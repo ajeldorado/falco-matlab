@@ -7,8 +7,7 @@
 # FALCO
 Fast Linear Least-Squares Coronagraph Optimization code
 
-Please acknowledge the use of FALCO if you use it in any work.
-Please cite FALCO if you use FALCO as part of the work. For now, the paper to cite is the SPIE Conference Proceeding for the 2018 SPIE Astronomical Telescopes + Instrumentation conference. The citation will not be available until July 2018. The talk will be:
+Please cite FALCO if you use it as part of the work for a publication. For now, the paper to cite is the SPIE Conference Proceeding for the 2018 SPIE Astronomical Telescopes + Instrumentation conference. The citation will not be available until July 2018. The talk will be:
 “Fast linearized coronagraph optimizer (FALCO) I: a software toolbox for rapid coronagraphic design and wavefront correction”
 Paper 10698-101 by A.J. Riggs
 
