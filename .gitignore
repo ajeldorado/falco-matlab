@@ -113,7 +113,8 @@ docs/**
 #*.synctex.gz(busy)
 #*.pdfsync
 
-
+#--License agreement
+!license.txt
 
 #--Files whose only purpose is to sync an empty folder to Github
 !placeholder.txt
