@@ -1,0 +1,7 @@
+This is a placeholder file to allow git to sync this entire folder.
+
+Install CVX in this folder from cvxr.org, 
+- or - 
+use the “addpath” command at the beginning of your Matlab script to tell Matlab where to your CVX directory.
+
+
