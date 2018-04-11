@@ -1,0 +1,126 @@
+# Refer to https://git-scm.com/docs/gitignore for documentation on how to use the .gitignore file
+
+.DS_Store
+**/*.DS_Store
+
+
+#--Tempoary files
+**/*.swp
+
+#--Temporary MATLAB files
+**/*.asv
+**/*.m~
+
+
+#--Don't sync any CVX files. Each user should download from cvxr.com
+lib/cvx/**
+
+#--PROPER content. Download from https://sourceforge.net/projects/proper-library/
+lib/PROPER/**
+
+##--PROPER executable
+#**/prop_szoom_c*
+#!**/prop_szoom_c.c
+#**/prop_szoom*
+#!**/prop_szoom.c
+#
+##--PROPER manual
+#**/PROPER_manual*.pdf
+
+#--CVX license
+**/LICENSE.txt
+
+#--Don't store saved data
+data/configs/**
+data/DM/**
+data/figures/**
+data/images/**
+data/Jacobians/**
+data/logs/**
+data/maps/**
+data/ws/**
+data/ws_inprogress/**
+
+!data/configs/placeholder.txt
+!data/DM/placeholder.txt
+!data/figures/placeholder.txt
+!data/images/placeholder.txt
+!data/Jacobians/placeholder.txt
+!data/logs/placeholder.txt
+!data/maps/placeholder.txt
+!data/ws/placeholder.txt
+!data/ws_inprogress/placeholder.txt
+#--Don't sync large-size mask image formats
+masks/**/*.fits
+**/*.bmp
+masks/**/*.tiff
+masks/**/*.tif
+masks/**/*.jpg
+masks/**/*.jpeg
+
+
+#--Folder of content not to sync
+DoNotPush/**
+#!DoNotPush/placeholder.txt
+
+#--Folder of content not to sync
+DoesNotSync/**
+!DoesNotSync/placeholder.txt
+
+#--Sync only template versions of main script files
+main/**
+!main/TEMPLATE*
+
+
+
+#--Documentation intermediate files
+docs/**
+#docs/*.pptx
+**/*.pptx~
+!docs/**/*.pdf
+
+
+#--Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+
+## Intermediate documents:
+#*.dvi
+#*-converted-to.*
+## these rules might exclude image files for figures etc.
+## *.ps
+## *.eps
+## *.pdf
+#
+### Bibliography auxiliary files (bibtex/biblatex/biber):
+##*.bbl
+#*.bcf
+#*.blg
+#*-blx.aux
+#*-blx.bib
+#*.brf
+#*.run.xml
+#
+### Build tool auxiliary files:
+#*.fdb_latexmk
+#*.synctex
+#*.synctex.gz
+#*.synctex.gz(busy)
+#*.pdfsync
+
+
+
+#--Files whose only purpose is to sync an empty folder to Github
+!placeholder.txt
+!**/placeholder.txt
+!**/*.placeholder.txt
+
+
+
+
+
