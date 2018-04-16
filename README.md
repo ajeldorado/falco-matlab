@@ -28,7 +28,7 @@ FALCO was written primarily on the MacOS operating system and tested on Windows 
 * Installation Instructions *
 %----------------------------------------------------------------------------------%
 
-1) Install the PROPER optical propagation library from proper-library.sourceforge.net in the folder “PROPER”. 
+1) Install the PROPER optical propagation library from https://sourceforge.net/projects/proper-library/ in the folder “PROPER”. 
 
 2) (Optional) Install CVX from cvxr.com in the folder “cvx”. If you install CVX elsewhere, you will need to add the actual path of the “cvx” folder to the file “pathdef.m” that defines your Matlab path. (To find your pathdef.m file, type “which pathdef” at the Matlab command prompt.) Perform the CVX installation instructions listed on the cvxd.com website.
 

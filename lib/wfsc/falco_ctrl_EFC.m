@@ -27,7 +27,7 @@ function [dDM,cp,cvar] = falco_ctrl_EFC(DM, cp, cvar, mp)
     Itr = cvar.Itr ;
 
 
-    vals_list = combvec(cp.muVec,cp.dmfacVec); %--dimensions: [2 x length(cp.muVec)*length(cp.dmfacVec) ]
+    vals_list = allcomb(cp.muVec,cp.dmfacVec); %--dimensions: [2 x length(cp.muVec)*length(cp.dmfacVec) ]
     
     Nvals = max(size(vals_list,2));
     Inorm_list = zeros(Nvals,1);

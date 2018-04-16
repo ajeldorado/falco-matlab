@@ -47,7 +47,7 @@ function jacStruct = model_Jacobian(mp, DM)
     %--Loop over the possible combinations of 1) tip/tilt-offsets, 2) sub-bandpasses, and 3) DM number 
     %   (either with parfor or for)
     fprintf('Computing control Jacobian matrices ... \n'); tic
-    vals_list = combvec(1:mp.Nttlam,DM.dm_ind); %--dimensions: [2 x length(mp.Nttlam)*length(DM.dm_ind) ]
+    vals_list = allcomb(1:mp.Nttlam,DM.dm_ind); %--dimensions: [2 x length(mp.Nttlam)*length(DM.dm_ind) ]
     Nvals = size(vals_list,2);
 
     %--Parallel/distributed computing
