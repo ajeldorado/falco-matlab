@@ -20,8 +20,7 @@ function w = falco_gen_Tukey4vortex( Nwindow, RHO, alpha )
 
 Nlut = round(10*Nwindow);
 p = linspace(-Nwindow/2,Nwindow/2,Nlut);
-lut = tukeywin(Nlut,alpha);
+lut = tukeywindow(Nlut,alpha);
 
 w = interp1(p,lut,RHO,'linear',0);
 end
-
