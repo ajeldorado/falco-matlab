@@ -21,7 +21,7 @@ if( any(DM.dm_ind==1) && any(DM.dm_ind==2) && length(DM.dm_ind)==2 ) %--DMs 1 an
     DM2VnomVec = DM.dm2.V(DM.dm2.act_ele);
     
     cvx_begin quiet
-        cvx_precision low
+        % cvx_precision low
         cvx_solver Mosek
         variables maxContrast u1(DM.dm1.Nele) u2(DM.dm2.Nele)
         minimize (maxContrast)
@@ -44,19 +44,19 @@ end
 
 %% Reformat the solution for the output
 
-if(any(DM.dm_ind==1)); 
+if(any(DM.dm_ind==1))
     dDM1V = zeros(DM.dm1.Nact);
     dDM1V(DM.dm1.act_ele) = u1;
     dDM.dDM1V = dDM1V;
 end
 
-if(any(DM.dm_ind==2)); 
+if(any(DM.dm_ind==2))
     dDM2V = zeros(DM.dm2.Nact, DM.dm2.Nact);
     dDM2V(DM.dm2.act_ele) = u2;
     dDM.dDM2V = dDM2V;
 end
 
-if(any(DM.dm_ind==3)); 
+if(any(DM.dm_ind==3))
     dDM3V = zeros(DM.dm3.Nact);
     dDM3V(DM.dm3.act_ele) = u3;
     dDM.dDM3V = dDM3V;

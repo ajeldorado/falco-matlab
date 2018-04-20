@@ -250,11 +250,12 @@ x_inf0 = (-(Npad-1)/2:(Npad-1)/2)*dm.dx_inf0; % True for even- or odd-sized infl
 %--Compute the size of the postage stamps.
 Nbox = ceil_even(((Ninf0pad*dm.dx_inf0)/dx_dm)); % Number of points across the influence function in the pupil file's spacing. Want as even
 dm.Nbox = Nbox;
-%--Also compute their padded sizes for the angular spectrum (AS) propagation between DMs 1 and 2:
-Nmin = min(mp.lam_array)*max([mp.d_P2_dm1,mp.d_dm1_dm2])/dx_dm^2; %--Minimum number of points across for accurate angular spectrum propagation
-dm.NboxAS = 2^(nextpow2(max([Nbox,Nmin])));  %--Zero-pad for FFTs in A.S. propagation. Use a larger array if the max sampling criterion for angular spectrum propagation is violated
+%--Also compute their padded sizes for the angular spectrum (AS) propagation between P2 and DM1 or between DM1 and DM2
+Nmin = ceil_even( max(mp.lam_array)*max(abs([mp.d_P2_dm1, mp.d_dm1_dm2,(mp.d_P2_dm1+mp.d_dm1_dm2)]))/dx_dm^2 ); %--Minimum number of points across for accurate angular spectrum propagation
+% dm.NboxAS = 2^(nextpow2(max([Nbox,Nmin])));  %--Zero-pad for FFTs in A.S. propagation. Uses a larger array if the max sampling criterion for angular spectrum propagation is violated
+dm.NboxAS = max([Nbox,Nmin]);  %--Uses a larger array if the max sampling criterion for angular spectrum propagation is violated
 
-dm.NdmPad = ceil_even( dm.Ndm + (dm.NboxAS-dm.Nbox) ); %--Number of points across the DM surface (with padding for angular spectrum propagation) at new, desired resolution.
+% dm.NdmPad = ceil_even( dm.Ndm + (dm.NboxAS-dm.Nbox) ); %--Number of points across the DM surface (with padding for angular spectrum propagation) at new, desired resolution.
 
 % if( Nbox < Nmin ) %--Use a larger array if the max sampling criterion for angular spectrum propagation is violated
 %     dm.NboxAS = 2^(nextpow2(Nmin)); %2*ceil(1/2*min(mp.lam_array)*mp.d_dm1_dm2/dx_dm^2);
@@ -273,8 +274,8 @@ if(dm.flag_hex_array)
     %dm.NdmPad = 2*ceil(1/2*Nbox*2) + 2*ceil((1/2*2*(dm.rmax)*dm.dx_inf0_act)*Nbox); %2*ceil((dm.rmax+3)*dm.dm_spacing/Dpup*Npup);
     dm.NdmPad = ceil_even((2*(dm.rmax+2))*NpixPerAct + 1); % padded 2 actuators past the last actuator center to avoid trying to index outside the array 
 else
-        dm.NdmPad = ceil_even( sqrt(2)*( 2*(dm.rmax*NpixPerAct + 1)) ); % padded 1/2 an actuator past the farthest actuator center (on each side) to prevent indexing outside the array 
-    %    dm.NdmPad = ceil_even( ( 2*(dm.rmax*NpixPerAct + dm.NboxAS/2 + 1)) ); % padded 1/2 an actuator past the farthest actuator center (on each side) to prevent indexing outside the array
+%         dm.NdmPad = ceil_even( sqrt(2)*( 2*(dm.rmax*NpixPerAct + 1)) ); % padded 1/2 an actuator past the farthest actuator center (on each side) to prevent indexing outside the array 
+    dm.NdmPad = ceil_even( ( dm.NboxAS + 2*(1+ (max(max(abs(dm.xy_cent_act)))+0.5)*NpixPerAct)) ); % DM surface array padded by the width of the padded influence function to prevent indexing outside the array. The 1/2 term is because the farthest actuator center is still half an actuator away from the nominal array edge. 
 end
 
 %--Compute coordinates (in meters) of the full DM array
@@ -291,7 +292,8 @@ dm.y_pupPad = dm.x_pupPad;
 
 if(flagGenCube)
     if(dm.flag_hex_array==false)
-        fprintf('  Influence function padded to 2^nextpow2(%d) = %d for A.S. propagation.\n',2*ceil(1/2*max([Nbox,Nmin])),dm.NboxAS);
+        fprintf('  Influence function padded from %d to %d points for A.S. propagation.\n',Nbox,dm.NboxAS);
+%         fprintf('  Influence function padded to 2^nextpow2(%d) = %d for A.S. propagation.\n',2*ceil(1/2*max([Nbox,Nmin])),dm.NboxAS);
     end
     tic
     fprintf('Computing datacube of DM influence functions... ');
