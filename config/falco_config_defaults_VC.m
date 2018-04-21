@@ -252,7 +252,14 @@ if(isfield(mp.F4.corr,'Rout')==false); mp.F4.corr.Rout  = floor(DM.dm1.Nact/2*(1
 if(isfield(mp.F4.score,'Rout')==false); mp.F4.score.Rout = mp.F4.corr.Rout; end  %--Needs to be <= that of Correction mask
 if(isfield(mp.F4.corr,'ang')==false); mp.F4.corr.ang  = 180; end  %--degrees per side
 if(isfield(mp.F4.score,'ang')==false); mp.F4.score.ang = 180; end  %--degrees per side
-if(isfield(mp.F4,'sides')==false); mp.F4.sides = 'both'; end  %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
+
+if(isfield(mp.F4,'sides')==false) %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
+    if( any(DM.dm_ind==1) && any(DM.dm_ind==2) )
+        mp.F4.sides = 'both'; 
+    else
+        mp.F4.sides = 'right';
+    end
+end  
 
 
 %%--Final Focal Plane (F4) Properties

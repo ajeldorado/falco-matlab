@@ -59,8 +59,8 @@ contrast_bandavg = zeros(mp.Nitr,1); % Measured/raw contrast in ScoreMask
 % contrast_right_bandavg = zeros(mp.Nitr+1,1);
 
 %--Store the DM surfaces (REQUIRES LOTS OF STORAGE)
-DM1S_array = single(zeros(DM.dm1.compact.Ndm,DM.dm1.compact.Ndm,mp.Nitr+1));
-DM2S_array = single(zeros(DM.dm2.compact.Ndm,DM.dm2.compact.Ndm,mp.Nitr+1));
+if(any(DM.dm_ind==1)); DM1S_array = single(zeros(DM.dm1.compact.Ndm,DM.dm1.compact.Ndm,mp.Nitr+1)); else; DM1S_array = zeros(2,2,mp.Nitr+1); end
+if(any(DM.dm_ind==2)); DM2S_array = single(zeros(DM.dm2.compact.Ndm,DM.dm2.compact.Ndm,mp.Nitr+1)); else; DM2S_array = zeros(2,2,mp.Nitr+1); end
 
 %% Take initial broadband images
 EfieldCorrTrue = zeros(length(mp.F4.compact.corr.inds),mp.Nttlam,mp.Nitr+1); % (Simulation only) Vectorized true starlight E-field at each pixel and wavelength
