@@ -748,7 +748,12 @@ elseif mp.Nwpsbp > 1
 else
     mp.lamFac_vec = 1;
 end
-mp.lam_array = mp.lambda0*mp.lamFac_vec;
+
+%--mp.lam_array = Complete vector of wavelengths that are evaluated in the full model
+mp.lam_array = []; %--initialize
+for si=1:mp.Nsbp
+    mp.lam_array = [mp.lam_array, mp.lamFac_vec*mp.sbp_center_vec(si)];
+end
 % fprintf('Wavelengths cover %3.1f%% for the %3.1f%% sub-bandpass (%3.1f%% coverage). \n', (max(lamFac_vec)-min(lamFac_vec))*100 , mp.fracBWsbp*100,(max(lamFac_vec)-min(lamFac_vec))/mp.fracBWsbp*100);
 
 %% Deformable Mirror (DM) Parameters
@@ -822,7 +827,7 @@ elseif(  any(DM.dm_ind==1) )
 elseif(  any(DM.dm_ind==2) )
     NdmPad = 2.^ceil(1 + log2(DM.dm2.compact.NdmPad));
 end
-while( (NdmPad < min(mp.lam_array)*abs(mp.d_dm1_dm2)/mp.P2.full.dx^2) || (NdmPad < min(mp.lam_array)*abs(mp.d_P2_dm1)/mp.P2.compact.dx^2) ) %--Double the zero-padding until the angular spectrum sampling requirement is not violated
+while( (NdmPad < min(mp.sbp_center_vec)*abs(mp.d_dm1_dm2)/mp.P2.full.dx^2) || (NdmPad < min(mp.sbp_center_vec)*abs(mp.d_P2_dm1)/mp.P2.compact.dx^2) ) %--Double the zero-padding until the angular spectrum sampling requirement is not violated
     NdmPad = 2*NdmPad; 
 end
 DM.compact.NdmPad = NdmPad;

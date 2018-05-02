@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function Eout = prop_PTP(Ein,Darray,lambda,dz) 
+% function Eout = prop_PTP(Ein,Larray,lambda,dz) 
 %
 % This is a Fresnel propagation function. It uses the convolution, transfer function
 % form of the Fresnel integral.  
@@ -18,33 +18,36 @@
 %
 % REQUIRED INPUTS: 
 % Ein = input E-field as 2-D square array
-% Darray = width of array (meters)
+% Larray = width of array (meters)
 % lambda = wavelength of light (meters)
 % dz = propagation distance (meters)
 %
 % OUTPUTS:
 %  Eout: output E-field as square array
 %
+% Modified on 2018-04-26 by A.J. Riggs to correct the sampling requirement.
 % Written by A.J. on April 30, 2013. 
 
-function Eout = propcustom_PTP(Ein,Darray,lambda,dz)
+function Eout = propcustom_PTP(Ein,Larray,lambda,dz)
     % propagation - transfer function approach
     % assumes same x and y side lengths
     % uniform sampling
     % Ein - source plane field
-    % Darray - source and observation plane side length
+    % Larray - source and observation plane side length
     % lambda - wavelength
     % dz - propagation distance
     % u2 - observation plane field
     [M,N] = size(Ein);  
+    dx = Larray/N;
+    Ncritical = floor(lambda*abs(dz)/dx^2); %--Critical sampling
+    
     if(M~=N) %--Check if input array is square
-        disp('Error: propcustom_PTP needs a square input array.');
-        return;
-    elseif(round(Darray^2/lambda/abs(dz))<M) %--Verify that the angular spectrum sampling requirement is not violated
-        disp(' WARNING: TOO MANY POINTS USED in function propcustom_PTP')
-        fprintf('Max allowed (ideal) number of points across = %u, and actual number = %u \n', floor(Darray^2/lambda/abs(dz)) , M);
+        error('propcustom_PTP: Error: propcustom_PTP needs a square input array.');
+    elseif( N < Ncritical) %--Verify that the angular spectrum sampling requirement is not violated
+        fprintf('Min allowed (ideal) number of points across = %u, and actual number = %u \n', Ncritical, N);
+        error('propcustom_PTP: WARNING, NOT ENOUGH POINTS USED!')
     else
-        fx = ( -M/2:1:(M/2-1) )/Darray;   % dx = Darray/M; fx=-1/(2*dx):1/Darray:1/(2*dx)-1/Darray;    % freq coords
+        fx = ( -M/2:1:(M/2-1) )/Larray;   % dx = Larray/M; fx=-1/(2*dx):1/Larray:1/(2*dx)-1/Larray;    % freq coords
         [FX,FY]=meshgrid(fx,fx);
 
         H = fftshift( exp(-1i*pi*lambda*dz*(FX.^2+FY.^2)) ); % transfer function

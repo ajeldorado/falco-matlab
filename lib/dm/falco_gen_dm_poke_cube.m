@@ -251,14 +251,14 @@ x_inf0 = (-(Npad-1)/2:(Npad-1)/2)*dm.dx_inf0; % True for even- or odd-sized infl
 Nbox = ceil_even(((Ninf0pad*dm.dx_inf0)/dx_dm)); % Number of points across the influence function in the pupil file's spacing. Want as even
 dm.Nbox = Nbox;
 %--Also compute their padded sizes for the angular spectrum (AS) propagation between P2 and DM1 or between DM1 and DM2
-Nmin = ceil_even( max(mp.lam_array)*max(abs([mp.d_P2_dm1, mp.d_dm1_dm2,(mp.d_P2_dm1+mp.d_dm1_dm2)]))/dx_dm^2 ); %--Minimum number of points across for accurate angular spectrum propagation
+Nmin = ceil_even( max(mp.sbp_center_vec)*max(abs([mp.d_P2_dm1, mp.d_dm1_dm2,(mp.d_P2_dm1+mp.d_dm1_dm2)]))/dx_dm^2 ); %--Minimum number of points across for accurate angular spectrum propagation
 % dm.NboxAS = 2^(nextpow2(max([Nbox,Nmin])));  %--Zero-pad for FFTs in A.S. propagation. Uses a larger array if the max sampling criterion for angular spectrum propagation is violated
 dm.NboxAS = max([Nbox,Nmin]);  %--Uses a larger array if the max sampling criterion for angular spectrum propagation is violated
 
 % dm.NdmPad = ceil_even( dm.Ndm + (dm.NboxAS-dm.Nbox) ); %--Number of points across the DM surface (with padding for angular spectrum propagation) at new, desired resolution.
 
 % if( Nbox < Nmin ) %--Use a larger array if the max sampling criterion for angular spectrum propagation is violated
-%     dm.NboxAS = 2^(nextpow2(Nmin)); %2*ceil(1/2*min(mp.lam_array)*mp.d_dm1_dm2/dx_dm^2);
+%     dm.NboxAS = 2^(nextpow2(Nmin)); %2*ceil(1/2*min(mp.sbp_center_vec)*mp.d_dm1_dm2/dx_dm^2);
 % else
 %     dm.NboxAS = 2^(nextpow2(Nbox));
 % end
