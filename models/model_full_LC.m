@@ -62,9 +62,10 @@ elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations
         
 else % Default to using the starlight
     %--Include the tip/tilt in the input stellar wavefront
-    if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
-        x_offset = mp.ttx(modvar.ttIndex);
-        y_offset = mp.tty(modvar.ttIndex);
+    if(isfield(mp,'ttx'))
+        %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
+        x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
+        y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
 
         TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
         Ett = exp(1i*TTphase*mp.lambda0/lambda);

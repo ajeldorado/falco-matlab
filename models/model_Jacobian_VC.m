@@ -54,9 +54,10 @@ NdmPad = DM.compact.NdmPad;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Include the tip/tilt in the input wavefront
-if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
-    x_offset = mp.ttx(modvar.ttIndex);
-    y_offset = mp.tty(modvar.ttIndex);
+if(isfield(mp,'ttx'))
+    %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
+    x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
+    y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
 
     TTphase = (-1)*(2*pi*(x_offset*mp.P2.compact.XsDL + y_offset*mp.P2.compact.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
@@ -72,24 +73,24 @@ end
 
 pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
 Ein = padOrCropEven(Ein,NdmPad);
-if(mp.flagApod); 
+if(mp.flagApod)
     apodRot180 = padOrCropEven( rot90(mp.P3.compact.mask,2), NdmPad );
-    if( strcmpi(mp.centering,'pixel') ); apodRot180 = circshift(apodRot180,[1 1]); end; %--To undo center offset when pixel centered and rotating by 180 degrees.
+    if( strcmpi(mp.centering,'pixel') ); apodRot180 = circshift(apodRot180,[1 1]); end %--To undo center offset when pixel centered and rotating by 180 degrees.
 else
     apodRot180 = ones(NdmPad); 
 end
 
 
-if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else DM1stop = ones(NdmPad); end
-if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else DM2stop = ones(NdmPad); end
+if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
+if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
 
-if(any(DM.dm_ind==1)); DM1surf = padOrCropEven(DM.dm1.compact.surfM, NdmPad);  else DM1surf = 0; end 
-if(any(DM.dm_ind==2)); DM2surf = padOrCropEven(DM.dm2.compact.surfM, NdmPad);  else DM2surf = 0; end 
+if(any(DM.dm_ind==1)); DM1surf = padOrCropEven(DM.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
+if(any(DM.dm_ind==2)); DM2surf = padOrCropEven(DM.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
 
 if(mp.useGPU)
     pupil = gpuArray(pupil);
     Ein = gpuArray(Ein);
-    if(any(DM.dm_ind==1)); DM1surf = gpuArray(DM1surf); end;
+    if(any(DM.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,7 +104,7 @@ EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil p
 % if( strcmpi(mp.centering,'pixel') ); EP2 = circshift(EP2,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
-if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else Edm1 = EP2; end  %--E-field arriving at DM1
+if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
 Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 
@@ -132,8 +133,8 @@ if(whichDM==1)
     NboxPad1AS = DM.dm1.compact.NboxAS;  %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
     DM.dm1.compact.xy_box_lowerLeft_AS = DM.dm1.compact.xy_box_lowerLeft - (DM.dm1.compact.NboxAS-DM.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
-    if(any(DM.dm_ind==2)); DM2surf = padOrCropEven(DM2surf,DM.dm1.compact.NdmPad);  else DM2surf = zeros(DM.dm1.compact.NdmPad); end 
-    if(mp.flagDM2stop); DM2stop = padOrCropEven(DM2stop,DM.dm1.compact.NdmPad); else DM2stop = ones(DM.dm1.compact.NdmPad); end
+    if(any(DM.dm_ind==2)); DM2surf = padOrCropEven(DM2surf,DM.dm1.compact.NdmPad);  else; DM2surf = zeros(DM.dm1.compact.NdmPad); end 
+    if(mp.flagDM2stop); DM2stop = padOrCropEven(DM2stop,DM.dm1.compact.NdmPad); else; DM2stop = ones(DM.dm1.compact.NdmPad); end
     apodRot180 = padOrCropEven( apodRot180, DM.dm1.compact.NdmPad);
 
     Edm1pad = padOrCropEven(Edm1,DM.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
