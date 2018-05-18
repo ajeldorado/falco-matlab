@@ -33,8 +33,8 @@ function jacStruct = model_Jacobian(mp, DM)
 
     %--Calculate the starting DM surfaces beforehand to save time.
     %--Compute the DM surfaces outside the full model to save lots of time
-    if(any(DM.dm_ind==1)); DM.dm1.compact.surfM = falco_gen_dm_surf(DM.dm1, DM.dm1.compact.dx,DM.dm1.compact.NdmPad); else DM.dm1.compact.surfM = zeros(2); end;
-    if(any(DM.dm_ind==2)); DM.dm2.compact.surfM = falco_gen_dm_surf(DM.dm2, DM.dm2.compact.dx,DM.dm2.compact.NdmPad); else DM.dm2.compact.surfM = zeros(2); end;
+    if(any(DM.dm_ind==1)); DM.dm1.compact.surfM = falco_gen_dm_surf(DM.dm1, DM.dm1.compact.dx,DM.dm1.compact.NdmPad); else; DM.dm1.compact.surfM = zeros(2); end
+    if(any(DM.dm_ind==2)); DM.dm2.compact.surfM = falco_gen_dm_surf(DM.dm2, DM.dm2.compact.dx,DM.dm2.compact.NdmPad); else; DM.dm2.compact.surfM = zeros(2); end
 
 
     %--Get rid of the DM.dmX.inf_datacube fields in the full model because they are HUGE and will
