@@ -42,7 +42,7 @@
 % 
 
 function Eout = model_compact_LC(mp, DM, modvar)
-lambda = mp.sbp_center_vec(modvar.sbpIndex)*mp.lamFac_vec(modvar.wpsbpIndex);
+lambda = mp.sbp_center_vec(modvar.sbpIndex);
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = DM.compact.NdmPad;
 
@@ -58,10 +58,10 @@ if(isfield(mp,'ttx'))
 
     TTphase = (-1)*(2*pi*(x_offset*mp.P2.compact.XsDL + y_offset*mp.P2.compact.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.compact.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+    Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex);  
 
 else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-    Ein = mp.P1.compact.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+    Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

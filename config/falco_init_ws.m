@@ -158,7 +158,15 @@ switch mp.whichPupil
         inputs.Dbeam = mp.P2.D;
         %inputs.Narray = mp.P1.compact.Narr;  % number of points across output array
         mp.P1.compact.mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs);
+    
         
+    case{'LUVOIRA5predef'}
+        
+        temp = load('luvoir2017novAp05cX100cobs1gap2_TelAp.txt'); %--512x512 array, 508x508 mask, interpixel-centered
+        mp.P1.full.mask = padOrCropEven(temp,mp.P1.full.Nbeam);
+        mp.P1.compact.mask = mp.P1.full.mask;
+
+
     case{'LUVOIRA5'}
         inputs.centering = mp.centering;
         
@@ -309,7 +317,27 @@ switch mp.coro
             disp('Using vortex without apodizer or aperture stop.')
         end
         
-end
+        
+        
+    case{'LC','APLC'}
+
+        switch mp.SPname
+            case 'luvoir2017novAp05cX100cobs1gap2'
+                    temp = load('luvoir2017novAp05cX100cobs1gap2_apodizer.txt'); %--512x512 array, 508x508 mask, interpixel-centered
+                    mp.P3.full.mask = padOrCropEven(temp,mp.P1.full.Nbeam);
+                    mp.P3.compact.mask = mp.P3.full.mask;
+                    
+                    mp.P3.full.Narr= length(mp.P3.full.mask);
+                    mp.P3.compact.Narr= length(mp.P3.compact.mask);
+
+            otherwise    
+                    error('ERROR IN falco_config_defaults_LC.m: No apodizer defined for this pupil');
+        end
+
+    
+end        
+        
+
 
 %% Lyot plane resolution, coordinates, and cropped-down mask for compact model
 %--Resolution at Lyot Plane
@@ -351,6 +379,13 @@ switch mp.whichPupil
         inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
         %inputs.Narray = mp.NlyotCompact;   % number of points across output array
         mp.P4.compact.mask = falco_gen_pupil_WFIRSTcycle6_LS(inputs,'ROT180');
+
+        
+  case{'LUVOIRA5predef'}        
+
+        temp = load('luvoir2017novAp05cX100cobs1gap2_LyotStop.txt'); %--512x512 array, 508x508 mask, interpixel-centered
+        mp.P4.full.mask = padOrCropEven(temp,mp.P4.full.Nbeam);
+        mp.P4.compact.mask = mp.P4.full.mask;
 
         
 	case{'LUVOIRA5','LUVOIRA0'}
@@ -418,6 +453,14 @@ switch mp.coro
         mp.P4.full.croppedMask = mp.P4.full.mask;
         mp.P4.compact.Narr = length(mp.P4.compact.mask);
         mp.P4.compact.croppedMask = mp.P4.compact.mask;
+        
+    case{'LUVOIRA5predef'}
+        switch mp.SPname
+            case 'luvoir2017novAp05cX100cobs1gap2'
+                mp.P4.full.Narr= length(mp.P4.full.mask);
+                mp.P4.compact.Narr= length(mp.P4.compact.mask);
+        end
+        
     otherwise
     
         % --Crop down the high-resolution Lyot stop to get rid of extra zero padding
@@ -860,10 +903,92 @@ DM.full.NdmPad = NdmPad;
 %% % % Initial Electric Fields for Star and Exoplanet
 % Starlight. Can add some propagation here to create an aberrate wavefront
 %   starting from a primary mirror.
-mp.P1.full.E  = ones(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
-% mp.P1.full.E = mp.Estar; %--Re-define in the main code if pupil phase flattening is done.
-mp.Eplanet = mp.P1.full.E; %--Initialize the input E-field for the planet at the entrance pupil. Will apply the phase ramp later
-mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nwpsbp,mp.Nsbp);
+
+switch mp.whichPupil
+    case 'LUVOIRA5predef'
+        mp.P1.full.E  = zeros(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
+
+        mp.P1.compact.E = zeros(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
+        
+        
+%         wavelength = 500e-9; % meters
+
+        beam_ratio = 1.;
+
+        grid_size = ceil_even(508*13/12) +2;%512;
+
+        % Define proper aperture
+        nrings = 6;
+
+        % 15m to 0.05m
+        compress=300;
+
+        flattoflat = 1.2225/compress;
+        hexrad = flattoflat / sqrt(3);
+        hexgap=0.006/compress;
+        hexsep = hexgap + flattoflat;
+        diam_temp = (nrings * 2 + 1)*flattoflat + hexgap*12;
+        diam = (nrings * 2)*flattoflat + hexgap*11;
+        num_hex = nrings*(nrings+1)*3+1; % 127
+
+        hexsep_ph = flattoflat;
+        hexrad_ph = (flattoflat + hexgap) / sqrt(3);
+
+
+%         mp.piston_max = 10e-9; %--Defined in main script
+%         mp.xtilt_max = 10e-9;
+%         mp.ytilt_max = 10e-9;
+        piston = mp.piston_max*randn(num_hex,1); % piston = np.random.normal(0, piston_max, (1, num_hex))
+        xtilt  = mp.xtilt_max*randn(num_hex,1); % xtilt = np.random.normal(0, xtilt_max, (1, num_hex))
+        ytilt  = mp.ytilt_max*randn(num_hex,1); % ytilt = np.random.normal(0, ytilt_max, (1, num_hex))
+
+        % Define zernike polynomials
+        zernikes = zeros(num_hex,22); %zernikes = np.zeros((22,num_hex))
+        zernikes(:,1) = piston;
+        zernikes(:,2) = xtilt;
+        zernikes(:,3) = ytilt;
+
+        centering = 'interpixel';
+
+        switch centering % 0 for pixel-centered pupil, or -diam/np for inter-pixel centering
+            case {'interpixel','even'}
+                cshift = -diam_temp/2/grid_size; 
+            case {'pixel','odd'}
+                cshift = 0;
+        end
+
+
+        wfo_temp = prop_begin(diam_temp, mp.lambda0, grid_size/beam_ratio, beam_ratio); 
+            % amp_hex,phase_hex = proper.prop_hex_wavefront(wfo_temp, nrings,hexrad_ph, hexsep_ph, zernike_val = zernikes, DARKCENTER = True)
+        [~,amp_hex,phase_hex] = prop_hex_wavefront(wfo_temp, nrings,hexrad_ph, hexsep_ph,'XCENTER',cshift,'YCENTER',cshift, 'zernike_val', zernikes, 'DARKCENTER');
+
+        ph_hex = padOrCropEven(phase_hex,mp.P1.full.Narr);
+        
+        for si=1:mp.Nsbp
+            
+            for wi = 1:mp.Nwpsbp
+                lambda = mp.sbp_center_vec(si)*mp.lamFac_vec(wi);
+                mp.P1.full.E(:,:,wi,si)  =  exp(2*pi*1i/lambda*ph_hex); %--Full model
+                
+            end
+             lambda = mp.sbp_center_vec(si);
+             mp.P1.compact.E(:,:,si) = exp(2*pi*1i/lambda*ph_hex);%--Compact model
+            
+        end
+        
+        %--Assign the planet the same WFE as the star in the full model
+        mp.Eplanet = mp.P1.full.E; %--Planet appears in only the full model
+
+        
+        
+    otherwise
+
+        mp.P1.full.E  = ones(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
+        % mp.P1.full.E = mp.Estar; %--Re-define in the main code if pupil phase flattening is done.
+        mp.Eplanet = mp.P1.full.E; %--Initialize the input E-field for the planet at the entrance pupil. Will apply the phase ramp later
+        mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
+        
+end
 
 %% Off-axis, incoherent point source (exoplanet)
 mp.c_planet = 1;%1e-14;%4e-10;%3e-10;%1e-8; % contrast of exoplanet

@@ -82,6 +82,8 @@ if(isfield(mp,'Nwpsbp')==false); mp.Nwpsbp = 1; end % number of wavelengths per 
 
 %%--Pupil Masks
 switch mp.whichPupil
+   
+    
     case 'Simple' % Can be used to create circular and annular apertures with radial spiders 
         
         
@@ -132,6 +134,15 @@ switch mp.whichPupil
         if(isfield(mp.P4,'IDnorm')==false); mp.P4.IDnorm = 0; end 
         if(isfield(mp.P4,'ODnorm')==false); mp.P4.ODnorm = 0.80; end 
         
+    case{'LUVOIRA5predef'}
+        mp.centering = 'interpixel';
+        
+        mp.P1.D = 15.0;  %--meters, circumscribing diameter of telescope (used only for mas-to-lambda/D conversion)
+        mp.P1.Dfac = 15.0/13.7; %--Ratio of OD_circumscribed to OD_inscribed for the non-circular outer aperture.
+
+        mp.P1.full.Nbeam = 508;
+        mp.P1.compact.Nbeam = 508;       
+        
         
 end
 
@@ -173,27 +184,26 @@ if(isfield(mp,'thput_eval_y')==false); mp.thput_eval_y = 0; end  %--lambda_c/D, 
 %% Coronagraphic Mask Properties:
 
 
-
 %%--FPM parameters
-if(isfield(mp.F3,'Rin')==false); mp.F3.Rin = 2.8; end % inner hard-edge radius of the focal plane mask, in lambda0/D
+switch mp.whichPupil
+    case{'LUVOIRA5predef'}
+
+        if(isfield(mp.F3.full,'res')==false); mp.F3.full.res = 10; end % sampling of FPM for full model, in pixels per lambda0/D
+        if(isfield(mp.F3.compact,'res')==false); mp.F3.compact.res = 10; end % sampling of FPM for compact model, in pixels per lambda0/D
+        if(isfield(mp.F3,'Rin')==false); mp.F3.Rin = 3.50; end % inner hard-edge radius of the focal plane mask, in lambda0/D
+        
+    otherwise
+        
+        if(isfield(mp.F3.full,'res')==false); mp.F3.full.res = 50; end % sampling of FPM for full model, in pixels per lambda0/D
+        if(isfield(mp.F3.compact,'res')==false); mp.F3.compact.res = 30; end % sampling of FPM for compact model, in pixels per lambda0/D
+        if(isfield(mp.F3,'Rin')==false); mp.F3.Rin = 2.8; end % inner hard-edge radius of the focal plane mask, in lambda0/D
+
+end
+
 if(isfield(mp.F3,'Rout')==false); mp.F3.Rout = Inf; end % outer hard-edge radius of the focal plane mask, in lambda0/D
-
-if(isfield(mp,'FPMampFac')==false); mp.FPMampFac = 0.025; end %--amplitude transmission value of the spot (achromatic)
-
-if(isfield(mp.F3.full,'res')==false); mp.F3.full.res = 50; end % sampling of FPM for full model, in pixels per lambda0/D
-if(isfield(mp.F3.compact,'res')==false); mp.F3.compact.res = 30; end % sampling of FPM for compact model, in pixels per lambda0/D
-
 if(isfield(mp.F3,'ang')==false); mp.F3.ang = 180; end% angular opening on each side of the focal plane mask, in degrees
-
-
-
-
-
 if(isfield(mp,'fl')==false); mp.fl = 1;  end % meters. Arbitrary value chose for this design configuration. Keep as 1. Used for all focal lengths to keep magnification at each pupil at 1x. 
-
-
-
-
+if(isfield(mp,'FPMampFac')==false); mp.FPMampFac = 0.0; end %--amplitude transmission value of the spot (achromatic)
 
 %% Controller weights and thresholds
 
@@ -259,8 +269,7 @@ if(isfield(mp.P4,'D')==false);  mp.P4.D = mp.P2.D; end  % beam diameter at Lyot 
 
 %% Apodizer (Shaped Pupil) Properties (Plane P3)
 
-
-   
+if(isfield(mp,'SPname')==false); mp.SPname = false; end
 
 
 
@@ -288,11 +297,16 @@ end
 
 %% Final Focal Plane (F4) Properties
 
+switch mp.whichPupil
+    case{'LUVOIRA5predef'}
+        mp.F4.corr.Rout = 12;
+end
+
 
 %--Specs for Correction (Corr) region and the Scoring (Score) region.
 if(isfield(mp.F4.corr,'Rin')==false); mp.F4.corr.Rin  = mp.F3.Rin; end  %--lambda0/D, inner radius of correction region
 if(isfield(mp.F4.score,'Rin')==false); mp.F4.score.Rin = mp.F4.corr.Rin; end  %--Needs to be >= that of Correction mask
-if(isfield(mp.F4.corr,'Rout')==false); mp.F4.corr.Rout  = 10; %floor(DM.dm1.Nact/2*(1-mp.fracBW/2)); end  %--lambda0/D, outer radius of correction region
+if(isfield(mp.F4.corr,'Rout')==false); mp.F4.corr.Rout  = 10; end %floor(DM.dm1.Nact/2*(1-mp.fracBW/2)); end  %--lambda0/D, outer radius of correction region
 if(isfield(mp.F4.score,'Rout')==false); mp.F4.score.Rout = mp.F4.corr.Rout; end  %--Needs to be <= that of Correction mask
 
 if(isfield(mp.F4.corr,'ang')==false); mp.F4.corr.ang  = 180; end  %--degrees per side
