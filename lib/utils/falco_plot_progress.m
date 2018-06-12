@@ -56,8 +56,8 @@ if(mp.flagPlot)
     ax4=get(h_dm1,'position'); % Save the position as ax
     set(h_dm1,'position',ax4); % Manually setting this holds the position with colorbar 
     subplot(2,2,3); 
-    imagesc(DM1S_array(:,:,Itr)/mp.lambda0);  axis xy equal tight; axis off; ch1 = colorbar;
-   ylabel(ch1,'Waves','Fontsize',20,'Interpreter','LaTex');
+    imagesc(DM1S_array(:,:,Itr)*1e9);  axis xy equal tight; axis off; ch1 = colorbar;
+   ylabel(ch1,'nm','Fontsize',20,'Interpreter','LaTex');
 %    title(sprintf('DM1 Surface at Iter=%03d',Itr),'Fontsize',20,'Fontweight','Bold');
    title(sprintf('DM1 Surface'),'Fontsize',20,'Fontweight','Bold');
    set(gca,'FontSize',20 ,'FontName','Times','FontWeight','Normal')
@@ -66,8 +66,8 @@ if(mp.flagPlot)
     ax5=get(h_dm2,'position'); % Save the position as ax
     set(h_dm2,'position',ax5); % Manually setting this holds the position with colorbar 
     subplot(2,2,4); 
-    imagesc(DM2S_array(:,:,Itr)/mp.lambda0);  axis xy equal tight; axis off; ch1 = colorbar;
-    ylabel(ch1,'Waves','Fontsize',20,'Interpreter','LaTex');
+    imagesc(DM2S_array(:,:,Itr)*1e9);  axis xy equal tight; axis off; ch1 = colorbar;
+    ylabel(ch1,'nm','Fontsize',20,'Interpreter','LaTex');
    title(sprintf('DM2 Surface'),'Fontsize',20,'Fontweight','Bold');
     set(gca,'FontSize',20 ,'FontName','Times','FontWeight','Normal')
 
