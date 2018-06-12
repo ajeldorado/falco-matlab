@@ -386,7 +386,6 @@ switch mp.whichPupil
         temp = load('luvoir2017novAp05cX100cobs1gap2_LyotStop.txt'); %--512x512 array, 508x508 mask, interpixel-centered
         mp.P4.full.mask = padOrCropEven(temp,mp.P4.full.Nbeam);
         mp.P4.compact.mask = mp.P4.full.mask;
-
         
 	case{'LUVOIRA5','LUVOIRA0'}
         
@@ -906,8 +905,12 @@ DM.full.NdmPad = NdmPad;
 
 switch mp.whichPupil
     case 'LUVOIRA5predef'
-        mp.P1.full.E  = zeros(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
+% %         %--Debugging
+% %         mp.P1.full.E  = ones(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
+% %         mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
+        
 
+        mp.P1.full.E  = zeros(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
         mp.P1.compact.E = zeros(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
         
         
@@ -963,6 +966,7 @@ switch mp.whichPupil
         [~,amp_hex,phase_hex] = prop_hex_wavefront(wfo_temp, nrings,hexrad_ph, hexsep_ph,'XCENTER',cshift,'YCENTER',cshift, 'zernike_val', zernikes, 'DARKCENTER');
 
         ph_hex = padOrCropEven(phase_hex,mp.P1.full.Narr);
+        mp.ph_hex = ph_hex;
         
         for si=1:mp.Nsbp
             
@@ -979,7 +983,9 @@ switch mp.whichPupil
         %--Assign the planet the same WFE as the star in the full model
         mp.Eplanet = mp.P1.full.E; %--Planet appears in only the full model
 
-        
+        figure(503); imagesc(ph_hex*1e9); axis xy equal tight; ch = colorbar;
+        ylabel(ch,'nm','Fontsize',20,'Interpreter','LaTex');
+
         
     otherwise
 

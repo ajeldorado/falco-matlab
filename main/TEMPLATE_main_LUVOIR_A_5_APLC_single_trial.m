@@ -51,7 +51,7 @@ mp.flagApod = true;
 mp.SPname = 'luvoir2017novAp05cX100cobs1gap2';
 
 %%--Pupil Plane and DM Plane Properties
-mp.d_dm1_dm2 = 1; % distance between DM1 and DM2 (meters)
+mp.d_dm1_dm2 = 1; % distance between Xinetics DM1 and DM2 (meters). MULTIPLY BY 6.25 FOR THE EQUIVALENT FRESNEL NUMBER WITH BMC DMS AND THE SAME NUMBER OF ACTUATORS. 
 % mp.d_P2_dm1 = 0; % distance (along +z axis) from P2 pupil to DM1 (meters)
 
 %%--Bandwidth and Wavelength Specs
