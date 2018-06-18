@@ -81,6 +81,9 @@ if(isfield(mp,'Nwpsbp')==false); mp.Nwpsbp = 1; end % number of wavelengths per 
 
 
 %%--Pupil Masks
+if(isfield(mp,'flagApod')==false); mp.flagApod = false; end
+
+
 switch mp.whichPupil
    
     

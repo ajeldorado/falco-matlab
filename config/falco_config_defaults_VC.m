@@ -80,6 +80,8 @@ if(isfield(mp,'Nwpsbp')==false); mp.Nwpsbp = 1; end % number of wavelengths per 
 
 
 %%--Pupil Masks
+if(isfield(mp,'flagApod')==false); mp.flagApod = false; end
+
 switch mp.whichPupil
     case 'Simple' % Can be used to create circular and annular apertures with radial spiders 
         
