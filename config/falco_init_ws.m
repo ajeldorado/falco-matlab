@@ -251,6 +251,8 @@ mp.dm2.compact.mask = falco_gen_DM_stop(mp.P2.compact.dx,mp.dm2.Dstop,mp.centeri
 
 %% Apodizer Masks for full and compact models
 
+if(mp.flagApod)
+    
 switch mp.coro
     case{'SPLC'}
         mp.P3.full.mask = falco_gen_multi_ring_SP(mp.rEdgesLeft,mp.rEdgesRight,mp.P2.full.dx,mp.P2.D,mp.centering);
@@ -337,7 +339,7 @@ switch mp.coro
     
 end        
         
-
+end
 
 %% Lyot plane resolution, coordinates, and cropped-down mask for compact model
 %--Resolution at Lyot Plane
