@@ -18,7 +18,7 @@ Paper 10698-101 by A.J. Riggs
 
 FALCO was built and tested for Matlab 2016a. It may still work on older versions, but functionality is not guaranteed.
 
-No Matlab toolboxes should be required for FALCO. If it is called anywhere, the only functions used are “imresize.m” and “padarray.m”.
+For ease of use, no Matlab toolboxes should be required for FALCO. Please notify the developer if this is not the case.
 
 FALCO was written primarily on the MacOS operating system and tested on Windows and Unix/Linux systems. Please report any FALCO bugs on Windows or Unix/Linux systems to the developers.
 
@@ -28,11 +28,11 @@ FALCO was written primarily on the MacOS operating system and tested on Windows 
 * Installation Instructions *
 %----------------------------------------------------------------------------------%
 
-1) Install the PROPER optical propagation library from https://sourceforge.net/projects/proper-library/ in the folder “PROPER”. 
+1) Install the PROPER optical propagation library from https://sourceforge.net/projects/proper-library/ in the folder “lib/PROPER”. 
 
-2) (Optional) Install CVX from cvxr.com in the folder “cvx”. If you install CVX elsewhere, you will need to add the actual path of the “cvx” folder to the file “pathdef.m” that defines your Matlab path. (To find your pathdef.m file, type “which pathdef” at the Matlab command prompt.) Perform the CVX installation instructions listed on the cvxd.com website.
+2) All other file paths should be known internally in the “FALCO” folder. Try running as-is one of the template files (starting with "TEMPLATE_") in the folder “main”. If it works, then all the file paths are set correctly.
 
-3) All other file paths should be known internally in the “FALCO” folder. Try running one of the files in the folder “run_templates” as is. If it works, then all the file paths are set correctly.
+3) (Optional, and not recommended until the constrained EFC controller is tested and characterized further.) Install CVX from cvxr.com in the folder “cvx”. If you install CVX elsewhere, you will need to add the actual path of the “cvx” folder to the file “pathdef.m” that defines your Matlab path. (To find your pathdef.m file, type “which pathdef” at the Matlab command prompt.) Perform the CVX installation instructions listed on the cvxd.com website. Note that the professional version of CVX with Gurobi is required; all the free solvers are too slow.
 
 %----------------------------------------------------------------------------------%
 *  *
