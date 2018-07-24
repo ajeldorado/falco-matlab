@@ -56,7 +56,7 @@ mp.d_dm1_dm2 = 1; % distance between Xinetics DM1 and DM2 (meters). MULTIPLY BY 
 
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 700e-9; % central wavelength of bandpass (meters)
-mp.fracBW = 0.125; %0.01 % fractional bandwidth of correction (Delta lambda / lambda)
+mp.fracBW = 0.10; %0.01 % fractional bandwidth of correction (Delta lambda / lambda)
 mp.Nsbp = 4; %1; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 

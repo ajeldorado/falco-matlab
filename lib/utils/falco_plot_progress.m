@@ -8,7 +8,7 @@ function handles = falco_plot_progress(handles,mp,Itr,contrast_bandavg,ImBandAvg
 
 
 if(mp.flagPlot)
-    fig_size = [100          60        1500         900];
+    fig_size = [100          100        1200         800];
 
     if(Itr>1)
         delete(handles.tb1)
@@ -48,7 +48,8 @@ if(mp.flagPlot)
     ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
     set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
     ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',20,'Interpreter','LaTex');
-    title(sprintf('PSF, NI=%.2e',contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
+    title('Stellar PSF','Fontsize',20,'Fontweight','Bold');
+%     title(sprintf('PSF, NI=%.2e',contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
 %       title(sprintf('PSF at Iter=%03d,   NI=%.2e',Itr,contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
 
 

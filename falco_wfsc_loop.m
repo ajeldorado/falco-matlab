@@ -65,10 +65,10 @@ if(any(DM.dm_ind==2)); DM2S_array = single(zeros(DM.dm2.compact.Ndm,DM.dm2.compa
 %% Take initial broadband images
 EfieldCorrTrue = zeros(length(mp.F4.compact.corr.inds),mp.Nttlam,mp.Nitr+1); % (Simulation only) Vectorized true starlight E-field at each pixel and wavelength
 
-if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
+if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis xy equal tight; axis off; colormap gray; title('pupil'); drawnow; end
 
-if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis image; colorbar; title('Lyot stop');drawnow; end;
-if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end;
+if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis xy equal tight; axis off; colormap gray; title('Lyot stop');drawnow; end
+if(mp.flagPlot && isfield(mp.P3.full,'mask')); figure(103); imagesc(mp.P3.full.mask); axis xy equal tight; axis off; colormap gray; title('Apodizer'); drawnow; end
 
 %% Take initial broadband image 
 
