@@ -36,16 +36,12 @@ function jacStruct = model_Jacobian(mp, DM)
     if(any(DM.dm_ind==1)); DM.dm1.compact.surfM = falco_gen_dm_surf(DM.dm1, DM.dm1.compact.dx,DM.dm1.compact.NdmPad); else; DM.dm1.compact.surfM = zeros(2); end
     if(any(DM.dm_ind==2)); DM.dm2.compact.surfM = falco_gen_dm_surf(DM.dm2, DM.dm2.compact.dx,DM.dm2.compact.NdmPad); else; DM.dm2.compact.surfM = zeros(2); end
 
+    fprintf('Computing control Jacobian matrices ... \n'); tic
 
     if(mp.flagGPU) %--GPU computations
-        
-        fprintf('Computing control Jacobian matrices ... \n'); tic
-        
+
         jacStruct = model_Jacobian_middle_layer_GPU(mp, DM);
-        
-        fprintf('...done.  Time = %.2f\n',toc);
-        
-        
+
         
     else %--CPU computations
         
@@ -57,7 +53,6 @@ function jacStruct = model_Jacobian(mp, DM)
         vals_list = allcomb(1:mp.Nttlam,DM.dm_ind).'; %--dimensions: [2 x length(mp.Nttlam)*length(DM.dm_ind) ]
         Nvals = size(vals_list,2);
     
-        fprintf('Computing control Jacobian matrices ... \n'); tic
 
         %--Parallel/distributed computing
         if(mp.flagParfor) 
