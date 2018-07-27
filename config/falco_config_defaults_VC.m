@@ -43,7 +43,10 @@ mp.F4.full.dummy = 1;
 mp.F4.corr.dummy = 1;
 mp.F4.score.dummy = 1;
 
-
+%% No plotting if not requested
+if(isfield(mp,'flagPlot')==false) % flag to plot PSF correction in real time
+    mp.flagPlot = false; 
+end
 %%
 %%--Record Keeping
 if(isfield(mp,'SeriesNum')==false); mp.SeriesNum = 867; end %--Use the same Series # for sets of similar trials.

@@ -29,14 +29,14 @@ if(mp.flagPlot)
     set(h_text,'position',ax1); % Manually setting this holds the position with colorbar 
     subplot(2,2,1); 
     axis off
-%     ht1 = text(0.05,0.9,sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',35);
-%     ht2 = text(0.05,0.5,sprintf('NI = %.2e',contrast_bandavg(Itr)),'Fontsize',35);
-%     ht3 = text(0.05,0.1,sprintf('T_{core} = %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',35);
-    handles.tb1 = text(0.05,0.9,sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',35);
-%     handles.tb1 = text(0.05,0.9,sprintf('%s, %d%% BW',mp.coro,round(100*mp.fracBW)),'Fontsize',35);
-    handles.tb2 = text(0.05,0.65,sprintf('%d%% BW @ %dnm',round(100*mp.fracBW),round(mp.lambda0*1e9)),'Fontsize',35);
-    handles.tb3 = text(0.05,0.35,sprintf('I_{norm} = %.2e',contrast_bandavg(Itr)),'Fontsize',35);
-    handles.tb4 = text(0.05,0.05,sprintf('T_{core} =   %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',35);
+%     ht1 = text(0.10,0.9,sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',24);
+%     ht2 = text(0.10,0.5,sprintf('NI = %.2e',contrast_bandavg(Itr)),'Fontsize',24);
+%     ht3 = text(0.10,0.1,sprintf('T_{core} = %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',24);
+    handles.tb1 = text(0.10,0.9,sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',24);
+%     handles.tb1 = text(0.10,0.9,sprintf('%s, %d%% BW',mp.coro,round(100*mp.fracBW)),'Fontsize',24);
+    handles.tb2 = text(0.10,0.65,sprintf('%d%% BW @ %dnm',round(100*mp.fracBW),round(mp.lambda0*1e9)),'Fontsize',24);
+    handles.tb3 = text(0.10,0.35,sprintf('I_{norm} = %.2e',contrast_bandavg(Itr)),'Fontsize',24);
+    handles.tb4 = text(0.10,0.05,sprintf('T_{core} =   %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',24);
 
     h_psf = subplot(2,2,2); % Save the handle of the subplot
     ax2=get(h_psf,'position'); % Save the position as ax

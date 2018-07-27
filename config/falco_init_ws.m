@@ -9,7 +9,7 @@
 %
 % Created by A.J. Riggs on 2017-10-31.
 
-function [mp,cp,ep,DM,folders] = falco_init_ws(fn_config, flagPlot)
+function [mp,cp,ep,DM,folders] = falco_init_ws(fn_config, varargin)
 
 %% File Paths
 %(Defined such that the entire folder can be downloaded anywhere and run without a problem)
@@ -29,7 +29,7 @@ folders.DoesNotSync = [mainPath filesep 'DoesNotSync' filesep]; % For extraneous
 
 %% Read inputs as structures from a .mat config file
 load(fn_config);
-mp.flagPlot = flagPlot;
+% mp.flagPlot = flagPlot;
 
 disp(['DM 1-2 Fresnel number = ',num2str((mp.P2.D/2)^2/(mp.d_dm1_dm2*mp.lambda0))]);
 
@@ -666,6 +666,7 @@ end
 
 %% Sampling/Resolution and Scoring/Correction Masks for 2nd Focal Plane
 
+
 mp.F4.compact.dxi = mp.fl*mp.lambda0/mp.P4.D/mp.F4.compact.res;
 mp.F4.compact.deta = mp.F4.compact.dxi;       
 
@@ -742,6 +743,9 @@ mp.F4.compact.Neta = size(mp.F4.compact.score.mask,1);
 mp.F4.full.Nxi  = size(mp.F4.full.score.mask,2);
 mp.F4.full.Neta = size(mp.F4.full.score.mask,1); 
 
+
+mp.F4.compact.Ncorr = length(mp.F4.compact.corr.inds);
+mp.F4.full.Ncorr = length(mp.F4.full.corr.inds);
 
 %% --Spatial weighting of pixel intensity (compac model only since for control)
 [XISLAMD,ETASLAMD] = meshgrid(mp.F4.compact.xisDL, mp.F4.compact.etasDL);

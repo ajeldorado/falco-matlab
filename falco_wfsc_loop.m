@@ -22,9 +22,6 @@
 
 function [] = falco_wfsc_loop(fn_config,varargin)
 
-% Set default values of input parameters
-mp.flagPlot = false; % flag to plot PSF correction in real time
-
 %--Enable different arguments values by using varargin
 icav = 0;                     % index in cell array varargin
 while icav < size(varargin, 2)
@@ -37,10 +34,9 @@ while icav < size(varargin, 2)
           
     end
 end
-
 %% Get configuration data from a function file
 
-[mp,cp,ep,DM,folders] = falco_init_ws(fn_config,mp.flagPlot);
+[mp,cp,ep,DM,folders] = falco_init_ws(fn_config);
 
 %%
 % G_mat_fname = sprintf(
@@ -63,12 +59,12 @@ if(any(DM.dm_ind==1)); DM1S_array = single(zeros(DM.dm1.compact.Ndm,DM.dm1.compa
 if(any(DM.dm_ind==2)); DM2S_array = single(zeros(DM.dm2.compact.Ndm,DM.dm2.compact.Ndm,mp.Nitr+1)); else; DM2S_array = zeros(2,2,mp.Nitr+1); end
 
 %% Take initial broadband images
-EfieldCorrTrue = zeros(length(mp.F4.compact.corr.inds),mp.Nttlam,mp.Nitr+1); % (Simulation only) Vectorized true starlight E-field at each pixel and wavelength
+EfieldCorrTrue = zeros(mp.F4.compact.Ncorr,mp.Nttlam,mp.Nitr+1); % (Simulation only) Vectorized true starlight E-field at each pixel and wavelength
 
 if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis xy equal tight; axis off; colormap gray; title('pupil'); drawnow; end
 
 if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis xy equal tight; axis off; colormap gray; title('Lyot stop');drawnow; end
-if(mp.flagPlot && isfield(mp.P3.full,'mask')); figure(103); imagesc(mp.P3.full.mask); axis xy equal tight; axis off; colormap gray; title('Apodizer'); drawnow; end
+% if(mp.flagPlot && isfield(mp.P3.full,'mask')); figure(103); imagesc(mp.P3.full.mask); axis xy equal tight; axis off; colormap gray; title('Apodizer'); drawnow; end
 
 %% Take initial broadband image 
 
@@ -117,16 +113,14 @@ mp = falco_get_PSF_norm_factor(mp, DM);
 %------------------
 
 % Relinearize about the DMs only at the iteration numbers in mp.relinItrVec.
-if(any(mp.relinItrVec==Itr))
+if( (Itr==1) || any(mp.relinItrVec==Itr) )
     flagRelin=true;
 else
     flagRelin=false;
 end
 
 %--Calculate (or re-calculate) the control Jacobian for each DM.
-%    Relinearize about the DMs only at the iteration numbers in mp.relinItrVec.
-% if( (Itr==1 && flagCalcJac==1) || (flagRelin==1 && Itr>1) )
-if( (Itr==1) || (flagRelin==true) )
+if(flagRelin)
     
     modvar.flagCalcJac = true; 
     modvar.wpsbpIndex = mp.wi_ref;
@@ -134,8 +128,10 @@ if( (Itr==1) || (flagRelin==true) )
     
     %--Re-initialize the Jacobian arrays to full size
     G1=zeros(1,1,mp.Nttlam); G2=zeros(1,1,mp.Nttlam); G3=zeros(1,1,mp.Nttlam); G4=zeros(1,1,mp.Nttlam); G5=zeros(1,1,mp.Nttlam); G6=zeros(1,1,mp.Nttlam); G7=zeros(1,1,mp.Nttlam); G8=zeros(1,1,mp.Nttlam); G9=zeros(1,1,mp.Nttlam); %--Initialize for bookkeeping in cells later 
-    if(any(DM.dm_ind==1)); G1 = zeros(length(mp.F4.compact.corr.inds),DM.dm1.NactTotal,mp.Nttlam); end % control Jacobian for DM1
-    if(any(DM.dm_ind==2)); G2 = zeros(length(mp.F4.compact.corr.inds),DM.dm2.NactTotal,mp.Nttlam); end % control Jacobian for DM2
+    if(any(DM.dm_ind==1)); G1 = zeros(mp.F4.compact.Ncorr, length(DM.dm1.act_ele), mp.Nttlam); end % control Jacobian for DM1
+    if(any(DM.dm_ind==2)); G2 = zeros(mp.F4.compact.Ncorr, length(DM.dm2.act_ele), mp.Nttlam); end % control Jacobian for DM2
+%     if(any(DM.dm_ind==1)); G1 = zeros(mp.F4.compact.Ncorr,DM.dm1.NactTotal,mp.Nttlam); end % control Jacobian for DM1
+%     if(any(DM.dm_ind==2)); G2 = zeros(mp.F4.compact.Ncorr,DM.dm2.NactTotal,mp.Nttlam); end % control Jacobian for DM2
     
 %--Compute the number of total actuators for all DMs used. 
 if(Itr==1)
@@ -165,41 +161,47 @@ if(Itr==1)
     fprintf('Weeding out weak actuators from the control Jacobian...\n'); 
     if(any(DM.dm_ind==1))
         %--Crop out very weak-effect actuators
+        G1allAct = zeros(mp.F4.compact.Ncorr,DM.dm1.NactTotal,mp.Nttlam);
+        G1allAct(:,DM.dm1.act_ele,:) = G1;
         G1intNorm = zeros(DM.dm1.Nact);
-        G1intNorm(1:end) = sum( abs(G1(:,:,1)).^2, 1);
+        G1intNorm(1:end) = sum( abs(G1allAct(:,:,1)).^2, 1);
         G1intNorm = G1intNorm/max(max(G1intNorm));
         DM.dm1.act_ele = find(G1intNorm>=10^(mp.logGmin));
+        clear G1allAct G1intNorm
         %if(mp.flagPlot); figure(81); imagesc(log10(G1int),[-6 0]); axis xy equal tight; colorbar; end
     end
-        if(any(DM.dm_ind==2))
+    
+    if(any(DM.dm_ind==2))
+        G2allAct = zeros(mp.F4.compact.Ncorr,DM.dm2.NactTotal,mp.Nttlam);
+        G2allAct(:,DM.dm2.act_ele,:) = G2;
         G2intNorm = zeros(DM.dm2.Nact);
-        G2intNorm(1:end) = sum( abs(G2(:,:,1)).^2,1);
+        G2intNorm(1:end) = sum( abs(G2allAct(:,:,1)).^2,1);
         G2intNorm = G2intNorm/max(max(G2intNorm));
         DM.dm2.act_ele = find(G2intNorm>=10^(mp.logGmin));
+        clear G2allAct G2intNorm
         %if(mp.flagPlot); figure(82); imagesc(log10(G2int),[-6 0]); axis xy equal tight; colorbar; end
-        end
-
+    end
 
     %--Update the number of elements used per DM
     if(any(DM.dm_ind==1)); DM.dm1.Nele = length(DM.dm1.act_ele); end
     if(any(DM.dm_ind==2)); DM.dm2.Nele = length(DM.dm2.act_ele); end
     DM.NelePerDMvec = [length(DM.dm1.Nele), length(DM.dm2.Nele), length(DM.dm3.Nele), length(DM.dm4.Nele), length(DM.dm5.Nele), length(DM.dm6.Nele), length(DM.dm7.Nele), length(DM.dm8.Nele), length(DM.dm9.Nele) ];
 
-    %if(tsi==1);
-        if(any(DM.dm_ind==1)); fprintf('  DM1: %d/%d (%.2f%%) actuators kept for Jacobian\n', DM.dm1.Nele, DM.dm1.NactTotal,100*DM.dm1.Nele/DM.dm1.NactTotal); end
-        if(any(DM.dm_ind==2)); fprintf('  DM2: %d/%d (%.2f%%) actuators kept for Jacobian\n', DM.dm2.Nele, DM.dm2.NactTotal,100*DM.dm2.Nele/DM.dm2.NactTotal); end
-    %end
+    %--Crop out unused actuators from the control Jacobian
+    if(any(DM.dm_ind==1)); G1 = G1(:,DM.dm1.act_ele,:); end
+    if(any(DM.dm_ind==2)); G2 = G2(:,DM.dm2.act_ele,:); end
+    
+    if(any(DM.dm_ind==1)); fprintf('  DM1: %d/%d (%.2f%%) actuators kept for Jacobian\n', DM.dm1.Nele, DM.dm1.NactTotal,100*DM.dm1.Nele/DM.dm1.NactTotal); end
+    if(any(DM.dm_ind==2)); fprintf('  DM2: %d/%d (%.2f%%) actuators kept for Jacobian\n', DM.dm2.Nele, DM.dm2.NactTotal,100*DM.dm2.Nele/DM.dm2.NactTotal); end
 end    
 
 
-%--Crop out unused actuators from the control Jacobian
-if(any(DM.dm_ind==1)); G1 = G1(:,DM.dm1.act_ele,:); end
-if(any(DM.dm_ind==2)); G2 = G2(:,DM.dm2.act_ele,:); end
-
-% Add spatially-dependent weighting to the control Jacobians
-if(any(DM.dm_ind==1)); G1 = G1.*repmat(mp.Wspatial_ele,[1,DM.dm1.Nele,mp.Nttlam]); end
-if(any(DM.dm_ind==2)); G2 = G2.*repmat(mp.Wspatial_ele,[1,DM.dm2.Nele,mp.Nttlam]); end  
-
+% Add spatially-dependent weighting to the control Jacobians. Apply
+% weights only after calculating a new Jacobian (to avoid applying over and over).
+if(flagRelin)
+    if(any(DM.dm_ind==1)); G1 = G1.*repmat(mp.Wspatial_ele,[1,DM.dm1.Nele,mp.Nttlam]); end
+    if(any(DM.dm_ind==2)); G2 = G2.*repmat(mp.Wspatial_ele,[1,DM.dm2.Nele,mp.Nttlam]); end  
+end
 fprintf('Total Jacobian Calcuation Time: %.2f\n',toc);
     
 
@@ -247,37 +249,32 @@ hProgress = falco_plot_progress(hProgress,mp,Itr,contrast_bandavg,ImBandAvg_arra
 %% MOVE THIS TO THE CONTROLLER FUNCTION
 %-----------------------------------------------------------------------------------------
 
-% switch mp.controller
-% 
-%     case{'EFC'}
+%--Compute matrices for linearized control with EFC
+GstarG_wsum = zeros(NeleAll,NeleAll);
+RealGstarEab_wsum = zeros(NeleAll, 1);
 
-        %--Compute matrices for linear control with regular EFC
-        GstarG_wsum = zeros(NeleAll,NeleAll);
-        RealGstarEab_wsum = zeros(NeleAll, 1);
-        
-        for tsi=1:mp.Nttlam
-            GallCell = {squeeze(G1(:,:,tsi)),squeeze(G2(:,:,tsi)),squeeze(G3(:,:,tsi)),squeeze(G4(:,:,tsi)),squeeze(G5(:,:,tsi)),squeeze(G6(:,:,tsi)),squeeze(G7(:,:,tsi)),squeeze(G8(:,:,tsi)),squeeze(G9(:,:,tsi))}; % Create the cell array. Placeholders for non-existent Jacobians to have consistent numbering
-            Gstack = []; %--For all DMs
-            for ii=1:numel(DM.dm_ind)
-                dm_index = DM.dm_ind(ii);
-                Gtemp = GallCell{dm_index};
-                Gstack = [Gstack, Gtemp]; % stacked control Jacobian at this wavelength and T/T setting. Dimensions: [Npix x NeleAll]
+for tsi=1:mp.Nttlam
+    GallCell = {squeeze(G1(:,:,tsi)),squeeze(G2(:,:,tsi)),squeeze(G3(:,:,tsi)),squeeze(G4(:,:,tsi)),squeeze(G5(:,:,tsi)),squeeze(G6(:,:,tsi)),squeeze(G7(:,:,tsi)),squeeze(G8(:,:,tsi)),squeeze(G9(:,:,tsi))}; % Create the cell array. Placeholders for non-existent Jacobians to have consistent numbering
+    Gstack = []; %--For all DMs
+    for ii=1:numel(DM.dm_ind)
+        dm_index = DM.dm_ind(ii);
+        Gtemp = GallCell{dm_index};
+        Gstack = [Gstack, Gtemp]; % stacked control Jacobian at this wavelength and T/T setting. Dimensions: [Npix x NeleAll]
 
-            end
-            GstarG_wsum = GstarG_wsum + mp.WttlamVec(tsi)*real(Gstack'*Gstack);
-            RealGstarEab_wsum = RealGstarEab_wsum + mp.WttlamVec(tsi)*real(Gstack'*squeeze(EfieldCorrTrue(:,tsi,Itr)));  
-        end
-        clear GallCell Gtemp Gstack Gstack12 Gstack9% save RAM
+    end
+    GstarG_wsum = GstarG_wsum + mp.WttlamVec(tsi)*real(Gstack'*Gstack);
+    RealGstarEab_wsum = RealGstarEab_wsum + mp.WttlamVec(tsi)*real(Gstack'*squeeze(EfieldCorrTrue(:,tsi,Itr)));  
+end
+clear GallCell Gtemp Gstack Gstack12 Gstack9% save RAM
 
-        %--Make the diagonal regularization matrix. (Define only the diagonal here
-        % to save RAM.)
-        %--Decide on the relative DM weighting within the controller's regularization matrix.
-        
-        EyeGstarGdiag = max(diag(GstarG_wsum))*ones(NeleAll,1);
-       
-        clear GstarG_wsum12
+%--Make the diagonal regularization matrix. (Define only the diagonal here
+% to save RAM.)
+%--Decide on the relative DM weighting within the controller's regularization matrix.
 
-% end
+EyeGstarGdiag = max(diag(GstarG_wsum))*ones(NeleAll,1);
+
+clear GstarG_wsum12
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Control Algorithm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   

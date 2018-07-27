@@ -26,6 +26,12 @@ if(~isdeployed)
   addpath(genpath(pwd)) %--To find apodizer masks and saved pupils
 end
 
+%% Special Computational Settings
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
+
+mp.flagPlot = true; %--Whether to plot figures or not
+
 %% Step 1: Define any variable values that will overwrite the defaults (in falco_config_defaults_SPLC)
 
 %%--Record Keeping
@@ -35,10 +41,6 @@ mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
 %%--WFSC Iterations and Control Matrix Relinearization
 mp.Nitr = 10; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-
-%%--Special Computational Settings
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
 
 mp.controller = 'EFC';%'conEFC';  % Controller options: 'EFC' for EFC as an empirical grid search over tuning parametrs, 'conEFC' for constrained EFC using CVX.
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
@@ -254,10 +256,5 @@ fprintf('Saved the config file: \t%s\n',fn_config)
 
 %% Part 4: Run the WFSC trial
 
-falco_wfsc_loop(fn_config,'PLOT'); %--Plot progress
-% falco_wfsc_loop(fn_config); %--Don't plot anything
-
-
-
-
+falco_wfsc_loop(fn_config);
 

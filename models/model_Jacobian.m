@@ -37,50 +37,60 @@ function jacStruct = model_Jacobian(mp, DM)
     if(any(DM.dm_ind==2)); DM.dm2.compact.surfM = falco_gen_dm_surf(DM.dm2, DM.dm2.compact.dx,DM.dm2.compact.NdmPad); else; DM.dm2.compact.surfM = zeros(2); end
 
 
-    %--Get rid of the DM.dmX.inf_datacube fields in the full model because they are HUGE and will
-    % take up way too much RAM if passed to all threads. Just pass in the one
-    % influence function that will be used.
-    if(any(DM.dm_ind==1)); G1 = zeros(length(mp.F4.compact.corr.inds),DM.dm1.NactTotal,mp.Nttlam); end % control Jacobian for DM1
-    if(any(DM.dm_ind==2)); G2 = zeros(length(mp.F4.compact.corr.inds),DM.dm2.NactTotal,mp.Nttlam); end % control Jacobian for DM2
+    if(mp.flagGPU) %--GPU computations
+        
+        fprintf('Computing control Jacobian matrices ... \n'); tic
+        
+        jacStruct = model_Jacobian_middle_layer_GPU(mp, DM);
+        
+        fprintf('...done.  Time = %.2f\n',toc);
+        
+        
+        
+    else %--CPU computations
+        
+        %--Initialize the Jacobians
+        if(any(DM.dm_ind==1)); G1 = zeros(length(mp.F4.compact.corr.inds), length(DM.dm1.act_ele), mp.Nttlam); end % control Jacobian for DM1
+        if(any(DM.dm_ind==2)); G2 = zeros(length(mp.F4.compact.corr.inds), length(DM.dm2.act_ele), mp.Nttlam); end % control Jacobian for DM2
 
+        %--Loop over the possible combinations of 1) tip/tilt-offsets, 2) sub-bandpasses, and 3) DM number (either with parfor or for)
+        vals_list = allcomb(1:mp.Nttlam,DM.dm_ind).'; %--dimensions: [2 x length(mp.Nttlam)*length(DM.dm_ind) ]
+        Nvals = size(vals_list,2);
+    
+        fprintf('Computing control Jacobian matrices ... \n'); tic
 
-    %--Loop over the possible combinations of 1) tip/tilt-offsets, 2) sub-bandpasses, and 3) DM number 
-    %   (either with parfor or for)
-    fprintf('Computing control Jacobian matrices ... \n'); tic
-    vals_list = allcomb(1:mp.Nttlam,DM.dm_ind).'; %--dimensions: [2 x length(mp.Nttlam)*length(DM.dm_ind) ]
-    Nvals = size(vals_list,2);
+        %--Parallel/distributed computing
+        if(mp.flagParfor) 
+            parfor ii=1:Nvals
+                Jtemp{ii} = model_Jacobian_middle_layer(mp, DM, vals_list, ii);
+            end
 
-    %--Parallel/distributed computing
-    if(mp.flagParfor) 
-        parfor ii=1:Nvals
-            Jtemp{ii} = model_Jacobian_middle_layer(mp, DM, vals_list, ii);
-        end
+        %--Regular computing    
+        else 
+            % fprintf('Jacobian Mode: ');
+            for ii=1:Nvals
+                tsi = vals_list(1,ii); %--index for tip-tilt-wavelength mode
+                whichDM = vals_list(2,ii); %--number of the specified DM
+                fprintf('Mode%dDM%d ',tsi,whichDM)
+                Jtemp{ii} = model_Jacobian_middle_layer(mp, DM, vals_list, ii);
+            end
+            fprintf('\n')
+        end    
 
-    %--Regular computing    
-    else 
-        % fprintf('Jacobian Mode: ');
+        %--Re-organize the output Jacobians to the format wanted
         for ii=1:Nvals
             tsi = vals_list(1,ii); %--index for tip-tilt-wavelength mode
             whichDM = vals_list(2,ii); %--number of the specified DM
-            fprintf('Mode%dDM%d ',tsi,whichDM)
-            Jtemp{ii} = model_Jacobian_middle_layer(mp, DM, vals_list, ii);
+
+            if(whichDM==1); G1(:,:,tsi) =  Jtemp{ii};  end
+            if(whichDM==2); G2(:,:,tsi) =  Jtemp{ii};  end
         end
-        fprintf('\n')
-    end    
+        clear Jtemp
 
+        if(any(DM.dm_ind==1)); jacStruct.G1 = G1; end
+        if(any(DM.dm_ind==2)); jacStruct.G2 = G2; end
 
-    %--Re-organize the structure
-    for ii=1:Nvals
-        tsi = vals_list(1,ii); %--index for tip-tilt-wavelength mode
-        whichDM = vals_list(2,ii); %--number of the specified DM
-
-        if(whichDM==1); G1(:,:,tsi) =  Jtemp{ii};  end
-        if(whichDM==2); G2(:,:,tsi) =  Jtemp{ii};  end
     end
-    clear Jtemp
-
-    if(any(DM.dm_ind==1)); jacStruct.G1 = G1; end
-    if(any(DM.dm_ind==2)); jacStruct.G2 = G2; end
 
     fprintf('...done.  Time = %.2f\n',toc);
 

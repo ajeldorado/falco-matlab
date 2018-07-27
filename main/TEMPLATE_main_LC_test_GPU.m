@@ -5,12 +5,12 @@
 % -------------------------------------------------------------------------
 %
 %--Script to:
-%  1) Specify the key parameter values for a shaped pupil Lyot coronagraph.
+%  1) Specify the key parameter values for a hybrid Lyot coronagraph.
 %  2) Load the rest of the default settings.
 %  3) Save out all the input parameters.
 %  4) Run a single trial of WFSC using FALCO.
 %
-% Modified on 2018-03-27 by A.J. Riggs from AVC to SPLC.
+% Modified on 2018-03-27 by A.J. Riggs from VC to LC.
 % Modified on 2018-03-22 by A.J. Riggs to have default values that can be
 %   overwritten if the variable is already defined in falco_config_defaults_AVC.m.
 % Modified on 2018-03-01 by Garreth Ruane and A.J. Riggs to be for a vortex coronagraph.
@@ -28,14 +28,16 @@ end
 
 %% Special Computational Settings
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
+% mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
+mp.flagGPU = true; %--New by A.J. to use different grouping of code for Jacobian model.
 
+%--Plotting
 mp.flagPlot = true; %--Whether to plot figures or not
 
 %% Step 1: Define any variable values that will overwrite the defaults (in falco_config_defaults_SPLC)
 
 %%--Record Keeping
-mp.TrialNum = 1; %--Always use a diffrent Trial # for different calls of FALCO.
+mp.TrialNum = 123; %--Always use a diffrent Trial # for different calls of FALCO.
 mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
 
 %%--WFSC Iterations and Control Matrix Relinearization
@@ -46,17 +48,16 @@ mp.controller = 'EFC';%'conEFC';  % Controller options: 'EFC' for EFC as an empi
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
 %%--Coronagraph and Pupil Type
-mp.coro = 'SPLC';   %--Tested Options: 'Vortex','LC','SPLC'
-mp.whichPupil = 'LUVOIRA5'; %--Tested options: 'WFIRST_onaxis', 'WFIRST20180103','LUVOIRA5'
-mp.flagApod = true;
-mp.SPname = 'luvoirA5bw10';  %--Shaped pupil identifier. Current options: '32WA194','31WA220', 'luvoirA5bw10'
+mp.coro = 'LC';   %--Tested Options: 'LC','SPLC','Vortex'
+mp.flagApod = false;
+mp.whichPupil = 'WFIRST20180103';%'WFIRST_onaxis';
 
 %%--Pupil Plane and DM Plane Properties
 mp.d_P2_dm1 = 0; % distance (along +z axis) from P2 pupil to DM1 (meters)
-mp.d_dm1_dm2 = 3; % distance between DM1 and DM2 (meters)
+mp.d_dm1_dm2 = 1; % distance between DM1 and DM2 (meters)
 
 %%--Bandwidth and Wavelength Specs
-mp.lambda0 = 500e-9; % central wavelength of bandpass (meters)
+mp.lambda0 = 575e-9; % central wavelength of bandpass (meters)
 mp.fracBW = 0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
 mp.Nsbp = 1; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
@@ -67,16 +68,16 @@ switch mp.whichPupil
     case 'Simple' % Can be used to create circular and annular apertures with radial spiders 
         
         mp.P1.D = 4; %--meters, diameter of telescope (This is like HabEx A)
-        mp.P1.full.Nbeam = 250; 
+        mp.P1.full.Nbeam = 500; 
         mp.P4.full.Nbeam = mp.P1.full.Nbeam; % P4 must be the same as P1 for Vortex. 
-        mp.P1.compact.Nbeam = 250;
+        mp.P1.compact.Nbeam = 350;
         mp.P4.compact.Nbeam = mp.P1.compact.Nbeam; % P4 must be the same as P1 for Vortex. 
         
-        mp.P1.IDnorm = 0;% Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
+        mp.P1.IDnorm = 0.32;% Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
         mp.P1.ODnorm = 1;% Outer diameter (fraction of Nbeam) 
         
-        mp.P4.IDnorm = 0;% Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
-        mp.P4.ODnorm = 0.95;% Outer diameter (fraction of Nbeam) 
+        mp.P4.IDnorm = 0.50;% Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
+        mp.P4.ODnorm = 0.80;% Outer diameter (fraction of Nbeam) 
         
         mp.P1.num_strut = 0;% Number of struts 
         mp.P1.strut_angs = [];%Array of angles of the radial struts (deg)
@@ -85,6 +86,29 @@ switch mp.whichPupil
         mp.P4.num_strut = 0;% Number of struts 
         mp.P4.strut_angs = [];%Array of angles of the radial struts (deg)
         mp.P4.strut_width = []; % Width of the struts (fraction of pupil diam.)
+        
+    case{'WFIRST20180103'}
+        mp.P1.D = 2.3631; %--meters, diameter of telescope (used only for mas to lambda/D conversion)
+        mp.LS_strut_width = 3.8/100.; % nominal pupil's value is 76mm = 3.216%
+        
+        mp.P1.full.Nbeam = 324; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
+        mp.P1.compact.Nbeam = 324;
+        
+        %--Lyot Stop parameters
+        mp.P4.IDnorm = 0.50;
+        mp.P4.ODnorm = 0.80;
+        
+    case 'WFIRST_onaxis'
+        mp.P1.D = 2.3631; %--meters, diameter of telescope (used only for mas to lambda/D conversion)
+        mp.pup_strut_width = 2.61/100;%3.2126/100.; %--0.0261  is nominal from 2014 on-axis (in pupil diameters)
+        mp.LS_strut_width = 3.0/100;%3.8/100.; % nominal pupil's value is 76mm = 3.216%
+
+        mp.P1.full.Nbeam = 324; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
+        mp.P1.compact.Nbeam = 324;
+        
+        %--Lyot Stop parameters
+        mp.P4.IDnorm = 0.50;
+        mp.P4.ODnorm = 0.80;
       
     case{'LUVOIRA5'}  % Note:  Nbeam needs to be >~500 to properly resolve segment gaps 
         mp.P1.D = 15.2; %14.9760; %--meters, circumscribing diameter of telescope (used only for mas-to-lambda/D conversion)
@@ -92,6 +116,10 @@ switch mp.whichPupil
         
         mp.P1.full.Nbeam = 500;%1000;%1000; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
         mp.P1.compact.Nbeam = 250;%400;%300;%400;
+        
+        %--Lyot Stop parameters
+        mp.P4.IDnorm = 0.40;
+        mp.P4.ODnorm = 0.80;
         
     case 'LUVOIR_B_offaxis' % Note:  Nbeam needs to be >~500 to properly resolve segment gaps 
         mp.P1.D = 7.989; %--meters, circumscribed. The segment size is 0.955 m, flat-to-flat, and the gaps are 6 mm.
@@ -111,48 +139,39 @@ switch mp.whichPupil
 end
 
 %%--DMs
-DM.dm_ind = [1 2]; % vector of which DMs to use for control.
+DM.dm_ind = [1 2 ]; % vector of which DMs to use for control.
 mp.P2.D =     46.3e-3; % beam diameter at pupil closest to the DMs  (meters)
 DM.dm1.Nact = 48; % number of actuators across DM1
 DM.dm2.Nact = 48; % number of actuators across DM2
-DM.dm_weights = ones(9,1);   % vector of relative weighting of DMs for EFC
-
 
 
 
 % %%--Controller Settings
-% 
+% mp.controller = 'conEFC';%'EFC';  % options: 'EFC' for EFC (as an Empirical Grid Search over tuning parametrs), 'conEFC' for constrained EFC using CVX.
 % switch mp.controller
 %     case{'EFC'} % 'EFC' = empirical grid search over both overall scaling coefficient and Lagrange multiplier
 %         % Take images for different Lagrange multiplier values and overall command gains and pick the value pair that gives the best contrast
-%         cp.muVec = 10.^(6:-1:1);
-%         cp.dmfacVec = 1;%[0.7, 1]; %[0.5, 1, 2];
-%         DM.maxAbsdV = 30; %--Max +/- delta voltage step for each actuator for DMs 1,2, and/or 3
+%         cp.muVec = 10.^(5:-1:1);
+%         cp.dmfacVec = [0.7, 1]; %[0.5, 1, 2];
 %         
 %     case{'conEFC'} %--Constrained EFC, written by He Sun of Princeton University
-%         DM.dm1.dVpvMax = 40;
-%         DM.dm2.dVpvMax = 40;
+%         DM.dm1.dVpvMax = 30;
+%         DM.dm2.dVpvMax = 30;
 %         cp.dmfacVec = 1;
 % end
-% 
 % %--Voltage range restrictions
 % DM.dm1.maxAbsV = 250./2.;
 % DM.dm2.maxAbsV = 250./2.;
+% 
 % 
 % %%--Tip/Tilt Control
 % mp.NlamForTT = 1; %--Number of wavelengths to control  tip/tilt at. 0,1, 2, 3, or inf (for all)
 % mp.Ntt = 1; %--Number of tip/tilt offsets, including 0 (so always set >=1). 1, 4, or 5
 % mp.TToffset = 1; %--tip/tilt offset (mas)
-    
 
 
 
 
-
-%% Coronagraphic Mask Properties:
-
-% mp.flagDM1stop = false; %--logical flag whether to include the stop at DM1 or not
-% mp.flagDM2stop = false; %--logical flag whether to include the stop at DM2 or not
 
 
 %% Final Focal Plane (F4) Properties
@@ -217,16 +236,13 @@ DM.dm_weights = ones(9,1);   % vector of relative weighting of DMs for EFC
 
 
 
-
-
-
 %% Part 2: Call the function to define the rest of the variables and initialize the workspace
 if(exist('mp','var')==false); mp.dummy = 1; end
 if(exist('cp','var')==false); cp.dummy = 1; end
 if(exist('ep','var')==false); ep.dummy = 1; end
 if(exist('DM','var')==false); DM.dummy = 1; end
 
-[mp,cp,ep,DM] = falco_config_defaults_SPLC(mp,cp,ep,DM); %--Load values
+[mp,cp,ep,DM] = falco_config_defaults_LC(mp,cp,ep,DM); %--Load defaults for undefined values
 
 
 %% Part 3: Save the config file    
@@ -242,4 +258,10 @@ fprintf('Saved the config file: \t%s\n',fn_config)
 
 %% Part 4: Run the WFSC trial
 
-falco_wfsc_loop(fn_config);
+% falco_wfsc_loop(fn_config,'PLOT'); %--Plot progress
+falco_wfsc_loop(fn_config); %--Don't plot anything
+
+
+
+
+
