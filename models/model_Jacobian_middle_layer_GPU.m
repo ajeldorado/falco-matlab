@@ -148,13 +148,16 @@ end
     if(any(DM.dm_ind==2)); gv.flagDM2 = true; else; gv.flagDM2 = false; end
     
     
-    %--gv stores all variables needed in the for loop over actuators
+    %--"gv" structure stores all variables needed in the for loop over actuators
     gv.Edm1padCube = Edm1padCube; 
     gv.Edm2cube = Edm2cube; 
+    
     gv.centering = mp.centering;
     gv.sbp_center_vec = mp.sbp_center_vec;
     gv.Nttlam = mp.Nttlam;
-%     gv.sbpIndex = modvar.sbpIndex; 
+    gv.Wttlam_si = mp.Wttlam_si;
+    gv.Wttlam_ti = mp.Wttlam_ti;
+    
     gv.DM2stop = DM2stop;
     gv.DM2surf = DM2surf; 
     gv.Nbox1 = DM.dm1.compact.Nbox; 
@@ -163,12 +166,18 @@ end
     gv.NboxPad2AS = DM.dm2.compact.NboxAS; 
     gv.dm1_NdmPad = DM.dm1.compact.NdmPad;
     gv.dm2_NdmPad = DM.dm2.compact.NdmPad;
-%     gv.mirrorFac = mirrorFac; 
     
-%     gv.lambda = lambda;
-    gv.Wttlam_si = mp.Wttlam_si;
-    gv.Wttlam_ti = mp.Wttlam_ti;
-
+% %     % Move calculation of coordinate matrix, FR2shift, outside the GPU
+% %     % Need a different FR2shift matrix for each different size of "Ein" array.
+% %     M1 = gv.NboxPad1AS; 
+% %     fx = ( -M1/2:1:(M1/2-1) )/(M1*mp.P2.compact.dx);    % frequency plane coordinates, vector
+% %     [FX,FY]=meshgrid(fx); % frequency plane coordinates, matrices
+% %     gv.dm1_FR2shift = fftshift(FX.^2+FY.^2); % fftshifted quadratic phase factor
+% %     M2 = gv.NboxPad2AS; 
+% %     fx = ( -M2/2:1:(M2/2-1) )/(M2*mp.P2.compact.dx);    % frequency plane coordinates, vector
+% %     [FX,FY]=meshgrid(fx); % frequency plane coordinates, matrices
+% %     gv.dm2_FR2shift = fftshift(FX.^2+FY.^2); % fftshifted quadratic phase factor
+  
     gv.NactTotal1 = DM.dm1.NactTotal;
     gv.NactTotal2 = DM.dm2.NactTotal;
     gv.NactUsed1 = length(DM.dm1.act_ele);

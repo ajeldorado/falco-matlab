@@ -65,8 +65,8 @@ for imode = 1:gv.Nttlam
 
             %--Propagate from DM1 to DM2, and then back to P2
             dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(gv.VtoH1(iact)*gv.inf_datacube1(:,:,iact),gv.NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
-            dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),gv.P2_dx*gv.NboxPad1AS,lambda,gv.d_dm1_dm2); % forward propagate to DM2 and apply DM2 E-field
-            dEP2box = propcustom_PTP(dEbox.*gv.DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*gv.DM2surf(y_box_AS_ind,x_box_AS_ind)),gv.P2_dx*gv.NboxPad1AS,lambda,-1*(gv.d_dm1_dm2 + gv.d_P2_dm1) ); % back-propagate to DM1
+            dEbox = propcustom_PTP_for_GPU(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind), gv.NboxPad1AS, gv.P2_dx,lambda,gv.d_dm1_dm2); % forward propagate to DM2 and apply DM2 E-field
+            dEP2box = propcustom_PTP_for_GPU(dEbox.*gv.DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*gv.DM2surf(y_box_AS_ind,x_box_AS_ind)), gv.NboxPad1AS, gv.P2_dx,lambda,-1*(gv.d_dm1_dm2 + gv.d_P2_dm1) ); % back-propagate to DM1
             dEP2box = padOrCropEven(dEP2box,gv.Nbox1); %--Crop down from the array size that is a power of 2 to make the MFT faster
 
             %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
@@ -125,7 +125,7 @@ for imode = 1:gv.Nttlam
             y_box_AS_ind = gv.xy_box_lowerLeft_AS_dm2(2,iact):gv.xy_box_lowerLeft_AS_dm2(2,iact)+gv.NboxPad2AS-1; % y-indices in pupil arrays for the box
 
             dEbox = gv.VtoH2(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(gv.inf_datacube2(:,:,iact),gv.NboxPad2AS); %--the padded influence function at DM2
-            dEP2box = propcustom_PTP(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),gv.P2_dx*gv.NboxPad2AS,lambda,-1*(gv.d_dm1_dm2 + gv.d_P2_dm1) ); % back-propagate to pupil P2
+            dEP2box = propcustom_PTP_for_GPU(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind), gv.NboxPad2AS, gv.P2_dx,lambda,-1*(gv.d_dm1_dm2 + gv.d_P2_dm1) ); % back-propagate to pupil P2
             dEP2box = padOrCropEven(dEP2box,gv.Nbox2); %--Crop down from the array size that is a power of 2 to make the MFT faster
 
             %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
