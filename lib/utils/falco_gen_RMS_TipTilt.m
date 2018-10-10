@@ -12,7 +12,7 @@
 % TTrms:    RMS tip/tilt value, in milliarcseconds
 % Dstar:    stellar angular diameter, in milliarcseconds
 % Dtel:     diameter of the telescope, in meters (used for conversion from mas to lambda0/D)
-% lambda_center:    center wavelength, in meters (used for conversion from mas to lambda0/D)
+% lambda:    center wavelength, in meters (used for conversion from mas to lambda0/D)
 % 'Nacross',value:  (optional, needs keyword) Number of points across the 2-D weight array (want as odd number)
 % 'Rfac',value:     Zero out weights outside this cutoff radius
 % 'upsampFac',value: Upsampling factor for computing the resolution at
@@ -21,7 +21,7 @@
 %--OUTPUTS:
 % xsTT:  Vector of x-coordinates for the jitter weights, in lambda0/D
 % ysTT:  Vector of y-coordinates for the jitter weights, in lambda0/D
-% wsTT:  Vector of x-coordinates for the jitter weights, in lambda0/D
+% wsTT:  Vector of jitter weights (the sum of the weights is one)
 %
 %--REVISION HISTORY: 
 % Created by A.J. Riggs on 2017-11-01.
@@ -30,13 +30,21 @@
 % [rmsTT_x_vec,rmsTT_y_vec,rmsTT_w_vec] = falco_gen_RMS_TipTilt(TTrms,Dstar,Dtel,lambda0,'Nacross',7,'Rfac',3,'upsampFac',256)
 
 
-function [xsTT,ysTT,wsTT] = falco_gen_RMS_TipTilt(TTrms,Dstar,Dtel,lambda_center,varargin)
+function [xsTT,ysTT,wsTT] = falco_gen_RMS_TipTilt(TTrms,Dstar,Dtel,lambda,varargin)
+
+if(TTrms==0 && Dstar==0)
+    xsTT = 0;
+    ysTT = 0;
+    wsTT = 1;
+else
 
 % Set default values of input parameters
 %  7,3 is good for real evaluation (29 points), and 5,2 is good for quicker real-time evaluation (13 points)
 Nacross = 7; %--Number of points across the 2-D weight array (want as odd number)
 Rfac = 3;% 3; %--Zero out weights outside this cutoff radius.    
 upsampFac = 256;
+
+flagBigD = TTrms<0.25*Dstar;  % Case 1: Stellar diameter dominates
 
 icav = 0;                     % index in cell array varargin
 while icav < size(varargin, 2)
@@ -57,13 +65,24 @@ icav = icav + 1;
 end
 
   
-mas2lam0D = 1/(lambda_center/Dtel*180/pi*3600*1000);
-
+mas2lam0D = 1/(lambda/Dtel*180/pi*3600*1000);
 NacrossHD = Nacross*upsampFac;
+
 
 %--Coordinates (high-res for the convolution, and low-res for the output)
 %  Coordinates are pixel-centered on an odd-sized array.
-dx = TTrms;
+
+if(flagBigD) % Case 1: Stellar diameter dominates
+    if(mod(Nacross,2)==1)
+        dx = Dstar/(Nacross-1);
+    else
+        dx = Dstar/Nacross;
+    end
+else
+    dx = TTrms; % Case 2: RMS pointing jitter dominates
+end
+
+
 xs = (-(Nacross-1)/2:1:(Nacross-1)/2)*dx;
 xsHD = (-(NacrossHD-1)/2:1:(NacrossHD-1)/2)*(dx/upsampFac);
 
@@ -88,16 +107,29 @@ end
 
 
 mask = ones(Nacross);
-mask(RS > Rfac*TTrms) = 0;
+if(flagBigD) 
+    mask(RS > 1.2*Dstar/2) = 0; % Case 1: Stellar diameter dominates
+else
+    mask(RS > Rfac*TTrms) = 0; % Case 2: RMS pointing jitter dominates
+end
+
+
 %     figure(301); imagesc(xs,xs,mask);
 j_ele = find(mask==1);
 Njitter = sum(sum(mask));
 
-jw_mat_hd = exp(-1/2*(RShd/TTrms).^2);
+jw_mat_hd = exp(-1/2*(RShd/TTrms).^2); %--Matrix of jitter weights (jw)
 % figure(93); imagesc(xsHD,xsHD,jw_mat_hd); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 
 %--Convolve Gaussian for the jitter with the disk for stellar angular size. (Both at high-res.)
-jw_mat_hd_sas = ifftshift(ifft2( fft2(fftshift(jw_mat_hd)).*fft2(fftshift(stellar_disk_hd)) ));
+if(Dstar==0)
+    jw_mat_hd_sas = jw_mat_hd;
+elseif(TTrms==0)
+    jw_mat_hd_sas = stellar_disk_hd;
+else
+    jw_mat_hd_sas = ifftshift(ifft2( fft2(fftshift(jw_mat_hd)).*fft2(fftshift(stellar_disk_hd)) ));
+end
+
 % figure(94); imagesc(xsHD,xsHD,jw_mat_hd_sas); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 %figure(95); imagesc(xsHD,xsHD,jw_mat_hd_sas-jw_mat_hd); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 
@@ -115,11 +147,12 @@ jw_mat = jw_mat/max(jw_mat(:));
 jw_mat = jw_mat.*mask;
 jw_mat = jw_mat/sum(sum(jw_mat));
 
-wsTT = jw_mat(j_ele); %--Vector of jitter weights
-xsTT = mas2lam0D*JXS(j_ele); %--Vector of x-coordinates for the jitter weights, in lambda0/D
-ysTT = mas2lam0D*JYS(j_ele); %--Vector of y-coordinates for the jitter weights, in lambda0/D
+wsTT = jw_mat(j_ele).'; %--Vector of jitter weights
+xsTT = mas2lam0D*JXS(j_ele).'; %--Vector of x-coordinates for the jitter weights, in lambda0/D
+ysTT = mas2lam0D*JYS(j_ele).'; %--Vector of y-coordinates for the jitter weights, in lambda0/D
 % figure(303); imagesc(xs,xs,jw_mat); colorbar; 
-
+ 
+end
 
 end %--END OF FUNCTION
 

@@ -11,6 +11,7 @@
 %  -The inner spot has a specifyable amplitude value.
 %  -The output array is the smallest size that fully contains the mask.
 %
+% Corrected on 2018-08-16 by A.J. Riggs to compute 'beam_diam_fraction' correctly.
 % Modified by A.J. Riggs on 2017-10-25 from a file to generate a pupil 
 %   to a file that generates an FPM. 
 % Modified by A.J. Riggs on 2017-02-09 to be a function with specifyable
@@ -31,15 +32,6 @@
 
 function mask = falco_gen_annular_FPM(inputs,varargin)
 
-% %--DEBUGGING ONLY: HARD-CODED INPUTS
-% clear
-% addpath ~/Repos/FALCO/proper_v3.0.1_matlab_22aug17/
-% inputs.pixresFPM = 6; %--pixels per lambda_c/D
-% inputs.rhoInner = 2.8; % radius of inner FPM amplitude spot (in lambda_c/D)
-% inputs.rhoOuter = 10; % radius of outer opaque FPM ring (in lambda_c/D)
-% inputs.FPMampFac = 0.4; % amplitude transmission of inner FPM spot
-% inputs.centering = 'pixel';
-
 % Set default values of input parameters
 flagRot180deg = false;
 %--Look for Optional Keywords
@@ -55,30 +47,24 @@ while icav < size(varargin, 2)
     end
 end
 
+% %--DEBUGGING ONLY: HARD-CODED INPUTS
+% clear all
+% addpath ~/Repos/FALCO/lib/PROPER
+% inputs.pixresFPM = 6; %--pixels per lambda_c/D
+% inputs.rhoInner = 2.8; % radius of inner FPM amplitude spot (in lambda_c/D)
+% inputs.rhoOuter = 10.1; % radius of outer opaque FPM ring (in lambda_c/D)
+% inputs.FPMampFac = 0.4; % amplitude transmission of inner FPM spot
+% inputs.centering = 'interpixel';
+% flagRot180deg = false;
+
+
 pixresFPM = inputs.pixresFPM; %--pixels per lambda_c/D
 rhoInner = inputs.rhoInner; % radius of inner FPM amplitude spot (in lambda_c/D)
 rhoOuter = inputs.rhoOuter; % radius of outer opaque FPM ring (in lambda_c/D)
 FPMampFac = inputs.FPMampFac; % amplitude transmission of inner FPM spot
 centering = inputs.centering; % Centering of array: 'pixel' or 'interpixel'
 
-%--DEBUGGING: Hard-coded values for testing function as a script first
-% pixresFPM = 8; %--pixels per lambda_c/D
-% rhoInner = 2.8; % radius of inner FPM amplitude spot (in lambda_c/D)
-% rhoOuter = 21.0; % radius of outer opaque FPM ring (in lambda_c/D)
-% amp0 = 0.025; % amplitude transmission of inner FPM spot
-% % ph0 = 10; % phase of inner FPM spot (in nanometers)
-% % lambda = 575e-9; % wavelength that the phase is computed for
-% centering = 'pixel';
-
-
-dxiUL = 1/pixresFPM; %--lambda_c/D per pixel. "UL" for unitless
-
-
-
-
-
-
-
+dx = 1/pixresFPM; %--lambda_c/D per pixel.
 
 % % Centering of array: 'pixel' or 'interpixel'
 % if(isfield(inputs,'centering'))
@@ -87,53 +73,51 @@ dxiUL = 1/pixresFPM; %--lambda_c/D per pixel. "UL" for unitless
 %     centering = 'pixel';
 % end
 
-% if(rhoOuter==inf)
-%     NfpmAcross = 2*rhoInner/dxiUL;
-% else
-%     NfpmAcross = 2*rhoOuter/dxiUL;
-% end
-
 if(rhoOuter==inf)
     if(strcmpi(centering,'interpixel'))
-        Narray = ceil_even((2*rhoInner/dxiUL)); % number of points across the inner diameter of the FPM.
+        Narray = ceil_even((2*rhoInner/dx)); % number of points across the inner diameter of the FPM.
     else
-        Narray = ceil_even(2*(rhoInner/dxiUL+1/2)); % number of points across the inner diameter of the FPM. Another half pixel added for pixel-centered masks.
+        Narray = ceil_even(2*(rhoInner/dx+1/2)); % number of points across the inner diameter of the FPM. Another half pixel added for pixel-centered masks.
     end
+    
+    Dmask = 2*pixresFPM*rhoInner; %--Diameter of the mask
+
 else
     if(strcmpi(centering,'interpixel'))
-        Narray = ceil_even(2*rhoOuter/dxiUL); % number of points across the outer diameter of the FPM. 
+        Narray = ceil_even(2*rhoOuter/dx); % number of points across the outer diameter of the FPM. 
     else
-        Narray = ceil_even(2*(rhoOuter/dxiUL+1/2)); % number of points across the outer diameter of the FPM. Another half pixel added for pixel-centered masks.
+        Narray = ceil_even(2*(rhoOuter/dx+1/2)); % number of points across the outer diameter of the FPM. Another half pixel added for pixel-centered masks.
     end
+    
+    Dmask = 2*pixresFPM*rhoOuter; %--Diameter of the mask
+
 end
 
 xshift = 0;%inputs.xshift; % translation in x of FPM (in lambda_c/D)
 yshift = 0;%inputs.yshift; % translation in y of FPM (in lambda_c/D)
 
-
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--GENERAL SPECS
-Darray = Narray*dxiUL; %--width of array in lambda_c/D
-diam = Darray;  
+Darray = Narray*dx; %--width of array in lambda_c/D
 wl_dummy   = 1e-6;              % wavelength (m); Dummy value--no propagation here, so not used.
 
 switch centering % 0 for pixel-centered FPM, or -diam/Narray for inter-pixel centering
     case {'interpixel'}
-        cshift = -diam/2/Narray; 
+        cshift = -dx/2; 
     case {'pixel'}
         cshift = 0;
         if(flagRot180deg)
-            cshift = -diam/Narray;
+            cshift = -dx;
         end
 end
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-%--INITIALIZE PROPER
-bdf = 1; %--beam diameter factor in output array
-bm = prop_begin(diam, wl_dummy, Narray,'beam_diam_fraction',bdf);
+%--INITIALIZE PROPER. Note that:  bm.dx = diam / bdf / np;
+bdf = Dmask/Darray; %--beam diameter factor in output array
+bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
 % figure(1); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 if(rhoOuter ~= inf)
@@ -161,7 +145,19 @@ mask = mask.*innerSpot; %--Include the inner FPM spot
 end %--END OF FUNCTION
 
 
-
+% %--DEBUGGING: Visually verify that mask is centered correctly
+% figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
+% switch centering 
+%     case {'pixel'}
+%         maskTemp = mask(2:end,2:end);
+%     otherwise
+%         maskTemp = mask;
+% end
+% figure(12); imagesc(maskTemp-rot90(maskTemp,2)); axis xy equal tight; colorbar; 
+% title('Centering Check','Fontsize',20); set(gca,'Fontsize',20);
+% drawnow;
+% 
+% sum(sum(mask))
 
 
 

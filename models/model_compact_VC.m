@@ -36,30 +36,24 @@
 % -whichSource
 % -flagGenMat
 
-% function Eout = model_compact_VC(mp, DM, modvar)
-% 
 
-function Eout = model_compact_VC(mp, DM, modvar)
-lambda = mp.sbp_center_vec(modvar.sbpIndex);
+
+function Eout = model_compact_VC(mp, lambda, Ein, normFac,flagEval)
+
+%lambda = mp.sbp_centers(modvar.sbpIndex);
 mirrorFac = 2; % Phase change is twice the DM surface height.
-NdmPad = DM.compact.NdmPad;
+NdmPad = mp.compact.NdmPad;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Input E-fields
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%--Include the tip/tilt in the input wavefront
-if(isfield(mp,'ttx'))
-    %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
-    x_offset = mp.ttx(modvar.ttIndex);
-    y_offset = mp.tty(modvar.ttIndex);
-
-    TTphase = (-1)*(2*pi*(x_offset*mp.P2.compact.XsDL + y_offset*mp.P2.compact.YsDL));
-    Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex);  
-
-else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-    Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
+if(flagEval)
+    dxi = mp.F4.eval.dxi;
+    Nxi = mp.F4.eval.Nxi;
+    deta = mp.F4.eval.deta;
+    Neta = mp.F4.eval.Neta; 
+else
+    dxi = mp.F4.dxi;
+    Nxi = mp.F4.Nxi;
+    deta = mp.F4.deta;
+    Neta = mp.F4.Neta; 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -67,11 +61,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Compute the DM surfaces for the current DM commands
-if(any(DM.dm_ind==1)); DM1surf = falco_gen_dm_surf(DM.dm1, DM.dm1.compact.dx, NdmPad); else DM1surf = 0; end %--Pre-compute the starting DM1 surface
-if(any(DM.dm_ind==2)); DM2surf = falco_gen_dm_surf(DM.dm2, DM.dm2.compact.dx, NdmPad); else DM2surf = 0; end %--Pre-compute the starting DM2 surface
+if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, NdmPad); else DM1surf = 0; end %--Pre-compute the starting DM1 surface
+if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, NdmPad); else DM2surf = 0; end %--Pre-compute the starting DM2 surface
+% if(any(mp.dm_ind==9)); DM9phase = padOrCropEven(falco_dm_surf_from_cube(mp.dm9,mp.dm9.compact),mp.F3.compact.Nxi); else DM9phase = 0; end %--Pre-compute the starting DM9 surface
 
 pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
-Ein = padOrCropEven(Ein,DM.compact.NdmPad);
+Ein = padOrCropEven(Ein,mp.compact.NdmPad);
 
 if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else DM1stop = 1; end
 if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else DM2stop = 1; end
@@ -79,7 +74,7 @@ if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else D
 if(mp.useGPU)
     pupil = gpuArray(pupil);
     Ein = gpuArray(Ein);
-    if(any(DM.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
+    if(any(mp.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
 end
 
 
@@ -115,33 +110,28 @@ if(mp.flagApod)
 end
 
 
-%--Do NOT apply FPM if normalization value is being found
-if(isfield(modvar,'flagGetNormVal'))
-    if(modvar.flagGetNormVal==true)
-        EP4 = propcustom_2FT(EP3, mp.centering);
-    else
-        EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, mp.F3.VortexCharge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU ); %--MFTs
-    end
+%--Don't apply FPM if normalization value is being found
+if(normFac==0)
+    EP4 = propcustom_2FT(EP3, mp.centering);
 else
     EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, mp.F3.VortexCharge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU );%--MFTs
-end    
+end  
 
+%--Apply the Lyot stop
 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr);
 
 
 % DFT to camera
-EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.compact.dxi,mp.F4.compact.Nxi,mp.F4.compact.deta,mp.F4.compact.Neta);
+EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
+% EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta);
 
-
-%--Don't apply FPM if normalization value is being found, or if the flag doesn't exist (for testing only)
-Eout = EF4; %--Don't normalize if normalization value is being found
-if(isfield(modvar,'flagGetNormVal'))
-    if(modvar.flagGetNormVal==false)
-        Eout = EF4/sqrt(mp.F4.compact.I00(modvar.sbpIndex)); %--Apply normalization
-    end
-elseif(isfield(mp.F4.compact,'I00'))
-    Eout = EF4/sqrt(mp.F4.compact.I00(modvar.sbpIndex)); %--Apply normalization
+%--Don't apply FPM if normalization value is being found
+if(normFac==0)
+    Eout = EF4; %--Don't normalize if normalization value is being found
+else
+    Eout = EF4/sqrt(normFac); %--Apply normalization
 end
+
 
 if(mp.useGPU)
     Eout = gather(Eout);

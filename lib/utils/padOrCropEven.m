@@ -44,19 +44,25 @@ function Aout = padOrCropEven(Ain,Ndes,varargin)
 
     Nx0 = size(Ain,2);
     Ny0 = size(Ain,1);
+    
+	if(isa(Ain,'gpuArray'))
+        Aout = gpuArray.ones(Ndes);
+    end
 
     if( mod(Nx0,2)~=0 || mod(Ny0,2)~=0 )
         error('padOrCropEven: Input was not an even-sized array')
     elseif( Nx0~=Ny0 )
         error('padOrCropEven: Input was not a square array')
     elseif(length(Ndes)~=1) 
-        error('padOrCropEven.m: Wrong number of dimensions specified for output')
-
+        error('padOrCropEven.m: Wrong number of dimensions specified for output')       
     else %--Pad or crop:
         if(min(Nx0,Ny0)>Ndes) %--Crop
             Aout = Ain( (Ny0-Ndes)/2+1:(Ny0+Ndes)/2, (Nx0-Ndes)/2+1:(Nx0+Ndes)/2 );
         elseif(max(Nx0,Ny0)<Ndes) %--Pad
-            Aout = extrapval*ones(Ndes); %--Initialize
+            if(~isa(Ain,'gpuArray'))
+                Aout = ones(Ndes); %--Initialize
+            end
+            Aout = extrapval*Aout;
             Aout( (Ndes-Ny0)/2+1:(Ndes+Ny0)/2, (Ndes-Nx0)/2+1:(Ndes+Nx0)/2 ) = Ain;
         else %--Leave as size
             Aout = Ain;

@@ -32,11 +32,10 @@ function Iout = falco_get_image(mp, modvar, DM)
             %--This function will take care of image processing (dark subtraction, flat
             %fielding, etc.); crop, rotate, and flip the image as necessary; and normalize the intensity.
             Iout = falco_lab_image(mp, modvar, DM); %--Needs more structures as inputs
-            [Iout,ip] = hcil_camera_kiloCdms(DM,ip);
+            
         else %--Get image in simulation
             Iout = falco_sim_image(mp, modvar, DM); 
         end
-        
     else %--Get image in simulation
         Iout = falco_sim_image(mp, modvar, DM);
     end

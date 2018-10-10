@@ -37,7 +37,7 @@ function mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs,varargin)
 % % %--DEBUGGING ONLY: HARD-CODED INPUTS
 % clear
 % inputs.Dbeam = 48e-3; % meters;
-% inputs.Nbeam = 48;
+% inputs.Nbeam = 100;
 % inputs.ID = 0.35;
 % inputs.OD = 0.99;
 % inputs.strut_width = 0.04;
@@ -46,7 +46,9 @@ function mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs,varargin)
 % inputs.xshift = 0;
 % inputs.yshift = 0;
 % inputs.clock_deg = 0;
-% addpath ~/Repos/FALCO/proper_v3.0.1_matlab_22aug17/
+% addpath(genpath('~/Repos/FALCO'))
+% flagRot180deg = true;
+
 
 
 % Set default values of input parameters

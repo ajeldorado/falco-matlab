@@ -22,14 +22,24 @@
 % Nxi = total number of points horizontally across at focal plane (second plane)
 % eta = pixel height in focal plane (CCD pixel size) in meters
 % Neta = total number of points vertically across at focal plane (second plane)
-% 'INTERPIXEL' = optional flag to change the centering of the array to be between pixels
+%
+%--OPTIONAL INPUTS (via keywords)
+% 'INTERPIXEL' = flag to change the centering of the array to be between pixels
+% 'xpc' = change the x-center of the pupil plane to the value after this flag
+% 'ypc' = change the y-center of the pupil plane to the value after this flag
+% 'xfc' = change the x-center of the focal plane to the value after this flag
+% 'yfc' = change the y-center of the focal plane to the value after this flag
 %--------------------------------------------------------------------------
 
 function [Efoc] = propcustom_mft_PtoF(Epup, f,lambda,dx,dxi,Nxi,deta,Neta,varargin)
 
 % Set default value(s) of the optional input parameter(s)
 centering = 'pixel';
-    
+xpc = 0;
+ypc = 0;
+xfc = 0;
+yfc = 0;
+
 %--Look for Optional Keywords
 icav = 0;                     % index in cell array varargin
 while icav < size(varargin, 2)
@@ -39,6 +49,19 @@ while icav < size(varargin, 2)
             centering = 'interpixel'; % For even arrays, beam center is in between pixels.
         case {'pixel'}
             centering = 'pixel'; % For even arrays, beam center is in between pixels.    
+        case {'xpc'} 
+            icav = icav + 1;
+            xpc = varargin{icav};  % x-center location in pupil plane [meters]
+        case {'ypc'} 
+            icav = icav + 1;
+            ypc = varargin{icav};  % y-center location in pupil plane [meters]
+        case {'xfc'} 
+            icav = icav + 1;
+            xfc = varargin{icav};  % x-center location in focal plane [meters]
+        case {'yfc'} 
+            icav = icav + 1;
+            yfc = varargin{icav};  % y-center location in focal plane [meters]
+            
         otherwise
             error('propcustom_mft_PtoF: Unknown keyword: %s\n', ...
             varargin{icav});
@@ -65,6 +88,10 @@ end
 ys = xs.';
 dy = dx;
 
+%--Translate the pupil plane coordinates
+xs = xs - xpc;
+ys = ys - ypc;
+
 
 %--Focal Plane Coordinates
 if(  (mod(Nxi,2)==1) ) %--Odd-sized array
@@ -82,6 +109,10 @@ elseif(strcmpi(centering,'interpixel'))%--Even-sized array, interpixel centered
 else%--Even-sized array, pixel centered
     etas = ( -Neta/2:(Neta/2-1) ).'*deta;
 end
+
+%--Translate the focal plane coordinates
+xis = xis - xfc;
+etas = etas - yfc;
 
 
 %--Matrix Fourier Transform (MFT)

@@ -11,6 +11,7 @@
 % a Visio file from Kent Wallace of the March 2, 2016 Cycle 6 WFIRST pupil.
 % The pupil used is on-axis.
 %
+% Corrected on 2018-08-16 by A.J. Riggs to compute 'beam_diam_fraction' correctly.
 % Modified by A.J. Riggs on 2017-02-09 to be a function with specifyable
 %   amounts of magnification, clocking, and translation. 
 %   Now keeping the pupil edges non-binary.
@@ -33,18 +34,6 @@
 
 function mask = falco_gen_pupil_WFIRSTcycle6_LS(inputs,varargin)
 
-
-% % %--DEBUGGING ONLY: HARD-CODED INPUTS
-% clear
-% inputs.Dbeam = 48e-3; % meters;
-% inputs.Nbeam = 48;
-% inputs.ID = 0.40;
-% inputs.OD = 0.80;
-% inputs.strut_width = 0.04;
-% inputs.centering = 'pixel';
-% addpath ~/Repos/FALCO/proper_v3.0.1_matlab_22aug17/
-
-
 % Set default values of input parameters
 flagRot180deg = false;
 %--Look for Optional Keywords
@@ -60,10 +49,22 @@ while icav < size(varargin, 2)
     end
 end
 
+
+% %--DEBUGGING ONLY: HARD-CODED INPUTS
+% clear all
+% addpath ~/Repos/FALCO/lib/PROPER/
+% inputs.Dbeam = 46.3e-3; % meters;
+% inputs.Nbeam = 124;
+% inputs.ID = 0.40;
+% inputs.OD = 0.80;
+% inputs.strut_width = 0.04;
+% inputs.centering = 'pixel';
+% flagRot180deg = false;
+% %--------------------------------------
+
+
 Dbeam = inputs.Dbeam; %--diameter of the beam at the mask (meters)
-% dx = inputs.dx; %--width of a pixel in the mask representation (meters)
 Nbeam   = inputs.Nbeam;     % number of points across the incoming beam           
-% Narray = inputs.Narray;   % number of points across output array
 ID = inputs.ID; % inner diameter of mask (in pupil diameters)
 OD = inputs.OD; % outer diameter of mask (in pupil diameters)
 strut_width = inputs.strut_width; % width of the struts (in pupil diameters)
@@ -86,37 +87,29 @@ yshift = 0;%inputs.yshift; % translation in y of pupil (in diameters)
 pad_strut = 0; %2*pad_strut_pct/100*diam; %--Convert to meters. Factor of 2x needed since strut is padded on both sides
 
 
-
 Dmask = Dbeam; % % width of the beam (so can have zero padding if LS is undersized) (meters)
 diam = Dmask;% width of the mask (meters)
-NapAcross = Dmask/dx; % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
-if(strcmpi(centering,'pixel'))
-    Narray = 2*ceil(1/2*(Dmask/dx+1/2)); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
-else
-    Narray = 2*ceil(1/2*Dmask/dx); %--number of points across output array. Same size as width when interpixel centered.
-end
-% NapAcross = 2*ceil(1/2*Dmask/dx); % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
-% if(strcmpi(centering,'pixel'))
-%     Narray = NapAcross + 2; %--number of points across output array. Requires two more pixels when pixel centered.
-% else
-%     Narray = NapAcross; %--number of points across output array. Same size as width when interpixel centered.
-% end
 
+
+if(strcmpi(centering,'pixel'))
+    Narray = ceil_even(Nbeam+1/2); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+else
+    Narray = ceil_even(Nbeam); %--number of points across output array. Same size as width when interpixel centered.
+end
 Darray = Narray*dx; %--width of the output array (meters)
-bdf = 1; %--beam diameter factor in output array
+
+bdf = Nbeam/Narray; %--beam diameter factor in output array
 wl_dummy   = 1e-6;     % wavelength (m); Dummy value--no propagation here, so not used.
 
 switch centering % 0 shift for pixel-centered pupil, or -diam/Narray shift for inter-pixel centering
     case {'interpixel'}
-        cshift = -Darray/2/Narray; 
+        cshift = -dx/2; 
     case {'pixel'}
         cshift = 0;
         if(flagRot180deg)
-            cshift = -Darray/Narray;
+            cshift = -dx;
         end
 end
-
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
@@ -131,7 +124,7 @@ Dconv = (diam/D0); % conversion factor from inches and Visio units to meters
 % strut_width = 0.209*(diam/D0);
 
 %--INITIALIZE PROPER
-bm = prop_begin(Darray, wl_dummy, Narray,'beam_diam_fraction',bdf);
+bm = prop_begin(Dbeam, wl_dummy, Narray,'beam_diam_fraction',bdf);
 % figure(1); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 %--PRIMARY MIRROR (OUTER DIAMETER)
@@ -249,12 +242,25 @@ end
 % figure(18); imagesc(mask); axis xy equal tight; colorbar;
 % figure(19); imagesc(mask-rot90(mask,2)); axis xy equal tight; colorbar;
 
+
 end %--END OF FUNCTION
 
 
 
 
-
+% %--DEBUGGING: Visually verify that mask is centered correctly
+% figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
+% switch centering 
+%     case {'pixel'}
+%         maskTemp = mask(2:end,2:end);
+%     otherwise
+%         maskTemp = mask;
+% end
+% figure(12); imagesc(maskTemp-fliplr(maskTemp)); axis xy equal tight; colorbar; 
+% title('Centering Check','Fontsize',20); set(gca,'Fontsize',20);
+% drawnow;
+% 
+% sum(sum(mask))
 
 
 

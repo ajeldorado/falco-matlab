@@ -39,13 +39,13 @@ if( strcmpi(modvar.whichSource,'offaxis') ) %--For throughput calculations by mo
 else %--Regular
     Isum = 0; % Initialize unstacked image
     
-%     for tsi=1:mp.Nttlam  %--Leave the tip/tilt part outside this function
+%     for tsi=1:mp.jac.Nmode  %--Leave the tip/tilt part outside this function
         for wi=1:mp.Nwpsbp  % Add intensities from all incoherent sources separately
             % Starlight
             modvar.wpsbpIndex = wi;
             modvar.whichSource = 'star';
             Eout = model_full(mp, DM, modvar);
-            Isum = Isum + (abs(Eout).^2);%*mp.WttlamVec(tsi)/mp.Wsum;
+            Isum = Isum + (abs(Eout).^2);%*mp.jac.weights(tsi)/mp.Wsum;
         end 
 %     end
 

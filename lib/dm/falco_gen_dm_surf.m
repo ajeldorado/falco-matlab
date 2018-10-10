@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function dm = falco_gen_dm_surf(dm)
+% function DMsurf = falco_gen_dm_surf(dm,dx,N)
 % 
 %--Function to generate a deformable mirror (DM) surface using PROPER.
 %
@@ -22,41 +22,39 @@
 %
 function DMsurf = falco_gen_dm_surf(dm,dx,N)
 
+% fprintf('falco_gen_dm_surf: dx = %.8g   dm.dx = %.8g\n',dx,dm.dx); %--DEBUGGING
+
 %--Set the order of operations
 orderOfOps = 'XYZ';
-if(isfield(dm,'flagZYX')); 
+if(isfield(dm,'flagZYX'))
     if(dm.flagZYX)
         orderOfOps = 'ZYX'; 
     end
 end
 
-pupil_ratio = 1;
+%--Adjust the centering of the output DM surface. The shift needs to be in
+%units of actuators, not meters, for prop_dm.m.
+Darray = dm.NdmPad*dm.dx;
+Narray = dm.NdmPad;
+switch dm.centering % 0 shift for pixel-centered pupil, or -Darray/2/Narray shift for inter-pixel centering
+    case {'interpixel'}
+        cshift = -Darray/2/Narray/dm.dm_spacing; 
+    case {'pixel'}
+        cshift = 0;
+    otherwise
+        error('falco_gen_dm_surf: centering variable must be either pixel or interpixel')
+end
+
+
+pupil_ratio = 1; % beam diameter fraction
 wl_dummy = 1e-6; %--dummy value needed to initialize wavelength in PROPER (meters)
 
 bm  = prop_begin(N*dx, wl_dummy, N, pupil_ratio);
-[~,DMsurf] = prop_dm(bm, dm.VtoH.*dm.V, dm.xc, dm.yc, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps);
-%     figure(1); imagesc(DMsurf); axis xy equal tight; colorbar; 
+[~,DMsurf] = prop_dm(bm, dm.VtoH.*dm.V, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps);
+
 
 end %--END OF FUNCTION
 
-% function DMsurf = falco_gen_dm_surf(dm)
-% 
-% %--Set the order of operations
-% orderOfOps = 'XYZ';
-% if(isfield(dm,'flagZYX')); 
-%     if(dm.flagZYX)
-%         orderOfOps = 'ZYX'; 
-%     end
-% end
-% 
-% pupil_ratio = 1;
-% wl_dummy = 1e-6; %--dummy value needed to initialize wavelength in PROPER (meters)
-% 
-% bm  = prop_begin(dm.NdmPad*dm.dx, wl_dummy, dm.NdmPad, pupil_ratio);
-% [~,DMsurf] = prop_dm(bm, dm.VtoH.*dm.V, dm.xc, dm.yc, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps);
-% %     figure(1); imagesc(DMsurf); axis xy equal tight; colorbar; 
-% 
-% end %--END OF FUNCTION
 
 
 

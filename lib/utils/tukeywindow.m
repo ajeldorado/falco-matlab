@@ -1,9 +1,3 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
-% -------------------------------------------------------------------------
-
 function window = tukeywindow(n,alpha)
 %   The function tukeywindow(n,alpha) returns an n-point, 1-D Tukey window.
 % 
@@ -17,10 +11,9 @@ function window = tukeywindow(n,alpha)
 %  OUTPUT:
 %  window: the 1-D window as an n-point column vector.
 %    -Note that the Tukey window is centered on the array.
-
-
 %--Initialize
 window = ones(n,1);
+
 
 if alpha >= 1
     ts = (0:1:(n-1)).';

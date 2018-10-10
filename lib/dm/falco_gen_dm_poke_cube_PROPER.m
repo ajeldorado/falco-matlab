@@ -63,7 +63,7 @@ function dm = falco_gen_dm_poke_cube_PROPER(dm,mp,varargin)
 % dm.centering = 'pixel';
 % dm.flagZYX = false;
 % mp.d_dm1_dm2 = 3;
-% mp.sbp_center_vec = 550e-9*[0.9 1 1.1];
+% mp.sbp_centers = 550e-9*[0.9 1 1.1];
 % % -------------------------------------------------------------------- %
 
 %--Enable the ability to turn off the data cube calculation with a keyword.
@@ -101,7 +101,7 @@ dm.Ndm = ceil_even( max(abs([sqrt(2)*cosd(45-dm.zrot),sqrt(2)*sind(45-dm.zrot)])
 dm.Ninf = ceil_even( Ninf0*(dm.dx_inf0/dm.dx) ); %--Number of points across the nominal influence function at the new, desired resolution
 dm.Nbox = dm.Ninf;
 %--Also compute the padded size for the angular spectrum (AS) propagation between DMs 1 and 2. Set as a power of 2 for FFTs.
-Nmin = min(mp.sbp_center_vec)*max(abs([mp.d_P2_dm1, mp.d_dm1_dm2, (mp.d_P2_dm1 + mp.d_dm1_dm2) ]))/dm.dx^2; %--Minimum number of points across for accurate angular spectrum propagation
+Nmin = min(mp.sbp_centers)*max(abs([mp.d_P2_dm1, mp.d_dm1_dm2, (mp.d_P2_dm1 + mp.d_dm1_dm2) ]))/dm.dx^2; %--Minimum number of points across for accurate angular spectrum propagation
 dm.NboxAS = 2^(nextpow2(max([dm.Nbox,Nmin])));  %--Zero-pad for FFTs in A.S. propagation. Use a larger array if the max sampling criterion for angular spectrum propagation is violated
 
 
@@ -153,7 +153,7 @@ if(flagGenCube)
 
         % 4a) Use PROPER to generate each normalized poke one at a time.
         bm  = prop_begin(Darray, wl_dummy, Narray, pupil_ratio);
-        [~,DMsurf] = prop_dm(bm, dU, dm.xc+cshift, dm.yc+cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps);
+        [~,DMsurf] = prop_dm(bm, dU, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps);
 %         figure(1); imagesc(DMsurf); axis xy equal tight; colorbar; 
 %         figure(2); imagesc(log10(abs(DMsurf))); axis xy equal tight; colorbar; 
 

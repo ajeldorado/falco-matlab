@@ -10,24 +10,28 @@
 % REVISION HISTORY: 
 % -Created on 2018-01-24 by A.J. Riggs.
 
-function [Emat,Isum2D] = falco_est_perfect_Efield_full(mp,DM)
+function [Emat,Imat] = falco_est_perfect_Efield_full(mp,DM)
     
-    Icube = zeros(mp.F4.full.Neta, mp.F4.full.Nxi, mp.Nttlam);
-    Emat = zeros(length(mp.F4.full.corr.inds), mp.Nttlam);
+%     Icube = zeros(mp.F4.Neta, mp.F4.Nxi, mp.jac.Nmode);
+    Imat = zeros(mp.F4.Neta, mp.F4.Nxi);
+    Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
     
-    for tsi=1:mp.Nttlam
+    for im=1:mp.jac.Nmode
         % Get full-knowledge, aberrated, noiseless starlight E-field and image
         modvar.flagCalcJac = 0; 
-        modvar.sbpIndex = mp.Wttlam_si(tsi);
-        modvar.ttIndex = mp.Wttlam_ti(tsi);
+        modvar.sbpIndex = mp.jac.sbp_inds(im); %mp.Wttlam_si(tsi);
+        modvar.zernIndex = mp.jac.zern_inds(im);
+        %modvar.ttIndex = mp.jac.zern_inds(im);
         modvar.wpsbpIndex = mp.wi_ref;
+        %modvar.lambda = mp.sbp_centers(modvar.sbpIndex);
         modvar.whichSource = 'star';
 
         E2D = model_full(mp, DM, modvar);
-        Emat(:,tsi) = E2D(mp.F4.full.corr.inds);   % Actual field in estimation area
-        Icube(:,:,tsi) = (abs(E2D).^2)*mp.WttlamVec(tsi)/mp.Wsum;
+        Emat(:,im) = E2D(mp.F4.corr.maskBool);   % Actual field in estimation area
+        Imat = Imat + (abs(E2D).^2)*mp.jac.weights(im);
+        %Icube(:,:,im) = (abs(E2D).^2)*mp.jac.weights(im);
     end
-    Isum2D = sum(Icube,3);
+    %Imat = sum(Icube,3);
 
 
 end %--END OF FUNCTION

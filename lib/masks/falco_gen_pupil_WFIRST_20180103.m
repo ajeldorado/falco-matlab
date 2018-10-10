@@ -26,7 +26,7 @@ while icav < size(varargin, 2)
         case {'rot180'}
             flagRot180deg = true; % For even arrays, beam center is in between pixels.
         otherwise
-            error('falco_gen_pupil_WFIRSTcycle6_mag_rot_trans: Unknown keyword: %s\n', ...
+            error('falco_gen_pupil_WFIRST_20180103: Unknown keyword: %s\n', ...
             varargin{icav});
     end
 end

@@ -60,6 +60,12 @@ else
     Neta = ceil_even(2*(sin(angRad/2)*FOVmin*pixresFP+1/2));
 end
 
+%--Overwrite the calculated value if it is specified.
+if(isfield(inputs,'Nxi'))
+    Nxi = inputs.Nxi;
+end
+
+
 %--Focal Plane Coordinates
 dxi = 1/pixresFP;
 deta = dxi;
