@@ -41,7 +41,11 @@ data/logs/**
 data/maps/**
 data/ws/**
 data/ws_inprogress/**
+data/brief/**
+data/material/**
 
+!data/brief/placeholder.txt
+!data/material/placeholder.txt
 !data/configs/placeholder.txt
 !data/DM/placeholder.txt
 !data/figures/placeholder.txt
