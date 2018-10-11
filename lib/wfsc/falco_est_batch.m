@@ -131,7 +131,7 @@ if( (mp.flagSim==true) ) %--For simulations
             dDM2Vprobe = dDMVprobe./mp.dm1.VtoH; % Now in volts
         end
 %         dDM2Vprobe = dDM2Vprobe.*padarray(ones(32),[5,5],0);
-        % cd(mp.path.m); fn = sprintf('map_probe%d_DM1.fits',qq); fitswrite(dDM1Vprobe,fn);
+        % cd(mp.path.falco); fn = sprintf('map_probe%d_DM1.fits',qq); fitswrite(dDM1Vprobe,fn);
         mp.dm1.V = DM1Vnom+dDM1Vprobe;
         mp.dm2.V = DM2Vnom+dDM2Vprobe;
 
@@ -293,7 +293,7 @@ if(isfield(ep,'flagSave'))
 %     fnV = sprintf('dmV_run%03d_estItr%03d.fits',mp.RunNum,estvar.Itr);
 %     fitswrite(IcubeOut,fnI);
 %     fitswrite(VcubeOut,fnV);
-%     cd(mp.path.m)
+%     cd(mp.path.falco)
     end
 end
 

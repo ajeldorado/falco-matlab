@@ -5,29 +5,31 @@
 % -------------------------------------------------------------------------
 %
 %--Script to:
-%  1) Specify the key parameter values for an (apodized) vortex coronagraph.
+%  1) Specify the key parameter values for a vortex coronagraph.
 %  2) Load the rest of the default settings.
 %  3) Save out all the input parameters.
 %  4) Run a single trial of WFSC using FALCO.
-%
-% Modified on 2018-03-22 by A.J. Riggs to have default values that can be
-%   overwritten if the variable is already defined in falco_config_defaults_AVC.m.
-% Modified on 2018-03-01 by Garreth Ruane and A.J. Riggs to be for a vortex coronagraph.
-% Created by A.J. Riggs on 2018-01-08.
 
-%% Go the correct starting directory and add all of FALCO to the Matlab path
-clear;
 
-if(~isdeployed)
-  pwd0 = fileparts(which(mfilename)); %--Path to this file
-  cd(pwd0);
-  cd ../
-  addpath(genpath(pwd)) %--To find apodizer masks and saved pupils
-end
+clear all;
 
-%% Output Data Directories (Change here if desired)
-% mp.path.brief =  %--Config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-% mp.path.ws = % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+%% Define Necessary Paths on Your System
+
+%--Library locations
+mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+% mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
+
+%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+
+
+%% Add to the MATLAB Path
+addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
+addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+% addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
+
 
 %% [OPTIONAL] Start from a previous FALCO trial's DM settings
 
@@ -251,9 +253,16 @@ mp.dm2.maxAbsV = 250;%250./2.;
 if(exist('mp','var')==false); mp.dummy = 1; end
 mp = falco_config_defaults_VC(mp); %--Load defaults for undefined values
 
-%% Part 3: Run the WFSC trial
+%% Part 3: Generate the label associated with this trial
+
+mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
+    mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
+    '_IWA',num2str(mp.F4.corr.Rin),'_OWA',num2str(mp.F4.corr.Rout),...
+    '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
+    '_',mp.controller];
+
+%% Part 4: Run the WFSC trial
 out = falco_wfsc_loop(mp);
-falco_wfsc_loop(fn_config,flagPlot); 
 
 
 
