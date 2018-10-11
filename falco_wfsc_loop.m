@@ -46,34 +46,34 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
     '_',mp.controller];
 
-mp.folders.dummy = 1; %--Initialize the folders structure in case it doesn't already exist
-if(isfield(mp.folders,'brief')==false)
+mp.path.dummy = 1; %--Initialize the folders structure in case it doesn't already exist
+if(isfield(mp.path,'brief')==false)
     mainPath = pwd;
-    mp.folders.m = mainPath;
-    mp.folders.brief = [mainPath filesep 'data' filesep 'brief' filesep];      % Store minimal data to re-construct the data from the run: the config files and "out" structure go here
+    mp.path.m = mainPath;
+    mp.path.brief = [mainPath filesep 'data' filesep 'brief' filesep];      % Store minimal data to re-construct the data from the run: the config files and "out" structure go here
 end
 
 fn_config = [mp.runLabel,'_config.mat'];
 
-cd(mp.folders.brief)
+cd(mp.path.brief)
 save(fn_config)
-cd(mp.folders.m)
+cd(mp.path.m)
 fprintf('Saved the config file: \t%s\n',fn_config)
 
 
 %% Get configuration data from a function file
-[mp,out] = falco_init_ws(fn_config, mp.folders.brief);
+[mp,out] = falco_init_ws(fn_config, mp.path.brief);
 
 %% Jacobian storage
 % G_mat_fname = sprintf('G_%s_%dDM_%dx%dx%dact_%dpix_%dpctBW_at%dnm_Nsbp%02d.mat',...  %--Name of the Jacobian file if it is saved
 %     mp.coro, mp.num_dms,mp.dm1.Nact,...
 %     mp.dm2.Nact,mp.dm9.NactTotal,length(mp.cor_ele),round(mp.fracBW*100), round(mp.lambda0*1e9), mp.Nsbp);
 
-% cd(mp.folders.jac)
+% cd(mp.path.jac)
 % if( exist(G_mat_fname, 'file') ~= 2) %--if 2, then the file by that name exists
 %     flagCalcJac = true; %--Calculate the starting Jacobian again if the file does not exist
 % end
-% cd(mp.folders.m)
+% cd(mp.path.m)
 
 %% Initializations of Arrays for Data Storage 
 
@@ -232,15 +232,15 @@ for Itr=1:mp.Nitr
     
     % %--Save or load a previous Jacobian (esp. useful for testbeds)
     %     if(Itr==1)
-    %         cd(mp.folders.jac)
+    %         cd(mp.path.jac)
     % %             save(G_mat_fname,'G1','G2','G9','-v7.3');
     % %             save(G_mat_fname,'G9','-v7.3');
-    %         cd(mp.folders.m)
+    %         cd(mp.path.m)
     %     end
     % elseif( Itr==1 && flagCalcJac==0 )    
-    %     cd(mp.folders.jac)
+    %     cd(mp.path.jac)
     %         %load(G_mat_fname)
-    %     cd(mp.folders.m)    
+    %     cd(mp.path.m)    
     
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
     [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
@@ -425,7 +425,7 @@ fprintf('\n\n');
 
 % %--Save out DM commands after each iteration in case the run crashes part way through.
 % fprintf('Saving DM commands for this iteration...')
-% cd(mp.folders.ws_inprogress)
+% cd(mp.path.ws_inprogress)
 % 
 %         if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
 %         if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
@@ -437,7 +437,7 @@ fprintf('\n\n');
 % 
 %         fnWS = sprintf('ws_%s_Iter%dof%d.mat',mp.runLabel,Itr,mp.Nitr);
 %         save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM8V','DM9V','InormHist','thput_vec')
-% cd(mp.folders.m)
+% cd(mp.path.m)
 % fprintf('done.\n\n')
 
 
@@ -498,10 +498,10 @@ out.InormHist = InormHist;
 fnOut = [mp.runLabel,'_snippet.mat'];
 
 disp(['\nSaving abridged workspace to file ' fnOut '...'])
-cd(mp.folders.brief)
+cd(mp.path.brief)
 save(fnOut,'out');
 fprintf('done.\n\n')
-cd(mp.folders.m)
+cd(mp.path.m)
 
 
 %% Save out the data from the workspace
@@ -528,10 +528,10 @@ fnAll = [mp.runLabel,'_all.mat'];
 % fnWS = ['ws_',mp.runLabel,'_',num2str(mp.Nitr),'its.mat'];
 
 disp(['Saving workspace to file ' fnAll '...'])
-cd(mp.folders.ws)
+cd(mp.path.ws)
 save(fnAll);
 fprintf('done.\n\n')
-cd(mp.folders.m)
+cd(mp.path.m)
 
 
 end %--END OF main FUNCTION

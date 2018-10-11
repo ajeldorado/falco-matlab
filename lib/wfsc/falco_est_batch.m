@@ -131,12 +131,12 @@ if( (mp.flagSim==true) ) %--For simulations
             dDM2Vprobe = dDMVprobe./mp.dm1.VtoH; % Now in volts
         end
 %         dDM2Vprobe = dDM2Vprobe.*padarray(ones(32),[5,5],0);
-        % cd(mp.folders.m); fn = sprintf('map_probe%d_DM1.fits',qq); fitswrite(dDM1Vprobe,fn);
+        % cd(mp.path.m); fn = sprintf('map_probe%d_DM1.fits',qq); fitswrite(dDM1Vprobe,fn);
         mp.dm1.V = DM1Vnom+dDM1Vprobe;
         mp.dm2.V = DM2Vnom+dDM2Vprobe;
 
         modvar.whichImg = 1+qq;
-        %[Im,ip] = hcil_getImage(DM_config, ip, mp.folders, mp, modvar);
+        %[Im,ip] = hcil_getImage(DM_config, ip, mp.path, mp, modvar);
         [Im,ip] = falco_get_image(mp, modvar, DM, ip);
         IcubeOut(:,:,modvar.whichImg) = Im;
         VcubeOut(:,:,1,modvar.whichImg) = mp.dm1.V;
@@ -286,14 +286,14 @@ estvar.estContrast = sum(sum(mp.ScoreMask.*Istar2D))/sum(sum(mp.ScoreMask));
 
 if(isfield(ep,'flagSave'))
     if(ep.flagSave) % Save images and DM commands out for later
-%     cd(mp.folders.data)
+%     cd(mp.path.data)
 %     %fnI = sprintf('img_run%03d_estItr%03d_im%04dto%04d.fits',ip.RunNum,estvar.Itr,ImNum0,ip.ImNum);
 %     %fnV = sprintf('dmV_run%03d_estItr%03d_im%04dto%04d.fits',ip.RunNum,estvar.Itr,ImNum0,ip.ImNum);
 %     fnI = sprintf('img_run%03d_estItr%03d.fits',mp.RunNum,estvar.Itr);
 %     fnV = sprintf('dmV_run%03d_estItr%03d.fits',mp.RunNum,estvar.Itr);
 %     fitswrite(IcubeOut,fnI);
 %     fitswrite(VcubeOut,fnV);
-%     cd(mp.folders.m)
+%     cd(mp.path.m)
     end
 end
 

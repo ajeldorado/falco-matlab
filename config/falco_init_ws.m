@@ -29,29 +29,29 @@ mp.jac.dummy = 1;
 % addpath(genpath(mainPath));
 
 mp.mainPath = mainPath;
-mp.folders.m = mainPath;
-mp.folders.brief = folder_brief;
+mp.path.m = mainPath;
+mp.path.brief = folder_brief;
 
 %--Storage directories (data in these folders will not be synced via Git
-if(isfield(mp.folders,'ws')==false);  mp.folders.ws = [mainPath filesep 'data' filesep 'ws' filesep];  end    % Store final workspace data here
-if(isfield(mp.folders,'maps')==false);  mp.folders.maps = [mainPath filesep 'maps' filesep];  end      % Maps go here
-if(isfield(mp.folders,'jac')==false);  mp.folders.jac = [mainPath filesep 'data' filesep 'jac' filesep];  end    % Store the control Jacobians here
-if(isfield(mp.folders,'images')==false);  mp.folders.images = [mainPath filesep 'data' filesep 'images' filesep];  end  % Store all full, reduced images here
-if(isfield(mp.folders,'dm')==false);  mp.folders.dm = [mainPath filesep 'data' filesep 'DMmaps' filesep];  end      % Store DM command maps here
-if(isfield(mp.folders,'ws_inprogress')==false);  mp.folders.ws_inprogress = [mainPath filesep 'data' filesep 'ws_inprogress' filesep];  end      % Store in progress workspace data here
+if(isfield(mp.path,'ws')==false);  mp.path.ws = [mainPath filesep 'data' filesep 'ws' filesep];  end    % Store final workspace data here
+if(isfield(mp.path,'maps')==false);  mp.path.maps = [mainPath filesep 'maps' filesep];  end      % Maps go here
+if(isfield(mp.path,'jac')==false);  mp.path.jac = [mainPath filesep 'data' filesep 'jac' filesep];  end    % Store the control Jacobians here
+if(isfield(mp.path,'images')==false);  mp.path.images = [mainPath filesep 'data' filesep 'images' filesep];  end  % Store all full, reduced images here
+if(isfield(mp.path,'dm')==false);  mp.path.dm = [mainPath filesep 'data' filesep 'DMmaps' filesep];  end      % Store DM command maps here
+if(isfield(mp.path,'ws_inprogress')==false);  mp.path.ws_inprogress = [mainPath filesep 'data' filesep 'ws_inprogress' filesep];  end      % Store in progress workspace data here
 
 
 
-% % mp.folders.brief = [mainPath filesep 'data' filesep 'ws' filesep];      % Store minimal data to re-construct the data from the run: the config files and "out" structure go here
-% mp.folders.ws = [mainPath filesep 'data' filesep 'ws' filesep];      % Store final workspace data here
-% mp.folders.maps = [mainPath filesep 'maps' filesep];      % Maps go here
-% % mp.folders.init = [mainPath '/init'];  % Store initialization maps and files here
-% mp.folders.jac = [mainPath filesep 'data' filesep 'jac' filesep];    % Store the control Jacobians here
-% mp.folders.images = [mainPath filesep 'data' filesep 'images' filesep];  % Store all full, reduced images here
-% mp.folders.dm = [mainPath filesep 'data' filesep 'DMmaps' filesep];      % Store DM command maps here
-% mp.folders.ws_inprogress = [mainPath filesep 'data' filesep 'ws_inprogress' filesep];      % Store in progress workspace data here
-% mp.folders.DoNotPush = [mainPath filesep 'DoNotPush' filesep]; % For extraneous or very large files not to push with git. (E.g., generated mask representations) 
-% mp.folders.DoesNotSync = [mainPath filesep 'DoesNotSync' filesep]; % For extraneous or very large files not to sync with git. (E.g., prototype functions and scripts) 
+% % mp.path.brief = [mainPath filesep 'data' filesep 'ws' filesep];      % Store minimal data to re-construct the data from the run: the config files and "out" structure go here
+% mp.path.ws = [mainPath filesep 'data' filesep 'ws' filesep];      % Store final workspace data here
+% mp.path.maps = [mainPath filesep 'maps' filesep];      % Maps go here
+% % mp.path.init = [mainPath '/init'];  % Store initialization maps and files here
+% mp.path.jac = [mainPath filesep 'data' filesep 'jac' filesep];    % Store the control Jacobians here
+% mp.path.images = [mainPath filesep 'data' filesep 'images' filesep];  % Store all full, reduced images here
+% mp.path.dm = [mainPath filesep 'data' filesep 'DMmaps' filesep];      % Store DM command maps here
+% mp.path.ws_inprogress = [mainPath filesep 'data' filesep 'ws_inprogress' filesep];      % Store in progress workspace data here
+% mp.path.DoNotPush = [mainPath filesep 'DoNotPush' filesep]; % For extraneous or very large files not to push with git. (E.g., generated mask representations) 
+% mp.path.DoesNotSync = [mainPath filesep 'DoesNotSync' filesep]; % For extraneous or very large files not to sync with git. (E.g., prototype functions and scripts) 
 
 
 %% Loading previous DM commands as the starting point

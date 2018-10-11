@@ -27,8 +27,8 @@ if(~isdeployed)
 end
 
 %% Output Data Directories (Change here if desired)
-% mp.folders.brief =  %--Config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-% mp.folders.ws = % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+% mp.path.brief =  %--Config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 %% [OPTIONAL] Start from a previous FALCO trial's DM settings
 
@@ -351,7 +351,7 @@ out = falco_wfsc_loop(mp);
 
 %% Part 4: Get configuration data from a function file
 % mp.flagPlot = true;
-% [mp,mp.folders] = falco_init_ws(fn_config,mp.flagPlot);
+% [mp,mp.path] = falco_init_ws(fn_config,mp.flagPlot);
 
 %% Part 5: Get the Lyot Plane Intensity
 % 
