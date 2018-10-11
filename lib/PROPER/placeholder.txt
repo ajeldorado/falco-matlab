@@ -1,7 +1,0 @@
-This is a placeholder file to allow git to sync this entire folder.
-
-Install Matlab PROPER in this folder from the website https://sourceforge.net/projects/proper-library/ 
-- or - 
-Use the “addpath” command at the beginning of your Matlab script to tell Matlab where to find your Matlab PROPER directory.
-
-
