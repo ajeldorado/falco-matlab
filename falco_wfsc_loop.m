@@ -681,6 +681,10 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
         case{'conEFC'} %--Constrained EFC. The quadratic cost function is solved directly with CVX rather than by inverting.
             cvar.dummy = 1;
             [dDM,cvar] = falco_ctrl_EFC_constrained(mp,cvar);
+            
+        case{'SM-AMPL'} %--Bounded stroke minimization using AMPL. The quadratic cost function is solved directly with AMPL+Gurobi rather than by inverting.
+            cvar.dummy = 1;
+            [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar);
 
     end
     fprintf(' done. Time: %.3f sec\n',toc);
