@@ -39,17 +39,19 @@ function [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar)
     %% Make the vector of input, total control commands
     if(any(mp.dm_ind==1));  u1 = mp.dm1.V(mp.dm1.act_ele);  else;  u1 = [];  end
     if(any(mp.dm_ind==2));  u2 = mp.dm2.V(mp.dm2.act_ele);  else;  u2 = [];  end
+    if(any(mp.dm_ind==5));  u5 = mp.dm5.V(mp.dm5.act_ele);  else;  u5 = [];  end
     if(any(mp.dm_ind==8));  u8 = mp.dm8.V(mp.dm8.act_ele);  else;  u8 = [];  end
     if(any(mp.dm_ind==9));  u9 = mp.dm9.V(mp.dm9.act_ele);  else;  u9 = [];  end
-    u = [u1; u2; u8; u9]; %--column vector
+    u = [u1; u2; u5; u8; u9]; %--column vector
     Nele = length(u);
     
     %--Get the indices of each DM's command within the full command
     if(any(mp.dm_ind==1));  u1dummy = 1*ones(mp.dm1.Nele,1);  else;  u1dummy = [];  end
     if(any(mp.dm_ind==2));  u2dummy = 2*ones(mp.dm2.Nele,1);  else;  u2dummy = [];  end
+    if(any(mp.dm_ind==5));  u5dummy = 5*ones(mp.dm5.Nele,1);  else;  u5dummy = [];  end
     if(any(mp.dm_ind==8));  u8dummy = 8*ones(mp.dm8.Nele,1);  else;  u8dummy = [];  end
     if(any(mp.dm_ind==9));  u9dummy = 9*ones(mp.dm9.Nele,1);  else;  u9dummy = [];  end
-    u_dm_guide = [u1dummy; u2dummy; u8dummy; u9dummy];
+    u_dm_guide = [u1dummy; u2dummy; u5dummy; u8dummy; u9dummy];
 
     %%
     
@@ -66,22 +68,25 @@ function [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar)
     %--Constraints: Lower bounds on absolute control commands
     if(any(mp.dm_ind==1));  u1_LB = -1*mp.dm1.maxAbsV*ones(1,mp.dm1.Nele);  else;  u1_LB = [];  end
     if(any(mp.dm_ind==2));  u2_LB = -1*mp.dm2.maxAbsV*ones(1,mp.dm2.Nele);  else;  u2_LB = [];  end
+    if(any(mp.dm_ind==5));  u5_LB = mp.dm5.Vmin*ones(1,mp.dm5.Nele);  else;  u5_LB = [];  end
     if(any(mp.dm_ind==8));  u8_LB = mp.dm8.Vmin*ones(1,mp.dm8.Nele);  else;  u8_LB = [];  end
     if(any(mp.dm_ind==9));  u9_LB = mp.dm9.Vmin*ones(1,mp.dm9.Nele);  else;  u9_LB = [];  end
-    u_LB = [u1_LB, u2_LB, u8_LB, u9_LB].'; %--column vector
+    u_LB = [u1_LB, u2_LB, u5_LB, u8_LB, u9_LB].'; %--column vector
     %--Constraints: Upper bounds on absolute control commands
     if(any(mp.dm_ind==1));  u1_UB = mp.dm1.maxAbsV*ones(1,mp.dm1.Nele);  else;  u1_UB = [];  end
     if(any(mp.dm_ind==2));  u2_UB = mp.dm2.maxAbsV*ones(1,mp.dm2.Nele);  else;  u2_UB = [];  end
+    if(any(mp.dm_ind==5));  u5_UB = mp.dm5.Vmax*ones(1,mp.dm5.Nele);  else;  u5_UB = [];  end
     if(any(mp.dm_ind==8));  u8_UB = mp.dm8.Vmax*ones(1,mp.dm8.Nele);  else;  u8_UB = [];  end
     if(any(mp.dm_ind==9));  u9_UB = mp.dm9.Vmax*ones(1,mp.dm9.Nele);  else;  u9_UB = [];  end
-    u_UB = [u1_UB, u2_UB, u8_UB, u9_UB].'; %--column vector
+    u_UB = [u1_UB, u2_UB, u5_UB, u8_UB, u9_UB].'; %--column vector
 
     %--Constraints: Lower and upper bounds on delta control commands
     if(any(mp.dm_ind==1));  du1_UB = mp.dm1.maxAbsdV*ones(1,mp.dm1.Nele);  else;  du1_UB = [];  end
     if(any(mp.dm_ind==2));  du2_UB = mp.dm2.maxAbsdV*ones(1,mp.dm2.Nele);  else;  du2_UB = [];  end
+    if(any(mp.dm_ind==5));  du5_UB = mp.dm5.maxAbsdV*ones(1,mp.dm5.Nele);  else;  du5_UB = [];  end
     if(any(mp.dm_ind==8));  du8_UB = mp.dm8.maxAbsdV*ones(1,mp.dm8.Nele);  else;  du8_UB = [];  end
     if(any(mp.dm_ind==9));  du9_UB = mp.dm9.maxAbsdV*ones(1,mp.dm9.Nele);  else;  du9_UB = [];  end
-    du_UB = [du1_UB, du2_UB, du8_UB, du9_UB].'; %--column vector
+    du_UB = [du1_UB, du2_UB, du5_UB, du8_UB, du9_UB].'; %--column vector
     du_LB = -du_UB;
 
     %--Constraints: Lower and uper bounds on new control commands (including starting point)

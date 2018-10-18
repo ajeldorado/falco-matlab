@@ -112,6 +112,7 @@ for Itr=1:mp.Nitr
     %--Fill in History of DM commands to Store
     if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V'));  out.dm1.Vall(:,:,Itr) = mp.dm1.V;  end;  end
     if(isfield(mp,'dm2')); if(isfield(mp.dm2,'V'));  out.dm2.Vall(:,:,Itr) = mp.dm2.V;  end;  end
+    if(isfield(mp,'dm5')); if(isfield(mp.dm5,'V'));  out.dm5.Vall(:,:,Itr) = mp.dm5.V;  end;  end
     if(isfield(mp,'dm8')); if(isfield(mp.dm8,'V'));  out.dm8.Vall(:,Itr) = mp.dm8.V(:);  end;  end
     if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall(:,Itr) = mp.dm9.V(:);  end;  end
 %     if(any(mp.dm_ind==1)); out.dm1.Vall(:,:,Itr) = mp.dm1.V; end
@@ -120,8 +121,14 @@ for Itr=1:mp.Nitr
 %     if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
     %--Compute the DM surfaces
-    if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  end
-    if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  end
+    if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  else; DM1surf = zeros(mp.dm1.compact.Ndm);  end
+    if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  else; DM2surf = zeros(mp.dm2.compact.Ndm);    end
+    if(any(mp.dm_ind==5))
+        DM5surf =  falco_gen_dm_surf(mp.dm5, mp.dm5.compact.dx, mp.dm5.compact.Ndm); 
+        figure(325); imagesc(DM5surf); axis xy equal tight; colorbar; drawnow;
+        figure(326); imagesc(mp.dm5.V); axis xy equal tight; colorbar; drawnow;
+    end
+
     % if(any(mp.dm_ind==9)); DM9phase =  padOrCropEven(falco_dm_surf_from_cube(mp.dm9,mp.dm9.compact), mp.dm9.compact.NxiFPM); end
     switch mp.coro
         case{'EHLC'}
@@ -203,11 +210,13 @@ for Itr=1:mp.Nitr
         %--Re-include all actuators in the basis set.
         if(any(mp.dm_ind==1)); mp.dm1.act_ele = 1:mp.dm1.NactTotal; end
         if(any(mp.dm_ind==2)); mp.dm2.act_ele = 1:mp.dm2.NactTotal; end
+        if(any(mp.dm_ind==5)); mp.dm5.act_ele = 1:mp.dm5.NactTotal; end
         if(any(mp.dm_ind==8)); mp.dm8.act_ele = 1:mp.dm8.NactTotal; end
         if(any(mp.dm_ind==9)); mp.dm9.act_ele = 1:mp.dm9.NactTotal; end
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); end
+        if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); end
         if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); end
         if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); end
     end
@@ -234,7 +243,8 @@ for Itr=1:mp.Nitr
 
     % Add spatially-dependent weighting to the control Jacobians
     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
-    if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end  
+    if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end
+    if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5.*repmat(mp.WspatialVec,[1,mp.dm5.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end 
 
@@ -444,6 +454,7 @@ if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, m
 %--Data to store
 if(any(mp.dm_ind==1)); out.dm1.Vall(:,:,Itr) = mp.dm1.V; end % DM1S_array(:,:,Itr) = single(DM1surf); end
 if(any(mp.dm_ind==2)); out.dm2.Vall(:,:,Itr) = mp.dm2.V; end %DM2S_array(:,:,Itr) = single(DM2surf); end
+if(any(mp.dm_ind==5)); out.dm5.Vall(:,:,Itr) = mp.dm5.V; end
 if(any(mp.dm_ind==8)); out.dm8.Vall(:,Itr) = mp.dm8.V;  end
 if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V;  end
 
@@ -562,14 +573,23 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
                 %if(mp.flagPlot); figure(81); imagesc(log10(G1intNorm),[-6 0]); axis xy equal tight; colorbar; end
                 clear G1intNorm
             end
-                if(any(mp.dm_ind==2))
+            if(any(mp.dm_ind==2))
                 G2intNorm = zeros(mp.dm2.Nact);
                 G2intNorm(1:end) = sum( mean(abs(jacStruct.G2).^2,3),1);
                 G2intNorm = G2intNorm/max(max(G2intNorm));
                 mp.dm2.act_ele = find(G2intNorm>=10^(mp.logGmin));
                 %if(mp.flagPlot); figure(82); imagesc(log10(G2intNorm),[-6 0]); axis xy equal tight; colorbar; end
                 clear G2intNorm
-                end
+            end
+            
+            if(any(mp.dm_ind==5))
+                G5intNorm = zeros(mp.dm5.Nact);
+                G5intNorm(1:end) = sum( mean(abs(jacStruct.G5).^2,3),1);
+                G5intNorm = G5intNorm/max(max(G5intNorm));
+                mp.dm5.act_ele = find(G5intNorm>=10^(mp.logGmin));
+                %if(mp.flagPlot); figure(85); imagesc(log10(G5intNorm),[-6 0]); axis xy equal tight; colorbar; end
+                clear G5intNorm
+            end
 
             if(any(mp.dm_ind==8))
                 G8intNorm = zeros(mp.dm8.NactTotal,1);
@@ -589,18 +609,21 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
             %--Update the number of elements used per DM
             if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); end
             if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); end
+            if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); end
             if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); end
             if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); end
             %mp.NelePerDMvec = [length(mp.dm1.Nele), length(mp.dm2.Nele), length(mp.dm3.Nele), length(mp.dm4.Nele), length(mp.dm5.Nele), length(mp.dm6.Nele), length(mp.dm7.Nele), length(mp.dm8.Nele), length(mp.dm9.Nele) ];
 
             if(any(mp.dm_ind==1)); fprintf('  DM1: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm1.Nele, mp.dm1.NactTotal,100*mp.dm1.Nele/mp.dm1.NactTotal); end
             if(any(mp.dm_ind==2)); fprintf('  DM2: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm2.Nele, mp.dm2.NactTotal,100*mp.dm2.Nele/mp.dm2.NactTotal); end
+            if(any(mp.dm_ind==5)); fprintf('  DM5: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm5.Nele, mp.dm5.NactTotal,100*mp.dm5.Nele/mp.dm5.NactTotal); end
             if(any(mp.dm_ind==8)); fprintf('  DM8: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm8.Nele, mp.dm8.NactTotal,100*mp.dm8.Nele/mp.dm8.NactTotal); end
             if(any(mp.dm_ind==9)); fprintf('  DM9: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm9.Nele, mp.dm9.NactTotal,100*mp.dm9.Nele/mp.dm9.NactTotal); end
             
             %--Crop out unused actuators from the control Jacobian
             if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1(:,mp.dm1.act_ele,:); end
             if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2(:,mp.dm2.act_ele,:); end
+            if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5(:,mp.dm5.act_ele,:); end
             if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8(:,mp.dm8.act_ele,:); end
             if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9(:,mp.dm9.act_ele,:); end
         end  
@@ -700,6 +723,10 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     if(any(mp.dm_ind==2))
         mp.dm2.dV = dDM.dDM2V;
         mp.dm2.V = mp.dm2.V + mp.dm2.dV; 
+    end
+    if(any(mp.dm_ind==5))
+        mp.dm5.dV = dDM.dDM5V;
+        mp.dm5.V = mp.dm5.V + mp.dm5.dV; 
     end
     if(any(mp.dm_ind==8))
         mp.dm8.dV = dDM.dDM8V(:);

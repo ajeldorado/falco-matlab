@@ -395,11 +395,25 @@ if(mp.flagDM2stop)
     mp.dm2.compact.mask = falco_gen_DM_stop(mp.P2.compact.dx,mp.dm2.Dstop,mp.centering);
 end
 
+%% DM5:
+%  Start by having DM5 be the same as DM1, but in amplitude.
+mp.dm5 = mp.dm1;
+mp.dm5.VtoH = ones(mp.dm5.Nact);
+mp.dm5.V = .6*ones(mp.dm5.Nact); %--Start at 1 instead of 0 because it is amplitude, not phase
+
+mp.dm5.Vmin = 0;
+mp.dm5.Vmax = 0.7;%1;
+mp.dm5.maxAbsdV = 0.25; 
+
+mp.dm_ind = 5; %--DEBUGGING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 %% %--First delta DM settings are zero (for covariance calculation in Kalman filters or robust controllers)
 mp.dm1.dV = zeros(mp.dm1.Nact,mp.dm1.Nact);  % delta voltage on DM1;
 mp.dm2.dV = zeros(mp.dm2.Nact,mp.dm2.Nact);  % delta voltage on DM2;
+mp.dm5.dV = zeros(mp.dm5.Nact,mp.dm5.Nact);  % delta voltage on DM2;
 mp.dm8.dV = zeros(mp.dm8.NactTotal,1);  % delta voltage on DM8;
 mp.dm9.dV = zeros(mp.dm9.NactTotal,1);  % delta voltage on DM9;
+
 
 
 %% Array Sizes for Angular Spectrum Propagation with FFTs

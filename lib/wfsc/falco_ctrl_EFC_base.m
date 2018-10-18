@@ -37,6 +37,7 @@ dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
 %--Save starting point for each delta command to be added to.
 if(any(mp.dm_ind==1)); DM1Vnom = mp.dm1.V; end
 if(any(mp.dm_ind==2)); DM2Vnom = mp.dm2.V; end
+if(any(mp.dm_ind==5)); DM5Vnom = mp.dm5.V; end
 if(any(mp.dm_ind==8)); DM8Vnom = mp.dm8.V(:); end
 if(any(mp.dm_ind==9)); DM9Vnom = mp.dm9.V; end
 
@@ -58,6 +59,7 @@ dDMvec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar
 %--Initialize delta DM commands
 if(any(mp.dm_ind==1)); dDM1V = zeros(mp.dm1.Nact); end
 if(any(mp.dm_ind==2)); dDM2V = zeros(mp.dm2.Nact); end
+if(any(mp.dm_ind==5)); dDM5V = zeros(mp.dm5.Nact); end
 if(any(mp.dm_ind==8)); dDM8V = zeros(mp.dm8.NactTotal,1); end
 if(any(mp.dm_ind==9)); dDM9V = zeros(mp.dm9.NactTotal,1); end
 
@@ -78,6 +80,14 @@ if(any(mp.dm_ind==2)) %--DM2
     dDM2V = dDM2V*mp.dm_weights(2); %--Re-scale correctly based on the DM's weighting
     dDM2Vmax = max(abs(dDM2V(:)));
     startIndex = startIndex + mp.dm2.Nele; % Set for next DM
+end
+
+%--DM5
+if(any(mp.dm_ind==5)) %--DM5
+    dDM5V(mp.dm5.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm5.Nele);
+    dDM5V = dDM5V*mp.dm_weights(5); %--Re-scale correctly based on the DM's weighting
+    dDM5Vmax = max(abs(dDM5V(:)));
+    startIndex = startIndex + mp.dm5.Nele; % Set for next DM
 end
 
 %--DM8
@@ -161,6 +171,21 @@ if(any(mp.dm_ind==2))
 end
 
 
+if(any(mp.dm_ind==5)) 
+    figure(327); imagesc(dDM5V); colorbar; axis xy equal tight;
+
+    %--Apply voltage range restrictions
+    DM5Vtemp = DM5Vnom + dDM5V;
+    DM5Vtemp(find(DM5Vtemp < mp.dm5.Vmin)) = mp.dm5.Vmin; 
+    DM5Vtemp(find(DM5Vtemp > mp.dm5.Vmax)) = mp.dm5.Vmax; 
+    
+    dDM5V = DM5Vtemp - DM5Vnom;
+    mp.dm5.V = DM5Vnom + dDM5V; 
+end
+
+
+
+
 %% Take images to empirically check contrast at that mu value
 Itotal = falco_get_summed_image(mp);
 InormAvg = mean(Itotal(mp.F4.corr.maskBool));
@@ -168,6 +193,7 @@ InormAvg = mean(Itotal(mp.F4.corr.maskBool));
 
 if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V; end
 if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V; end
+if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V; end
 if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V(:); end
 if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V(:); end
 
