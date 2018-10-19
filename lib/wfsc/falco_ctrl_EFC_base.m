@@ -96,19 +96,20 @@ if(any(mp.dm_ind==8))  %--DM8
     dDM8V = dDM8V*mp.dm_weights(8); %--Re-scale correctly based on the DM's weighting
     startIndex = startIndex + mp.dm8.Nele; % Set for next DM
 
-    %--Rescale the voltage range if it goes too high (and becomes highly nonlinear)
-    if( max(abs(dDM8V(:))) > mp.dm8.dVmax )  
-        dDM8V = dDM8V*(mp.dm8.dVmax/max(abs(dDM8V(:)))); 
-    end
+%     %--Rescale the voltage range if it goes too high (and becomes highly nonlinear)
+%     if( max(abs(dDM8V(:))) > mp.dm8.dVmax )  
+%         dDM8V = dDM8V*(mp.dm8.dVmax/max(abs(dDM8V(:)))); 
+%     end
+%     
+%     %--Apply voltage range restrictions
+%     DM8Vtemp = DM8Vnom(:) + dDM8V(:);
+%     DM8Vtemp(DM8Vtemp < mp.dm8.Vmin) = mp.dm8.Vmin; 
+%     DM8Vtemp(DM8Vtemp > mp.dm8.Vmax) = mp.dm8.Vmax; 
+% %     DM8Vtemp(find(DM8Vtemp < mp.dm8.Vmin)) = mp.dm8.Vmin; 
+% %     DM8Vtemp(find(DM8Vtemp > mp.dm8.Vmax)) = mp.dm8.Vmax; 
+%     
+%     dDM8V(:) = DM8Vtemp(:) - DM8Vnom(:);
     
-    %--Apply voltage range restrictions
-    DM8Vtemp = DM8Vnom(:) + dDM8V(:);
-    DM8Vtemp(DM8Vtemp < mp.dm8.Vmin) = mp.dm8.Vmin; 
-    DM8Vtemp(DM8Vtemp > mp.dm8.Vmax) = mp.dm8.Vmax; 
-%     DM8Vtemp(find(DM8Vtemp < mp.dm8.Vmin)) = mp.dm8.Vmin; 
-%     DM8Vtemp(find(DM8Vtemp > mp.dm8.Vmax)) = mp.dm8.Vmax; 
-    
-    dDM8V(:) = DM8Vtemp(:) - DM8Vnom(:);
     mp.dm8.V(:) = DM8Vnom(:) + dDM8V(:);
     
 end
@@ -119,67 +120,71 @@ if(any(mp.dm_ind==9))  %--DM9
     dDM9V = dDM9V*mp.dm_weights(9); %--Re-scale correctly based on the DM's weighting
     startIndex = startIndex + mp.dm9.Nele; % Set for next DM
     
-    %--Rescale the voltage range if it goes too high (and becomes highly nonlinear)
-    if( max(abs(dDM9V(:))) > mp.maxAbsdV )  
-        dDM9V = dDM9V*(mp.maxAbsdV/max(abs(dDM9V(:)))); 
-    end
+%     %--Rescale the voltage range if it goes too high (and becomes highly nonlinear)
+%     if( max(abs(dDM9V(:))) > mp.maxAbsdV )  
+%         dDM9V = dDM9V*(mp.maxAbsdV/max(abs(dDM9V(:)))); 
+%     end
+%     
+%     %--Apply voltage range restrictions
+%     DM9Vtemp = DM9Vnom + dDM9V;
+%     DM9Vtemp(find(DM9Vtemp < mp.dm9.Vmin)) = mp.dm9.Vmin; 
+%     DM9Vtemp(find(DM9Vtemp > mp.dm9.Vmax)) = mp.dm9.Vmax; 
+%     
+%     dDM9V = DM9Vtemp - DM9Vnom;
     
-    %--Apply voltage range restrictions
-    DM9Vtemp = DM9Vnom + dDM9V;
-    DM9Vtemp(find(DM9Vtemp < mp.dm9.Vmin)) = mp.dm9.Vmin; 
-    DM9Vtemp(find(DM9Vtemp > mp.dm9.Vmax)) = mp.dm9.Vmax; 
-    
-    dDM9V = DM9Vtemp - DM9Vnom;
     mp.dm9.V = DM9Vnom + dDM9V;
     
 end
 
 %% Rescale the DM1 and DM2 voltage ranges equally if either goes too high (and becomes highly nonlinear)  
-if(any(mp.dm_ind==1) && any(mp.dm_ind==2)) %--DMs 1 and 2 used
-    if( (dDM1Vmax > mp.maxAbsdV) || (dDM2Vmax > mp.maxAbsdV) )
-        dDM1V = dDM1V*(mp.maxAbsdV/max([dDM1Vmax,dDM2Vmax]));   
-        dDM2V = dDM2V*(mp.maxAbsdV/max([dDM1Vmax,dDM2Vmax]));   
-    end
-elseif(any(mp.dm_ind==1)) %--DM1,but no DM2
-    if(dDM1Vmax > mp.maxAbsdV)
-        dDM1V = dDM1V*(mp.maxAbsdV/dDM1Vmax); 
-    end
-elseif(any(mp.dm_ind==2)) %--DM2, but no DM1
-    if(dDM2Vmax > mp.maxAbsdV)
-        dDM2V = dDM2V*(mp.maxAbsdV/dDM2Vmax); 
-    end
-end
+% if(any(mp.dm_ind==1) && any(mp.dm_ind==2)) %--DMs 1 and 2 used
+%     if( (dDM1Vmax > mp.maxAbsdV) || (dDM2Vmax > mp.maxAbsdV) )
+%         dDM1V = dDM1V*(mp.maxAbsdV/max([dDM1Vmax,dDM2Vmax]));   
+%         dDM2V = dDM2V*(mp.maxAbsdV/max([dDM1Vmax,dDM2Vmax]));   
+%     end
+% elseif(any(mp.dm_ind==1)) %--DM1,but no DM2
+%     if(dDM1Vmax > mp.maxAbsdV)
+%         dDM1V = dDM1V*(mp.maxAbsdV/dDM1Vmax); 
+%     end
+% elseif(any(mp.dm_ind==2)) %--DM2, but no DM1
+%     if(dDM2Vmax > mp.maxAbsdV)
+%         dDM2V = dDM2V*(mp.maxAbsdV/dDM2Vmax); 
+%     end
+% end
     
 if(any(mp.dm_ind==1)) 
-    %--Apply voltage range restrictions
-    DM1Vtemp = DM1Vnom + dDM1V;
-    DM1Vtemp(find(DM1Vtemp < -mp.dm1.maxAbsV)) = -mp.dm1.maxAbsV ; 
-    DM1Vtemp(find(DM1Vtemp >  mp.dm1.maxAbsV)) =  mp.dm1.maxAbsV ; 
-    
-    dDM1V = DM1Vtemp - DM1Vnom;
+%     %--Apply voltage range restrictions
+%     DM1Vtemp = DM1Vnom + dDM1V;
+%     DM1Vtemp(find(DM1Vtemp < -mp.dm1.maxAbsV)) = -mp.dm1.maxAbsV ; 
+%     DM1Vtemp(find(DM1Vtemp >  mp.dm1.maxAbsV)) =  mp.dm1.maxAbsV ; 
+%     
+%     dDM1V = DM1Vtemp - DM1Vnom;
+%     
     mp.dm1.V = DM1Vnom + dDM1V;
 end
 
 if(any(mp.dm_ind==2)) 
-    %--Apply voltage range restrictions
-    DM2Vtemp = DM2Vnom + dDM2V;
-    DM2Vtemp(find(DM2Vtemp < -mp.dm2.maxAbsV)) = -mp.dm2.maxAbsV ; 
-    DM2Vtemp(find(DM2Vtemp >  mp.dm2.maxAbsV)) =  mp.dm2.maxAbsV ; 
+%     %--Apply voltage range restrictions
+%     DM2Vtemp = DM2Vnom + dDM2V;
+%     DM2Vtemp(find(DM2Vtemp < -mp.dm2.maxAbsV)) = -mp.dm2.maxAbsV ; 
+%     DM2Vtemp(find(DM2Vtemp >  mp.dm2.maxAbsV)) =  mp.dm2.maxAbsV ; 
+%     
+%     dDM2V = DM2Vtemp - DM2Vnom;
     
-    dDM2V = DM2Vtemp - DM2Vnom;
     mp.dm2.V = DM2Vnom + dDM2V; 
 end
 
 
 if(any(mp.dm_ind==5)) 
-    figure(327); imagesc(dDM5V); colorbar; axis xy equal tight;
-
-    %--Apply voltage range restrictions
-    DM5Vtemp = DM5Vnom + dDM5V;
-    DM5Vtemp(find(DM5Vtemp < mp.dm5.Vmin)) = mp.dm5.Vmin; 
-    DM5Vtemp(find(DM5Vtemp > mp.dm5.Vmax)) = mp.dm5.Vmax; 
+%     figure(327); imagesc(dDM5V); colorbar; axis xy equal tight;
+% 
+%     %--Apply voltage range restrictions
+%     DM5Vtemp = DM5Vnom + dDM5V;
+%     DM5Vtemp(find(DM5Vtemp < mp.dm5.Vmin)) = mp.dm5.Vmin; 
+%     DM5Vtemp(find(DM5Vtemp > mp.dm5.Vmax)) = mp.dm5.Vmax; 
+%     
+%     dDM5V = DM5Vtemp - DM5Vnom;
     
-    dDM5V = DM5Vtemp - DM5Vnom;
     mp.dm5.V = DM5Vnom + dDM5V; 
 end
 
