@@ -410,7 +410,7 @@ end
 %% %--First delta DM settings are zero (for covariance calculation in Kalman filters or robust controllers)
 mp.dm1.dV = zeros(mp.dm1.Nact,mp.dm1.Nact);  % delta voltage on DM1;
 mp.dm2.dV = zeros(mp.dm2.Nact,mp.dm2.Nact);  % delta voltage on DM2;
-mp.dm5.dV = zeros(mp.dm5.Nact,mp.dm5.Nact);  % delta voltage on DM2;
+% mp.dm5.dV = zeros(mp.dm5.Nact,mp.dm5.Nact);  % delta voltage on DM2;
 mp.dm8.dV = zeros(mp.dm8.NactTotal,1);  % delta voltage on DM8;
 mp.dm9.dV = zeros(mp.dm9.NactTotal,1);  % delta voltage on DM9;
 
