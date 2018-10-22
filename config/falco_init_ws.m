@@ -87,15 +87,15 @@ mp.wi_ref = ceil(mp.Nwpsbp/2);
 
 %--Wavelengths used for Compact Model (and Jacobian Model)
 mp.sbp_weights = ones(mp.Nsbp,1);
-if(strcmpi(mp.estimator,'perfect') && mp.Nsbp>1) %--For design or modeling without estimation: Choose ctrl wvls evenly between endpoints of the total bandpass
+if(strcmpi(mp.estimator,'perfect') && mp.Nsbp>1) %--For design or modeling without estimation: Choose ctrl wvls evenly between endpoints (inclusive) of the total bandpass
     mp.fracBWsbp = mp.fracBW/(mp.Nsbp-1);
     mp.sbp_centers = mp.lambda0*linspace( 1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
+%     mp.sbp_weights(1) = 1/2;
+%     mp.sbp_weights(end) = 1/2;
 else %--For cases with estimation: Choose est/ctrl wavelengths to be at subbandpass centers.
     mp.fracBWsbp = mp.fracBW/mp.Nsbp;
     mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
     mp.sbp_centers = mp.lambda0*linspace( 1-mp.fracBWcent2cent/2,1+mp.fracBWcent2cent/2,mp.Nsbp); %--Space evenly at the centers of the subbandpasses.
-    mp.sbp_weights(1) = 1/2;
-    mp.sbp_weights(end) = 1/2;
 end
 mp.sbp_weights = mp.sbp_weights/sum(mp.sbp_weights); %--Normalize the sum of the weights
 
@@ -395,11 +395,25 @@ if(mp.flagDM2stop)
     mp.dm2.compact.mask = falco_gen_DM_stop(mp.P2.compact.dx,mp.dm2.Dstop,mp.centering);
 end
 
+%% DM5:
+% %  Start by having DM5 be the same as DM1, but in amplitude.
+% mp.dm5 = mp.dm1;
+% mp.dm5.VtoH = ones(mp.dm5.Nact);
+% mp.dm5.V = .6*ones(mp.dm5.Nact); %--Start at 1 instead of 0 because it is amplitude, not phase
+% 
+% mp.dm5.Vmin = 0;
+% mp.dm5.Vmax = 0.7;%1;
+% mp.dm5.maxAbsdV = 0.25; 
+% 
+% %mp.dm_ind = 5; %--DEBUGGING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 %% %--First delta DM settings are zero (for covariance calculation in Kalman filters or robust controllers)
 mp.dm1.dV = zeros(mp.dm1.Nact,mp.dm1.Nact);  % delta voltage on DM1;
 mp.dm2.dV = zeros(mp.dm2.Nact,mp.dm2.Nact);  % delta voltage on DM2;
+% mp.dm5.dV = zeros(mp.dm5.Nact,mp.dm5.Nact);  % delta voltage on DM2;
 mp.dm8.dV = zeros(mp.dm8.NactTotal,1);  % delta voltage on DM8;
 mp.dm9.dV = zeros(mp.dm9.NactTotal,1);  % delta voltage on DM9;
+
 
 
 %% Array Sizes for Angular Spectrum Propagation with FFTs

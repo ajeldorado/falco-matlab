@@ -78,6 +78,7 @@ function jacStruct = model_Jacobian(mp)
 
             if(whichDM==1); jacStruct.G1(:,:,im) =  Jtemp{ii};  end
             if(whichDM==2); jacStruct.G2(:,:,im) =  Jtemp{ii};  end
+            if(whichDM==5); jacStruct.G5(:,:,im) =  Jtemp{ii};  end
             if(whichDM==8); jacStruct.G8(:,:,im) =  Jtemp{ii};  end
             if(whichDM==9); jacStruct.G9(:,:,im) =  Jtemp{ii};  end
         end
@@ -93,6 +94,7 @@ function jacStruct = model_Jacobian(mp)
                         
             if(whichDM==1); jacStruct.G1(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
             if(whichDM==2); jacStruct.G2(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+            if(whichDM==5); jacStruct.G5(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
             if(whichDM==8); jacStruct.G8(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
             if(whichDM==9); jacStruct.G9(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
         end

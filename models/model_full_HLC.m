@@ -68,6 +68,8 @@ else
     DM2surf = 0;
 end
 
+if(any(mp.dm_ind==5)); DM5apod = falco_gen_dm_surf(mp.dm5, mp.dm1.dx, NdmPad); else; DM5apod = ones(NdmPad); end %--Pre-compute the starting DM5 amplitude
+
 % %--Complex transmission map of the FPM.
 % ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
 % if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
@@ -101,6 +103,9 @@ if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.full.mask, NdmPad); else; DM2
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
+% if(mp.flagDM5);  
+    EP1 = EP1.*padOrCropEven(DM5apod,NdmPad);  
+% end
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
