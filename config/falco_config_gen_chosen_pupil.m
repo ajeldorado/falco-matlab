@@ -222,7 +222,7 @@ switch mp.whichPupil
             
             if(mp.flagPlot)
                 figure;imagesc(angle(mp.P1.full.E(:,:,1,1))/2/pi);axis image;colorbar;title('Phase of telescope aperture (waves)');
-                figure;imagesc(angle(mp.P1.compact.E(:,:,1))/2/pi);axis image;colorbar;title('Phase of telescope aperture (waves)');
+                %figure;imagesc(angle(mp.P1.compact.E(:,:,1))/2/pi);axis image;colorbar;title('Phase of telescope aperture (waves)');
             end
         end
         
