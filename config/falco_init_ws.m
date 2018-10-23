@@ -466,12 +466,12 @@ mp.full.NdmPad = NdmPad;
 if(isfield(mp.P1.full,'E')==false)
     mp.P1.full.E  = ones(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
 end
-% mp.P1.full.E = mp.Estar; %--Re-define in the main code if pupil phase flattening is done.
+
 mp.Eplanet = mp.P1.full.E; %--Initialize the input E-field for the planet at the entrance pupil. Will apply the phase ramp later
-% mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nwpsbp,mp.Nsbp);
-% if(isfield(mp.P1.compact,'E')==false)
+
+if(isfield(mp.P1.compact,'E')==false)
     mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
-% end
+end
 
 %% Off-axis, incoherent point source (exoplanet)
 mp.c_planet = 1;%1e-14;%4e-10;%3e-10;%1e-8; % contrast of exoplanet
