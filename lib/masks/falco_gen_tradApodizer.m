@@ -41,7 +41,7 @@ function APOD = falco_gen_tradApodizer(PUPIL,apDiaSamps,effIWA,effOWA,useGPU)
 
     prevMetric = 1; 
     minThpt = 0.3;
-    maxIts = 500;
+    maxIts = 50;
     
     A = PUPIL;
     normI = max(max(abs(fft2(PUPIL)).^2));
