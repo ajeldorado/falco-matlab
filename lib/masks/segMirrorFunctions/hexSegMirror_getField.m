@@ -26,6 +26,12 @@ pistons = hexMirror_struct.pistons;
 tiltxs = hexMirror_struct.tiltxs; 
 tiltys = hexMirror_struct.tiltys; 
 
+if(isfield(hexMirror_struct,'missingSegments'))
+    missingSegments = hexMirror_struct.missingSegments;
+else
+    missingSegments = ones(1,hexSegMirror_numSegments( numRings ));
+end
+
 N1 = 2^nextpow2(apDia);
 OUT = zeros(N1);
 
@@ -38,8 +44,10 @@ for ringNum = 0:numRings
     cenrow = ringNum*hexSep;
     cencol = 0;
     
-    [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
-                gapWidth, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+    if(missingSegments(segNum)==1)
+        [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
+                    gapWidth, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+    end
     segNum = segNum + 1;
     
     for face = 1:6
@@ -56,8 +64,10 @@ for ringNum = 0:numRings
             if(face==6 && stepnum==ringNum)
                 %disp(['Finished ring ',num2str(ringNum)]);
             else
-                [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
-                            gapWidth, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+                if(missingSegments(segNum)==1)
+                    [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
+                                gapWidth, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+                end
                 segNum = segNum + 1;
             end
             stepnum = stepnum + 1;
