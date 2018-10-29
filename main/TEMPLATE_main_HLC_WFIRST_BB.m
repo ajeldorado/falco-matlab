@@ -15,23 +15,9 @@ clear all;
 
 
 
-%% 
-LS_ID_vec = 0.45; %(48:1:53)/100;
-LS_OD_vec = 0.78; %(78:1:83)/100;
 
-vals_list = allcomb(LS_ID_vec,LS_OD_vec).'; %--dimensions: [2 x length(mp.Nttlam)*length(mp.dm_ind) ]
-%     Nvals = size(vals_list,2);
 
-Nsurvey = size(vals_list,2);
 
-for isurvey = 1:Nsurvey
-
-clear mp
-
-mp.P4.IDnorm = vals_list(1,isurvey); %--Lyot stop ID
-mp.P4.ODnorm = vals_list(2,isurvey); %--Lyot stop OD
-
-fprintf('******** LS ID = %.2f\t\tLS OD = %.2f\t\t ********\n',mp.P4.IDnorm, mp.P4.ODnorm);
 
 %% Define Necessary Paths on Your System
 
@@ -121,6 +107,9 @@ mp.P1.compact.Nbeam = mp.P1.full.Nbeam;
 mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
 % mp.P4.IDnorm = 0.53;%0.50;
 % mp.P4.ODnorm = 0.79;%0.80;
+mp.P4.IDnorm = 0.45; %--Lyot stop ID
+mp.P4.ODnorm = 0.78; %--Lyot stop OD
+% fprintf('******** LS ID = %.2f\t\tLS OD = %.2f\t\t ********\n',mp.P4.IDnorm, mp.P4.ODnorm);
 
 
 %%--Controller Settings
@@ -347,10 +336,8 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 out = falco_wfsc_loop(mp);
 
 
-% fprintf('*** Total time for this trial =     %d seconds    (%.2f minutes) \n\n  ***',toc,toc/60)
 
 
-end %--END OF SURVEY LOOP
 
 
 
