@@ -139,7 +139,7 @@ mp.dm2.inf0 = infCrop;
 
 
 %%--Controller Settings
-mp.maxAbsdV = 50;  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
+mp.maxAbsdV = 150;%100;%50;  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
 mp.logGmin = -7;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
 mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
 switch mp.controller

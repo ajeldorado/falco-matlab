@@ -40,6 +40,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
     % Temporarily store computed DM commands so that the best one does not have to be re-computed
     if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals); end
     if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals); end
+    if(any(mp.dm_ind==5)); dDM5V_store = zeros(mp.dm5.Nact,mp.dm5.Nact,Nvals); end
     if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals); end
     if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals); end
 
@@ -53,6 +54,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
                 [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
                 if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
                 if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
+                if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
                 if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
             end
@@ -61,6 +63,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
                 [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
                 if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
                 if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
+                if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
                 if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
             end
@@ -96,6 +99,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
     
         if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
         if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
+        if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest); end
         if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest); end
         if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest); end
         

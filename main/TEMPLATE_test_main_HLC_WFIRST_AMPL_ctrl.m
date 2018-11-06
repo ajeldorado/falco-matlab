@@ -15,9 +15,23 @@ clear all;
 
 
 
+% %% 
+% LS_ID_vec = 0.45; %(48:1:53)/100;
+% LS_OD_vec = 0.78; %(78:1:83)/100;
+% 
+% vals_list = allcomb(LS_ID_vec,LS_OD_vec).'; %--dimensions: [2 x length(mp.Nttlam)*length(mp.dm_ind) ]
+% %     Nvals = size(vals_list,2);
+% 
+% Nsurvey = size(vals_list,2);
+% 
+% for isurvey = 1:Nsurvey
+% 
+% clear mp
 
+mp.P4.IDnorm = 0.45;%vals_list(1,isurvey); %--Lyot stop ID
+mp.P4.ODnorm = 0.78;%vals_list(2,isurvey); %--Lyot stop OD
 
-
+fprintf('******** LS ID = %.2f\t\tLS OD = %.2f\t\t ********\n',mp.P4.IDnorm, mp.P4.ODnorm);
 
 %% Define Necessary Paths on Your System
 
@@ -75,7 +89,9 @@ mp.dm9.V0coef = 390;%240/1.42; % Nominal PMGI layer thickness [nm] (the 1.42 dis
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'conEFC' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
+%  - 'ampl' for constrained EFC using AMPL. --> DEVELOPMENT ONLY
+mp.controller = 'ampl';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
+
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
@@ -91,7 +107,7 @@ mp.d_dm1_dm2 = 1; % distance between DM1 and DM2 (meters)
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 575e-9; % central wavelength of bandpass (meters)
 mp.fracBW = 0.10;%0.125;%0.10;%0.125;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
-mp.Nsbp = 6; % number of sub-bandpasses across correction band 
+mp.Nsbp = 1;%6; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
 %--FPM
@@ -107,13 +123,12 @@ mp.P1.compact.Nbeam = mp.P1.full.Nbeam;
 mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
 % mp.P4.IDnorm = 0.53;%0.50;
 % mp.P4.ODnorm = 0.79;%0.80;
-mp.P4.IDnorm = 0.45; %--Lyot stop ID
-mp.P4.ODnorm = 0.78; %--Lyot stop OD
-% fprintf('******** LS ID = %.2f\t\tLS OD = %.2f\t\t ********\n',mp.P4.IDnorm, mp.P4.ODnorm);
 
 
 %%--Controller Settings
 mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
+mp.logGmin = -7;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
+
 switch mp.controller
     case{'gridsearchEFC'} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast
@@ -128,16 +143,22 @@ switch mp.controller
         mp.Nitr = 20; %--Number of estimation+control iterations to perform
         mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 
+        %--Voltage range restrictions
+        mp.dm1.maxAbsV = 250;%250./2.;
+        mp.dm2.maxAbsV = 250;%250./2.;
+
     case{'plannedEFC'}
         mp.dm_ind = [1 2 9]; % vector of which DMs to compute Jacobians for at some point (not necessarily all at once or all the time). 
 
         mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
-        mp.logGmin = -7;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
 
         mp.maxAbsdV = 150; %100  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
         mp.ctrl.dmfacVec = 1;
         
-
+        %--Voltage range restrictions
+        mp.dm1.maxAbsV = 250;%250./2.;
+        mp.dm2.maxAbsV = 250;%250./2.;
+        
         %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
             % Column 1: # of iterations, 
             % Column 2: log10(regularization), 
@@ -208,18 +229,36 @@ switch mp.controller
 % 
 %         [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
+
+%     case{'conEFC'} %--Constrained EFC
+%         mp.dm1.dVpvMax = 30;
+%         mp.dm2.dVpvMax = 30;
+%         %mp.dm9.dVpvMax = 40;
+%         mp.ctrl.dmfacVec = 1;
+%         mp.ctrl.muVec = 10.^(5); %10.^(8:-1:1);
+
+
+    case{'SM-AMPL'} %--Constrained EFC with AMPL
         
-    case{'conEFC'} %--Constrained EFC
-        mp.dm1.dVpvMax = 30;
-        mp.dm2.dVpvMax = 30;
-        %mp.dm9.dVpvMax = 40;
+        mp.dm_ind = [1 2 9]; %--Which DMs to use and when
+        mp.ctrl.log10regVec = -5:1:-2;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
         mp.ctrl.dmfacVec = 1;
-        mp.ctrl.muVec = 10.^(5); %10.^(8:-1:1);
+
+        %--Delta voltage range restrictions
+        mp.dm1.maxAbsdV = 30;
+        mp.dm2.maxAbsdV = 30;
+        mp.dm9.maxAbsdV = 5;
+        mp.dm9.maxAbsdV = 40;
+        
+        %--Absolute voltage range restrictions
+        mp.dm1.maxAbsV = 150;%250;
+        mp.dm2.maxAbsV = 150;%250;
+        
+
+
         
 end
-%--Voltage range restrictions
-mp.dm1.maxAbsV = 250;%250./2.;
-mp.dm2.maxAbsV = 250;%250./2.;
+
 
 
 % %%--Tip/Tilt Control
@@ -336,8 +375,8 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 out = falco_wfsc_loop(mp);
 
 
-
-
+% fprintf('*** Total time for this trial =     %d seconds    (%.2f minutes) \n\n  ***',toc,toc/60)
+% end %--END OF SURVEY LOOP
 
 
 

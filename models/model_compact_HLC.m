@@ -72,6 +72,8 @@ end
 %--Compute the DM surfaces for the current DM commands
 if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, NdmPad); else; DM1surf = 0; end %--Pre-compute the starting DM1 surface
 if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, NdmPad); else; DM2surf = 0; end %--Pre-compute the starting DM2 surface
+if(any(mp.dm_ind==5)); DM5apod = falco_gen_dm_surf(mp.dm5, mp.dm1.compact.dx, NdmPad); else; DM5apod = ones(NdmPad); end %--Pre-compute the starting DM5 amplitude
+
 % if(any(mp.dm_ind==9)); DM9phase = padOrCropEven(falco_dm_surf_from_cube(mp.dm9,mp.dm9.compact),mp.F3.compact.Nxi); else DM9phase = 0; end %--Pre-compute the starting DM9 surface
    
 % %--Generate the FPM's complex transmission map
@@ -118,6 +120,10 @@ if mp.IFzern
 else
     EP1 = pupil.*Ein; %--E-field at pupil plane P1
 end
+
+% if(mp.flagDM5)
+    EP1 = EP1.*padOrCropEven(DM5apod,NdmPad);
+% end
 
 %--Define pupil P1 and Propagate to pupil P2
 %EP1 = pupil.*Ein; %--E-field at pupil plane P1

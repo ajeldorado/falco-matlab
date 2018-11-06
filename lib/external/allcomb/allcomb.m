@@ -1,36 +1,11 @@
-% Copyright (c) 2016, Jos (10584)
-% All rights reserved.
-% 
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions are
-% met:
-% 
-%     * Redistributions of source code must retain the above copyright
-%       notice, this list of conditions and the following disclaimer.
-%     * Redistributions in binary form must reproduce the above copyright
-%       notice, this list of conditions and the following disclaimer in
-%       the documentation and/or other materials provided with the distribution
-% 
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-% POSSIBILITY OF SUCH DAMAGE.
-
 function A = allcomb(varargin)
 
 % ALLCOMB - All combinations
 %    B = ALLCOMB(A1,A2,A3,...,AN) returns all combinations of the elements
-%    in the arrays A1, A2, ..., and AN. B is P-by-N matrix is which P is the product
-%    of the number of elements of the N inputs. This functionality is also
-%    known as the Cartesian Product. The arguments can be numerical and/or
-%    characters, or they can be cell arrays.
+%    in the arrays A1, A2, ..., and AN. B is P-by-N matrix where P is the product
+%    of the number of elements of the N inputs. 
+%    This functionality is also known as the Cartesian Product. The
+%    arguments can be numerical and/or characters, or they can be cell arrays.
 %
 %    Examples:
 %       allcomb([1 3 5],[-3 8],[0 1]) % numerical input:
@@ -44,7 +19,7 @@ function A = allcomb(varargin)
 %       allcomb('abc','XY') % character arrays
 %       % -> [ aX ; aY ; bX ; bY ; cX ; cY] % a 6-by-2 character array
 %
-%       allcomb('xy',[65 66]) % a combination
+%       allcomb('xy',[65 66]) % a combination -> character output
 %       % -> ['xA' ; 'xB' ; 'yA' ; 'yB'] % a 4-by-2 character array
 %
 %       allcomb({'hello','Bye'},{'Joe', 10:12},{99999 []}) % all cell arrays
@@ -62,13 +37,13 @@ function A = allcomb(varargin)
 %      allcomb(1:2,3:4,5:6,'matlab') 
 %      % -> [ 1 3 5 ; 1 4 5 ; 1 3 6 ; ... ; 2 4 6 ]
 %
-%    If one of the arguments is empty, ALLCOMB returns a 0-by-N empty array.
+%    If one of the N arguments is empty, ALLCOMB returns a 0-by-N empty array.
 %    
 %    See also NCHOOSEK, PERMS, NDGRID
 %         and NCHOOSE, COMBN, KTHCOMBN (Matlab Central FEX)
 
-% Tested in Matlab R2015a
-% version 4.1 (feb 2016)
+% Tested in Matlab R2015a and up
+% version 4.2 (apr 2018)
 % (c) Jos van der Geest
 % email: samelinoa@gmail.com
 
@@ -86,13 +61,13 @@ function A = allcomb(varargin)
 % 4.0 (feb 2014) added support for cell arrays
 % 4.1 (feb 2016) fixed error for cell array input with last argument being
 %     'matlab'. Thanks to Richard for pointing this out.
+% 4.2 (apr 2018) fixed some grammar mistakes in the help and comments
 
 narginchk(1,Inf) ;
-
 NC = nargin ;
 
 % check if we should flip the order
-if ischar(varargin{end}) && (strcmpi(varargin{end},'matlab') || strcmpi(varargin{end},'john')),
+if ischar(varargin{end}) && (strcmpi(varargin{end}, 'matlab') || strcmpi(varargin{end}, 'john'))
     % based on a suggestion by JD on the FEX
     NC = NC-1 ;
     ii = 1:NC ; % now first argument will change fastest
@@ -102,38 +77,37 @@ else
 end
 
 args = varargin(1:NC) ;
-% check for empty inputs
-if any(cellfun('isempty',args)),
+
+if any(cellfun('isempty', args)) % check for empty inputs
     warning('ALLCOMB:EmptyInput','One of more empty inputs result in an empty output.') ;
-    A = zeros(0,NC) ;
-elseif NC > 1
-    isCellInput = cellfun(@iscell,args) ;
+    A = zeros(0, NC) ;
+elseif NC == 0 % no inputs
+    A = zeros(0,0) ; 
+elseif NC == 1 % a single input, nothing to combine
+    A = args{1}(:) ; 
+else
+    isCellInput = cellfun(@iscell, args) ;
     if any(isCellInput)
         if ~all(isCellInput)
             error('ALLCOMB:InvalidCellInput', ...
                 'For cell input, all arguments should be cell arrays.') ;
         end
         % for cell input, we use to indices to get all combinations
-        ix = cellfun(@(c) 1:numel(c), args,'un',0) ;
+        ix = cellfun(@(c) 1:numel(c), args, 'un', 0) ;
         
         % flip using ii if last column is changing fastest
         [ix{ii}] = ndgrid(ix{ii}) ;
         
-        A = cell(numel(ix{1}),NC) ; % pre-allocate the output
-        for k=1:NC,
+        A = cell(numel(ix{1}), NC) ; % pre-allocate the output
+        for k = 1:NC
             % combine
-            A(:,k) = reshape(args{k}(ix{k}),[],1) ;
+            A(:,k) = reshape(args{k}(ix{k}), [], 1) ;
         end
     else
         % non-cell input, assuming all numerical values or strings
         % flip using ii if last column is changing fastest
         [A{ii}] = ndgrid(args{ii}) ;
         % concatenate
-        A = reshape(cat(NC+1,A{:}),[],NC) ;
+        A = reshape(cat(NC+1,A{:}), [], NC) ;
     end
-elseif NC==1,
-    A = args{1}(:) ; % nothing to combine
-
-else % NC==0, there was only the 'matlab' flag argument
-    A = zeros(0,0) ; % nothing
 end
