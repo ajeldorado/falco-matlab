@@ -152,7 +152,7 @@ EP3 = propcustom_2FT(EP2eff, mp.centering);
 
 %--Apply apodizer mask.
 if(mp.flagApod)
-    EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P3.compact.Narr); 
+    EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P1.compact.Narr); 
 end
 
 % ===========================================================

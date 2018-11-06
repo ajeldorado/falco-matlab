@@ -153,6 +153,12 @@ switch mp.coro
             end
             P1andP4 = mp.P1.compact.mask + P4mask;
             figure(301); imagesc(P1andP4); axis xy equal tight; colorbar; set(gca,'Fontsize',20); title('Pupil and LS Superimposed','Fontsize',16');
+            
+            if(mp.flagApod)
+                P1andP3 = mp.P1.compact.mask + padOrCropEven(mp.P3.compact.mask,length(mp.P1.compact.mask));
+                figure(302); imagesc(P1andP3); axis xy equal tight; colorbar; set(gca,'Fontsize',20); title('Pupil and Apod Superimposed','Fontsize',16');
+            end
+            
         end
 end
 

@@ -124,7 +124,7 @@ EP3 = propcustom_2FT(EP2eff, mp.centering);
 
 %--Apply the apodizer mask
 if(mp.flagApod)
-    EP3 = padOrCropEven(mp.P3.full.mask,mp.P3.full.Narr).*padOrCropEven(EP3, mp.P3.full.Narr); %--Apply apodizer mask.
+    EP3 = padOrCropEven(mp.P3.full.mask,mp.P1.full.Narr).*padOrCropEven(EP3, mp.P1.full.Narr); %--Apply apodizer mask.
 end
 
 %--MFT from apodizer plane to FPM (i.e., P3 to F3)
