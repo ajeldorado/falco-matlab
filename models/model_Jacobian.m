@@ -40,8 +40,12 @@ function jacStruct = model_Jacobian(mp)
             %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
             mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
             mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
-        case{'HLC','APHLC','SPHLC','FOHLC'}
+        case{'HLC','APHLC','SPHLC'}
             [mp.FPMcube,mp.dm8.surf,mp.dm9.surf] = falco_gen_HLC_FPM_complex_trans_cube(mp,'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
+            %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
+            mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
+            mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
+        case{'FOHLC'}
             %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
             mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
             mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 

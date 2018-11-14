@@ -442,8 +442,8 @@ if(whichDM==8)
             if(mp.useGPU); EF4 = gather(EF4);end
             
             Gzdl(:,Gindex) = mp.dm_weights(8)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
-            Gindex = Gindex + 1;
         end
+        Gindex = Gindex + 1;
     end
 
 end %%%%%%%%%%%%%%%%%%%
@@ -552,9 +552,9 @@ if(mp.useGPU)
     Gzdl = gather(Gzdl);
 end
 
-% %--Crop out unused actuators
-% act_ele_cells = {mp.dm1.act_ele, mp.dm2.act_ele, mp.dm3.act_ele, mp.dm4.act_ele, mp.dm5.act_ele, mp.dm6.act_ele, mp.dm7.act_ele, mp.dm8.act_ele, mp.dm9.act_ele};
-% Gzdl = Gzdl(:,act_ele_cells{whichDM});
+% % %--Crop out unused actuators
+% % act_ele_cells = {mp.dm1.act_ele, mp.dm2.act_ele, mp.dm3.act_ele, mp.dm4.act_ele, mp.dm5.act_ele, mp.dm6.act_ele, mp.dm7.act_ele, mp.dm8.act_ele, mp.dm9.act_ele};
+% % Gzdl = Gzdl(:,act_ele_cells{whichDM});
 
 
 

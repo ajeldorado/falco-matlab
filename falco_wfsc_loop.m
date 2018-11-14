@@ -229,11 +229,6 @@ for Itr=1:mp.Nitr
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
     end
     
-%     cd ~/Downloads
-%     save('data_Jac_FOHLC.mat','jacStruct')
-%     cd ~/Repos/falco-matlab/main
-    keyboard
-    
     % %--Save or load a previous Jacobian (esp. useful for testbeds)
     %     if(Itr==1)
     %         cd(mp.path.jac)

@@ -39,7 +39,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 
 %% Special Computational Settings
-mp.flagParfor = true; %true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = false;%true;%true; %true; %--whether to use parfor for Jacobian calculation
 mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
 
 mp.flagPlot = true;
@@ -103,8 +103,8 @@ mp.Nsbp = 1;%5; % number of sub-bandpasses across correction band
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
 %--FPM
-mp.F3.Rin = 2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
-mp.F3.RinA = mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
+mp.F3.Rin = 4;%2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
+mp.F3.RinA = 2.7;%mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
 
 %%--Pupil Masks        
 mp.P1.full.Nbeam = 250;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
@@ -171,7 +171,7 @@ switch mp.controller
             ];
 
         mp.ctrl.sched_mat = [...
-            repmat([1, 1j, 1289, 1, 1], [3, 1]);
+            repmat([1, 1j, 8, 1, 1], [3, 1]);
             ]; 
         
 %         mp.ctrl.sched_mat = [...
