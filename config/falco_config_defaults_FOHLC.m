@@ -6,6 +6,7 @@
 %
 %  Function to set variables to default values if they are not already defined.
 %
+% Modified on 2018-11-13 by A.J. Riggs for FOHLC from HLC.
 % Modified on 2018-03-22 by A.J. Riggs to have default values that can be
 %   overwritten if the variable is already defined.
 % Created on 2017-10-31 by A.J. Riggs.
@@ -14,7 +15,7 @@
 % Created on 2017-10-31 by A.J. Riggs.
 %
 
-function mp = falco_config_defaults_HLC(mp)
+function mp = falco_config_defaults_FOHLC(mp)
 
 
 %% Initialize some structures if they don't already exist
@@ -28,8 +29,8 @@ mp.P2.dummy = 1;
 
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
-mp.dm1.dummy = 1;
-mp.dm2.dummy = 1;
+mp.dm8.dummy = 1;
+mp.dm9.dummy = 1;
 
 mp.P3.dummy = 1;
 
@@ -87,13 +88,14 @@ mp = falco_config_load_pupil_defaults(mp);
 
 %% Focal Plane Mask (at F3) Properties:
 
+if(isfield(mp.dm9,'V0coef')==false); mp.dm8.V0coef = 1 - 3e-3; end %--Starting voltages of DM9
 if(isfield(mp.dm9,'V0coef')==false); mp.dm9.V0coef = 0; end %--Starting voltages of DM9
 
-%--Complex-valued FPM
-mp.FPM.d0fac = 4; %--For HLC occulter: Reference plane's distance from the substrate surface [waves]
+% %--Complex-valued FPM
+% mp.FPM.d0fac = 4; %--For HLC occulter: Reference plane's distance from the substrate surface [waves]
 
-%--FPM materials
-if(isfield(mp,'t_diel_bias_nm')==false); mp.t_diel_bias_nm = 0; end %--Thickness of starting uniform bias layer of PMGI [nm]. % (Requires an outer stop in reality if >0, but will run without it to see if it gives essentially the same result as the EHLC but faster)
+% %--FPM materials
+% if(isfield(mp,'t_diel_bias_nm')==false); mp.t_diel_bias_nm = 0; end %--Thickness of starting uniform bias layer of PMGI [nm]. % (Requires an outer stop in reality if >0, but will run without it to see if it gives essentially the same result as the EHLC but faster)
 
 
 %--FPM resolution 
@@ -122,7 +124,7 @@ switch mp.controller
         
         if(isfield(mp,'dm_ind')==false); mp.dm_ind = [1 2 9]; end %--Which DMs to use and when
         if(isfield(mp.ctrl,'log10regVec')==false); mp.ctrl.log10regVec = -5:1:-2; end %--log10 of the regularization exponents (often called Beta values)
-        if(isfield(mp,'maxAbsdV')==false); mp.maxAbsdV = 80; end %--Max +/- delta voltage step for each actuator for DMs 1 and 2
+        if(isfield(mp,'maxAbsdV')==false); mp.maxAbsdV = 500; end %--Max +/- delta voltage step for each actuator for DMs 1 and 2
         if(isfield(mp.ctrl,'dmfacVec')==false); mp.ctrl.dmfacVec = 1; end %--Proportional gain multiplied with the DM command just before applying it.
         if(isfield(mp,'logGmin')==false); mp.logGmin = -7; end % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
         
@@ -133,7 +135,7 @@ switch mp.controller
     case{'plannedEFC'}
         if(isfield(mp,'dm_ind')==false); mp.dm_ind = [1 2 9]; end %--Which DMs to use and when
         if(isfield(mp.ctrl,'log10regVec')==false); mp.ctrl.log10regVec = -5:1:-2; end %--log10 of the regularization exponents (often called Beta values)
-        if(isfield(mp,'maxAbsdV')==false); mp.maxAbsdV = 80; end %--Max +/- delta voltage step for each actuator for DMs 1 and 2
+        if(isfield(mp,'maxAbsdV')==false); mp.maxAbsdV = 500; end %--Max +/- delta voltage step for each actuator for DMs 1 and 2
         if(isfield(mp,'logGmin')==false); mp.logGmin = -7; end % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
         
         %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
@@ -259,10 +261,18 @@ if(isfield(mp.dm2,'Dstop')==false); mp.dm2.Dstop = mp.dm2.Nact*1e-3; end  %--dia
 % if(isfield(mp.dm9,'flag_hex_array')==false); mp.dm9.flag_hex_array = false; end %--true->hex grid. false->square grid
 if(isfield(mp.dm9,'actres')==false);  mp.dm9.actres = 10; end % number of "actuators" per lambda0/D in the FPM's focal plane. Only used for square grid
 
-if(isfield(mp.dm8,'Vmin')==false);  mp.dm8.Vmin = 0; end % minimum thickness of FPM metal layer (nm)
-if(isfield(mp.dm8,'Vmax')==false);  mp.dm8.Vmax = 300; end % maximum thickness (from one actuator, not of the facesheet) of FPM metal layer (nm)
-if(isfield(mp.dm9,'Vmin')==false);  mp.dm9.Vmin = 0; end % minimum thickness of FPM dielectric layer (nm)
-if(isfield(mp.dm9,'Vmax')==false);  mp.dm9.Vmax = 400+mp.dm9.V0coef; end % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
+%--For phase and amplitude approximation in FOHLC
+if(isfield(mp.dm8,'Vmin')==false);  mp.dm8.Vmin = 0;  end % 1-mp.dm8.Vmin is the maximum allowed FPM amplitude
+if(isfield(mp.dm8,'Vmax')==false);  mp.dm8.Vmax = 1 - 1e-4; end % 1-mp.dm8.Vmax is the minimum allowed FPM amplitude
+% % if(isfield(mp.dm8,'Vmin')==false);  mp.dm8.Vmin = 1e-6; end % minimum thickness of FPM metal layer (nm)
+% % if(isfield(mp.dm8,'Vmax')==false);  mp.dm8.Vmax = 1; end % maximum thickness (from one actuator, not of the facesheet) of FPM metal layer (nm)
+if(isfield(mp.dm9,'Vmin')==false);  mp.dm9.Vmin = -600; end % minimum thickness of FPM dielectric layer (nm)
+if(isfield(mp.dm9,'Vmax')==false);  mp.dm9.Vmax = 600; end % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
+% %--For true material properties of HLC
+% if(isfield(mp.dm8,'Vmin')==false);  mp.dm8.Vmin = 0; end % minimum thickness of FPM metal layer (nm)
+% if(isfield(mp.dm8,'Vmax')==false);  mp.dm8.Vmax = 300; end % maximum thickness (from one actuator, not of the facesheet) of FPM metal layer (nm)
+% if(isfield(mp.dm9,'Vmin')==false);  mp.dm9.Vmin = 0; end % minimum thickness of FPM dielectric layer (nm)
+% if(isfield(mp.dm9,'Vmax')==false);  mp.dm9.Vmax = 400+mp.dm9.V0coef; end % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
 
 mp.dm9.Nact = ceil_even(2*mp.F3.Rin*mp.dm9.actres); % number of actuators across DM9 (if not in a hex grid)
 mp.dm9.xtilt = 0;

@@ -20,7 +20,7 @@ function mp = falco_config_gen_chosen_apodizer(mp)
 
 switch mp.coro
     
-	case{'LC','HLC','EHLC'}
+	case{'LC','HLC','EHLC','FOHLC'}
          disp('Using Lyot coronagraph without apodizer or aperture stop.')
         
     case{'SPLC','SPHLC'}

@@ -57,6 +57,17 @@ if(mp.flagPlot)
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
             ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+        case{'FOHLC'}
+            h_amp = subplot(2,3,3);
+             ax3=get(h_amp,'position'); % Save the position as ax
+            set(h_amp,'position',ax3); % Manually setting this holds the position with colorbar 
+            subplot(2,3,3); 
+            imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM8amp); axis xy equal tight; colormap gray; ch = colorbar;
+            title('FPM Amplitude','Fontsize',16,'Fontweight','Bold');
+            xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+            ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+            ylabel(ch,'amplitude','FontSize',16,'Interpreter','LaTeX');
+            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')    
         otherwise
             h_amp = subplot(2,3,3);
              ax3=get(h_amp,'position'); % Save the position as ax
@@ -120,8 +131,20 @@ if(mp.flagPlot)
     switch mp.coro
 %         case{'Vortex'}
 %             %--No subplot
+        case{'FOHLC'}
+           
+            h_dm9 = subplot(2,3,6);
+            ax6=get(h_dm9,'position'); % Save the position as ax
+            set(h_dm9,'position',ax6); % Manually setting this holds the position with colorbar 
+            subplot(2,3,6); 
+            imagesc(mp.F3.compact.xisDL, mp.F3.compact.xisDL, mp.DM9surf*1e9); axis xy equal tight; ch = colorbar;
+            title('FPM Phase Shift','Fontsize',16,'Fontweight','Bold');
+            xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+            ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+            ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
+            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+        
         case{'EHLC'}
-            
            
             h_dm9 = subplot(2,3,6);
             ax6=get(h_dm9,'position'); % Save the position as ax

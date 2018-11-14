@@ -144,7 +144,7 @@ mp = falco_config_gen_chosen_LS(mp); %--Lyot stop
 %--Only for coronagraphs using Babinet's principle, for which the input
 %pupil and Lyot plane have the same resolution.
 switch mp.coro
-    case{'HLC','LC','APLC','VC','AVC'}
+    case{'FOHLC','HLC','LC','APLC','VC','AVC'}
         if(mp.flagPlot)
             P4mask = padOrCropEven(mp.P4.compact.mask,mp.P1.compact.Narr);
             P4mask = rot90(P4mask,2);
@@ -175,6 +175,11 @@ switch mp.coro
     case{'HLC'}
         mp = falco_setup_FPM_HLC(mp);
         mp = falco_config_gen_FPM_HLC(mp);
+    case{'FOHLC'}
+        mp = falco_setup_FPM_FOHLC(mp);
+        mp = falco_config_gen_FPM_FOHLC(mp);
+        mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
+        mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
     case{'EHLC'}
         mp = falco_setup_FPM_EHLC(mp);
         mp = falco_config_gen_FPM_EHLC(mp);
