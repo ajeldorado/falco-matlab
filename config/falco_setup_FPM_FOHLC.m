@@ -114,12 +114,14 @@ dm8Vmin = mp.dm8.Vmin;
 dm8Vmax = mp.dm8.Vmax;
 dm8v0coef = mp.dm8.V0coef; %--Starting value. Save as temporary value to avoid overwriting
 dm8VtoHavg = mp.dm8.VtoHavg; %--Starting value. Save as temporary value to avoid overwriting
+dm8maxAbsdV = mp.dm8.maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
 mp.dm8 = mp.dm9; %--DANGER: OVERWRITING ANY PREVIOUS mp.dm8 DATA!!! -----------------------------------------------!!!!!!!!!!!!!!!!!!!!
 mp.dm8 = rmfield(mp.dm8,'V');
 mp.dm8.V0coef = dm8v0coef;
 mp.dm8.VtoHavg = dm8VtoHavg;
 mp.dm8.Vmin = dm8Vmin;
 mp.dm8.Vmax = dm8Vmax;
+mp.dm8.maxAbsdV = dm8maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
 fprintf('%d actuators in DM8.\n',mp.dm8.NactTotal);
 % mp.dm8.ABfac = 1;%1/5; %--Gain factor between inner and outer FPM regions
 mp.dm8.VtoH = mp.dm8.VtoHavg*ones(mp.dm8.NactTotal,1);%1*1e-9*ones(mp.dm9.Nact); % Gains: volts to meters in surface height;

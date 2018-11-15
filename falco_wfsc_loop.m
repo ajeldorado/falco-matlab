@@ -229,6 +229,8 @@ for Itr=1:mp.Nitr
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
     end
     
+    
+    
     % %--Save or load a previous Jacobian (esp. useful for testbeds)
     %     if(Itr==1)
     %         cd(mp.path.jac)
@@ -393,13 +395,13 @@ end
 
 %--Calculate and report updated RMS DM surfaces.
 if(any(mp.dm_ind==1))
-    out.dm1.Spv = max(DM1surf(:))-min(DM1surf(:));
-    out.dm1.Srms = rms(DM1surf(rms_ele));
+    out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
+    out.dm1.Srms(Itr) = rms(DM1surf(rms_ele));
     fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms)
 end
 if(any(mp.dm_ind==2))
-    out.dm2.Spv = max(DM2surf(:))-min(DM2surf(:));
-    out.dm2.Srms = rms(DM2surf(rms_ele));
+    out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
+    out.dm2.Srms(Itr) = rms(DM2surf(rms_ele));
     fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms)
 end
 
