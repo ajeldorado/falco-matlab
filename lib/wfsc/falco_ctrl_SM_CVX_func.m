@@ -1,26 +1,22 @@
- function [InormAvg,dDM] = falco_ctrl_SM_CVX_func(mp,cvar,vals_list,ni,Nele,du_LB_comb,du_UB_comb,uNom,u_guide)
+ function [InormAvg,dDM] = falco_ctrl_SM_CVX_func(mp,cvar,vals_list,ni,du_LB_comb,du_UB_comb,uNom,u_guide,RegMatDiag)
         
-        log10reg = vals_list(1,ni);
+    log10reg = vals_list(1,ni);
 
     NeleAll = length(uNom);
     
     cvx_begin quiet
-        %cvx_precision low
-        cvx_solver Mosek
+%         cvx_precision default
+%         cvx_solver Mosek
         variables maxContrast duVec(NeleAll,1)
         % variables maxContrast u1(mp.dm1.Nele) u2(mp.dm2.Nele) u8(mp.dm8.Nele) u9(mp.dm9.Nele) 
         minimize (maxContrast)
         subject to
-            (duVec.' * (cvar.GstarG_wsum)  + cvar.RealGstarEab_wsum.') * duVec <= maxContrast
-
-            uTotal 
-             ('var du {q in Acts} >=ampl_du_LB[q] , <=ampl_du_UB[q], := 1;');
-
+            (duVec.' * (cvar.GstarG_wsum + 10.^(log10reg)*diag(RegMatDiag))  + cvar.RealGstarEab_wsum.') * duVec <= maxContrast
+            
             duVec <= du_UB_comb
             duVec >= du_LB_comb
             
     cvx_end
-
         
         
         

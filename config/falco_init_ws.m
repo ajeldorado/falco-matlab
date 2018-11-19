@@ -524,7 +524,8 @@ modvar.sbpIndex = mp.si_ref;
 modvar.wpsbpIndex = mp.wi_ref;
 modvar.whichSource = 'star';     
 
-flagEval = false;
+
+% flagEval = false;
 E0c = model_compact(mp, modvar);
 I0c = abs(E0c).^2;
 if(mp.flagPlot)

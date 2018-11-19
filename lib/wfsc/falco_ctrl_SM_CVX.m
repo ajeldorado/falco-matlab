@@ -95,10 +95,25 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
     du_LB_comb = max(du_LB_total,du_LB);
     du_UB_comb = min(du_UB_total,du_UB);
     
+    %% Diagonal of the regularization matrix
+    
+    
+    %--The entire regularization matrix will be normalized based on the max
+    %response of DMs 1 and 2
+    temp = diag(cvar.GstarG_wsum);
+    diagNormVal = max(temp(u_guide==1 | u_guide==2));
+    
+    %--Initialize the regularization matrix
+    RegMatDiag = diagNormVal*ones(NeleAll,1);
+    
+    %--Change regularization values for non-standard DMs
+    if(any(mp.dm_ind==8));  RegMatDiag(u_guide==8) = mp.ctrl.relReg8 ;  end
+    if(any(mp.dm_ind==9));  RegMatDiag(u_guide==9) = mp.ctrl.relReg9 ;  end
+    
     
     %% Loop over CVX calls for different regularizations
     for ni = 1:Nvals
-        [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_CVX_func(mp,cvar,vals_list,ni,NeleAll,du_LB_comb,du_UB_comb,u,u_guide);
+        [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_CVX_func(mp,cvar,vals_list,ni,du_LB_comb,du_UB_comb,u,u_guide,RegMatDiag);
     end %--End of loop over regularizations
     
     

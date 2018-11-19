@@ -397,12 +397,12 @@ end
 if(any(mp.dm_ind==1))
     out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
     out.dm1.Srms(Itr) = rms(DM1surf(rms_ele));
-    fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms)
+    fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
 end
 if(any(mp.dm_ind==2))
     out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
     out.dm2.Srms(Itr) = rms(DM2surf(rms_ele));
-    fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms)
+    fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
 end
 
 
@@ -713,6 +713,11 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
         case{'SM-AMPL'} %--Bounded stroke minimization using AMPL. The quadratic cost function is solved directly with AMPL+Gurobi rather than by inverting.
             cvar.dummy = 1;
             [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar);
+            
+        case{'SM-CVX'} %--Bounded stroke minimization using AMPL. The quadratic cost function is solved directly with AMPL+Gurobi rather than by inverting.
+            cvar.dummy = 1;
+            [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar);
+            
         case{'SVDtruncEFC'} %--Truncate the singular values used for EFC 
             cvar.dummy = 1;
             [dDM,cvar,InormAvg] = falco_ctrl_SVD_truncation_EFC(mp,jacStruct,cvar);    
