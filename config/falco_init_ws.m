@@ -184,26 +184,13 @@ end
 
 %% Generate FPM
 
-% switch mp.coro
-%     case{'Vortex','vortex','AVC','VC'}
-%         %--Vortex FPM is generated as needed
-%     otherwise
-% %         %--Make or read in focal plane mask (FPM) amplitude for the full model
-% %         FPMgenInputs.IWA = mp.F3.Rin;% inner radius of the focal plane mask, in lambda0/D
-% %         FPMgenInputs.OWAmask = mp.F3.Rout; % outer radius of the focal plane mask, in lambda0/D
-% %         %FPMgenInputs.flagOdd = false; % flag to specify odd or even-sized array
-% %         FPMgenInputs.centering = mp.centering;
-% %         FPMgenInputs.ang = mp.F3.ang; % angular opening on each side of the focal plane mask, in degrees
-% %         FPMgenInputs.magx = 1; % magnification factor along the x-axis
-% %         FPMgenInputs.magy = 1; % magnification factor along the y-axis
-% end
-
-
 switch mp.coro
     case {'LC','DMLC','APLC'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
         mp = falco_config_gen_FPM_LC(mp);
     case{'SPLC'}
         mp = falco_config_gen_FPM_SPLC(mp);
+    case{'Roddier'}
+        mp = falco_config_gen_FPM_Roddier(mp);
 end
 
 %% FPM coordinates, [meters] and [dimensionless]

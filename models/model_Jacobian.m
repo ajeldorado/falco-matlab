@@ -153,6 +153,9 @@ function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
         case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
             jacMode  = model_Jacobian_VC(mp,   im, whichDM); 
             
+        case{'Roddier'} %--DMs, optional apodizer, Roddier FPM, LS
+            jacMode  = model_Jacobian_Roddier(mp,   im, whichDM); 
+            
         %case{'SPC','APP','APC'} %--Pupil-plane apodizer is only coronagraphic mask
             %Jac  = model_Jacobian_APC(mp,   tsi, whichDM); 
             

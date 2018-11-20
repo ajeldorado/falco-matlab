@@ -141,6 +141,9 @@ switch mp.coro
     case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
         Eout = model_compact_VC(mp, lambda, Ein, normFac, flagEval);      
         
+    case{'Roddier'} %--DMs, optional apodizer, Roddier FPM, LS
+        Eout = model_compact_Roddier(mp, lambda, Ein, normFac, flagEval);   
+        
 %     case{'SPC','APP','APC'} %--Pupil-plane mask only
 %         Eout = model_compact_APC(mp,   modvar);             
 

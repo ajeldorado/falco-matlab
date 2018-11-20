@@ -22,7 +22,8 @@ switch mp.coro
     
 	case{'LC','HLC','EHLC'}
          disp('Using Lyot coronagraph without apodizer or aperture stop.')
-        
+	case{'Roddier'}
+         disp('Using Roddier coronagraph without apodizer or aperture stop.')
     case{'SPLC','SPHLC'}
         
 
