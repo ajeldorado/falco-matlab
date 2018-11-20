@@ -96,7 +96,6 @@ switch mp.coro
         if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
             % Full aperture stop 
             mp.P3.full.Narr = 2^(nextpow2(mp.P1.full.Nbeam));
-%             mp.P3.full.dx = mp.P2.full.dx;
 
             if(strcmp(mp.P3.apodType,'Simple'))
                 inputs.Nbeam = mp.P1.full.Nbeam;     % number of points across incoming beam 
@@ -109,38 +108,19 @@ switch mp.coro
 
                 mp.P3.full.mask= falco_gen_pupil_Simple( inputs );
 
-% <<<<<<< thin_film
-% %             mp.P3.full.mask = falco_gen_multi_ring_SP([0.20, 0.55]/2, [0.50, 0.95]/2, mp.P2.full.dx, mp.P2.D, mp.centering);
-% %             mp.P3.full.mask = falco_gen_multi_ring_SP(mp.P3.IDvec, mp.P3.ODvec, mp.P2.full.dx, mp.P2.D, mp.centering);
-%             mp.P3.full.mask = padOrCropEven(mp.P3.full.mask, mp.P3.full.Narr);
-            
-            
-%             % Compact aperture stop 
-%             inputs.Nbeam = mp.P1.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
-%             inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));% 
-            
-%             mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
-% % %            mp.P3.compact.dx = mp.P1.compact.dx;
-%             mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
-% %             mp.P3.compact.mask = falco_gen_multi_ring_SP(mp.P3.IDvec,mp.P3.ODvec, mp.P2.compact.dx, mp.P2.D, mp.centering);
-%             mp.P3.compact.mask = padOrCropEven(mp.P3.compact.mask, mp.P3.compact.Narr);
-% =======
                 % Compact aperture stop 
                 inputs.Nbeam = mp.P1.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
                 inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));% 
 
                 mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
-    %            mp.P3.compact.dx = mp.P1.compact.dx;
                 mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
             else
                 load(mp.P3.apodType)
                 mp.P3.full.mask = padOrCropEven(APOD,mp.P3.full.Narr);
-                %mp.P3.full.mask = propcustom_2FT(mp.P3.full.mask);
                 mp.P3.compact.Narr = mp.P3.full.Narr;
                 mp.P3.compact.mask = mp.P3.full.mask;
             end
             
-% >>>>>>> master
         else
             disp('Using vortex without apodizer or aperture stop.')
         end
@@ -150,17 +130,50 @@ switch mp.coro
             error('Use pixel centering for APLC');
         end
         if(mp.P1.full.Nbeam~=mp.P1.compact.Nbeam)
-            error('APLC currently requires Nbeam for the full and compact.');
+            error('APLC currently requires Nbeam to be equal for the full and compact.');
         end
 
-        mp.P3.full.mask = falco_gen_tradApodizer(mp.P1.full.mask,mp.P1.full.Nbeam,mp.F3.Rin,(1+mp.fracBW/2)*mp.F3.Rout,mp.useGPU);
-        mp.P3.full.Narr = length(mp.P3.full.mask);
-        
-        mp.P3.compact.mask = mp.P3.full.mask;
-        mp.P3.compact.Narr = length(mp.P3.compact.mask);
-        
-        mp.P3.full.dx = mp.P2.full.dx;
-        mp.P3.compact.dx = mp.P2.compact.dx;
+        if(strcmp(mp.P3.apodType,'traditional'))
+
+            mp.P3.full.mask = falco_gen_tradApodizer(mp.P1.full.mask,mp.P1.full.Nbeam,mp.F3.Rin,(1+mp.fracBW/2)*mp.F3.Rout,mp.useGPU);
+            mp.P3.full.Narr = length(mp.P3.full.mask);
+
+            mp.P3.compact.mask = mp.P3.full.mask;
+            mp.P3.compact.Narr = length(mp.P3.compact.mask);
+
+            mp.P3.full.dx = mp.P2.full.dx;
+            mp.P3.compact.dx = mp.P2.compact.dx;
+        elseif(strcmp(mp.P3.apodType,'Simple'))
+            if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
+                % Full aperture stop 
+                mp.P3.full.Narr = 2^(nextpow2(mp.P1.full.Nbeam));
+
+                inputs.Nbeam = mp.P1.full.Nbeam;     % number of points across incoming beam 
+                inputs.Npad = mp.P3.full.Narr;% 
+                inputs.OD = mp.P3.ODnorm;
+                inputs.ID = mp.P3.IDnorm;
+                inputs.num_strut = 0;
+                inputs.strut_angs = [];%Angles of the struts 
+                inputs.strut_width = 0;% spider width (fraction of the pupil diameter)
+
+                mp.P3.full.mask= falco_gen_pupil_Simple( inputs );
+
+                % Compact aperture stop 
+                inputs.Nbeam = mp.P1.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
+                inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));% 
+
+                mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
+                mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
+            end
+        elseif(isfield(mp.P3,'apodType') && ~strcmp(mp.P3.apodType,'none'))
+                disp(['Using ',mp.P3.apodType,' as apodizer for APLC.'])
+                load(mp.P3.apodType)
+                mp.P3.full.mask = padOrCropEven(APOD,mp.P3.full.Narr);
+                mp.P3.compact.Narr = mp.P3.full.Narr;
+                mp.P3.compact.mask = mp.P3.full.mask;
+        else
+            disp('Using APLC without apodizer or aperture stop.')
+        end
         
         if(mp.flagPlot)
             figure(504); imagesc(padOrCropEven(mp.P3.full.mask,length(mp.P1.full.mask)).*mp.P1.full.mask); axis xy equal tight; colorbar;

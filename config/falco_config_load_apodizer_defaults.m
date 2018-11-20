@@ -23,7 +23,7 @@ function mp = falco_config_load_apodizer_defaults(mp)
 %% Apodizer (Shaped Pupil Properties (Plane P3)
 
 if(mp.flagApod == false); mp.SPname = 'none'; end
-% if(isfield(mp,'SPname')==false); mp.SPname = 'luvoirA5bw10'; end
+if(~isfield(mp,'SPname')); mp.SPname = 'none'; end
 
 %--Load the inner and outer radii of the apodizer's concentric rings
 switch mp.whichPupil
@@ -64,7 +64,7 @@ switch mp.whichPupil
 end
 
 %--Scale the ring diameters from the inscribed diameter values to the circumscribed diameter values. 
-if(mp.flagApod)
+if(mp.flagApod && isfield(mp,'SPname') && ~strcmp(mp.SPname,'none'))
     mp.rEdgesLeft = mp.rEdgesLeft/mp.P1.Dfac;
     mp.rEdgesRight = mp.rEdgesRight/mp.P1.Dfac;
 end
