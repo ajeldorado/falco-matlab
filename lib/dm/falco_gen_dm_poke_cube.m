@@ -92,7 +92,7 @@ end
 %--Set the order of operations
 orderOfOps = 'XYZ';
 zyx = false;
-if(isfield(dm,'flagZYX')); 
+if(isfield(dm,'flagZYX'))
     if(dm.flagZYX)
         orderOfOps = 'ZYX'; 
         zyx = true;
