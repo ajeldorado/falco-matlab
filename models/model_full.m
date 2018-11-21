@@ -120,7 +120,6 @@ end
 
 
 
-
 %%
 %--Select the type of coronagraph
 switch mp.coro 
@@ -143,6 +142,8 @@ switch mp.coro
         else %--Otherwise generate it
             FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
         end
+        
+        Eout = model_full_HLC(mp,   lambda, normFac, Ein, FPM);
         
     case{'FOHLC'} %--DMs, optional apodizer, FPM with amplitude and phase modulation, and LS. Uses Babinet's principle about FPM.
         Eout = model_full_FOHLC(mp, lambda, normFac, Ein);

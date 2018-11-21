@@ -39,7 +39,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 
 %% Special Computational Settings
-mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true; %true; %--whether to use parfor for Jacobian calculation
 mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
 
 mp.flagPlot = true;
@@ -55,43 +55,34 @@ mp.flagPlot = true;
 %% Step 1: Define any variable values that will overwrite the defaults (in falco_config_defaults_SPLC)
 
 %%--Record Keeping
-mp.TrialNum = 1;%-1*(0 + isurvey); %--Always use a diffrent Trial # for different calls of FALCO.
-mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
+mp.TrialNum = 1; %--Always use a diffrent Trial # for different calls of FALCO.
+mp.SeriesNum = 25; %--Use the same Series # for sets of similar trials.
 
 
-% mp.aoi = 10; % Angle of incidence at FPM [deg]
-% mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
-% 
-% mp.dt_metal_nm = 0.25;%1/10; %--thickness step size for FPM metal layer (nm)
-% mp.t_metal_nm_vec = 0:mp.dt_metal_nm:120; %150; %--nickel thickness range and sampling (nm)
-% mp.dt_diel_nm = 2/10; %--thickness step size for FPM dielectric layer  (nm)
-% mp.t_diel_nm_vec = 0:mp.dt_diel_nm:900; %--PMGI thickness range and sampling (nm)
-% 
-% mp.dm8.V0coef = 100;%100/1.42; % Nominal Nickel layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
-% mp.dm9.V0coef = 390;%240/1.42; % Nominal PMGI layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
+mp.aoi = 10; % Angle of incidence at FPM [deg]
+mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
 
-%--Note: dm8 amplitude goes from zero to one, but for simplicity with the
-%surface it is used as 1-dm8amplitude for the FPM
-mp.dm8.Vmin = 0; % 1-mp.dm8.Vmin is the maximum allowed FPM amplitude
-mp.dm8.Vmax = 1 - 1e-4; % 1-mp.dm8.Vmax is the minimum allowed FPM amplitude
+mp.dt_metal_nm = 0.25;%1/10; %--thickness step size for FPM metal layer (nm)
+mp.t_metal_nm_vec = 0:mp.dt_metal_nm:120; %150; %--nickel thickness range and sampling (nm)
+mp.dt_diel_nm = 2/10; %--thickness step size for FPM dielectric layer  (nm)
+mp.t_diel_nm_vec = 0:mp.dt_diel_nm:900; %--PMGI thickness range and sampling (nm)
 
-mp.dm8.V0coef = 1 - 1e-2; % starting occulting spot amplitude amplitude]
-mp.dm9.V0coef = -100; % starting occulting spot phase (uniform) [nm of phase]
+mp.dm8.V0coef = 100;%100/1.42; % Nominal Nickel layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
+mp.dm9.V0coef = 390;%240/1.42; % Nominal PMGI layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
 
 
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'conEFC' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-% mp.controller = 'SM-AMPL';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
 mp.controller = 'plannedEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
 %%--Coronagraph and Pupil Type
-mp.coro = 'FOHLC';    %--Tested Options: 'LC','HLC','SPLC','Vortex','FOHLC'
+mp.coro = 'HLC';    %--Tested Options: 'LC','HLC','SPLC','Vortex'
 mp.flagApod = false;
-mp.whichPupil = 'WFIRST180718';%
+mp.whichPupil = 'WFIRST180718';%'WFIRST_onaxis';
 
 %%--Pupil Plane and DM Plane Properties
 mp.d_P2_dm1 = 0; % distance (along +z axis) from P2 pupil to DM1 (meters)
@@ -100,12 +91,12 @@ mp.d_dm1_dm2 = 1; % distance between DM1 and DM2 (meters)
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 575e-9; % central wavelength of bandpass (meters)
 mp.fracBW = 0.10;%0.125;%0.10;%0.125;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
-mp.Nsbp = 1;%5; % number of sub-bandpasses across correction band 
+mp.Nsbp = 5; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
 %--FPM
-mp.F3.Rin = 4;%2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
-mp.F3.RinA = 2.7;%mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
+mp.F3.Rin = 2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
+mp.F3.RinA = mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
 
 %%--Pupil Masks        
 mp.P1.full.Nbeam = 250;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
@@ -135,7 +126,7 @@ switch mp.controller
         mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 
     case{'plannedEFC'}
-        mp.dm_ind = [1 2 8 9];%[1 2 8];%8;%[1 2 8 9]; % vector of which DMs to compute Jacobians for at some point (not necessarily all at once or all the time). 
+        mp.dm_ind = [1 2 9]; % vector of which DMs to compute Jacobians for at some point (not necessarily all at once or all the time). 
 
         mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
 
@@ -170,36 +161,37 @@ switch mp.controller
             5,  -5, 129, 0, 0;...
             10, -2, 129, 0, 0;...
             ];
+        SetD = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
+           [0, 0, 0, 1, 0;...
+           10, -5, 129, 0, 0;...
+           5,  -6, 129, 0, 0;...
+           10, -2, 129, 0, 0;...
+           ];
 
-        mp.ctrl.sched_mat = [...
-            repmat([1, 1j, 128, 1, 1], [3, 1]);
-            ]; 
-        
 %         mp.ctrl.sched_mat = [...
 %             SetA;...
-%             ...repmat(SetB,[2,1]);...
-%             ...repmat(SetC,[8,1]);...
+%             repmat(SetB,[2,1]);...
+%             repmat(SetC,[8,1]);...
 %             ]; 
+        
+       SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
+       SetB2 = [1, -5, 12, 1, 0];
+       SetC2 = [1, 1j, 12, 1, 1];
+       
+       mp.ctrl.sched_mat = [...
+           repmat(SetA2,[5,1]);...
+           repmat(SetB2,[3,1]);...
+           repmat(SetC2,[3,1]);...
+           ...repmat(SetB,[2,1]);...
+           repmat(SetC,[4,1]);...
+           repmat(SetD,[4,1]);...
+           ];
+        
         
         [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
         
         
-    case{'SM-AMPL'} %--Constrained EFC with AMPL
-        
-        addpath('~/bin/amplapi/matlab/')
-        
-        mp.dm_ind = 8;%[1 2 8 9]; %--Which DMs to use and when
-        mp.ctrl.log10regVec = -5:1:-2;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
-        mp.ctrl.dmfacVec = 1;
 
-        %--Delta voltage range restrictions
-        mp.dm1.maxAbsdV = 50;%30;
-        mp.dm2.maxAbsdV = 50;%30;
-        mp.dm9.maxAbsdV = 50;%40;
-        
-        %--Absolute voltage range restrictions
-        mp.dm1.maxAbsV = 150;%250;
-        mp.dm2.maxAbsV = 150;%250;
         
     case{'conEFC'} %--Constrained EFC
         mp.dm1.dVpvMax = 30;
@@ -209,10 +201,6 @@ switch mp.controller
         mp.ctrl.muVec = 10.^(5); %10.^(8:-1:1);
         
 end
-
-%--Delta voltage range restrictions
-mp.dm8.maxAbsdV = 0.2;
-
 %--Voltage range restrictions
 mp.dm1.maxAbsV = 1000;
 mp.dm2.maxAbsV = 1000;
@@ -244,14 +232,9 @@ mp.dm2.Dstop = mp.dm2.Nact*1e-3;  %--diameter of circular stop at DM2 and center
 
 %--DM9 weights and sensitivities
 mp.dm_weights = ones(9,1);   % vector of relative weighting of DMs' Jacobians for EFC
-mp.dm_weights(9) = 1;%2/3;%1;%10; % Jacobian weight for the FPM phase. Smaller weight makes stroke larger by the inverse of this factor.
-% % mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
-% % mp.dm9.stepFac = 200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
-
-%--DM8 weight
-mp.dm_weights(8) = 1e-2;%0.1;%1e-3 % Jacobian weight for the FPM amplitude. Smaller weight makes stroke larger by the inverse of this factor.
-
-
+mp.dm_weights(9) = 1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
+mp.dm9.stepFac = 200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
 % %%--DM9 parameters for Lanczos3 influence function
 % mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
@@ -269,12 +252,19 @@ mp.dm_weights(8) = 1e-2;%0.1;%1e-3 % Jacobian weight for the FPM amplitude. Smal
 % mp.F3.compact.res = 30;
 % mp.F3.full.res = 30;
 
-%%--DM9 parameters for 3x3 influence function
-mp.dm9.actres = 10;%8;%  number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
-mp.dm9.FPMbuffer = 0;%-0.5;%0;%0.2; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
-mp.dm9.inf0name = '3x3';   % = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
-%->NOTE: Cannot specify F3 resolution independently of number of DM9
-%actuators because there are exactly 2 pixels between neighboring actuator centers.
+% %%--DM9 parameters for 3x3 influence function
+% mp.dm9.actres = 10;%8;%  number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
+% mp.dm9.FPMbuffer = -0.5;%0;%0.2; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
+% mp.dm9.inf0name = '3x3';   % = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
+% %->NOTE: Cannot specify F3 resolution independently of number of DM9
+% %actuators because there are exactly 2 pixels between neighboring actuator centers.
+
+%%--DM9 parameters for 3fold-symmetric Zernike influence function
+mp.dm9.inf0name = '3foldZern'; %--Zernikes with 3-fold (0,3,6,9,etc) symmetry only 
+mp.dm9.maxRadialOrder = 20;
+mp.F3.compact.res = 20;
+mp.F3.full.res = 20;
+mp.dm9.VtoHavg = 1e-9; %--Gain of DM9 influence functions [meters/Volt]
 
 %% Specs for Correction (Corr) region and the Scoring (Score) region in the final image
 mp.F4.corr.Rin  = mp.F3.RinA; %--lambda0/D, inner radius of correction region
@@ -322,7 +312,7 @@ mp.F4.res = 3;%2.5;%3; %--Pixels per lambda_c/D
 % fprintf('Saved the config file: \t%s\n',fn_config)
 
 %% Part 2
-mp = falco_config_defaults_FOHLC(mp);
+mp = falco_config_defaults_HLC(mp);
 
 %% Part 3: Generate the label associated with this trial
 

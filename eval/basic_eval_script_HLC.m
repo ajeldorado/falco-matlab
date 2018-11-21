@@ -1,12 +1,30 @@
 
 flagPlot = true; %--Plot results
-flagSave = false; %--Save FITS files
+flagSave = true;%false; %--Save FITS files
 
 %% Set up Paths for FALCO and PROPER
 
+%--Library locations
+mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+% mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
+
+%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+
+
+%%--Add to the MATLAB Path
+addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
+addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+% addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
+
+
+%%
+fn_prefix = '/Users/ajriggs/Repos/falco-matlab/data/brief/';
 
 %% Define file names to load
-runLabel = '/full/path/to/data/Series0015_Trial0009_HLC_LUVOIRA5_3DM64_z3.24_IWA2.7_OWA10_11lams550nm_BW10_plannedEFC'; 
+runLabel = '~/Repos/falco-matlab/data/brief/Series0022_Trial0006_HLC_WFIRST180718_3DM48_z1_IWA2.7_OWA9_5lams575nm_BW10_plannedEFC';  %--good trials are 2,3,6,9
 
 fn_init_ws = [runLabel, '_config.mat']; %--configuration file
 fn_snippet_ws = [runLabel, '_snippet.mat']; %--post-trial data in structure named 'out'
@@ -14,8 +32,13 @@ fn_snippet_ws = [runLabel, '_snippet.mat']; %--post-trial data in structure name
 fn_brief = fn_init_ws; 
 
 %% Load final DM settings and assign to mp structure
-load(fn_snippet_ws)
 
+load(fn_init_ws)
+load(fn_snippet_ws)
+figure(70); semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); set(gca,'Fontsize',20); grid on;
+
+% return
+%%
 mp.dm1.V = out.DM1V;
 mp.dm2.V = out.DM2V;
 mp.dm8.V = out.DM8V;
@@ -50,7 +73,7 @@ DM9surf = t_diel_bias + falco_gen_HLC_FPM_surf_from_cube(mp.dm9,modelType); %--D
 figure(8); imagesc(DM8surf*1e9); axis xy equal tight; colorbar;
 figure(9); imagesc(DM9surf*1e9); axis xy equal tight; colorbar; drawnow;
 
-if(flagSave);  
+if(flagSave)
     fitswrite(DM8surf,[fn_prefix,'data_DM8_surf.fits']);
     fitswrite(DM9surf,[fn_prefix,'data_DM9_surf.fits']);
 end

@@ -173,7 +173,12 @@ mp.dm1.Nele=0; mp.dm2.Nele=0;  mp.dm3.Nele=0;  mp.dm4.Nele=0;  mp.dm5.Nele=0;  m
 %% HLC and EHLC FPM: Initialization and Generation
 switch mp.coro
     case{'HLC'}
-        mp = falco_setup_FPM_HLC(mp);
+        switch mp.dm9.inf0name
+            case '3foldZern'
+                mp = falco_setup_FPM_HLC_3foldZern(mp);
+            otherwise
+                mp = falco_setup_FPM_HLC(mp);
+        end
         mp = falco_config_gen_FPM_HLC(mp);
     case{'FOHLC'}
         mp = falco_setup_FPM_FOHLC(mp);
