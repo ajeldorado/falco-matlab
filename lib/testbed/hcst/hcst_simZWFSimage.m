@@ -27,30 +27,5 @@ for si=1:mp.Nsbp
 
 end
 
-
-
-% %--Loop over wavelengths within each sub-bandpass
-% for ilam = 1:mp.full.Nlam  % Add intensities from all incoherent sources separately
-%     
-%     
-%     %--Starlight
-%     modvar.ebpIndex = ilam;
-%     modvar.lambda = mp.full.lambdas(ilam);
-%     modvar.whichSource = 'star';
-%     Eout = model_full(mp, modvar);
-%     Isum = Isum + mp.full.all_weights(ilam)*(abs(Eout).^2);
-% %     Isum = Isum + mp.entireBWimage.Iweights(ilam)/IweightsSum*(abs(Eout).^2);
-%     %Isum = Isum + (abs(Eout).^2)*(mp.jac.weights(tsi)/mp.Wsum)/mp.Nwpsbp;
-% 
-% %         %--Exoplanet light
-% %         if(mp.planetFlag)
-% %             modvar.whichSource = 'exoplanet';
-% %             Eout = model_full(mp,modvar);
-% %             ImPlanetC = abs(Eout).^2; % In contrast
-% %             %Isum = Isum + ImPlanetC*(mp.jac.weights(tsi)/mp.Wsum)/mp.Nwpsbp;
-% %         end
-% 
-% end
-    
 end %--END OF FUNCTION
 
