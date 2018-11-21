@@ -62,12 +62,12 @@ mp.dm9.compact.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.compact.res; % width of a 
 
 %--Generate datacube of influence functions, which are Zernikes
 NbeamCompact = mp.F3.compact.res*mp.F3.Rin*2;
-mp.dm9.compact.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamCompact,mp.dm9.maxRadialOrder,mp.centering);
+mp.dm9.compact.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamCompact,mp.dm9.maxRadialOrder,mp.centering,'SymmAxis','y');
 mp.dm9.compact.NdmPad = size(mp.dm9.compact.inf_datacube,1);
 mp.dm9.compact.Nbox = mp.dm9.compact.NdmPad; %--the Zernikes take up the full array.
 
 NbeamFull = mp.F3.full.res*mp.F3.Rin*2;
-mp.dm9.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamFull,mp.dm9.maxRadialOrder,mp.centering);
+mp.dm9.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamFull,mp.dm9.maxRadialOrder,mp.centering,'SymmAxis','y');
 mp.dm9.NdmPad = size(mp.dm9.inf_datacube,1);
 mp.dm9.Nbox = mp.dm9.NdmPad; %--the Zernikes take up the full array.
 
@@ -78,16 +78,14 @@ mp.dm9.VtoH = mp.dm9.VtoHavg*ones(mp.dm9.NactTotal,1);
 mp.dm9.xy_box_lowerLeft = ones(2,mp.dm9.NactTotal);
 mp.dm9.compact.xy_box_lowerLeft = ones(2,mp.dm9.NactTotal);
 
-%--Initialize voltages
 
-% %     DMsurf = zeros(dmFullOrCompact.NdmPad); % Initialize the empty array
-% %     for iact=1:dm.NactTotal 
-% %         if( any(any(dmFullOrCompact.inf_datacube(:,:,iact))) && any(dm.VtoH(iact)) )
-% %             y_box_ind = dmFullOrCompact.xy_box_lowerLeft(1,iact):dmFullOrCompact.xy_box_lowerLeft(1,iact)+dmFullOrCompact.Nbox-1; % x-indices in pupil arrays for the box
-% %             x_box_ind = dmFullOrCompact.xy_box_lowerLeft(2,iact):dmFullOrCompact.xy_box_lowerLeft(2,iact)+dmFullOrCompact.Nbox-1; % y-indices in pupil arrays for the box
-%             DMsurf(x_box_ind,y_box_ind) = DMsurf(x_box_ind,y_box_ind) + dm.V(iact)*dm.VtoH(iact)*dmFullOrCompact.inf_datacube(:,:,iact);
-%         end
-%     end
+%--Coordinates for the full FPM array
+if(strcmpi(mp.centering,'pixel')  ) 
+    mp.dm9.compact.x_pupPad = (-mp.dm9.compact.NdmPad/2:(mp.dm9.compact.NdmPad/2 - 1))*mp.dm9.compact.dxi; % meters, coords for the full DM arrays. Origin is centered on a pixel
+else
+    mp.dm9.compact.x_pupPad = (-(mp.dm9.compact.NdmPad-1)/2:(mp.dm9.compact.NdmPad-1)/2)*mp.dm9.compact.dxi; % meters, coords for the full DM arrays. Origin is centered between pixels for an even-sized array
+end
+mp.dm9.compact.y_pupPad = mp.dm9.compact.x_pupPad;
 
 %%
 %--Initial DM9 voltages
@@ -152,7 +150,7 @@ for di = 1:mp.dm9.NactTotal
 %     figure(41); imagesc(mp.dm9.inf_datacube(:,:,di)); axis xy equal tight; colorbar; drawnow;
     mp.dm9.inf_datacube(:,:,di) = windowFull.*mp.dm9.inf_datacube(:,:,di);
     mp.dm9.compact.inf_datacube(:,:,di) = windowCompact.*mp.dm9.compact.inf_datacube(:,:,di);
-    figure(42); imagesc(mp.dm9.inf_datacube(:,:,di)); axis xy equal tight; colorbar; drawnow;
+%     figure(42); imagesc(mp.dm9.inf_datacube(:,:,di)); axis xy equal tight; colorbar; drawnow;
 %     pause(0.1);
 end
 
