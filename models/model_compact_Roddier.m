@@ -111,7 +111,7 @@ end
 %--MFT from SP to FPM (i.e., P3 to F3)
 EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
 
-FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t);
+FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
 EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
 
 
@@ -129,12 +129,6 @@ else %--Otherwise apply FPM
     EP4 = mp.P4.compact.croppedMask.*(EP4noFPM-EP4sub);
 end
 
-% figure(777);imagesc(abs(EP4noFPM));axis image; axis xy; colorbar; colormap(parula(256))
-% %figure(778);imagesc(angle(EP4sub));axis image; axis xy; colorbar; 
-try
-    figure;imagesc(abs(EP4noFPM-EP4sub));axis image; axis xy; colorbar; title('Lyot plane');
-end
-
 % MFT to camera
 EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
 % EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
@@ -145,8 +139,6 @@ if(normFac==0)
 else
     Eout = EF4/sqrt(normFac); %--Apply normalization
 end
-
-
 
 if(mp.useGPU)
     Eout = gather(Eout);

@@ -102,7 +102,7 @@ end
 EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
 
 % Apply (1-FPM) for Babinet's principle later
-FPM = mp.F3.full.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t);
+FPM = mp.F3.full.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.full.mask.phzSupport);
 EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
 
 % Use Babinet's principle at the Lyot plane. This is the term without the FPM.
@@ -118,14 +118,6 @@ else %--Otherwise apply FPM
     EP4 = mp.P4.full.croppedMask.*(EP4noFPM-EP4subtra);
 end
 
-
-% %--Do NOT apply FPM if normalization value is being found
-% if(isfield(modvar,'flagGetNormVal'))
-%     if(modvar.flagGetNormVal==true)
-%         EP4 = mp.P4.full.croppedMask.*EP4noFPM;
-%     end
-% end    
-
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to F4)
 EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
 
@@ -135,16 +127,6 @@ if(normFac==0)
 else
     Eout = EF4/sqrt(normFac); %--Apply normalization
 end
-
-% %--Don't apply FPM if normalization value is being found, or if the flag doesn't exist (for testing only)
-% Eout = EF4; %--Don't normalize if normalization value is being found
-% if(isfield(modvar,'flagGetNormVal'))
-%     if(modvar.flagGetNormVal==false)
-%         Eout = EF4/sqrt(mp.F4.full.I00(modvar.sbpIndex)); %--Apply normalization
-%     end
-% elseif(isfield(mp.F4.full,'I00'))
-%     Eout = EF4/sqrt(mp.F4.full.I00(modvar.sbpIndex)); %--Apply normalization
-% end
 
 
 end %--END OF FUNCTION
