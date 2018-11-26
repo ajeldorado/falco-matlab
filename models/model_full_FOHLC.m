@@ -11,6 +11,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2018-11-13 by A.J. Riggs from HLC to FOHLC.
 % Modified on 2018-09-?? by A.J. Riggs to change the function inputs to
 %  include: lambda, normFac, Ein, FPM. 
 % Modified on 2018-01-23 by A.J. Riggs to allow DM1 to not be at a pupil
@@ -38,11 +39,11 @@
 % -flagGenMat
 
 
-function Eout = model_full_HLC(mp,   lambda, normFac, Ein, FPM)  
-% function Eout = model_full_HLC(mp,   modvar)
+function Eout = model_full_FOHLC(mp, lambda, normFac, Ein)  
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.full.NdmPad;
+Nfpm = mp.full.Nfpm; %mp.dm9.NxiFPM;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
@@ -70,24 +71,33 @@ end
 
 if(any(mp.dm_ind==5)); DM5apod = falco_gen_dm_surf(mp.dm5, mp.dm1.dx, NdmPad); else; DM5apod = ones(NdmPad); end %--Pre-compute the starting DM5 amplitude
 
-% %--Complex transmission map of the FPM.
-% ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-% if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
-%     FPM = mp.FPMcubeFull(:,:,ilam); %padOrCropEven(mp.FPMcubeFull, mp.dm9.NxiFPM);
-% else %--Otherwise generate it
-%     FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
-% end
+%--FPM representation (idealized as amplitude and phase)
+DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'full');
+DM8ampPad = padOrCropEven( DM8amp,Nfpm,'extrapval',1);
+DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'full');
+DM9surfPad = padOrCropEven( DM9surf,Nfpm);
+transOuterFPM = 1;
+FPM = DM8ampPad.*exp(2*pi*1i/lambda*DM9surfPad);
 
-%--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
-t_Ti_base = 0;
-t_Ni_vec = 0;
-t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-pol = 0;
-[tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-transOuterFPM = tCoef;
-% ind_metal = falco_discretize_FPM_surf(0, mp.t_metal_nm_vec, mp.dt_metal_nm); %--Obtain the indices of the nearest thickness values in the complex transmission datacube.
-% ind_diel = falco_discretize_FPM_surf(0, mp.t_diel_nm_vec,  mp.dt_diel_nm); %--Obtain the indices of the nearest thickness values in the complex transmission datacube.
-% transOuterFPM = mp.complexTransFull(ind_diel,ind_metal,ilam); %--Complex transmission of the points outside the FPM (just fused silica with neither dielectric nor metal).            
+
+% % %--Complex transmission map of the FPM.
+% % ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
+% % if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
+% %     FPM = mp.FPMcubeFull(:,:,ilam); %padOrCropEven(mp.FPMcubeFull, mp.dm9.NxiFPM);
+% % else %--Otherwise generate it
+% %     FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
+% % end
+% 
+% %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
+% t_Ti_base = 0;
+% t_Ni_vec = 0;
+% t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+% pol = 0;
+% [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+% transOuterFPM = tCoef;
+% % ind_metal = falco_discretize_FPM_surf(0, mp.t_metal_nm_vec, mp.dt_metal_nm); %--Obtain the indices of the nearest thickness values in the complex transmission datacube.
+% % ind_diel = falco_discretize_FPM_surf(0, mp.t_diel_nm_vec,  mp.dt_diel_nm); %--Obtain the indices of the nearest thickness values in the complex transmission datacube.
+% % transOuterFPM = mp.complexTransFull(ind_diel,ind_metal,ilam); %--Complex transmission of the points outside the FPM (just fused silica with neither dielectric nor metal).            
 
 pupil = padOrCropEven(mp.P1.full.mask,NdmPad);
 if(mp.useGPU);    pupil = gpuArray(pupil); end
@@ -131,12 +141,12 @@ end
 EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
 
 % Apply (1-FPM) for Babinet's principle later
-EF3 = (transOuterFPM-FPM).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
+EF3 = (1-FPM/transOuterFPM).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
 
 % Use Babinet's principle at the Lyot plane.
 EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
 EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.full.Narr);
-EP4noFPM = transOuterFPM*EP4noFPM; %--Apply the phase and amplitude change from the FPM's outer complex transmission.
+% % EP4noFPM = transOuterFPM*EP4noFPM; %--Apply the phase and amplitude change from the FPM's outer complex transmission.
 
 
 %--Do NOT apply FPM if normalization value is being found

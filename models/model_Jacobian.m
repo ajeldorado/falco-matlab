@@ -45,6 +45,10 @@ function jacStruct = model_Jacobian(mp)
             %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
             mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
             mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
+        case{'FOHLC'}
+            %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
+            mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
+            mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
     end
 
     %--Initialize the Jacobian cubes for each DM.
@@ -134,6 +138,9 @@ function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
     whichDM = vals_list(2,ii); %--number of the specified DM
 
     switch mp.coro 
+        case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
+            jacMode = model_Jacobian_FOHLC(mp,   im, whichDM); 
+        
         case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
             jacMode = model_Jacobian_EHLC(mp,   im, whichDM); 
         

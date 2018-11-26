@@ -137,6 +137,9 @@ for Itr=1:mp.Nitr
         case{'HLC','APHLC','SPHLC'}
             mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
             mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
+        case{'FOHLC'}
+            mp.DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'compact'); %--FPM amplitude transmission [amplitude]
+            mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--FPM phase shift in transmission [m]    
     end
 
     %% Updated plot and reporting
@@ -225,6 +228,8 @@ for Itr=1:mp.Nitr
     if( (Itr==1) || cvar.flagRelin )
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
     end
+    
+    
     
     % %--Save or load a previous Jacobian (esp. useful for testbeds)
     %     if(Itr==1)
@@ -390,14 +395,14 @@ end
 
 %--Calculate and report updated RMS DM surfaces.
 if(any(mp.dm_ind==1))
-    out.dm1.Spv = max(DM1surf(:))-min(DM1surf(:));
-    out.dm1.Srms = rms(DM1surf(rms_ele));
-    fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms)
+    out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
+    out.dm1.Srms(Itr) = rms(DM1surf(rms_ele));
+    fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
 end
 if(any(mp.dm_ind==2))
-    out.dm2.Spv = max(DM2surf(:))-min(DM2surf(:));
-    out.dm2.Srms = rms(DM2surf(rms_ele));
-    fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms)
+    out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
+    out.dm2.Srms(Itr) = rms(DM2surf(rms_ele));
+    fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
 end
 
 
@@ -708,6 +713,15 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
         case{'SM-AMPL'} %--Bounded stroke minimization using AMPL. The quadratic cost function is solved directly with AMPL+Gurobi rather than by inverting.
             cvar.dummy = 1;
             [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar);
+            
+        case{'SM-CVX'} %--Bounded stroke minimization using AMPL. The quadratic cost function is solved directly with AMPL+Gurobi rather than by inverting.
+            cvar.dummy = 1;
+            [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar);
+            
+        case{'SVDtruncEFC'} %--Truncate the singular values used for EFC 
+            cvar.dummy = 1;
+            [dDM,cvar,InormAvg] = falco_ctrl_SVD_truncation_EFC(mp,jacStruct,cvar);    
+            
 
     end
     fprintf(' done. Time: %.3f sec\n',toc);
