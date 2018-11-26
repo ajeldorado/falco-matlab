@@ -232,9 +232,9 @@ mp.dm2.Dstop = mp.dm2.Nact*1e-3;  %--diameter of circular stop at DM2 and center
 
 %--DM9 weights and sensitivities
 mp.dm_weights = ones(9,1);   % vector of relative weighting of DMs' Jacobians for EFC
-mp.dm_weights(9) = 1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
-mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
-mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+mp.dm_weights(9) = 1; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm9.act_sens = 1e-2;%10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step. 1e-2 for Zernikes, or 10 for poke actuators
+mp.dm9.stepFac = 10; %200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
 % %%--DM9 parameters for Lanczos3 influence function
 % mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
@@ -261,7 +261,7 @@ mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide b
 
 %%--DM9 parameters for 3fold-symmetric Zernike influence function
 mp.dm9.inf0name = '3foldZern'; %--Zernikes with 3-fold (0,3,6,9,etc) symmetry only 
-mp.dm9.maxRadialOrder = 20;
+mp.dm9.maxRadialOrder = 25; %20; %--35 is too many, 25 works well, 30 is ??
 mp.F3.compact.res = 20;
 mp.F3.full.res = 20;
 mp.dm9.VtoHavg = 1e-9; %--Gain of DM9 influence functions [meters/Volt]
