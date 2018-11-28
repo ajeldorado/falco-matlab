@@ -500,9 +500,9 @@ out.InormHist = InormHist;
 
 fnOut = [mp.path.config mp.runLabel,'_snippet.mat'];
 
-sprintf('\nSaving abridged workspace to file:\t%s...\n',fnOut)
+fprintf('\nSaving abridged workspace to file:\n\t%s\n',fnOut)
 save(fnOut,'out');
-fprintf('done.\n\n')
+fprintf('...done.\n\n')
 
 
 %% Save out the data from the workspace

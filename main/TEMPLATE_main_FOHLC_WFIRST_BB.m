@@ -56,7 +56,7 @@ mp.flagPlot = true;
 
 %%--Record Keeping
 mp.TrialNum = 1;%-1*(0 + isurvey); %--Always use a diffrent Trial # for different calls of FALCO.
-mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
+mp.SeriesNum = 26; %--Use the same Series # for sets of similar trials.
 
 
 % mp.aoi = 10; % Angle of incidence at FPM [deg]
@@ -75,8 +75,8 @@ mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
 mp.dm8.Vmin = 0; % 1-mp.dm8.Vmin is the maximum allowed FPM amplitude
 mp.dm8.Vmax = 1 - 1e-4; % 1-mp.dm8.Vmax is the minimum allowed FPM amplitude
 
-mp.dm8.V0coef = 1 - 1e-2; % starting occulting spot amplitude amplitude]
-mp.dm9.V0coef = -100; % starting occulting spot phase (uniform) [nm of phase]
+mp.dm8.V0coef = 1 - 1e-2; % starting occulting spot amplitude amplitude
+mp.dm9.V0coef = -(147/360)*575; %-100; % starting occulting spot phase (uniform) [nm of phase]
 
 
 % Controller options: 
@@ -100,7 +100,7 @@ mp.d_dm1_dm2 = 1; % distance between DM1 and DM2 (meters)
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 575e-9; % central wavelength of bandpass (meters)
 mp.fracBW = 0.10;%0.125;%0.10;%0.125;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
-mp.Nsbp = 1;%5; % number of sub-bandpasses across correction band 
+mp.Nsbp = 5; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
 %--FPM
@@ -170,16 +170,36 @@ switch mp.controller
             5,  -5, 129, 0, 0;...
             10, -2, 129, 0, 0;...
             ];
+        SetD = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
+           [0, 0, 0, 1, 0;...
+           10, -5, 129, 0, 0;...
+           5,  -6, 129, 0, 0;...
+           10, -2, 129, 0, 0;...
+           ];
 
-        mp.ctrl.sched_mat = [...
-            repmat([1, 1j, 128, 1, 1], [3, 1]);
-            ]; 
-        
 %         mp.ctrl.sched_mat = [...
 %             SetA;...
-%             ...repmat(SetB,[2,1]);...
-%             ...repmat(SetC,[8,1]);...
+%             repmat(SetB,[2,1]);...
+%             repmat(SetC,[8,1]);...
 %             ]; 
+        
+       SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
+       SetB2 = [1, -5, 12, 1, 0];
+       SetC2 = [1, 1j, 12, 1, 1];
+       
+       mp.ctrl.sched_mat = [...
+           repmat(SetA2,[5,1]);...
+           repmat(SetB2,[3,1]);...
+           repmat(SetC2,[3,1]);...
+           repmat(SetB,[2,1]);...
+           repmat(SetC,[4,1]);...
+           repmat(SetD,[4,1]);...
+           ];
+       
+%         mp.ctrl.sched_mat = [...
+%             repmat([1, 1j, 128, 1, 1], [3, 1]);
+%             ]; 
+        
         
         [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
         
@@ -216,12 +236,6 @@ mp.dm8.maxAbsdV = 0.2;
 %--Voltage range restrictions
 mp.dm1.maxAbsV = 1000;
 mp.dm2.maxAbsV = 1000;
-
-
-% %%--Tip/Tilt Control
-% mp.NlamForTT = 1; %--Number of wavelengths to control  tip/tilt at. 0,1, 2, 3, or inf (for all)
-% mp.Ntt = 1; %--Number of tip/tilt offsets, including 0 (so always set >=1). 1, 4, or 5
-% mp.TToffset = 1; %--tip/tilt offset (mas)
 
 
 
@@ -292,34 +306,9 @@ mp.F4.res = 3;%2.5;%3; %--Pixels per lambda_c/D
 
 
 %% Tip/Tilt, Spatial, and Chromatic Weighting of the Control Jacobian  #NEWFORTIPTILT
-% mp.Ntt = 1; %--Number of tip/tilt offsets, including 0 (so always set >=1). 1, 4, or 5
-% mp.NlamForTT = 1; %--Number of wavelengths to compute tip/tilt at. 0,1, 2, 3, or inf (for all)
-% mp.TToffset = 1; %--tip/tilt offset in mas
 % 
 % %--Spatial pixel weighting
 % mp.WspatialDef = [mp.F4.corr.Rin, mp.F4.corr.Rin+2, 1];  %--spatial control Jacobian weighting by annulus: [Inner radius, outer radius, intensity weight; (as many rows as desired)]
-% 
-% %--Chromatic weighting
-
-
-% %% Part 2: Call the function to define the rest of the variables and initialize the workspace
-% if(exist('mp','var')==false); mp.dummy = 1; end
-% if(exist('cp','var')==false); mp.ctrl.dummy = 1; end
-% if(exist('ep','var')==false); ep.dummy = 1; end
-% if(exist('DM','var')==false); mp.dummy = 1; end
-% 
-% [mp,cp,ep,DM] = falco_config_defaults_HLC_thinfilm(mp,cp,ep,DM); %--Load defaults for undefined values
-% 
-
-% %% Part 3: Save the config file    
-% mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
-%     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-%     '_IWA',num2str(mp.F4.corr.Rin),'_OWA',num2str(mp.F4.corr.Rout),...
-%     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-%     '_',mp.controller];
-% fn_config = ['data/configs/',mp.runLabel,'.mat'];
-% save(fn_config)
-% fprintf('Saved the config file: \t%s\n',fn_config)
 
 %% Part 2
 mp = falco_config_defaults_FOHLC(mp);
