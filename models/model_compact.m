@@ -45,6 +45,7 @@ modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 normFac = mp.F4.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 flagEval = false;             % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
+flagAllPlanes = false; %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
 %--Enable different arguments values by using varargin
 icav = 0;                     % index in cell array varargin
 while icav < size(varargin, 2)
@@ -56,6 +57,8 @@ while icav < size(varargin, 2)
             %fprintf('model_compact: Not normalized.\n');
         case {'eval'} % Set to 0 when finding the normalization factor
             flagEval = true; 
+        case{'all'} %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
+            flagAllPlanes = true;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
           
@@ -128,7 +131,7 @@ switch mp.coro
         Eout = model_compact_HLC(mp, lambda, normFac, Ein, FPM, flagEval);
     
     case{'FOHLC'} %--DMs, optional apodizer, FPM with amplitude and phase modulation, and LS. Uses Babinet's principle about FPM.
-        Eout = model_compact_FOHLC(mp, lambda, normFac, Ein, flagEval);    
+        Eout = model_compact_FOHLC(mp, lambda, normFac, Ein, flagEval,flagAllPlanes);    
         
     case{'SPHLC','FHLC'} %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS. Uses 2-part direct MFTs to/from FPM
         %Eout = model_compact_SPHLC(mp,   lambda, Ein, normFac);

@@ -38,7 +38,7 @@
 % -flagGenMat
 
 
-function Eout = model_compact_FOHLC(mp, lambda, normFac, Ein, flagEval) 
+function Eout = model_compact_FOHLC(mp, lambda, normFac, Ein, flagEval, flagAll) 
 
 %lambda = mp.sbp_centers(modvar.sbpIndex); 
 mirrorFac = 2; % Phase change is twice the DM surface height.
@@ -131,6 +131,8 @@ else
     EP1 = pupil.*Ein; %--E-field at pupil plane P1
 end
 
+if(flagAll);  E.P1 = padOrCropEven(EP1,mp.P1.compact.Narr);  end
+
 % if(mp.flagDM5)
     EP1 = EP1.*padOrCropEven(DM5apod,NdmPad);
 % end
@@ -159,6 +161,8 @@ if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 ); EP2eff = Edm2; else; EP2eff = propcustom_
 
 %--Rotate 180 degrees to propagate to pupil P3
 EP3 = propcustom_2FT(EP2eff, mp.centering);
+if(flagAll);  E.P3 = padOrCropEven(EP3,mp.P1.compact.Narr);  end
+
 
 %--Apply apodizer mask.
 if(mp.flagApod)
@@ -192,23 +196,34 @@ else % ===========================================================
 
     %--MFT from SP to FPM (i.e., P3 to F3)
     EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
+    if(flagAll) %--Compute over the full FOV of at the final plane at that same resolution 
+        Nxi = mp.F4.eval.Nxi;% ceil_even(mp.F4.FOV*2*mp.F3.compact.res);
+        dxi = mp.F4.eval.dxi;
+        EF3more = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,dxi,Nxi,dxi,Nxi,mp.centering); %--E-field incident upon the FPM
+        E.F3 = EF3more;  
+    end
 
     %--Apply (1-FPM) for Babinet's principle later
     EF3 = (1-FPM/transOuterFPM).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
 
 
     %--Use Babinet's principle at the Lyot plane.
-    EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
-    EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
+    EP4noFPM0 = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
+    EP4noFPM = padOrCropEven(EP4noFPM0,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
     % % EP4noFPM = transOuterFPM*EP4noFPM; %--Apply the phase and amplitude change from the FPM's outer complex transmission.
 
     if(normFac==0) %--Do NOT apply FPM if normalization value is being found
         EP4 = mp.P4.compact.croppedMask.*EP4noFPM;
+        EP4sub = 0;
     else %--Otherwise apply FPM
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
         %--Babinet's principle at P4
         EP4 = mp.P4.compact.croppedMask.*(EP4noFPM-EP4sub); 
+    end
+    if(flagAll)
+        EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P1.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle
+        E.P4 = padOrCropEven(EP4noFPM0,mp.P1.compact.Narr) - EP4sub; 
     end
 
 
@@ -221,11 +236,15 @@ else % ===========================================================
     else
         Eout = EF4/sqrt(normFac); %--Apply normalization
     end
-
-
+    
     if(mp.useGPU)
         Eout = gather(Eout);
     end
+    
+    if(flagAll);  E.F4 = Eout;  end
+    if(flagAll);  Eout = E;  end
+
+
 
 end %if mp.lowfs == 0
 

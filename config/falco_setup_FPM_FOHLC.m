@@ -108,12 +108,12 @@ mp.dm8.Vmax = 1; % maximum allowed amplitude in FPM
 % mp.dm8.Vmax = max(mp.t_metal_nm_vec); % maximum thickness (from one actuator, not of the facesheet) of FPM metal layer (nm)
 
 
-
 %--DM8 Option 1: Set as same basis set (DM actuators) as DM9. BE CAREFUL ABOUT OVERWRITING VALUES INADVERTENTLY!!!!!!!!!!!
 dm8Vmin = mp.dm8.Vmin;
 dm8Vmax = mp.dm8.Vmax;
 dm8v0coef = mp.dm8.V0coef; %--Starting value. Save as temporary value to avoid overwriting
 dm8VtoHavg = mp.dm8.VtoHavg; %--Starting value. Save as temporary value to avoid overwriting
+dm8actSens = mp.dm8.act_sens;
 dm8maxAbsdV = mp.dm8.maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
 mp.dm8 = mp.dm9; %--DANGER: OVERWRITING ANY PREVIOUS mp.dm8 DATA!!! -----------------------------------------------!!!!!!!!!!!!!!!!!!!!
 mp.dm8 = rmfield(mp.dm8,'V');
@@ -121,12 +121,31 @@ mp.dm8.V0coef = dm8v0coef;
 mp.dm8.VtoHavg = dm8VtoHavg;
 mp.dm8.Vmin = dm8Vmin;
 mp.dm8.Vmax = dm8Vmax;
+mp.dm8.act_sens = dm8actSens;
 mp.dm8.maxAbsdV = dm8maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
 fprintf('%d actuators in DM8.\n',mp.dm8.NactTotal);
 % mp.dm8.ABfac = 1;%1/5; %--Gain factor between inner and outer FPM regions
 mp.dm8.VtoH = mp.dm8.VtoHavg*ones(mp.dm8.NactTotal,1);%1*1e-9*ones(mp.dm9.Nact); % Gains: volts to meters in surface height;
 % mp.dm8.VtoH(mp.F3.RinAB_inds) = mp.dm8.ABfac*mp.dm8.VtoH(mp.F3.RinAB_inds);
 if(isfield(mp.dm8,'V')==false); mp.dm8.V = zeros(mp.dm8.NactTotal,1); mp.dm8.V(mp.F3.RinA_inds) = mp.dm8.V0coef; else; mp.dm8.V = DM8V0; end %--Initial DM voltages
+% %--DM8 Option 1: Set as same basis set (DM actuators) as DM9. BE CAREFUL ABOUT OVERWRITING VALUES INADVERTENTLY!!!!!!!!!!!
+% dm8Vmin = mp.dm8.Vmin;
+% dm8Vmax = mp.dm8.Vmax;
+% dm8v0coef = mp.dm8.V0coef; %--Starting value. Save as temporary value to avoid overwriting
+% dm8VtoHavg = mp.dm8.VtoHavg; %--Starting value. Save as temporary value to avoid overwriting
+% dm8maxAbsdV = mp.dm8.maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
+% mp.dm8 = mp.dm9; %--DANGER: OVERWRITING ANY PREVIOUS mp.dm8 DATA!!! -----------------------------------------------!!!!!!!!!!!!!!!!!!!!
+% mp.dm8 = rmfield(mp.dm8,'V');
+% mp.dm8.V0coef = dm8v0coef;
+% mp.dm8.VtoHavg = dm8VtoHavg;
+% mp.dm8.Vmin = dm8Vmin;
+% mp.dm8.Vmax = dm8Vmax;
+% mp.dm8.maxAbsdV = dm8maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
+% fprintf('%d actuators in DM8.\n',mp.dm8.NactTotal);
+% % mp.dm8.ABfac = 1;%1/5; %--Gain factor between inner and outer FPM regions
+% mp.dm8.VtoH = mp.dm8.VtoHavg*ones(mp.dm8.NactTotal,1);%1*1e-9*ones(mp.dm9.Nact); % Gains: volts to meters in surface height;
+% % mp.dm8.VtoH(mp.F3.RinAB_inds) = mp.dm8.ABfac*mp.dm8.VtoH(mp.F3.RinAB_inds);
+% if(isfield(mp.dm8,'V')==false); mp.dm8.V = zeros(mp.dm8.NactTotal,1); mp.dm8.V(mp.F3.RinA_inds) = mp.dm8.V0coef; else; mp.dm8.V = DM8V0; end %--Initial DM voltages
 
 
 

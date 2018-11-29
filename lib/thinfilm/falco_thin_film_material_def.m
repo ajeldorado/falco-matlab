@@ -54,9 +54,9 @@ lam_nm = lam * 1.0e9;    % m --> nm
 theta  = aoi*pi/180;     % deg --> rad
 
 lam_u = lam*1.0e6;
-npmgi = 1.524 + 5.176e-03./lam_u.^2 + 2.105e-4./lam_u.^4;
+nPMGI = 1.524 + 5.176e-03./lam_u.^2 + 2.105e-4./lam_u.^4;
 
-vsilica = [400	1.470127387
+vSilica = [400	1.470127387
 405	1.469591804
 410	1.469076614
 415	1.468580736
@@ -178,9 +178,25 @@ vsilica = [400	1.470127387
 995	1.450483855
 1000	1.450420548];
 
-lam_silica = vsilica(:,1);  % nm
-n_silica   = vsilica(:,2);
-nsilica    = interp1(lam_silica, n_silica, lam_nm, 'linear');
+if 0   % Fused Silica
+
+    lam_silica = vSilica(:,1);  % nm
+    n_silica   = vSilica(:,2);
+    nGlass    = interp1(lam_silica, n_silica, lam_nm, 'linear');
+    
+else       % BK-7
+    
+    B1 = 1.03961212;
+    B2 = 0.231792344;
+    B3 = 1.01046945;
+    C1 = 0.00600069867;
+    C2 = 0.0200179144;
+    C3 = 103.560653;
+    
+    wvl_um = lam_u;
+    nGlass = sqrt(1 + (B1*(wvl_um).^2./((wvl_um).^2 - C1)) + (B2*(wvl_um).^2./((wvl_um).^2 - C2)) + (B3*(wvl_um).^2./((wvl_um).^2 - C3)));
+    
+end
 
 % ---------------------------------------------
 vnickel = [387.5	1.61	2.3
@@ -216,7 +232,7 @@ vnickel = [387.5	1.61	2.3
 lam_nickel = vnickel(:,1);  % nm
 n_nickel   = vnickel(:,2);
 k_nickel   = vnickel(:,3);
-nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
+nNickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
 knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');
 
 % ---------------------------------------------
@@ -239,8 +255,8 @@ titanium = [413.0000    2.1400    2.9800
 lam_ti = vnickel(:,1);  % nm
 n_ti   = vnickel(:,2);
 k_ti   = vnickel(:,3);
-nti    = interp1(lam_ti, n_ti, lam_nm, 'linear');
-kti    = interp1(lam_ti, k_ti, lam_nm, 'linear');
+nTi    = interp1(lam_ti, n_ti, lam_nm, 'linear');
+kTi    = interp1(lam_ti, k_ti, lam_nm, 'linear');
 % ---------------------------------------------
 Nmetal = length(t_Ni_vec);
 Ndiel = length(t_PMGI_vec);
@@ -249,15 +265,15 @@ tCoef = zeros(Ndiel,Nmetal); %--initialize2
 rCoef = zeros(Ndiel,Nmetal); %--initialize
 
 for jj = 1:Ndiel
-    dpm = t_PMGI_vec(jj);
+    dPMGI = t_PMGI_vec(jj);
     
     for ii = 1:Nmetal
-        dni = t_Ni_vec(ii);
-        dti = t_Ti_vec(ii);
+        dNi = t_Ni_vec(ii);
+        dTi = t_Ti_vec(ii);
         
-        nvec = [1 1 npmgi nnickel-1i*knickel nti-1i*kti nsilica];
-        %dvec = [d0-dpm dpm dni];
-        dvec = [d0-dpm-dni-dti dpm dni dti];
+        nvec = [1 1 nPMGI nNickel-1i*knickel nTi-1i*kTi nGlass];
+        %dvec = [d0-dPMGI dPMGI dNi];
+        dvec = [d0-dPMGI-dNi-dTi dPMGI dNi dTi];
         
 %         [R, T, rr, tt] = thin_film_filter_2(nvec, dvec, theta, lam, pol);
         %--OUTPUTS:

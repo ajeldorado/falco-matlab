@@ -101,8 +101,11 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
     %--The entire regularization matrix will be normalized based on the max
     %response of DMs 1 and 2
     temp = diag(cvar.GstarG_wsum);
-    diagNormVal = max(temp(u_guide==1 | u_guide==2));
-    
+    if(any(u_guide==1) || any(u_guide==2))
+        diagNormVal = max(temp(u_guide==1 | u_guide==2));
+    else
+        diagNormVal = max(temp);
+    end
     %--Initialize the regularization matrix
     RegMatDiag = diagNormVal*ones(NeleAll,1);
     
