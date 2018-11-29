@@ -110,7 +110,7 @@ if(mp.flagPlot)
     imagesc(log10(IP4),[-4 0]); 
     axis xy equal tight; colormap parula;   axis off; colorbar;
     set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
-    title('Pupil after DMs','Fontsize',20,'Fontweight','Bold');
+    title('Pupil at Lyot Plane','Fontsize',20,'Fontweight','Bold');
 
     
     drawnow;
