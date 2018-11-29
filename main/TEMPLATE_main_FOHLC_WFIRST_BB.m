@@ -298,7 +298,7 @@ mp.F4.corr.Rout  = 10; %--lambda0/D, outer radius of correction region
 % mp.F4.corr.ang  = 180; %--degrees per side
 % mp.F4.score.ang = 180; %--degrees per side
 % mp.F4.sides = 'both'; %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
-
+% mp.F4.shape = 'square';
 
 %% Final Focal Plane (F4) Properties
 mp.F4.res = 3;%2.5;%3; %--Pixels per lambda_c/D

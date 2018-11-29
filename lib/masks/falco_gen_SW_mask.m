@@ -46,6 +46,12 @@ else
     centering = 'pixel'; %--Default to pixel centering if it is not specified.
 end
 
+if( isfield(inputs,'shape') ) %--shape of the outer part of the dark hole
+    DHshape = inputs.shape;
+else
+    DHshape = 'circle'; %--Default to a circular outer edge
+end
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--Convert opening angle to radians
@@ -81,7 +87,12 @@ RHOS = sqrt(XIS.^2 + ETAS.^2);
 TAN = atan(ETAS./XIS);
 
 %--Generate the Software Mask
-maskSW = (RHOS>=rhoInner & RHOS<=rhoOuter & TAN<=angRad/2 & TAN>=-angRad/2);
+switch lower(DHshape)
+    case{'square'}
+        maskSW = (RHOS>=rhoInner & abs(XIS)<=rhoOuter & abs(ETAS)<=rhoOuter & TAN<=angRad/2 & TAN>=-angRad/2);
+    otherwise
+        maskSW = (RHOS>=rhoInner & RHOS<=rhoOuter & TAN<=angRad/2 & TAN>=-angRad/2);
+end
 
 %--Determine if it is one-sided or not
 if( strcmpi(whichSide,'L') || strcmpi(whichSide,'left') )

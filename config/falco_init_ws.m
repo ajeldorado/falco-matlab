@@ -275,6 +275,10 @@ maskCorr.angDeg = mp.F4.corr.ang; %--degrees
 maskCorr.centering = mp.centering;
 maskCorr.FOV = mp.F4.FOV;
 maskCorr.whichSide = mp.F4.sides; %--which (sides) of the dark hole have open
+if(isfield(mp.F4,'shape'))
+    maskCorr.shape = mp.F4.shape;
+end
+    
 
 %--Compact Model: Generate Software Mask for Correction 
 [mp.F4.corr.mask, mp.F4.xisDL, mp.F4.etasDL] = falco_gen_SW_mask(maskCorr); 
@@ -322,7 +326,9 @@ maskScore.angDeg = mp.F4.score.ang; %--degrees
 maskScore.centering = mp.centering;
 maskScore.FOV = mp.F4.FOV; %--Determines max dimension length
 maskScore.whichSide = mp.F4.sides; %--which (sides) of the dark hole have open
-
+if(isfield(mp.F4,'shape'))
+    maskScore.shape = mp.F4.shape;
+end
 %--Compact Model: Generate Software Mask for Scoring Contrast 
 maskScore.Nxi = mp.F4.Nxi; %--Set min dimension length to be same as for corr 
 maskScore.pixresFP = mp.F4.res;
