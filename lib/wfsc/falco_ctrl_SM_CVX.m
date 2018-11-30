@@ -109,9 +109,12 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
     %--Initialize the regularization matrix
     RegMatDiag = diagNormVal*ones(NeleAll,1);
     
+    %--NOT YET IMPLEMENTED TO DO ANYTHING
     %--Change regularization values for non-standard DMs
-    if(any(mp.dm_ind==8));  RegMatDiag(u_guide==8) = mp.ctrl.relReg8 ;  end
-    if(any(mp.dm_ind==9));  RegMatDiag(u_guide==9) = mp.ctrl.relReg9 ;  end
+    mp.ctrl.relReg8 = 1;
+    mp.ctrl.relReg9 = 1;
+    if(any(mp.dm_ind==8));  RegMatDiag(u_guide==8) = mp.ctrl.relReg8*RegMatDiag(u_guide==8) ;  end
+    if(any(mp.dm_ind==9));  RegMatDiag(u_guide==9) = mp.ctrl.relReg9*RegMatDiag(u_guide==9) ;  end
     
     
     %% Loop over CVX calls for different regularizations

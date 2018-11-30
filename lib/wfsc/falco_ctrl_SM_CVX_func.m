@@ -25,10 +25,10 @@
 %         if(any(mp.dm_ind==2)); dDM2V = zeros(mp.dm2.Nact,mp.dm2.Nact);  dDM2V(mp.dm2.act_ele) = du_out(u_dm_guide==2);  dDM2V_store(:,:,ni) = dDM2V; end
 %         if(any(mp.dm_ind==8)); dDM8V = du_out(u_dm_guide==8);  dDM8V_store(u_dm_guide==8,ni) = dDM8V; end
 %         if(any(mp.dm_ind==9)); dDM9V = du_out(u_dm_guide==9);  dDM9V_store(u_dm_guide==9,ni) = dDM9V; end
-        if(any(mp.dm_ind==1)); dDM.dDM1V = zeros(mp.dm1.Nact,mp.dm1.Nact);  dDM.dDM1V(mp.dm1.act_ele) = duVec(u_guide==1);   end
-        if(any(mp.dm_ind==2)); dDM.dDM2V = zeros(mp.dm2.Nact,mp.dm2.Nact);  dDM.dDM2V(mp.dm2.act_ele) = duVec(u_guide==2);   end
-        if(any(mp.dm_ind==8)); dDM.dDM8V = zeros(mp.dm8.NactTotal,1);  dDM.dDM8V(mp.dm8.act_ele) = duVec(u_guide==8);  end
-        if(any(mp.dm_ind==9)); dDM.dDM9V = zeros(mp.dm9.NactTotal,1);  dDM.dDM9V(mp.dm9.act_ele) = duVec(u_guide==9);  end        
+        if(any(mp.dm_ind==1)); dDM.dDM1V = zeros(mp.dm1.Nact,mp.dm1.Nact);  dDM.dDM1V(mp.dm1.act_ele) = mp.dm_weights(1)*duVec(u_guide==1);   end
+        if(any(mp.dm_ind==2)); dDM.dDM2V = zeros(mp.dm2.Nact,mp.dm2.Nact);  dDM.dDM2V(mp.dm2.act_ele) = mp.dm_weights(2)*duVec(u_guide==2);   end
+        if(any(mp.dm_ind==8)); dDM.dDM8V = zeros(mp.dm8.NactTotal,1);  dDM.dDM8V(mp.dm8.act_ele) = mp.dm_weights(8)*duVec(u_guide==8);  end
+        if(any(mp.dm_ind==9)); dDM.dDM9V = zeros(mp.dm9.NactTotal,1);  dDM.dDM9V(mp.dm9.act_ele) = mp.dm_weights(9)*duVec(u_guide==9);  end        
         
         %--Update the DM commands by adding the new control signal
         if(any(mp.dm_ind==1))

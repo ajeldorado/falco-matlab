@@ -36,28 +36,28 @@ if( any(mp.dm_ind==1) && any(mp.dm_ind==2) && any(mp.dm_ind==8) && any(mp.dm_ind
     cvx_begin quiet
         %cvx_precision low
         cvx_solver Mosek
-        variables maxContrast u1(mp.dm1.Nele) u2(mp.dm2.Nele) u8(mp.dm8.Nele) u9(mp.dm9.Nele) 
+        variables maxContrast du1(mp.dm1.Nele) du2(mp.dm2.Nele) du8(mp.dm8.Nele) du9(mp.dm9.Nele) 
         minimize (maxContrast)
         subject to
-            ([u1; u2; u8; u9].' * (cvar.GstarG_wsum)  + cvar.RealGstarEab_wsum.') * [u1; u2; u8; u9] <= maxContrast
+            ([du1; du2; du8; du9].' * (cvar.GstarG_wsum)  + cvar.RealGstarEab_wsum.') * [du1; du2; du8; du9] <= maxContrast
 
-            u1 <= mp.dm1.dVpvMax/2
-            u1 >= -mp.dm1.dVpvMax/2
-            u2 <= mp.dm2.dVpvMax/2
-            u2 >= -mp.dm2.dVpvMax/2
-            u8 <= mp.dm8.dVpvMax/2
-            u8 >= -mp.dm8.dVpvMax/2
-            u9 <= mp.dm9.dVpvMax/2
-            u9 >= -mp.dm9.dVpvMax/2
+            du1 <= mp.dm1.dVpvMax/2
+            du1 >= -mp.dm1.dVpvMax/2
+            du2 <= mp.dm2.dVpvMax/2
+            du2 >= -mp.dm2.dVpvMax/2
+            du8 <= mp.dm8.dVpvMax/2
+            du8 >= -mp.dm8.dVpvMax/2
+            du9 <= mp.dm9.dVpvMax/2
+            du9 >= -mp.dm9.dVpvMax/2
             
-            u1 + DM1VnomVec <= mp.dm1.maxAbsV
-            u1 + DM1VnomVec >= -mp.dm1.maxAbsV
-            u2 + DM2VnomVec <= mp.dm2.maxAbsV
-            u2 + DM2VnomVec >= -mp.dm2.maxAbsV
-            u8 + DM8VnomVec <= mp.dm8.Vmax
-            u8 + DM8VnomVec >= mp.dm8.Vmin
-            u9 + DM9VnomVec <= mp.dm9.Vmax
-            u9 + DM9VnomVec >= mp.dm9.Vmin
+            du1 + DM1VnomVec <= mp.dm1.maxAbsV
+            du1 + DM1VnomVec >= -mp.dm1.maxAbsV
+            du2 + DM2VnomVec <= mp.dm2.maxAbsV
+            du2 + DM2VnomVec >= -mp.dm2.maxAbsV
+            du8 + DM8VnomVec <= mp.dm8.Vmax
+            du8 + DM8VnomVec >= mp.dm8.Vmin
+            du9 + DM9VnomVec <= mp.dm9.Vmax
+            du9 + DM9VnomVec >= mp.dm9.Vmin
     cvx_end
 
 elseif( any(mp.dm_ind==1) && any(mp.dm_ind==2) && any(mp.dm_ind==8) && length(mp.dm_ind)==3 ) %--DMs 1, 2, 8 only
@@ -68,25 +68,25 @@ elseif( any(mp.dm_ind==1) && any(mp.dm_ind==2) && any(mp.dm_ind==8) && length(mp
     cvx_begin quiet
         %cvx_precision low
         cvx_solver Mosek
-        variables maxContrast u1(mp.dm1.Nele) u2(mp.dm2.Nele) u8(mp.dm8.Nele) 
+        variables maxContrast du1(mp.dm1.Nele) du2(mp.dm2.Nele) du8(mp.dm8.Nele) 
         minimize (maxContrast)
         subject to
-            ([u1; u2; u8].' * (cvar.GstarG_wsum)  + cvar.RealGstarEab_wsum.') * [u1; u2; u8] <= maxContrast
+            ([du1; du2; du8].' * (cvar.GstarG_wsum)  + cvar.RealGstarEab_wsum.') * [du1; du2; du8] <= maxContrast
 
-            u1 <= mp.dm1.dVpvMax/2
-            u1 >= -mp.dm1.dVpvMax/2
-            u2 <= mp.dm2.dVpvMax/2
-            u2 >= -mp.dm2.dVpvMax/2
-            u8 <= mp.dm8.dVpvMax/2
-            u8 >= -mp.dm8.dVpvMax/2
+            du1 <= mp.dm1.dVpvMax/2
+            du1 >= -mp.dm1.dVpvMax/2
+            du2 <= mp.dm2.dVpvMax/2
+            du2 >= -mp.dm2.dVpvMax/2
+            du8 <= mp.dm8.dVpvMax/2
+            du8 >= -mp.dm8.dVpvMax/2
             
             
-            u1 + DM1VnomVec <= mp.dm1.maxAbsV
-            u1 + DM1VnomVec >= -mp.dm1.maxAbsV
-            u2 + DM2VnomVec <= mp.dm2.maxAbsV
-            u2 + DM2VnomVec >= -mp.dm2.maxAbsV
-            u8 + DM8VnomVec <= mp.dm8.Vmax
-            u8 + DM8VnomVec >= mp.dm8.Vmin
+            du1 + DM1VnomVec <= mp.dm1.maxAbsV
+            du1 + DM1VnomVec >= -mp.dm1.maxAbsV
+            du2 + DM2VnomVec <= mp.dm2.maxAbsV
+            du2 + DM2VnomVec >= -mp.dm2.maxAbsV
+            du8 + DM8VnomVec <= mp.dm8.Vmax
+            du8 + DM8VnomVec >= mp.dm8.Vmin
     cvx_end
 
 elseif( any(mp.dm_ind==1) && any(mp.dm_ind==2) && any(mp.dm_ind==9) && length(mp.dm_ind)==3 ) %--DMs 1, 2, 9 only
@@ -97,24 +97,24 @@ elseif( any(mp.dm_ind==1) && any(mp.dm_ind==2) && any(mp.dm_ind==9) && length(mp
     cvx_begin quiet
         %cvx_precision low
         cvx_solver Mosek
-        variables maxContrast u1(mp.dm1.Nele) u2(mp.dm2.Nele) u9(mp.dm9.Nele) 
+        variables maxContrast du1(mp.dm1.Nele) du2(mp.dm2.Nele) du9(mp.dm9.Nele) 
         minimize (maxContrast)
         subject to
-            ([u1; u2; u9].' * (cvar.GstarG_wsum)  + cvar.RealGstarEab_wsum.') * [u1; u2; u9] <= maxContrast
+            ([du1; du2; du9].' * (cvar.GstarG_wsum)  + cvar.RealGstarEab_wsum.') * [du1; du2; du9] <= maxContrast
 
-            u1 <= mp.dm1.dVpvMax/2
-            u1 >= -mp.dm1.dVpvMax/2
-            u2 <= mp.dm2.dVpvMax/2
-            u2 >= -mp.dm2.dVpvMax/2
-            u9 <= mp.dm9.dVpvMax/2
-            u9 >= -mp.dm9.dVpvMax/2
+            du1 <= mp.dm1.dVpvMax/2
+            du1 >= -mp.dm1.dVpvMax/2
+            du2 <= mp.dm2.dVpvMax/2
+            du2 >= -mp.dm2.dVpvMax/2
+            du9 <= mp.dm9.dVpvMax/2
+            du9 >= -mp.dm9.dVpvMax/2
             
-            u1 + DM1VnomVec <= mp.dm1.maxAbsV
-            u1 + DM1VnomVec >= -mp.dm1.maxAbsV
-            u2 + DM2VnomVec <= mp.dm2.maxAbsV
-            u2 + DM2VnomVec >= -mp.dm2.maxAbsV
-            u9 + DM9VnomVec <= mp.dm9.Vmax
-            u9 + DM9VnomVec >= mp.dm9.Vmin
+            du1 + DM1VnomVec <= mp.dm1.maxAbsV
+            du1 + DM1VnomVec >= -mp.dm1.maxAbsV
+            du2 + DM2VnomVec <= mp.dm2.maxAbsV
+            du2 + DM2VnomVec >= -mp.dm2.maxAbsV
+            du9 + DM9VnomVec <= mp.dm9.Vmax
+            du9 + DM9VnomVec >= mp.dm9.Vmin
     cvx_end
 
 elseif( any(mp.dm_ind==1) && any(mp.dm_ind==2) && length(mp.dm_ind)==2 ) %--DMs 1 and 2 only
@@ -124,20 +124,20 @@ elseif( any(mp.dm_ind==1) && any(mp.dm_ind==2) && length(mp.dm_ind)==2 ) %--DMs 
     cvx_begin quiet
         %cvx_precision low
         cvx_solver Mosek
-        variables maxContrast u1(mp.dm1.Nele) u2(mp.dm2.Nele)
+        variables maxContrast du1(mp.dm1.Nele) du2(mp.dm2.Nele)
         minimize (maxContrast)
         subject to
-            ([u1; u2].' * (cvar.GstarG_wsum + 1/mu*maxDiagGstarG*eye(size(cvar.GstarG_wsum))) + cvar.RealGstarEab_wsum.') * [u1; u2] <= maxContrast
+            ([du1; du2].' * (cvar.GstarG_wsum + 1/mu*maxDiagGstarG*eye(size(cvar.GstarG_wsum))) + cvar.RealGstarEab_wsum.') * [du1; du2] <= maxContrast
 
-            u1 <= mp.dm1.dVpvMax/2
-            u1 >= -mp.dm1.dVpvMax/2
-            u2 <= mp.dm2.dVpvMax/2
-            u2 >= -mp.dm2.dVpvMax/2
+            du1 <= mp.dm1.dVpvMax/2
+            du1 >= -mp.dm1.dVpvMax/2
+            du2 <= mp.dm2.dVpvMax/2
+            du2 >= -mp.dm2.dVpvMax/2
             
-            u1 + DM1VnomVec <= mp.dm1.maxAbsV
-            u1 + DM1VnomVec >= -mp.dm1.maxAbsV
-            u2 + DM2VnomVec <= mp.dm2.maxAbsV
-            u2 + DM2VnomVec >= -mp.dm2.maxAbsV
+            du1 + DM1VnomVec <= mp.dm1.maxAbsV
+            du1 + DM1VnomVec >= -mp.dm1.maxAbsV
+            du2 + DM2VnomVec <= mp.dm2.maxAbsV
+            du2 + DM2VnomVec >= -mp.dm2.maxAbsV
             
     cvx_end
 end
@@ -147,31 +147,26 @@ end
 
 if(any(mp.dm_ind==1))
     dDM1V = zeros(mp.dm1.Nact);
-    dDM1V(mp.dm1.act_ele) = u1;
+    dDM1V(mp.dm1.act_ele) = mp.dm_weights(1)*du1;
     dDM.dDM1V = dDM1V;
 end
 
 if(any(mp.dm_ind==2))
     dDM2V = zeros(mp.dm2.Nact, mp.dm2.Nact);
-    dDM2V(mp.dm2.act_ele) = u2;
+    dDM2V(mp.dm2.act_ele) = mp.dm_weights(2)*du2;
     dDM.dDM2V = dDM2V;
 end
 
-if(any(mp.dm_ind==3)) 
-    dDM3V = zeros(mp.dm3.Nact);
-    dDM3V(mp.dm3.act_ele) = u3;
-    dDM.dDM3V = dDM3V;
-end
 
 if(any(mp.dm_ind==8))
     dDM8V = zeros(mp.dm8.NactTotal,1);
-    dDM8V(mp.dm8.act_ele) = u8;
+    dDM8V(mp.dm8.act_ele) = mp.dm_weights(8)*du8;
     dDM.dDM8V = dDM8V;
 end
 
 if(any(mp.dm_ind==9))
     dDM9V = zeros(mp.dm9.NactTotal,1);
-    dDM9V(mp.dm9.act_ele) = u9;
+    dDM9V(mp.dm9.act_ele) = mp.dm_weights(9)*du9;
     dDM.dDM9V = dDM9V;
 end
 
