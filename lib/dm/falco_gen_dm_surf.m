@@ -50,7 +50,7 @@ pupil_ratio = 1; % beam diameter fraction
 wl_dummy = 1e-6; %--dummy value needed to initialize wavelength in PROPER (meters)
 
 bm  = prop_begin(N*dx, wl_dummy, N, pupil_ratio);
-[~,DMsurf] = prop_dm(bm, dm.inf_info, dm.VtoH.*dm.V, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps);
+[~,DMsurf] = propcustom_dm(bm, dm.inf_info, dm.VtoH.*dm.V, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps);
 
 
 end %--END OF FUNCTION
