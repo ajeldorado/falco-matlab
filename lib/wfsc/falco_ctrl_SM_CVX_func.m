@@ -11,7 +11,7 @@
         % variables maxContrast u1(mp.dm1.Nele) u2(mp.dm2.Nele) u8(mp.dm8.Nele) u9(mp.dm9.Nele) 
         minimize (maxContrast)
         subject to
-            (duVec.' * (cvar.GstarG_wsum + 10.^(log10reg)*diag(RegMatDiag))  + cvar.RealGstarEab_wsum.') * duVec <= maxContrast
+            (duVec.' * (cvar.GstarG_wsum + 10.^(log10reg)*diag(RegMatDiag))  + 2*cvar.RealGstarEab_wsum.') * duVec <= maxContrast
             
             duVec <= du_UB_comb
             duVec >= du_LB_comb
