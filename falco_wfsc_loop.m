@@ -419,6 +419,11 @@ if(any(mp.dm_ind==2))
     fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
 end
 
+%--Calculate sensitivities to 1nm RMS of zernikes
+if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
+    out.Zsens = falco_get_Zernike_sensitivities(mp);
+end
+
 
 % Take the next image to check the contrast level (in simulation only)
 Im = falco_get_summed_image(mp);

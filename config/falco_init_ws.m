@@ -575,6 +575,13 @@ out.dm2.Srms = zeros(mp.Nitr,1);
 out.dm8.Srms = zeros(mp.Nitr,1);
 out.dm9.Srms = zeros(mp.Nitr,1);
 
+%--Zernike sensitivities to 1nm RMS
+if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
+if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
+Nannuli = size(mp.eval.Rsens,1);
+Nzern = length(mp.eval.indsZnoll);
+out.Zsens = zeros(Nzern,Nannuli,mp.Nitr);
+
 %--Store the DM commands at each iteration
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V'));  out.dm1.Vall = zeros(mp.dm1.Nact,mp.dm1.Nact,mp.Nitr+1);  end; end
 if(isfield(mp,'dm2')); if(isfield(mp.dm2,'V'));  out.dm2.Vall = zeros(mp.dm2.Nact,mp.dm2.Nact,mp.Nitr+1); end; end

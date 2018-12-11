@@ -59,32 +59,32 @@ mp.TrialNum = 1;%-1*(0 + isurvey); %--Always use a diffrent Trial # for differen
 mp.SeriesNum = 26; %--Use the same Series # for sets of similar trials.
 
 
-% mp.aoi = 10; % Angle of incidence at FPM [deg]
-% mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
-% 
-% mp.dt_metal_nm = 0.25;%1/10; %--thickness step size for FPM metal layer (nm)
-% mp.t_metal_nm_vec = 0:mp.dt_metal_nm:120; %150; %--nickel thickness range and sampling (nm)
-% mp.dt_diel_nm = 2/10; %--thickness step size for FPM dielectric layer  (nm)
-% mp.t_diel_nm_vec = 0:mp.dt_diel_nm:900; %--PMGI thickness range and sampling (nm)
-% 
-% mp.dm8.V0coef = 100;%100/1.42; % Nominal Nickel layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
-% mp.dm9.V0coef = 390;%240/1.42; % Nominal PMGI layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
-
 %--Note: dm8 amplitude goes from zero to one, but for simplicity with the
 %surface it is used as 1-dm8amplitude for the FPM
 mp.dm8.Vmin = 0; % 1-mp.dm8.Vmin is the maximum allowed FPM amplitude
 mp.dm8.Vmax = 1 - 1e-4; % 1-mp.dm8.Vmax is the minimum allowed FPM amplitude
 
 mp.dm8.V0coef = 1 - 1e-2; % starting occulting spot amplitude amplitude
-mp.dm9.V0coef = -(147/360)*575; %-100; % starting occulting spot phase (uniform) [nm of phase]
+mp.dm9.V0coef = 0; %-(147/360)*575;  % starting occulting spot phase (uniform) [nm of phase]
 
+
+%--Zernikes to suppress with controller
+mp.jac.zerns = 1;%[1 2 3]; %1; %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include at least 1 for the on-axis piston mode.
+mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
+
+    
+%--Zernikes to compute sensitivities for
+mp.eval.indsZnoll = 2:6; %--Noll indices of Zernikes to compute values for
+mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
+                 4, 8];    
 
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
-%  - 'conEFC' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-% mp.controller = 'SM-AMPL';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
-mp.controller = 'plannedEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
+%  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
+% mp.controller = 'SM-CVX';
+mp.controller = 'plannedEFC';
+
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
