@@ -35,6 +35,7 @@ mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 % addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
+% rmpath([mp.path.cvx 'lib/narginchk_:']) %--Legend plotting issue if CVX's narginchk function is used instead of Matlab's default function.
 
 
 
@@ -74,7 +75,7 @@ mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberratio
 
     
 %--Zernikes to compute sensitivities for
-mp.eval.indsZnoll = 2:6; %--Noll indices of Zernikes to compute values for
+mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
 mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
                  4, 8];    
 
@@ -204,34 +205,56 @@ switch mp.controller
         [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
         
         
-    case{'SM-AMPL'} %--Constrained EFC with AMPL
+%     case{'SM-AMPL'} %--Constrained EFC with AMPL
+%         
+%         addpath('~/bin/amplapi/matlab/')
+%         
+%         mp.dm_ind = 8;%[1 2 8 9]; %--Which DMs to use and when
+%         mp.ctrl.log10regVec = -5:1:-2;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
+%         mp.ctrl.dmfacVec = 1;
+% 
+%         %--Delta voltage range restrictions
+%         mp.dm1.maxAbsdV = 50;%30;
+%         mp.dm2.maxAbsdV = 50;%30;
+%         mp.dm9.maxAbsdV = 50;%40;
+%         
+%         %--Absolute voltage range restrictions
+%         mp.dm1.maxAbsV = 150;%250;
+%         mp.dm2.maxAbsV = 150;%250;
+%         
+%     case{'conEFC'} %--Constrained EFC
+%         mp.dm1.dVpvMax = 30;
+%         mp.dm2.dVpvMax = 30;
+%         mp.dm9.dVpvMax = 40;
+%         mp.ctrl.dmfacVec = 1;
+%         mp.ctrl.muVec = 10.^(5); %10.^(8:-1:1);
+
+    case{'SM-CVX'} %--Constrained stroke minimization with CVX
+        cvx_startup %--MUST HAVE THIS LINE TO START CVX
+        cvx_solver Mosek
+        cvx_precision best %--Options: low, medium, default, high, best
         
-        addpath('~/bin/amplapi/matlab/')
         
-        mp.dm_ind = 8;%[1 2 8 9]; %--Which DMs to use and when
-        mp.ctrl.log10regVec = -5:1:-2;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
+        mp.dm_ind = 1;%[1 2 8 9]; %--Which DMs to use and when
+        mp.Nitr = 10;
+        
+        mp.ctrl.log10regVec = -5:1:-3;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
         mp.ctrl.dmfacVec = 1;
 
         %--Delta voltage range restrictions
         mp.dm1.maxAbsdV = 50;%30;
         mp.dm2.maxAbsdV = 50;%30;
+        mp.dm8.maxAbsdV = 0.1;
         mp.dm9.maxAbsdV = 50;%40;
         
         %--Absolute voltage range restrictions
         mp.dm1.maxAbsV = 150;%250;
-        mp.dm2.maxAbsV = 150;%250;
-        
-    case{'conEFC'} %--Constrained EFC
-        mp.dm1.dVpvMax = 30;
-        mp.dm2.dVpvMax = 30;
-        mp.dm9.dVpvMax = 40;
-        mp.ctrl.dmfacVec = 1;
-        mp.ctrl.muVec = 10.^(5); %10.^(8:-1:1);
+        mp.dm2.maxAbsV = 150;%250;           
         
 end
 
-%--Delta voltage range restrictions
-mp.dm8.maxAbsdV = 0.2;
+% %--Delta voltage range restrictions
+% mp.dm8.maxAbsdV = 0.2;
 
 %--Voltage range restrictions
 mp.dm1.maxAbsV = 1000;

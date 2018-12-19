@@ -76,16 +76,26 @@ mp.dm8.Vmin = 0; % 1-mp.dm8.Vmin is the maximum allowed FPM amplitude
 mp.dm8.Vmax = 1 - 1e-4; % 1-mp.dm8.Vmax is the minimum allowed FPM amplitude
 
 mp.dm8.V0coef = 1 - 1e-2; % starting occulting spot amplitude amplitude]
-mp.dm9.V0coef = -100; % starting occulting spot phase (uniform) [nm of phase]
+mp.dm9.V0coef = 0;%-100; % starting occulting spot phase (uniform) [nm of phase]
 
+
+%--Zernikes to suppress with controller
+mp.jac.zerns = 1;%[1 2 3]; %1; %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include at least 1 for the on-axis piston mode.
+mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
+
+    
+%--Zernikes to compute sensitivities for
+mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
+mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
+                 4, 8];    
 
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
-%  - 'conEFC' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-% mp.controller = 'SM-AMPL';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
-% mp.controller = 'plannedEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
+%  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
 mp.controller = 'SM-CVX';
+% mp.controller = 'plannedEFC';
+
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
@@ -106,7 +116,7 @@ mp.Nsbp = 5;%1;%5; % number of sub-bandpasses across correction band
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
 %--FPM
-mp.F3.Rin = 2.7;%4;%2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
+mp.F3.Rin = 5;%2.7;%4;%2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
 mp.F3.RinA = 2.7;%mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
 
 %%--Pupil Masks        
@@ -226,16 +236,16 @@ switch mp.controller
         cvx_precision best %--Options: low, medium, default, high, best
         
         
-        mp.dm_ind = 1;%[1 2 8 9]; %--Which DMs to use and when
+        mp.dm_ind = [1 2 8]; %1;%[1 2 8 9]; %--Which DMs to use and when
         mp.Nitr = 10;
         
         mp.ctrl.log10regVec = -5:1:-3;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
         mp.ctrl.dmfacVec = 1;
 
         %--Delta voltage range restrictions
-        mp.dm1.maxAbsdV = 50;%30;
-        mp.dm2.maxAbsdV = 50;%30;
-        mp.dm8.maxAbsdV = 0.1;
+        mp.dm1.maxAbsdV = 30;%80;%50;%30;
+        mp.dm2.maxAbsdV = 30;%80;%50;%30;
+        mp.dm8.maxAbsdV = 0.05;
         mp.dm9.maxAbsdV = 50;%40;
         
         %--Absolute voltage range restrictions
@@ -281,6 +291,7 @@ mp.dm_weights(9) = 1;%2/3;%1;%10; % Jacobian weight for the FPM phase. Smaller w
 
 %--DM8 weight
 mp.dm_weights(8) = 1e-2;%0.1;%1e-3 % Jacobian weight for the FPM amplitude. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm8.act_sens = 1; %--Change in oomph (E-field sensitivity) of DM8 actuators. Chosen empirically based on how much DM8 actuates during a control step.
 
 
 
@@ -301,7 +312,7 @@ mp.dm_weights(8) = 1e-2;%0.1;%1e-3 % Jacobian weight for the FPM amplitude. Smal
 % mp.F3.full.res = 30;
 
 %%--DM9 parameters for 3x3 influence function
-mp.dm9.actres = 7;%10;%8;%  number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
+mp.dm9.actres = 6;%10;%8;%  number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
 mp.dm9.FPMbuffer = 0;%-0.5;%0;%0.2; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
 mp.dm9.inf0name = '3x3';   % = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
 %->NOTE: Cannot specify F3 resolution independently of number of DM9

@@ -1,6 +1,6 @@
 
 flagPlot = true; %--Plot results
-flagSave = true;%false; %--Save FITS files
+flagSave = false;%true;%false; %--Save FITS files
 
 %% Set up Paths for FALCO and PROPER
 
