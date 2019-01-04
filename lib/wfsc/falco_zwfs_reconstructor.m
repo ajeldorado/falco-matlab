@@ -1,5 +1,5 @@
-function phz = zwfs_reconstructor_v1(IC0,IC, mask, b, type,varargin)
-%phz = zwfs_WallaceReconstructor_v1(IC0,IC, mask, b, type, (modelparams))
+function phz = falco_zwfs_reconstructor(IC0,IC, mask, b, type,varargin)
+%phz = falco_zwfs_reconstructor(IC0,IC, mask, b, type, (modelparams))
 %   IC0 - image without Zernike mask
 %   IC - iamge with Zernike mask aligned 
 %   mask - pupil support mask 
