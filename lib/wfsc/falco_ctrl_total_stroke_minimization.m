@@ -26,6 +26,7 @@
 function [dDM,cvar,InormAvg] = falco_ctrl_total_stroke_minimization(mp,cvar)
 
 %%
+cvar.dampFac = mp.ctrl.dampFac;
 cvar.dmfac = mp.ctrl.dmfac;
 cvar.gamma = mp.ctrl.gamma;
 cvar.gamma9 = mp.ctrl.gamma9; %--weight on total DM stroke for DM9.
@@ -48,10 +49,16 @@ cvar.gamma9 = mp.ctrl.gamma9; %--weight on total DM stroke for DM9.
     u_dm_guide = [u1dummy; u2dummy; u5dummy; u8dummy; u9dummy];
 
     %%
+    
+    GstarGdiag = diag(cvar.GstarG_wsum);
+    cvar.maxDiagGstarG = max(GstarGdiag(u_dm_guide==1 | u_dm_guide==2));
+
+    
+    %%
 %--Build up the diagonal of the regularization matrix. Allow different
 %regularization values for different DMs
 EyeDiag = [];
-u_weight = []
+u_weight = [];
 for idm=1:numel(mp.dm_ind)
     dm_index = mp.dm_ind(idm);
     if(dm_index==1)
@@ -60,20 +67,25 @@ for idm=1:numel(mp.dm_ind)
     elseif(dm_index==2)
         dm_reg = cvar.gamma;
         Nele = mp.dm2.Nele;
-    elseif(dm_index==1)
+    elseif(dm_index==8)
+        dm_reg = cvar.gamma8;
+        Nele = mp.dm8.Nele;
+    elseif(dm_index==9)
         dm_reg = cvar.gamma9;
         Nele = mp.dm9.Nele;
     else
         error('falco_ctrl_total_stroke_minimization.m: Controller weight not defined for DM %d.',dm_index);
     end
     
-    EyeDiag = [EyeDiag; dm_reg*cvar.maxDiagGstarG*ones(Nele,1)];
-    u_weight = [u_weight; dm_reg*ones(Nele,1)];
+    EyeDiag = [EyeDiag; (dm_reg*cvar.maxDiagGstarG)*ones(Nele,1)];
+    u_weight = [u_weight; (dm_reg*cvar.maxDiagGstarG)*ones(Nele,1)];
 end
+
 
 %% Least-squares solution. Different from EFC because of term u_weight.*u
 
-dDMvec = -cvar.dmfac*(cvar.gamma*diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + u_weight.*u);
+dDMvec = -cvar.dmfac*(diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + cvar.dampFac*u_weight.*u);
+% dDMvec = -cvar.dmfac*(cvar.gamma*diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + u_weight.*u);
     
 
 %%

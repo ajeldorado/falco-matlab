@@ -172,13 +172,12 @@ for Itr=1:mp.Nitr
     %--Decide with Zernike modes to include in the Jacobian
     if(Itr==1)
         mp.jac.zerns0 = mp.jac.zerns;
-       %mp.jac.maxZnoll0 = mp.jac.maxZnoll; 
     end
-    if( (any(mp.dm_ind==8)==false) && (any(mp.dm_ind==9)==false) )
-        mp.jac.zerns = 1;
-    else
-        mp.jac.zerns = mp.jac.zerns0;
-    end
+%     if( (any(mp.dm_ind==8)==false) && (any(mp.dm_ind==9)==false) )
+%         mp.jac.zerns = 1;
+%     else
+%         mp.jac.zerns = mp.jac.zerns0;
+%     end
     fprintf('Zernike modes used in this Jacobian:\t'); fprintf('%d ',mp.jac.zerns); fprintf('\n');
     %--Re-compute the Jacobian weights
     mp = falco_config_jac_weights(mp); 
@@ -421,7 +420,7 @@ end
 
 %--Calculate sensitivities to 1nm RMS of zernikes
 if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
-    out.Zsens = falco_get_Zernike_sensitivities(mp);
+    out.Zsens(:,:,Itr) = falco_get_Zernike_sensitivities(mp);
 end
 
 
@@ -737,9 +736,13 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
             cvar.dummy = 1;
             [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar);
             
-        case{'SVDtruncEFC'} %--Truncate the singular values used for EFC 
+        case{'TSM'}
             cvar.dummy = 1;
-            [dDM,cvar,InormAvg] = falco_ctrl_SVD_truncation_EFC(mp,jacStruct,cvar);    
+            [dDM,cvar] = falco_ctrl_total_stroke_minimization(mp,cvar);
+            
+%         case{'SVDtruncEFC'} %--Truncate the singular values used for EFC 
+%             cvar.dummy = 1;
+%             [dDM,cvar,InormAvg] = falco_ctrl_SVD_truncation_EFC(mp,jacStruct,cvar);    
             
 
     end
