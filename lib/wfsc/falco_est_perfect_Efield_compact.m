@@ -12,7 +12,7 @@
 %    Erkin's code.
 %--Created on 2018-01-24 by A.J. Riggs.
 
-function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp,DM)
+function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp);%,DM)
     
     if(isfield(mp,'lowfs')==false)
         mp.lowfs = false; %--Set LOWFS flag to false if it isn't included
@@ -30,7 +30,7 @@ function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp,DM)
         modvar.wpsbpIndex = mp.wi_ref;
         modvar.whichSource = 'star';
 
-        E2D = model_compact(mp, DM, modvar);
+        E2D = model_compact(mp, modvar);
 
         if mp.lowfs
             Icube(:,:,si) = abs(E2D).^2;

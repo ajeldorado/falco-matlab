@@ -144,6 +144,10 @@ if(rhoOuter ~= inf)
         bowtieBottom = 1;
     end
     
+else
+    bowtieTop = 1;
+    bowtieBottom = 1;
+    
 end
 
 %--Inner spot of FPM (Amplitude transmission can be nonzero)
