@@ -28,37 +28,13 @@
 
 function Isum = falco_get_summed_image(mp)
 
-% %--Save a lot of RAM
-% if(any(mp.dm_ind==1)); mp.dm1compact = rmfield(mp.dm1compact,'inf_datacube'); end;
-% if(any(mp.dm_ind==2)); mp.dm2compact = rmfield(mp.dm2compact,'inf_datacube'); end;
-% if(any(mp.dm_ind==9)); mp.dm9compact = rmfield(mp.dm9compact,'inf_datacube'); end;
-
 %--Compute the DM surfaces outside the full model to save lots of time
 if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
 if(any(mp.dm_ind==2)); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.NdmPad); end
 if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
 
 % facContrastToCounts = model_params.texp*model_params.peakCountsPerPixPerSec;
-% modvar.flagCalcJac = 0; % False for all cases
-% modvar.flagGetNormVal = false; % False for all cases
-    
-
-% %     %--Another set of wavelengths only for use in generating the image of the
-% %     % entire-bandwdith image with the full model. 
-% %     mp.full.Nlam = mp.Nsbp;
-% %     mp.full.lambdas = mp.lambda0*linspace( 1-mp.fracBW/2,1+mp.fracBW/2,mp.full.Nlam);
-% %     mp.entireBWimage.Iweights = ones(mp.full.Nlam,1);
-% %     if(mp.full.Nlam>2)
-% %         mp.entireBWimage.Iweights(1) = 1/2;
-% %         mp.entireBWimage.Iweights(end) = 1/2;
-% %     end
-  
-
-%modvar.ttIndex = 1; % 0 offset in tip/tilt
-% IweightsSum = sum(mp.entireBWimage.Iweights);
 Isum = 0; % Initialize image
-
-
 
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;

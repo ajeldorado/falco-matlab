@@ -24,20 +24,20 @@
 %  planet.
 
 
-function Iout = falco_get_image(mp, modvar, DM)
+function Iout = falco_get_image(mp, modvar)
 
 
     if(isfield(mp,'flagTestbed'))
         if(mp.flagTestbed) 
             %--This function will take care of image processing (dark subtraction, flat
             %fielding, etc.); crop, rotate, and flip the image as necessary; and normalize the intensity.
-            Iout = falco_lab_image(mp, modvar, DM); %--Needs more structures as inputs
+            Iout = falco_lab_image(mp, modvar); %--Needs more structures as inputs
             
         else %--Get image in simulation
-            Iout = falco_sim_image(mp, modvar, DM); 
+            Iout = falco_sim_image(mp, modvar); 
         end
     else %--Get image in simulation
-        Iout = falco_sim_image(mp, modvar, DM);
+        Iout = falco_sim_image(mp, modvar);
     end
 
 
