@@ -7,7 +7,7 @@
 %   Matlab translation by Gary Gutt
 %   Modified to take accept influence function by G. Ruane 
 
-function [bm, map] = propcustom_dm(bm, inf_info, dmz0, dmcx, dmcy, spcg, varargin)
+function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 %        [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 % Simulate a deformable mirror of specified actuator spacing,
 % including the effects of the DM influence function.
@@ -62,6 +62,14 @@ function [bm, map] = propcustom_dm(bm, inf_info, dmz0, dmcx, dmcy, spcg, varargi
 %                       xtilt, ytilt, or ztilt are specified.
 %                       The default is X, Y, then Z rotations.
 %                       Set for for Z, Y, then X rotations.
+% 'custom_infl'       : specify a new influence function as a structure
+%                       inf = inf_info.inf0; % inf func 2D array 
+%                       ifnx = inf_info.ifnx;% inf func number of pixels x
+%                       ifny = inf_info.ifny;% inf func number of pixels y
+%                       ifdx = inf_info.ifdx;% inf func spacing x (m)
+%                       ifdy = inf_info.ifdy;% inf func spacing y (m) 
+%                       acdx = inf_info.acdx;% actuator spacing x (m)
+%                       acdy = inf_info.acdy;% actuator spacing y (m)
 
 % 2005 Feb     jek  created idl routine 
 % 2007 Jun     jek  fixed bug in interpolation of smoothed DM surface &
@@ -74,7 +82,6 @@ function [bm, map] = propcustom_dm(bm, inf_info, dmz0, dmcx, dmcy, spcg, varargi
 % 2018 Dec 05  GJR  Revised to accept any influence function 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-%   DMinf_name = 'influence_dm5v2.fits';
   
   if ischar(dmz0)               % then open 2D FITS image file
     dmz  = fitsread(dmz0);
@@ -112,41 +119,52 @@ function [bm, map] = propcustom_dm(bm, inf_info, dmz0, dmcx, dmcy, spcg, varargi
         zyx  = 0;       % rotation order is X, Y, then Z rotations
       case {'zyx'}
         zyx  = 1;       % rotation order is Z, Y, then X rotations
+      case {'custom_infl'}
+        icav = icav + 1;
+        inf_info = varargin{icav};
       otherwise
         error('prop_dm: Unknown keyword: %s\n', varargin{icav});
     end
   end
 
-% Read the influence function data from a FITS file
-%   info = fitsinfo(DMinf_name);
-%   inf  = fitsread(DMinf_name);
+  % If the custom influence function is not passed...
+  if(~exist('inf_info','var'))
+    DMinf_name = 'influence_dm5v2.fits';
+    
+    % Read the influence function data from a FITS file
+	info = fitsinfo(DMinf_name);
+	inf  = fitsread(DMinf_name);
 
-%   [ldef, idef] = ismember('NAXIS1' , info.PrimaryData.Keywords(:, 1));
-%   ifnx = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels x
-% 
-%   [ldef, idef] = ismember('NAXIS2' , info.PrimaryData.Keywords(:, 1));
-%   ifny = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels y
-% 
-%   [ldef, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));
-%   ifdx = info.PrimaryData.Keywords{idef, 2};    % inf func spacing x (m)
-% 
-%   [ldef, idef] = ismember('P2PDY_M', info.PrimaryData.Keywords(:, 1));
-%   ifdy = info.PrimaryData.Keywords{idef, 2};    % inf func spacing y (m)
-% 
-%   [ldef, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
-%   acdx = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
-% 
-%   [ldef, idef] = ismember('C2CDY_M', info.PrimaryData.Keywords(:, 1));
-%   acdy = info.PrimaryData.Keywords{idef, 2};    % actuator spacing y (m)
+	[ldef, idef] = ismember('NAXIS1' , info.PrimaryData.Keywords(:, 1));
+	ifnx = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels x
 
-    inf = inf_info.inf0;
+	[ldef, idef] = ismember('NAXIS2' , info.PrimaryData.Keywords(:, 1));
+	ifny = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels y
 
+	[ldef, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));
+	ifdx = info.PrimaryData.Keywords{idef, 2};    % inf func spacing x (m)
+
+	[ldef, idef] = ismember('P2PDY_M', info.PrimaryData.Keywords(:, 1));
+	ifdy = info.PrimaryData.Keywords{idef, 2};    % inf func spacing y (m)
+
+	[ldef, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
+	acdx = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
+
+	[ldef, idef] = ismember('C2CDY_M', info.PrimaryData.Keywords(:, 1));
+	acdy = info.PrimaryData.Keywords{idef, 2};    % actuator spacing y (m)
+    
+  % if the custom infl_info structure is provided 
+  elseif(exist('inf_info','var'))
+
+    inf = inf_info.inf0; % inf func 2D array 
     ifnx = inf_info.ifnx;% inf func number of pixels x
     ifny = inf_info.ifny;% inf func number of pixels y
     ifdx = inf_info.ifdx;% inf func spacing x (m)
     ifdy = inf_info.ifdy;% inf func spacing y (m) 
     acdx = inf_info.acdx;% actuator spacing x (m)
     acdy = inf_info.acdy;% actuator spacing y (m)
+    
+  end
 
   
   ifcx = floor(ifnx / 2) + 1;           % inf func center pixel x
