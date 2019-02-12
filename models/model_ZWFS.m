@@ -1,6 +1,6 @@
 
 
-function Eout = model_hcst_ZWFS(mp,   modvar,varargin)
+function Eout = model_ZWFS(mp,   modvar,varargin)
 
 
 % %--Save a lot of RAM (remove compact model data from full model inputs)

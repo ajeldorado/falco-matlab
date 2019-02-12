@@ -1,4 +1,4 @@
-function rw = zwfs_getReferenceWave(mp)
+function rw = falco_zwfs_getReferenceWave(mp)
 %rw = zwfs_getReferenceWave(mp)
 %   Computes the reference wave for the Zernike wavefront sensor using
 %   FALCO model
@@ -16,7 +16,7 @@ function rw = zwfs_getReferenceWave(mp)
     mp.dm1.V = zeros(mp.dm1.Nact);
 %     mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad);
     mp.P1.full.E = ones(size(mp.P1.full.E));
-    rw = model_hcst_ZWFSrefWave(mp, modvar);
+    rw = model_ZWFSrefWave(mp, modvar);
 
 
 end

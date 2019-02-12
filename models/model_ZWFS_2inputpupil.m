@@ -1,6 +1,6 @@
 
 
-function Eout = model_hcst_ZWFSrefWave(mp,   modvar,varargin)
+function Eout = model_ZWFS_2inputpupil(mp,   modvar,varargin)
 
 
 % %--Save a lot of RAM (remove compact model data from full model inputs)
@@ -113,37 +113,7 @@ Edm2 = DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
 %--Back-propagate to pupil P2
 if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 ); EP2eff = Edm2; else; EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); end %--Back propagate to pupil P2
 
-%--Rotate 180 degrees to propagate to pupil P3
-EP3 = propcustom_2FT(EP2eff, mp.centering);
-
-%--Apply apodizer mask.
-if(mp.flagApod)
-    EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P3.compact.Narr); 
-end
-
-%--MFT from SP to FPM (i.e., P3 to F3)
-EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
-
-FPM = mp.F3.compact.mask.phzSupport;%mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
-EF3 = FPM.*EF3inc; %--Apply (1-FPM) for Babinet's principle later
-
-
-% %--Use Babinet's principle at the Lyot plane.
-% EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
-% EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
-% 
-
-%--MFT from FPM to Lyot Plane (i.e., F3 to P4)
-EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
-
-
-Eout = EP4sub;% EP4noFPM-EP4sub;
-
-% figure;imagesc(abs(EP4noFPM));axis image; colorbar; set(gca,'ydir','normal');
-% figure;imagesc(angle(EP4noFPM));axis image; colorbar; set(gca,'ydir','normal');
-% figure;imagesc(abs(EP4sub));axis image; colorbar; set(gca,'ydir','normal');
-% figure;imagesc(angle(EP4sub));axis image; colorbar; set(gca,'ydir','normal');
-% 
+Eout = EP2eff;
 
 if(mp.useGPU)
     Eout = gather(Eout);
