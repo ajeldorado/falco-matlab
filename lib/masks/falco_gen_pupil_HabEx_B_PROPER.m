@@ -37,7 +37,7 @@ dx = Dmask/Nbeam;
 hexradius = .2374*4; %--Radius of circumscribing circle for the inner hex (NOT INCLUDING SEGMENT GAP) (meters)
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam+1/2); %--number of points across output array. Requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam+1); %--number of points across output array. Requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam);
 end

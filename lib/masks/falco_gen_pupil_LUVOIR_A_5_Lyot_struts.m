@@ -8,7 +8,7 @@
 %   Matlab using PROPER
 % Coordinates and dimensions of the primary, secondary, and hex segments
 %   are from Matthew Bolcar (NASA GSFC).
-% Coordinates and dimenstions of the secondary mirror support struts were a
+% Coordinates and dimensions of the secondary mirror support struts were a
 %   best-fit match by A.J. Riggs by matching PROPER-made rectangles to the 
 %   pupil file from Matthew Bolcar (NASA GSFC).
 %
@@ -19,8 +19,6 @@
 %--Coordinates of hex segments to skip:
 % 1 13 114 115 126 127
 % 1 12 113 114 125 126
-%
-% Go back and do front matter later.  Above is not quite right now.
 %
 
 function mask = falco_gen_pupil_LUVOIR_A_5_Lyot_struts(inputs,varargin)
@@ -105,7 +103,7 @@ pad_strut = 0; %2*pad_strut_pct/100*diam; %--Convert to meters. Factor of 2x nee
 Dmask = Dbeam; % width of the beam (so can have zero padding if LS is undersized) (meters)
 
 if(strcmpi(centering,'pixel') || strcmpi(centering,'odd'))
-    Narray = ceil_even(Nbeam/magfacD + 1/2); % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
+    Narray = ceil_even(Nbeam/magfacD + 1); % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
 else
     Narray = ceil_even(Nbeam/magfacD); % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
 end

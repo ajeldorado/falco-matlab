@@ -92,7 +92,7 @@ diam = Dmask;% width of the mask (meters)
 
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam+1/2); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam); %--number of points across output array. Same size as width when interpixel centered.
 end

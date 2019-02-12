@@ -8,7 +8,7 @@
 %   Matlab using PROPER
 % Coordinates and dimensions of the primary, secondary, and hex segments
 %   are from Matthew Bolcar (NASA GSFC).
-% Coordinates and dimenstions of the secondary mirror support struts were a
+% Coordinates and dimensions of the secondary mirror support struts were a
 %   best-fit match by A.J. Riggs by matching PROPER-made rectangles to the 
 %   pupil file from Matthew Bolcar (NASA GSFC).
 %
@@ -101,7 +101,7 @@ dx_drawing = 1.242/158; % (m) %--In actual drawing, 158 pixels across the 1.242m
 
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam/magfacD+1/2); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam/magfacD+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam/magfacD); %--number of points across output array. Same size as width when interpixel centered.
 end

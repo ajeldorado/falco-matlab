@@ -93,9 +93,9 @@ Dmask = Dbeam; % % width of the mask (meters)
 diam = Dmask;% width of the mask (meters)
 % NapAcross = Dmask/dx; % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
 if(strcmpi(centering,'pixel'))
-    Narray = 2*ceil(1/2*(Dmask/dx+1/2)); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(Dmask/dx+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
-    Narray = 2*ceil(1/2*Dmask/dx); %--number of points across output array. Same size as width when interpixel centered.
+    Narray = ceil_even(Dmask/dx); %--number of points across output array. Same size as width when interpixel centered.
 end
 
 Darray = Narray*dx; %--width of the output array (meters)
