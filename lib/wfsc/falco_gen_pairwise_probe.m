@@ -41,9 +41,12 @@
 %    -mp.est.probe.axis:    which axis to have the phase discontinuity along [x or y]
 
 
-function probeCmd = falco_gen_pairwise_probe(mp,InormDes,psi)
+function probeCmd = falco_gen_pairwise_probe(mp,InormDes,psi,badAxis)
 % function probeCmd = falco_gen_pairwise_probe(ProbeArea,Nact,psi,offsetX,offsetY,lambda,InormDes)
 % function probeCmd = falco_gen_probe_command(ProbeArea,D,lambda,psi,offsetX,offsetY,XS,YS,DesiredCont)
+%%
+
+
 
 %--Number of actuators across DM surface (independent of beam for time being)
 if(mp.est.probe.whichDM==1)
@@ -53,14 +56,19 @@ elseif(mp.est.probe.whichDM==2)
     Nact = mp.dm2.Nact;
     dm = mp.dm2;
 end
-
-xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.offsetX/Nact);
-ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.offsetY/Nact);
+%--Coordinates in actuator space
+xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.offsetX)/Nact;
+ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.offsetY)/Nact;
 [XS,YS] = meshgrid(xs,ys);
 
-magn = mp.lambda0*sqrt(2*pi)*sqrt(InormDes);   % surface height to get desired intensity [meters]
+%--Restrict the probing region if it is not possible to achieve
+if(mp.est.probe.radius > Nact/2)
+    mp.est.probe.radius = Nact/2;
+end
 
-switch lower(mp.est.probe.axis)
+%--Generate the DM command for the probe
+magn = mp.lambda0*sqrt(2*pi)*sqrt(InormDes);   % surface height to get desired intensity [meters]
+switch lower(badAxis) %lower(mp.est.probe.axis)
     case 'y'
         mX = mp.est.probe.radius;
         mY = 2*mp.est.probe.radius;
@@ -76,20 +84,37 @@ switch lower(mp.est.probe.axis)
 end
 
 %--Option to use just the sincs for a zero phase shift. This avoids the
-% phase discontinuity along one axis.
+% phase discontinuity along one axis (for this probe only!).
 if(psi==0)
     m = 2*mp.est.probe.radius;
     probeCmd = magn*sinc(m*XS).*sinc(m*YS);
 
 end
 
-
 probeCmd = falco_fit_dm_surf(dm,probeCmd);
-% figure(1); imagesc(probeCmd); axis xy equal tight; colorbar;
 
+probeCmd = mp.est.probe.gainFudge*probeCmd; % Scale the probe amplitude empirically if needed
+
+%% DEBUGGING ONLY
+figure(101); imagesc(probeCmd); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
+% %%
+% keyboard
+% %%
+% 
+% LS = mp.P4.compact.mask;
+% figure(204); imagesc(LS); axis xy equal tight; 
+% N = ceil_even(48/46.3*size(LS,1));
+% LSpad = padOrCropEven(LS,N);
+% 
+% probePad = imresize(probeCmd,[1 1]*N);
+% 
+% figure(205); imagesc(LSpad+probePad*1e9); axis xy equal tight; 
+
+
+%%
 end %--END OF FUNCTION
 
-
+%%
 
 
 % OLD CODE (for reference only)

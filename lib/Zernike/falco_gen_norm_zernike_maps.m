@@ -25,9 +25,9 @@ function ZmapCube = falco_gen_norm_zernike_maps(Nbeam,centering,indsZnoll)
 
     %--Set array size as minimum width to contain the beam.
     if(strcmpi(centering,'interpixel') )
-        Narray = Nbeam; %--No zero-padding needed if beam is centered between pixels
+        Narray = ceil_even(Nbeam);    %--Minimal zero-padding needed if beam is centered between pixels
     else
-        Narray = Nbeam + 2; %--number of points across output array. Requires two more pixels when pixel centered.
+        Narray = ceil_even(Nbeam+1); %--Number of points across output array. Sometimes requires two more pixels when pixel centered.
     end
 
     %--PROPER setup values

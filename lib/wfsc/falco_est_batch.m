@@ -27,9 +27,9 @@
 %
 %--New variables
 % mp.est.probe.Npairs
+% mp.est.probe.whichDM
 
-
-function [ip] = falco_est_batch(mp,ip)
+function [ip] = falco_est_batch(mp)
 
 %--Select number of actuators across based on chosen DM for the probing
 if(mp.est.probe.whichDM==1)
@@ -43,12 +43,10 @@ if(any(mp.dm_ind==1));  DM1Vnom = mp.dm1.V;  end
 if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  end
 
 % Definitions:
-% Itr = estvar.Itr;
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
 ip.Icube = zeros(mp.F4.Neta,mp.F4.Nxi,1+2*Npairs);
 if(any(mp.dm_ind==1));  ip.Vcube.dm1 = zeros(mp.dm1.Nact,mp.dm1.Nact,1+2*Npairs);  end
 if(any(mp.dm_ind==2));  ip.Vcube.dm2 = zeros(mp.dm2.Nact,mp.dm2.Nact,1+2*Npairs);  end
-
 
 %--Generate evenly spaced probes along the complex unit circle
 % NOTE: Nprobes=Npairs*2;   
@@ -60,10 +58,22 @@ end
 probePhaseVec = probePhaseVec*pi/(Npairs);
 % ProbePhsVec = (offset + ProbePhsVec)*pi/(Npairs);
 
+switch lower(mp.est.probe.axis)
+    case 'y'
+        badAxisVec = repmat('y',[2*Npairs,1]);
+    case 'x'
+        badAxisVec = repmat('x',[2*Npairs,1]);
+    case{'alt','xy','alternate'}
+        badAxisVec = repmat('x',[2*Npairs,1]);
+        badAxisVec(3:4:end) = 'y';
+        badAxisVec(4:4:end) = 'y';
+end
+
 %% Initialize output arrays
 ip.Eest = zeros(mp.F4.corr.Npix,mp.Nsbp);
 ip.IincoEst = zeros(mp.F4.corr.Npix,mp.Nsbp);
-I0mean = 0;
+ip.I0mean = 0;
+ip.IprobedMean = 0;
 
 %% Get images and perform estimates in each sub-bandpass
 
@@ -98,7 +108,7 @@ for si=1:mp.Nsbp
         whichImg = 1;
         I0 = falco_get_sbp_image(mp,si);
         I0vec = I0(mp.F4.corr.maskBool); % Vectorize the correction region pixels
-        I0mean = I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
+        ip.I0mean = ip.I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
 
         %--Store values for first image and its DM commands
         ip.Icube(:,:, whichImg) = I0;
@@ -106,8 +116,8 @@ for si=1:mp.Nsbp
         if(any(mp.dm_ind==2));  ip.Vcube.dm2(:,:, whichImg) = mp.dm2.V;  end
 
         %--Compute the average Inorm
-        ip.score.Inorm = mean(Itotal(mp.F4.score.maskBool));
-        ip.corr.Inorm  = mean(Itotal(mp.F4.corr.maskBool));
+        ip.score.Inorm = mean(I0(mp.F4.score.maskBool));
+        ip.corr.Inorm  = mean(I0(mp.F4.corr.maskBool));
         fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ip.corr.Inorm,ip.score.Inorm);    
 
         % Set (approximate) probe intensity based on current measured Inorm
@@ -121,8 +131,7 @@ for si=1:mp.Nsbp
         for iProbe=1:2*Npairs           
             
             %--Generate the command map for the probe
-            probeCmd = falco_gen_pairwise_probe(mp,InormProbe,probePhaseVec(iProbe));
-            probeCmd = 1*probeCmd; % Scale the probe amplitude empirically if needed
+            probeCmd = falco_gen_pairwise_probe(mp,InormProbe,probePhaseVec(iProbe),badAxisVec(iProbe));
 
     %         dx = mp.Ddm/2/mp.Ndm;
     %         xs = (-mp.Ndm:mp.Ndm-1)'*dx + dx/2;
@@ -143,12 +152,15 @@ for si=1:mp.Nsbp
             end
             if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom+dDM1Vprobe;  end
             if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom+dDM2Vprobe;  end
+            
+            figure(202); imagesc(dDM1Vprobe); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
 
             %--Take probed image
             Im = falco_get_sbp_image(mp,si);
             whichImg = 1+iProbe; %--Increment image counter
-            meanIprobed = meanIprobed + mean(Im(mp.F4.corr.maskBool))/(2*Npairs); %--Inorm averaged over wavelength for the probed images
-            
+            ip.IprobedMean = ip.IprobedMean + mean(Im(mp.F4.corr.maskBool))/(2*Npairs); %--Inorm averaged over wavelength for the probed images
+            figure(203); imagesc(log10(Im),[-7 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
+
             %--Store probed image and its DM settings
             ip.Icube(:,:,whichImg) = Im;
             if(any(mp.dm_ind==1));  ip.Vcube.dm1(:,:,whichImg) = mp.dm1.V;  end
@@ -218,12 +230,12 @@ for si=1:mp.Nsbp
         % For plus probes:
         if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
         if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
-        Etemp = hcil_model(mp, DM_config, modvar);
+        Etemp = model_compact(mp, modvar);
         Eplus(:,iProbe) = Etemp(mp.F4.corr.maskBool);
         % For minus probes:
         if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
         if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
-        Etemp = hcil_model(mp, DM_config, modvar);
+        Etemp = model_compact(mp, modvar);
         Eminus(:,iProbe) = Etemp(mp.F4.corr.maskBool);
     end
 
@@ -243,11 +255,14 @@ for si=1:mp.Nsbp
     z = ( (Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs,mp.F4.corr.Npix]
 
     for iProbe=1:Npairs % Display the actual probe intensity
-        ampSq2D = zeros(mp.Neta,mp.Nxi); ampSq2D(mp.F4.corr.maskBool) = ampSq(:,iProbe); 
+        ampSq2D = zeros(mp.F4.Neta,mp.F4.Nxi); ampSq2D(mp.F4.corr.maskBool) = ampSq(:,iProbe); 
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.F4.corr.maskBool)));
     end
+    
+    figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
 
     %% Compute electric field in the dark hole pixel-by-pixel.
+    Eest = zeros(mp.F4.corr.Npix,1);
     zerosCounter = 0;
     for ipix=1:mp.F4.corr.Npix
         H = zeros(Npairs,2); % Observation matrix
@@ -257,19 +272,19 @@ for si=1:mp.Nsbp
             end
         else
             zerosCounter = zerosCounter+1;
-            if( strcmpi(ep.probeAmpType,'both') )
-                dE = dEplus(ipix,:).';
-                H = [real(dE),imag(dE)]; %nonlinear way of calculating
-            end
+%             if( strcmpi(ep.probeAmpType,'both') )
+%                 dE = dEplus(ipix,:).';
+%                 H = [real(dE),imag(dE)]; %nonlinear way of calculating
+%             end
         end
         Epix = pinv(H)*z(:,ipix);
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
-    if(estvar.Itr>2)
-        Eest(abs(Eest).^2 > 1e-3) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
-    end
+    %if(estvar.Itr>2)
+    Eest(abs(Eest).^2 > 1e-2) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
+    %end
     % Eest = Eest.*isnonzero; 
-    fprintf('%d of %d pixels had zero probe amplitude. \n',zerosCounter,mp.F4.corr.Npix); 
+    fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.F4.corr.Npix); 
 
     % end % End of if-elseif statements for ep.probeAmpType
     %% Compute the incoherent light
@@ -281,25 +296,17 @@ end % End of loop over the wavelengths
 % Calculate time spent on exposures
 % estvar.timeTotal = mp.Nsbp*(1+2*Npairs)*ip.ExpTime*ip.num_im; % Since unprobed imaged is half that time.
 
-% estvar.ip.Eest = ip.Eest;
-estvar.ip.IincoEst = ip.IincoEst;
-% ep.InormMean(estvar.Itr)=ep.InormMean(estvar.Itr);
-estvar.meanIprobed = meanIprobed;
-% estvar.amp = amp/sqrt(InormProbe); % Normalized probe amplitude
-estvar.IupMean= I0mean/mp.Nsbp; %--Bandpass-averaged image
-
-estvar.ampSqMean = mean(mean(ampSq,1),2); % Mean probe intensity
-% estvar.HmodelAll = HmodelAll;
-% estvar.dDM2VprobePlus = dDM2VprobePlus;
-% estvar.dElin = dElin;
+ip.ampSqMean = mean(ampSq(:)); %mean(mean(ampSq,1),2); % Mean probe intensity
 
 % Calculate starlight estimated contrast
-Istar2D = zeros(mp.Neta,mp.Nxi);
-Istar2D(mp.F4.corr.maskBool) = abs(Eest).^2;
+ip.Istar2D = zeros(mp.F4.Neta,mp.F4.Nxi);
+ip.Istar2D(mp.F4.corr.maskBool) = abs(ip.Eest).^2;
 % Istar2D(Istar2D<0) = 0;
 
-estvar.estContrast = sum(sum(mp.ScoreMask.*Istar2D))/sum(sum(mp.ScoreMask));
-ip.InormEst = 
+%--Calculate the mean normalized intensity over the whole dark hole at all
+% wavelengths.
+ip.Iest = abs(ip.Eest).^2;
+ip.InormEst = mean(ip.Iest(:));
 
 %--Save out all probing images and their DM voltage command maps
 % if(isfield(ep,'flagSave'))
@@ -318,5 +325,7 @@ ip.InormEst =
 fprintf(' done. Time: %.3f\n',toc);
 
 
+
+end %--END OF FUNCTION
 
 

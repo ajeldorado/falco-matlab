@@ -108,7 +108,7 @@ mp.F3.Rin = 2.7; % maximum radius of inner part of the focal plane mask, in lamb
 mp.F3.RinA = 2.7;%mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
 
 %%--Pupil Masks        
-mp.P1.full.Nbeam = 250;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
+mp.P1.full.Nbeam = 309;%250;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
 mp.P1.compact.Nbeam = mp.P1.full.Nbeam;
 
 %--Lyot Stop parameters

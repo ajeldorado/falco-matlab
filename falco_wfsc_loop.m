@@ -189,8 +189,10 @@ for Itr=1:mp.Nitr
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
-        case{'batch'}
-
+        case{'pwp-bp'}
+            ip = falco_est_batch(mp);
+            EfieldVec = ip.Eest;
+            IincoVec = ip.IincoEst;
     end
 
     %-----------------------------------------------------------------------------------------
