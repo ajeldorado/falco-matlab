@@ -42,11 +42,6 @@
 
 
 function probeCmd = falco_gen_pairwise_probe(mp,InormDes,psi,badAxis)
-% function probeCmd = falco_gen_pairwise_probe(ProbeArea,Nact,psi,offsetX,offsetY,lambda,InormDes)
-% function probeCmd = falco_gen_probe_command(ProbeArea,D,lambda,psi,offsetX,offsetY,XS,YS,DesiredCont)
-%%
-
-
 
 %--Number of actuators across DM surface (independent of beam for time being)
 if(mp.est.probe.whichDM==1)
@@ -67,7 +62,7 @@ if(mp.est.probe.radius > Nact/2)
 end
 
 %--Generate the DM command for the probe
-magn = mp.lambda0*sqrt(2*pi)*sqrt(InormDes);   % surface height to get desired intensity [meters]
+magn = 4*pi*mp.lambda0*sqrt(InormDes);   % surface height to get desired intensity [meters]
 switch lower(badAxis) %lower(mp.est.probe.axis)
     case 'y'
         mX = mp.est.probe.radius;
@@ -94,9 +89,12 @@ end
 probeCmd = falco_fit_dm_surf(dm,probeCmd);
 
 probeCmd = mp.est.probe.gainFudge*probeCmd; % Scale the probe amplitude empirically if needed
+% figure(101); imagesc(probeCmd); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
+
+end %--END OF FUNCTION
+
 
 %% DEBUGGING ONLY
-figure(101); imagesc(probeCmd); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 % %%
 % keyboard
 % %%
@@ -109,39 +107,3 @@ figure(101); imagesc(probeCmd); axis xy equal tight; colorbar; set(gca,'Fontsize
 % probePad = imresize(probeCmd,[1 1]*N);
 % 
 % figure(205); imagesc(LSpad+probePad*1e9); axis xy equal tight; 
-
-
-%%
-end %--END OF FUNCTION
-
-%%
-
-
-% OLD CODE (for reference only)
-%
-% function ProbeSurf = falco_gen_probe_command(ProbeArea,D,lambda,psi,offsetX,offsetY,XS,YS,DesiredCont)
-%
-% %--Hard-coded values for debugging
-% xs = (-(Nact-1)/2:(Nact-1)/2)/Nact;
-% D = 1;
-% psi = pi/2;
-% Nact = 48;
-% offsetX = 10; %--offset in y (actuators)
-% offsetY = 10; %--offset of probe center in y (actuators)
-% ProbeArea = [0 Nact/2,-Nact/2, Nact/2]; % [x_inner, x_outer, y_lower, y_upper
-%
-% mx = (ProbeArea(2)-ProbeArea(1))/D;
-% my = (ProbeArea(4)-ProbeArea(3))/D;
-% wx = (ProbeArea(2)+ProbeArea(1))/2;
-% wy = (ProbeArea(4)+ProbeArea(3))/2;
-% sincAmp = lambda*sqrt(2*pi)*sqrt(DesiredCont);   % surface height in meters
-% ProbeSurf = sincAmp*sinc(mx*(XS+offsetX)).*sinc(my*(YS+offsetY)).*cos(2*pi*wx/D*XS+ psi).*cos(2*pi*wy/D*YS);
-
-% Offsets move the main lobe away from the center of the PSF. This is
-% crucial for AFTA and other telescopes with large secondaries obscuring
-% the center of the pupil.
-
-
-
-
-

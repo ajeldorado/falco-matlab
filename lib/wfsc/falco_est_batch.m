@@ -26,8 +26,9 @@
 %
 %
 %--New variables
-% mp.est.probe.Npairs
-% mp.est.probe.whichDM
+%    -mp.est.probe.Npairs:      Number of pairwise probe pairs to use
+%    -mp.est.probe.whichDM:      Which DM # to use for probing. 1 or 2. Default is 1
+%    -mp.est.probe.axis:    which axis to have the phase discontinuity along [x or y]
 
 function [ip] = falco_est_batch(mp)
 
@@ -152,14 +153,13 @@ for si=1:mp.Nsbp
             end
             if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom+dDM1Vprobe;  end
             if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom+dDM2Vprobe;  end
-            
-            figure(202); imagesc(dDM1Vprobe); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
+            %figure(202); imagesc(dDM1Vprobe); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
 
             %--Take probed image
             Im = falco_get_sbp_image(mp,si);
             whichImg = 1+iProbe; %--Increment image counter
             ip.IprobedMean = ip.IprobedMean + mean(Im(mp.F4.corr.maskBool))/(2*Npairs); %--Inorm averaged over wavelength for the probed images
-            figure(203); imagesc(log10(Im),[-7 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
+            if(mp.flagPlot);  figure(203); imagesc(log10(Im),[-8 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
 
             %--Store probed image and its DM settings
             ip.Icube(:,:,whichImg) = Im;
@@ -257,9 +257,9 @@ for si=1:mp.Nsbp
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.F4.Neta,mp.F4.Nxi); ampSq2D(mp.F4.corr.maskBool) = ampSq(:,iProbe); 
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.F4.corr.maskBool)));
+        if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow; pause(1);  end
     end
     
-    figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
 
     %% Compute electric field in the dark hole pixel-by-pixel.
     Eest = zeros(mp.F4.corr.Npix,1);
