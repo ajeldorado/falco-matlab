@@ -11,18 +11,23 @@
 %  4) Run a single trial of WFSC using FALCO.
 
 
-clear all;
+clear;
+
+restoredefaultpath;
+rehash toolboxcache;
 
 %% Define Necessary Paths on Your System
 
+pathStem = 'D:\Dropbox\Caltech\NASA_project\';
+
 %--Library locations
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+mp.path.falco = [pathStem,'falco-matlab/'];  %--Location of FALCO
+mp.path.proper = [pathStem,'PROPER/'];  %--Location of FALCO; %--Location of the MATLAB PROPER library
 % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.config = [mp.path.falco,'data/brief/']; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = [mp.path.falco,'data/ws/']; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 
 %% Add to the MATLAB Path
@@ -48,9 +53,9 @@ mp.flagPlot = true;
 
 %% Step 1: Define any variable values that will overwrite the defaults (in falco_config_defaults_SPLC)
 
-%%--Record Keeping
-mp.TrialNum = 1; %--Always use a diffrent Trial # for different calls of FALCO.
-mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
+% %%--Record Keeping
+% mp.TrialNum = 1; %--Always use a diffrent Trial # for different calls of FALCO.
+% mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
@@ -67,7 +72,7 @@ mp.estimator = 'perfect';
 %%--Coronagraph and Pupil Type
 mp.coro = 'LC';    %--Tested Options: 'LC','HLC','SPLC','Vortex'
 mp.flagApod = false;
-mp.whichPupil = 'WFIRST180718';
+mp.whichPupil = 'Simple';
 
 %%--Pupil Plane and DM Plane Properties
 mp.d_P2_dm1 = 0; % distance (along +z axis) from P2 pupil to DM1 (meters)
