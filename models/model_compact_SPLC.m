@@ -84,8 +84,6 @@ end
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% EP2 = rot90(EP1,2); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP2 = circshift(EP2,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
@@ -105,8 +103,6 @@ end
 
 %--Forward propagate to the next pupil plane (P3) by rotating 180 deg.
 EP3 = propcustom_2FT(EP2eff,mp.centering); 
-% EP3 = rot90(EP3,2); %--Forward propagate to the next pupil plane (with the SP) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP3 = circshift(EP3,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P3.compact.Narr); %--Apply apodizer mask.
 
 %--MFT from SP to FPM (i.e., P3 to F3)
@@ -122,7 +118,9 @@ end
 
 %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
 EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); %--E-field incident upon the Lyot stop 
-EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr);% Apply Lyot stop
+
+%--Apply Lyot stop
+EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr);
 
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to F4)
 EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
