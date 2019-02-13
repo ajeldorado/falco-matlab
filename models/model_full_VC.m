@@ -11,6 +11,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-02-12 by G. Ruane to allow scalar vortex models 
 % Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
 %  actual full models, including this one, have been moved to sub-routines for clarity.
 % Modified by A.J. Riggs from hcil_simTestbed.m to model_full.m.
@@ -108,7 +109,12 @@ end
 if(normFac==0)
     EP4 = propcustom_2FT(EP3, mp.centering);
 else
-    EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, mp.F3.VortexCharge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU );  %--MFTs
+    if(numel(mp.F3.VortexCharge)==1)
+        charge = mp.F3.VortexCharge;
+    else
+        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+    end
+    EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU );  %--MFTs
 end
 
 % %--Do NOT apply FPM if normalization value is being found

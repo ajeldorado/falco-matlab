@@ -10,6 +10,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-02-12 by G. Ruane to allow scalar vortex models 
 % Modified on 2018-01-23 by A.J. Riggs to allow DM1 to not be at a pupil
 %  and to have an aperture stop.
 % Modified on 2017-11-09 by A.J. Riggs to remove the Jacobian calculation.
@@ -114,7 +115,12 @@ end
 if(normFac==0)
     EP4 = propcustom_2FT(EP3, mp.centering);
 else
-    EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, mp.F3.VortexCharge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU );%--MFTs
+    if(numel(mp.F3.VortexCharge)==1)
+        charge = mp.F3.VortexCharge;
+    else
+        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+    end
+    EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU );  %--MFTs
 end  
 
 %--Apply the Lyot stop
