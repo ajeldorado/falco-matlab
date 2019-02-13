@@ -76,6 +76,9 @@ DoesNotSync/**
 outdated/**
 deprecated/**
 debugging/**
+zOUTDATED/**
+zDEPRECATED/**
+zDEBUGGING/**
 
 #--Sync only template versions of main script files
 main/**
