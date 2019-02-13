@@ -15,7 +15,12 @@ if(mp.flagPlot)
         delete(handles.tb2)
         delete(handles.tb3)
         delete(handles.tb4)
-        figure(handles.master);
+        try
+            figure(handles.master);
+        catch
+            handles.master = figure('Color',[1 1 1],'Position',fig_size);
+            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+        end
     else
 %         handles.master = figure(123);
 %         set(gcf,'Color',[1 1 1],'Position',fig_size);
