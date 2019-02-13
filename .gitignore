@@ -72,10 +72,15 @@ DoNotPush/**
 DoesNotSync/**
 !DoesNotSync/placeholder.txt
 
+#--Folders of different content not to sync with Github
+outdated/**
+deprecated/**
+debugging/**
+
 #--Sync only template versions of main script files
 main/**
 !main/TEMPLATE*
-
+!main/EXAMPLE_*
 
 
 #--Documentation intermediate files
