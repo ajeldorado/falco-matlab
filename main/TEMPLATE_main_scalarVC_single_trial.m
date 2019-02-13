@@ -73,12 +73,12 @@ mp.flagApod = false; % Can be simply a sub-aperture
 
 %%--Pupil Plane and DM Plane Properties
 mp.d_P2_dm1 = 0; % distance (along +z axis) from P2 pupil to DM1 (meters)
-mp.d_dm1_dm2 = 2; % distance between DM1 and DM2 (meters)
+mp.d_dm1_dm2 = 3; % distance between DM1 and DM2 (meters)
 
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 500e-9; % central wavelength of bandpass (meters)
 mp.fracBW = 0.1;  % fractional bandwidth of correction (Delta lambda / lambda)
-mp.Nsbp = 5; % number of sub-bandpasses across correction band 
+mp.Nsbp = 3; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
 %%--Coronagraph type 
@@ -87,7 +87,7 @@ mp.coro = 'Vortex';    %--Tested Options: 'LC','HLC','SPLC','Vortex'
 %--Charge of vortex coronagraph. For achromatic vortex, give one value. For
 % scalar vortex give the effective charge for each wavelength. 
 
-mp.F3.VortexCharge_lambdas = [475e-9 500e-9 525e-9];
+mp.F3.VortexCharge_lambdas = 475e-9:1e-9:525e-9;
 mp.F3.VortexCharge = 6*mp.lambda0./mp.F3.VortexCharge_lambdas; 
 
 %%--Pupil Masks
