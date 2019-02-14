@@ -107,7 +107,7 @@ function ap = falco_hex_aperture_LUVOIR_A_5(bmi, nr, hr, hs, varargin)
             hexx = cx + hx * cosd(rot) - hy * sind(rot);
             hexy = cy + hx * sind(rot) + hy * cosd(rot);
             counter = counter + 1;
-            if(any(counter==[1 12 113 114 125 126]))
+            if(any(counter==[1 12 113 114 125 126]))%1 13 114 115 126 127]))%1 12 113 114 125 126]))
             else
                 ap   = ap + prop_polygon(bmi,6,hr,'cx',hexx,'cy',hexy,'rot',rot);
             end
@@ -124,7 +124,7 @@ function ap = falco_hex_aperture_LUVOIR_A_5(bmi, nr, hr, hs, varargin)
             hexx = cx - hx * cosd(rot) - hy * sind(rot);
             hexy = cy - hx * sind(rot) + hy * cosd(rot);
             counter = counter + 1;
-            if(any(counter==[1 12 113 114 125 126]))
+            if(any(counter==[1 12 113 114 125 126]))%1 13 114 115 126 127]))%1 12 113 114 125 126]))
             else
                 ap   = ap + prop_polygon(bmi,6,hr,'cx',hexx,'cy',hexy,'rot',rot);
             end

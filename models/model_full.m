@@ -34,7 +34,7 @@
 % -flagGenMat
 
 
-function Eout = model_full(mp,   modvar,varargin)
+function [Eout, Efiber] = model_full(mp,modvar,varargin)
 
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
@@ -129,10 +129,10 @@ switch mp.coro
         if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
             FPM = mp.FPMcubeFull(:,:,ilam); 
         else %--Otherwise generate it
-            FPM = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
+            FPM = falco_gen_EHLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
         end
         
-        Eout = model_full_EHLC(mp,   lambda, normFac, Ein, FPM); 
+        Eout = model_full_EHLC(mp, lambda, normFac, Ein, FPM); 
         
     case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
         %--Complex transmission map of the FPM.
@@ -140,29 +140,28 @@ switch mp.coro
         if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
             FPM = mp.FPMcubeFull(:,:,ilam);
         else %--Otherwise generate it
-            FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
+            FPM = falco_gen_HLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
         end
         
-        Eout = model_full_HLC(mp,   lambda, normFac, Ein, FPM);
+        Eout = model_full_HLC(mp, lambda, normFac, Ein, FPM);
         
     case{'FOHLC'} %--DMs, optional apodizer, FPM with amplitude and phase modulation, and LS. Uses Babinet's principle about FPM.
         Eout = model_full_FOHLC(mp, lambda, normFac, Ein);
         
     case{'SPHLC','FHLC'} %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS. Uses 2-part direct MFTs to/from FPM
-        Eout = model_full_SPHLC(mp,   lambda, Ein, normFac);
-        
+        Eout = model_full_SPHLC(mp, lambda, Ein, normFac);
         
     case{'LC','DMLC','APLC'} %--optional apodizer, occulting spot FPM, and LS.
-        Eout = model_full_LC(mp,   lambda, Ein, normFac);
+        Eout = model_full_LC(mp, lambda, Ein, normFac);
        
     case{'SPLC','FLC'} %--Optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-        Eout = model_full_SPLC(mp,   lambda, Ein, normFac);
+        [Eout, Efiber] = model_full_SPLC(mp, lambda, Ein, normFac);
             
     case{'vortex','Vortex','VC','AVC'} %--Optional apodizer, vortex FPM, LS
-        Eout = model_full_VC(mp,   lambda, Ein, normFac);       
+        Eout = model_full_VC(mp, lambda, Ein, normFac);       
           
 %     case{'SPC','APP','APC'} %--Pupil-plane mask only
-%         Eout = model_full_APC(mp,   modvar);   
+%         Eout = model_full_APC(mp, modvar);   
         
     otherwise
         error('model_full.m: Modely type\t %s\t not recognized.\n',mp.coro);        

@@ -35,23 +35,14 @@
 % -whichSource
 % -flagGenMat
 
-function [Eout, Efiber] = model_full_SPLC(mp, lambda, Ein, normFac)
-% function Eout = model_full_SPLC(mp,   modvar)
+function Eout = model_full_SPLC(mp,   lambda, Ein, normFac)
 
-% lambda = mp.sbp_centers(modvar.sbpIndex)*mp.lamFac_vec(modvar.wpsbpIndex);
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.full.NdmPad;
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% %--Set nominal DM plane array sizes as a power of 2 for angular spectrum propagation with FFTs
-% NdmPad = 2.^ceil(1 + log2(max([mp.dm1.NdmPad,mp.dm2.NdmPad]))); 
-% while( NdmPad < lambda*abs(mp.d_dm1_dm2)/mp.P2.full.dx^2 ) %--Double the zero-padding until the angular spectrum sampling requirement is not violated
-%     NdmPad = 2*NdmPad; 
-% end
 
 if(any(mp.dm_ind==1)); 
     if( isfield(mp.dm1,'surfM') );   DM1surf = padOrCropEven(mp.dm1.surfM, NdmPad);
@@ -77,8 +68,6 @@ if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.full.mask, NdmPad); else DM2s
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% EP2 = rot90(EP1,2); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP2 = circshift(EP2,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.full.dx*NdmPad,lambda,mp.d_P2_dm1); else Edm1 = EP2; end  %--E-field arriving at DM1
@@ -103,13 +92,6 @@ if(normFac==0)
 else
     EF3 = mp.F3.full.mask.amp.*EF3inc; % Apply FPM
 end
-    
-% %--Do NOT apply FPM if normalization value is being found
-% if(isfield(modvar,'flagGetNormVal'))
-%     if(modvar.flagGetNormVal==true)
-%         EF3 = EF3inc;
-%     end
-% end    
 
 %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
 EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); %--E-field incident upon the Lyot stop 
@@ -118,28 +100,11 @@ EP4 = mp.P4.full.croppedMask.*padOrCropEven(EP4,mp.P4.full.Narr);% Apply Lyot st
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to F4)
 EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
 
-
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
     Eout = EF4; %--Don't normalize if normalization value is being found
 else
     Eout = EF4/sqrt(normFac); %--Apply normalization
-end
-
-%--Fiber propagation
-if (mp.flagFiber)
-    
-    Efiber = cell(np.F4.Nlens,1);
-    
-    for nlens = 1:mp.F4.Nlens
-        EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering,'xfc',mp.F4.x_lenslet_phys(nlens),'yfc',mp.F4.y_lenslet_phys(nlens));
-        Elenslet = EF4.*mp.F4.lenslet.mask;
-        EF5 = propcustom_mft_PtoF(Elenslet,mp.lensletFL,lambda,mp.F4.dxi,mp.F5.dxi,mp.F5.Nxi,mp.F5.deta,mp.F5.Neta,mp.centering);
-        Efiber{nlens} = mp.F5.fiberMode(:).*sum(sum(mp.F5.fiberMode.*conj(EF5)));
-    end
-
-    Efiber = permute(reshape(cell2mat(Efiber)', mp.F5.Nxi, mp.F5.Neta, mp.F4.Nlens), [2,1,3]);
-    
 end
 
 end % End of function

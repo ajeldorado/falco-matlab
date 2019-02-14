@@ -98,8 +98,12 @@ Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving 
 
 %--DM1---------------------------------------------------------
 if(whichDM==1)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm1.Nele); %--Initialize the Jacobian
-    
+    if (mp.flagFiber)
+        Gzdl = zeros(mp.F4.Nlens,mp.dm1.Nele);
+    else
+        Gzdl = zeros(mp.F4.corr.Npix,mp.dm1.Nele); %--Initialize the Jacobian
+    end
+        
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
     NboxPad1AS = mp.dm1.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
@@ -156,11 +160,20 @@ if(whichDM==1)
             EP4 = mp.P4.compact.croppedMask.*(EP4); %--Apply Lyot stop
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            if(mp.flagFiber)
+                for nlens = 1:mp.F4.Nlens
+                    EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering, 'xfc', mp.F4.x_lenslet_phys(nlens), 'yfc', mp.F4.y_lenslet_phys(nlens));
+                    Elenslet = EF4.*mp.F4.lenslet.mask;
+                    EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.F4.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                    Gzdl(nlens,Gindex) = max(mp.F5.fiberMode(:)).*sum(sum(mp.F5.fiberMode.*EF5));
+                end
+            else    
+                EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
 
-            if(mp.useGPU);EF4 = gather(EF4);end
+                if(mp.useGPU);EF4 = gather(EF4);end
             
-            Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+                Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            end
         end
         Gindex = Gindex + 1;
     end
@@ -169,7 +182,11 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm2.Nele);
+    if (mp.flagFiber)
+        Gzdl = zeros(mp.F4.Nlens,mp.dm2.Nele);
+    else
+        Gzdl = zeros(mp.F4.corr.Npix,mp.dm2.Nele); %--Initialize the Jacobian
+    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox2 = mp.dm2.compact.Nbox;%2*ceil(1/2*min(mp.lamFac_vec)*mp.lambda0*mp.d_dm1_dm2/mp.dm2.compact.dx^2);
@@ -222,11 +239,20 @@ if(whichDM==2)
             EP4 = mp.P4.compact.croppedMask.*(EP4); %--Apply Lyot stop
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi, mp.F4.deta,mp.F4.Neta,mp.centering);
+            if(mp.flagFiber)
+                for nlens = 1:mp.F4.Nlens
+                    EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering, 'xfc', mp.F4.x_lenslet_phys(nlens), 'yfc', mp.F4.y_lenslet_phys(nlens));
+                    Elenslet = EF4.*mp.F4.lenslet.mask;
+                    EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.F4.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                    Gzdl(nlens,Gindex) = max(mp.F5.fiberMode(:)).*sum(sum(mp.F5.fiberMode.*EF5));
+                end
+            else    
+                EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
 
-            if(mp.useGPU);EF4 = gather(EF4);end
+                if(mp.useGPU);EF4 = gather(EF4);end
             
-            Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+                Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            end
         end
         Gindex = Gindex + 1;
     end
