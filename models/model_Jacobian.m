@@ -79,7 +79,6 @@ function jacStruct = model_Jacobian(mp)
     fprintf('Computing control Jacobian matrices ... \n'); tic
     vals_list = allcomb(1:mp.jac.Nmode,mp.dm_ind).'; %--dimensions: [2 x length(mp.jac.Nmode)*length(mp.dm_ind) ]
     Nvals = size(vals_list,2);
-
     
     %--Parallel/distributed computing
     if(mp.flagParfor) 
@@ -102,7 +101,6 @@ function jacStruct = model_Jacobian(mp)
 
     %--Regular computing (avoid using variable Jtemp to save RAM
     else 
-        % fprintf('Jacobian Mode: ');
         for ii=1:Nvals
             im = vals_list(1,ii); %--index for tip-tilt-wavelength mode
             whichDM = vals_list(2,ii); %--number of the specified DM
@@ -120,13 +118,6 @@ function jacStruct = model_Jacobian(mp)
     fprintf('...done.  Time = %.2f\n',toc);
 
 end %--END OF FUNCTION model_Jacobian.m
-
-
-
-
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The function model_Jacobian_middle_layer.m exists at all so that parfor
@@ -151,38 +142,28 @@ function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
 
     switch mp.coro 
         case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-            jacMode = model_Jacobian_FOHLC(mp,   im, whichDM); 
+            jacMode = model_Jacobian_FOHLC(mp, im, whichDM); 
         
         case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-            jacMode = model_Jacobian_EHLC(mp,   im, whichDM); 
+            jacMode = model_Jacobian_EHLC(mp, im, whichDM); 
         
         case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
-            jacMode = model_Jacobian_HLC(mp,   im, whichDM); 
+            jacMode = model_Jacobian_HLC(mp, im, whichDM); 
             
         case{'SPHLC','FHLC'}  %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS
-            jacMode  = model_Jacobian_SPHLC(mp,   im, whichDM); 
-            
+            jacMode  = model_Jacobian_SPHLC(mp, im, whichDM); 
             
         case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
-            jacMode = model_Jacobian_LC(mp,   im, whichDM); 
+            jacMode = model_Jacobian_LC(mp, im, whichDM); 
             
         case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-            jacMode  = model_Jacobian_SPLC(mp,   im, whichDM); 
+            jacMode  = model_Jacobian_SPLC(mp, im, whichDM); 
             
         case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
-            jacMode  = model_Jacobian_VC(mp,   im, whichDM); 
-            
-        %case{'SPC','APP','APC'} %--Pupil-plane apodizer is only coronagraphic mask
-            %Jac  = model_Jacobian_APC(mp,   tsi, whichDM); 
+            jacMode  = model_Jacobian_VC(mp, im, whichDM);
             
         otherwise
             error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED IN model_Jacobian.m');        
     end    
 
 end %--END OF FUNCTION model_Jacobian_middle_layer.m
-
-
-
-
-
-

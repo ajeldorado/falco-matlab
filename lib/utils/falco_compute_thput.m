@@ -12,15 +12,19 @@
 
 function [mp,thput] = falco_compute_thput(mp)
 
-    ImTemp = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y,'eval');
-    if(mp.flagPlot); figure(324); imagesc(mp.F4.eval.xisDL,mp.F4.eval.etasDL,ImTemp); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
+    if(mp.flagFiber)
+        ImTemp = falco_sim_image_fiber(mp, mp.thput_eval_x, mp.thput_eval_y, 'eval');
+        thput = sum(sum(ImTemp))/mp.sumPupil;
+        fprintf('Fiber throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', 100*thput, mp.thput_eval_x, mp.thput_eval_y);
+    else
+        ImTemp = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y,'eval');
+        if(mp.flagPlot); figure(324); imagesc(mp.F4.eval.xisDL,mp.F4.eval.etasDL,ImTemp); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 
-    maskHM = 0*mp.FP4.eval.RHOS;
-    maskHM(ImTemp>=1/2*max(max(ImTemp))) = 1;
-    mp.maskHMcore = maskHM.*mp.maskCore;
-    % figure(325); imagesc(mp.F4.full.xisDL,mp.F4.full.etasDL,mp.maskCore); axis xy equal tight; drawnow;
-    thput = sum(ImTemp(mp.maskHMcore==1))/mp.sumPupil*mean(mp.F4.eval.I00);
-    fprintf('>=Half-max core throughput within a %.2f lambda/D radius = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n',mp.thput_radius,100*thput,mp.thput_eval_x,mp.thput_eval_y);
-
-
+        maskHM = 0*mp.FP4.eval.RHOS;
+        maskHM(ImTemp>=1/2*max(max(ImTemp))) = 1;
+        mp.maskHMcore = maskHM.*mp.maskCore;
+        thput = sum(ImTemp(mp.maskHMcore==1))/mp.sumPupil*mean(mp.F4.eval.I00);
+        fprintf('>=Half-max core throughput within a %.2f lambda/D radius = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n',mp.thput_radius,100*thput,mp.thput_eval_x,mp.thput_eval_y);
+    end
+        
 end %--END OF FUNCTION

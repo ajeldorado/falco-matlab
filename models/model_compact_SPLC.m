@@ -36,11 +36,8 @@
 % -whichSource
 % -flagGenMat
 
+function [Eout, Efiber] = model_compact_SPLC(mp, lambda, Ein, normFac, flagEval)
 
-function Eout = model_compact_SPLC(mp, lambda, Ein, normFac, flagEval)
-% function Eout = model_compact_SPLC(mp, DM, modvar)
-
-%lambda = mp.sbp_centers(modvar.sbpIndex);
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
 
@@ -76,7 +73,6 @@ if(mp.useGPU)
     if(any(mp.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation: 2 DMs, apodizer, binary-amplitude FPM, LS, and final focal plane
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -84,8 +80,6 @@ end
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% EP2 = rot90(EP1,2); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP2 = circshift(EP2,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
@@ -94,7 +88,6 @@ Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving 
 %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
 Edm2 = propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); 
 Edm2 = DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
-
 
 %--Back-propagate to pupil P2
 if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 )
@@ -105,8 +98,6 @@ end
 
 %--Forward propagate to the next pupil plane (P3) by rotating 180 deg.
 EP3 = propcustom_2FT(EP2eff,mp.centering); 
-% EP3 = rot90(EP3,2); %--Forward propagate to the next pupil plane (with the SP) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP3 = circshift(EP3,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P3.compact.Narr); %--Apply apodizer mask.
 
 %--MFT from SP to FPM (i.e., P3 to F3)
@@ -119,14 +110,12 @@ else
     EF3 = mp.F3.compact.mask.amp.*EF3inc; % Apply FPM
 end
 
-
 %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
 EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); %--E-field incident upon the Lyot stop 
 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr);% Apply Lyot stop
 
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to F4)
-EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
-% EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,dxi,Nxi,deta,Neta,mp.centering);
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
@@ -135,6 +124,19 @@ else
     Eout = EF4/sqrt(normFac); %--Apply normalization
 end
 
+%--Fiber propagation
+if(mp.flagFiber)
+    Efiber = cell(np.F4.Nlens,1);
+    
+    for nlens = 1:mp.F4.Nlens
+        EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering,'xfc',mp.F4.x_lenslet_phys(nlens),'yfc',mp.F4.y_lenslet_phys(nlens));
+        Elenslet = EF4.*mp.F4.lenslet.mask;
+        EF5 = propcustom_mft_PtoF(Elenslet,mp.lensletFL,lambda,mp.F4.dxi,mp.F5.dxi,mp.F5.Nxi,mp.F5.deta,mp.F5.Neta,mp.centering);
+        Efiber{nlens} = mp.F5.fiberMode(:).*sum(sum(mp.F5.fiberMode.*conj(EF5)));
+    end
+
+    Efiber = permute(reshape(cell2mat(Efiber)', mp.F5.Nxi, mp.F5.Neta, mp.F4.Nlens), [2,1,3]);
+end
 
 if(mp.useGPU)
     Eout = gather(Eout);

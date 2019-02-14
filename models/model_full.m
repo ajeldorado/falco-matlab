@@ -33,7 +33,6 @@
 % -whichSource
 % -flagGenMat
 
-
 function [Eout, Efiber] = model_full(mp,modvar,varargin)
 
 % Set default values of input parameters
@@ -43,20 +42,17 @@ elseif(isfield(modvar,'ebpIndex')) %--Entire bandpass index, out of mp.full.Nlam
     normFac = mp.F4.full.I00(modvar.ebpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
-    %--Enable different arguments values by using varargin
-icav = 0;                     % index in cell array varargin
+%--Enable different arguments values by using varargin
+icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
       case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
         normFac = 0; 
-        %fprintf('model_full: Not normalized.\n');
       otherwise
         error('model_full: Unknown keyword: %s\n', varargin{icav});
-          
     end
 end
-
 
 %--Save a lot of RAM (remove compact model data from full model inputs)
 if(any(mp.dm_ind==1)); mp.dm1 = rmfield(mp.dm1,'compact'); end
@@ -67,8 +63,6 @@ if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9,'compact'); end
 %--Set the wavelength
 if(isfield(modvar,'lambda'))
     lambda = modvar.lambda;
-% elseif(isfield(modvar,'ebpIndex'))
-%     lambda = mp.full.lambdas(modvar.ebpIndex);
 elseif(isfield(modvar,'sbpIndex'))
     lambda = mp.sbp_centers(modvar.sbpIndex)*mp.full.sbp_facs(modvar.wpsbpIndex);
 end
@@ -100,11 +94,9 @@ else % Default to using the starlight
         Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
 
     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-%         Ein = mp.Estar(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
         Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
     end
 end
-
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
@@ -114,11 +106,8 @@ end
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
 end
-
-
 
 %%
 %--Select the type of coronagraph
@@ -160,9 +149,6 @@ switch mp.coro
     case{'vortex','Vortex','VC','AVC'} %--Optional apodizer, vortex FPM, LS
         Eout = model_full_VC(mp, lambda, Ein, normFac);       
           
-%     case{'SPC','APP','APC'} %--Pupil-plane mask only
-%         Eout = model_full_APC(mp, modvar);   
-        
     otherwise
         error('model_full.m: Modely type\t %s\t not recognized.\n',mp.coro);        
                     

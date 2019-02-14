@@ -56,11 +56,8 @@ Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
 end
-% figure(71); imagesc(real(Ein)); axis xy equal tight; colorbar; 
-% figure(72); imagesc(imag(Ein)); axis xy equal tight; colorbar; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
@@ -76,7 +73,6 @@ if( strcmpi(mp.centering,'pixel') ); apodRot180 = circshift(apodRot180,[1 1]); e
 
 if(any(mp.dm_ind==1)); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
 if(any(mp.dm_ind==2)); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
-% if(any(mp.dm_ind==9)); DM9phase = padOrCropEven(mp.dm9.compact.phaseM,mp.F3.compact.Nxi); else DM9phase = 0; end 
 
 if(mp.useGPU)
     pupil = gpuArray(pupil);
@@ -106,7 +102,7 @@ if(whichDM==1)
         
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
-    NboxPad1AS = mp.dm1.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
+    NboxPad1AS = mp.dm1.compact.NboxAS; %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
     %--Resize starting matrices at DM1/pupil1
@@ -142,7 +138,6 @@ if(whichDM==1)
             % 2nd negate the coordinates of the box used. 
             dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
             dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
-%             Esp = padOrCropEven(Esp,Nbox1); %--Crop down from the array size that is a power of 2 to make the MFT faster
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 
@@ -177,7 +172,6 @@ if(whichDM==1)
         end
         Gindex = Gindex + 1;
     end
-
 end    
 
 %--DM2---------------------------------------------------------
@@ -189,8 +183,8 @@ if(whichDM==2)
     end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
-    Nbox2 = mp.dm2.compact.Nbox;%2*ceil(1/2*min(mp.lamFac_vec)*mp.lambda0*mp.d_dm1_dm2/mp.dm2.compact.dx^2);
-    NboxPad2AS = mp.dm2.compact.NboxAS; %NboxPad2;%2.^ceil(log2(NboxPad2));
+    Nbox2 = mp.dm2.compact.Nbox;
+    NboxPad2AS = mp.dm2.compact.NboxAS;
     mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
 
     %--Propagate full field to DM2 before back-propagating in small boxes
@@ -221,7 +215,6 @@ if(whichDM==2)
             apodRot180 = padOrCropEven( apodRot180, mp.dm2.compact.NdmPad);
             dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
             dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
-%             dEP3box = padOrCropEven(dEP3box,Nbox2); %--Crop down from the array size that is a power of 2 to make the MFT faster
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 
@@ -256,9 +249,7 @@ if(whichDM==2)
         end
         Gindex = Gindex + 1;
     end
-
 end
-
 
 end %--END OF ENTIRE FUNCTION
 

@@ -11,7 +11,6 @@
 
 function [mp,out] = falco_init_ws(fn_config)
 
-
 %% Read inputs as structures from a .mat config file
 mainPath = pwd;
 
@@ -23,12 +22,6 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 mp.jac.dummy = 1;
 
 %% File Paths
-%(Defined such that the entire folder can be downloaded anywhere and run without a problem)
-% addpath(genpath(mainPath));
-
-% mp.path.falco = mainPath;
-% mp.path.falco = mainPath;
-% mp.path.brief = folder_brief;
 
 %--Storage directories (data in these folders will not be synced via Git
 if(isfield(mp.path,'ws')==false);  mp.path.ws = [mainPath filesep 'data' filesep 'ws' filesep];  end    % Store final workspace data here
@@ -37,20 +30,6 @@ if(isfield(mp.path,'jac')==false);  mp.path.jac = [mainPath filesep 'data' files
 if(isfield(mp.path,'images')==false);  mp.path.images = [mainPath filesep 'data' filesep 'images' filesep];  end  % Store all full, reduced images here
 if(isfield(mp.path,'dm')==false);  mp.path.dm = [mainPath filesep 'data' filesep 'DMmaps' filesep];  end      % Store DM command maps here
 if(isfield(mp.path,'ws_inprogress')==false);  mp.path.ws_inprogress = [mainPath filesep 'data' filesep 'ws_inprogress' filesep];  end      % Store in progress workspace data here
-
-
-
-% % mp.path.brief = [mainPath filesep 'data' filesep 'ws' filesep];      % Store minimal data to re-construct the data from the run: the config files and "out" structure go here
-% mp.path.ws = [mainPath filesep 'data' filesep 'ws' filesep];      % Store final workspace data here
-% mp.path.falcoaps = [mainPath filesep 'maps' filesep];      % Maps go here
-% % mp.path.init = [mainPath '/init'];  % Store initialization maps and files here
-% mp.path.jac = [mainPath filesep 'data' filesep 'jac' filesep];    % Store the control Jacobians here
-% mp.path.images = [mainPath filesep 'data' filesep 'images' filesep];  % Store all full, reduced images here
-% mp.path.dm = [mainPath filesep 'data' filesep 'DMmaps' filesep];      % Store DM command maps here
-% mp.path.ws_inprogress = [mainPath filesep 'data' filesep 'ws_inprogress' filesep];      % Store in progress workspace data here
-% mp.path.DoNotPush = [mainPath filesep 'DoNotPush' filesep]; % For extraneous or very large files not to push with git. (E.g., generated mask representations) 
-% mp.path.DoesNotSync = [mainPath filesep 'DoesNotSync' filesep]; % For extraneous or very large files not to sync with git. (E.g., prototype functions and scripts) 
-
 
 %% Loading previous DM commands as the starting point
 %--Stash DM8 and DM9 starting commands if they are given in the main script
@@ -84,14 +63,11 @@ end
 mp.si_ref = ceil(mp.Nsbp/2);
 mp.wi_ref = ceil(mp.Nwpsbp/2);
 
-
 %--Wavelengths used for Compact Model (and Jacobian Model)
 mp.sbp_weights = ones(mp.Nsbp,1);
 if(strcmpi(mp.estimator,'perfect') && mp.Nsbp>1) %--For design or modeling without estimation: Choose ctrl wvls evenly between endpoints (inclusive) of the total bandpass
     mp.fracBWsbp = mp.fracBW/(mp.Nsbp-1);
     mp.sbp_centers = mp.lambda0*linspace( 1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
-%     mp.sbp_weights(1) = 1/2;
-%     mp.sbp_weights(end) = 1/2;
 else %--For cases with estimation: Choose est/ctrl wavelengths to be at subbandpass centers.
     mp.fracBWsbp = mp.fracBW/mp.Nsbp;
     mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
@@ -128,7 +104,6 @@ for si=1:mp.Nsbp
     end
 end
 
-
 %% Zernike and Chromatic Weighting of the Control Jacobian
 if(isfield(mp.jac,'zerns')==false);  mp.jac.zerns = 1;  end  %--Which Zernike modes to include in Jacobian [Noll index]. Always include 1 for piston term.
 if(isfield(mp.jac,'Zcoef')==false);  mp.jac.Zcoef = 1e-9*ones(10,1);  end%--meters RMS of Zernike aberrations. (piston value is reset to 1 later for correct normalization)
@@ -158,17 +133,14 @@ switch mp.coro
                 P1andP3 = mp.P1.compact.mask + padOrCropEven(mp.P3.compact.mask,length(mp.P1.compact.mask));
                 figure(302); imagesc(P1andP3); axis xy equal tight; colorbar; set(gca,'Fontsize',20); title('Pupil and Apod Superimposed','Fontsize',16');
             end
-            
         end
 end
-
 
 %% DM Initialization
 
 %--Initialize the number of actuators (NactTotal) and actuators used (Nele).
 mp.dm1.NactTotal=0; mp.dm2.NactTotal=0; mp.dm3.NactTotal=0; mp.dm4.NactTotal=0; mp.dm5.NactTotal=0; mp.dm6.NactTotal=0; mp.dm7.NactTotal=0; mp.dm8.NactTotal=0; mp.dm9.NactTotal=0; %--Initialize for bookkeeping later.
 mp.dm1.Nele=0; mp.dm2.Nele=0;  mp.dm3.Nele=0;  mp.dm4.Nele=0;  mp.dm5.Nele=0;  mp.dm6.Nele=0;  mp.dm7.Nele=0;  mp.dm8.Nele=0;  mp.dm9.Nele=0; %--Initialize for Jacobian calculations later. 
-%mp.dm1.Nele=[]; mp.dm2.Nele=[];  mp.dm3.Nele=[];  mp.dm4.Nele=[];  mp.dm5.Nele=[];  mp.dm6.Nele=[];  mp.dm7.Nele=[];  mp.dm8.Nele=[];  mp.dm9.Nele=[]; %--Initialize for Jacobian calculations later. 
 
 %% HLC and EHLC FPM: Initialization and Generation
 switch mp.coro
@@ -199,21 +171,6 @@ switch mp.coro
 end
 
 %% Generate FPM
-
-% switch mp.coro
-%     case{'Vortex','vortex','AVC','VC'}
-%         %--Vortex FPM is generated as needed
-%     otherwise
-% %         %--Make or read in focal plane mask (FPM) amplitude for the full model
-% %         FPMgenInputs.IWA = mp.F3.Rin;% inner radius of the focal plane mask, in lambda0/D
-% %         FPMgenInputs.OWAmask = mp.F3.Rout; % outer radius of the focal plane mask, in lambda0/D
-% %         %FPMgenInputs.flagOdd = false; % flag to specify odd or even-sized array
-% %         FPMgenInputs.centering = mp.centering;
-% %         FPMgenInputs.ang = mp.F3.ang; % angular opening on each side of the focal plane mask, in degrees
-% %         FPMgenInputs.magx = 1; % magnification factor along the x-axis
-% %         FPMgenInputs.magy = 1; % magnification factor along the y-axis
-% end
-
 
 switch mp.coro
     case {'LC','DMLC','APLC'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
@@ -310,7 +267,6 @@ mp.maskCore(mp.FP4.eval.RHOS<=mp.thput_radius) = 1;
 
 %--Storage array for throughput at each iteration
 mp.thput_vec = zeros(mp.Nitr+1,1);
-% mp.thput_vec_EE = zeros(mp.Nitr,1);
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -348,45 +304,29 @@ mp = falco_config_spatial_weights(mp);
 
 %--Extract the vector of weights at the pixel locations of the dark hole pixels.
 mp.WspatialVec = mp.Wspatial(mp.F4.corr.inds);
-% mp.WspatialFullVec = mp.WspatialFull(mp.F4.corr.inds);
-
 
 %% Deformable Mirror (DM) 1 and 2 Parameters
 
 mp.dm1.centering = mp.centering;
 mp.dm2.centering = mp.centering;
 
-% % if( any(mp.dm_ind==9) )
-% %     %--Cropped influence function for FPM phase
-% %     Nhalf = ceil(length(mp.dm9.inf0)/2); %-- =46 for the Xinetics influence function
-% %     if(mp.dm9.Ncrop_inf0<45)
-% %         mp.dm9.inf0 = mp.dm9.inf0(Nhalf-mp.dm9.Ncrop_inf0:Nhalf+mp.dm9.Ncrop_inf0,Nhalf-mp.dm9.Ncrop_inf0:Nhalf+mp.dm9.Ncrop_inf0);
-% %     end
-% % end
-
 %--Create influence function datacubes for each DM
-if( any(mp.dm_ind==1) ) %if(isfield(mp.dm1,'inf_datacube')==0 && any(mp.dm_ind==1) )
+if(any(mp.dm_ind==1))
     mp.dm1.compact = mp.dm1;
-%     mp.dm1.dx = mp.P2.full.dx;
-%     mp.dm1.compact.dx = mp.P2.compact.dx;
     mp.dm1 = falco_gen_dm_poke_cube(mp.dm1, mp, mp.P2.full.dx,'NOCUBE');
     mp.dm1.compact = falco_gen_dm_poke_cube(mp.dm1.compact, mp, mp.P2.compact.dx);
-%     mp.dm1 = falco_gen_dm_poke_cube_PROPER(mp.dm1,mp,'NOCUBE');
-%     mp.dm1.compact = falco_gen_dm_poke_cube_PROPER(mp.dm1.compact,mp);
 else
     mp.dm1.compact = mp.dm1;
     mp.dm1 = falco_gen_dm_poke_cube(mp.dm1, mp, mp.P2.full.dx,'NOCUBE');
     mp.dm1.compact = falco_gen_dm_poke_cube(mp.dm1.compact, mp, mp.P2.compact.dx,'NOCUBE');
 end
-if( any(mp.dm_ind==2) ) %if(isfield(mp.dm2,'inf_datacube')==0 && any(mp.dm_ind==2) )
+if(any(mp.dm_ind==2))
     mp.dm2.compact = mp.dm2;
     mp.dm2.dx = mp.P2.full.dx;
     mp.dm2.compact.dx = mp.P2.compact.dx;
     
     mp.dm2 = falco_gen_dm_poke_cube(mp.dm2, mp, mp.P2.full.dx, 'NOCUBE');
     mp.dm2.compact = falco_gen_dm_poke_cube(mp.dm2.compact, mp, mp.P2.compact.dx);
-%     mp.dm2 = falco_gen_dm_poke_cube_PROPER(mp.dm2,mp,'NOCUBE');
-%     mp.dm2.compact = falco_gen_dm_poke_cube_PROPER(mp.dm2.compact,mp);
 else
     mp.dm2.compact = mp.dm2;
     mp.dm2.dx = mp.P2.full.dx;
@@ -411,26 +351,11 @@ if(mp.flagDM2stop)
     mp.dm2.compact.mask = falco_gen_DM_stop(mp.P2.compact.dx,mp.dm2.Dstop,mp.centering);
 end
 
-%% DM5:
-% %  Start by having DM5 be the same as DM1, but in amplitude.
-% mp.dm5 = mp.dm1;
-% mp.dm5.VtoH = ones(mp.dm5.Nact);
-% mp.dm5.V = .6*ones(mp.dm5.Nact); %--Start at 1 instead of 0 because it is amplitude, not phase
-% 
-% mp.dm5.Vmin = 0;
-% mp.dm5.Vmax = 0.7;%1;
-% mp.dm5.maxAbsdV = 0.25; 
-% 
-% %mp.dm_ind = 5; %--DEBUGGING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 %% %--First delta DM settings are zero (for covariance calculation in Kalman filters or robust controllers)
 mp.dm1.dV = zeros(mp.dm1.Nact,mp.dm1.Nact);  % delta voltage on DM1;
 mp.dm2.dV = zeros(mp.dm2.Nact,mp.dm2.Nact);  % delta voltage on DM2;
-% mp.dm5.dV = zeros(mp.dm5.Nact,mp.dm5.Nact);  % delta voltage on DM2;
 mp.dm8.dV = zeros(mp.dm8.NactTotal,1);  % delta voltage on DM8;
 mp.dm9.dV = zeros(mp.dm9.NactTotal,1);  % delta voltage on DM9;
-
-
 
 %% Array Sizes for Angular Spectrum Propagation with FFTs
 
@@ -464,18 +389,6 @@ while( (NdmPad < min(mp.full.lambdas)*abs(mp.d_dm1_dm2)/mp.P2.full.dx^2) || (Ndm
 end
 mp.full.NdmPad = NdmPad;
 
-% %--For propagation from pupil P2 to DM1.
-% mp.P2.compact.Nfft =  2.^ceil(1 + log2(mp.P1.compact.Nbeam));
-% while( (mp.P2.compact.Nfft < min(mp.full.lambdas)*abs(mp.d_dm1_dm2)/mp.P2.compact.dx^2) ||  (mp.P2.compact.Nfft < min(mp.full.lambdas)*abs(mp.d_P2_dm1)/mp.P2.compact.dx^2) ); 
-%     mp.P2.compact.Nfft = 2*mp.P2.compact.Nfft; %--Double the zero-padding until the angular spectrum sampling requirement is not violated
-% end 
-% 
-% mp.P2.full.Nfft =  2.^ceil(1 + log2(mp.P1.full.Nbeam));
-% while( (mp.P2.full.Nfft < min(mp.full.lambdas)*abs(mp.d_dm1_dm2)/mp.P2.full.dx^2) ||  (mp.P2.full.Nfft < min(mp.full.lambdas)*abs(mp.d_P2_dm1)/mp.P2.full.dx^2) ); 
-%     mp.P2.full.Nfft = 2*mp.P2.full.Nfft; %--Double the zero-padding until the angular spectrum sampling requirement is not violated
-% end 
-
-
 %% % % Initial Electric Fields for Star and Exoplanet
 % Starlight. Can add some propagation here to create an aberrate wavefront
 %   starting from a primary mirror.
@@ -500,26 +413,14 @@ mp.F4.compact.mask = ones(mp.F4.Neta,mp.F4.Nxi);
 
 %% Initialize Storage Arrays for Controller
 switch mp.controller
-    case{'gridsearchEFC'} % 'EFC' = empirical grid search over both overall scaling coefficient and Lagrange multiplier
-%         % Take images for different Lagrange multiplier values and overall command gains and pick the value pair that gives the best contrast
-%         %cp.contrast_array_mus_meas = zeros(length(mp.ctrl.muVec),mp.Nitr);
-%         %cp.contrast_array_mus_linMod = zeros(length(mp.ctrl.muVec),mp.Nitr);
-% %         cp.PtoVdu1V = zeros(length(cp.log10regBest),mp.Nitr);
-% %         cp.PtoVdu2V = zeros(length(cp.log10regBest),mp.Nitr);
-%         %cp.muBest = zeros(mp.Nitr,1);
-%         cp.log10regBest = zeros(mp.Nitr,1);
-%         cp.dmfacBest = zeros(mp.Nitr,1);
-%         cp.dm9regfacBest = zeros(mp.Nitr,1);
     case{'conEFC'}
         cvx_startup
 end
 
 %% Contrast to Normalized Intensity Map Calculation 
 
-
 %% Get the starlight normalization factor for the compact and full models (to convert images to normalized intensity)
 mp = falco_get_PSF_norm_factor(mp);
-
 
 %--Check that the normalization of the coronagraphic PSF is correct
 
@@ -529,8 +430,6 @@ modvar.sbpIndex = mp.si_ref;
 modvar.wpsbpIndex = mp.wi_ref;
 modvar.whichSource = 'star';     
 
-
-% flagEval = false;
 E0c = model_compact(mp, modvar);
 I0c = abs(E0c).^2;
 if(mp.flagPlot)
@@ -544,8 +443,6 @@ if(mp.flagPlot)
     figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
     title('(Full Model: Normalization Check Using Starting PSF)'); drawnow;
 end
-
-
 
 %% Storage Arrays for DM Metrics
 %--EFC regularization history
@@ -574,9 +471,6 @@ if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V'));  out.dm1.Vall = zeros(mp.dm1.Nac
 if(isfield(mp,'dm2')); if(isfield(mp.dm2,'V'));  out.dm2.Vall = zeros(mp.dm2.Nact,mp.dm2.Nact,mp.Nitr+1); end; end
 if(isfield(mp,'dm8')); if(isfield(mp.dm8,'V'));  out.dm8.Vall = zeros(mp.dm8.NactTotal,mp.Nitr+1); end; end
 if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall = zeros(mp.dm9.NactTotal,mp.Nitr+1); end; end
-% if( any(mp.dm_ind==8) );  out.dm8.Vall = zeros(mp.dm8.NactTotal,mp.Nitr+1); end
-% if( any(mp.dm_ind==9) );  out.dm9.Vall = zeros(mp.dm9.NactTotal,mp.Nitr+1); end
-
 
 %% 
 fprintf('\nBeginning Trial %d of Series %d.\n',mp.TrialNum,mp.SeriesNum);

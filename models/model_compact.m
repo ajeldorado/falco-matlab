@@ -36,29 +36,26 @@
 % -whichSource
 % -flagGenMat
 
-
 function Eout = model_compact(mp, modvar,varargin)
 
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
 % Set default values of input parameters
 normFac = mp.F4.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
-flagEval = false;             % flag to use a different (usually higher) resolution at final focal plane for evaluation
+flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
 %--Enable different arguments values by using varargin
-icav = 0;                     % index in cell array varargin
+icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
         case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
             normFac = 0; 
             flagNewNorm = true;
-            %fprintf('model_compact: Not normalized.\n');
         case {'eval'} % Set to 0 when finding the normalization factor
             flagEval = true; 
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
-          
     end
 end
 
@@ -97,8 +94,6 @@ else %--Backward compatible with code without tip/tilt offsets in the Jacobian
     Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
 end
 
-
-
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
     modvar.zernIndex = 1;
@@ -109,10 +104,8 @@ if(modvar.zernIndex~=1)
     indZernVec = find(mp.jac.zerns==modvar.zernIndex); %--Index in vector of RMS values for Zernikes.
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
 end
-
 
 %--Select the type of coronagraph
 switch mp.coro 
@@ -131,27 +124,21 @@ switch mp.coro
         Eout = model_compact_FOHLC(mp, lambda, normFac, Ein, flagEval);    
         
     case{'SPHLC','FHLC'} %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS. Uses 2-part direct MFTs to/from FPM
-        %Eout = model_compact_SPHLC(mp,   lambda, Ein, normFac);
+        Eout = model_compact_SPHLC(mp, lambda, Ein, normFac);
         
-        
-    
     case{'LC','DMLC','APLC'} %--DMs, optional apodizer, FPM with/without phase contribution, and LS.
         Eout = model_compact_LC(mp, lambda, Ein, normFac, flagEval);  
        
     case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-        Eout = model_compact_SPLC(mp, lambda, Ein, normFac, flagEval);
+        [Eout, Efiber] = model_compact_SPLC(mp, lambda, Ein, normFac, flagEval);
             
     case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
         Eout = model_compact_VC(mp,lambda, Ein, normFac, flagEval);      
-        
-%     case{'SPC','APP','APC'} %--Pupil-plane mask only
-%         Eout = model_compact_APC(mp,   modvar);             
 
     otherwise
         disp('ERROR: CASE NOT RECOGNIZED IN model_compact.m');        
 end
     
-
 end % End of function
 
 
