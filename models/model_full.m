@@ -36,6 +36,7 @@
 
 function Eout = model_full(mp,   modvar,varargin)
 
+
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
     normFac = mp.F4.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
@@ -67,8 +68,6 @@ if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9,'compact'); end
 %--Set the wavelength
 if(isfield(modvar,'lambda'))
     lambda = modvar.lambda;
-% elseif(isfield(modvar,'ebpIndex'))
-%     lambda = mp.full.lambdas(modvar.ebpIndex);
 elseif(isfield(modvar,'sbpIndex'))
     lambda = mp.sbp_centers(modvar.sbpIndex)*mp.full.sbp_facs(modvar.wpsbpIndex);
 end
@@ -172,6 +171,7 @@ end
 if(mp.useGPU)
     Eout = gather(Eout);
 end
+
 
 end % End of function
 

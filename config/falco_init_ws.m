@@ -594,4 +594,5 @@ if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall = zeros(mp.dm9.Nac
 %% 
 fprintf('\nBeginning Trial %d of Series %d.\n',mp.TrialNum,mp.SeriesNum);
 
+
 end %--END OF FUNCTION

@@ -13,25 +13,19 @@
 
 clear all;
 
+close all;
 
+%--New variables for estimation:
+mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
+mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
+mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
+mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
+mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
+mp.est.probe.axis = 'xy';%'y';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
+mp.est.probe.gainFudge = 1;%5;     % empirical fudge factor to make average probe amplitude match desired value.
 
-% %% 
-% LS_ID_vec = 0.45; %(48:1:53)/100;
-% LS_OD_vec = 0.78; %(78:1:83)/100;
-% 
-% vals_list = allcomb(LS_ID_vec,LS_OD_vec).'; %--dimensions: [2 x length(mp.Nttlam)*length(mp.dm_ind) ]
-% %     Nvals = size(vals_list,2);
-% 
-% Nsurvey = size(vals_list,2);
-% 
-% for isurvey = 1:Nsurvey
-% 
-% clear mp
+mp.flagSim = true;
 
-mp.P4.IDnorm = 0.45;%vals_list(1,isurvey); %--Lyot stop ID
-mp.P4.ODnorm = 0.78;%vals_list(2,isurvey); %--Lyot stop OD
-
-fprintf('******** LS ID = %.2f\t\tLS OD = %.2f\t\t ********\n',mp.P4.IDnorm, mp.P4.ODnorm);
 
 %% Define Necessary Paths on Your System
 
@@ -49,11 +43,12 @@ mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 % addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
+% rmpath([mp.path.cvx 'lib/narginchk_:']) %--Legend plotting issue if CVX's narginchk function is used instead of Matlab's default function.
 
 
 
 %% Special Computational Settings
-mp.flagParfor = true; %true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = false; %true; %true; %--whether to use parfor for Jacobian calculation
 mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
 
 mp.flagPlot = true;
@@ -73,7 +68,7 @@ mp.TrialNum = 1;%-1*(0 + isurvey); %--Always use a diffrent Trial # for differen
 mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
 
 
-mp.aoi = 10; % Angle of incidence at FPM [deg]
+mp.aoi = 7.96; % Angle of incidence at FPM [deg]
 mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
 
 mp.dt_metal_nm = 0.25;%1/10; %--thickness step size for FPM metal layer (nm)
@@ -84,14 +79,28 @@ mp.t_diel_nm_vec = 0:mp.dt_diel_nm:900; %--PMGI thickness range and sampling (nm
 mp.dm8.V0coef = 100;%100/1.42; % Nominal Nickel layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
 mp.dm9.V0coef = 390;%240/1.42; % Nominal PMGI layer thickness [nm] (the 1.42 disappears when the neighboring actuators are considered)
 
+%--Zernikes to suppress with controller
+mp.jac.zerns = 1;%[1 2 3]; %1; %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include at least 1 for the on-axis piston mode.
+mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
+    
+%--Zernikes to compute sensitivities for
+mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
+mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
+                 4, 8];    
 
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
-%  - 'conEFC' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-%  - 'ampl' for constrained EFC using AMPL. --> DEVELOPMENT ONLY
-mp.controller = 'ampl';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
+%  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
+mp.controller = 'plannedEFC';
 
+%--Estimator Options:
+% - 'perfect' for exact numerical answer from full model
+% - 'pwp-bp' for pairwise probing with batch process estimation
+% - 'pwp-kf' for pairwise probing with Kalman filter
+% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter
+mp.estimator = 'pwp-bp';
+% mp.controller = 'perfect';
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
@@ -106,59 +115,57 @@ mp.d_dm1_dm2 = 1; % distance between DM1 and DM2 (meters)
 
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 575e-9; % central wavelength of bandpass (meters)
-mp.fracBW = 0.10;%0.125;%0.10;%0.125;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
-mp.Nsbp = 1;%6; % number of sub-bandpasses across correction band 
+mp.fracBW = 0.01;%0.10;%0.125;%0.10;%0.125;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
+mp.Nsbp = 1;%5; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
 %--FPM
 mp.F3.Rin = 2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
-mp.F3.RinA = mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
+mp.F3.RinA = 2.7;%mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
 
 %%--Pupil Masks        
-%     case{'WFIRST180718'}
-mp.P1.full.Nbeam = 250;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
+mp.P1.full.Nbeam = 309;%250;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
 mp.P1.compact.Nbeam = mp.P1.full.Nbeam;
 
 %--Lyot Stop parameters
 mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
-% mp.P4.IDnorm = 0.53;%0.50;
-% mp.P4.ODnorm = 0.79;%0.80;
-
+mp.P4.IDnorm = 0.45; %--Lyot stop ID
+mp.P4.ODnorm = 0.78; %--Lyot stop OD
 
 %%--Controller Settings
 mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
-mp.logGmin = -7;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
+mp.logGmin = -6;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
 
 switch mp.controller
     case{'gridsearchEFC'} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast
         
-        mp.dm_ind = [1 2 9]; %--Which DMs to use and when
+        mp.dm_ind = [1 2 9]; %--Which DMs to use
 
         mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
-        mp.maxAbsdV = 150;  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
         mp.ctrl.dmfacVec = 1;
+        
+        %--Voltage range restrictions
+        mp.dm1.maxAbsV = 1000;
+        mp.dm2.maxAbsV = 1000;
+        mp.maxAbsdV = 1000;%150; %100  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
         
         %%--WFSC Iterations and Control Matrix Relinearization
         mp.Nitr = 20; %--Number of estimation+control iterations to perform
         mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 
-        %--Voltage range restrictions
-        mp.dm1.maxAbsV = 250;%250./2.;
-        mp.dm2.maxAbsV = 250;%250./2.;
-
     case{'plannedEFC'}
-        mp.dm_ind = [1 2 9]; % vector of which DMs to compute Jacobians for at some point (not necessarily all at once or all the time). 
+        mp.dm_ind = [1 2 9]; % vector of DMs used in controller at ANY time (not necessarily all at once or all the time). 
 
         mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
-
-        mp.maxAbsdV = 150; %100  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
         mp.ctrl.dmfacVec = 1;
         
         %--Voltage range restrictions
-        mp.dm1.maxAbsV = 250;%250./2.;
-        mp.dm2.maxAbsV = 250;%250./2.;
-        
+        mp.dm1.maxAbsV = 1000;
+        mp.dm2.maxAbsV = 1000;
+        mp.maxAbsdV = 1000;%150; %100  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
+
+
         %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
             % Column 1: # of iterations, 
             % Column 2: log10(regularization), 
@@ -186,85 +193,60 @@ switch mp.controller
             5,  -5, 129, 0, 0;...
             10, -2, 129, 0, 0;...
             ];
+        SetD = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
+           [0, 0, 0, 1, 0;...
+           10, -5, 129, 0, 0;...
+           5,  -6, 129, 0, 0;...
+           10, -2, 129, 0, 0;...
+           ];
+        SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
+        SetB2 = [1, -5, 12, 1, 0];
+        SetC2 = [1, 1j, 12, 1, 1];
 
-        mp.ctrl.sched_mat = [...
-            SetA;...
-            repmat(SetB,[2,1]);...
-            repmat(SetC,[8,1]);...
-            ]; 
+%        %--Tested and pretty good method:
+%         mp.ctrl.sched_mat = [...
+%             SetA;...
+%             repmat(SetB,[2,1]);...
+%             repmat(SetC,[8,1]);...
+%             ]; 
+        
+       %--Newer Schedule
+       mp.ctrl.sched_mat = [...
+           repmat(SetA2,[5,1]);...
+           repmat(SetB2,[3,1]);...
+           repmat(SetC2,[3,1]);...
+           ...repmat(SetB,[2,1]);...
+           repmat(SetC,[4,1]);...
+           repmat(SetD,[4,1]);...
+           ];
+      
         
         [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
         
+
+    case{'SM-CVX'} %--Constrained stroke minimization with CVX
+        cvx_startup %--MUST HAVE THIS LINE TO START CVX
+        cvx_solver Mosek
+        cvx_precision best %--Options: low, medium, default, high, best
         
-        %--ANOTHER OPTION
-%         SetA = ... %--DMs 1 & 2 for 30 iterations. Relinearize every iteration.
-%             repmat([1, 1j, 12, 1, 1], [30, 1]); 
-%         SetB = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
-%             [0, 0, 0, 1, 1;...
-%             5,  1j, 129, 0, 0;...
-%             5,  -2, 129, 0, 0;...
-%             5,  -1, 129, 0, 0;...
-%             ];
-%         SetC = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
-%             [0, 0, 0, 1, 1;...
-%             5,  1j, 129, 0, 0;...
-%             5,  1j-1, 129, 0, 0;...
-%             10, -2, 129, 0, 0;...
-%             5,  -1, 129, 0, 0;...
-%             ];
-%         SetD = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
-%             [0, 0, 0, 1, 1;...
-%             5,  1j+1, 129, 0, 0;...
-%             5,  1j, 129, 0, 0;...
-%             10, -2, 129, 0, 0;...
-%             5,  -1, 129, 0, 0;...
-%             ];
-% 
-%         mp.ctrl.sched_mat = [...
-%             SetA;...
-%             repmat(SetB,[3,1]);...
-%             repmat(SetC,[3,1]);...
-%             repmat(SetD,[2,1]);...
-%             ];
-% 
-%         [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-
-
-%     case{'conEFC'} %--Constrained EFC
-%         mp.dm1.dVpvMax = 30;
-%         mp.dm2.dVpvMax = 30;
-%         %mp.dm9.dVpvMax = 40;
-%         mp.ctrl.dmfacVec = 1;
-%         mp.ctrl.muVec = 10.^(5); %10.^(8:-1:1);
-
-
-    case{'SM-AMPL'} %--Constrained EFC with AMPL
         
-        mp.dm_ind = [1 2 9]; %--Which DMs to use and when
-        mp.ctrl.log10regVec = -5:1:-2;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
+        mp.dm_ind = 1;%[1 2 8 9]; %--Which DMs to use and when
+        mp.Nitr = 10;
+        
+        mp.ctrl.log10regVec = -5:1:-3;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
         mp.ctrl.dmfacVec = 1;
 
         %--Delta voltage range restrictions
-        mp.dm1.maxAbsdV = 30;
-        mp.dm2.maxAbsdV = 30;
-        mp.dm9.maxAbsdV = 5;
-        mp.dm9.maxAbsdV = 40;
+        mp.dm1.maxAbsdV = 50;%30;
+        mp.dm2.maxAbsdV = 50;%30;
+        mp.dm8.maxAbsdV = 0.1;
+        mp.dm9.maxAbsdV = 50;%40;
         
-        %--Absolute voltage range restrictions
+        %--Total voltage range restrictions
         mp.dm1.maxAbsV = 150;%250;
-        mp.dm2.maxAbsV = 150;%250;
-        
-
-
+        mp.dm2.maxAbsV = 150;%250;   
         
 end
-
-
-
-% %%--Tip/Tilt Control
-% mp.NlamForTT = 1; %--Number of wavelengths to control  tip/tilt at. 0,1, 2, 3, or inf (for all)
-% mp.Ntt = 1; %--Number of tip/tilt offsets, including 0 (so always set >=1). 1, 4, or 5
-% mp.TToffset = 1; %--tip/tilt offset (mas)
 
 
 
@@ -287,9 +269,9 @@ mp.dm2.Dstop = mp.dm2.Nact*1e-3;  %--diameter of circular stop at DM2 and center
 
 %--DM9 weights and sensitivities
 mp.dm_weights = ones(9,1);   % vector of relative weighting of DMs' Jacobians for EFC
-mp.dm_weights(9) = 2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm_weights(9) = 1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
 mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
-mp.dm9.stepFac = 200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
 % %%--DM9 parameters for Lanczos3 influence function
 % mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
@@ -308,7 +290,7 @@ mp.dm9.stepFac = 200; %--Adjust the step size in the Jacobian, then divide back 
 % mp.F3.full.res = 30;
 
 %%--DM9 parameters for 3x3 influence function
-mp.dm9.actres = 10;%8;%  number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
+mp.dm9.actres = 7;%10;%8;%  number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
 mp.dm9.FPMbuffer = -0.5;%0;%0.2; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
 mp.dm9.inf0name = '3x3';   % = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
 %->NOTE: Cannot specify F3 resolution independently of number of DM9
@@ -326,7 +308,6 @@ mp.F4.corr.Rout  = 10; %--lambda0/D, outer radius of correction region
 
 %% Final Focal Plane (F4) Properties
 mp.F4.res = 3;%2.5;%3; %--Pixels per lambda_c/D
-mp.F4.full.res = 6; %--Pixels per lambda_c/D
 % mp.F4.FOV = 1 + mp.F4.corr.Rout; % minimum desired field of view (along both axes) in lambda0/D
 
 
@@ -375,8 +356,8 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 out = falco_wfsc_loop(mp);
 
 
-% fprintf('*** Total time for this trial =     %d seconds    (%.2f minutes) \n\n  ***',toc,toc/60)
-% end %--END OF SURVEY LOOP
+
+
 
 
 

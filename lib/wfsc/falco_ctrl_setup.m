@@ -1,5 +1,7 @@
 
 
+function cvar = falco_ctrl_setup(mp,cvar)
+
 
 %--Save starting point for each delta command to be added to.
 if(any(mp.dm_ind==1)); cvar.DM1Vnom = mp.dm1.V; end
@@ -22,8 +24,8 @@ if(any(mp.dm_ind==6));  u6 = mp.dm6.V(mp.dm6.act_ele);  else;  u6 = [];  end
 if(any(mp.dm_ind==7));  u7 = mp.dm7.V(mp.dm7.act_ele);  else;  u7 = [];  end
 if(any(mp.dm_ind==8));  u8 = mp.dm8.V(mp.dm8.act_ele);  else;  u8 = [];  end
 if(any(mp.dm_ind==9));  u9 = mp.dm9.V(mp.dm9.act_ele);  else;  u9 = [];  end
-u = [u1; u2; u3; u4; u5; u6; u7; u8; u9]; %--column vector
-NeleAll = length(u);
+cvar.uVec = [u1; u2; u3; u4; u5; u6; u7; u8; u9]; %--column vector
+cvar.NeleAll = length(cvar.uVec);
 
 %--Get the indices of each DM's command within the full command
 if(any(mp.dm_ind==1));  u1dummy = 1*ones(mp.dm1.Nele,1);  else;  u1dummy = [];  end
@@ -35,7 +37,7 @@ if(any(mp.dm_ind==6));  u6dummy = 6*ones(mp.dm6.Nele,1);  else;  u6dummy = [];  
 if(any(mp.dm_ind==7));  u7dummy = 7*ones(mp.dm7.Nele,1);  else;  u7dummy = [];  end
 if(any(mp.dm_ind==8));  u8dummy = 8*ones(mp.dm8.Nele,1);  else;  u8dummy = [];  end
 if(any(mp.dm_ind==9));  u9dummy = 9*ones(mp.dm9.Nele,1);  else;  u9dummy = [];  end
-cvar.u_guide = [u1dummy; u2dummy; u3dummy;  u4dummy;  u5dummy; u6dummy;  u7dummy;  u8dummy; u9dummy];
+cvar.uLegend = [u1dummy; u2dummy; u3dummy;  u4dummy;  u5dummy; u6dummy;  u7dummy;  u8dummy; u9dummy];
 
 %--Save starting point for each delta command to be added to.
 if(any(mp.dm_ind==1)); cvar.DM1Vnom = mp.dm1.V; end
@@ -47,3 +49,6 @@ if(any(mp.dm_ind==6)); cvar.DM6Vnom = mp.dm6.V; end
 if(any(mp.dm_ind==7)); cvar.DM7Vnom = mp.dm7.V; end
 if(any(mp.dm_ind==8)); cvar.DM8Vnom = mp.dm8.V(:); end
 if(any(mp.dm_ind==9)); cvar.DM9Vnom = mp.dm9.V; end
+
+
+end %--END OF FUNCTION
