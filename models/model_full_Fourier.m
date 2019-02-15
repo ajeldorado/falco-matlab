@@ -25,6 +25,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-02-14 by G. Ruane to handle scalar vortex FPMs
 % Modified on 2019-02-14 by A.J. Riggs to be the "Fourier" layout for all
 % types of coronagraphs.
 % Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
@@ -168,7 +169,17 @@ else
             if(mp.flagApod==false)
                 EP3 = padOrCropEven(EP3,2^nextpow2(mp.P1.full.Narr)); %--Crop down if there isn't an apodizer mask
             end
-            EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, mp.F3.VortexCharge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU );  %--MFTs
+            % Get FPM charge 
+            if(numel(mp.F3.VortexCharge)==1)
+                % single value indicates fully achromatic mask
+                charge = mp.F3.VortexCharge;
+            else
+                % Passing an array for mp.F3.VortexCharge with
+                % corresponding wavelengths mp.F3.VortexCharge_lambdas
+                % represents a chromatic vortex FPM
+                charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+            end
+            EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU );  %--MFTs
             EP4 = padOrCropEven(EP4,mp.P4.full.Narr);
             
         case{'splc','flc'}

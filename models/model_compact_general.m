@@ -17,6 +17,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-02-14 by G. Ruane to handle scalar vortex FPMs
 % Modified on 2019-02-11 by A.J. Riggs to have all coronagraph types
 % together.
 % Modified on 2018-01-23 by A.J. Riggs to allow DM1 to not be at a pupil
@@ -168,6 +169,16 @@ if(normFac==0)
 else
     switch lower(mp.coro)
         case{'vortex','vc','avc'}
+            % Get FPM charge 
+            if(numel(mp.F3.VortexCharge)==1)
+                % single value indicates fully achromatic mask
+                charge = mp.F3.VortexCharge;
+            else
+                % Passing an array for mp.F3.VortexCharge with
+                % corresponding wavelengths mp.F3.VortexCharge_lambdas
+                % represents a chromatic vortex FPM
+                charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+            end
             EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, mp.F3.VortexCharge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU );%--MFTs
         case{'splc','flc'}
             %--MFT from SP to FPM (i.e., P3 to F3)
