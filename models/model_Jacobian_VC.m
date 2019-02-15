@@ -12,6 +12,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-02-12 by G. Ruane to allow scalar vortex models 
 % Modified on 2018-03-01 by A.J. Riggs to debug the vortex coronagraph.
 % Modified on 2017-11-13 by A.J. Riggs to be compatible with parfor.
 % Modified on 2017-11-09 by A.J. Riggs to have the Jacobian calculation be
@@ -127,8 +128,14 @@ if(whichDM==1)
     %--Array size for planes P3, F3, and P4
     Nfft1 = 2^( ceil( log2(   max([mp.dm1.compact.NdmPad, minPadFacVortex*mp.dm1.compact.Nbox]) ) ) ); %--Don't crop--but do pad if necessary.
     
+	if(numel(mp.F3.VortexCharge)==1)
+        charge = mp.F3.VortexCharge;
+    else
+        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+    end
+
     %--Generate vortex FPM with fftshift already applied
-    fftshiftVortex = fftshift( falco_gen_vortex_mask( mp.F3.VortexCharge, Nfft1) );
+    fftshiftVortex = fftshift( falco_gen_vortex_mask( charge, Nfft1) );
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
 %     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
@@ -218,8 +225,14 @@ if(whichDM==2)
     %--Array size for planes P3, F3, and P4
     Nfft2 = 2^( ceil( log2(   max([mp.dm2.compact.NdmPad, minPadFacVortex*mp.dm2.compact.Nbox]) ) ) ); %--Don't crop--but do pad if necessary.
     
+	if(numel(mp.F3.VortexCharge)==1)
+        charge = mp.F3.VortexCharge;
+    else
+        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+    end
+
     %--Generate vortex FPM with fftshift already applied
-    fftshiftVortex = fftshift( falco_gen_vortex_mask( mp.F3.VortexCharge, Nfft2) );
+    fftshiftVortex = fftshift( falco_gen_vortex_mask( charge, Nfft2) );
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
 %     Nbox2 = mp.dm2.compact.Nbox;
