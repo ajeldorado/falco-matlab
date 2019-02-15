@@ -1,10 +1,27 @@
-
+% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% RESERVED. United States Government Sponsorship acknowledged. Any
+% commercial use must be negotiated with the Office of Technology Transfer
+% at the California Institute of Technology.
+% -------------------------------------------------------------------------
+%
+% Function to handle the output command vectors from the controller.
+%
+% ---------------
+% INPUTS:
+% - mp = structure of model parameters
+% - cvar = structure of controller variables
+% - duVec = the vector of delta commands computed by the controller
+%
+% OUTPUTS
+% - mp = structure of model parameters
+% - dDM = structure of the delta control commands separated by DM number
+%
+% REVISION HISTORY
+% - Created on 2019-02-13 by A.J. Riggs.
 
 
 function [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec)
 
-
-%% Parse the command vector by DM
 
 %--Initialize delta DM commands
 if(any(mp.dm_ind==1)); dDM.dDM1V = zeros(mp.dm1.Nact,mp.dm1.Nact); end

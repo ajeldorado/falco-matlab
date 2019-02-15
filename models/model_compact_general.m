@@ -4,9 +4,16 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function Eout = model_compact_simple(mp, lambda, Ein, normFac, flagEval)
-%--Blind model used by the estimator and controller
-%  Does not include unknown aberrations/errors that are in the full model.
+% function Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval)
+% 
+% This function produces the electric field based on the knowledge
+% available to the user in what is called the "compact model." Usually, 
+% aberrations are condensed to the input pupil (and possibly also the 
+% output pupil) after phase retrieval, COFFEE, or similar since aberrations
+% cannot accurately enough be attributed to individual optics. That makes 
+% this model primarily a Fourier model, with Fresnel propagation only 
+% useful and needed between the deformable mirrors and key coronagraph 
+% optics known to be out of the pupil or focal planes.
 %
 % REVISION HISTORY:
 % --------------
@@ -35,12 +42,12 @@
 % - Eout = electric field in the final focal plane
 %
 %
-% NOTE: In wrapper above this that chooses layout, need to define mp.FPM
+% NOTE: In wrapper above this that chooses layout, need to define mp.FPM.mask
 % like this:
-% mp.FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
+% mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
 
 
-function Eout = model_compact_simple(mp, lambda, Ein, normFac, flagEval)
+function Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval)
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
@@ -118,9 +125,8 @@ if(normFac==0)
         case{'splc','flc'}
             %--MFT from SP to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
-            EF3 = EF3inc; %--Don't apply FPM if normalization value is being found
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
-            EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); %--E-field incident upon the Lyot stop 
+            EP4 = propcustom_mft_FtoP(EF3inc,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); %--E-field incident upon the Lyot stop 
         case{'lc,aplc'}
             %--Re-image to Lyot plane
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
@@ -137,6 +143,26 @@ if(normFac==0)
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
             EP4 = transOuterFPM*EP4noFPM; %--Apply the phase and amplitude change from the FPM's outer complex transmission.
+        case{'ehlc'}
+            %--Complex transmission of the points outside the inner part of the FPM (just fused silica with optional dielectric and no metal).
+            t_Ti_base = 0;
+            t_Ni_vec = 0;
+            t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+            pol = 2;
+            [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+            transOuterFPM = tCoef;
+            
+            %--MFT from apodizer plane to FPM (i.e., P3 to F3)
+            EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
+            %--Do NOT apply FPM if normalization value is being found
+            EF3 = transOuterFPM*EF3inc;
+            %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
+            EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);
+            
+        case{'fohlc'}
+            %--Do NOT apply FPM if normalization value is being found
+            EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
+            EP4 = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
     end
     
 else
@@ -172,7 +198,7 @@ else
             %--Propagate to focal plane F3
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
             %--Apply (1-FPM) for Babinet's principle later
-            EF3 = (transOuterFPM - mp.FPM).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
+            EF3 = (transOuterFPM - mp.FPM.mask).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
             %--Use Babinet's principle at the Lyot plane.
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
@@ -181,6 +207,43 @@ else
             EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
             %--Babinet's principle at P4
             EP4 = (EP4noFPM-EP4sub); 
+        
+        case{'ehlc'}
+            %--Complex transmission of the points outside the inner part of the FPM (just fused silica with optional dielectric and no metal).
+            t_Ti_base = 0;
+            t_Ni_vec = 0;
+            t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+            pol = 2;
+            [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+            transOuterFPM = tCoef;
+            
+            %--MFT from apodizer plane to FPM (i.e., P3 to F3)
+            EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
+            EF3 = FPM.*EF3inc; %--Apply FPM
+            %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
+            EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);
+            
+        case{'fohlc'}
+            %--FPM representation (idealized as amplitude and phase)
+            DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'compact');
+            DM8ampPad = padOrCropEven( DM8amp,Nfpm,'extrapval',1);
+            DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact');
+            DM9surfPad = padOrCropEven( DM9surf,Nfpm);
+            transOuterFPM = 1; %--Is 1 because normalized out in FOHLC model
+            FPM = DM8ampPad.*exp(2*pi*1i/lambda*DM9surfPad);
+            
+            %--MFT from SP to FPM (i.e., P3 to F3)
+            EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
+            %--Apply (1-FPM) for Babinet's principle later
+            EF3 = (1-FPM/transOuterFPM).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
+            %--Use Babinet's principle at the Lyot plane.
+            EP4noFPM0 = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
+            EP4noFPM = padOrCropEven(EP4noFPM0,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
+            %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
+            EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+            %--Babinet's principle at P4
+            EP4 = EP4noFPM - EP4sub; 
+
     end
 end  
 

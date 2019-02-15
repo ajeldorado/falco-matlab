@@ -1,3 +1,21 @@
+% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% RESERVED. United States Government Sponsorship acknowledged. Any
+% commercial use must be negotiated with the Office of Technology Transfer
+% at the California Institute of Technology.
+% -------------------------------------------------------------------------
+%
+% Function to set up control variables as vectors for all controllers.
+%
+% ---------------
+% INPUTS:
+% - mp = structure of model parameters
+% - cvar = structure of controller variables
+%
+% OUTPUTS
+% - cvar = structure of controller variables
+%
+% REVISION HISTORY
+% - Created on 2019-02-13 by A.J. Riggs.
 
 
 function cvar = falco_ctrl_setup(mp,cvar)

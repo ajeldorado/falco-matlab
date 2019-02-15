@@ -25,6 +25,7 @@ mp.est.probe.axis = 'xy';%'y';     % which axis to have the phase discontinuity 
 mp.est.probe.gainFudge = 1;%5;     % empirical fudge factor to make average probe amplitude match desired value.
 
 mp.flagSim = true;
+mp.layout = 'Fourier';
 
 
 %% Define Necessary Paths on Your System

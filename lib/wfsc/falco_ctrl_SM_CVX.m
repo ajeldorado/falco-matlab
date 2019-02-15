@@ -34,31 +34,6 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
     %--Parse the command vector by DM
     %--Combine the delta command with the previous command
     cvar = falco_ctrl_setup(mp,cvar);
-    
-%     %% Make the vector of input, total control commands
-%     if(any(mp.dm_ind==1));  u1 = mp.dm1.V(mp.dm1.act_ele);  else;  u1 = [];  end
-%     if(any(mp.dm_ind==2));  u2 = mp.dm2.V(mp.dm2.act_ele);  else;  u2 = [];  end
-%     if(any(mp.dm_ind==3));  u3 = mp.dm3.V(mp.dm3.act_ele);  else;  u3 = [];  end
-%     if(any(mp.dm_ind==4));  u4 = mp.dm4.V(mp.dm4.act_ele);  else;  u4 = [];  end
-%     if(any(mp.dm_ind==5));  u5 = mp.dm5.V(mp.dm5.act_ele);  else;  u5 = [];  end
-%     if(any(mp.dm_ind==6));  u6 = mp.dm6.V(mp.dm6.act_ele);  else;  u6 = [];  end
-%     if(any(mp.dm_ind==7));  u7 = mp.dm7.V(mp.dm7.act_ele);  else;  u7 = [];  end
-%     if(any(mp.dm_ind==8));  u8 = mp.dm8.V(mp.dm8.act_ele);  else;  u8 = [];  end
-%     if(any(mp.dm_ind==9));  u9 = mp.dm9.V(mp.dm9.act_ele);  else;  u9 = [];  end
-%     cvar.uVec = [u1; u2; u3; u4; u5; u6; u7; u8; u9]; %--column vector
-%     cvar.NeleAll = length(cvar.uVec);
-% 
-%     %--Get the indices of each DM's command within the full command
-%     if(any(mp.dm_ind==1));  u1dummy = 1*ones(mp.dm1.Nele,1);  else;  u1dummy = [];  end
-%     if(any(mp.dm_ind==2));  u2dummy = 2*ones(mp.dm2.Nele,1);  else;  u2dummy = [];  end
-%     if(any(mp.dm_ind==3));  u3dummy = 3*ones(mp.dm3.Nele,1);  else;  u3dummy = [];  end
-%     if(any(mp.dm_ind==4));  u4dummy = 4*ones(mp.dm4.Nele,1);  else;  u4dummy = [];  end
-%     if(any(mp.dm_ind==5));  u5dummy = 5*ones(mp.dm5.Nele,1);  else;  u5dummy = [];  end
-%     if(any(mp.dm_ind==6));  u6dummy = 6*ones(mp.dm6.Nele,1);  else;  u6dummy = [];  end
-%     if(any(mp.dm_ind==7));  u7dummy = 7*ones(mp.dm7.Nele,1);  else;  u7dummy = [];  end
-%     if(any(mp.dm_ind==8));  u8dummy = 8*ones(mp.dm8.Nele,1);  else;  u8dummy = [];  end
-%     if(any(mp.dm_ind==9));  u9dummy = 9*ones(mp.dm9.Nele,1);  else;  u9dummy = [];  end
-%     cvar.uLegend = [u1dummy; u2dummy; u3dummy;  u4dummy;  u5dummy; u6dummy;  u7dummy;  u8dummy; u9dummy];
 
     %% Constraints on Actuation
     %--Put constraints in same format (du isolated on one side)
@@ -154,35 +129,3 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
 
 
 end %--END OF FUNCTION
-
-
-
-
-
-%     %% Code for AMPL version
-%     fn_GstarG = ['/home/ajriggs/Repos/falco-matlab/data/Jacobians/' sprintf('GstarG_s%d_t%d.DAT',mp.SeriesNum,mp.TrialNum)];
-%     %    fn_GstarG = [mp.path.falco 'data/Jacobians/' sprintf('GstarG_s%d_t%d.DAT',mp.SeriesNum,mp.TrialNum)];
-% % %    % dlmwrite(fn_GstarG,cvar.GstarG_wsum,'delimiter', ' ', 'precision', '%.16g');% ,'precision','%.16g'); %--Write out matrix from Matlab
-%    
-%    %--Writing with fprintf is Wayyyyy faster than with dlmwrite.
-%    fprintf('Saving Jacobian*Jacobian to a file for AMPL to read in...')
-%    fid = fopen(fn_GstarG,'w');
-%    fprintf(fid, '%.16g ',cvar.GstarG_wsum);
-%    fclose(fid);
-%    fprintf('done. Time = %.2fs\n',toc);
-%  
-%     %% Loop over AMPL calls for different regularizations
-% 
-% %         for ni = 1:Nvals
-% %             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,Nele,du_LB_comb,du_UB_comb,cvar.uLegend,fn_GstarG);
-% %         end %--End of loop over regularizations
-%     
-%     if(mp.flagParfor)
-%         parfor ni = 1:Nvals
-%             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,cvar.NeleAll,du_LB_comb,du_UB_comb,cvar.uLegend,fn_GstarG);
-%         end %--End of loop over regularizations
-%     else
-%         for ni = 1:Nvals
-%             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,cvar.NeleAll,du_LB_comb,du_UB_comb,cvar.uLegend,fn_GstarG);
-%         end %--End of loop over regularizations
-%     end
