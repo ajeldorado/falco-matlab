@@ -23,7 +23,6 @@ function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp);%,DM)
     Emat = zeros(mp.F4.corr.Npix, mp.Nsbp);
     
     for si=1:mp.Nsbp
-        modvar.flagCalcJac = 0; 
         modvar.sbpIndex = si; %mp.jac.sbp_inds(im); %mp.Wttlam_si(im);
         modvar.zernIndex = 1;%mp.jac.zern_inds(im);
         %modvar.ttIndex = mp.Wttlam_ti(im);
@@ -46,7 +45,6 @@ function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp);%,DM)
 %     Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
 %     
 %     for im=1:mp.jac.Nmode
-%         modvar.flagCalcJac = 0; 
 %         modvar.sbpIndex = mp.jac.sbp_inds(im); %mp.Wttlam_si(im);
 %         modvar.zernIndex = mp.jac.zern_inds(im);
 %         %modvar.ttIndex = mp.Wttlam_ti(im);

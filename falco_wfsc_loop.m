@@ -56,12 +56,6 @@ fprintf('Saved the config file: \t%s\n',fn_config)
 %     mp.coro, mp.num_dms,mp.dm1.Nact,...
 %     mp.dm2.Nact,mp.dm9.NactTotal,length(mp.cor_ele),round(mp.fracBW*100), round(mp.lambda0*1e9), mp.Nsbp);
 
-% cd(mp.path.jac)
-% if( exist(G_mat_fname, 'file') ~= 2) %--if 2, then the file by that name exists
-%     flagCalcJac = true; %--Calculate the starting Jacobian again if the file does not exist
-% end
-% cd(mp.path.falco)
-
 %% Initializations of Arrays for Data Storage 
 
 %--Raw contrast (broadband)

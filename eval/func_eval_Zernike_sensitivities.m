@@ -158,7 +158,6 @@ for iz = 1:Nzern
         
         modvar.sbpIndex = si;
         modvar.whichSource = 'star';     
-        modvar.flagCalcJac = 0; 
 
         EZarray(:,:,iz,si) = model_compact(mp, modvar);
         dEZarray(:,:,iz,si) = EZarray(:,:,iz,si)-E0cube(:,:,si);

@@ -530,7 +530,6 @@ mp = falco_get_PSF_norm_factor(mp);
 %--Check that the normalization of the coronagraphic PSF is correct
 
 modvar.ttIndex = 1;
-modvar.flagCalcJac = 0; 
 modvar.sbpIndex = mp.si_ref;
 modvar.wpsbpIndex = mp.wi_ref;
 modvar.whichSource = 'star';     

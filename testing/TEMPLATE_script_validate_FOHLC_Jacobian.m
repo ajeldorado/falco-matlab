@@ -369,7 +369,6 @@ if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); end
 
 %% Part 5: Compute the Jacobian using model_Jacobian
 
-modvar.flagCalcJac = true; 
 modvar.wpsbpIndex = mp.wi_ref;
 modvar.whichSource = 'star'; 
 
@@ -423,7 +422,6 @@ for tsi=1:mp.jac.Nmode
     
     modvar.sbpIndex = 1;% 
 %     modvar.ttIndex = mp.Wttlam_ti(tsi);
-%     modvar.flagCalcJac = 0; 
     modvar.whichSource = 'star';     
     
     normFac = mp.F4.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor

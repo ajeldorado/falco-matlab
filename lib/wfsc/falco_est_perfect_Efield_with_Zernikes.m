@@ -26,7 +26,6 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
     Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
     
     for im=1:mp.jac.Nmode
-        modvar.flagCalcJac = 0; 
         modvar.sbpIndex = mp.jac.sbp_inds(im); %mp.Wttlam_si(im);
         modvar.zernIndex = mp.jac.zern_inds(im);
         %modvar.ttIndex = mp.Wttlam_ti(im);
