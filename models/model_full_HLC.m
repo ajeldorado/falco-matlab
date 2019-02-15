@@ -82,7 +82,7 @@ if(any(mp.dm_ind==5)); DM5apod = falco_gen_dm_surf(mp.dm5, mp.dm1.dx, NdmPad); e
 t_Ti_base = 0;
 t_Ni_vec = 0;
 t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-pol = 0;
+pol = 2;
 [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
 transOuterFPM = tCoef;
 % ind_metal = falco_discretize_FPM_surf(0, mp.t_metal_nm_vec, mp.dt_metal_nm); %--Obtain the indices of the nearest thickness values in the complex transmission datacube.
@@ -124,7 +124,7 @@ EP3 = propcustom_2FT(EP2eff, mp.centering);
 
 %--Apply the apodizer mask
 if(mp.flagApod)
-    EP3 = padOrCropEven(mp.P3.full.mask,mp.P3.full.Narr).*padOrCropEven(EP3, mp.P3.full.Narr); %--Apply apodizer mask.
+    EP3 = padOrCropEven(mp.P3.full.mask,mp.P1.full.Narr).*padOrCropEven(EP3, mp.P1.full.Narr); %--Apply apodizer mask.
 end
 
 %--MFT from apodizer plane to FPM (i.e., P3 to F3)

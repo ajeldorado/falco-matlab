@@ -139,6 +139,9 @@ if(rhoOuter ~= inf)
         yvert = cshift + xshift + -1*[0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
         bowtieBottom = prop_irregular_polygon( bm, xvert, yvert,'DARK');
         % figure(6); imagesc((abs(bowtieBottom))); axis xy equal tight; colorbar;
+    else
+        bowtieTop = 1;
+        bowtieBottom = 1;
     end
     
 end

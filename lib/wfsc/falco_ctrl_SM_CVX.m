@@ -16,7 +16,7 @@
 % REVISION HISTORY:
 % -Created on 2018-10-15 by A.J. Riggs.
 
-function [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar)
+function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
 
 
 
@@ -26,33 +26,9 @@ function [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar)
 
     Nvals = max(size(vals_list,2));
     
-    %% Temporarily store computed DM commands so that the best one does not have to be re-computed
-    
-%     if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals); end
-%     if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals); end
-%     if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals); end
-%     if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals); end
-    
     %--Storage array for average normalized intensity
-    Inorm_list = zeros(Nvals,1);    
-    
-%     %% Make the vector of input, total control commands
-%     if(any(mp.dm_ind==1));  u1 = mp.dm1.V(mp.dm1.act_ele);  else;  u1 = [];  end
-%     if(any(mp.dm_ind==2));  u2 = mp.dm2.V(mp.dm2.act_ele);  else;  u2 = [];  end
-%     if(any(mp.dm_ind==5));  u5 = mp.dm5.V(mp.dm5.act_ele);  else;  u5 = [];  end
-%     if(any(mp.dm_ind==8));  u8 = mp.dm8.V(mp.dm8.act_ele);  else;  u8 = [];  end
-%     if(any(mp.dm_ind==9));  u9 = mp.dm9.V(mp.dm9.act_ele);  else;  u9 = [];  end
-%     u = [u1; u2; u5; u8; u9]; %--column vector
-%     NeleAll = length(u);
-%     
-%     %--Get the indices of each DM's command within the full command
-%     if(any(mp.dm_ind==1));  u1dummy = 1*ones(mp.dm1.Nele,1);  else;  u1dummy = [];  end
-%     if(any(mp.dm_ind==2));  u2dummy = 2*ones(mp.dm2.Nele,1);  else;  u2dummy = [];  end
-%     if(any(mp.dm_ind==5));  u5dummy = 5*ones(mp.dm5.Nele,1);  else;  u5dummy = [];  end
-%     if(any(mp.dm_ind==8));  u8dummy = 8*ones(mp.dm8.Nele,1);  else;  u8dummy = [];  end
-%     if(any(mp.dm_ind==9));  u9dummy = 9*ones(mp.dm9.Nele,1);  else;  u9dummy = [];  end
-%     u_guide = [u1dummy; u2dummy; u5dummy; u8dummy; u9dummy];
-
+    Inorm_list = zeros(Nvals,1);   
+        
     %% Make the vector of input, total control commands
     if(any(mp.dm_ind==1));  u1 = mp.dm1.V(mp.dm1.act_ele);  else;  u1 = [];  end
     if(any(mp.dm_ind==2));  u2 = mp.dm2.V(mp.dm2.act_ele);  else;  u2 = [];  end
@@ -77,10 +53,6 @@ function [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar)
     if(any(mp.dm_ind==8));  u8dummy = 8*ones(mp.dm8.Nele,1);  else;  u8dummy = [];  end
     if(any(mp.dm_ind==9));  u9dummy = 9*ones(mp.dm9.Nele,1);  else;  u9dummy = [];  end
     u_guide = [u1dummy; u2dummy; u3dummy;  u4dummy;  u5dummy; u6dummy;  u7dummy;  u8dummy; u9dummy];
-
-
-    %%
-    
 
     %% Constraints on Actuation
     %--Put constraints in same format (du isolated on one side)
@@ -123,55 +95,30 @@ function [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar)
     du_LB_comb = max(du_LB_total,du_LB);
     du_UB_comb = min(du_UB_total,du_UB);
     
+    %% Diagonal of the regularization matrix
     
-    %%
-    fn_GstarG = ['/home/ajriggs/Repos/falco-matlab/data/Jacobians/' sprintf('GstarG_s%d_t%d.DAT',mp.SeriesNum,mp.TrialNum)];
-    %    fn_GstarG = [mp.path.falco 'data/Jacobians/' sprintf('GstarG_s%d_t%d.DAT',mp.SeriesNum,mp.TrialNum)];
-% %    % dlmwrite(fn_GstarG,cvar.GstarG_wsum,'delimiter', ' ', 'precision', '%.16g');% ,'precision','%.16g'); %--Write out matrix from Matlab
-   
-   %--Writing with fprintf is Wayyyyy faster than with dlmwrite.
-   fprintf('Saving Jacobian*Jacobian to a file for AMPL to read in...')
-   fid = fopen(fn_GstarG,'w');
-   fprintf(fid, '%.16g ',cvar.GstarG_wsum);
-   fclose(fid);
-   fprintf('done. Time = %.2fs\n',toc);
-   
-   %%
-   %keyboard
-   
-    %% Loop over AMPL calls for different regularizations
-
-%         for ni = 1:Nvals
-%             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,Nele,du_LB_comb,du_UB_comb,u_guide,fn_GstarG);
-%         end %--End of loop over regularizations
     
-    if(mp.flagParfor)
-        parfor ni = 1:Nvals
-            [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,NeleAll,du_LB_comb,du_UB_comb,u_guide,fn_GstarG);
-        end %--End of loop over regularizations
-    else
-        for ni = 1:Nvals
-            [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,NeleAll,du_LB_comb,du_UB_comb,u_guide,fn_GstarG);
-        end %--End of loop over regularizations
-    end
+    %--The entire regularization matrix will be normalized based on the max
+    %response of DMs 1 and 2
+    temp = diag(cvar.GstarG_wsum);
+    diagNormVal = max(temp(u_guide==1 | u_guide==2));
+    
+    %--Initialize the regularization matrix
+    RegMatDiag = diagNormVal*ones(NeleAll,1);
+    
+    %--Change regularization values for non-standard DMs
+    if(any(mp.dm_ind==8));  RegMatDiag(u_guide==8) = mp.ctrl.relReg8 ;  end
+    if(any(mp.dm_ind==9));  RegMatDiag(u_guide==9) = mp.ctrl.relReg9 ;  end
+    
+    
+    %% Loop over CVX calls for different regularizations
+    for ni = 1:Nvals
+        [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_CVX_func(mp,cvar,vals_list,ni,du_LB_comb,du_UB_comb,u,u_guide,RegMatDiag);
+    end %--End of loop over regularizations
+    
+    
 
-
-% % %--Doesn't work because "Using license file "/home/ajriggs/bin/amplapi/matlab/../lib/../../ampl.lic". is not serializable "
-%     ampl_shared = falco_ctrl_SM_AMPL_func_a(cvar,Nele,du_LB_comb,du_UB_comb,fn_GstarG);   
-%     for ni = 1:Nvals
-%        ampl{ni} = ampl_shared; 
-%     end
-%     
-%     if(mp.flagParfor)
-%         parfor ni = 1:Nvals
-%             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func_b(mp,vals_list,ni,u_guide,ampl)
-%         end %--End of loop over regularizations
-%     else
-%         for ni = 1:Nvals
-%             %[Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,Nele,du_LB_comb,du_UB_comb,u_guide,fn_GstarG);
-%         end %--End of loop over regularizations
-%     end
-      
+    
     
     
 
@@ -190,28 +137,46 @@ function [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar)
         fprintf('\n')
 
     end
-        
-    
+
 
     %% Find the best regularization value based on the best normalized intensity.
     [cvar.cMin,indBest] = min(Inorm_list(:));
     dDM = dDM_cells{indBest};
-    
-%     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
-%     if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
-%     if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest); end
-%     if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest); end
   
     cvar.log10regUsed = vals_list(1,indBest);
     fprintf('Empirically chosen log10reg = %.2f\t   gives %4.2e normalized intensity.\n',cvar.log10regUsed,cvar.cMin)    
 
-    %cp.muBest(Itr) = vals_list(1,indBest);
-    %fprintf('Empirically chosen mu = %.2e\t   gives %4.2e contrast.\n',cp.muBest(Itr),cvar.cMin)    
-
-
-    
-    %%
-   
-
 
 end %--END OF FUNCTION
+
+
+
+
+
+%     %% Code for AMPL version
+%     fn_GstarG = ['/home/ajriggs/Repos/falco-matlab/data/Jacobians/' sprintf('GstarG_s%d_t%d.DAT',mp.SeriesNum,mp.TrialNum)];
+%     %    fn_GstarG = [mp.path.falco 'data/Jacobians/' sprintf('GstarG_s%d_t%d.DAT',mp.SeriesNum,mp.TrialNum)];
+% % %    % dlmwrite(fn_GstarG,cvar.GstarG_wsum,'delimiter', ' ', 'precision', '%.16g');% ,'precision','%.16g'); %--Write out matrix from Matlab
+%    
+%    %--Writing with fprintf is Wayyyyy faster than with dlmwrite.
+%    fprintf('Saving Jacobian*Jacobian to a file for AMPL to read in...')
+%    fid = fopen(fn_GstarG,'w');
+%    fprintf(fid, '%.16g ',cvar.GstarG_wsum);
+%    fclose(fid);
+%    fprintf('done. Time = %.2fs\n',toc);
+%  
+%     %% Loop over AMPL calls for different regularizations
+% 
+% %         for ni = 1:Nvals
+% %             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,Nele,du_LB_comb,du_UB_comb,u_guide,fn_GstarG);
+% %         end %--End of loop over regularizations
+%     
+%     if(mp.flagParfor)
+%         parfor ni = 1:Nvals
+%             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,NeleAll,du_LB_comb,du_UB_comb,u_guide,fn_GstarG);
+%         end %--End of loop over regularizations
+%     else
+%         for ni = 1:Nvals
+%             [Inorm_list(ni),dDM_cells{ni}] = falco_ctrl_SM_AMPL_func(mp,cvar,vals_list,ni,NeleAll,du_LB_comb,du_UB_comb,u_guide,fn_GstarG);
+%         end %--End of loop over regularizations
+%     end

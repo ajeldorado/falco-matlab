@@ -14,19 +14,85 @@
 %   aoi:    Angle of incidense [deg]
 %   t_Ni:   Nickel layer thickness [m]
 %   t_PMGI: PMGI layer thickness [m]
-%   pol: = 0 for TE(s) polarization, = 1 for TM(p) polarization
+%   pol: = 0 for TE(s) polarization, = 1 for TM(p) polarization, 2 for mean
+%   of s and p polarizations
 %
 % OUTPUTS:
 %   cMask(t_PMGI,t_ni): complex field transmission coeffient. Scalar,
 %   complex value.
 %
 % REVISION HISTORY:
+% Modified on 2019-01-28 by A.J. Riggs to:
+%  -Allow for returning the mean transmission for different polarizations
+%  -Add optional keyword input for OPD or non-OPD phase convention choice
+%  -Add optional keyword input for substrate material choice.
+%  -Cleaned up the code.
 % Modified on 2018-05-01 by A.J. Riggs.
 % Created on 2017-12-11 by Erkin Sidick.
+% 1/25/2019: Erkin replaced Ni, Ti and Fused-Silica indices with Dwight's.
 % -------------------------------------------------------------------------
 
-function [tCoef, rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol)
+function [tCoef, rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol, varargin)
 
+
+%% Optional Keyword Inputs
+
+flagOPD = false; %--Default value for OPD phase sign convention is false.
+substrate = 'FS'; % material name of the mask substrate [FS or N-BK7]
+
+icav = 0;             % index in cell array varargin
+while icav < size(varargin, 2)
+    icav = icav + 1;
+    switch lower(varargin{icav})
+      case {'opd'}
+        flagOPD  = true;       % Use the OPD phase sign convention.
+      case {'substrate','sub','glass'}
+        icav = icav + 1;
+        substrate = varargin{icav}; % material name of the mask substrate [FS or N-BK7]
+      otherwise
+        error('falco_thin_film_material_def: Unknown keyword: %s\n', varargin{icav});
+    end
+end
+
+%% Define Material Properties
+
+lam_nm = lam * 1.0e9;    % m --> nm
+lam_u = lam*1.0e6; % m --> microns
+theta  = aoi*pi/180;     % deg --> rad
+
+% ---------------------------------------------
+%--Substrate properties
+switch lower(substrate)
+    case{'fs','fusedsilica','fused_silica'}   % Fused Silica
+        % ----------- Fused Silica from Dwight Moody------------------
+        lamm = [.4e-6,  .5e-6, .51e-6, .52e-6, .53e-6, .54e-6, .55e-6, .56e-6, .57e-6, .58e-6, .59e-6, .6e-6, .72e-6, .76e-6,   .8e-6,  .88e-6,  .90e-6 1.04e-6]*1d9;
+        nx = [ 1.47012, 1.462, 1.462,  1.461,  1.461,  1.460,  1.460,  1.460,  1.459,  1.459,  1.458,  1.458, 1.45485, 1.45404, 1.45332, 1.45204, 1.45175, 1.44992];
+        vsilica = [lamm(:) nx(:)];
+        lam_silica = vsilica(:,1);  % nm
+        n_silica   = vsilica(:,2);
+        n_substrate    = interp1(lam_silica, n_silica, lam_nm, 'linear');
+    
+    case{'n-bk7','nbk7','bk7','bk-7'} % N-BK7
+    
+        B1 = 1.03961212;
+        B2 = 0.231792344;
+        B3 = 1.01046945;
+        C1 = 0.00600069867;
+        C2 = 0.0200179144;
+        C3 = 103.560653;
+
+        wvl_um = lam_u;
+        n_substrate = sqrt(1 + (B1*(wvl_um).^2./((wvl_um).^2 - C1)) + (B2*(wvl_um).^2./((wvl_um).^2 - C2)) + (B3*(wvl_um).^2./((wvl_um).^2 - C3)));
+    
+end
+
+% ---------------------------------------------
+%--Dielectric properties
+npmgi = 1.524 + 5.176e-03./lam_u.^2 + 2.105e-4./lam_u.^4;
+Ndiel  = length(t_PMGI_vec);
+
+% ---------------------------------------------
+%--Metal layer properties
 %--New logic: Titanium layer goes beneath Nickel only. Always include them
 %together. Subtract off the thickness of the Ti layer from the intended Ni
 %layer thickness.
@@ -42,176 +108,40 @@ for ii = 1:Nmetal
         t_Ni_vec(ii) = 0;
     end
 end
+% % GUIDE:
 % if(t_Ni > t_Ti) %--For thicker layers
 %     t_Ni = t_Ni - t_Ti;
 % else %--For very thin layers.
 %     t_Ti = t_Ni;
 %     t_Ni = 0;
-% end
 
-
-lam_nm = lam * 1.0e9;    % m --> nm
-theta  = aoi*pi/180;     % deg --> rad
-
-lam_u = lam*1.0e6;
-npmgi = 1.524 + 5.176e-03./lam_u.^2 + 2.105e-4./lam_u.^4;
-
-vsilica = [400	1.470127387
-405	1.469591804
-410	1.469076614
-415	1.468580736
-420	1.468103157
-425	1.467642933
-430	1.467199179
-435	1.466771066
-440	1.466357818
-445	1.465958706
-450	1.465573044
-455	1.46520019
-460	1.464839538
-465	1.464490518
-470	1.464152593
-475	1.463825257
-480	1.463508031
-485	1.463200465
-490	1.462902132
-495	1.462612628
-500	1.462331573
-505	1.462058604
-510	1.46179338
-515	1.461535575
-520	1.461284882
-525	1.461041008
-530	1.460803676
-535	1.460572623
-540	1.460347597
-545	1.460128359
-550	1.459914683
-555	1.459706352
-560	1.45950316
-565	1.459304911
-570	1.459111418
-575	1.458922501
-580	1.45873799
-585	1.458557722
-590	1.458381542
-595	1.4582093
-600	1.458040855
-605	1.457876069
-610	1.457714813
-615	1.457556962
-620	1.457402396
-625	1.457251001
-630	1.457102667
-635	1.456957289
-640	1.456814766
-645	1.456675001
-650	1.4565379
-655	1.456403375
-660	1.45627134
-665	1.456141712
-670	1.456014412
-675	1.455889364
-680	1.455766494
-685	1.455645731
-690	1.455527009
-695	1.455410261
-700	1.455295425
-705	1.455182439
-710	1.455071246
-715	1.454961789
-720	1.454854014
-725	1.454747868
-730	1.4546433
-735	1.454540263
-740	1.454438708
-745	1.454338591
-750	1.454239867
-755	1.454142494
-760	1.454046432
-765	1.453951639
-770	1.453858079
-775	1.453765714
-780	1.453674508
-785	1.453584427
-790	1.453495437
-795	1.453407505
-800	1.453320601
-805	1.453234694
-810	1.453149754
-815	1.453065752
-820	1.452982662
-825	1.452900457
-830	1.452819109
-835	1.452738595
-840	1.45265889
-845	1.45257997
-850	1.452501812
-855	1.452424394
-860	1.452347694
-865	1.452271691
-870	1.452196365
-875	1.452121696
-880	1.452047665
-885	1.451974252
-890	1.451901441
-895	1.451829213
-900	1.451757551
-905	1.451686439
-910	1.45161586
-915	1.451545798
-920	1.451476239
-925	1.451407167
-930	1.451338567
-935	1.451270427
-940	1.451202731
-945	1.451135467
-950	1.451068621
-955	1.451002181
-960	1.450936135
-965	1.45087047
-970	1.450805174
-975	1.450740237
-980	1.450675648
-985	1.450611394
-990	1.450547467
-995	1.450483855
-1000	1.450420548];
-
-lam_silica = vsilica(:,1);  % nm
-n_silica   = vsilica(:,2);
-nsilica    = interp1(lam_silica, n_silica, lam_nm, 'linear');
-
-% ---------------------------------------------
-vnickel = [387.5	1.61	2.3
-400	1.61	2.36
-413.3	1.61	2.44
-427.5	1.62	2.52
-442.8	1.62	2.61
-459.2	1.64	2.71
-476.9	1.66	2.81
-495.9	1.67	2.93
-516.6	1.71	3.06
-539.1	1.75	3.19
-563.6	1.8	3.33
-590.4	1.85	3.48
-619.9	1.93	3.65
-636	1.98	3.74
-653	2.02	3.82
-670	2.08	3.91
-689	2.14	4
-709	2.21	4.09
-729	2.28	4.18
-751	2.36	4.25
-775	2.43	4.31
-800	2.48	4.38
-827	2.53	4.47
-855	2.59	4.55
-886	2.65	4.63
-918	2.69	4.73
-954	2.74	4.85
-992	2.8	4.97
-1033	2.85	5.1]; 
+% from D Moody
+vnickel =...
+    [400          1.61          2.36
+    440          1.62       2.59353
+    480       1.66163       2.82958
+    500         1.678         2.966
+    510         1.697         3.023
+    520         1.716          3.08
+    530         1.735         3.137
+    540         1.754         3.194
+    550         1.773         3.251
+    560         1.792         3.308
+    570         1.811         3.365
+    580          1.83         3.423
+    590         1.849          3.48
+    600         1.869         3.537
+    640       1.98941       3.75882
+    680       2.11158       3.95737
+    720          2.25         4.115
+    760       2.38625        4.2725
+    800          2.48          4.38
+    880       2.63839       4.61452
+    900        2.6675       4.67375
+    920       2.69278       4.73667
+    960       2.74947       4.86895
+    1000       2.80976       4.99537
+    1040       2.85933       5.12178];
 
 lam_nickel = vnickel(:,1);  % nm
 n_nickel   = vnickel(:,2);
@@ -220,34 +150,38 @@ nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
 knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');
 
 % ---------------------------------------------
-titanium = [413.0000    2.1400    2.9800
-  431.0000    2.2100    3.0100
-  451.0000    2.2700    3.0400
-  471.0000    2.3200    3.1000
-  496.0000    2.3600    3.1900
-  521.0000    2.4400    3.3000
-  549.0000    2.5400    3.4300
-  582.0000    2.6000    3.5800
-  617.0000    2.6700    3.7200
-  659.0000    2.7600    3.8400
-  704.0000    2.8600    3.9600
-  756.0000    3.0000    4.0100
-  821.0000    3.2100    4.0100
-  892.0000    3.2900    3.9600
-  984.0000    3.3500    3.9700];
-
-lam_ti = vnickel(:,1);  % nm
-n_ti   = vnickel(:,2);
-k_ti   = vnickel(:,3);
+% from D Moody
+titanium =[...  
+    397          2.08          2.95
+    413          2.14          2.98
+    431          2.21          3.01
+    451          2.27          3.04
+    471           2.3           3.1
+    496          2.36          3.19
+    521          2.44           3.2
+    549          2.54          3.43
+    582           2.6          3.58
+    617          2.67          3.74
+    659          2.76          3.84
+    704          2.86          3.96
+    756             3          4.01
+    821          3.21          4.01
+    892          3.29          3.96
+    984          3.35          3.97
+    1088           3.5          4.02
+    1216          3.62          4.15];
+    
+lam_ti = titanium(:,1);  % nm
+n_ti   = titanium(:,2);
+k_ti   = titanium(:,3);
 nti    = interp1(lam_ti, n_ti, lam_nm, 'linear');
 kti    = interp1(lam_ti, k_ti, lam_nm, 'linear');
 % ---------------------------------------------
-Nmetal = length(t_Ni_vec);
-Ndiel = length(t_PMGI_vec);
 
-tCoef = zeros(Ndiel,Nmetal); %--initialize2
+
+%% Compute the complex transmission
+tCoef = zeros(Ndiel,Nmetal); %--initialize
 rCoef = zeros(Ndiel,Nmetal); %--initialize
-
 for jj = 1:Ndiel
     dpm = t_PMGI_vec(jj);
     
@@ -255,27 +189,33 @@ for jj = 1:Ndiel
         dni = t_Ni_vec(ii);
         dti = t_Ti_vec(ii);
         
-        nvec = [1 1 npmgi nnickel-1i*knickel nti-1i*kti nsilica];
-        %dvec = [d0-dpm dpm dni];
+        nvec = [1 1 npmgi nnickel-1i*knickel nti-1i*kti n_substrate];
         dvec = [d0-dpm-dni-dti dpm dni dti];
         
-%         [R, T, rr, tt] = thin_film_filter_2(nvec, dvec, theta, lam, pol);
-        %--OUTPUTS:
-            % R = normalized reflected intensity coefficient
-            % T =        "   transmitted     "
-            % rr = complex field reflection coefficient
-            % tt =      "        transmission "
-        %amp(jj,ii) = tt; %sqrt(T);
-        %pha(jj,ii) = atan2(imag(tt), real(tt));
+        %--Choose polarization
+        if(pol==2) %--Mean of the two
+            [~, ~, rr0, tt0] = falco_thin_film_solver(nvec, dvec, theta, lam, 0);
+            [~, ~, rr1, tt1] = falco_thin_film_solver(nvec, dvec, theta, lam, 1);
+            rr = (rr0+rr1)/2.;
+            tt = (tt0+tt1)/2.;
+        elseif(pol==0 || pol==1)
+            [~, ~, rr, tt] = falco_thin_film_solver(nvec, dvec, theta, lam, pol);
+        else
+            error('falco_thin_film_material_def.m: Wrong input value for polarization.')
+        end
         
-        [~, ~, rr, tt] = falco_thin_film_solver(nvec, dvec, theta, lam, pol);
-        tCoef(jj,ii) = tt; %--Complex field transmission coeffient
-        rCoef(jj,ii) = rr; %--Complex field transmission coeffient
+        %--Choose phase convention
+        if(flagOPD==false)
+            tCoef(jj,ii) = conj(tt); %--Complex field transmission coeffient, changed by erkin
+            rCoef(jj,ii) = conj(rr); %--Complex field reflection coeffient, changed by erkin
+        else %--OPD phase convention is negative of oppositive convention
+            tCoef(jj,ii) = tt; %--Complex field transmission coeffient, changed by erkin
+            rCoef(jj,ii) = rr; %--Complex field reflection coeffient, changed by erkin
+        end
+        
     end
 end
 
-%pha = 0;
         
-return
-% ---------------------------------------------
-%
+end %--END OF FUNCTION
+

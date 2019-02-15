@@ -22,7 +22,7 @@
 % -Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % -Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
-function [dDM,cvar] = falco_ctrl_EFC_constrained(cp, cvar, mp)
+function [dDM,cvar] = falco_ctrl_EFC_constrained(mp, cvar)
 
     Itr = cvar.Itr ;
 

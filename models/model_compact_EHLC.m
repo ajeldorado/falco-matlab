@@ -75,7 +75,7 @@ if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, Nd
 t_Ti_base = 0;
 t_Ni_vec = 0;
 t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-pol = 0;
+pol = 2;
 [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
 transOuterFPM = tCoef;
 

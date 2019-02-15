@@ -24,6 +24,8 @@
 %
 % REVISION HISTORY:
 % -------------------------------------------------------------------------
+% Modified on 2019-01-28 by A.J. Riggs to use pol=2 for the mean of the
+% complex transmission for the two polarizations.
 % Modified on 2018-05-01 by A.J. Riggs.
 % Created on 2018-03 by Erkin Sidick.
 % -------------------------------------------------------------------------
@@ -52,12 +54,12 @@ mp.F3.diel = 'PMGI';
 % NlamCompact = mp.Nsbp;%length(mp.sbp_centers);
 % NlamFull = mp.full.Nlam; %length(mp.lambdas);
 
-fn_cube_compact = sprintf('%s/data/material/ct_cube_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1fN%d_%.1fdeg_compact.mat',...
+fn_cube_compact = sprintf('%s/data/material/ct_cube_BK7_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1fN%d_%.1fdeg_compact.mat',...
     mp.path.falco,mp.t_Ti_nm,mp.F3.metal,min(mp.t_metal_nm_vec), max(mp.t_metal_nm_vec), mp.dt_metal_nm, ...
     mp.F3.diel, min(mp.t_diel_nm_vec),  max(mp.t_diel_nm_vec),  mp.dt_diel_nm, ...
     (1e9*mp.lambda0),100*mp.fracBW,mp.Nsbp,mp.aoi);
 
-fn_cube_full = sprintf('%s/data/material/ct_cube_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1f_%dN%d_%.1fdeg_full.mat',...
+fn_cube_full = sprintf('%s/data/material/ct_cube_BK7_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1f_%dN%d_%.1fdeg_full.mat',...
     mp.path.falco,mp.t_Ti_nm,mp.F3.metal,min(mp.t_metal_nm_vec), max(mp.t_metal_nm_vec), mp.dt_metal_nm, ...
     mp.F3.diel, min(mp.t_diel_nm_vec),  max(mp.t_diel_nm_vec),  mp.dt_diel_nm, ...
     (1e9*mp.lambda0),100*mp.fracBW,mp.Nsbp,mp.Nwpsbp,mp.aoi);
@@ -95,7 +97,7 @@ else
             lam = sbp_centers(si);
             d0 = lam * d0fac; % Max thickness of PMGI + Ni
             for imetal = 1:Nmetal        
-                [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec(imetal), t_diel_m_vec, d0, 0);    
+                [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec(imetal), t_diel_m_vec, d0, 2);    
                 if(flagRefl)
                     complexTransCompact(:,imetal,si) = rCoef;  
                 else
@@ -110,14 +112,14 @@ else
             lam = sbp_centers(si);
             d0 = lam * mp.FPM.d0fac; % Max thickness of PMGI + Ni
             
-            [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec, t_diel_m_vec, d0, 0); 
+            [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec, t_diel_m_vec, d0, 2); 
             if(flagRefl)
                 complexTransCompact(:,:,si) = rCoef;       
             else
                 complexTransCompact(:,:,si) = tCoef;
             end
 %             for imetal = 1:Nmetal        
-%                 [ampc,~] = falco_thin_film_material_def(lam, aoi, t_Ti, t_metal_m_vec(imetal), t_diel_m_vec, d0, 0);            
+%                 [ampc,~] = falco_thin_film_material_def(lam, aoi, t_Ti, t_metal_m_vec(imetal), t_diel_m_vec, d0, 2);            
 %                 complexTransCompact(:,imetal,si) = ampc;
 %             end
             fprintf('\tDone computing wavelength %d of %d.\n',si,Nsbp);
@@ -152,7 +154,7 @@ else
                 
                 for imetal = 1:Nmetal
                     %t_Ni = t_Ni(imetal)*1e-9;
-                    [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec(imetal), t_diel_m_vec, d0, 0);            
+                    [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec(imetal), t_diel_m_vec, d0, 2);            
                     if(flagRefl)
                         complexTransFull(:,imetal,li) = tCoef;
                     else
@@ -166,7 +168,7 @@ else
                 lam = lambdas(li);
                 d0 = lam * mp.FPM.d0fac; % Max thickness of PMGI + Ni
                 
-                [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec, t_diel_m_vec, d0, 0); 
+                [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec, t_diel_m_vec, d0, 2); 
                 if(flagRefl)
                     complexTransFull(:,:,li) = rCoef;
                 else
