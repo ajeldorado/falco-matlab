@@ -27,12 +27,10 @@ mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe a
 mp.flagSim = true;
 mp.layout = 'Fourier';
 
-% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um.fits';
-% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um.fits';
-% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N123.fits';
-% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N123.fits';
-mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N49.fits';
-mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N49.fits';
+% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N131.fits';
+% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N131.fits';
+mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N65.fits';
+mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N65.fits';
 % mp.dm1.inf_fn = 'influence_dm5v2.fits';
 % mp.dm2.inf_fn = 'influence_dm5v2.fits';
 
