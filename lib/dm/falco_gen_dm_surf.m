@@ -54,7 +54,7 @@ wl_dummy = 1e-6; %--dummy value needed to initialize wavelength in PROPER (meter
 bm  = prop_begin(N*dx, wl_dummy, N, pupil_ratio);
 
 % If HminStep (minimum step in H) is defined, then quantize the DM voltages
-if(isfield(dm,'HminStep') && ~any(isnan(dm.HminStep)))
+if(isfield(dm,'HminStep') && ~any(isnan(dm.HminStep(:))))
     
     % If desired method is not defined, set it to the default. 
     if(~isfield(dm,'HminStepMethod'))
