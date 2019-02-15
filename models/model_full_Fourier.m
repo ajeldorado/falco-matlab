@@ -178,18 +178,23 @@ else
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); %--E-field incident upon the Lyot stop
             
-        case{'lc,aplc'}
+        case{'lc,aplc','roddier'}
             %--MFT from apodizer plane to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
             % Apply (1-FPM) for Babinet's principle later
-            EF3 = (1-mp.F3.full.mask.amp).*EF3inc;
+            if(strcmp(mp.coro,'roddier'))
+                FPM = mp.F3.full.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.full.mask.phzSupport);
+                EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
+            else
+                EF3 = (1-mp.F3.full.mask.amp).*EF3inc;
+            end
             % Use Babinet's principle at the Lyot plane. This is the term without the FPM.
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4subtrahend = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
             %--Babinet's principle at P4
             EP4 = padOrCropEven(EP4noFPM,mp.P4.full.Narr) - EP4subtrahend;
-             
+            
         case{'hlc'}
             %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
             t_Ti_base = 0;

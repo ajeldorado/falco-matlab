@@ -175,10 +175,17 @@ else
             EF3 = mp.F3.compact.mask.amp.*EF3inc; % Apply FPM
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); %--E-field incident upon the Lyot stop 
-        case{'lc,aplc'}
+        
+        case{'lc,aplc','roddier'}
             %--MFT from SP to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
-            EF3 = (1 - mp.F3.compact.mask.amp).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
+            %--Apply (1-FPM) for Babinet's principle later
+            if(strcmp(mp.coro,'roddier'))
+                FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
+                EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
+            else
+                EF3 = (1 - mp.F3.compact.mask.amp).*EF3inc;
+            end
             %--Use Babinet's principle at the Lyot plane.
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
