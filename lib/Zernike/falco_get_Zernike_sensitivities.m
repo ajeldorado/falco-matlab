@@ -69,6 +69,17 @@ Nzern = length(indsZnoll);
 rmsZvec = ones(size(indsZnoll))*1e-9;  %--RMS values for each Zernike specified in vector indsZnoll [meters] 
 
 ZmapCube = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+
+%--Make sure ZmapCube is the right array size
+if(size(ZmapCube,1)~=mp.P1.compact.Narr)
+    ZmapCubeTemp = zeros(mp.P1.compact.Narr,mp.P1.compact.Narr);
+    for zi=1:size(ZmapCube,3)
+        ZmapCubeTemp(:,:,zi) = padOrCropEven(ZmapCube(:,:,zi),mp.P1.compact.Narr);
+    end
+    ZmapCube = ZmapCubeTemp; 
+    clear ZmapCubeTemp
+end
+
 % figure(1); imagesc(ZmapCube(:,:,5)); axis xy equal tight; colorbar;
 
 %% Get rid of original tip/tilt offsets (just change wavelength for eval)

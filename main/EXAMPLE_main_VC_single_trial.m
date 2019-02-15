@@ -13,6 +13,45 @@
 
 clear all;
 
+close all;
+
+%--Estimator Options:
+% - 'perfect' for exact numerical answer from full model
+% - 'pwp-bp' for pairwise probing with batch process estimation
+% - 'pwp-kf' for pairwise probing with Kalman filter [NOT AVAILABLE YET]
+% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
+% mp.estimator = 'pwp-bp';
+mp.controller = 'perfect';
+
+%--New variables for estimation:
+% - Note: For 360-degree dark hole, must set mp.est.probe.Npairs>=3 and mp.est.probe.axis = 'alternate'.
+mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
+mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
+mp.est.probe.radius = 50;%12;%20;    % Max x/y extent of probed region [actuators].
+mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
+mp.est.probe.offsetY = 0;   % offset of probe center in y [actuators]. Use to avoid central obscurations.
+mp.est.probe.axis = 'alternate';    % which axis to have the phase discontinuity along [x or y or xy/alt/alternate].
+mp.est.probe.gainFudge = 6;%4;%1;     % empirical fudge factor to make average probe amplitude match desired value.
+
+mp.flagSim = true;
+mp.layout = 'Fourier';
+
+% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um.fits';
+% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um.fits';
+% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N123.fits';
+% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N123.fits';
+mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N49.fits';
+mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N49.fits';
+% mp.dm1.inf_fn = 'influence_dm5v2.fits';
+% mp.dm2.inf_fn = 'influence_dm5v2.fits';
+
+mp.dm1.dm_spacing = 1e-3; %--User defined actuator pitch
+mp.dm2.dm_spacing = 1e-3; %--User defined actuator pitch
+
+mp.dm1.inf_sign = '+';
+mp.dm2.inf_sign = '+';
+
+
 %% Define Necessary Paths on Your System
 
 %--Library locations
@@ -64,8 +103,16 @@ mp.controller = 'gridsearchEFC';%--Controller options: 'gridsearchEFC' or 'plann
 mp.coro = 'Vortex';    %--Tested Options: 'LC','HLC','SPLC','Vortex'
 mp.F3.VortexCharge = 6; %--Charge of vortex coronagraph
 mp.whichPupil = 'LUVOIR_B_offaxis';%'Simple';
-
 mp.flagApod = false; % Can be simply a sub-aperture 
+
+%--Zernikes to suppress with controller
+mp.jac.zerns = 1;%[1 2 3]; %1; %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include at least 1 for the on-axis piston mode.
+mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
+    
+%--Zernikes to compute sensitivities for
+mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
+mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
+                 4, 8];    
 
 
 %%--Pupil Plane and DM Plane Properties
@@ -134,9 +181,12 @@ end
 
 %% DMs
 mp.dm_ind = [1 2]; % vector of which DMs to use for control.
-mp.P2.D =     46.3e-3; % beam diameter at pupil closest to the DMs  (meters)
-mp.dm1.Nact = 48; % number of actuators across DM1
-mp.dm2.Nact = 48; % number of actuators across DM2
+mp.P2.D =     30e-3; % beam diameter at pupil closest to the DMs  (meters)
+mp.dm1.Nact = 32; % number of actuators across DM1
+mp.dm2.Nact = 32; % number of actuators across DM2
+% mp.P2.D =     46.3e-3; % beam diameter at pupil closest to the DMs  (meters)
+% mp.dm1.Nact = 48; % number of actuators across DM1
+% mp.dm2.Nact = 48; % number of actuators across DM2
 mp.dm_weights = ones(9,1);   % vector of relative weighting of DMs for EFC
 
 %--Crop the influence functions used in the DM1 & DM2 Jacobians (but not by PROPER)

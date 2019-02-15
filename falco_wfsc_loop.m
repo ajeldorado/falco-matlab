@@ -414,7 +414,7 @@ if(any(mp.dm_ind==2))
     fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
 end
 
-%--Calculate sensitivities to 1nm RMS of zernikes
+%--Calculate sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
 if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
     out.Zsens(:,:,Itr) = falco_get_Zernike_sensitivities(mp);
 end

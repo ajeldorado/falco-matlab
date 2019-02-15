@@ -21,12 +21,26 @@ mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is
 mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
 mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
 mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
-mp.est.probe.axis = 'xy';%'y';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
-mp.est.probe.gainFudge = 1;%5;     % empirical fudge factor to make average probe amplitude match desired value.
+mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
+mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
 
 mp.flagSim = true;
 mp.layout = 'Fourier';
 
+% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um.fits';
+% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um.fits';
+% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N123.fits';
+% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N123.fits';
+mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N49.fits';
+mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N49.fits';
+% mp.dm1.inf_fn = 'influence_dm5v2.fits';
+% mp.dm2.inf_fn = 'influence_dm5v2.fits';
+
+mp.dm1.dm_spacing = 1e-3; %--User defined actuator pitch
+mp.dm2.dm_spacing = 1e-3; %--User defined actuator pitch
+
+mp.dm1.inf_sign = '+';
+mp.dm2.inf_sign = '+';
 
 %% Define Necessary Paths on Your System
 
@@ -93,13 +107,14 @@ mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities ove
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';
+% mp.controller = 'plannedEFC';
+mp.controller = 'gridsearchEFC';
 
 %--Estimator Options:
 % - 'perfect' for exact numerical answer from full model
 % - 'pwp-bp' for pairwise probing with batch process estimation
-% - 'pwp-kf' for pairwise probing with Kalman filter
-% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter
+% - 'pwp-kf' for pairwise probing with Kalman filter [NOT AVAILABLE YET]
+% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
 mp.estimator = 'pwp-bp';
 % mp.controller = 'perfect';
 
@@ -141,7 +156,7 @@ switch mp.controller
     case{'gridsearchEFC'} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast
         
-        mp.dm_ind = [1 2 9]; %--Which DMs to use
+        mp.dm_ind = [1 2];%[1 2 9]; %--Which DMs to use
 
         mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
         mp.ctrl.dmfacVec = 1;
