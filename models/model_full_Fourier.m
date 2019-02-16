@@ -118,7 +118,7 @@ if(normFac==0)
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3inc,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); %--E-field incident upon the Lyot stop 
         
-        case{'lc,aplc'}
+        case{'lc','aplc','roddier'}
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Re-image forward (no FPM in between pupil planes)
             EP4 = mp.P4.full.croppedMask.*padOrCropEven(EP4noFPM,mp.P4.full.Narr);
            
@@ -159,7 +159,7 @@ if(normFac==0)
             EP4 = padOrCropEven(EP4noFPM,mp.P4.full.Narr);
             
         otherwise
-            error('model_full_Fourier.m: Modely type\t %s\t not recognized.\n',mp.coro);
+            error('model_full_Fourier.m: Model type\t %s\t not recognized.\n',mp.coro);
     end
     
 else
