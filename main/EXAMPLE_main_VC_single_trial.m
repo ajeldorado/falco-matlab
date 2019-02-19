@@ -21,7 +21,7 @@ close all;
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT AVAILABLE YET]
 % - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
 % mp.estimator = 'pwp-bp';
-mp.controller = 'perfect';
+mp.estimator = 'perfect';
 
 %--New variables for estimation:
 % - Note: For 360-degree dark hole, must set mp.est.probe.Npairs>=3 and mp.est.probe.axis = 'alternate'.
@@ -46,8 +46,8 @@ mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N65.fits';
 mp.dm1.dm_spacing = 1e-3; %--User defined actuator pitch
 mp.dm2.dm_spacing = 1e-3; %--User defined actuator pitch
 
-mp.dm1.inf_sign = '+';
-mp.dm2.inf_sign = '+';
+mp.dm1.inf_sign = '-';
+mp.dm2.inf_sign = '-';
 
 
 %% Define Necessary Paths on Your System

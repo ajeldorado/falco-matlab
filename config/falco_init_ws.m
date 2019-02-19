@@ -359,19 +359,30 @@ mp.WspatialVec = mp.Wspatial(mp.F4.corr.inds);
 
 %% Deformable Mirror (DM) 1 and 2 Parameters
 
-mp.dm1.centering = mp.centering;
-mp.dm2.centering = mp.centering;
 
-% % if( any(mp.dm_ind==9) )
-% %     %--Cropped influence function for FPM phase
-% %     Nhalf = ceil(length(mp.dm9.inf0)/2); %-- =46 for the Xinetics influence function
-% %     if(mp.dm9.Ncrop_inf0<45)
-% %         mp.dm9.inf0 = mp.dm9.inf0(Nhalf-mp.dm9.Ncrop_inf0:Nhalf+mp.dm9.Ncrop_inf0,Nhalf-mp.dm9.Ncrop_inf0:Nhalf+mp.dm9.Ncrop_inf0);
-% %     end
-% % end
+if( any(mp.dm_ind==1) )
+    switch lower(mp.dm1.inf_sign(1))
+        case{'-','n','m'}
+            mp.dm1.inf0 = -1*mp.dm1.inf0;
+        otherwise
+            %--Leave coefficient as +1
+    end
+end
+
+if( any(mp.dm_ind==2) )
+    
+    switch lower(mp.dm2.inf_sign(1))
+        case{'-','n','m'}
+            mp.dm2.inf0 = -1*mp.dm2.inf0;
+        otherwise
+            %--Leave coefficient as +1
+    end
+end
+
 
 %--Create influence function datacubes for each DM
 if( any(mp.dm_ind==1) ) %if(isfield(mp.dm1,'inf_datacube')==0 && any(mp.dm_ind==1) )
+    mp.dm1.centering = mp.centering;
     mp.dm1.compact = mp.dm1;
 %     mp.dm1.dx = mp.P2.full.dx;
 %     mp.dm1.compact.dx = mp.P2.compact.dx;
@@ -385,6 +396,8 @@ else
     mp.dm1.compact = falco_gen_dm_poke_cube(mp.dm1.compact, mp, mp.P2.compact.dx,'NOCUBE');
 end
 if( any(mp.dm_ind==2) ) %if(isfield(mp.dm2,'inf_datacube')==0 && any(mp.dm_ind==2) )
+    mp.dm2.centering = mp.centering;
+    
     mp.dm2.compact = mp.dm2;
     mp.dm2.dx = mp.P2.full.dx;
     mp.dm2.compact.dx = mp.P2.compact.dx;

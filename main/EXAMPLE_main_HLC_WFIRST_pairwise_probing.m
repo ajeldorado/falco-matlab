@@ -15,6 +15,14 @@ clear all;
 
 close all;
 
+%--Estimator Options:
+% - 'perfect' for exact numerical answer from full model
+% - 'pwp-bp' for pairwise probing with batch process estimation
+% - 'pwp-kf' for pairwise probing with Kalman filter [NOT AVAILABLE YET]
+% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
+% mp.estimator = 'pwp-bp';
+mp.estimator = 'perfect';
+
 %--New variables for estimation:
 mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
@@ -108,13 +116,7 @@ mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities ove
 % mp.controller = 'plannedEFC';
 mp.controller = 'gridsearchEFC';
 
-%--Estimator Options:
-% - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing with batch process estimation
-% - 'pwp-kf' for pairwise probing with Kalman filter [NOT AVAILABLE YET]
-% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
-mp.estimator = 'pwp-bp';
-% mp.controller = 'perfect';
+
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 

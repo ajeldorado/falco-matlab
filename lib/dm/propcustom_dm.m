@@ -29,7 +29,7 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 %        must not be used when n_act_acroos_pupil is specified.
 %
 % Optional inputs:
-% 'Fit'               : switch that tells routine that the values in dmz0
+% 'fit'               : switch that tells routine that the values in dmz0
 %                       are the desired surface heights rather than the
 %                       commanded actuator heights, and so the routine
 %                       should fit this map, accounting for actuator
@@ -62,15 +62,7 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 %                       xtilt, ytilt, or ztilt are specified.
 %                       The default is X, Y, then Z rotations.
 %                       Set for for Z, Y, then X rotations.
-% 'custom_infl'       : specify a new influence function as a structure
-%                       inf = inf_info.inf0; % inf func 2D array 
-%                       ifnx = inf_info.ifnx;% inf func number of pixels x
-%                       ifny = inf_info.ifny;% inf func number of pixels y
-%                       ifdx = inf_info.ifdx;% inf func spacing x (m)
-%                       ifdy = inf_info.ifdy;% inf func spacing y (m) 
-%                       acdx = inf_info.acdx;% actuator spacing x (m)
-%                       acdy = inf_info.acdy;% actuator spacing y (m)
-% 'inf_file'          : specify a new influence function as a FITS file
+% 'inf_fn','inf_file' : specify a new influence function as a FITS file
 %                       with the same keywords as PROPER's default
 %                       influence function. Needs these values in
 %                       info.PrimaryData.Keywords:
@@ -89,8 +81,9 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 % 2017 Feb 15  gmg  Revised for keyword/value for optional inputs
 % 2018 Dec 05  GJR  Revised to accept any influence function via keyword
 % 2019 Feb 15  ar   Revised to accept any influence function FITS file with
-%                   all needed headers via keyword. Added keyword sign
+%                   all needed headers via keyword. Also added keyword sign
 %                   value definition to influence function.
+% 2019 Feb 19  ar   Removed keyword 'custom_infl'
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   
@@ -132,13 +125,10 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
         zyx  = 0;       % rotation order is X, Y, then Z rotations
       case {'zyx'}
         zyx  = 1;       % rotation order is Z, Y, then X rotations
-      case {'custom_infl'}
-        icav = icav + 1;
-        inf_info = varargin{icav};
-      case{'inf_fn'} % name of FITS file for influence function
+      case{'inf_fn','inf_file'} % name of FITS file for influence function
         icav = icav + 1;
         DMinf_name = varargin{icav};
-      case{'inf_sign'} % + or - sign for 
+      case{'inf_sign'} % + or - sign for influence function
         icav = icav + 1;
         sign_char = varargin{icav};
         switch lower(sign_char(1))
@@ -155,45 +145,31 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
     end
   end
 
-  % If the custom influence function is not passed...
-  if(~exist('inf_info','var'))
-    %DMinf_name = 'influence_dm5v2.fits';
     
-    % Read the influence function data from a FITS file
-	info = fitsinfo(DMinf_name);
-	inf  = fitsread(DMinf_name);
-    inf = sign_factor*inf; %--Multiply by +1 or -1
-
-	[ldef, idef] = ismember('NAXIS1' , info.PrimaryData.Keywords(:, 1));
-	ifnx = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels x
-
-	[ldef, idef] = ismember('NAXIS2' , info.PrimaryData.Keywords(:, 1));
-	ifny = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels y
-
-	[ldef, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));
-	ifdx = info.PrimaryData.Keywords{idef, 2};    % inf func spacing x (m)
-
-	[ldef, idef] = ismember('P2PDY_M', info.PrimaryData.Keywords(:, 1));
-	ifdy = info.PrimaryData.Keywords{idef, 2};    % inf func spacing y (m)
-
-	[ldef, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
-	acdx = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
-
-	[ldef, idef] = ismember('C2CDY_M', info.PrimaryData.Keywords(:, 1));
-	acdy = info.PrimaryData.Keywords{idef, 2};    % actuator spacing y (m)
+    % Read the influence function data from the specified FITS file
+    info = fitsinfo(DMinf_name);
+    inf  = fitsread(DMinf_name);
     
-  % if the custom infl_info structure is provided 
-  elseif(exist('inf_info','var'))
+    %--Multiply by +1 or -1
+    inf = sign_factor*inf; 
 
-    inf = inf_info.inf0; % inf func 2D array 
-    ifnx = inf_info.ifnx;% inf func number of pixels x
-    ifny = inf_info.ifny;% inf func number of pixels y
-    ifdx = inf_info.ifdx;% inf func spacing x (m)
-    ifdy = inf_info.ifdy;% inf func spacing y (m) 
-    acdx = inf_info.acdx;% actuator spacing x (m)
-    acdy = inf_info.acdy;% actuator spacing y (m)
-    
-  end
+    [ldef, idef] = ismember('NAXIS1' , info.PrimaryData.Keywords(:, 1));
+    ifnx = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels x
+
+    [ldef, idef] = ismember('NAXIS2' , info.PrimaryData.Keywords(:, 1));
+    ifny = info.PrimaryData.Keywords{idef, 2};    % inf func number of pixels y
+
+    [ldef, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));
+    ifdx = info.PrimaryData.Keywords{idef, 2};    % inf func spacing x (m)
+
+    [ldef, idef] = ismember('P2PDY_M', info.PrimaryData.Keywords(:, 1));
+    ifdy = info.PrimaryData.Keywords{idef, 2};    % inf func spacing y (m)
+
+    [ldef, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
+    acdx = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
+
+    [ldef, idef] = ismember('C2CDY_M', info.PrimaryData.Keywords(:, 1));
+    acdy = info.PrimaryData.Keywords{idef, 2};    % actuator spacing y (m)
 
   
   ifcx = floor(ifnx / 2) + 1;           % inf func center pixel x
