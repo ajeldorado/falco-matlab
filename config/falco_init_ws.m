@@ -220,6 +220,8 @@ switch mp.coro
         mp = falco_config_gen_FPM_LC(mp);
     case{'SPLC'}
         mp = falco_config_gen_FPM_SPLC(mp);
+    case{'Roddier'}
+        mp = falco_config_gen_FPM_Roddier(mp);  
 end
 
 %% FPM coordinates, [meters] and [dimensionless]

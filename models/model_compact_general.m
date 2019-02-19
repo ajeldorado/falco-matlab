@@ -17,6 +17,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-02-14 by G. Ruane to handle scalar vortex FPMs
 % Modified on 2019-02-11 by A.J. Riggs to have all coronagraph types
 % together.
 % Modified on 2018-01-23 by A.J. Riggs to allow DM1 to not be at a pupil
@@ -102,7 +103,7 @@ Edm2 = propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2);
 Edm2 = DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
 
 %--Back-propagate to pupil P2
-if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 ); EP2eff = Edm2; else; EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); end %--Back propagate to pupil P2
+if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 ); EP2eff = Edm2; else EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); end %--Back propagate to pupil P2
 
 %--Rotate 180 degrees to propagate to pupil P3
 EP3 = propcustom_2FT(EP2eff, mp.centering);
@@ -127,7 +128,7 @@ if(normFac==0)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3inc,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); %--E-field incident upon the Lyot stop 
-        case{'lc,aplc'}
+        case{'lc','aplc','roddier'}
             %--Re-image to Lyot plane
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
             EP4 = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening           
@@ -168,17 +169,34 @@ if(normFac==0)
 else
     switch lower(mp.coro)
         case{'vortex','vc','avc'}
-            EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, mp.F3.VortexCharge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU );%--MFTs
+            % Get FPM charge 
+            if(numel(mp.F3.VortexCharge)==1)
+                % single value indicates fully achromatic mask
+                charge = mp.F3.VortexCharge;
+            else
+                % Passing an array for mp.F3.VortexCharge with
+                % corresponding wavelengths mp.F3.VortexCharge_lambdas
+                % represents a chromatic vortex FPM
+                charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+            end
+            EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU );%--MFTs
         case{'splc','flc'}
             %--MFT from SP to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
             EF3 = mp.F3.compact.mask.amp.*EF3inc; % Apply FPM
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); %--E-field incident upon the Lyot stop 
-        case{'lc,aplc'}
+        
+        case{'lc', 'aplc','roddier'}
             %--MFT from SP to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
-            EF3 = (1 - mp.F3.compact.mask.amp).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
+            %--Apply (1-FPM) for Babinet's principle later
+            if(strcmp(mp.coro,'roddier'))
+                FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
+                EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
+            else
+                EF3 = (1 - mp.F3.compact.mask.amp).*EF3inc;
+            end
             %--Use Babinet's principle at the Lyot plane.
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening

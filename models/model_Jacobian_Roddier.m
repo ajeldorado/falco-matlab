@@ -4,17 +4,18 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian_VC(mp, DM, tsi, whichDM)
+% function jac = model_Jacobian_Roddier(mp, DM, tsi, whichDM)
 %--Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
-%  This function is for the apodized/unapodized vortex coronagraphs.
+%  This function is for a Roddier coronagraph.
 %
 % REVISION HISTORY:
 % --------------
-% Modified on 2019-02-12 by G. Ruane to allow scalar vortex models 
-% Modified on 2018-03-01 by A.J. Riggs to debug the vortex coronagraph.
+% Modified on 2017-11-20 from model_Jacobian_LC by G. Ruane
 % Modified on 2017-11-13 by A.J. Riggs to be compatible with parfor.
+% Modified on 2017-11-09 by A.J. Riggs to compute only one row of the whole Jacobian. 
+%  This enables much easier parallelization.
 % Modified on 2017-11-09 by A.J. Riggs to have the Jacobian calculation be
 % its own function.
 % Modified on 2017-10-17 by A.J. Riggs to have model_compact.m be a wrapper. All the 
@@ -35,7 +36,7 @@
 % -Gttlam = Jacobian for the specified DM and specified T/T-wavelength pair
 %
 
-function Gzdl = model_Jacobian_VC(mp, im, whichDM)
+function Gzdl = model_Jacobian_Roddier(mp, im, whichDM)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Setup
@@ -63,8 +64,7 @@ if(modvar.zernIndex~=1)
     Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
 end
 % figure(71); imagesc(real(Ein)); axis xy equal tight; colorbar; 
-% figure(72); imagesc(imag(Ein)); axis xy equal tight; colorbar; 
-
+% figure(72); imagesc(imag(Ein)); axis xy equal tight; colorbar;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
@@ -72,7 +72,7 @@ end
 
 pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
 Ein = padOrCropEven(Ein,NdmPad);
-if(mp.flagApod)
+if(mp.flagApod) 
     apodRot180 = padOrCropEven( rot90(mp.P3.compact.mask,2), NdmPad );
     if( strcmpi(mp.centering,'pixel') ); apodRot180 = circshift(apodRot180,[1 1]); end %--To undo center offset when pixel centered and rotating by 180 degrees.
 else
@@ -99,47 +99,18 @@ end
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% EP2 = (1/1j)^2*rot90(EP1,2); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP2 = circshift(EP2,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
 Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Propagation: 2 DMs, apodizer, binary-amplitude FPM, LS, and final focal plane
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%--Minimum FPM resolution for Jacobian calculations (in pixels per lambda/D)
-minPadFacVortex = 8; 
-
-
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
     Gzdl = zeros(mp.F4.corr.Npix,mp.dm1.Nele);
-
-%     if(mp.useGPU)
-%         Gzdl = gpuArray(Gzdl);
-%     end
-%     
-    %--Array size for planes P3, F3, and P4
-    Nfft1 = 2^( ceil( log2(   max([mp.dm1.compact.NdmPad, minPadFacVortex*mp.dm1.compact.Nbox]) ) ) ); %--Don't crop--but do pad if necessary.
-    
-	if(numel(mp.F3.VortexCharge)==1)
-        charge = mp.F3.VortexCharge;
-    else
-        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
-    end
-
-    %--Generate vortex FPM with fftshift already applied
-    fftshiftVortex = fftshift( falco_gen_vortex_mask( charge, Nfft1) );
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
-%     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
-    NboxPad1AS = mp.dm1.compact.NboxAS;  %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
+    Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
+    NboxPad1AS = mp.dm1.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
     if(any(mp.dm_ind==2)); DM2surf = padOrCropEven(DM2surf,mp.dm1.compact.NdmPad);  else; DM2surf = zeros(mp.dm1.compact.NdmPad); end 
@@ -147,65 +118,60 @@ if(whichDM==1)
     apodRot180 = padOrCropEven( apodRot180, mp.dm1.compact.NdmPad);
 
     Edm1pad = padOrCropEven(Edm1,mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
-      
 
-    
-
-    %--Propagate each actuator from DM2 through the optical system
+    %--Propagate each actuator from DM1 through the optical system
     Gindex = 1; % initialize index counter
     for iact=mp.dm1.act_ele(:).'
-        if( any(any(mp.dm1.compact.inf_datacube(:,:,iact))) )  %--Only compute for acutators specified for use or for influence functions that are not zeroed out
-        
+        if(any(any(mp.dm1.compact.inf_datacube(:,:,iact))) && any(mp.dm1.act_ele==iact) )  %--Only compute for acutators specified for use or for influence functions that are not zeroed out
+            
             %--x- and y- coordinates of the padded influence function in the full padded pupil
             x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1,iact):mp.dm1.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
             y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2,iact):mp.dm1.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
 
             %--Propagate from DM1 to DM2, and then back to P2
             dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact),NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
-            
-            if(mp.useGPU);dEbox = gpuArray(dEbox);end
-            
             dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2); % forward propagate to DM2 and apply DM2 E-field
             dEP2box = propcustom_PTP(dEbox.*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); % back-propagate to DM1
-            %dEP2box = padOrCropEven(dEP2box,Nbox1); %--Crop down from the array size that is a power of 2 to make the MFT faster
+            dEP2box = padOrCropEven(dEP2box,Nbox1); %--Crop down from the array size that is a power of 2 to make the MFT faster
 
-%             %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
-%             x_box_ind = mp.dm1.compact.xy_box_lowerLeft(1,iact):mp.dm1.compact.xy_box_lowerLeft(1,iact)+Nbox1-1; % x-indices in pupil arrays for the box
-%             y_box_ind = mp.dm1.compact.xy_box_lowerLeft(2,iact):mp.dm1.compact.xy_box_lowerLeft(2,iact)+Nbox1-1; % y-indices in pupil arrays for the box
+            %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
+            x_box_ind = mp.dm1.compact.xy_box_lowerLeft(1,iact):mp.dm1.compact.xy_box_lowerLeft(1,iact)+Nbox1-1; % x-indices in pupil arrays for the box
+            y_box_ind = mp.dm1.compact.xy_box_lowerLeft(2,iact):mp.dm1.compact.xy_box_lowerLeft(2,iact)+Nbox1-1; % y-indices in pupil arrays for the box
+            x_box = mp.dm1.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
+            y_box = mp.dm1.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
-            dEP2boxEff = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            % Second, negate the coordinates of the box used.
+            dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
+            y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
+           
+            %--Matrices for the MFT from the pupil P3 to the focal plane mask
+            rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+            rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
+
+            %--MFT from pupil P3 to FPM
+            EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
+            FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t);
+            EF3 = (1-FPM).*EF3; %--Apply (1-FPM) for Babinet's principle later
+
+            %--DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
+            EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  %--Subtrahend term for the Lyot plane E-field    
             
-            %--Re-insert the window around the influence function back into the full beam array.
-            if(isa(dEP2boxEff,'gpuArray'))
-                EP2eff = gpuArray.zeros(mp.dm1.compact.NdmPad);
-            else
-                EP2eff = zeros(mp.dm1.compact.NdmPad);
-            end
+            if(mp.useGPU);dEP2box = gather(dEP2box);end
             
-            EP2eff(y_box_AS_ind,x_box_AS_ind) = dEP2boxEff;
+            %--Full Lyot plane pupil (for Babinet)
+            EP4noFPM = zeros(mp.dm1.compact.NdmPad);
+            EP4noFPM(y_box_ind,x_box_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
+            EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
+            EP4 = mp.P4.compact.croppedMask.*(EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
+
+            % DFT to camera
+            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
             
-            %--Forward propagate from P2 (effective) to P3
-            EP3 = propcustom_2FT(EP2eff,mp.centering); 
-
-            %--Pad pupil P3 for FFT
-            EP3pad = padOrCropEven(EP3, Nfft1 );
-
-            %--FFT from P3 to F4 and apply vortex
-            EF3 = (1/1j)*fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft1;
-
-            %--FFT from Vortex FPM to Lyot Plane
-            EP4 = (1/1j)*fftshift(fft2(EF3))/Nfft1;
-            if(Nfft1 > mp.P4.compact.Narr)
-                EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
-            else
-                EP4 = padOrCropEven(mp.P4.compact.croppedMask,Nfft1).*EP4; %--Crop the Lyot stop and then apply it.
-            end
-
-            % DFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta);
-
             if(mp.useGPU);EF4 = gather(EF4);end
             
             Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
@@ -215,29 +181,14 @@ if(whichDM==1)
 
 end    
 
-
-
-
 %--DM2---------------------------------------------------------
 if(whichDM==2)
     Gzdl = zeros(mp.F4.corr.Npix,mp.dm2.Nele);
     
-    %--Array size for planes P3, F3, and P4
-    Nfft2 = 2^( ceil( log2(   max([mp.dm2.compact.NdmPad, minPadFacVortex*mp.dm2.compact.Nbox]) ) ) ); %--Don't crop--but do pad if necessary.
-    
-	if(numel(mp.F3.VortexCharge)==1)
-        charge = mp.F3.VortexCharge;
-    else
-        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
-    end
-
-    %--Generate vortex FPM with fftshift already applied
-    fftshiftVortex = fftshift( falco_gen_vortex_mask( charge, Nfft2) );
-    
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
-%     Nbox2 = mp.dm2.compact.Nbox;
+    Nbox2 = mp.dm2.compact.Nbox;
     NboxPad2AS = mp.dm2.compact.NboxAS; 
-    mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
+    mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-Nbox2)/2; %--Account for the padding of the influence function boxes
     
     apodRot180 = padOrCropEven( apodRot180, mp.dm2.compact.NdmPad);
     DM2stop = padOrCropEven(DM2stop,mp.dm2.compact.NdmPad);
@@ -251,51 +202,54 @@ if(whichDM==2)
     Gindex = 1; % initialize index counter
     for iact=mp.dm2.act_ele(:).'
         if(any(any(mp.dm2.compact.inf_datacube(:,:,iact))) ) 
-            
+
             %--x- and y- coordinates of the padded influence function in the full padded pupil
             x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1,iact):mp.dm2.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
             y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2,iact):mp.dm2.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
 
             dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
-            
-            if(mp.useGPU);dEbox = gpuArray(dEbox);end
-            
             dEP2box = propcustom_PTP(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad2AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); % back-propagate to pupil P2
-            %dEP2box = padOrCropEven(dEP2box,Nbox2); %--Crop down from the array size that is a power of 2 to make the MFT faster
+            dEP2box = padOrCropEven(dEP2box,Nbox2); %--Crop down from the array size that is a power of 2 to make the MFT faster
+
+            %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
+            x_box_ind = mp.dm2.compact.xy_box_lowerLeft(1,iact):mp.dm2.compact.xy_box_lowerLeft(1,iact)+Nbox2-1; % x-indices in pupil arrays for the box
+            y_box_ind = mp.dm2.compact.xy_box_lowerLeft(2,iact):mp.dm2.compact.xy_box_lowerLeft(2,iact)+Nbox2-1; % y-indices in pupil arrays for the box
+            x_box = mp.dm2.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
+            y_box = mp.dm2.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box 
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
-            dEP2boxEff = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-%             dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-
-            if(isa(dEP2boxEff,'gpuArray'))
-                EP2eff = gpuArray.zeros(mp.dm2.compact.NdmPad);
-            else
-                EP2eff = zeros(mp.dm2.compact.NdmPad);
-            end
+            % Second, negate the coordinates of the box used.
+            dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
+            y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
             
-            EP2eff(y_box_AS_ind,x_box_AS_ind) = dEP2boxEff;
+            %--Matrices for the MFT from the pupil P3 to the focal plane mask
+            rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+            rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
-            %--Forward propagate from P2 (effective) to P3
-            EP3 = propcustom_2FT(EP2eff,mp.centering); 
+            %--MFT from pupil P3 to FPM
+            dEP2box = padOrCropEven(dEP2box,Nbox2); %--Crop back down to make the MFT faster
+            EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
+            FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
+            EF3 = (1-FPM).*EF3; %--Apply (1-FPM) for Babinet's principle later
 
-            %--Pad pupil P3 for FFT
-            EP3pad = padOrCropEven(EP3, Nfft2 );
-
-            %--FFT from P3 to F4 and apply vortex
-            EF3 = (1/1j)*fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft2;
-
-            %--FFT from Vortex FPM to Lyot Plane
-            EP4 = (1/1j)*fftshift(fft2(EF3))/Nfft2;
-            if(Nfft2 > mp.P4.compact.Narr)
-                EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
-            else
-                EP4 = padOrCropEven(mp.P4.compact.croppedMask,Nfft2).*EP4; %--Crop the Lyot stop and then apply it.
-            end
+            % DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
+            EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  %--Subtrahend term for the Lyot plane E-field    
             
-            % DFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta);
+            if(mp.useGPU);dEP2box = gather(dEP2box);end
             
+            EP4noFPM = zeros(mp.dm2.compact.NdmPad);
+            EP4noFPM(y_box_ind,x_box_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
+            %EP4noFPM = (1/1j)^2*rot90(EP4noFPM,2); if( strcmpi(mp.centering,'pixel') ); EP4noFPM = circshift(EP4noFPM,[1 1]); end %--Re-image to next pupil plane. (1j)^2 comes from the coefficients of the 2 skipped MFTs
+            EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
+            EP4 = mp.P4.compact.croppedMask.*(EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
+
+            % DFT to camera
+            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+
             if(mp.useGPU);EF4 = gather(EF4);end
             
             Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
@@ -307,8 +261,11 @@ end
 
 
 
+if(mp.useGPU)
+    Gzdl = gather(Gzdl);
+end
 
-end % End of function
+end %--END OF FUNCTION
 
 
     
