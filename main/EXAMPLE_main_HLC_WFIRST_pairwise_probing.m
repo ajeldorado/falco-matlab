@@ -249,7 +249,7 @@ switch mp.controller
         mp.dm_ind = 1;%[1 2 8 9]; %--Which DMs to use and when
         mp.Nitr = 10;
         
-        mp.ctrl.log10regVec = -5:1:-3;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
+        mp.ctrl.log10regVec = -5:1:-2;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
         mp.ctrl.dmfacVec = 1;
 
         %--Delta voltage range restrictions

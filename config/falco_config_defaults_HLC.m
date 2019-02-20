@@ -243,31 +243,31 @@ if(isfield(mp.dm2,'inf_fn')==false); mp.dm2.inf_fn = 'influence_dm5v2.fits'; end
 if(isfield(mp.dm2,'inf_sign')==false); mp.dm2.inf_sign = '+'; end  % sign of the influence function [+ or -]
 
 
-if(isfield(mp,'dm1'))
-    % Read the influence function header data from the FITS file
-	info = fitsinfo(mp.dm1.inf_fn);
-	[~, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));  % Get index in cell array
-	dx1 = info.PrimaryData.Keywords{idef, 2};    % pixel width of the influence function IN THE FILE [meters];
-    [~, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
-	pitch1 = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
-    
-    mp.dm1.inf0 = fitsread(mp.dm1.inf_fn);
-    if(isfield(mp.dm2,'dm_spacing')==false);  mp.dm1.dm_spacing = 1e-3;  end% inter-actuator pitch THAT YOU DEFINE. Does not have to be the true value [meters]
-    mp.dm1.dx_inf0 = mp.dm1.dm_spacing*(dx1/pitch1);
-end    
-
-if(isfield(mp,'dm2'))
-    % Read the influence function header data from the FITS file
-	info = fitsinfo(mp.dm2.inf_fn);
-	[~, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));  % Get index in cell array
-	dx2 = info.PrimaryData.Keywords{idef, 2};    % pixel width of the influence function IN THE FILE [meters];
-    [~, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
-	pitch2 = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
-    
-    mp.dm2.inf0 = fitsread(mp.dm2.inf_fn);
-    if(isfield(mp.dm2,'dm_spacing')==false);  mp.dm2.dm_spacing = 1e-3;  end% inter-actuator pitch THAT YOU DEFINE. Does not have to be the true value [meters]
-    mp.dm2.dx_inf0 = mp.dm2.dm_spacing*(dx2/pitch2);
-end    
+% if(isfield(mp,'dm1'))
+%     % Read the influence function header data from the FITS file
+% 	info = fitsinfo(mp.dm1.inf_fn);
+% 	[~, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));  % Get index in cell array
+% 	dx1 = info.PrimaryData.Keywords{idef, 2};    % pixel width of the influence function IN THE FILE [meters];
+%     [~, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
+% 	pitch1 = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
+%     
+%     mp.dm1.inf0 = fitsread(mp.dm1.inf_fn);
+%     if(isfield(mp.dm2,'dm_spacing')==false);  mp.dm1.dm_spacing = 1e-3;  end% inter-actuator pitch THAT YOU DEFINE. Does not have to be the true value [meters]
+%     mp.dm1.dx_inf0 = mp.dm1.dm_spacing*(dx1/pitch1);
+% end    
+% 
+% if(isfield(mp,'dm2'))
+%     % Read the influence function header data from the FITS file
+% 	info = fitsinfo(mp.dm2.inf_fn);
+% 	[~, idef] = ismember('P2PDX_M', info.PrimaryData.Keywords(:, 1));  % Get index in cell array
+% 	dx2 = info.PrimaryData.Keywords{idef, 2};    % pixel width of the influence function IN THE FILE [meters];
+%     [~, idef] = ismember('C2CDX_M', info.PrimaryData.Keywords(:, 1));
+% 	pitch2 = info.PrimaryData.Keywords{idef, 2};    % actuator spacing x (m)
+%     
+%     mp.dm2.inf0 = fitsread(mp.dm2.inf_fn);
+%     if(isfield(mp.dm2,'dm_spacing')==false);  mp.dm2.dm_spacing = 1e-3;  end% inter-actuator pitch THAT YOU DEFINE. Does not have to be the true value [meters]
+%     mp.dm2.dx_inf0 = mp.dm2.dm_spacing*(dx2/pitch2);
+% end    
 
 % if(isfield(mp.dm1,'dx_inf0')==false); mp.dm1.dx_inf0 = 1e-4; end  % meters, sampling of the influence function;
 % if(isfield(mp.dm1,'dm_spacing')==false); mp.dm1.dm_spacing = 1e-3; end  % meters, pitch of DM actuators
