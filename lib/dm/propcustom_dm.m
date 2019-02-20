@@ -63,14 +63,19 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 %                       The default is X, Y, then Z rotations.
 %                       Set for for Z, Y, then X rotations.
 % 'inf_fn','inf_file' : specify a new influence function as a FITS file
-%                       with the same keywords as PROPER's default
+%                       with the same header keywords as PROPER's default
 %                       influence function. Needs these values in
 %                       info.PrimaryData.Keywords:
 %                       'P2PDX_M' % inf func spacing x (m)
 %                       'P2PDY_M' % inf func spacing y (m)
 %                       'C2CDX_M' % actuator spacing x (m)
 %                       'C2CDY_M' % actuator spacing y (m)
-
+% 'inf_sign'          : specifies the sign (+/-) of the influence function.
+%                       Given as an option because the default influence
+%                       function file is positive, but positive DM actuator
+%                       commands make a negative deformation for Xinetics
+%                       and BMC DMs.
+%
 % 2005 Feb     jek  created idl routine 
 % 2007 Jun     jek  fixed bug in interpolation of smoothed DM surface &
 %                   changed default from smoothed to non-smoothed
@@ -79,11 +84,9 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 % 2015 Oct     jek  Implemented DM surface tilting, rotation
 % 2015 Dec 04  gmg  Matlab translation
 % 2017 Feb 15  gmg  Revised for keyword/value for optional inputs
-% 2018 Dec 05  GJR  Revised to accept any influence function via keyword
-% 2019 Feb 15  ar   Revised to accept any influence function FITS file with
-%                   all needed headers via keyword. Also added keyword sign
-%                   value definition to influence function.
-% 2019 Feb 19  ar   Removed keyword 'custom_infl'
+% 2019 Feb 15  a r  Added two new keyword/value pairs as optional inputs:
+%                   -Accept any influence function from a FITS file
+%                   -Allow the sign of the influence function to be + or -
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   
