@@ -66,10 +66,10 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 %                       with the same header keywords as PROPER's default
 %                       influence function. Needs these values in
 %                       info.PrimaryData.Keywords:
-%                       'P2PDX_M' % inf func spacing x (m)
-%                       'P2PDY_M' % inf func spacing y (m)
-%                       'C2CDX_M' % actuator spacing x (m)
-%                       'C2CDY_M' % actuator spacing y (m)
+%                       'P2PDX_M' % pixel width x (m)
+%                       'P2PDY_M' % pixel width y (m)
+%                       'C2CDX_M' % actuator pitch x (m)
+%                       'C2CDY_M' % actuator pitch y (m)
 % 'inf_sign'          : specifies the sign (+/-) of the influence function.
 %                       Given as an option because the default influence
 %                       function file is positive, but positive DM actuator
