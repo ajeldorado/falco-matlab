@@ -222,6 +222,13 @@ end
 mp.F4.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.F4.res; % sampling at F4 [meters]
 mp.F4.deta = mp.F4.dxi; % sampling at F4 [meters]    
 
+mp.F4.lenslet.D = 2*mp.F4.res*mp.F4.lensletWavRad*mp.F4.dxi;
+mp.F4.x_lenslet_phys = mp.F4.dxi*mp.F4.res*mp.F4.x_lenslet;
+mp.F4.y_lenslet_phys = mp.F4.deta*mp.F4.res*mp.F4.y_lenslet;
+
+mp.F5.dxi = mp.lensletFL*mp.lambda0/mp.F4.lenslet.D/mp.F5.res;
+mp.F5.deta = mp.F5.dxi;
+
 %% Software Mask for Correction (corr) and Scoring (score)
 
 %--Set Inputs
@@ -241,6 +248,68 @@ mp.F4.corr.settings = maskCorr; %--Store values for future reference
 %--Need the sizes to be the same for the correction and scoring masks
 mp.F4.Nxi  = size(mp.F4.corr.mask,2);
 mp.F4.Neta = size(mp.F4.corr.mask,1);
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+%--Mask defining the area covered by the lenslet.  Only the immediate area
+%around the lenslet is propagated, saving computation time.  This lenslet
+%can then be moved around to different positions in F4.
+maskLenslet.pixresFP = mp.F4.res;
+maskLenslet.rhoInner = 0;
+maskLenslet.rhoOuter = mp.F4.lensletWavRad;
+maskLenslet.angDeg = mp.F4.corr.ang;
+maskLenslet.centering = mp.centering;
+maskLenslet.FOV = mp.F4.FOV;
+maskLenslet.whichSide = mp.F4.sides;
+[mp.F4.lenslet.mask, ~, ~] = falco_gen_SW_mask(maskLenslet);
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+%--Dummy mask to calculate the F5 coordinates correctly.
+maskF5.pixresFP = mp.F5.res;
+maskF5.rhoInner = 0;
+maskF5.rhoOuter = 1.22;
+maskF5.angDeg = 180;
+maskF5.centering = mp.centering;
+maskF5.FOV = mp.F5.FOV;
+maskF5.whichSide = mp.F4.sides;
+[mp.F5.mask, mp.F5.xisDL, mp.F5.etasDL] = falco_gen_SW_mask(maskF5);
+
+%--Size of the output image in F5
+mp.F5.Nxi = size(mp.F5.mask, 2);
+mp.F5.Neta = size(mp.F5.mask, 1);
+
+%% Set up the fiber mode in F5
+
+V = 2*pi/mp.lambda0*mp.fiber.a*mp.fiber.NA; 
+W = 1.1428*V - 0.996;
+U = sqrt(V.^2 - W.^2);
+
+maskFiberCore.pixresFP = mp.F5.res;
+maskFiberCore.rhoInner = 0;
+maskFiberCore.rhoOuter = mp.fiber.a;
+maskFiberCore.angDeg = 180;
+maskFiberCore.FOV = mp.F5.FOV;
+maskFiberCore.whichSide = mp.F4.sides;
+[mp.F5.fiberCore.mask, ~, ~] = falco_gen_SW_mask(maskFiberCore);
+
+maskFiberCladding.pixresFP = mp.F5.res;
+maskFiberCladding.rhoInner = mp.fiber.a;
+maskFiberCladding.rhoOuter = 10;
+maskFiberCladding.angDeg = 180;
+maskFiberCladding.FOV = mp.F5.FOV;
+maskFiberCladding.whichSide = mp.F4.sides;
+[mp.F5.fiberCladding.mask, ~, ~] = falco_gen_SW_mask(maskFiberCladding);
+
+[F5XIS, F5ETAS] = meshgrid(mp.F5.xisDL, mp.F5.etasDL);
+
+mp.F5.RHOS = sqrt((F5XIS - mp.F5.fiberPos(1)).^2 + (F5ETAS - mp.F5.fiberPos(2)).^2);
+mp.F5.fiberCore.mode = mp.F5.fiberCore.mask.*besselj(0, U*mp.F5.RHOS/mp.fiber.a)/besselj(0,U);
+mp.F5.fiberCladding.mode = mp.F5.mask.*besselk(0, W*mp.F5.RHOS/mp.fiber.a)/besselk(0,W);
+mp.F5.fiberCladding.mode(isnan(mp.F5.fiberCladding.mode)) = 0;
+mp.F5.fiberMode = mp.F5.fiberCore.mode + mp.F5.fiberCladding.mode;
+fiberModeNorm = sqrt(sum(sum(abs(mp.F5.fiberMode).^2)));
+mp.F5.fiberMode = mp.F5.fiberMode./fiberModeNorm;
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -289,11 +358,16 @@ mp.F4.score.settings = maskScore; %--Store values for future reference
 mp.F4.corr.Npix = sum(sum(mp.F4.corr.mask));
 mp.F4.score.Npix = sum(sum(mp.F4.score.mask));
 
-%--Indices of dark hole pixels
-mp.F4.corr.inds = find(mp.F4.corr.mask~=0);
+%--Indices of dark hole pixels and logical masks
+if(mp.flagFiber)
+    mp.F4.corr.inds = find(sum(mp.F4.lenslet.mask,3)~=0);
+    mp.F4.corr.maskBool = logical(mp.F4.corr.mask);
+else
+    mp.F4.corr.inds = find(mp.F4.corr.mask~=0);
+    mp.F4.corr.maskBool = logical(mp.F4.corr.mask);
+end
+
 mp.F4.score.inds = find(mp.F4.score.mask~=0);
-%--Logical masks:
-mp.F4.corr.maskBool = logical(mp.F4.corr.mask);
 mp.F4.score.maskBool = logical(mp.F4.score.mask);
 
 %% Spatial weighting of pixel intensity. 
@@ -403,10 +477,12 @@ if(isfield(mp.P1.compact,'E')==false)
 end
 
 %% Off-axis, incoherent point source (exoplanet)
-mp.c_planet = 1;%1e-14;%4e-10;%3e-10;%1e-8; % contrast of exoplanet
-mp.x_planet = 6;%4; % x position of exoplanet in lambda0/D
-mp.y_planet = 0;%1/2; % 7 position of exoplanet in lambda0/D
-
+if(~mp.flagFiber)
+    mp.c_planet = 1;%1e-14;%4e-10;%3e-10;%1e-8; % contrast of exoplanet
+    mp.x_planet = 6;%4; % x position of exoplanet in lambda0/D
+    mp.y_planet = 0;%1/2; % 7 position of exoplanet in lambda0/D
+end
+    
 %% Field Stop at F4 (as a software mask)
 mp.F4.compact.mask = ones(mp.F4.Neta,mp.F4.Nxi);
 % figure; imagesc(Lam0Dxi,Lam0Deta,FPMstop); axis xy equal tight; colormap gray; colorbar; title('Field Stop');
@@ -425,7 +501,6 @@ mp = falco_get_PSF_norm_factor(mp);
 %--Check that the normalization of the coronagraphic PSF is correct
 
 modvar.ttIndex = 1;
-modvar.flagCalcJac = 0; 
 modvar.sbpIndex = mp.si_ref;
 modvar.wpsbpIndex = mp.wi_ref;
 modvar.whichSource = 'star';     

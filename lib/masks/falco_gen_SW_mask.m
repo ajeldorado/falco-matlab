@@ -94,6 +94,12 @@ elseif( strcmpi(whichSide,'B') || strcmpi(whichSide,'bottom') )
     maskSW(ETAS>=0) = 0;    
 end
 
-
+if(rhoInner == 0)
+     if( strcmpi(centering,'interpixel') )
+         maskSW((Nxi-1)/2+1, (Neta-1)/2+1) = 1;
+     else
+         maskSW(Nxi/2+1, Neta/2+1) = 1;
+     end
+end
 
 end %--END OF FUNCTION

@@ -126,7 +126,7 @@ end
 
 %--Fiber propagation
 if(mp.flagFiber)
-    Efiber = cell(np.F4.Nlens,1);
+    Efiber = cell(mp.F4.Nlens,1);
     
     for nlens = 1:mp.F4.Nlens
         EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering,'xfc',mp.F4.x_lenslet_phys(nlens),'yfc',mp.F4.y_lenslet_phys(nlens));

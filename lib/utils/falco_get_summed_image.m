@@ -26,39 +26,15 @@
 %  planet.
 
 
-function Isum = falco_get_summed_image(mp)
-
-% %--Save a lot of RAM
-% if(any(mp.dm_ind==1)); mp.dm1compact = rmfield(mp.dm1compact,'inf_datacube'); end;
-% if(any(mp.dm_ind==2)); mp.dm2compact = rmfield(mp.dm2compact,'inf_datacube'); end;
-% if(any(mp.dm_ind==9)); mp.dm9compact = rmfield(mp.dm9compact,'inf_datacube'); end;
+function [Isum, IfiberSum] = falco_get_summed_image(mp)
 
 %--Compute the DM surfaces outside the full model to save lots of time
 if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
 if(any(mp.dm_ind==2)); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.NdmPad); end
 if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
 
-% facContrastToCounts = model_params.texp*model_params.peakCountsPerPixPerSec;
-% modvar.flagCalcJac = 0; % False for all cases
-% modvar.flagGetNormVal = false; % False for all cases
-    
-
-% %     %--Another set of wavelengths only for use in generating the image of the
-% %     % entire-bandwdith image with the full model. 
-% %     mp.full.Nlam = mp.Nsbp;
-% %     mp.full.lambdas = mp.lambda0*linspace( 1-mp.fracBW/2,1+mp.fracBW/2,mp.full.Nlam);
-% %     mp.entireBWimage.Iweights = ones(mp.full.Nlam,1);
-% %     if(mp.full.Nlam>2)
-% %         mp.entireBWimage.Iweights(1) = 1/2;
-% %         mp.entireBWimage.Iweights(end) = 1/2;
-% %     end
-  
-
-%modvar.ttIndex = 1; % 0 offset in tip/tilt
-% IweightsSum = sum(mp.entireBWimage.Iweights);
 Isum = 0; % Initialize image
-
-
+IfiberSum = 0;
 
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
@@ -66,43 +42,11 @@ for si=1:mp.Nsbp
     for wi=1:mp.Nwpsbp
         modvar.whichSource = 'star';
         modvar.wpsbpIndex = wi;
-        Etemp = model_full(mp, modvar);
+        [Etemp, EfiberTemp] = model_full(mp, modvar);
         Isum = Isum + (abs(Etemp).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi);
+        IfiberSum = IfiberSum + (abs(EfiberTemp).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi);
     end 
-    
-    if(mp.planetFlag)
-        modvar.whichSource = 'exoplanet';
-        Eout = model_full(mp,modvar);
-        ImPlanetC = abs(Eout).^2; % In contrast
-        Isum = Isum + ImPlanetC*mp.sbp_weights(si);
-    end
-
 end
 
-
-
-% %--Loop over wavelengths within each sub-bandpass
-% for ilam = 1:mp.full.Nlam  % Add intensities from all incoherent sources separately
-%     
-%     
-%     %--Starlight
-%     modvar.ebpIndex = ilam;
-%     modvar.lambda = mp.full.lambdas(ilam);
-%     modvar.whichSource = 'star';
-%     Eout = model_full(mp, modvar);
-%     Isum = Isum + mp.full.all_weights(ilam)*(abs(Eout).^2);
-% %     Isum = Isum + mp.entireBWimage.Iweights(ilam)/IweightsSum*(abs(Eout).^2);
-%     %Isum = Isum + (abs(Eout).^2)*(mp.jac.weights(tsi)/mp.Wsum)/mp.Nwpsbp;
-% 
-% %         %--Exoplanet light
-% %         if(mp.planetFlag)
-% %             modvar.whichSource = 'exoplanet';
-% %             Eout = model_full(mp,modvar);
-% %             ImPlanetC = abs(Eout).^2; % In contrast
-% %             %Isum = Isum + ImPlanetC*(mp.jac.weights(tsi)/mp.Wsum)/mp.Nwpsbp;
-% %         end
-% 
-% end
-    
 end %--END OF FUNCTION
 

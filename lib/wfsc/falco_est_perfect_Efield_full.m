@@ -18,7 +18,6 @@ function [Emat,Imat] = falco_est_perfect_Efield_full(mp,DM)
     
     for im=1:mp.jac.Nmode
         % Get full-knowledge, aberrated, noiseless starlight E-field and image
-        modvar.flagCalcJac = 0; 
         modvar.sbpIndex = mp.jac.sbp_inds(im); %mp.Wttlam_si(tsi);
         modvar.zernIndex = mp.jac.zern_inds(im);
         %modvar.ttIndex = mp.jac.zern_inds(im);

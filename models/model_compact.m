@@ -36,7 +36,7 @@
 % -whichSource
 % -flagGenMat
 
-function Eout = model_compact(mp, modvar,varargin)
+function [Eout, Efiber] = model_compact(mp, modvar,varargin)
 
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 

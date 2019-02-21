@@ -22,22 +22,25 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
         end
     end
 
-   
-    Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
-    
+    if(mp.flagFiber)
+        Emat = zeros(mp.F4.Nlens, mp.jac.Nmode);
+    else
+        Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
+    end
+        
     for im=1:mp.jac.Nmode
-        modvar.flagCalcJac = 0; 
-        modvar.sbpIndex = mp.jac.sbp_inds(im); %mp.Wttlam_si(im);
+        modvar.sbpIndex = mp.jac.sbp_inds(im);
         modvar.zernIndex = mp.jac.zern_inds(im);
-        %modvar.ttIndex = mp.Wttlam_ti(im);
         modvar.wpsbpIndex = mp.wi_ref;
         modvar.whichSource = 'star';
 
-        E2D = model_compact(mp, modvar);
-
-        Emat(:,im) = E2D(mp.F4.corr.inds);   % Actual field in estimation area
-
+        [E2D, EfibCompact] = model_compact(mp, modvar);
+        if(mp.flagFiber)
+            [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
+            Emat(:,im) = EfibCompact(I,J,:);
+        else
+            Emat(:,im) = E2D(mp.F4.corr.inds);   % Actual field in estimation area
+        end
     end
     
-
 end %--END OF FUNCTION

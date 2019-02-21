@@ -46,7 +46,6 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     %% Empirically find the regularization value giving the best contrast
     
-        
     %--Loop over all the settings to check empirically
     if(mp.flagParfor) %--Parallelized
         parfor ni = 1:Nvals
@@ -82,26 +81,14 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin,indBest] = min(Inorm_list(:));
 
-
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
     if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
     if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest); end
     if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest); end
     if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest); end
 
-    
     cvarOut.log10regUsed = vals_list(1,indBest);
     dmfacBest = vals_list(2,indBest);
     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
-    
-%     cp.log10regBest(Itr) = vals_list(1,indBest);
-%     cp.dmfacBest(Itr) = vals_list(2,indBest);
-%     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cp.log10regBest(Itr),cp.dmfacBest(Itr), cvar.cMin)
-
-% %     cvar.latestBestlog10reg = vals_list(1,indBest);
-% %     cvar.latestBestDMfac = vals_list(2,indBest);
-% %     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg,cvar.latestBestDMfac,cvar.cMin)
-
-
 
 end %--END OF FUNCTION

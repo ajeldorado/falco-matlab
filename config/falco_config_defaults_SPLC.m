@@ -340,8 +340,7 @@ if(isfield(mp.F4,'sides')==false); mp.F4.sides = 'both'; end  %--options: 'left'
 
 
 %%--Final Focal Plane (F4) Properties
-if(isfield(mp.F4.compact,'res')==false); mp.F4.res = 2.5; end  %--Pixels per lambda_c/D
-if(isfield(mp.F4.full,'res')==false); mp.F4.full.res = 4; end  %--Pixels per lambda_c/D
+if(isfield(mp.F4,'res')==false); mp.F4.res = 2.5; end  %--Pixels per lambda_c/D
 if(isfield(mp.F4,'FOV')==false); mp.F4.FOV = 1 + mp.F4.corr.Rout; end  % minimum desired field of view (along both axes) in lambda0/D
 
 
