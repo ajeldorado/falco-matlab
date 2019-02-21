@@ -248,42 +248,20 @@ if(isfield(mp.dm2,'xc')==false); mp.dm2.xc = mp.dm2.Nact/2 - 1/2; end  % x-cente
 if(isfield(mp.dm2,'yc')==false); mp.dm2.yc = mp.dm2.Nact/2 - 1/2; end  % x-center of DM in actuator widths
 if(isfield(mp.dm2,'edgeBuffer')==false); mp.dm2.edgeBuffer = 1; end  % Radius (in actuator spacings) outside of pupil to compute influence functions for.
 
-%--DM Actuator characteristics
-if(isfield(mp.dm1,'dx_inf0')==false); mp.dm1.dx_inf0 = 1e-4; end  % meters, sampling of the influence function;
-if(isfield(mp.dm1,'dm_spacing')==false); mp.dm1.dm_spacing = 1e-3; end  % meters, pitch of DM actuators
-if(isfield(mp.dm1,'inf0')==false); mp.dm1.inf0 = 1*fitsread('influence_dm5v2.fits'); end     %  -1*fitsread('inf64.3.fits');                              
-if(isfield(mp.dm2,'dx_inf0')==false); mp.dm2.dx_inf0 = 1e-4; end  % meters, sampling of the influence function;
-if(isfield(mp.dm2,'dm_spacing')==false); mp.dm2.dm_spacing = 1e-3; end %0.9906e-3; % meters, pitch of DM actuators
-if(isfield(mp.dm2,'inf0')==false); mp.dm2.inf0 = 1*fitsread('influence_dm5v2.fits'); end     
 
+%--DM Actuator characteristics
+if(isfield(mp.dm1,'inf_fn')==false); mp.dm1.inf_fn = 'influence_dm5v2.fits'; end  % file name of influence function
+if(isfield(mp.dm1,'inf_sign')==false); mp.dm1.inf_sign = '+'; end  % sign of the influence function [+ or -]
+
+if(isfield(mp.dm2,'inf_fn')==false); mp.dm2.inf_fn = 'influence_dm5v2.fits'; end  % file name of influence function
+if(isfield(mp.dm2,'inf_sign')==false); mp.dm2.inf_sign = '+'; end  % sign of the influence function [+ or -]
+
+  
 %--Aperture stops at DMs
 if(isfield(mp,'flagDM1stop')==false); mp.flagDM1stop = false; end  %--logical flag whether to include the stop at DM1 or not
 if(isfield(mp,'flagDM2stop')==false); mp.flagDM2stop = false; end  %--logical flag whether to include the stop at DM2 or not
 if(isfield(mp.dm1,'Dstop')==false); mp.dm1.Dstop = mp.dm1.Nact*1e-3; end  %--diameter of circular stop at DM1 and centered on the beam
 if(isfield(mp.dm2,'Dstop')==false); mp.dm2.Dstop = mp.dm2.Nact*1e-3; end  %--diameter of circular stop at DM2 and centered on the beam
-
-
-%--DM9: Phase control at the FPM
-% mp.dm9.Nrings = 25; % Number of radial hexagonal rings (including the center) for the FPM's phase "DM"
-mp.dm9.VtoHavg = 1e-9; %--meters, gain of each "actuator" for the FPM phase.
-
-%--DM9 parameters
-mp.dm9.flag_hex_array = false; %--true->hex grid. false->square grid
-mp.dm9.actres = 10; % number of "actuators" per lambda0/D in the FPM's focal plane. Only used for square grid
-mp.dm9.Nact = ceil_even(2*mp.F3.Rin*mp.dm9.actres); % number of actuators across DM9 (if not in a hex grid)
-mp.dm9.xtilt = 0;
-mp.dm9.ytilt = 0;
-mp.dm9.zrot = 0; %--clocking angle (degrees)
-% mp.dm9.xc = mp.dm9.Nact/2 - 1/2; % x-center of DM in mm, in actuator widths
-% mp.dm9.yc = mp.dm9.Nact/2 - 1/2; % x-center of DM in mm, in actuator widths
-mp.dm9.edgeBuffer = 0; %1; % Radius (in actuator spacings) outside of pupil to compute influence functions for.
-
-%--DM9 Actuator characteristics
-mp.dm9.dx_inf0_act = 1/10; % units of actuator spacings, sampling of the influence function (for the Xinetics influence function, always 1/10 of the actuator pitch).
-mp.dm9.inf0 = 1*fitsread('influence_dm5v2.fits');    %  -1*fitsread('inf64.3.fits');                              
-%--Cropped influence function for FPM phase
-mp.dm9.Ncrop_inf0 = 45;%20;%45;  %--Half the amount to extract from the center of the 91x91 pixel DM influence function. >=45 gives the uncropped influence functionNhalf = ceil(length(mp.dm9.inf0)/2);
-mp.dm9.FPMbuffer = 0.2;%0.25; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
 
 %%--Pupil Plane Properties
 if(isfield(mp.P2,'D')==false);  mp.P2.D = (mp.dm1.Nact-2)*1e-3; end %46.3e-3; end % beam diameter at pupil closest to the DMs  (meters)
@@ -293,10 +271,6 @@ if(isfield(mp.P4,'D')==false);  mp.P4.D = mp.P2.D; end  % beam diameter at Lyot 
 
 
 %% Apodizer (Shaped Pupil) Properties (Plane P3)
-
-
-   
-
 
 
 %% Lyot Stop Properties
@@ -323,22 +297,50 @@ end
 
 %% Final Focal Plane (F4) Properties
 
+% 
+% %--Specs for Correction (Corr) region and the Scoring (Score) region.
+% if(isfield(mp.F4.corr,'Rin')==false); mp.F4.corr.Rin  = mp.F3.Rin; end  %--lambda0/D, inner radius of correction region
+% if(isfield(mp.F4.score,'Rin')==false); mp.F4.score.Rin = mp.F4.corr.Rin; end  %--Needs to be >= that of Correction mask
+% if(isfield(mp.F4.corr,'Rout')==false); mp.F4.corr.Rout  = floor(mp.dm1.Nact/2/(1+mp.fracBW/2)); end  %--lambda0/D, outer radius of correction region
+% if(isfield(mp.F4.score,'Rout')==false); mp.F4.score.Rout = mp.F4.corr.Rout; end  %--Needs to be <= that of Correction mask
+% 
+% if(isfield(mp.F4.corr,'ang')==false); mp.F4.corr.ang  = 180; end  %--degrees per side
+% if(isfield(mp.F4.score,'ang')==false); mp.F4.score.ang = 180; end  %--degrees per side
+% if(isfield(mp.F4,'sides')==false); mp.F4.sides = 'both'; end  %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
+% 
+% 
+% %%--Final Focal Plane (F4) Properties
+% if(isfield(mp.F4.compact,'res')==false); mp.F4.res = 3; end  %--Pixels per lambda_c/D
+% if(isfield(mp.F4.full,'res')==false); mp.F4.full.res = 6; end  %--Pixels per lambda_c/D
+% if(isfield(mp.F4,'FOV')==false); mp.F4.FOV = 1 + mp.F4.corr.Rout; end  % minimum desired field of view (along both axes) in lambda0/D
 
-%--Specs for Correction (Corr) region and the Scoring (Score) region.
-if(isfield(mp.F4.corr,'Rin')==false); mp.F4.corr.Rin  = mp.F3.Rin; end  %--lambda0/D, inner radius of correction region
-if(isfield(mp.F4.score,'Rin')==false); mp.F4.score.Rin = mp.F4.corr.Rin; end  %--Needs to be >= that of Correction mask
-if(isfield(mp.F4.corr,'Rout')==false); mp.F4.corr.Rout  = floor(mp.dm1.Nact/2/(1+mp.fracBW/2)); end  %--lambda0/D, outer radius of correction region
-if(isfield(mp.F4.score,'Rout')==false); mp.F4.score.Rout = mp.F4.corr.Rout; end  %--Needs to be <= that of Correction mask
-
-if(isfield(mp.F4.corr,'ang')==false); mp.F4.corr.ang  = 180; end  %--degrees per side
-if(isfield(mp.F4.score,'ang')==false); mp.F4.score.ang = 180; end  %--degrees per side
-if(isfield(mp.F4,'sides')==false); mp.F4.sides = 'both'; end  %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
 
 
-%%--Final Focal Plane (F4) Properties
-if(isfield(mp.F4.compact,'res')==false); mp.F4.res = 3; end  %--Pixels per lambda_c/D
-if(isfield(mp.F4.full,'res')==false); mp.F4.full.res = 6; end  %--Pixels per lambda_c/D
-if(isfield(mp.F4,'FOV')==false); mp.F4.FOV = 1 + mp.F4.corr.Rout; end  % minimum desired field of view (along both axes) in lambda0/D
+
+
+% % %--Specs for Correction (Corr) region and the Scoring (Score) region.
+% % % if(isfield(mp.F4.corr,'Rin')==false); mp.F4.corr.Rin  = mp.F3.Rin; end  %--lambda0/Dcircumscribed, inner radius of correction region
+% % if(isfield(mp.F4.corr,'Rin')==false)
+% %     if(isfield(mp.F3,'RinA')) 
+% %         mp.F4.corr.Rin  = mp.F3.RinA;
+% %     else
+% %         mp.F4.corr.Rin  = mp.F3.Rin;
+% %     end
+% % end  %--lambda0/D, inner radius of correction region
+% % if(isfield(mp.F4.score,'Rin')==false); mp.F4.score.Rin = mp.F4.corr.Rin; end  %--Needs to be >= that of Correction mask
+% % if(isfield(mp.F4.corr,'Rout')==false); mp.F4.corr.Rout  = min( [floor(mp.dm1.Nact/2*(1-mp.fracBW/2)), mp.F3.Rout ] ); end %--lambda0/Dcircumscribed, outer radius of correction region
+% % if(isfield(mp.F4.score,'Rout')==false); mp.F4.score.Rout = mp.F4.corr.Rout; end  %--Needs to be <= that of Correction mask
+% % 
+% % if(isfield(mp.F4.corr,'ang')==false); mp.F4.corr.ang  = 180; end  %--degrees per side
+% % if(isfield(mp.F4.score,'ang')==false); mp.F4.score.ang = 180; end  %--degrees per side
+% % if(isfield(mp.F4,'sides')==false); mp.F4.sides = 'both'; end  %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
+% % 
+% % 
+% % %%--Final Focal Plane (F4) Properties
+% % if(isfield(mp.F4.compact,'res')==false); mp.F4.res = 3; end  %--Pixels per lambda_c/D
+% % if(isfield(mp.F4.full,'res')==false); mp.F4.full.res = 6; end  %--Pixels per lambda_c/D
+% % if(isfield(mp.F4,'FOV')==false); mp.F4.FOV = 1 + mp.F4.corr.Rout; end  % minimum desired field of view (along both axes) in lambda0/D
+
 
 
 end %--END OF FUNCTION

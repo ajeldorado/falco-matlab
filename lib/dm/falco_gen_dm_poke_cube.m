@@ -45,9 +45,9 @@
 % dm.yc = dm.Nact/2 - 1/2; % x-center of DM in mm, in actuator widths
 % 
 % %--DM Actuator characteristics
-% dm.dx_inf0 = 1e-4; % meters, sampling of the influence function;
-% dm.dm_spacing = 0.9906e-3; % meters, pitch of DM actuators
-% dm.inf0 = -1*fitsread('influence_dm5v2.fits');s
+% dm.dx_inf0 = ; % meters, sampling of the influence function;
+% dm.dm_spacing = ; % meters, pitch of DM actuators
+% dm.inf0 = 
 %
 %
 %

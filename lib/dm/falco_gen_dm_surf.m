@@ -50,7 +50,6 @@ switch dm.centering % 0 shift for pixel-centered pupil, or -Darray/2/Narray shif
         error('falco_gen_dm_surf: centering variable must be either pixel or interpixel')
 end
 
-
 pupil_ratio = 1; % beam diameter fraction
 wl_dummy = 1e-6; %--dummy value needed to initialize wavelength in PROPER (meters)
 
@@ -76,13 +75,8 @@ else
     H = dm.VtoH.*dm.V;
 end
 
-if(isfield(dm,'inf_info'))
-    [~,DMsurf] = propcustom_dm(bm, H, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps,...
-        'inf_sign',dm.inf_sign, 'custom_infl', dm.inf_info);
-else
-    [~,DMsurf] = propcustom_dm(bm, H, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps,...
-        'inf_sign',dm.inf_sign, 'inf_fn', dm.inf_fn);
-end
+[~,DMsurf] = propcustom_dm(bm, H, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps,...
+    'inf_sign',dm.inf_sign, 'inf_fn', dm.inf_fn);
 
 
 end %--END OF FUNCTION
