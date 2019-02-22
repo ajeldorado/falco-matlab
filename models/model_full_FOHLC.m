@@ -148,6 +148,7 @@ EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil 
 EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.full.Narr);
 % % EP4noFPM = transOuterFPM*EP4noFPM; %--Apply the phase and amplitude change from the FPM's outer complex transmission.
 
+mp.P3.E = EP3; %JLllop
 
 %--Do NOT apply FPM if normalization value is being found
 if(normFac==0) 

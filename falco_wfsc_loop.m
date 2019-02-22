@@ -510,8 +510,8 @@ clear cvar G* h* jacStruct; % Save a ton of space when storing the workspace
 
 % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
 mp.P1.full.mask=1; mp.P1.compact.mask=1;
-mp.P3.full.mask=1; mp.P3.compact.mask=1;
-mp.P4.full.mask=1; mp.P4.compact.mask=1;
+% mp.P3.full.mask=1; mp.P3.compact.mask=1;
+% mp.P4.full.mask=1; mp.P4.compact.mask=1;
 mp.F3.full.mask=1; mp.F3.compact.mask=1;
 
 mp.P1.full.E = 1; mp.P1.compact.E=1; mp.Eplanet=1; 

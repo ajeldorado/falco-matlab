@@ -22,13 +22,13 @@ clear all;
 %% Define Necessary Paths on Your System
 
 %--Library locations
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.falco = '~/Documents/GitHub/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
 % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.config = '~/Documents/GitHub/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '~/Documents/GitHub/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 
 %% Add to the MATLAB Path
@@ -84,7 +84,7 @@ mp.dm9.V0coef = -100; % starting occulting spot phase (uniform) [nm of phase]
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'conEFC' for constrained EFC using CVX. --> DEVELOPMENT ONLY
 % mp.controller = 'SM-AMPL';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
-mp.controller = 'plannedEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
+mp.controller = 'gridsearchEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
@@ -131,7 +131,7 @@ switch mp.controller
         mp.ctrl.dmfacVec = 1;
         
         %%--WFSC Iterations and Control Matrix Relinearization
-        mp.Nitr = 20; %--Number of estimation+control iterations to perform
+        mp.Nitr = 1; %--Number of estimation+control iterations to perform
         mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 
     case{'plannedEFC'}
@@ -330,7 +330,7 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
     '_IWA',num2str(mp.F4.corr.Rin),'_OWA',num2str(mp.F4.corr.Rout),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller];
+    '_',mp.controller,'_plotPupilTest'];
 
 %% Part 4: Run the WFSC trial
 out = falco_wfsc_loop(mp);

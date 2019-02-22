@@ -22,13 +22,13 @@ clear all;
 %% Define Necessary Paths on Your System
 
 %--Library locations
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.falco = '/Users/jllopsay/Documents/GitHub/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
 % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.config = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 
 %% Add to the MATLAB Path
@@ -75,7 +75,7 @@ mp.dm9.V0coef = 390;%240/1.42; % Nominal PMGI layer thickness [nm] (the 1.42 dis
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'conEFC' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
+mp.controller = 'gridsearchEFC';%--Controller options: 'gridsearchEFC' or 'plannedEFC'
 
 mp.centering = 'pixel'; %--Centering on the arrays at each plane: pixel or interpixel
 
@@ -99,7 +99,7 @@ mp.F3.Rin = 2.7; % maximum radius of inner part of the focal plane mask, in lamb
 mp.F3.RinA = mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
 
 %%--Pupil Masks        
-mp.P1.full.Nbeam = 250;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
+mp.P1.full.Nbeam = 120;%350;%250; %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
 mp.P1.compact.Nbeam = mp.P1.full.Nbeam;
 
 %--Lyot Stop parameters
@@ -115,14 +115,14 @@ switch mp.controller
     case{'gridsearchEFC'} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast
         
-        mp.dm_ind = [1 2 9]; %--Which DMs to use and when
+        mp.dm_ind = [1 2]; %--Which DMs to use and when
 
         mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
         mp.maxAbsdV = 150;  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
         mp.ctrl.dmfacVec = 1;
         
         %%--WFSC Iterations and Control Matrix Relinearization
-        mp.Nitr = 20; %--Number of estimation+control iterations to perform
+        mp.Nitr = 75; %--Number of estimation+control iterations to perform
         mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 
     case{'plannedEFC'}
