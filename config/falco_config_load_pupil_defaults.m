@@ -28,9 +28,9 @@ switch mp.whichPupil
         if(isfield(mp.P1,'D')==false); mp.P1.D = 4; end  %--meters, diameter of telescope (This is like HabEx A)
         if(isfield(mp.P1,'Dfac')==false); mp.P1.Dfac = 1; end  %--Ratio of OD_circumscribed to OD_inscribed for the non-circular outer aperture.
         if(isfield(mp.P1.full,'Nbeam')==false); mp.P1.full.Nbeam = 250; end  
-        if(isfield(mp.P1.compact,'Nbeam')==false); mp.P1.compact.Nbeam = 250; end 
-        if(isfield(mp.P4.full,'Nbeam')==false); mp.P4.full.Nbeam = 250; end  
-        if(isfield(mp.P4.compact,'Nbeam')==false); mp.P4.compact.Nbeam = 200; end 
+        if(isfield(mp.P1.compact,'Nbeam')==false); mp.P1.compact.Nbeam = mp.P1.full.Nbeam; end 
+        if(isfield(mp.P4.full,'Nbeam')==false); mp.P4.full.Nbeam = mp.P1.full.Nbeam; end  
+        if(isfield(mp.P4.compact,'Nbeam')==false); mp.P4.compact.Nbeam = mp.P1.full.Nbeam; end 
         
         if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
         if(isfield(mp.P1,'ODnorm')==false); mp.P1.ODnorm = 1; end % Outer diameter (fraction of Nbeam) 
@@ -100,9 +100,9 @@ switch mp.whichPupil
         if(isfield(mp.P1,'D')==false); mp.P1.D = 7.989; end  %--meters, circumscribed. The segment size is 0.955 m, flat-to-flat, and the gaps are 6 mm.
         
         if(isfield(mp.P1.full,'Nbeam')==false); mp.P1.full.Nbeam = 1000; end  %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering)
-        if(isfield(mp.P1.compact,'Nbeam')==false); mp.P1.compact.Nbeam = 500; end 
-        if(isfield(mp.P4.full,'Nbeam')==false); mp.P4.full.Nbeam = 300; end  
-        if(isfield(mp.P4.compact,'Nbeam')==false); mp.P4.compact.Nbeam = 200; end 
+        if(isfield(mp.P1.compact,'Nbeam')==false); mp.P1.compact.Nbeam = mp.P1.full.Nbeam; end 
+        if(isfield(mp.P4.full,'Nbeam')==false); mp.P4.full.Nbeam = mp.P1.full.Nbeam; end  
+        if(isfield(mp.P4.compact,'Nbeam')==false); mp.P4.compact.Nbeam = mp.P1.full.Nbeam; end 
         
         %if(isfield(mp.P4,'IDnorm')==false); mp.P4.IDnorm = 0; end 
         %if(isfield(mp.P4,'ODnorm')==false); mp.P4.ODnorm = 0.80; end 
@@ -113,7 +113,7 @@ end
 
 %--Resolution must be the same at pupils P1 and P4 for the Vortex and Lyot coronagraphs.
 switch lower(mp.coro)
-    case{'lc','hlc','vortex','vc','avc'}
+    case{'lc','hlc','vortex','vc','avc','roddier'}
         mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex and H/LC. 
         mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex and H/LC. 
 end

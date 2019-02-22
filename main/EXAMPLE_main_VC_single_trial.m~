@@ -3,8 +3,13 @@
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
+%
+%--Script to:
+%  1) Specify the key parameter values for a vortex coronagraph.
+%  2) Load the rest of the default settings.
+%  3) Save out all the input parameters.
+%  4) Run a single trial of WFSC using FALCO.
 
-% Vortex coronagraph example script
 
 %% Go the correct starting directory and add all of FALCO to the Matlab path
 clear;
@@ -25,9 +30,7 @@ mp.path.proper = [pathStem,'PROPER/'];  %--Location of FALCO; %--Location of the
 mp.path.config = [mp.path.falco,'data/brief/']; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
 mp.path.ws = [mp.path.falco,'data/ws/']; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
-%% Add to the MATLAB Path
-addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+
 
 %% [OPTIONAL] Start from a previous FALCO trial's DM settings
 
@@ -62,11 +65,14 @@ mp.controller = 'gridsearchEFC';%--Controller options: 'gridsearchEFC' or 'plann
 mp.coro = 'Vortex';    %--Tested Options: 'LC','HLC','SPLC','Vortex'
 mp.F3.VortexCharge = 6; %--Charge of vortex coronagraph
 mp.whichPupil = 'LUVOIR_B_offaxis';%'Simple';
+mp.flagApod = false; % Can be simply a sub-aperture 
+
+
 
 
 %%--Pupil Plane and DM Plane Properties
 mp.d_P2_dm1 = 0; % distance (along +z axis) from P2 pupil to DM1 (meters)
-mp.d_dm1_dm2 = 0.3; % distance between DM1 and DM2 (meters)
+mp.d_dm1_dm2 = 3; % distance between DM1 and DM2 (meters)
 
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 500e-9; % central wavelength of bandpass (meters)
@@ -74,7 +80,6 @@ mp.fracBW = 0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
 mp.Nsbp = 1; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
 
-%%
 
 %%--Pupil Masks
 switch mp.whichPupil
@@ -100,8 +105,7 @@ switch mp.whichPupil
         mp.P4.strut_angs = [];%Array of angles of the radial struts (deg)
         mp.P4.strut_width = []; % Width of the struts (fraction of pupil diam.)
       
-        mp.flagApod = false; 
-        
+
     case 'LUVOIR_B_offaxis' % Note:  Nbeam needs to be >~500 to properly resolve segment gaps 
         mp.P1.D = 7.989; %--meters, circumscribed. The segment size is 0.955 m, flat-to-flat, and the gaps are 6 mm.
         
@@ -122,16 +126,13 @@ switch mp.whichPupil
 
         mp.P1.gapWidth = 6e-3/mp.P1.D; % Fractional gap width
         
-        mp.P4.padFacPct = 0;
-        
 end
 
 %% DMs
 
 mp.dm_ind = [1 2 ]; % vector of which DMs to use for control.
 
-% mp.P2.D =     46.3e-3; % beam diameter at pupil closest to the DMs  (meters)
-mp.P2.D =     48*400e-6; % beam diameter at pupil closest to the DMs  (meters)
+mp.P2.D =     46.3e-3; % beam diameter at pupil closest to the DMs  (meters)
 mp.dm1.Nact = 50; % number of actuators across DM1
 mp.dm2.Nact = 50; % number of actuators across DM2
 
@@ -158,18 +159,16 @@ mp.est.probe.gainFudge = 6;%4;%1;     % empirical fudge factor to make average p
 mp.flagSim = true;
 mp.layout = 'Fourier';
 
+mp.dm1.inf_fn = 'influence_BMC_2kDM_400micron.fits';
+mp.dm2.inf_fn = 'influence_BMC_2kDM_400micron.fits';
 % mp.dm1.inf_fn = 'influence_dm5v2.fits';
 % mp.dm2.inf_fn = 'influence_dm5v2.fits';
-mp.dm1.inf_fn = 'influence_BMC_2kDM_400micron_res10.fits';
-mp.dm2.inf_fn = 'influence_BMC_2kDM_400micron_res10.fits';
 
-% mp.dm1.dm_spacing = 1e-3; %--User defined actuator pitch
-% mp.dm2.dm_spacing = 1e-3; %--User defined actuator pitch
-mp.dm1.dm_spacing = 400e-6; %--User defined actuator pitch
-mp.dm2.dm_spacing = 400e-6; %--User defined actuator pitch
+mp.dm1.dm_spacing = 1e-3; %--User defined actuator pitch
+mp.dm2.dm_spacing = 1e-3; %--User defined actuator pitch
+% mp.dm1.dm_spacing = 400e-6; %--User defined actuator pitch
+% mp.dm2.dm_spacing = 400e-6; %--User defined actuator pitch
 
-% mp.dm1.inf_sign = '+';
-% mp.dm2.inf_sign = '+';
 mp.dm1.inf_sign = '-';
 mp.dm2.inf_sign = '-';
 
@@ -271,7 +270,7 @@ mp.dm2.maxAbsV = 250;%250./2.;
 
 %--Specs for Correction (Corr) region and the Scoring (Score) region.
 mp.F4.corr.Rin  = 2; %--lambda0/D, inner radius of correction region
-mp.F4.score.Rin = mp.F4.corr.Rin; %--Needs to be <= that of Correction mask
+mp.F4.score.Rin = 2; %--Needs to be <= that of Correction mask
 mp.F4.corr.Rout  = floor(mp.dm1.Nact/2*(1-mp.fracBW/2)); %--lambda0/D, outer radius of correction region
 mp.F4.score.Rout = mp.F4.corr.Rout; %--Needs to be <= that of Correction mask
 mp.F4.corr.ang  = 180; %--degrees per side
@@ -280,8 +279,12 @@ mp.F4.sides = 'both'; %--options: 'left', 'right','top','bottom'; any other valu
 
 
 %%--Final Focal Plane (F4) Properties
-mp.F4.res = 4; %--Pixels per lambda_c/D
+mp.F4.res = 3; %--Pixels per lambda_c/D
+mp.F4.full.res = 6; %--Pixels per lambda_c/D
 mp.F4.FOV = 1 + mp.F4.corr.Rout; % minimum desired field of view (along both axes) in lambda0/D
+
+
+
 
 %% Part 2: Call the function to define the rest of the variables and initialize the workspace
 if(exist('mp','var')==false); mp.dummy = 1; end

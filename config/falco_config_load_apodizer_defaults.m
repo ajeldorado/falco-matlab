@@ -159,7 +159,6 @@ switch mp.whichPupil
 	case{'Simple','SimplePROPER'}
         %--Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
         mp.P4.full.Nbeam = mp.P1.full.Nbeam; %--Number of pixels across the re-imaged pupil at the Lyot plane (independent of beam centering)
-        mp.P4.full.Nbeam
         mp.P4.compact.Nbeam = mp.P1.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
         %--Make or read in Lyot stop (LS) for the 'full' model
         if(isfield(mp.P4,'IDnorm')==false);  mp.P4.IDnorm = 0.3; end % Inner radius of Lyot stop
