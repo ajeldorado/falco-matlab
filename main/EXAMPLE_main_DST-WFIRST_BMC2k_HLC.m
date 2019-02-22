@@ -16,22 +16,38 @@ clear all;
 close all;
 
 
+POOL = parpool('local',18);
+
+
+dz_vec = (3:1.5:11)/10;
+Nrep = length(dz_vec);
+for isurvey=1:Nrep
+
+    clearvars -except isurvey Nrep dz_vec POOL
+    
+%%--Record Keeping
+mp.TrialNum = isurvey + 10; %--Always use a diffrent Trial # for different calls of FALCO.
+mp.SeriesNum = 33; %--Use the same Series # for sets of similar trials.
+
+    
 %% Properties for BMC Survey
 
+%%--Special Computational Settings
+mp.flagParfor = true; %true; %true; %--whether to use parfor for Jacobian calculation
+mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
+mp.flagPlot = false;%true;
+
 % %--Variables for survey:
-% dz_vec = (3:1.5:10)/10;
-% flagWFE_vec = [0, 1]; %--Flag for DM WFE
-
 flagDMwfe = false;
-dz = 0.6; % separation distance between DMs [meters]
-
+dz = dz_vec(isurvey);%0.6; % separation distance between DMs [meters]
+fprintf('*** DM separation = %.3f meters ***\n',dz);
 
 %--WFE maps and stops on DMs:
 mp.dm1.inf_fn = 'influence_BMC_2kDM_400micron_res20.fits';
 mp.dm2.inf_fn = 'influence_BMC_2kDM_400micron_res20.fits';
 
 %%--Pupil Masks
-mp.P1.full.Nbeam = 937;%309;%250; %--Number of pixel widths across the actual diameter of the beam/aperture (independent of beam centering)
+mp.P1.full.Nbeam = 927; %309;%927; %--Number of pixel widths across the actual diameter of the beam/aperture (independent of beam centering)
 mp.P1.compact.Nbeam = mp.P1.full.Nbeam;
 
 mp.flagDMwfe = flagDMwfe;
@@ -57,7 +73,7 @@ mp.d_dm1_dm2 = dz; % distance between DM1 and DM2 (meters)
 
 
 %%--Bandwidth and Wavelength Specs
-mp.lambda0 = 550e-9;%575e-9; % central wavelength of bandpass (meters)
+mp.lambda0 = 575e-9; % central wavelength of bandpass (meters)
 mp.fracBW = 0.10;%0.10;%0.125;%0.10;%0.125;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
 mp.Nsbp = 6; % number of sub-bandpasses across correction band 
 mp.Nwpsbp = 1;% number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Can be odd or even value.
@@ -111,11 +127,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 
 
-%% Special Computational Settings
-mp.flagParfor = false; %true; %true; %--whether to use parfor for Jacobian calculation
-mp.useGPU = false; %--whether to use GPUs for Jacobian calculation
 
-mp.flagPlot = true;
 
 %% [OPTIONAL] Start from a previous FALCO trial's DM settings
 
@@ -127,9 +139,6 @@ mp.flagPlot = true;
 
 %% Step 1: Define any variable values that will overwrite the defaults (in falco_config_defaults_SPLC)
 
-%%--Record Keeping
-mp.TrialNum = 1;%-1*(0 + isurvey); %--Always use a diffrent Trial # for different calls of FALCO.
-mp.SeriesNum = 33; %--Use the same Series # for sets of similar trials.
 
 
 mp.aoi = 7.96; % Angle of incidence at FPM [deg]
@@ -156,8 +165,8 @@ mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities ove
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-% mp.controller = 'plannedEFC';
-mp.controller = 'gridsearchEFC';
+mp.controller = 'plannedEFC';
+%mp.controller = 'gridsearchEFC';
 
 
 
@@ -411,7 +420,7 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 %% Part 4: Run the WFSC trial
 out = falco_wfsc_loop(mp);
 
-
+end
 
 
 
