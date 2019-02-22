@@ -131,8 +131,8 @@ switch mp.whichPupil
     case 'Simple' % Can be used to create circular and annular apertures with radial spiders 
         
         mp.P1.D = 4; %--meters, diameter of telescope (This is like HabEx A)
-        mp.P1.full.Nbeam = 300; 
-        mp.P1.compact.Nbeam = 300;
+%         mp.P1.full.Nbeam = 300; 
+%         mp.P1.compact.Nbeam = 300;
 
         mp.P1.IDnorm = 0;% Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
         mp.P1.ODnorm = 1;% Outer diameter (fraction of Nbeam) 
