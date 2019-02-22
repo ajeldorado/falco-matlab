@@ -21,8 +21,8 @@ function Im = falco_get_sbp_image(mp,si)
 
     if(mp.flagSim) %--Generate simulated image
         Im = falco_get_sim_sbp_image(mp,si);
-    else %--Retrieve testbed image
-    %     Isum = falco_get_real_sbp_image(mp,si);
+    else %--Send DM commands and retrieve testbed image
+        Im = falco_get_testbed_sbp_image(mp,si);
     end
 
 end %--END OF FUNCTION
