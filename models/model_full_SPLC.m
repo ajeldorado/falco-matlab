@@ -107,6 +107,8 @@ else
     Eout = EF4/sqrt(normFac); %--Apply normalization
 end
 
+Efiber = 0;
+
 %--Fiber propagation
 if (mp.flagFiber) 
     Efiber = cell(mp.F4.Nlens,1);

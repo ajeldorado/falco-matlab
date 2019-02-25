@@ -30,8 +30,12 @@ while icav < size(varargin, 2)
     end
 end
 
-Ifiber = zeros(mp.F5.Neta, mp.F5.Nxi);
+Ifiber = 0;
 
+if(mp.flagFiber)
+    Ifiber = zeros(mp.F5.Neta, mp.F5.Nxi);
+end
+    
 if(flagEval)
     Iout = zeros(mp.F4.eval.Neta, mp.F4.eval.Nxi);
 else
@@ -52,7 +56,9 @@ for si=1:mp.Nsbp
     end
         
     Iout = Iout + (abs(E2D).^2)*mp.jac.weightMat(si,1);
-    Ifiber = Ifiber + (abs(Efiber).^2)*mp.jac.weightMat(si,1);
+    if(mp.flagFiber)
+        Ifiber = Ifiber + (abs(Efiber).^2)*mp.jac.weightMat(si,1);
+    end
 end
 
 end %--END OF FUNCTION
