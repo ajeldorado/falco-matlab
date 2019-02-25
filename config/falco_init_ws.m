@@ -222,13 +222,15 @@ end
 mp.F4.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.F4.res; % sampling at F4 [meters]
 mp.F4.deta = mp.F4.dxi; % sampling at F4 [meters]    
 
-mp.F4.lenslet.D = 2*mp.F4.res*mp.F4.lensletWavRad*mp.F4.dxi;
-mp.F4.x_lenslet_phys = mp.F4.dxi*mp.F4.res*mp.F4.x_lenslet;
-mp.F4.y_lenslet_phys = mp.F4.deta*mp.F4.res*mp.F4.y_lenslet;
+if(mp.flagFiber)
+    mp.F4.lenslet.D = 2*mp.F4.res*mp.F4.lensletWavRad*mp.F4.dxi;
+    mp.F4.x_lenslet_phys = mp.F4.dxi*mp.F4.res*mp.F4.x_lenslet;
+    mp.F4.y_lenslet_phys = mp.F4.deta*mp.F4.res*mp.F4.y_lenslet;
 
-mp.F5.dxi = mp.lensletFL*mp.lambda0/mp.F4.lenslet.D/mp.F5.res;
-mp.F5.deta = mp.F5.dxi;
-
+    mp.F5.dxi = mp.lensletFL*mp.lambda0/mp.F4.lenslet.D/mp.F5.res;
+    mp.F5.deta = mp.F5.dxi;
+end
+    
 %% Software Mask for Correction (corr) and Scoring (score)
 
 %--Set Inputs
@@ -254,63 +256,65 @@ mp.F4.Neta = size(mp.F4.corr.mask,1);
 %--Mask defining the area covered by the lenslet.  Only the immediate area
 %around the lenslet is propagated, saving computation time.  This lenslet
 %can then be moved around to different positions in F4.
-maskLenslet.pixresFP = mp.F4.res;
-maskLenslet.rhoInner = 0;
-maskLenslet.rhoOuter = mp.F4.lensletWavRad;
-maskLenslet.angDeg = mp.F4.corr.ang;
-maskLenslet.centering = mp.centering;
-maskLenslet.FOV = mp.F4.FOV;
-maskLenslet.whichSide = mp.F4.sides;
-[mp.F4.lenslet.mask, ~, ~] = falco_gen_SW_mask(maskLenslet);
+if(mp.flagFiber)
+    maskLenslet.pixresFP = mp.F4.res;
+    maskLenslet.rhoInner = 0;
+    maskLenslet.rhoOuter = mp.F4.lensletWavRad;
+    maskLenslet.angDeg = mp.F4.corr.ang;
+    maskLenslet.centering = mp.centering;
+    maskLenslet.FOV = mp.F4.FOV;
+    maskLenslet.whichSide = mp.F4.sides;
+    [mp.F4.lenslet.mask, ~, ~] = falco_gen_SW_mask(maskLenslet);
+    
+    % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    %--Dummy mask to calculate the F5 coordinates correctly.
+    maskF5.pixresFP = mp.F5.res;
+    maskF5.rhoInner = 0;
+    maskF5.rhoOuter = 1.22;
+    maskF5.angDeg = 180;
+    maskF5.centering = mp.centering;
+    maskF5.FOV = mp.F5.FOV;
+    maskF5.whichSide = mp.F4.sides;
+    [mp.F5.mask, mp.F5.xisDL, mp.F5.etasDL] = falco_gen_SW_mask(maskF5);
 
-%--Dummy mask to calculate the F5 coordinates correctly.
-maskF5.pixresFP = mp.F5.res;
-maskF5.rhoInner = 0;
-maskF5.rhoOuter = 1.22;
-maskF5.angDeg = 180;
-maskF5.centering = mp.centering;
-maskF5.FOV = mp.F5.FOV;
-maskF5.whichSide = mp.F4.sides;
-[mp.F5.mask, mp.F5.xisDL, mp.F5.etasDL] = falco_gen_SW_mask(maskF5);
+    %--Size of the output image in F5
+    mp.F5.Nxi = size(mp.F5.mask, 2);
+    mp.F5.Neta = size(mp.F5.mask, 1);
 
-%--Size of the output image in F5
-mp.F5.Nxi = size(mp.F5.mask, 2);
-mp.F5.Neta = size(mp.F5.mask, 1);
+    %% Set up the fiber mode in F5
 
-%% Set up the fiber mode in F5
+    V = 2*pi/mp.lambda0*mp.fiber.a*mp.fiber.NA; 
+    W = 1.1428*V - 0.996;
+    U = sqrt(V.^2 - W.^2);
 
-V = 2*pi/mp.lambda0*mp.fiber.a*mp.fiber.NA; 
-W = 1.1428*V - 0.996;
-U = sqrt(V.^2 - W.^2);
+    maskFiberCore.pixresFP = mp.F5.res;
+    maskFiberCore.rhoInner = 0;
+    maskFiberCore.rhoOuter = mp.fiber.a;
+    maskFiberCore.angDeg = 180;
+    maskFiberCore.FOV = mp.F5.FOV;
+    maskFiberCore.whichSide = mp.F4.sides;
+    [mp.F5.fiberCore.mask, ~, ~] = falco_gen_SW_mask(maskFiberCore);
 
-maskFiberCore.pixresFP = mp.F5.res;
-maskFiberCore.rhoInner = 0;
-maskFiberCore.rhoOuter = mp.fiber.a;
-maskFiberCore.angDeg = 180;
-maskFiberCore.FOV = mp.F5.FOV;
-maskFiberCore.whichSide = mp.F4.sides;
-[mp.F5.fiberCore.mask, ~, ~] = falco_gen_SW_mask(maskFiberCore);
+    maskFiberCladding.pixresFP = mp.F5.res;
+    maskFiberCladding.rhoInner = mp.fiber.a;
+    maskFiberCladding.rhoOuter = 10;
+    maskFiberCladding.angDeg = 180;
+    maskFiberCladding.FOV = mp.F5.FOV;
+    maskFiberCladding.whichSide = mp.F4.sides;
+    [mp.F5.fiberCladding.mask, ~, ~] = falco_gen_SW_mask(maskFiberCladding);
 
-maskFiberCladding.pixresFP = mp.F5.res;
-maskFiberCladding.rhoInner = mp.fiber.a;
-maskFiberCladding.rhoOuter = 10;
-maskFiberCladding.angDeg = 180;
-maskFiberCladding.FOV = mp.F5.FOV;
-maskFiberCladding.whichSide = mp.F4.sides;
-[mp.F5.fiberCladding.mask, ~, ~] = falco_gen_SW_mask(maskFiberCladding);
+	[F5XIS, F5ETAS] = meshgrid(mp.F5.xisDL, mp.F5.etasDL);
 
-[F5XIS, F5ETAS] = meshgrid(mp.F5.xisDL, mp.F5.etasDL);
-
-mp.F5.RHOS = sqrt((F5XIS - mp.F5.fiberPos(1)).^2 + (F5ETAS - mp.F5.fiberPos(2)).^2);
-mp.F5.fiberCore.mode = mp.F5.fiberCore.mask.*besselj(0, U*mp.F5.RHOS/mp.fiber.a)/besselj(0,U);
-mp.F5.fiberCladding.mode = mp.F5.mask.*besselk(0, W*mp.F5.RHOS/mp.fiber.a)/besselk(0,W);
-mp.F5.fiberCladding.mode(isnan(mp.F5.fiberCladding.mode)) = 0;
-mp.F5.fiberMode = mp.F5.fiberCore.mode + mp.F5.fiberCladding.mode;
-fiberModeNorm = sqrt(sum(sum(abs(mp.F5.fiberMode).^2)));
-mp.F5.fiberMode = mp.F5.fiberMode./fiberModeNorm;
-
+    mp.F5.RHOS = sqrt((F5XIS - mp.F5.fiberPos(1)).^2 + (F5ETAS - mp.F5.fiberPos(2)).^2);
+    mp.F5.fiberCore.mode = mp.F5.fiberCore.mask.*besselj(0, U*mp.F5.RHOS/mp.fiber.a)/besselj(0,U);
+    mp.F5.fiberCladding.mode = mp.F5.fiberCladding.mask.*besselk(0, W*mp.F5.RHOS/mp.fiber.a)/besselk(0,W);
+    mp.F5.fiberCladding.mode(isnan(mp.F5.fiberCladding.mode)) = 0;
+    mp.F5.fiberMode = mp.F5.fiberCore.mode + mp.F5.fiberCladding.mode;
+    fiberModeNorm = sqrt(sum(sum(abs(mp.F5.fiberMode).^2)));
+    mp.F5.fiberMode = mp.F5.fiberMode./fiberModeNorm;
+end
+    
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 %--Evaluation Model for Computing Throughput (same as Compact Model but
@@ -374,10 +378,14 @@ mp.F4.score.maskBool = logical(mp.F4.score.mask);
 % NOTE: For real instruments and testbeds, only the compact model should be 
 % used. The full model spatial weighting is included too if in simulation 
 % the full model has a different detector resolution than the compact model.
-mp = falco_config_spatial_weights(mp);
 
-%--Extract the vector of weights at the pixel locations of the dark hole pixels.
-mp.WspatialVec = mp.Wspatial(mp.F4.corr.inds);
+if(mp.flagFiber)
+    mp.WspatialVec = ones(mp.F4.Nlens);
+else
+    mp = falco_config_spatial_weights(mp);
+    %--Extract the vector of weights at the pixel locations of the dark hole pixels.
+    mp.WspatialVec = mp.Wspatial(mp.F4.corr.inds);
+end
 
 %% Deformable Mirror (DM) 1 and 2 Parameters
 

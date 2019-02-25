@@ -102,7 +102,7 @@ if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
 
 [Itotal, IfiberTotal] = falco_get_summed_image(mp);
 if(mp.flagFiber)
-    InormAvg = mean(IfiberTotal);
+    InormAvg = max(max(IfiberTotal));
 else
     InormAvg = mean(Itotal(mp.F4.corr.maskBool));
 end

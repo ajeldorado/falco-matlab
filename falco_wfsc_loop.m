@@ -122,7 +122,7 @@ for Itr=1:mp.Nitr
 
     %--Compute the current contrast level
     InormHist(Itr) = mean(Im(mp.F4.corr.maskBool));
-
+        
     %--Plot the updates to the DMs and PSF
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);

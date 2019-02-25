@@ -44,7 +44,9 @@ for si=1:mp.Nsbp
         modvar.wpsbpIndex = wi;
         [Etemp, EfiberTemp] = model_full(mp, modvar);
         Isum = Isum + (abs(Etemp).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi);
-        IfiberSum = IfiberSum + (abs(EfiberTemp).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi);
+        if(mp.flagFiber)
+            IfiberSum = IfiberSum + (abs(EfiberTemp).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi);
+        end
     end 
 end
 
