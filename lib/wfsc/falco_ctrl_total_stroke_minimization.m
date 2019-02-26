@@ -102,7 +102,7 @@ startIndex = 0; % Initialize starting index of the command vector
 %--DM1
 if(any(mp.dm_ind==1)) %--DM1
     dDM1V(mp.dm1.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm1.Nele); % Parse the command vector to get component for DM1
-    dDM1V = dDM1V*mp.dm_weights(1); %--Re-scale correctly based on the DM's weighting
+    dDM1V = dDM1V*mp.dm1.weight; %--Re-scale correctly based on the DM's weighting
     dDM1Vmax = max(abs(dDM1V(:))); % Store max absolute deviation value for later
     startIndex = startIndex + mp.dm1.Nele; % Set for next DM
 end
@@ -110,7 +110,7 @@ end
 %--DM2
 if(any(mp.dm_ind==2)) %--DM2
     dDM2V(mp.dm2.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm2.Nele);
-    dDM2V = dDM2V*mp.dm_weights(2); %--Re-scale correctly based on the DM's weighting
+    dDM2V = dDM2V*mp.dm2.weight; %--Re-scale correctly based on the DM's weighting
     dDM2Vmax = max(abs(dDM2V(:)));
     startIndex = startIndex + mp.dm2.Nele; % Set for next DM
 end
@@ -126,14 +126,14 @@ end
 %--DM8
 if(any(mp.dm_ind==8))  %--DM8
     dDM8V(mp.dm8.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm8.Nele);
-    dDM8V = dDM8V*mp.dm_weights(8); %--Re-scale correctly based on the DM's weighting
+    dDM8V = dDM8V*mp.dm8.weight; %--Re-scale correctly based on the DM's weighting
     startIndex = startIndex + mp.dm8.Nele; % Set for next DM
 end
 
 %--DM9
 if(any(mp.dm_ind==9))  %--DM9
     dDM9V(mp.dm9.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm9.Nele);
-    dDM9V = dDM9V*mp.dm_weights(9); %--Re-scale correctly based on the DM's weighting
+    dDM9V = dDM9V*mp.dm9.weight; %--Re-scale correctly based on the DM's weighting
     startIndex = startIndex + mp.dm9.Nele; % Set for next DM
 end
 

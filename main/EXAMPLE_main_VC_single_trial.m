@@ -190,7 +190,7 @@ mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
 mp.eval.Rsens = [3, 4;... %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
                  4, 8];    
 
-mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
+mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm9.weight
 switch mp.controller
     case{'gridsearchEFC'} % 'EFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast

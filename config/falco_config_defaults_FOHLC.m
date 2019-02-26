@@ -117,7 +117,7 @@ if(isfield(mp.dm1,'maxAbsV')==false); mp.dm1.maxAbsV = 150; end
 if(isfield(mp.dm2,'maxAbsV')==false); mp.dm2.maxAbsV = 150; end 
 
 %%--Controller Settings
-mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
+mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm9.weight
 switch lower(mp.controller)
     case{'gridsearchefc} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast

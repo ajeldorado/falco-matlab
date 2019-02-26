@@ -158,7 +158,7 @@ mp.P4.IDnorm = 0.45; %--Lyot stop ID
 mp.P4.ODnorm = 0.78; %--Lyot stop OD
 
 %%--Controller Settings
-mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
+mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm9.weight
 mp.logGmin = -6;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
 
 switch mp.controller
@@ -294,7 +294,7 @@ mp.dm2.Dstop = mp.dm2.Nact*1e-3;  %--diameter of circular stop at DM2 and center
 
 %--DM9 weights and sensitivities
 mp.dm_weights = ones(9,1);   % vector of relative weighting of DMs' Jacobians for EFC
-mp.dm_weights(9) = 1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm9.weight = 1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
 mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
 mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
@@ -336,35 +336,10 @@ mp.F4.res = 3;%2.5;%3; %--Pixels per lambda_c/D
 % mp.F4.FOV = 1 + mp.F4.corr.Rout; % minimum desired field of view (along both axes) in lambda0/D
 
 
-%% Tip/Tilt, Spatial, and Chromatic Weighting of the Control Jacobian  #NEWFORTIPTILT
-% mp.Ntt = 1; %--Number of tip/tilt offsets, including 0 (so always set >=1). 1, 4, or 5
-% mp.NlamForTT = 1; %--Number of wavelengths to compute tip/tilt at. 0,1, 2, 3, or inf (for all)
-% mp.TToffset = 1; %--tip/tilt offset in mas
+%% Spatial Weighting of the Control Jacobian
 % 
 % %--Spatial pixel weighting
 % mp.WspatialDef = [mp.F4.corr.Rin, mp.F4.corr.Rin+2, 1];  %--spatial control Jacobian weighting by annulus: [Inner radius, outer radius, intensity weight; (as many rows as desired)]
-% 
-% %--Chromatic weighting
-
-
-% %% Part 2: Call the function to define the rest of the variables and initialize the workspace
-% if(exist('mp','var')==false); mp.dummy = 1; end
-% if(exist('cp','var')==false); mp.ctrl.dummy = 1; end
-% if(exist('ep','var')==false); ep.dummy = 1; end
-% if(exist('DM','var')==false); mp.dummy = 1; end
-% 
-% [mp,cp,ep,DM] = falco_config_defaults_HLC_thinfilm(mp,cp,ep,DM); %--Load defaults for undefined values
-% 
-
-% %% Part 3: Save the config file    
-% mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
-%     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-%     '_IWA',num2str(mp.F4.corr.Rin),'_OWA',num2str(mp.F4.corr.Rout),...
-%     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-%     '_',mp.controller];
-% fn_config = ['data/configs/',mp.runLabel,'.mat'];
-% save(fn_config)
-% fprintf('Saved the config file: \t%s\n',fn_config)
 
 %% Part 2
 mp = falco_config_defaults_HLC(mp);

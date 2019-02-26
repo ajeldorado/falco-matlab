@@ -13,6 +13,43 @@
 
 function mp = falco_setup_FPM_HLC(mp)
 
+%%
+switch mp.dm9.inf0name
+    case '3x3'
+        mp.dm9.inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  % influence function
+        mp.dm9.dx_inf0_act = 1/2;  % number of inter-actuator widths per pixel 
+        %--FPM resolution (pixels per lambda0/D) in the compact and full models.
+        mp.F3.compact.res = mp.dm9.actres/mp.dm9.dx_inf0_act;
+        mp.F3.full.res = mp.dm9.actres/mp.dm9.dx_inf0_act;
+
+    case 'Lanczos3'
+        N = 91;
+        xs = (-(N-1)/2:(N-1)/2)/N*10*0.906;
+        xsPlot = (-(N-1)/2:(N-1)/2);
+
+        a = 3;
+        Lx0 = a*sin(pi*xs).*sin(pi*xs/a)./(pi*xs).^2;
+        Lx0(xs==0) = 1;
+        Lx = Lx0;
+        Lx(xs>=a) = 0;
+        Lx(xs<=-a) = 0;
+        Lxy = Lx.'*Lx; %--The 2-D Lanczos kernel
+        Nhalf = ceil(N/2);
+        Nrad = 30;
+        inds = Nhalf-Nrad:Nhalf+Nrad;
+        LxyCrop = Lxy(inds,inds);
+
+        mp.dm9.inf0 = LxyCrop; % influence function
+        mp.dm9.dx_inf0_act = 1/10;  % number of inter-actuator widths per pixel 
+%             figure(11); imagesc(xsPlot,xsPlot,Lxy); axis xy equal tight; colorbar; set(gca,'Fontsize',20); title('Lanczos3 Influence Function','Fontsize',20); drawnow;
+%             figure(12); imagesc(mp.dm9.inf0); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow; %title('FALCO','Fontsize',20);
+
+    case 'Xinetics'
+        mp.dm9.inf0 = 1*fitsread('influence_dm5v2.fits');
+        mp.dm9.dx_inf0_act = 1/10;  % number of inter-actuator widths per pixel 
+end
+    
+
 
 %% DM8 and DM9 (Optimizable FPM) Setup
 

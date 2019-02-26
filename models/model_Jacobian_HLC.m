@@ -196,7 +196,7 @@ if(whichDM==5)
             EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
             if(mp.useGPU); EF4 = gather(EF4);end
 
-            Gzdl(:,Gindex) = mp.dm_weights(1)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm1.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex+1;
     end
@@ -271,7 +271,7 @@ if(whichDM==1)
             EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
             if(mp.useGPU); EF4 = gather(EF4);end
 
-            Gzdl(:,Gindex) = mp.dm_weights(1)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm1.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex+1;
     end
@@ -346,7 +346,7 @@ if(whichDM==2)
             EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
             if(mp.useGPU); EF4 = gather(EF4);end
 
-            Gzdl(:,Gindex) = mp.dm_weights(2)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm2.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex+1;
 
@@ -436,7 +436,7 @@ if(whichDM==8)
             EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
             if(mp.useGPU); EF4 = gather(EF4);end
             
-            Gzdl(:,Gindex) = (1/stepFac)*mp.dm_weights(8)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = (1/stepFac)*mp.dm8.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
             Gindex = Gindex + 1;
         end
     end
@@ -550,7 +550,7 @@ if(whichDM==9)
             EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
             if(mp.useGPU); EF4 = gather(EF4);end
 
-            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm_weights(9)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
         

@@ -202,7 +202,7 @@ mp.dm1.inf0 = infCrop;
 mp.dm2.inf0 = infCrop;   
 
 %% Controller Settings
-mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
+mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm9.weight
 switch mp.controller
     case{'gridsearchEFC'} % 'EFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast

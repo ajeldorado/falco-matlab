@@ -44,6 +44,14 @@ mp.F4.full.dummy = 1;
 mp.F4.corr.dummy = 1;
 mp.F4.score.dummy = 1;
 
+%% Method of computing core throughput:
+% - 'HMI' for energy within half-max isophote divided by energy at telescope pupil
+% - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
+mp.thput_metric = 'HMI'; 
+mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY for 'EE' method.
+mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate throughput
+mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
+
 
 %%
 %%--Record Keeping
@@ -115,7 +123,7 @@ if(isfield(mp.dm1,'maxAbsV')==false); mp.dm1.maxAbsV = 150; end
 if(isfield(mp.dm2,'maxAbsV')==false); mp.dm2.maxAbsV = 150; end 
 
 %%--Controller Settings
-mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
+mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm9.weight
 switch lower(mp.controller)
     case{'gridsearchefc'} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast
@@ -211,7 +219,7 @@ if(isfield(mp,'dm_weights')==false); mp.dm_weights = ones(9,1);  end % vector of
 
 %--DM1 parameters
 if(isfield(mp.dm1,'Nact')==false); mp.dm1.Nact = 48; end  % number of actuators across DM1
-if(isfield(mp.dm1,'VtoH')==false); mp.dm1.VtoH = 1*1e-9*ones(mp.dm1.Nact); end  % Gains: volts to meters in surface height;
+if(isfield(mp.dm1,'VtoH')==false); mp.dm1.VtoH = 1*1e-9*ones(mp.dm1.Nact); end  % Gains: volts to meters in free stroke;
 if(isfield(mp.dm1,'xtilt')==false); mp.dm1.xtilt = 0; end 
 if(isfield(mp.dm1,'ytilt')==false); mp.dm1.ytilt = 0; end 
 if(isfield(mp.dm1,'zrot')==false); mp.dm1.zrot = 0; end  %--clocking angle (degrees)
