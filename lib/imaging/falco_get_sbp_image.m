@@ -12,17 +12,17 @@
 % - si = index of sub-bandpass for which to take the image
 %
 % OUTPUTS
-% - Im: sub-bandpass image
+% - Im: sub-bandpass image in units of normalized intensity
 %
 % REVISION HISTORY
 % - Created on 2019-02-06 by A.J. Riggs.
 
-function Im = falco_get_sbp_image(mp,si)
+function ImNI = falco_get_sbp_image(mp,si)
 
     if(mp.flagSim) %--Generate simulated image
-        Im = falco_get_sim_sbp_image(mp,si);
+        ImNI = falco_get_sim_sbp_image(mp,si);
     else %--Retrieve testbed image
-    %     Isum = falco_get_real_sbp_image(mp,si);
+        ImNI = falco_get_testbed_sbp_image(mp,si);
     end
 
 end %--END OF FUNCTION

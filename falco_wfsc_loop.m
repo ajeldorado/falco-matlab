@@ -61,11 +61,11 @@ fprintf('Saved the config file: \t%s\n',fn_config)
 %--Raw contrast (broadband)
 InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of dark hole.
 
-% ImHist = single( zeros(mp.F4.Neta,mp.F4.Nxi,mp.Nitr+1) ); %--Full PSF after each correction step
-%
 % %--Store the DM surfaces (REQUIRES LOTS OF STORAGE)
 % DM1S_array = single(zeros(mp.dm1.compact.Ndm,mp.dm1.compact.Ndm,mp.Nitr+1));
 % DM2S_array = single(zeros(mp.dm2.compact.Ndm,mp.dm2.compact.Ndm,mp.Nitr+1));
+%
+% ImHist = single( zeros(mp.F4.Neta,mp.F4.Nxi,mp.Nitr+1) ); %--Full PSF after each correction step
 
 
 %% Take initial broadband images
@@ -96,8 +96,8 @@ for Itr=1:mp.Nitr
     
     %% Updated DM data
     %--Change the selected DMs if using the scheduled EFC controller
-    switch mp.controller
-        case{'plannedEFC'} 
+    switch lower(mp.controller)
+        case{'plannedefc'} 
             mp.dm_ind = mp.dm_ind_sched{Itr};
     end
     %--Report which DMs are used in this iteration
@@ -109,10 +109,6 @@ for Itr=1:mp.Nitr
     if(isfield(mp,'dm5')); if(isfield(mp.dm5,'V'));  out.dm5.Vall(:,:,Itr) = mp.dm5.V;  end;  end
     if(isfield(mp,'dm8')); if(isfield(mp.dm8,'V'));  out.dm8.Vall(:,Itr) = mp.dm8.V(:);  end;  end
     if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall(:,Itr) = mp.dm9.V(:);  end;  end
-%     if(any(mp.dm_ind==1)); out.dm1.Vall(:,:,Itr) = mp.dm1.V; end
-%     if(any(mp.dm_ind==2)); out.dm2.Vall(:,:,Itr) = mp.dm2.V; end 
-%     if(any(mp.dm_ind==8)); out.dm8.Vall(:,Itr) = mp.dm8.V(:); end
-%     if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
     %--Compute the DM surfaces
     if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  else; DM1surf = zeros(mp.dm1.compact.Ndm);  end
@@ -124,7 +120,7 @@ for Itr=1:mp.Nitr
     end
 
     % if(any(mp.dm_ind==9)); DM9phase =  padOrCropEven(falco_dm_surf_from_cube(mp.dm9,mp.dm9.compact), mp.dm9.compact.NxiFPM); end
-    switch mp.coro
+    switch upper(mp.coro)
         case{'EHLC'}
             mp.DM8surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
             mp.DM9surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
@@ -149,7 +145,7 @@ for Itr=1:mp.Nitr
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
 
     %--Plot the intermediate E-fields
-    switch mp.coro
+    switch upper(mp.coro)
         case{'FOHLC'}
 
             %--Get E-fields at the intermediate planes
@@ -167,26 +163,22 @@ for Itr=1:mp.Nitr
     if(Itr==1)
         mp.jac.zerns0 = mp.jac.zerns;
     end
-%     if( (any(mp.dm_ind==8)==false) && (any(mp.dm_ind==9)==false) )
-%         mp.jac.zerns = 1;
-%     else
-%         mp.jac.zerns = mp.jac.zerns0;
-%     end
+
     fprintf('Zernike modes used in this Jacobian:\t'); fprintf('%d ',mp.jac.zerns); fprintf('\n');
+    
     %--Re-compute the Jacobian weights
     mp = falco_config_jac_weights(mp); 
-    
-
+   
 
     %% Wavefront Estimation
     %----------------------      Wavefront Estimation    ----------------------
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
-        case{'pwp-bp'}
-            ip = falco_est_batch(mp);
-            EfieldVec = ip.Eest;
-            IincoVec = ip.IincoEst;
+        case{'pwp-bp','pwp-kf'}
+            ev = falco_est_pairwise_probing(mp);
+            EfieldVec = ev.Eest;
+            IincoVec = ev.IincoEst;
     end
 
     %-----------------------------------------------------------------------------------------
@@ -237,8 +229,6 @@ for Itr=1:mp.Nitr
     if( (Itr==1) || cvar.flagRelin )
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
     end
-    
-    
     
     % %--Save or load a previous Jacobian (esp. useful for testbeds)
     %     if(Itr==1)
@@ -329,11 +319,8 @@ for Itr=1:mp.Nitr
     %--Save out regularization used.
     out.log10regHist(Itr) = cvar.log10regUsed; 
     
-
-    
-
-%     switch mp.controller
-%         case{'plannedEFC','gridsearchEFC'}
+%     switch lower(mp.controller)
+%         case{'plannedefc','gridsearchefc'}
 %             %--Remove railed actuators from the basis set
 %             if(any(mp.dm_ind==1)); mp.dm1.act_ele = intersect( mp.dm1.act_ele, find( (mp.dm1.V > -mp.dm1.maxAbsV) & (mp.dm1.V < mp.dm1.maxAbsV) ) ); end
 %             if(any(mp.dm_ind==2)); mp.dm2.act_ele = intersect( mp.dm2.act_ele, find( (mp.dm2.V > -mp.dm2.maxAbsV) & (mp.dm2.V < mp.dm2.maxAbsV) ) ); end
@@ -349,7 +336,7 @@ for Itr=1:mp.Nitr
 %% DM Stats
 
 %--ID and OD of pupil in units of pupil diameters
-% ID_pup = 0.303; % mp.P1.IDnorm
+% ID_pup = 0.303; % for WFIRST, mp.P1.IDnorm
 OD_pup = 1.0;
 
 % DM1surf = DM1S_array(:,:,end);
@@ -405,12 +392,12 @@ end
 %--Calculate and report updated RMS DM surfaces.
 if(any(mp.dm_ind==1))
     out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
-    out.dm1.Srms(Itr) = rms(DM1surf(rms_ele));
+    out.dm1.Srms(Itr) = falco_rms(DM1surf(rms_ele));
     fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
 end
 if(any(mp.dm_ind==2))
     out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
-    out.dm2.Srms(Itr) = rms(DM2surf(rms_ele));
+    out.dm2.Srms(Itr) = falco_rms(DM2surf(rms_ele));
     fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
 end
 
@@ -491,7 +478,7 @@ hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
 %% Save the final DM commands separately for faster reference
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V')); out.DM1V = mp.dm1.V; end; end
 if(isfield(mp,'dm2')); if(isfield(mp.dm2,'V')); out.DM2V = mp.dm2.V; end; end
-switch mp.coro
+switch upper(mp.coro)
     case{'HLC','EHLC'}
         if(isfield(mp.dm8,'V')); out.DM8V = mp.dm8.V;  end
         if(isfield(mp.dm9,'V')); out.DM9V = mp.dm9.V;  end
@@ -712,27 +699,19 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
 
     %--Call the Controller Function
     fprintf('Control beginning ...\n'); tic
-    switch mp.controller
+    switch lower(mp.controller)
 
-        case{'plannedEFC'} %--EFC regularization is scheduled ahead of time
+        case{'plannedefc'} %--EFC regularization is scheduled ahead of time
             [dDM,cvar] = falco_ctrl_planned_EFC(mp,cvar);
 
-        case{'gridsearchEFC'}  %--Empirical grid search of EFC. Scaling factor for DM commands too.
+        case{'gridsearchefc'}  %--Empirical grid search of EFC. Scaling factor for DM commands too.
             [dDM,cvar] = falco_ctrl_grid_search_EFC(mp,cvar);
-
-        case{'conEFC'} %--Constrained EFC. The quadratic cost function is solved directly with CVX rather than by inverting.
-            cvar.dummy = 1;
-            [dDM,cvar] = falco_ctrl_EFC_constrained(mp,cvar);
             
-        case{'SM-AMPL'} %--Bounded stroke minimization using AMPL. The quadratic cost function is solved directly with AMPL+Gurobi rather than by inverting.
-            cvar.dummy = 1;
-            [dDM,cvar] = falco_ctrl_SM_AMPL(mp,cvar);
-            
-        case{'SM-CVX'} %--Bounded stroke minimization using AMPL. The quadratic cost function is solved directly with AMPL+Gurobi rather than by inverting.
+        case{'sm-cvx'} %--Constrained & bounded stroke minimization using CVX. The quadratic cost function is solved directly CVX.
             cvar.dummy = 1;
             [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar);
             
-        case{'TSM'}
+        case{'tsm'}
             cvar.dummy = 1;
             [dDM,cvar] = falco_ctrl_total_stroke_minimization(mp,cvar);
             

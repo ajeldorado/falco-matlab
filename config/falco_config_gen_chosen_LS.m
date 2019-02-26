@@ -244,8 +244,8 @@ end
 
 
 %% Crop down the Lyot stop(s) to get rid of extra zero padding for the full model
-switch mp.coro
-    case{'Vortex','vortex','AVC','VC'}
+switch lower(mp.coro)
+    case{'vortex','vc','avc'}
         mp.P4.full.Narr = length(mp.P4.full.mask);
         mp.P4.full.croppedMask = mp.P4.full.mask;
         mp.P4.compact.Narr = length(mp.P4.compact.mask);

@@ -22,6 +22,9 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 
+%--Temporary
+if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end
+
 %% File Paths
 %(Defined such that the entire folder can be downloaded anywhere and run without a problem)
 % addpath(genpath(mainPath));
@@ -143,8 +146,8 @@ mp = falco_config_gen_chosen_LS(mp); %--Lyot stop
 %% Plot the pupil and Lyot stop on top of each other to make sure they are aligned correctly
 %--Only for coronagraphs using Babinet's principle, for which the input
 %pupil and Lyot plane have the same resolution.
-switch mp.coro
-    case{'FOHLC','HLC','LC','APLC','VC','AVC'}
+switch lower(mp.coro)
+    case{'fohlc','hlc','lc','aplc','vc','avc'}
         if(mp.flagPlot)
             P4mask = padOrCropEven(mp.P4.compact.mask,mp.P1.compact.Narr);
             P4mask = rot90(P4mask,2);
@@ -171,8 +174,8 @@ mp.dm1.Nele=0; mp.dm2.Nele=0;  mp.dm3.Nele=0;  mp.dm4.Nele=0;  mp.dm5.Nele=0;  m
 %mp.dm1.Nele=[]; mp.dm2.Nele=[];  mp.dm3.Nele=[];  mp.dm4.Nele=[];  mp.dm5.Nele=[];  mp.dm6.Nele=[];  mp.dm7.Nele=[];  mp.dm8.Nele=[];  mp.dm9.Nele=[]; %--Initialize for Jacobian calculations later. 
 
 %% HLC and EHLC FPM: Initialization and Generation
-switch mp.coro
-    case{'HLC'}
+switch lower(mp.coro)
+    case{'hlc'}
         switch mp.dm9.inf0name
             case '3foldZern'
                 mp = falco_setup_FPM_HLC_3foldZern(mp);
@@ -180,28 +183,28 @@ switch mp.coro
                 mp = falco_setup_FPM_HLC(mp);
         end
         mp = falco_config_gen_FPM_HLC(mp);
-    case{'FOHLC'}
+    case{'fohlc'}
         mp = falco_setup_FPM_FOHLC(mp);
         mp = falco_config_gen_FPM_FOHLC(mp);
         mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
         mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
-    case{'EHLC'}
+    case{'ehlc'}
         mp = falco_setup_FPM_EHLC(mp);
         mp = falco_config_gen_FPM_EHLC(mp);
-    case 'SPHLC'
+    case 'sphlc'
         mp = falco_config_gen_FPM_SPHLC(mp);
 end
 
 %%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.
-switch mp.coro
-    case{'EHLC','HLC','SPHLC'}
+switch lower(mp.coro)
+    case{'ehlc','hlc','sphlc'}
         [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
 end
 
 %% Generate FPM
 
-% switch mp.coro
-%     case{'Vortex','vortex','AVC','VC'}
+% switch lower(mp.coro)
+%     case{'vortex','vc','avc'}
 %         %--Vortex FPM is generated as needed
 %     otherwise
 % %         %--Make or read in focal plane mask (FPM) amplitude for the full model
@@ -215,20 +218,20 @@ end
 % end
 
 
-switch mp.coro
-    case {'LC','DMLC','APLC'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
+switch lower(mp.coro)
+    case {'lc','dmlc','aplc'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
         mp = falco_config_gen_FPM_LC(mp);
-    case{'SPLC'}
+    case{'splc'}
         mp = falco_config_gen_FPM_SPLC(mp);
-    case{'Roddier'}
+    case{'roddier'}
         mp = falco_config_gen_FPM_Roddier(mp);  
 end
 
 %% FPM coordinates, [meters] and [dimensionless]
 
-switch mp.coro
-    case{'Vortex','vortex','AVC','VC'}   %--Nothing needed to run the vortex model
-    case 'SPHLC' %--Moved to separate function
+switch lower(mp.coro)
+    case{'vortex','vc','avc'}   %--Nothing needed to run the vortex model
+    case 'sphlc' %--Moved to separate function
     otherwise %case{'LC','DMLC','APLC','SPLC','FLC','SPC'}
         
         %--FPM (at F3) Resolution [meters]
@@ -361,8 +364,6 @@ mp.WspatialVec = mp.Wspatial(mp.F4.corr.inds);
 
 %% Deformable Mirror (DM) 1 and 2 Parameters
 
-
-
 if(isfield(mp,'dm1'))
     % Read the influence function header data from the FITS file
 	info = fitsinfo(mp.dm1.inf_fn);
@@ -405,21 +406,19 @@ end
 
 
 %--Create influence function datacubes for each DM
-if( any(mp.dm_ind==1) ) %if(isfield(mp.dm1,'inf_datacube')==0 && any(mp.dm_ind==1) )
+if( any(mp.dm_ind==1) )
     mp.dm1.centering = mp.centering;
     mp.dm1.compact = mp.dm1;
 %     mp.dm1.dx = mp.P2.full.dx;
 %     mp.dm1.compact.dx = mp.P2.compact.dx;
     mp.dm1 = falco_gen_dm_poke_cube(mp.dm1, mp, mp.P2.full.dx,'NOCUBE');
     mp.dm1.compact = falco_gen_dm_poke_cube(mp.dm1.compact, mp, mp.P2.compact.dx);
-%     mp.dm1 = falco_gen_dm_poke_cube_PROPER(mp.dm1,mp,'NOCUBE');
-%     mp.dm1.compact = falco_gen_dm_poke_cube_PROPER(mp.dm1.compact,mp);
 else
     mp.dm1.compact = mp.dm1;
     mp.dm1 = falco_gen_dm_poke_cube(mp.dm1, mp, mp.P2.full.dx,'NOCUBE');
     mp.dm1.compact = falco_gen_dm_poke_cube(mp.dm1.compact, mp, mp.P2.compact.dx,'NOCUBE');
 end
-if( any(mp.dm_ind==2) ) %if(isfield(mp.dm2,'inf_datacube')==0 && any(mp.dm_ind==2) )
+if( any(mp.dm_ind==2) ) 
     mp.dm2.centering = mp.centering;
     
     mp.dm2.compact = mp.dm2;
@@ -428,8 +427,6 @@ if( any(mp.dm_ind==2) ) %if(isfield(mp.dm2,'inf_datacube')==0 && any(mp.dm_ind==
     
     mp.dm2 = falco_gen_dm_poke_cube(mp.dm2, mp, mp.P2.full.dx, 'NOCUBE');
     mp.dm2.compact = falco_gen_dm_poke_cube(mp.dm2.compact, mp, mp.P2.compact.dx);
-%     mp.dm2 = falco_gen_dm_poke_cube_PROPER(mp.dm2,mp,'NOCUBE');
-%     mp.dm2.compact = falco_gen_dm_poke_cube_PROPER(mp.dm2.compact,mp);
 else
     mp.dm2.compact = mp.dm2;
     mp.dm2.dx = mp.P2.full.dx;
@@ -541,22 +538,6 @@ mp.y_planet = 0;%1/2; % 7 position of exoplanet in lambda0/D
 mp.F4.compact.mask = ones(mp.F4.Neta,mp.F4.Nxi);
 % figure; imagesc(Lam0Dxi,Lam0Deta,FPMstop); axis xy equal tight; colormap gray; colorbar; title('Field Stop');
 
-%% Initialize Storage Arrays for Controller
-switch mp.controller
-    case{'gridsearchEFC'} % 'EFC' = empirical grid search over both overall scaling coefficient and Lagrange multiplier
-%         % Take images for different Lagrange multiplier values and overall command gains and pick the value pair that gives the best contrast
-%         %cp.contrast_array_mus_meas = zeros(length(mp.ctrl.muVec),mp.Nitr);
-%         %cp.contrast_array_mus_linMod = zeros(length(mp.ctrl.muVec),mp.Nitr);
-% %         cp.PtoVdu1V = zeros(length(cp.log10regBest),mp.Nitr);
-% %         cp.PtoVdu2V = zeros(length(cp.log10regBest),mp.Nitr);
-%         %cp.muBest = zeros(mp.Nitr,1);
-%         cp.log10regBest = zeros(mp.Nitr,1);
-%         cp.dmfacBest = zeros(mp.Nitr,1);
-%         cp.dm9regfacBest = zeros(mp.Nitr,1);
-    case{'conEFC'}
-        cvx_startup
-end
-
 %% Contrast to Normalized Intensity Map Calculation 
 
 
@@ -587,6 +568,17 @@ if(mp.flagPlot)
     title('(Full Model: Normalization Check Using Starting PSF)'); drawnow;
 end
 
+%% Intialize delta DM voltages. Needed for Kalman filters.
+%%--Save the delta from the previous command
+if(any(mp.dm_ind==1));  mp.dm1.dV = 0;  end
+if(any(mp.dm_ind==2));  mp.dm2.dV = 0;  end
+if(any(mp.dm_ind==3));  mp.dm3.dV = 0;  end
+if(any(mp.dm_ind==4));  mp.dm4.dV = 0;  end
+if(any(mp.dm_ind==5));  mp.dm5.dV = 0;  end
+if(any(mp.dm_ind==6));  mp.dm6.dV = 0;  end
+if(any(mp.dm_ind==7));  mp.dm7.dV = 0;  end
+if(any(mp.dm_ind==8));  mp.dm8.dV = 0;  end
+if(any(mp.dm_ind==9));  mp.dm9.dV = 0;  end
 
 
 %% Storage Arrays for DM Metrics
@@ -623,8 +615,6 @@ if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V'));  out.dm1.Vall = zeros(mp.dm1.Nac
 if(isfield(mp,'dm2')); if(isfield(mp.dm2,'V'));  out.dm2.Vall = zeros(mp.dm2.Nact,mp.dm2.Nact,mp.Nitr+1); end; end
 if(isfield(mp,'dm8')); if(isfield(mp.dm8,'V'));  out.dm8.Vall = zeros(mp.dm8.NactTotal,mp.Nitr+1); end; end
 if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall = zeros(mp.dm9.NactTotal,mp.Nitr+1); end; end
-% if( any(mp.dm_ind==8) );  out.dm8.Vall = zeros(mp.dm8.NactTotal,mp.Nitr+1); end
-% if( any(mp.dm_ind==9) );  out.dm9.Vall = zeros(mp.dm9.NactTotal,mp.Nitr+1); end
 
 
 %% 

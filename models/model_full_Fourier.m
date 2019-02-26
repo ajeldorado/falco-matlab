@@ -115,22 +115,22 @@ end
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
     
-    switch lower(mp.coro)
-        case{'vortex','vc','avc'}
+    switch upper(mp.coro)
+        case{'VORTEX','VC','AVC'}
             EP4 = propcustom_2FT(EP3, mp.centering);
             EP4 = padOrCropEven(EP4,mp.P4.full.Narr);
             
-        case{'splc','flc'}
+        case{'SPLC','FLC'}
             %--MFT from SP to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering); %--E-field incident upon the FPM
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3inc,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); %--E-field incident upon the Lyot stop 
         
-        case{'lc','aplc','roddier'}
+        case{'LC','APLC','RODDIER'}
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Re-image forward (no FPM in between pupil planes)
             EP4 = mp.P4.full.croppedMask.*padOrCropEven(EP4noFPM,mp.P4.full.Narr);
            
-        case{'hlc'}
+        case{'HLC'}
             %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
             t_Ti_base = 0;
             t_Ni_vec = 0;
@@ -143,7 +143,7 @@ if(normFac==0)
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
             EP4 = transOuterFPM*padOrCropEven(EP4noFPM,mp.P4.full.Narr); %--Apply the phase and amplitude change from the FPM's outer complex transmission.
             
-        case{'ehlc'}
+        case{'EHLC'}
             %--Complex transmission of the points outside the inner part of the FPM (just fused silica with optional dielectric and no metal).
             t_Ti_base = 0;
             t_Ni_vec = 0;
@@ -160,7 +160,7 @@ if(normFac==0)
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
 
-        case{'fohlc'}
+        case{'FOHLC'}
             %--Do NOT apply FPM if normalization value is being found
             %--NOTE: transOuterFPM is divided out to unity in the FOHLC model
             EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
@@ -172,8 +172,8 @@ if(normFac==0)
     
 else
     
-    switch lower(mp.coro)
-        case{'vortex','vc','avc'}
+    switch upper(mp.coro)
+        case{'VORTEX','VC','AVC'}
             if(mp.flagApod==false)
                 EP3 = padOrCropEven(EP3,2^nextpow2(mp.P1.full.Narr)); %--Crop down if there isn't an apodizer mask
             end
@@ -190,18 +190,18 @@ else
             EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU );  %--MFTs
             EP4 = padOrCropEven(EP4,mp.P4.full.Narr);
             
-        case{'splc','flc'}
+        case{'SPLC','FLC'}
             %--MFT from SP to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering); %--E-field incident upon the FPM
             EF3 = mp.F3.full.mask.amp.*EF3inc; %--Apply FPM
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); %--E-field incident upon the Lyot stop
             
-        case{'lc','aplc','roddier'}
+        case{'LC','APLC','RODDIER'}
             %--MFT from apodizer plane to FPM (i.e., P3 to F3)
             EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
             % Apply (1-FPM) for Babinet's principle later
-            if(strcmp(mp.coro,'roddier'))
+            if(strcmpi(mp.coro,'roddier'))
                 FPM = mp.F3.full.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.full.mask.phzSupport);
                 EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
             else
@@ -214,7 +214,7 @@ else
             %--Babinet's principle at P4
             EP4 = padOrCropEven(EP4noFPM,mp.P4.full.Narr) - EP4subtrahend;
             
-        case{'hlc'}
+        case{'HLC'}
             %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
             t_Ti_base = 0;
             t_Ni_vec = 0;
@@ -235,7 +235,7 @@ else
             %--Babinet's principle at P4
             EP4 = EP4noFPM-EP4subtra;
             
-        case{'ehlc'}
+        case{'EHLC'}
             %--Complex transmission of the points outside the inner part of the FPM (just fused silica with optional dielectric and no metal).
             t_Ti_base = 0;
             t_Ni_vec = 0;
@@ -250,7 +250,7 @@ else
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
             EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
 
-        case{'fohlc'}
+        case{'FOHLC'}
             %--FPM representation (idealized as amplitude and phase)
             DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'full');
             DM8ampPad = padOrCropEven( DM8amp,Nfpm,'extrapval',1);

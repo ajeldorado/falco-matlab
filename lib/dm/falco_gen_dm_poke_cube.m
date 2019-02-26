@@ -23,33 +23,6 @@
 %- distance from pupil that the actuators aren't computed. --> Move this
 %outside the function and let that be the user's choice which ones to zero.
 %Instead, just output the 
-
-% %--Load the beam diameter and size
-% Npup = length(pupil);
-% Dpup = 46.3e-3; % meters, distance across pupil file
-% 
-% %--DM parameters
-% dm.Nact = 48; % number of actuators across DM1
-
-
-
-
-
-
-% dm.VtoH = 1*1e-9*ones(dm.Nact); % Gains: volts to meters in surface height;
-% 
-% dm.xtilt = 0;
-% dm.ytilt = 0;
-% dm.zrot = 0;
-% dm.xc = dm.Nact/2 - 1/2; % x-center of DM in mm, in actuator widths
-% dm.yc = dm.Nact/2 - 1/2; % x-center of DM in mm, in actuator widths
-% 
-% %--DM Actuator characteristics
-% dm.dx_inf0 = ; % meters, sampling of the influence function;
-% dm.dm_spacing = ; % meters, pitch of DM actuators
-% dm.inf0 = 
-%
-%
 %
 %--VERSION CHANGE HISTORY
 % -Modified by A.J. Riggs on September 23, 2017 to allow for pixel centering.
@@ -62,13 +35,10 @@
 %--SUGGESTED CHANGES
 % -Clean up uses of dx_dm vs dx_dm to avoid any possible differences
 % since they need to be the same value.
-
-
-
 %-------------------------------------------------------------------
+
+
 function dm = falco_gen_dm_poke_cube(dm,mp,dx_dm,varargin)
-
-
 
 
 %--Enable the ability to turn off the data cube calculation with a keyword.
@@ -99,7 +69,6 @@ if(isfield(dm,'flagZYX'))
     end
 end
 
-    
 %--Compute sampling of the pupil. Assume that it is square.
 dm.dx_dm = dx_dm;
 dm.dx = dx_dm;
@@ -120,7 +89,6 @@ dm.NdmMin = ceil_even( Ndm0*(dm.dx_inf0/dm.dx))+2; %--Number of points across th
 dm.Ndm = ceil_even( max(abs([sqrt(2)*cosd(45-dm.zrot),sqrt(2)*sind(45-dm.zrot)]))*Ndm0*(dm.dx_inf0/dm.dx))+2; %--Number of points across the array to fully contain the DM surface at new, desired resolution and z-rotation angle.
 
 [Xinf0,Yinf0] = meshgrid(x_inf0);
-
 
 
 %--Compute list of initial actuator center coordinates (in actutor widths).
@@ -154,7 +122,6 @@ end
 dm.NactTotal = length(x_vec); %--Total number of actuators in the 2-D array
 
 
-
 tlt  = zeros(1, 3);
 tlt(1) = dm.xtilt;
 tlt(2) = dm.ytilt;
@@ -186,7 +153,6 @@ for iact=1:dm.NactTotal
 end
 
 
-  
 N0 = max(size(dm.inf0));
 Npad = ceil_odd( sqrt(2)*max(size(dm.inf0)) );
 inf0pad = zeros(Npad,Npad);
@@ -219,8 +185,6 @@ dm.infMaster(isnan(dm.infMaster)) = 0;
 % [Xinf0,Yinf0] = meshgrid(x_inf0);
  
 
-
-
 %--Crop down the influence function until it has no zero padding left
 infSum = sum(dm.infMaster(:));
 infDiff = 0; counter = 0;
@@ -240,7 +204,6 @@ Npad = Ninf0pad;
 
 x_inf0 = (-(Npad-1)/2:(Npad-1)/2)*dm.dx_inf0; % True for even- or odd-sized influence function maps as long as they are centered on the array.
 [Xinf0,Yinf0] = meshgrid(x_inf0);
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -292,7 +255,6 @@ end
 dm.y_pupPad = dm.x_pupPad;
 
 
-
 %% DM: (use NboxPad-sized postage stamps)
 
 if(flagGenCube)
@@ -338,34 +300,3 @@ else
 end
 
 end %--END OF FUNCTION
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

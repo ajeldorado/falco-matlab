@@ -30,15 +30,15 @@ if(mp.flagPlot)
 
     
     %--Need to specify slightly different coordinates for the SPHLC's FPM
-    switch mp.coro
+    switch upper(mp.coro)
         case{'SPHLC'}
             mp.F3.compact.xisDL  = mp.F3.compact.in.xisDL;
             mp.F3.compact.etasDL = mp.F3.compact.in.etasDL;
     end
     
     
-    switch mp.coro
-        case{'Vortex','vortex','AVC','VC'}
+    switch upper(mp.coro)
+        case{'VORTEX','AVC','VC'}
             %--No subplot
         case{'EHLC'}
             h_amp = subplot(2,3,3);
@@ -133,7 +133,7 @@ if(mp.flagPlot)
    title(sprintf('DM2 Surface'),'Fontsize',20,'Fontweight','Bold');
     set(gca,'FontSize',20 ,'FontName','Times','FontWeight','Normal')
 
-    switch mp.coro
+    switch upper(mp.coro)
 %         case{'Vortex'}
 %             %--No subplot
         case{'FOHLC'}

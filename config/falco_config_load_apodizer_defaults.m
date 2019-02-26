@@ -73,8 +73,8 @@ end
 
 mp.F3.ang = 180; % default, per-side opening angle of FPM (degrees)
 
-switch mp.coro
-    case{'HLC','APHLC','SPHLC'}
+switch lower(mp.coro)
+    case{'hlc','aphlc','sphlc'}
         if(strcmpi(mp.SPname,'20170714'))
             mp.F3.Rin = 2.6; % inner hard-edge radius of the focal plane mask, in lambda0/D
             mp.F3.Rout = 9.0; % outer hard-edge radius of the focal plane mask, in lambda0/D
@@ -109,7 +109,7 @@ switch mp.coro
         
         
         %--Convert to one-step propagation in SPHLC if the inner region is too large and would overlap with the outer iris.
-        if(strcmpi(mp.coro,'SPHLC'))
+        if(strcmpi(mp.coro,'sphlc'))
             if( mp.F3.Rin*sqrt(2) >= mp.F3.Rout ) %--If the inner regions corners would start overlapping with the outer FPM iris.
                 mp.F3.Rin = mp.F3.Rout; %--Have the inner region be large enough to contain the outer iris
                 mp.flagSPHLConeFPM = true

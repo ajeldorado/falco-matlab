@@ -18,7 +18,7 @@
 %
 % REVISION HISTORY
 % - Created on 2019-02-13 by A.J. Riggs.
-
+% - Modified on 2019-02-25 by A.J. Riggs to save the delta steps.
 
 function [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec)
 
@@ -47,7 +47,6 @@ if(any(mp.dm_ind==7));  dDM.dDM7V(mp.dm7.act_ele) = mp.dm_weights(7)*duVec(cvar.
 if(any(mp.dm_ind==8));  dDM.dDM8V(mp.dm8.act_ele) = mp.dm_weights(8)*duVec(cvar.uLegend==8);  end % Parse the command vector to get component for DM and apply the DM's weight
 if(any(mp.dm_ind==9));  dDM.dDM9V(mp.dm9.act_ele) = mp.dm_weights(9)*duVec(cvar.uLegend==9);  end % Parse the command vector to get component for DM and apply the DM's weight
 
-
 %%--Combine the delta command with the previous command
 if(any(mp.dm_ind==1));  mp.dm1.V = cvar.DM1Vnom + dDM.dDM1V;  end
 if(any(mp.dm_ind==2));  mp.dm2.V = cvar.DM2Vnom + dDM.dDM2V;  end
@@ -59,5 +58,15 @@ if(any(mp.dm_ind==7));  mp.dm7.V = cvar.DM7Vnom + dDM.dDM7V;  end
 if(any(mp.dm_ind==8));  mp.dm8.V = cvar.DM8Vnom + dDM.dDM8V;  end
 if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
 
+%%--Save the delta from the previous command
+if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end
+if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end
+if(any(mp.dm_ind==3));  mp.dm3.dV = dDM.dDM3V;  end
+if(any(mp.dm_ind==4));  mp.dm4.dV = dDM.dDM4V;  end
+if(any(mp.dm_ind==5));  mp.dm5.dV = dDM.dDM5V;  end
+if(any(mp.dm_ind==6));  mp.dm6.dV = dDM.dDM6V;  end
+if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end
+if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end
+if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end
 
 end %--END OF FUNCTION

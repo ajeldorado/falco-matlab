@@ -20,10 +20,10 @@ close all;
 % - 'pwp-bp' for pairwise probing with batch process estimation
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT AVAILABLE YET]
 % - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
-% mp.estimator = 'pwp-bp';
-mp.estimator = 'perfect';
+mp.estimator = 'pwp-bp';
+% mp.estimator = 'perfect';
 
-%--New variables for estimation:
+%--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
@@ -31,14 +31,23 @@ mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to av
 mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
 mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
+%--New variables for pairwise probing with a Kalman filter
+%  mp.est.ItrStartKF =  %Which correction iteration to start recursive estimate
+%  mp.est.tExp =
+%  mp.est.num_im =
+%  mp.readNoiseStd =
+%  mp.peakCountsPerPixPerSec =
+%  mp.est.Qcoef =
+%  mp.est.Rcoef =
+
 
 mp.flagSim = true;
 mp.layout = 'Fourier';
 
-% mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N131.fits';
-% mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N131.fits';
-mp.dm1.inf_fn = 'influence_BMC_kiloDM_300um_N65.fits';
-mp.dm2.inf_fn = 'influence_BMC_kiloDM_300um_N65.fits';
+% mp.dm1.inf_fn = 'influence_BMC_2kDM_400micron_res10.fits';
+% mp.dm2.inf_fn = 'influence_BMC_2kDM_400micron_res10.fits';
+mp.dm1.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
+mp.dm2.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
 % mp.dm1.inf_fn = 'influence_dm5v2.fits';
 % mp.dm2.inf_fn = 'influence_dm5v2.fits';
 

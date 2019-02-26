@@ -355,10 +355,10 @@ if(isfield(mp.F3.compact,'res')==false); mp.F3.compact.res = 5; end % sampling o
 
 if(isfield(mp.F3,'ang')==false); mp.F3.ang = 180; end% angular opening on each side of the focal plane mask, in degrees
 
-switch mp.coro
-    case {'SPLC'} %--Occulting spot and diaphragm FPM (opaque spot and opaque outer diaphragm)
+switch lower(mp.coro)
+    case {'splc'} %--Occulting spot and diaphragm FPM (opaque spot and opaque outer diaphragm)
         if(isfield(mp,'FPMampFac')==false); mp.FPMampFac = 0; end %--amplitude transmission value of the spot (achromatic)
-    case {'SPHLC'} %--Complex occulting spot and opaque diaphragm FPM
+    case {'sphlc'} %--Complex occulting spot and opaque diaphragm FPM
 %         mp.FPMampFac = 0.025; %--amplitude transmission value of the spot (achromatic)
 end
 

@@ -18,13 +18,13 @@
 
 function mp = falco_config_gen_chosen_apodizer(mp)
 
-switch mp.coro
+switch lower(mp.coro)
     
-	case{'LC','HLC','EHLC','FOHLC'}
+	case{'lc','hlc','ehlc','fohlc'}
          disp('Using Lyot coronagraph without apodizer or aperture stop.')
-	case{'Roddier'}
+	case{'roddier'}
          disp('Using Roddier coronagraph without apodizer or aperture stop.')
-    case{'SPLC','SPHLC'}
+    case{'splc','sphlc'}
         
 
         
@@ -92,7 +92,7 @@ switch mp.coro
 %         end
 %         mp.P3.compact.mask = padOrCropEven(SPcompact,mp.P3.compact.Narr); %--The cropped-down Lyot stop for the compact model       
 
-    case{'Vortex','vortex','VC','AVC'}
+    case{'vortex','vc','avc'}
         
         if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
             % Full aperture stop 
@@ -145,7 +145,8 @@ switch mp.coro
         else
             disp('Using vortex without apodizer or aperture stop.')
         end
-	case{'APLC'}
+        
+	case{'aplc'}
         
         if(~strcmpi(mp.centering,'pixel'))
             error('Use pixel centering for APLC');

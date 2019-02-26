@@ -34,7 +34,7 @@ function jacStruct = model_Jacobian(mp)
     %--Calculate the starting DM surfaces beforehand to save time.
     if(any(mp.dm_ind==1)); mp.dm1.compact.surfM = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx,mp.dm1.compact.NdmPad); else; mp.dm1.compact.surfM = zeros(2); end
     if(any(mp.dm_ind==2)); mp.dm2.compact.surfM = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx,mp.dm2.compact.NdmPad); else; mp.dm2.compact.surfM = zeros(2); end
-    switch mp.coro
+    switch upper(mp.coro)
         case{'EHLC'}
             [mp.FPMcube,mp.dm8.surf,mp.dm9.surf] = falco_gen_EHLC_FPM_complex_trans_cube(mp,'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
             %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
@@ -137,7 +137,7 @@ function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
     im = vals_list(1,ii); %--index for Zernike-&-subbandpass pair
     whichDM = vals_list(2,ii); %--number of the specified DM
 
-    switch mp.coro 
+    switch upper(mp.coro) 
         case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
             jacMode = model_Jacobian_FOHLC(mp,   im, whichDM); 
         
@@ -157,10 +157,10 @@ function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
         case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
             jacMode  = model_Jacobian_SPLC(mp,   im, whichDM); 
             
-        case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
+        case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
             jacMode  = model_Jacobian_VC(mp,   im, whichDM); 
             
-        case{'Roddier'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
+        case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
             jacMode  = model_Jacobian_Roddier(mp,   im, whichDM); 
             
         %case{'SPC','APP','APC'} %--Pupil-plane apodizer is only coronagraphic mask

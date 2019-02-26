@@ -101,7 +101,6 @@ else %--Backward compatible with code without tip/tilt offsets in the Jacobian
 end
 
 
-
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
     modvar.zernIndex = 1;
@@ -118,19 +117,23 @@ end
 
 
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
-switch mp.coro 
+switch upper(mp.coro) 
     case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
         mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
     case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
         mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
 end
 
-%--Compute the E-field in the compact model.
-Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+%--Select which optical layout's compact model to use and get the output E-field
+switch lower(mp.layout)
+    case{'fourier'}
+        Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+        
+end
 
 
 % %--Select the type of coronagraph
-% switch mp.coro 
+% switch upper(mp.coro) 
 %     
 %     case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
 %         %--Complex transmission map of the FPM.
@@ -156,7 +159,7 @@ Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
 %     case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
 %         Eout = model_compact_SPLC(mp, lambda, Ein, normFac, flagEval);
 %             
-%     case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
+%     case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
 %         Eout = model_compact_VC(mp,lambda, Ein, normFac, flagEval);      
 %         
 % %     case{'SPC','APP','APC'} %--Pupil-plane mask only

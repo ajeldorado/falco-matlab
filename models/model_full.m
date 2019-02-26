@@ -118,7 +118,7 @@ if(modvar.zernIndex~=1)
 end
 
 %% Pre-compute the FPM first for HLC as mp.FPM.mask
-switch mp.coro 
+switch upper(mp.coro) 
     case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
         %--Complex transmission map of the FPM.
         ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;

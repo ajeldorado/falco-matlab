@@ -116,8 +116,8 @@ if(isfield(mp.dm2,'maxAbsV')==false); mp.dm2.maxAbsV = 150; end
 
 %%--Controller Settings
 mp.ctrl.dm9regfacVec = 1;%10.^(-2:1:4);%1/30*10.^(-2:1:2); %--Multiplies with mp.dm_weights(9)
-switch mp.controller
-    case{'gridsearchEFC'} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
+switch lower(mp.controller)
+    case{'gridsearchefc'} % 'gridsearchEFC' = empirical grid search over both overall scaling coefficient and log10(regularization)
         % Take images for different log10(regularization) values and overall command gains and pick the value pair that gives the best contrast
         
         if(isfield(mp,'dm_ind')==false); mp.dm_ind = [1 2 9]; end %--Which DMs to use and when
@@ -130,7 +130,7 @@ switch mp.controller
         if(isfield(mp,'relinItrVec')==false); mp.relinItrVec = 1:mp.Nitr; end %--Which correction iterations at which to re-compute the control Jacobian
         
         
-    case{'plannedEFC'}
+    case{'plannedefc'}
         if(isfield(mp,'dm_ind')==false); mp.dm_ind = [1 2 9]; end %--Which DMs to use and when
         if(isfield(mp.ctrl,'log10regVec')==false); mp.ctrl.log10regVec = -5:1:-2; end %--log10 of the regularization exponents (often called Beta values)
         if(isfield(mp,'maxAbsdV')==false); mp.maxAbsdV = 80; end %--Max +/- delta voltage step for each actuator for DMs 1 and 2
@@ -174,12 +174,6 @@ switch mp.controller
             [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
         end
         
-        
-   case{'conEFC'} %--Constrained/bounded EFC (using CVX)
-       if(isfield(mp.dm1,'dVpvMax')==false); mp.dm1.dVpvMax = 30; end 
-       if(isfield(mp.dm2,'dVpvMax')==false); mp.dm2.dVpvMax = 30; end 
-       if(isfield(mp.ctrl,'dmfacVec')==false); mp.ctrl.dmfacVec = 1; end
-       if(isfield(mp.ctrl,'muVec')==false); mp.ctrl.muVec = 10.^(5); end 
         
 end
  
