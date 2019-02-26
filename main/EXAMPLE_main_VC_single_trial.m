@@ -14,11 +14,13 @@ clear;
 
 %% Define Necessary Paths on Your System
 
-pathStem = '/Users/gruane/Desktop/SCDA/';
+% pathStem = '/Users/gruane/Desktop/SCDA/';
 
 %--Library locations
-mp.path.falco = [pathStem,'falco-matlab/'];  %--Location of FALCO
-mp.path.proper = [pathStem,'PROPER/'];  %--Location of FALCO; %--Location of the MATLAB PROPER library
+mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '~/Documents/MATLAB/PROPER/';  %--Location of FALCO; %--Location of the MATLAB PROPER library
+% mp.path.falco = [pathStem,'falco-matlab/'];  %--Location of FALCO
+% mp.path.proper = [pathStem,'PROPER/'];  %--Location of FALCO; %--Location of the MATLAB PROPER library
 % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)

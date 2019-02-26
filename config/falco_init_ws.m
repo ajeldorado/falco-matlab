@@ -146,8 +146,8 @@ mp = falco_config_gen_chosen_LS(mp); %--Lyot stop
 %% Plot the pupil and Lyot stop on top of each other to make sure they are aligned correctly
 %--Only for coronagraphs using Babinet's principle, for which the input
 %pupil and Lyot plane have the same resolution.
-switch lower(mp.coro)
-    case{'fohlc','hlc','lc','aplc','vc','avc'}
+switch upper(mp.coro)
+    case{'FOHLC','HLC','LC','APLC','VC','AVC'}
         if(mp.flagPlot)
             P4mask = padOrCropEven(mp.P4.compact.mask,mp.P1.compact.Narr);
             P4mask = rot90(P4mask,2);
@@ -174,8 +174,8 @@ mp.dm1.Nele=0; mp.dm2.Nele=0;  mp.dm3.Nele=0;  mp.dm4.Nele=0;  mp.dm5.Nele=0;  m
 %mp.dm1.Nele=[]; mp.dm2.Nele=[];  mp.dm3.Nele=[];  mp.dm4.Nele=[];  mp.dm5.Nele=[];  mp.dm6.Nele=[];  mp.dm7.Nele=[];  mp.dm8.Nele=[];  mp.dm9.Nele=[]; %--Initialize for Jacobian calculations later. 
 
 %% HLC and EHLC FPM: Initialization and Generation
-switch lower(mp.coro)
-    case{'hlc'}
+switch upper(mp.coro)
+    case{'HLC'}
         switch mp.dm9.inf0name
             case '3foldZern'
                 mp = falco_setup_FPM_HLC_3foldZern(mp);
@@ -183,55 +183,55 @@ switch lower(mp.coro)
                 mp = falco_setup_FPM_HLC(mp);
         end
         mp = falco_config_gen_FPM_HLC(mp);
-    case{'fohlc'}
+    case{'FOHLC'}
         mp = falco_setup_FPM_FOHLC(mp);
         mp = falco_config_gen_FPM_FOHLC(mp);
         mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
         mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
-    case{'ehlc'}
+    case{'EHLC'}
         mp = falco_setup_FPM_EHLC(mp);
         mp = falco_config_gen_FPM_EHLC(mp);
-    case 'sphlc'
+    case 'SPHLC'
         mp = falco_config_gen_FPM_SPHLC(mp);
 end
 
 %%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.
-switch lower(mp.coro)
-    case{'ehlc','hlc','sphlc'}
+switch upper(mp.coro)
+    case{'EHLC','HLC','SPHLC'}
         [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
 end
 
 %% Generate FPM
 
-% switch lower(mp.coro)
-%     case{'vortex','vc','avc'}
-%         %--Vortex FPM is generated as needed
-%     otherwise
-% %         %--Make or read in focal plane mask (FPM) amplitude for the full model
-% %         FPMgenInputs.IWA = mp.F3.Rin;% inner radius of the focal plane mask, in lambda0/D
-% %         FPMgenInputs.OWAmask = mp.F3.Rout; % outer radius of the focal plane mask, in lambda0/D
-% %         %FPMgenInputs.flagOdd = false; % flag to specify odd or even-sized array
-% %         FPMgenInputs.centering = mp.centering;
-% %         FPMgenInputs.ang = mp.F3.ang; % angular opening on each side of the focal plane mask, in degrees
-% %         FPMgenInputs.magx = 1; % magnification factor along the x-axis
-% %         FPMgenInputs.magy = 1; % magnification factor along the y-axis
-% end
+switch upper(mp.coro)
+    case{'VORTEX','VC','AVC'}
+        %--Vortex FPM is generated as needed
+    otherwise
+%         %--Make or read in focal plane mask (FPM) amplitude for the full model
+%         FPMgenInputs.IWA = mp.F3.Rin;% inner radius of the focal plane mask, in lambda0/D
+%         FPMgenInputs.OWAmask = mp.F3.Rout; % outer radius of the focal plane mask, in lambda0/D
+%         %FPMgenInputs.flagOdd = false; % flag to specify odd or even-sized array
+%         FPMgenInputs.centering = mp.centering;
+%         FPMgenInputs.ang = mp.F3.ang; % angular opening on each side of the focal plane mask, in degrees
+%         FPMgenInputs.magx = 1; % magnification factor along the x-axis
+%         FPMgenInputs.magy = 1; % magnification factor along the y-axis
+end
 
 
-switch lower(mp.coro)
-    case {'lc','dmlc','aplc'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
+switch upper(mp.coro)
+    case {'LC','APLC'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
         mp = falco_config_gen_FPM_LC(mp);
-    case{'splc'}
+    case{'SPLC'}
         mp = falco_config_gen_FPM_SPLC(mp);
-    case{'roddier'}
+    case{'RODDIER'}
         mp = falco_config_gen_FPM_Roddier(mp);  
 end
 
 %% FPM coordinates, [meters] and [dimensionless]
 
-switch lower(mp.coro)
-    case{'vortex','vc','avc'}   %--Nothing needed to run the vortex model
-    case 'sphlc' %--Moved to separate function
+switch upper(mp.coro)
+    case{'VORTEX','VC','AVC'}   %--Nothing needed to run the vortex model
+    case 'SPHLC' %--Moved to separate function
     otherwise %case{'LC','DMLC','APLC','SPLC','FLC','SPC'}
         
         %--FPM (at F3) Resolution [meters]
