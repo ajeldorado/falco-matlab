@@ -97,7 +97,12 @@ if(mp.flagPlot)
 %     handles.tb1 = text(0.05,0.9,sprintf('%s, %d%% BW',mp.coro,round(100*mp.fracBW)),'Fontsize',24);
     handles.tb2 = text(0.1,0.65,sprintf('%.1f%% BW @ %dnm',(100*mp.fracBW),round(mp.lambda0*1e9)),'Fontsize',24);
     handles.tb3 = text(0.1,0.35,sprintf('I_{norm} = %.2e',contrast_bandavg(Itr)),'Fontsize',24);
-    handles.tb4 = text(0.1,0.05,sprintf('T_{core} =   %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',24);
+    switch lower(mp.thput_metric)
+        case{'hmi'} %--Absolute energy within half-max isophote(s)
+            handles.tb4 = text(0.1,0.05,sprintf('T_{half-max} =   %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',24);
+        case{'ee','e.e.'} %--Absolute energy encircled within a given radius
+            handles.tb4 = text(0.1,0.05,sprintf('T_{E.E.} =   %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',24);
+    end
 
     h_psf = subplot(2,3,2); % Save the handle of the subplot
     ax2=get(h_psf,'position'); % Save the position as ax
