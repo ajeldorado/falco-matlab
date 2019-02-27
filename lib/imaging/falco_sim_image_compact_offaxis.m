@@ -36,9 +36,9 @@ modvar.y_offset = y_offset; % mp.thput_eval_y;
 
   
     if(flagEval)
-        Iout = zeros(mp.F4.eval.Neta, mp.F4.eval.Nxi);
+        Iout = zeros(mp.Fend.eval.Neta, mp.Fend.eval.Nxi);
     else
-        Iout = zeros(mp.F4.Neta, mp.F4.Nxi);            
+        Iout = zeros(mp.Fend.Neta, mp.Fend.Nxi);            
     end
     
     for si=1:mp.Nsbp

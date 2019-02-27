@@ -39,10 +39,10 @@ mp.F3.compact.dummy = 1;
 mp.P4.full.dummy = 1;
 mp.P4.compact.dummy = 1;
 
-mp.F4.compact.dummy = 1;
-mp.F4.full.dummy = 1;
-mp.F4.corr.dummy = 1;
-mp.F4.score.dummy = 1;
+mp.Fend.compact.dummy = 1;
+mp.Fend.full.dummy = 1;
+mp.Fend.corr.dummy = 1;
+mp.Fend.score.dummy = 1;
 
 
 %%
@@ -124,7 +124,7 @@ if(isfield(mp,'fl')==false); mp.fl = 1;  end % meters. Arbitrary value chose for
 %% Controller weights and thresholds
 
 %--Spatial pixel weighting of the Control Jacobian
-if(isfield(mp,'WspatialDef')==false); mp.WspatialDef = []; end %[mp.F4.corr.Rin, mp.F4.corr.Rin+2, 1]; end   %--spatial control Jacobian weighting by annulus: [Inner radius, outer radius, intensity weight; (as many rows as desired)]
+if(isfield(mp,'WspatialDef')==false); mp.WspatialDef = []; end %[mp.Fend.corr.Rin, mp.Fend.corr.Rin+2, 1]; end   %--spatial control Jacobian weighting by annulus: [Inner radius, outer radius, intensity weight; (as many rows as desired)]
 
 %--Chromatic weighting
 
@@ -159,10 +159,10 @@ mp = falco_config_load_apodizer_defaults(mp);
 
 % Now handled in falco_config_load_apodizer_defaults
 
-%% Final Focal Plane (F4) Properties
+%% Final Focal Plane (Fend. Properties
 
-%%--Final Focal Plane (F4) Properties
-mp = falco_config_load_F4_defaults(mp);
+%%--Final Focal Plane (Fend. Properties
+mp = falco_config_load_Fend.defaults(mp);
 
 end %--END OF FUNCTION
 

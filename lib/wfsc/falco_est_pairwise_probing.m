@@ -55,7 +55,7 @@ if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  end
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
-ev.Icube = zeros(mp.F4.Neta,mp.F4.Nxi,1+2*Npairs);
+ev.Icube = zeros(mp.Fend.Neta,mp.Fend.Nxi,1+2*Npairs);
 if(any(mp.dm_ind==1));  ev.Vcube.dm1 = zeros(mp.dm1.Nact,mp.dm1.Nact,1+2*Npairs);  end
 if(any(mp.dm_ind==2));  ev.Vcube.dm2 = zeros(mp.dm2.Nact,mp.dm2.Nact,1+2*Npairs);  end
 
@@ -81,8 +81,8 @@ switch lower(mp.est.probe.axis)
 end
 
 %% Initialize output arrays
-ev.Eest = zeros(mp.F4.corr.Npix,mp.Nsbp);
-ev.IincoEst = zeros(mp.F4.corr.Npix,mp.Nsbp);
+ev.Eest = zeros(mp.Fend.corr.Npix,mp.Nsbp);
+ev.IincoEst = zeros(mp.Fend.corr.Npix,mp.Nsbp);
 ev.I0mean = 0;
 ev.IprobedMean = 0;
 
@@ -103,8 +103,8 @@ for si=1:mp.Nsbp
     mp.dm2.V = DM2Vnom;
 
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
-    Iplus  = zeros( [mp.F4.corr.Npix, Npairs]); % Pixels of plus probes' intensities
-    Iminus = zeros( [mp.F4.corr.Npix, Npairs]); % Pixels of minus probes' intensities
+    Iplus  = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
+    Iminus = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of minus probes' intensities
     DM1Vplus  = zeros( [Nact,Nact, Npairs]);
     DM1Vminus = zeros( [Nact,Nact, Npairs]);
     DM2Vplus  = zeros( [Nact,Nact, Npairs]);
@@ -115,7 +115,7 @@ for si=1:mp.Nsbp
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImg = 1;
     I0 = falco_get_sbp_image(mp,si);
-    I0vec = I0(mp.F4.corr.maskBool); % Vectorize the correction region pixels
+    I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     ev.I0mean = ev.I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
 
     %--Store values for first image and its DM commands
@@ -124,8 +124,8 @@ for si=1:mp.Nsbp
     if(any(mp.dm_ind==2));  ev.Vcube.dm2(:,:, whichImg) = mp.dm2.V;  end
 
     %--Compute the average Inorm in the scoring and correction regions
-    ev.score.Inorm = mean(I0(mp.F4.score.maskBool));
-    ev.corr.Inorm  = mean(I0(mp.F4.corr.maskBool));
+    ev.score.Inorm = mean(I0(mp.Fend.score.maskBool));
+    ev.corr.Inorm  = mean(I0(mp.Fend.corr.maskBool));
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
@@ -157,7 +157,7 @@ for si=1:mp.Nsbp
         %--Take probed image
         Im = falco_get_sbp_image(mp,si);
         whichImg = 1+iProbe; %--Increment image counter
-        ev.IprobedMean = ev.IprobedMean + mean(Im(mp.F4.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
+        ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
         if(mp.flagPlot);  figure(203); imagesc(log10(Im),[-8 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
 
         %--Store probed image and its DM settings
@@ -167,18 +167,18 @@ for si=1:mp.Nsbp
 
         %--Report results
         probeSign = ['-','+'];
-        fprintf('Actual Probe %d%s Contrast is: %.2e \n',ceil(iProbe/2),probeSign(mod(iProbe,2)+1),mean(Im(mp.F4.corr.maskBool)));
+        fprintf('Actual Probe %d%s Contrast is: %.2e \n',ceil(iProbe/2),probeSign(mod(iProbe,2)+1),mean(Im(mp.Fend.corr.maskBool)));
 
         %--Assign image to positive or negative probe collection:
         if mod(iProbe,2)==1  % Odd; for plus probes
             if(any(mp.dm_ind==1));  DM1Vplus(:,:,iOdd) = dDM1Vprobe + DM1Vnom;  end
             if(any(mp.dm_ind==2));  DM2Vplus(:,:,iOdd) = dDM2Vprobe + DM2Vnom;  end
-            Iplus(:,iOdd) = Im(mp.F4.corr.maskBool);
+            Iplus(:,iOdd) = Im(mp.Fend.corr.maskBool);
             iOdd=iOdd+1;
         elseif mod(iProbe,2)==0  % Even; for minus probes
             if(any(mp.dm_ind==1));  DM1Vminus(:,:,iEven) = dDM1Vprobe + DM1Vnom;  end
             if(any(mp.dm_ind==2));  DM2Vminus(:,:,iEven) = dDM2Vprobe + DM2Vnom;  end 
-            Iminus(:,iEven) = Im(mp.F4.corr.maskBool);
+            Iminus(:,iEven) = Im(mp.Fend.corr.maskBool);
             iEven=iEven+1;      
         end
     end
@@ -191,7 +191,7 @@ for si=1:mp.Nsbp
     if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom;  end
     if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom;  end % Added July 9, 2014
     E0 = model_compact(mp, modvar);
-    E0vec = E0(mp.F4.corr.maskBool);
+    E0vec = E0(mp.Fend.corr.maskBool);
 
     %--For probed fields based on model:
     Eplus  = zeros(size(Iplus ));
@@ -201,18 +201,18 @@ for si=1:mp.Nsbp
         if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
         if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
         Etemp = model_compact(mp, modvar);
-        Eplus(:,iProbe) = Etemp(mp.F4.corr.maskBool);
+        Eplus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
         % For minus probes:
         if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
         if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
         Etemp = model_compact(mp, modvar);
-        Eminus(:,iProbe) = Etemp(mp.F4.corr.maskBool);
+        Eminus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
     end
 
     %% Create delta E-fields for each probe image. Then create Npairs phase angles.
     dEplus  = Eplus  - repmat(E0vec,[1,Npairs]);
     dEminus = Eminus - repmat(E0vec,[1,Npairs]);
-    dphdm  = zeros( [mp.F4.corr.Npix, Npairs]); %--phases of the probes
+    dphdm  = zeros( [mp.Fend.corr.Npix, Npairs]); %--phases of the probes
     for iProbe=1:Npairs
         dphdm(:,iProbe) = atan2( imag(dEplus(:,iProbe))-imag(dEminus(:,iProbe)),real(dEplus(:,iProbe))-real(dEminus(:,iProbe)) );
     end
@@ -220,22 +220,22 @@ for si=1:mp.Nsbp
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
     ampSq = (Iplus+Iminus)/2 - repmat(I0vec,[1,Npairs]);  % square of probe E-field amplitudes
     ampSq(ampSq<0) = 0;  % If probe amplitude is zero, amplitude is zero there.
-    amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.F4.corr.Npix, Npairs]
+    amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
     isnonzero = all(amp,2);
-    zAll = ( (Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs,mp.F4.corr.Npix]
+    zAll = ( (Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs,mp.Fend.corr.Npix]
 
     for iProbe=1:Npairs % Display the actual probe intensity
-        ampSq2D = zeros(mp.F4.Neta,mp.F4.Nxi); ampSq2D(mp.F4.corr.maskBool) = ampSq(:,iProbe); 
-        fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.F4.corr.maskBool)));
+        ampSq2D = zeros(mp.Fend.Neta,mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:,iProbe); 
+        fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
         if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow; pause(1);  end
     end
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
 if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && estvar.Itr<mp.est.ItrStartKF ) )
-    Eest = zeros(mp.F4.corr.Npix,1);
+    Eest = zeros(mp.Fend.corr.Npix,1);
     zerosCounter = 0;
-    for ipix=1:mp.F4.corr.Npix
+    for ipix=1:mp.Fend.corr.Npix
         H = zeros(Npairs,2); % Observation matrix
         if(isnonzero(ipix)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
             for iProbe=1:Npairs
@@ -255,7 +255,7 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && estvar.
     Eest(abs(Eest).^2 > 1e-2) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
     %end
     % Eest = Eest.*isnonzero; 
-    fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.F4.corr.Npix); 
+    fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
     % end % End of if-elseif statements for ep.probeAmpType
 
 
@@ -263,14 +263,14 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && estvar.
     %filter. The state is the real and imag parts of the E-field.
     if(strcmpi(mp.estimator,'pwp-kf'))
         %--Re-organize the batch-processed E-field estimate into the first state estimate for the Kalman filter
-        xOld = zeros(2*mp.F4.corr.Npix,1);
-        for ii = 1:mp.F4.corr.Npix
+        xOld = zeros(2*mp.Fend.corr.Npix,1);
+        for ii = 1:mp.Fend.corr.Npix
             xOld(2*(ii-1)+1:2*(ii-1)+2) = [real(Eest(ii)); imag(Eest(ii))];
         end
         ev.xOld = xOld; %--Save out for returning later
 
         %--Initialize the state covariance matrix (2x2 for each dark hole pixel)
-        ev.Pold_KF_array = repmat(mp.est.Pcoef0*eye(2), [mp.F4.corr.Npix,1,Nsbp]);
+        ev.Pold_KF_array = repmat(mp.est.Pcoef0*eye(2), [mp.Fend.corr.Npix,1,Nsbp]);
     end
 
 end   
@@ -285,8 +285,8 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     Pold = ev.Pold_KF_array(:,:,si);
     
     %--Construct the observation matrix, H, for all pixels
-    Hall = zeros(Npairs,2,mp.F4.corr.Npix);
-    for jj=1:mp.F4.corr.Npix
+    Hall = zeros(Npairs,2,mp.Fend.corr.Npix);
+    for jj=1:mp.Fend.corr.Npix
         H = zeros(Npairs,2); % Observation matrix
         if(isnonzero(jj)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
             for qq=1:Npairs
@@ -304,12 +304,12 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom-mp.dm1.dV;  end
     if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom-mp.dm2.dV;  end
     Eprev = model_compact(mp, modvar);
-    EprevVec = Eprev(mp.F4.corr.maskBool);
+    EprevVec = Eprev(mp.Fend.corr.maskBool);
     dE = E0vec-EprevVec; % Change in unprobed E-field between correction iterations
 
     %--Construct dX, the change in state since last correction iteration
     dX = zeros(size(xOld));
-    for ii=1:mp.F4.corr.Npix
+    for ii=1:mp.Fend.corr.Npix
             %dX(2*(ii-1)+1:2*(ii-1)+2) = Gamma(2*(ii-1)+1:2*(ii-1)+2,:)*u; % From Jacobian
             dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
     end
@@ -327,12 +327,12 @@ if(strcmpi(mp.estimator,'pwp-kf') )
 
     %--Compute Process Noise, Q. This you just have to tune (via the scalar mp.est.Qcoef).
     Q00 = ev.corr.Inorm; %--Set coefficient to the current measured contrast. Can change to the last estimated contrast.
-    Q = Q00*mp.est.Qcoef*repmat( eye(2), [mp.F4.corr.Npix, 1]);
+    Q = Q00*mp.est.Qcoef*repmat( eye(2), [mp.Fend.corr.Npix, 1]);
     dP = Q;
     fprintf('Process noise coefficient: %.3e\n',Q(1,1));
     %--Other way to define Q is as the scaled squared Jacobian.
     % Q = zeros(size(Pold));
-    % for jj=1:mp.F4.corr.Npix
+    % for jj=1:mp.Fend.corr.Npix
     %     Q(2*jj-1:2*jj,:) = Qcoef*eye(2);
     % end
     % Qcoef = 1e-7; dP = Qcoef*Gamma*(Gamma.');  
@@ -340,13 +340,13 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Compute Kalman Filter Equations
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    xNew = zeros(2*mp.F4.corr.Npix,1);
-    Pnew = zeros(2*mp.F4.corr.Npix,2);
-    Kall = zeros(2,Npairs,mp.F4.corr.Npix); %--Store the Kalman gain matrices. For diagnostics only
+    xNew = zeros(2*mp.Fend.corr.Npix,1);
+    Pnew = zeros(2*mp.Fend.corr.Npix,2);
+    Kall = zeros(2,Npairs,mp.Fend.corr.Npix); %--Store the Kalman gain matrices. For diagnostics only
 
     xMinusAll = xOld + dX; %State Estimate Extrapolation (Recall Phi = Identity)
     PminusAll = Pold + dP; %Covariance Estimate Extrapolation (Recall Phi = Identity)
-    for ii=1:mp.F4.corr.Npix
+    for ii=1:mp.Fend.corr.Npix
         %--Format several matrices
         z = zAll(:,ii); % z has dimensions [Npairs x Npix]
         H = Hall(:,:,ii); % H has dimensions [Npairs x 2]
@@ -370,8 +370,8 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     fprintf('P11,P22,P12,P21: \t%.2e \t%.2e \t%.2e \t%.2e \n',P11,P22,P12,P21);
 
     % Re-order Xnew into Eest
-    EestKF = zeros(mp.F4.corr.Npix,1); %for re-ordering state for control
-    for jj=1:mp.F4.corr.Npix
+    EestKF = zeros(mp.Fend.corr.Npix,1); %for re-ordering state for control
+    for jj=1:mp.Fend.corr.Npix
         EestKF(jj) = xNew(2*(jj-1)+1) + 1i*xNew(2*(jj-1)+2);
     end
     Eest = EestKF;

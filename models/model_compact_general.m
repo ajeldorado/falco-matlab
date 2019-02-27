@@ -54,15 +54,15 @@ mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
 
 if(flagEval) %--Higher resolution at final focal plane for computing stats
-    dxi = mp.F4.eval.dxi;
-    Nxi = mp.F4.eval.Nxi;
-    deta = mp.F4.eval.deta;
-    Neta = mp.F4.eval.Neta; 
+    dxi = mp.Fend.eval.dxi;
+    Nxi = mp.Fend.eval.Nxi;
+    deta = mp.Fend.eval.deta;
+    Neta = mp.Fend.eval.Neta; 
 else
-    dxi = mp.F4.dxi;
-    Nxi = mp.F4.Nxi;
-    deta = mp.F4.deta;
-    Neta = mp.F4.Neta; 
+    dxi = mp.Fend.dxi;
+    Nxi = mp.Fend.Nxi;
+    deta = mp.Fend.deta;
+    Neta = mp.Fend.Neta; 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -280,14 +280,14 @@ end
 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr);
 
 % DFT to camera
-EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
-% EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta); %--Code from before flagEval
+EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
+% EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta); %--Code from before flagEval
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
-    Eout = EF4; %--Don't normalize if normalization value is being found
+    Eout = EFend; %--Don't normalize if normalization value is being found
 else
-    Eout = EF4/sqrt(normFac); %--Apply normalization
+    Eout = EFend/sqrt(normFac); %--Apply normalization
 end
 
 

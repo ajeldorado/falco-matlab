@@ -65,11 +65,11 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of
 % DM1S_array = single(zeros(mp.dm1.compact.Ndm,mp.dm1.compact.Ndm,mp.Nitr+1));
 % DM2S_array = single(zeros(mp.dm2.compact.Ndm,mp.dm2.compact.Ndm,mp.Nitr+1));
 %
-% ImHist = single( zeros(mp.F4.Neta,mp.F4.Nxi,mp.Nitr+1) ); %--Full PSF after each correction step
+% ImHist = single( zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.Nitr+1) ); %--Full PSF after each correction step
 
 
 %% Take initial broadband images
-%EfieldCorrTrue = zeros(mp.F4.corr.Npix,mp.jac.Nmode,mp.Nitr+1); % (Simulation only) Vectorized true starlight E-field at each pixel and wavelength
+%EfieldCorrTrue = zeros(mp.Fend.corr.Npix,mp.jac.Nmode,mp.Nitr+1); % (Simulation only) Vectorized true starlight E-field at each pixel and wavelength
 
 if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
 
@@ -138,7 +138,7 @@ for Itr=1:mp.Nitr
     mp.thput_vec(Itr) = thput;
 
     %--Compute the current contrast level
-    InormHist(Itr) = mean(Im(mp.F4.corr.maskBool));
+    InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
 
     %--Plot the updates to the DMs and PSF
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
@@ -413,9 +413,9 @@ Im = falco_get_summed_image(mp);
 
 %--REPORTING NORMALIZED INTENSITY
 if( (Itr==mp.Nitr) || (strcmpi(mp.controller,'conEFC') && (numel(mp.ctrl.muVec)==1)  ) ) 
-    InormHist(Itr+1) = mean(Im(mp.F4.corr.maskBool));
+    InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
 %     ImBandAvg_current = ImHist(:,:,Itr+1);
-%     InormHist(Itr+1) = mean(ImBandAvg_current(mp.F4.corr.maskBool));
+%     InormHist(Itr+1) = mean(ImBandAvg_current(mp.Fend.corr.maskBool));
 
     fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
         InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 

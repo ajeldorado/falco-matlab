@@ -39,9 +39,9 @@ function Eout = model_full(mp,   modvar,varargin)
 
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
-    normFac = mp.F4.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 elseif(isfield(modvar,'ebpIndex')) %--Entire bandpass index, out of mp.full.Nlam
-    normFac = mp.F4.full.I00(modvar.ebpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.full.I00(modvar.ebpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
     %--Enable different arguments values by using varargin

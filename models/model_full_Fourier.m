@@ -283,14 +283,14 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.full.croppedMask.*EP4; %padOrCropEven(EP4,mp.P4.full.Narr);
 
-%--MFT from Lyot Stop to final focal plane (i.e., P4 to F4)
-EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta);
+%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend.
+EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta);
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
-    Eout = EF4; %--Don't normalize if normalization value is being found
+    Eout = EFend;  %--Don't normalize if normalization value is being found
 else
-    Eout = EF4/sqrt(normFac); %--Apply normalization
+    Eout = EFend/sqrt(normFac); %--Apply normalization
 end
 
 if(mp.useGPU); Eout = gather(Eout); end

@@ -117,7 +117,7 @@ Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving 
 
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm1.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
@@ -183,9 +183,9 @@ if(whichDM==1)
 %             EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm1.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -194,7 +194,7 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm2.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox2 = mp.dm2.compact.Nbox;
@@ -263,9 +263,9 @@ if(whichDM==2)
 %             EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm2.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -276,7 +276,7 @@ end
 
 %--DM8--------------------------------------------------------- 
 if(whichDM==8)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm8.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm8.Nele);
     Nbox8 = mp.dm8.compact.Nbox;
     
     if(isfield(mp.dm8,'stepFac')==false)
@@ -360,9 +360,9 @@ if(whichDM==8)
             EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
 
             %--DFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm8.act_sens*(1/stepFac)*mp.dm8.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm8.act_sens*(1/stepFac)*mp.dm8.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -374,7 +374,7 @@ end %%%%%%%%%%%%%%%%%%%
 
 %--DM9--------------------------------------------------------- 
 if(whichDM==9)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm9.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm9.Nele);
     Nbox9 = mp.dm9.compact.Nbox;
     
     if(isfield(mp.dm9,'stepFac')==false)
@@ -467,9 +467,9 @@ if(whichDM==9)
             EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
 
             %--MFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end

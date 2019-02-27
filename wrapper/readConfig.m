@@ -40,16 +40,16 @@ switch upper(coro_type)
       end
 
       %% Specs for Correction (Corr) region and the Scoring (Score) region.
-      if(isfield(mp.F4.corr,'Rin')==false)
+      if(isfield(mp.Fend.corr,'Rin')==false)
           if(isfield(mp.F3,'RinA'))
-              mp.F4.corr.Rin  = mp.F3.RinA;
+              mp.Fend.corr.Rin  = mp.F3.RinA;
           else
             body
-              mp.F4.corr.Rin  = mp.F3.Rin;
+              mp.Fend.corr.Rin  = mp.F3.Rin;
           end
       end  %--lambda0/D, inner radius of correction region
 
-      if (isfield(mp.F4.score,'Rin')==false); mp.F4.score.Rin = mp.F4.corr.Rin; end
+      if (isfield(mp.Fend.score,'Rin')==false); mp.Fend.score.Rin = mp.Fend.corr.Rin; end
 
       if (mp.controller == 'plannedEFC')
           [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);

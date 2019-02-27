@@ -84,10 +84,10 @@ end
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
 
-% dxi = mp.F4.dxi;
-% Nxi = mp.F4.Nxi;
-% deta = mp.F4.deta;
-% Neta = mp.F4.Neta; 
+% dxi = mp.Fend.dxi;
+% Nxi = mp.Fend.Nxi;
+% deta = mp.Fend.deta;
+% Neta = mp.Fend.Neta; 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

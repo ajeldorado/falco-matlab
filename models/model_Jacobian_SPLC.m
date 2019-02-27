@@ -98,7 +98,7 @@ Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving 
 
 %--DM1---------------------------------------------------------
 if(whichDM==1)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm1.Nele); %--Initialize the Jacobian
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele); %--Initialize the Jacobian
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
@@ -156,11 +156,11 @@ if(whichDM==1)
             EP4 = mp.P4.compact.croppedMask.*(EP4); %--Apply Lyot stop
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            if(mp.useGPU);EF4 = gather(EF4);end
+            if(mp.useGPU);EFend = gather(EFend) ;end
             
-            Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -169,7 +169,7 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm2.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox2 = mp.dm2.compact.Nbox;%2*ceil(1/2*min(mp.lamFac_vec)*mp.lambda0*mp.d_dm1_dm2/mp.dm2.compact.dx^2);
@@ -222,11 +222,11 @@ if(whichDM==2)
             EP4 = mp.P4.compact.croppedMask.*(EP4); %--Apply Lyot stop
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi, mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi, mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            if(mp.useGPU);EF4 = gather(EF4);end
+            if(mp.useGPU);EFend = gather(EFend) ;end
             
-            Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end

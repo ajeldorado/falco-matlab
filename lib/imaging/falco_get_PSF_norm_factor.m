@@ -23,9 +23,9 @@
 function mp = falco_get_PSF_norm_factor(mp)
 
 %--Initialize Model Normalizations
-mp.F4.compact.I00 = ones(1,mp.Nsbp); % Initial input before computing
-mp.F4.eval.I00 = ones(1,mp.Nsbp); % Initial input before computing
-mp.F4.full.I00 = ones(1,mp.full.Nlam); % Initial input before computing
+mp.Fend.compact.I00 = ones(1,mp.Nsbp); % Initial input before computing
+mp.Fend.eval.I00 = ones(1,mp.Nsbp); % Initial input before computing
+mp.Fend.full.I00 = ones(1,mp.full.Nlam); % Initial input before computing
 
 modvar.zernIndex = 1;
 % modvar.wpsbpIndex = wi;
@@ -37,8 +37,8 @@ for si=1:mp.Nsbp
     modvar.sbpIndex = si;
     Etemp = model_compact(mp, modvar,'NormOff');
     Im_temp_compact = abs(Etemp).^2;
-    mp.F4.compact.I00(si) = max(max(Im_temp_compact));
-    %     figure; imagesc(mp.F4.xisDL,mp.F4.etasDL,log10(mean(Im_temp_compact,3)/mp.F4.compact.I00(si)),[-9 0]); axis xy equal tight; colorbar; title('Compact Model');
+    mp.Fend.compact.I00(si) = max(max(Im_temp_compact));
+    %     figure; imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(mean(Im_temp_compact,3)/mp.Fend.compact.I00(si)),[-9 0]); axis xy equal tight; colorbar; title('Compact Model');
 end
 
 %--Compact Evaluation Model Normalizations
@@ -46,8 +46,8 @@ for si=1:mp.Nsbp
     modvar.sbpIndex = si;
     Etemp = model_compact(mp, modvar,'NormOff','eval');
     Im_temp_compact = abs(Etemp).^2;
-    mp.F4.eval.I00(si) = max(max(Im_temp_compact));
-    %     figure; imagesc(mp.F4.xisDL,mp.F4.etasDL,log10(mean(Im_temp_compact,3)/mp.F4.compact.I00(si)),[-9 0]); axis xy equal tight; colorbar; title('Compact Model');
+    mp.Fend.eval.I00(si) = max(max(Im_temp_compact));
+    %     figure; imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(mean(Im_temp_compact,3)/mp.Fend.compact.I00(si)),[-9 0]); axis xy equal tight; colorbar; title('Compact Model');
 end
 
 % %--Full Model Normalizations (at points for entire-bandpass evaluation)
@@ -56,7 +56,7 @@ end
 %     Etemp = model_full(mp, modvar,'NormOff');
 %     %Etemp = model_compact(mp, modvar,'NormOff');
 %     Im_temp_full = abs(Etemp).^2;
-%     mp.F4.full.I00(ilam) = max(max(Im_temp_full));
+%     mp.Fend.full.I00(ilam) = max(max(Im_temp_full));
 % end
 
 %--Full Model Normalizations (at points for entire-bandpass evaluation)
@@ -67,7 +67,7 @@ for si=1:mp.Nsbp
         modvar.wpsbpIndex = wi;
         Etemp = model_full(mp, modvar,'NormOff');
         Im_temp_full = abs(Etemp).^2;
-        mp.F4.full.I00(counter) = max(Im_temp_full(:));
+        mp.Fend.full.I00(counter) = max(Im_temp_full(:));
         counter = counter+1;
     end
 end

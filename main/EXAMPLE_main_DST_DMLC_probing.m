@@ -42,7 +42,7 @@ defaults_DST_LC_design
 %% Step 3: Overwrite default values as desired
 
 %%--Special Computational Settings
-% mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 
 %--Record Keeping
@@ -59,15 +59,15 @@ mp.TrialNum = 1;
 % mp.estimator = 'perfect';
 
 %--Use just 1 wavelength for initial debugging of code
-mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 
 
 %% Step 4: Generate the label associated with this trial
 
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-    '_IWA',num2str(mp.F4.corr.Rin),'_OWA',num2str(mp.F4.corr.Rout),...
+    '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
     '_',mp.controller];
 

@@ -42,7 +42,7 @@ function Eout = model_compact(mp, modvar,varargin)
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
 % Set default values of input parameters
-normFac = mp.F4.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 flagEval = false;             % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
 flagAllPlanes = false; %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
@@ -67,7 +67,7 @@ end
 
 %--Normalization factor for compact evaluation model
 if( (flagNewNorm==false) && (flagEval==true) )
-    normFac = mp.F4.eval.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.eval.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
 %--Set the wavelength

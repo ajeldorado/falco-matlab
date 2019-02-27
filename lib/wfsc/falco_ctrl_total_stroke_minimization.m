@@ -162,7 +162,7 @@ if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V(:); end
 
 %% Take images to empirically check contrast at that mu value
 Itotal = falco_get_summed_image(mp);
-InormAvg = mean(Itotal(mp.F4.corr.maskBool));
+InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
 cvar.cMin = InormAvg;
 
 cvar.log10regUsed = -10; %--Dummy value

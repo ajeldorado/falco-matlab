@@ -86,9 +86,9 @@ switch lower(mp.coro)
             mp.F3.Rin = 3.1; % inner hard-edge radius of the focal plane mask, in lambda0/D
             mp.F3.Rout = 22.0; % outer hard-edge radius of the focal plane mask, in lambda0/D
         elseif(strcmpi(mp.SPname,'27WA166'))
-            if(isfield(mp.F4.corr,'Rin')==false)
-                if(isfield(mp.F3,'RinA')); mp.F4.corr.Rin  = mp.F3.RinA;
-                else; mp.F3.Rin = 2.7; mp.F4.corr.Rin  = mp.F3.Rin;
+            if(isfield(mp.Fend.corr,'Rin')==false)
+                if(isfield(mp.F3,'RinA')); mp.Fend.corr.Rin  = mp.F3.RinA;
+                else; mp.F3.Rin = 2.7; mp.Fend.corr.Rin  = mp.F3.Rin;
                 end
             end  %--lambda0/D, inner radius of correction region
             if(isfield(mp.F3,'Rout')==false); mp.F3.Rout = 16.6; end % outer hard-edge radius of the focal plane mask, in lambda0/D    

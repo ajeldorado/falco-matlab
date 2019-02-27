@@ -161,19 +161,19 @@ mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'vortex';
 
 %--Final Focal Plane Properties
-mp.F4.res = 3; %--Sampling [ pixels per lambda0/D]
-mp.F4.FOV = 20; %--half-width of the field of view in both dimensions [lambda0/D]
+mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
+mp.Fend.FOV = 20; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
-mp.F4.corr.Rin = 2.0;   % inner radius of dark hole correction region [lambda0/D]
-mp.F4.corr.Rout  = 15;  % outer radius of dark hole correction region [lambda0/D]
-mp.F4.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.Rin = 2.0;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 15;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.F4.score.Rin = 2.0;  % inner radius of dark hole scoring region [lambda0/D]
-mp.F4.score.Rout = 15;  % outer radius of dark hole scoring region [lambda0/D]
-mp.F4.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
+mp.Fend.score.Rin = 2.0;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = 15;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
-mp.F4.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle

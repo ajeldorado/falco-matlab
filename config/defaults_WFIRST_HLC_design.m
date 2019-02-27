@@ -28,7 +28,7 @@ mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 500e-9;    %--Central wavelength of the whole spectral bandpass [meters]
+mp.lambda0 = 575e-9;    %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 6;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
@@ -86,11 +86,6 @@ mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annu
 %--DM weighting
 mp.dm1.weight = 1;
 mp.dm2.weight = 1;
-
-%--DM9 weights and sensitivities
-mp.dm9.weight = 10;%1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
-mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
-mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
 %--Voltage range restrictions
 mp.dm1.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
@@ -218,19 +213,19 @@ mp.coro = 'HLC';
 mp.flagApod = false;    %--Whether to use an apodizer or not
 
 %--Final Focal Plane Properties
-mp.F4.res = 3; %--Sampling [ pixels per lambda0/D]
-mp.F4.FOV = 11; %--half-width of the field of view in both dimensions [lambda0/D]
+mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
+mp.Fend.FOV = 12; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
-mp.F4.corr.Rin = 2.7;   % inner radius of dark hole correction region [lambda0/D]
-mp.F4.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
-mp.F4.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.Rin = 2.7;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.F4.score.Rin = 2.7;  % inner radius of dark hole scoring region [lambda0/D]
-mp.F4.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
-mp.F4.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
+mp.Fend.score.Rin = 2.7;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
-mp.F4.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -287,6 +282,7 @@ mp.F3.ang = 180;    % on each side, opening angle [degrees]
 %% HLC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+
 %% FPM Material Properties
 mp.aoi = 10.04; % Angle of incidence at FPM [deg]
 mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
@@ -299,7 +295,7 @@ mp.t_diel_nm_vec = 0:mp.dt_diel_nm:900; %--PMGI thickness range and sampling (nm
 %--Number of waves offset from substrate for reference plane. MUST BE MORE THAN MAX THICKNESS OF THE FPM.
 mp.FPM.d0fac = 4;
 
-%% DM8
+%% DM8: FPM Metal Thickness
 
 mp.dm8.V0coef = 100; % Nominal Nickel layer thickness [nm]
 
@@ -308,9 +304,15 @@ mp.dm8.Vmin = 0;
 mp.dm8.Vmax = 300;
 
 
-%% DM9
-mp.t_diel_bias_nm = 0; %--Thickness of starting uniform bias layer of PMGI [nm]. % (Requires an outer stop in reality if >0, but will run without it to see if it gives essentially the same result as the EHLC but faster)
+%% DM9: FPM Dielectric thickness
 
+%--DM9 weights and sensitivities: Used by the controller
+mp.dm9.weight = 1; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
+mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+
+%--Starting dielectric thicknesses
+mp.t_diel_bias_nm = 0; %--Thickness of starting uniform bias layer of PMGI [nm]. % (Requires an outer stop in reality if >0, but will run without it to see if it gives essentially the same result as the EHLC but faster)
 mp.dm9.V0coef = 390; % Nominal PMGI layer thickness [nm] 
 
 %--DM9 influence function options:

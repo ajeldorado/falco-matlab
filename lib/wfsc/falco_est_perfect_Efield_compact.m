@@ -19,8 +19,8 @@ function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp);%,DM)
     end
 
     
-    IfocusCube = zeros(mp.F4.Neta, mp.F4.Nxi, mp.Nsbp);
-    Emat = zeros(mp.F4.corr.Npix, mp.Nsbp);
+    IfocusCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, mp.Nsbp);
+    Emat = zeros(mp.Fend.corr.Npix, mp.Nsbp);
     
     for si=1:mp.Nsbp
         modvar.sbpIndex = si; %mp.jac.sbp_inds(im); %mp.Wttlam_si(im);
@@ -34,15 +34,15 @@ function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp);%,DM)
         if mp.lowfs
             Icube(:,:,si) = abs(E2D).^2;
         else
-            Emat(:,si) = E2D(mp.F4.corr.inds);   % Actual field in estimation area
+            Emat(:,si) = E2D(mp.Fend.corr.inds);   % Actual field in estimation area
             IfocusCube(:,:,si) = (abs(E2D).^2)*mp.jac.weightMat(si,1);%mp.jac.weights(im);
         end
 
     end
     
     
-%     IfocusCube = zeros(mp.F4.Neta, mp.F4.Nxi, mp.jac.Nmode);
-%     Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
+%     IfocusCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, mp.jac.Nmode);
+%     Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
 %     
 %     for im=1:mp.jac.Nmode
 %         modvar.sbpIndex = mp.jac.sbp_inds(im); %mp.Wttlam_si(im);
@@ -56,7 +56,7 @@ function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp);%,DM)
 %         if mp.lowfs
 %             Icube(:,:,im) = abs(E2D).^2;
 %         else
-%             Emat(:,im) = E2D(mp.F4.corr.inds);   % Actual field in estimation area
+%             Emat(:,im) = E2D(mp.Fend.corr.inds);   % Actual field in estimation area
 %             IfocusCube(:,:,im) = (abs(E2D).^2)*mp.jac.weights(im);
 %         end
 % 

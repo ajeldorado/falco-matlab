@@ -52,7 +52,7 @@ mp.dm9.V = out.DM9V;
 % % DM9V = out.dm9.Vall(:,whichItr+extra); 
 
 %% Increase Spatial Resolution in FP4 if desired
-mp.F4.res = 10;
+mp.Fend.res = 10;
 
 %% Save to new config file that includes the final DM settings as the new starting point
 fn_config_updated = [fn_init_ws(1:end-4) '_updated.mat'];

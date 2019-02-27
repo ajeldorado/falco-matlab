@@ -63,7 +63,7 @@ duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.
 
 %% Take images and compute average intensity in dark hole
 Itotal = falco_get_summed_image(mp);
-InormAvg = mean(Itotal(mp.F4.corr.maskBool));
+InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
         
 
 end %--END OF FUNCTION

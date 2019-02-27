@@ -280,23 +280,23 @@ mp.dm2.maxAbsV = 250;%250./2.;
 
 
  
-%% Final Focal Plane (F4) Properties
+%% Final Focal Plane (Fend. Properties
 % 
 % 
 % % %--Specs for Correction (Corr) region and the Scoring (Score) region.
-% % mp.F4.corr.Rin  = 2; %--lambda0/D, inner radius of correction region
-% % mp.F4.score.Rin = 2; %--Needs to be <= that of Correction mask
-% % mp.F4.corr.Rout  = floor(mp.dm1.Nact/2*(1-mp.fracBW/2)); %--lambda0/D, outer radius of correction region
-% % mp.F4.score.Rout = mp.F4.corr.Rout; %--Needs to be <= that of Correction mask
-% % mp.F4.corr.ang  = 180; %--degrees per side
-% % mp.F4.score.ang = 180; %--degrees per side
-% % mp.F4.sides = 'both'; %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
+% % mp.Fend.corr.Rin  = 2; %--lambda0/D, inner radius of correction region
+% % mp.Fend.score.Rin = 2; %--Needs to be <= that of Correction mask
+% % mp.Fend.corr.Rout  = floor(mp.dm1.Nact/2*(1-mp.fracBW/2)); %--lambda0/D, outer radius of correction region
+% % mp.Fend.score.Rout = mp.Fend.corr.Rout; %--Needs to be <= that of Correction mask
+% % mp.Fend.corr.ang  = 180; %--degrees per side
+% % mp.Fend.score.ang = 180; %--degrees per side
+% % mp.Fend.sides = 'both'; %--options: 'left', 'right','top','bottom'; any other values produce an annular region 
 % 
 % 
-% % %%--Final Focal Plane (F4) Properties
-% % mp.F4.res = 3; %--Pixels per lambda_c/D
-% % mp.F4.full.res = 6; %--Pixels per lambda_c/D
-% % mp.F4.FOV = 1 + mp.F4.corr.Rout; % minimum desired field of view (along both axes) in lambda0/D
+% % %%--Final Focal Plane (Fend. Properties
+% % mp.Fend.res = 3; %--Pixels per lambda_c/D
+% % mp.Fend.full.res = 6; %--Pixels per lambda_c/D
+% % mp.Fend.FOV = 1 + mp.Fend.corr.Rout; % minimum desired field of view (along both axes) in lambda0/D
 
 
 
@@ -309,7 +309,7 @@ mp = falco_config_defaults_VC(mp); %--Load defaults for undefined values
 
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-    '_IWA',num2str(mp.F4.corr.Rin),'_OWA',num2str(mp.F4.corr.Rout),...
+    '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
     '_',mp.controller];
 

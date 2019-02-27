@@ -265,50 +265,50 @@ switch upper(mp.coro)
         end
 end
 
-%% Sampling/Resolution and Scoring/Correction Masks for Final Focal Plane (F4)
+%% Sampling/Resolution and Scoring/Correction Masks for Final Focal Plane (Fend.
 
-mp.F4.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.F4.res; % sampling at F4 [meters]
-mp.F4.deta = mp.F4.dxi; % sampling at F4 [meters]    
+mp.Fend.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.Fend.res; % sampling at Fend.[meters]
+mp.Fend.deta = mp.Fend.dxi; % sampling at Fend.[meters]    
 
 %% Software Mask for Correction (corr) and Scoring (score)
 
 %--Set Inputs
-maskCorr.pixresFP = mp.F4.res;
-maskCorr.rhoInner = mp.F4.corr.Rin; %--lambda0/D
-maskCorr.rhoOuter = mp.F4.corr.Rout ; %--lambda0/D
-maskCorr.angDeg = mp.F4.corr.ang; %--degrees
+maskCorr.pixresFP = mp.Fend.res;
+maskCorr.rhoInner = mp.Fend.corr.Rin; %--lambda0/D
+maskCorr.rhoOuter = mp.Fend.corr.Rout ; %--lambda0/D
+maskCorr.angDeg = mp.Fend.corr.ang; %--degrees
 maskCorr.centering = mp.centering;
-maskCorr.FOV = mp.F4.FOV;
-maskCorr.whichSide = mp.F4.sides; %--which (sides) of the dark hole have open
-if(isfield(mp.F4,'shape'))
-    maskCorr.shape = mp.F4.shape;
+maskCorr.FOV = mp.Fend.FOV;
+maskCorr.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+if(isfield(mp.Fend,'shape'))
+    maskCorr.shape = mp.Fend.shape;
 end
     
 
 %--Compact Model: Generate Software Mask for Correction 
-[mp.F4.corr.mask, mp.F4.xisDL, mp.F4.etasDL] = falco_gen_SW_mask(maskCorr); 
-mp.F4.corr.settings = maskCorr; %--Store values for future reference
+[mp.Fend.corr.mask, mp.Fend.xisDL, mp.Fend.etasDL] = falco_gen_SW_mask(maskCorr); 
+mp.Fend.corr.settings = maskCorr; %--Store values for future reference
 
 %--Size of the output image 
 %--Need the sizes to be the same for the correction and scoring masks
-mp.F4.Nxi  = size(mp.F4.corr.mask,2);
-mp.F4.Neta = size(mp.F4.corr.mask,1);
+mp.Fend.Nxi  = size(mp.Fend.corr.mask,2);
+mp.Fend.Neta = size(mp.Fend.corr.mask,1);
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 %--Evaluation Model for Computing Throughput (same as Compact Model but
-% with different F4 resolution)
-mp.F4.eval.dummy = 1; %--Initialize the structure if it doesn't exist.
-if(isfield(mp.F4.eval,'res')==false);  mp.F4.eval.res = 10;  end 
-maskCorr.pixresFP = mp.F4.eval.res; %--Assign the resolution
-[mp.F4.eval.mask, mp.F4.eval.xisDL, mp.F4.eval.etasDL] = falco_gen_SW_mask(maskCorr);  %--Generate the mask
-mp.F4.eval.Nxi  = size(mp.F4.eval.mask,2);
-mp.F4.eval.Neta = size(mp.F4.eval.mask,1);
-mp.F4.eval.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.F4.eval.res; % higher sampling at F4 for evaulation [meters]
-mp.F4.eval.deta = mp.F4.eval.dxi; % higher sampling at F4 for evaulation [meters]   
+% with different Fend.resolution)
+mp.Fend.eval.dummy = 1; %--Initialize the structure if it doesn't exist.
+if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end 
+maskCorr.pixresFP = mp.Fend.eval.res; %--Assign the resolution
+[mp.Fend.eval.mask, mp.Fend.eval.xisDL, mp.Fend.eval.etasDL] = falco_gen_SW_mask(maskCorr);  %--Generate the mask
+mp.Fend.eval.Nxi  = size(mp.Fend.eval.mask,2);
+mp.Fend.eval.Neta = size(mp.Fend.eval.mask,1);
+mp.Fend.eval.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.Fend.eval.res; % higher sampling at Fend.for evaulation [meters]
+mp.Fend.eval.deta = mp.Fend.eval.dxi; % higher sampling at Fend.for evaulation [meters]   
 
 % % (x,y) location [lambda_c/D] in dark hole at which to evaluate throughput
-[XIS,ETAS] = meshgrid(mp.F4.eval.xisDL - mp.thput_eval_x, mp.F4.eval.etasDL - mp.thput_eval_y);
+[XIS,ETAS] = meshgrid(mp.Fend.eval.xisDL - mp.thput_eval_x, mp.Fend.eval.etasDL - mp.thput_eval_y);
 mp.FP4.eval.RHOS = sqrt(XIS.^2 + ETAS.^2);
 % % if(isfield(mp,'thput_eval_x')==false);  mp.thput_eval_x = 6;  end
 % % if(isfield(mp,'thput_eval_y')==false);  mp.thput_eval_y = 0;  end
@@ -325,31 +325,31 @@ mp.thput_vec = zeros(mp.Nitr+1,1);
 
 %--Software Mask for Scoring Contrast 
 %--Set Inputs
-maskScore.rhoInner = mp.F4.score.Rin; %--lambda0/D
-maskScore.rhoOuter = mp.F4.score.Rout ; %--lambda0/D
-maskScore.angDeg = mp.F4.score.ang; %--degrees
+maskScore.rhoInner = mp.Fend.score.Rin; %--lambda0/D
+maskScore.rhoOuter = mp.Fend.score.Rout ; %--lambda0/D
+maskScore.angDeg = mp.Fend.score.ang; %--degrees
 maskScore.centering = mp.centering;
-maskScore.FOV = mp.F4.FOV; %--Determines max dimension length
-maskScore.whichSide = mp.F4.sides; %--which (sides) of the dark hole have open
-if(isfield(mp.F4,'shape'))
-    maskScore.shape = mp.F4.shape;
+maskScore.FOV = mp.Fend.FOV; %--Determines max dimension length
+maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+if(isfield(mp.Fend,'shape'))
+    maskScore.shape = mp.Fend.shape;
 end
 %--Compact Model: Generate Software Mask for Scoring Contrast 
-maskScore.Nxi = mp.F4.Nxi; %--Set min dimension length to be same as for corr 
-maskScore.pixresFP = mp.F4.res;
-[mp.F4.score.mask,~,~] = falco_gen_SW_mask(maskScore); 
-mp.F4.score.settings = maskScore; %--Store values for future reference
+maskScore.Nxi = mp.Fend.Nxi; %--Set min dimension length to be same as for corr 
+maskScore.pixresFP = mp.Fend.res;
+[mp.Fend.score.mask,~,~] = falco_gen_SW_mask(maskScore); 
+mp.Fend.score.settings = maskScore; %--Store values for future reference
 
 %--Number of pixels used in the dark hole
-mp.F4.corr.Npix = sum(sum(mp.F4.corr.mask));
-mp.F4.score.Npix = sum(sum(mp.F4.score.mask));
+mp.Fend.corr.Npix = sum(sum(mp.Fend.corr.mask));
+mp.Fend.score.Npix = sum(sum(mp.Fend.score.mask));
 
 %--Indices of dark hole pixels
-mp.F4.corr.inds = find(mp.F4.corr.mask~=0);
-mp.F4.score.inds = find(mp.F4.score.mask~=0);
+mp.Fend.corr.inds = find(mp.Fend.corr.mask~=0);
+mp.Fend.score.inds = find(mp.Fend.score.mask~=0);
 %--Logical masks:
-mp.F4.corr.maskBool = logical(mp.F4.corr.mask);
-mp.F4.score.maskBool = logical(mp.F4.score.mask);
+mp.Fend.corr.maskBool = logical(mp.Fend.corr.mask);
+mp.Fend.score.maskBool = logical(mp.Fend.score.mask);
 
 %% Spatial weighting of pixel intensity. 
 % NOTE: For real instruments and testbeds, only the compact model should be 
@@ -358,8 +358,8 @@ mp.F4.score.maskBool = logical(mp.F4.score.mask);
 mp = falco_config_spatial_weights(mp);
 
 %--Extract the vector of weights at the pixel locations of the dark hole pixels.
-mp.WspatialVec = mp.Wspatial(mp.F4.corr.inds);
-% mp.WspatialFullVec = mp.WspatialFull(mp.F4.corr.inds);
+mp.WspatialVec = mp.Wspatial(mp.Fend.corr.inds);
+% mp.WspatialFullVec = mp.WspatialFull(mp.Fend.corr.inds);
 
 
 %% Deformable Mirror (DM) 1 and 2 Parameters
@@ -534,8 +534,8 @@ mp.c_planet = 1;%1e-14;%4e-10;%3e-10;%1e-8; % contrast of exoplanet
 mp.x_planet = 6;%4; % x position of exoplanet in lambda0/D
 mp.y_planet = 0;%1/2; % 7 position of exoplanet in lambda0/D
 
-%% Field Stop at F4 (as a software mask)
-mp.F4.compact.mask = ones(mp.F4.Neta,mp.F4.Nxi);
+%% Field Stop at Fend.(as a software mask)
+mp.Fend.compact.mask = ones(mp.Fend.Neta,mp.Fend.Nxi);
 % figure; imagesc(Lam0Dxi,Lam0Deta,FPMstop); axis xy equal tight; colormap gray; colorbar; title('Field Stop');
 
 %% Contrast to Normalized Intensity Map Calculation 
