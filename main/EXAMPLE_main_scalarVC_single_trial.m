@@ -144,13 +144,13 @@ switch mp.whichPupil
         mp.P4.IDnorm = 0;% Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
         mp.P4.ODnorm = 0.95;% Outer diameter (fraction of Nbeam) 
         
-        mp.P1.num_strut = 0;% Number of struts 
-        mp.P1.strut_angs = [];%Array of angles of the radial struts (deg)
-        mp.P1.strut_width = []; % Width of the struts (fraction of pupil diam.)
+        mp.P1.Nstrut = 0;% Number of struts 
+        mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
+        mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
         
-        mp.P4.num_strut = 0;% Number of struts 
-        mp.P4.strut_angs = [];%Array of angles of the radial struts (deg)
-        mp.P4.strut_width = []; % Width of the struts (fraction of pupil diam.)
+        mp.P4.Nstrut = 0;% Number of struts 
+        mp.P4.angStrut = [];%Array of angles of the radial struts (deg)
+        mp.P4.wStrut = []; % Width of the struts (fraction of pupil diam.)
       
     case{'LUVOIRA5'}  % Note:  Nbeam needs to be >~500 to properly resolve segment gaps 
         mp.P1.D = 15.2; %14.9760; %--meters, circumscribing diameter of telescope (used only for mas-to-lambda/D conversion)
@@ -177,7 +177,7 @@ switch mp.whichPupil
         mp.P4.IDnorm = 0;
         mp.P4.ODnorm = 0.82;
 
-        mp.P1.gapWidth = 6e-3/mp.P1.D; % Fractional gap width
+        mp.P1.wGap = 6e-3/mp.P1.D; % Fractional gap width
         
 end
 

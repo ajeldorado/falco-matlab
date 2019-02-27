@@ -154,8 +154,8 @@ mp.P4.compact.Nbeam = mp.P1.compact.Nbeam; % P4 must be the same as P1 for Vorte
 mp.P4.IDnorm = 0;
 mp.P4.ODnorm = 1.1;%0.82;
 
-%mp.P1.gapWidth = 6e-3/mp.P1.D; % Fractional gap width
-mp.P1.gapWidth = 0.01; % Fractional gap width
+%mp.P1.wGap = 6e-3/mp.P1.D; % Fractional gap width
+mp.P1.wGap = 0.01; % Fractional gap width
 
 mp.P4.padFacPct = 0; 
 

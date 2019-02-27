@@ -38,9 +38,9 @@ switch mp.whichPupil
         inputs.Nbeam = mp.P1.full.Nbeam;     % number of points across the pupil diameter
         inputs.OD = mp.P1.ODnorm;
         inputs.ID = mp.P1.IDnorm;
-        inputs.num_strut = mp.P1.num_strut;
-        inputs.strut_angs = mp.P1.strut_angs;%Angles of the struts 
-        inputs.strut_width = mp.P1.strut_width;% spider width (fraction of the pupil diameter)
+        inputs.Nstrut = mp.P1.Nstrut;
+        inputs.angStrut = mp.P1.angStrut;%Angles of the struts 
+        inputs.wStrut = mp.P1.wStrut;% spider width (fraction of the pupil diameter)
         inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));% 
 
         mp.P1.full.mask = falco_gen_pupil_Simple( inputs );
@@ -65,7 +65,7 @@ switch mp.whichPupil
         mp.P1.compact.mask = falco_gen_pupil_WFIRST_20180103(mp.P1.compact.Nbeam, mp.centering);
         
     case{'WFIRST_onaxis'}
-        inputs.strut_width = mp.pup_strut_width; %--0.0261  is nominal from 2014 on-axis (in pupil diameters)
+        inputs.wStrut = mp.pup_wStrut; %--0.0261  is nominal from 2014 on-axis (in pupil diameters)
         %--Generate input pupil
         inputs.Nbeam = mp.P1.full.Nbeam;     % number of points across usable pupil  
         inputs.Dbeam = mp.P2.D;
@@ -86,12 +86,12 @@ switch mp.whichPupil
         
     case{'LUVOIRA5'}
         inputs.centering = mp.centering;
-        if(isfield(mp.P1,'strut_width'))
-            inputs.strut_width = mp.P1.strut_width;% spider width (fraction of the pupil diameter)
+        if(isfield(mp.P1,'wStrut'))
+            inputs.wStrut = mp.P1.wStrut;% spider width (fraction of the pupil diameter)
         end
         
-        if(isfield(mp.P1,'gap_width_m'))
-            inputs.gap_width_m = mp.P1.gap_width_m;% spider width (fraction of the pupil diameter)
+        if(isfield(mp.P1,'wGap_m'))
+            inputs.wGap_m = mp.P1.wGap_m;% spider width (fraction of the pupil diameter)
         end
         
         %--Generate high-res input pupil for the 'full' model
@@ -165,15 +165,15 @@ switch mp.whichPupil
         
     case 'LUVOIR_B_offaxis'
         input.Nbeam = mp.P1.full.Nbeam/0.925; % number of points across the pupil diameter
-        input.gapWidth = mp.P1.gapWidth*mp.P1.full.Nbeam; % samples
-        %input.gapWidth = 6e-3/7.989*mp.P1.full.Nbeam; % samples
+        input.wGap = mp.P1.wGap*mp.P1.full.Nbeam; % samples
+        %input.wGap = 6e-3/7.989*mp.P1.full.Nbeam; % samples
         input.numRings = 4;% Number of rings in hexagonally segmented mirror 
         input.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
         input.ID = 0; % central obscuration radius 
         input.OD = 1; % pupil outer diameter, can be < 1
-        input.num_strut = 0;% Number of struts 
-        input.strut_angs = [];%Angles of the struts (deg)
-        input.strut_width = []; % Width of the struts (fraction of pupil diam.)
+        input.Nstrut = 0;% Number of struts 
+        input.angStrut = [];%Angles of the struts (deg)
+        input.wStrut = []; % Width of the struts (fraction of pupil diam.)
 
         if(isfield(mp.P1,'pistons'))
             input.pistons = mp.P1.pistons;%Tilts on segment in vertical direction (waves/apDia)
@@ -192,8 +192,8 @@ switch mp.whichPupil
         mp.P1.full.mask = falco_gen_pupil_customHex( input );
         
         input.Nbeam = mp.P1.compact.Nbeam/0.925; % number of points across the pupil diameter
-        %input.gapWidth = 6e-3/7.989*mp.P1.compact.Nbeam; % samples
-        input.gapWidth = mp.P1.gapWidth*mp.P1.compact.Nbeam; % samples
+        %input.wGap = 6e-3/7.989*mp.P1.compact.Nbeam; % samples
+        input.wGap = mp.P1.wGap*mp.P1.compact.Nbeam; % samples
         input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
         mp.P1.compact.mask = falco_gen_pupil_customHex( input );
         

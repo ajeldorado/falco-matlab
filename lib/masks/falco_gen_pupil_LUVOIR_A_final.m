@@ -67,8 +67,8 @@ end
 
 
 %--Gap between primary mirror segments [meters]
-if(isfield(inputs,'gap_width_m')) 
-    hexgap0 = inputs.gap_width_m;
+if(isfield(inputs,'wGap_m')) 
+    hexgap0 = inputs.wGap_m;
 else
     hexgap0 = 6e-3; %--Default of 6.0 millimeters
 end
@@ -118,7 +118,7 @@ switch centering % 0 for pixel-centered pupil, or -diam/np for inter-pixel cente
             cshift = -dx;
         end
 end
-strut_width = 0.15*magfacD; % meters
+wStrut = 0.15*magfacD; % meters
 
 %-------- Generate the input pupil for LUVOIR
 bm = prop_begin(Dap, wl_dummy, Narray,'beam_diam_fraction',bdf);
@@ -127,11 +127,11 @@ bm = prop_begin(Dap, wl_dummy, Narray,'beam_diam_fraction',bdf);
 [ap] = falco_hex_aperture_LUVOIR_A_5(bm,nrings,hexrad,hexsep,'XC',cshift-dx_t,'YC',cshift-dy_t,'DARKCENTER'); %--Official Matlab PROPER from August 2017
 
 % %--Add the struts
-bm = prop_rectangular_obscuration(bm, strut_width, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfacD*Dap/4);
+bm = prop_rectangular_obscuration(bm, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfacD*Dap/4);
 
 len_1b = (sqrt(93)+0.5)*hexrad;
-bm = prop_rectangular_obscuration(bm, strut_width, len_1b, 'XC',cshift-dx_t + 1.5*hexrad, 'YC',cshift-dy_t - 11*sqrt(3)/4*hexrad,'ROT',12.7);
-bm = prop_rectangular_obscuration(bm, strut_width, len_1b, 'XC',cshift-dx_t - 1.5*hexrad, 'YC',cshift-dy_t - 11*sqrt(3)/4*hexrad,'ROT',-12.7);
+bm = prop_rectangular_obscuration(bm, wStrut, len_1b, 'XC',cshift-dx_t + 1.5*hexrad, 'YC',cshift-dy_t - 11*sqrt(3)/4*hexrad,'ROT',12.7);
+bm = prop_rectangular_obscuration(bm, wStrut, len_1b, 'XC',cshift-dx_t - 1.5*hexrad, 'YC',cshift-dy_t - 11*sqrt(3)/4*hexrad,'ROT',-12.7);
 
 mask = ifftshift(abs(bm.wf)).*ap;
 

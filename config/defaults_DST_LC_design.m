@@ -241,16 +241,16 @@ mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for 
 mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
 mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.num_strut = 0;% Number of struts 
-mp.P1.strut_angs = [];%Array of angles of the radial struts (deg)
-mp.P1.strut_width = []; % Width of the struts (fraction of pupil diam.)
+mp.P1.Nstrut = 0;% Number of struts 
+mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
+mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
 
 %--Lyot stop padding
 mp.P4.IDnorm = 47.36/227.86; %--Lyot stop ID [Dtelescope]
 mp.P4.ODnorm = 156.21/227.86; %--Lyot stop OD [Dtelescope]
-mp.P4.num_strut = 3;% Number of struts 
-mp.P4.strut_angs = [90 210 330];%Array of angles of the radial struts (deg)
-mp.P4.strut_width = 0.005; % Width of the struts (fraction of pupil diam.)
+mp.P4.Nstrut = 3;% Number of struts 
+mp.P4.angStrut = [90 210 330];%Array of angles of the radial struts (deg)
+mp.P4.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
 
 %--FPM size
 mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0/D]

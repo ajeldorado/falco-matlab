@@ -163,15 +163,15 @@ switch mp.whichPupil
         %--Make or read in Lyot stop (LS) for the 'full' model
         if(isfield(mp.P4,'IDnorm')==false);  mp.P4.IDnorm = 0.3; end % Inner radius of Lyot stop
         if(isfield(mp.P4,'ODnorm')==false);  mp.P4.ODnorm = 0.85; end % Outer radius of Lyot stop 
-        mp.LS_num_strut = 4; % Number of struts in Lyot stop 
-        mp.LS_strut_angs = [0 90 180 270];%Angles of the struts 
-        mp.LS_strut_width = 0.01;% Size of Lyot stop spiders 
+        mp.LS_Nstrut = 4; % Number of struts in Lyot stop 
+        mp.LS_angStrut = [0 90 180 270];%Angles of the struts 
+        mp.LS_wStrut = 0.01;% Size of Lyot stop spiders 
         
     case{'WFIRST_onaxis','WFIRST20180103'} % WFIRST is case specific 
         %--Make or read in Lyot stop (LS) for the 'full' model
         if(strcmpi(mp.SPname,'20170714'))
             if(isfield(mp.P4,'IDnorm')==false);  mp.P4.IDnorm = 0.25; mp.P4.ODnorm = 0.82; mp.P4.ang = 115;  end
-            mp.LS_strut_width = 0; %--Dummy value
+            mp.LS_wStrut = 0; %--Dummy value
         elseif(strcmpi(mp.SPname,'32WA194'))
             if(isfield(mp.P4,'IDnorm')==false);  mp.P4.IDnorm = 0.45; mp.P4.ODnorm = 0.79; end
         elseif(strcmpi(mp.SPname,'31WA220'))

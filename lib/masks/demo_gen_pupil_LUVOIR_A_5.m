@@ -25,7 +25,7 @@ clear;
 addpath ../PROPER/
 inputs.Nbeam = 1000;
 inputs.magfacD = 1;
-inputs.strut_width = 1/100;
+inputs.wStrut = 1/100;
 
 
 mask = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
@@ -151,8 +151,8 @@ figure(2); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',2
 %         cshift = 0;
 % end
 % 
-% strut_width0 = 19*dx_drawing*magfac; %%%%125e-3; % meters
-% strut_width = strut_width*diam; %--now in meters
+% wStrut0 = 19*dx_drawing*magfac; %%%%125e-3; % meters
+% wStrut = wStrut*diam; %--now in meters
 % 
 % 
 % %-------- Generate the input pupil for LUVOIR
@@ -164,21 +164,21 @@ figure(2); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',2
 % % bm.wf = fftshift(ap-ap2);
 % 
 % % %--Add the struts
-% bm = prop_rectangular_obscuration(bm, strut_width, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfac*diam/4);
+% bm = prop_rectangular_obscuration(bm, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfac*diam/4);
 % 
 % 
 % len_1a = 2*width_hex - 12*dx_drawing;
-% bm = prop_rectangular_obscuration(bm, strut_width, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*strut_width0), 'YC',cshift-dy_t - len_1a/2.);
-% bm = prop_rectangular_obscuration(bm, strut_width, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*strut_width0), 'YC',cshift-dy_t - len_1a/2.);
+% bm = prop_rectangular_obscuration(bm, wStrut, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
+% bm = prop_rectangular_obscuration(bm, wStrut, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
 % 
 % len_1b = 3.75*width_hex;
-% bm = prop_rectangular_obscuration(bm, strut_width, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
-% bm = prop_rectangular_obscuration(bm, strut_width, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
+% bm = prop_rectangular_obscuration(bm, wStrut, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
+% bm = prop_rectangular_obscuration(bm, wStrut, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
 % 
-% % bm = prop_rectangular_obscuration(bm, strut_width, 2*width_hex, 'XC',cshift, 'YC',cshift - diam/8);
+% % bm = prop_rectangular_obscuration(bm, wStrut, 2*width_hex, 'XC',cshift, 'YC',cshift - diam/8);
 % 
-% % bm = prop_rectangular_obscuration(bm, strut_width, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
-% % bm = prop_rectangular_obscuration(bm, strut_width, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
+% % bm = prop_rectangular_obscuration(bm, wStrut, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
+% % bm = prop_rectangular_obscuration(bm, wStrut, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
 % mask = ifftshift(abs(bm.wf)).*ap;
 % 
 % figure(2); imagesc(mask); axis xy equal tight; title('Input Pupil','Fontsize',20);
@@ -226,9 +226,9 @@ figure(2); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',2
 % bm2 = prop_circular_obscuration(bm2, D_ID/2,'XC',cshift, 'YC',cshift);
 % 
 % % %--Add the struts
-% % bm2 = prop_rectangular_obscuration(bm2, strut_width, 8*width_hex, 'XC',cshift, 'YC',cshift + diam/4);
-% % bm2 = prop_rectangular_obscuration(bm2, strut_width, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
-% % bm2 = prop_rectangular_obscuration(bm2, strut_width, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
+% % bm2 = prop_rectangular_obscuration(bm2, wStrut, 8*width_hex, 'XC',cshift, 'YC',cshift + diam/4);
+% % bm2 = prop_rectangular_obscuration(bm2, wStrut, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
+% % bm2 = prop_rectangular_obscuration(bm2, wStrut, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
 % 
 % LS = fftshift(bm2.wf);
 % figure(12); imagesc(LS); axis xy equal tight; title('Input Pupil','Fontsize',20);

@@ -215,7 +215,7 @@ mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for 
 mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
 mp.P1.D = 7.989; %--meters, circumscribed. The segment size is 0.955 m, flat-to-flat, and the gaps are 6 mm. %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.gapWidth = 6e-3/mp.P1.D; % Fractional width of segment gaps
+mp.P1.wGap = 6e-3/mp.P1.D; % Fractional width of segment gaps
         
 %--Aperture stop definition
 mp.flagApod = true;    %--Whether to use an apodizer or not. Can be a simple aperture stop

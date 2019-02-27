@@ -35,9 +35,9 @@ switch mp.whichPupil
         inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));% 
         inputs.OD = mp.P4.ODnorm;
         inputs.ID = mp.P4.IDnorm;
-        inputs.num_strut = mp.P4.num_strut;
-        inputs.strut_angs = mp.P4.strut_angs;%Angles of the struts 
-        inputs.strut_width = mp.P4.strut_width;% spider width (fraction of the pupil diameter)
+        inputs.Nstrut = mp.P4.Nstrut;
+        inputs.angStrut = mp.P4.angStrut;%Angles of the struts 
+        inputs.wStrut = mp.P4.wStrut;% spider width (fraction of the pupil diameter)
 
         mp.P4.full.mask = falco_gen_pupil_Simple( inputs );
         
@@ -50,8 +50,8 @@ switch mp.whichPupil
     case{'WFIRST180718'}
 
         %--Define Lyot stop generator function inputs for the 'full' optical model
-        changes.DCOBS = mp.P4.IDnorm;
-        changes.ODpup = mp.P4.ODnorm;
+        changes.ID = mp.P4.IDnorm;
+        changes.OD = mp.P4.ODnorm;
         changes.wStrut = mp.P4.wStrut;
         changes.flagRot180 = true;
 
@@ -70,7 +70,7 @@ switch mp.whichPupil
         %inputs.Narray = mp.Nlyot;   % number of points across output array
         inputs.ID = mp.P4.IDnorm;
         inputs.OD = mp.P4.ODnorm;
-        inputs.strut_width = mp.LS_strut_width;
+        inputs.wStrut = mp.LS_wStrut;
         inputs.centering = mp.centering;
 
         %--Make or read in Lyot stop (LS) for the 'full' model
@@ -110,7 +110,7 @@ switch mp.whichPupil
         inputs.Dbeam = mp.P1.D;
         inputs.ID = mp.P4.IDnorm;
         inputs.OD = mp.P4.ODnorm;
-        inputs.strut_width = mp.LS_strut_width;
+        inputs.wStrut = mp.LS_wStrut;
         inputs.centering = mp.centering;
         %--Make or read in Lyot stop (LS) for the 'full' model
         mp.P4.full.mask = falco_gen_pupil_LUVOIR_A_5_Lyot_struts(inputs,'ROT180');
@@ -125,8 +125,8 @@ switch mp.whichPupil
 %         %inputs.Narray = mp.Nlyot;   % number of points across output array
 %         inputs.ID = mp.P4.IDnorm;
 %         inputs.OD = mp.P4.ODnorm;
-%         %inputs.strut_width = mp.LS_strut_width;
-%         inputs.strut_width = 0;
+%         %inputs.wStrut = mp.LS_wStrut;
+%         inputs.wStrut = 0;
 %         inputs.centering = mp.centering;
 %         %--Make or read in Lyot stop (LS) for the 'full' model
 %         mp.P4.full.mask = falco_gen_pupil_WFIRSTcycle6_LS(inputs,'ROT180');
@@ -142,9 +142,9 @@ switch mp.whichPupil
         inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));% 
         inputs.OD = mp.P4.ODnorm;
         inputs.ID = mp.P4.IDnorm;
-        inputs.num_strut = 0;
-        inputs.strut_angs = [];%Angles of the struts 
-        inputs.strut_width = 0;% spider width (fraction of the pupil diameter)
+        inputs.Nstrut = 0;
+        inputs.angStrut = [];%Angles of the struts 
+        inputs.wStrut = 0;% spider width (fraction of the pupil diameter)
 
         mp.P4.full.mask = falco_gen_pupil_Simple( inputs );
         

@@ -104,9 +104,9 @@ switch lower(mp.coro)
                 inputs.Npad = mp.P3.full.Narr;% 
                 inputs.OD = mp.P3.ODnorm;
                 inputs.ID = mp.P3.IDnorm;
-                inputs.num_strut = 0;
-                inputs.strut_angs = [];%Angles of the struts 
-                inputs.strut_width = 0;% spider width (fraction of the pupil diameter)
+                inputs.Nstrut = 0;
+                inputs.angStrut = [];%Angles of the struts 
+                inputs.wStrut = 0;% spider width (fraction of the pupil diameter)
 
                 mp.P3.full.mask= falco_gen_pupil_Simple( inputs );
 

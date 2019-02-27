@@ -41,13 +41,13 @@ switch mp.whichPupil
         %if(isfield(mp.P4,'IDnorm')==false); mp.P4.IDnorm = 0; end % Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
         %if(isfield(mp.P4,'ODnorm')==false); mp.P4.ODnorm = 0.95; end % Outer diameter (fraction of Nbeam) 
         
-        if(isfield(mp.P1,'num_strut')==false); mp.P1.num_strut = 0; end % Number of struts 
-        if(isfield(mp.P1,'strut_angs')==false); mp.P1.strut_angs = []; end %Array of angles of the radial struts (deg)
-        if(isfield(mp.P1,'strut_width')==false); mp.P1.strut_width = []; end  % Width of the struts (fraction of pupil diam.)
+        if(isfield(mp.P1,'Nstrut')==false); mp.P1.Nstrut = 0; end % Number of struts 
+        if(isfield(mp.P1,'angStrut')==false); mp.P1.angStrut = []; end %Array of angles of the radial struts (deg)
+        if(isfield(mp.P1,'wStrut')==false); mp.P1.wStrut = []; end  % Width of the struts (fraction of pupil diam.)
         
-        if(isfield(mp.P4,'num_strut')==false); mp.P4.num_strut = 0; end % Number of struts 
-        if(isfield(mp.P4,'strut_angs')==false); mp.P4.strut_angs = []; end %Array of angles of the radial struts (deg)
-        if(isfield(mp.P4,'strut_width')==false); mp.P4.strut_width = []; end  % Width of the struts (fraction of pupil diam.)
+        if(isfield(mp.P4,'Nstrut')==false); mp.P4.Nstrut = 0; end % Number of struts 
+        if(isfield(mp.P4,'angStrut')==false); mp.P4.angStrut = []; end %Array of angles of the radial struts (deg)
+        if(isfield(mp.P4,'wStrut')==false); mp.P4.wStrut = []; end  % Width of the struts (fraction of pupil diam.)
                 
     case{'WFIRST180718'}
         if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0.303; end % Inner diameter (fraction of Nbeam; zero if you want an off-axis telescope)
@@ -68,8 +68,8 @@ switch mp.whichPupil
         
         if(isfield(mp.P1,'D')==false); mp.P1.D = 2.3631; end  %--meters, diameter of telescope (used only for mas to lambda/D conversion)
         if(isfield(mp.P1,'Dfac')==false); mp.P1.Dfac = 1; end  %--Ratio of OD_circumscribed to OD_inscribed for the non-circular outer aperture.
-        if(isfield(mp,'pup_strut_width')==false); mp.pup_strut_width = 3.22/100.; end  %--3.22% is the new value as of 2018-01-03
-        if(isfield(mp,'LS_strut_width')==false); mp.LS_strut_width = 3.8/100.; end  
+        if(isfield(mp,'pup_wStrut')==false); mp.pup_wStrut = 3.22/100.; end  %--3.22% is the new value as of 2018-01-03
+        if(isfield(mp,'LS_wStrut')==false); mp.LS_wStrut = 3.8/100.; end  
 
         if(isfield(mp.P1.full,'Nbeam')==false); mp.P1.full.Nbeam = 324; end  %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
         if(isfield(mp.P1.compact,'Nbeam')==false); mp.P1.compact.Nbeam = 324; end 
@@ -85,8 +85,8 @@ switch mp.whichPupil
         if(isfield(mp.P1,'D')==false); mp.P1.D = 15.2;  end %--meters, circumscribing diameter of telescope (used only for mas-to-lambda/D conversion)
         if(isfield(mp.P1,'Dfac')==false); mp.P1.Dfac = 15.2/13.7; end  %--Ratio of OD_circumscribed to OD_inscribed for the non-circular outer aperture.
         
-        if(isfield(mp,'LS_strut_width')==false); mp.LS_strut_width = 1.4/100.; end
-        if(isfield(mp.P4,'wStrut'));  mp.LS_strut_width = mp.P4.wStrut;  end
+        if(isfield(mp,'LS_wStrut')==false); mp.LS_wStrut = 1.4/100.; end
+        if(isfield(mp.P4,'wStrut'));  mp.LS_wStrut = mp.P4.wStrut;  end
 
         if(isfield(mp.P1.full,'Nbeam')==false); mp.P1.full.Nbeam = 1000; end %--Number of pixels across the actual diameter of the beam/aperture (independent of beam centering
         if(isfield(mp.P1.compact,'Nbeam')==false); mp.P1.compact.Nbeam = 500; end 

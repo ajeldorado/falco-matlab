@@ -31,13 +31,13 @@ function pupil = falco_gen_pupil_WFIRST_CGI_180718(Nbeam,centering,varargin)
 %--Values were found by fitting to the full-resolution, 4096x4096 pupil
 %file, 'CGI_Entrance_Pupil_180718_No-labels.bmp'.
 
-ODpup = 1.000130208333333;
+OD = 1.000130208333333;
 xcOD = 8.680555555555557e-06;
 ycOD = 8.680555555555557e-06;
-DCOBS = 3.030133333333332e-01;
+ID = 3.030133333333332e-01;
 xcCOBS = -1.155555555555556e-04;
 ycCOBS = -6.133333333333334e-04;
-DCOBStabs = 3.144078947368421e-01;
+IDtabs = 3.144078947368421e-01;
 xcCOBStabs = -1.973684210526340e-04;
 ycCOBStabs = -6.250000000000000e-03;
 wStrutVec = [...
@@ -96,8 +96,8 @@ end
  
 %% Oversized strut features: overwrite defaults if values specified.
 
-if(isfield(changes,'ODpup')); ODpup = changes.ODpup;  end
-if(isfield(changes,'DCOBS')); DCOBS = changes.DCOBS;  end
+if(isfield(changes,'OD')); OD = changes.OD;  end
+if(isfield(changes,'ID')); ID = changes.ID;  end
 if(isfield(changes,'wStrut')); wStrutVec = changes.wStrut*ones(6,1);  end
 if(isfield(changes,'wStrutVec')); wStrutVec = changes.wStrutVec;  end %--Unlikely to be called. Would overrule line above this one.
 
@@ -187,7 +187,7 @@ bm = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
 % figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 %% PRIMARY MIRROR (OUTER DIAMETER)
-ra_OD = magFac*(ODpup/2-pad_OD);
+ra_OD = magFac*(OD/2-pad_OD);
 cx_OD = magFac*xcOD;
 cy_OD = magFac*ycOD;
 cxy = rotMat*[cx_OD; cy_OD];
@@ -197,7 +197,7 @@ bm = prop_circular_aperture(bm, ra_OD,'XC',cx_OD+cshift,'YC',cy_OD+cshift);
 % figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
 %% SECONDARY MIRROR (INNER DIAMETER)
-ra_ID = magFac*(DCOBS/2 + pad_COBS);
+ra_ID = magFac*(ID/2 + pad_COBS);
 cx_ID = magFac*(xcCOBS);
 cy_ID = magFac*(ycCOBS);
 cxy = rotMat*[cx_ID; cy_ID];
@@ -238,13 +238,13 @@ THETAS = atan2(YSnew,XSnew);
 clock_rad = deg2rad(clock_deg);
 
 if(angTabStart(1)>angTabEnd(1))
-    cobsTabsMask( (XSnew).^2 + (YSnew).^2 <= (overSizeFac*magFac*DCOBStabs/2)^2 & ...
+    cobsTabsMask( (XSnew).^2 + (YSnew).^2 <= (overSizeFac*magFac*IDtabs/2)^2 & ...
         ( ( THETAS>=angTabEnd(1)+clock_rad & THETAS<=angTabStart(1)+clock_rad )...
         | ( THETAS>=angTabEnd(2)+clock_rad & THETAS<=angTabStart(2)+clock_rad )...
         | ( THETAS>=angTabEnd(3)+clock_rad & THETAS<=angTabStart(3)+clock_rad ) )...
         ) = 1;
 else
-    cobsTabsMask( (XSnew).^2 + (YSnew).^2 <= (overSizeFac*magFac*DCOBStabs/2)^2 & ...
+    cobsTabsMask( (XSnew).^2 + (YSnew).^2 <= (overSizeFac*magFac*IDtabs/2)^2 & ...
         ( ( THETAS<=angTabEnd(1)+clock_rad & THETAS>=angTabStart(1)+clock_rad )...
         | ( THETAS<=angTabEnd(2)+clock_rad & THETAS>=angTabStart(2)+clock_rad )...
         | ( THETAS<=angTabEnd(3)+clock_rad & THETAS>=angTabStart(3)+clock_rad ) )...
@@ -257,7 +257,7 @@ end
 bm2 = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
 
 %--Full circle of COBS tabs--to be multiplied by the mask to get just tabs
-ra_tabs = magFac*(DCOBStabs/2 + pad_COBStabs);
+ra_tabs = magFac*(IDtabs/2 + pad_COBStabs);
 cx_tabs = magFac*(xcCOBStabs);
 cy_tabs = magFac*(ycCOBStabs);
 cxy = rotMat*[cx_tabs; cy_tabs];

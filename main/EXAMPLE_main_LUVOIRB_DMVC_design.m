@@ -42,7 +42,7 @@ defaults_LUVOIRB_VC_design
 %% Step 3: Overwrite default values as desired
 
 %%--Special Computational Settings
-% mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 
 %--Record Keeping
@@ -58,8 +58,8 @@ mp.TrialNum = 1;
 
 % mp.estimator = 'perfect';
 
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 
 %% Step 4: Generate the label associated with this trial
 
