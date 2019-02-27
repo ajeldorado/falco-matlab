@@ -24,22 +24,18 @@ function [mp,thput] = falco_compute_thput(mp)
             
             maskHM = 0*mp.FP4.eval.RHOS;
             maskHM(ImTemp>=1/2*max(max(ImTemp))) = 1;
-            mp.maskHMcore = maskHM.*mp.maskCore;
             % figure(325); imagesc(mp.F4.full.xisDL,mp.F4.full.etasDL,mp.maskCore); axis xy equal tight; drawnow;
-            thput = sum(ImTemp(mp.maskHMcore==1))/mp.sumPupil*mean(mp.F4.eval.I00);
+            thput = sum(ImTemp(maskHM==1))/mp.sumPupil*mean(mp.F4.eval.I00);
             fprintf('Core throughput with the half-max isophote(s) at separation = (%.1f, %.1f) lambda0/D.\n',100*thput,mp.thput_eval_x,mp.thput_eval_y);
             
         case{'ee','e.e.'} %--Absolute energy encircled within a given radius
 
             % (x,y) location [lambda_c/D] in dark hole at which to evaluate throughput
-            [XIS,ETAS] = meshgrid(mp.F4.eval.xisDL - mp.thput_eval_x, mp.F4.eval.etasDL - mp.thput_eval_y);
-            mp.FP4.eval.RHOS = sqrt(XIS.^2 + ETAS.^2);
-            mp.maskHMcore = 0*mp.FP4.eval.RHOS;
-            mp.maskCore  = 0*mp.FP4.eval.RHOS;
-            mp.maskCore(mp.FP4.eval.RHOS<=mp.thput_radius) = 1;
+            maskEE  = 0*mp.FP4.eval.RHOS;
+            maskEE(mp.FP4.eval.RHOS<=mp.thput_radius) = 1;
             
             % figure(325); imagesc(mp.F4.full.xisDL,mp.F4.full.etasDL,mp.maskCore); axis xy equal tight; drawnow;
-            thput = sum(ImTemp(mp.maskCore==1))/mp.sumPupil*mean(mp.F4.eval.I00);
+            thput = sum(ImTemp(maskEE==1))/mp.sumPupil*mean(mp.F4.eval.I00);
             fprintf('E.E. throughput within a %.2f lambda/D radius = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n',mp.thput_radius,100*thput,mp.thput_eval_x,mp.thput_eval_y);
     end
 end %--END OF FUNCTION

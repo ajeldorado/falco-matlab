@@ -66,13 +66,13 @@ mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe a
 mp.logGmin = -6;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
 
 %--Zernikes to suppress with controller
-jac.zerns = 1;  %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include the value "1" for the on-axis piston mode.
-jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
+mp.jac.zerns = 1;  %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include the value "1" for the on-axis piston mode.
+mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
     
 %--Zernikes to compute sensitivities for
-eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
+mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
 %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
-eval.Rsens = [3, 4;...
+mp.eval.Rsens = [3, 4;...
               4, 8];  
 
 %--Grid- or Line-Search Settings
@@ -80,8 +80,18 @@ mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often
 mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
    
-% %--Spatial pixel weighting
+%--Spatial pixel weighting
 mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annulus: [Inner radius, outer radius, intensity weight; (as many rows as desired)]
+
+%--DM weighting
+mp.dm1.weight = 1;
+mp.dm2.weight = 1;
+
+%--DM9 weights and sensitivities
+mp.dm9.weight = 10;%1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
+mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+
 
 %% Wavefront Control: Controller Specific
 % Controller options: 
@@ -219,23 +229,6 @@ mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'HLC';
 mp.flagApod = false;    %--Whether to use an apodizer or not
 
-%--Pupil definition
-mp.whichPupil = 'WFIRST180718';
-P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
-mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-
-%--Lyot stop padding
-mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
-mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
-
-%--FPM size
-mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
-mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
-mp.F3.ang = 180;    % on each side, opening angle [degrees]
-
 %--Final Focal Plane Properties
 mp.F4.res = 3; %--Sampling [ pixels per lambda0/D]
 mp.F4.FOV = 11; %--half-width of the field of view in both dimensions [lambda0/D]
@@ -251,17 +244,16 @@ mp.F4.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
 mp.F4.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
-
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
 %--Focal Lengths
-mp.fl = 1; %--Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
+mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Pupil Plane Diameters
-P2.D = 46.3e-3;
-P3.D = 46.3e-3;
-P4.D = 46.3e-3;
+mp.P2.D = 46.3e-3;
+mp.P3.D = 46.3e-3;
+mp.P4.D = 46.3e-3;
 
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 250;
@@ -270,21 +262,50 @@ mp.P3.compact.Nbeam = 250;
 mp.P4.compact.Nbeam = 250;
 
 
+%% Optical Layout: Full Model 
+
+%--Focal Lengths
+% mp.fl = 1; 
+
+
+%--Pupil Plane Resolutions
+mp.P1.full.Nbeam = 250;
+mp.P2.full.Nbeam = 250;
+mp.P3.full.Nbeam = 250;
+mp.P4.full.Nbeam = 250;
+
+%% Mask Definitions
+
+%--Pupil definition
+mp.whichPupil = 'WFIRST180718';
+mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
+mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+
+%--Lyot stop padding
+mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
+mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
+mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
+
+%--FPM size
+mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
+mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
+mp.F3.ang = 180;    % on each side, opening angle [degrees]
 
 
 
 
-%% HLC-Specific Values
-
+%% HLC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %% FPM Material Properties
 mp.aoi = 10.04; % Angle of incidence at FPM [deg]
 mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
 
-mp.dt_metal_nm = 0.25;%1/10; %--thickness step size for FPM metal layer (nm)
+mp.dt_metal_nm = 1;%0.25;%1/10; %--thickness step size for FPM metal layer (nm)
 mp.t_metal_nm_vec = 0:mp.dt_metal_nm:120; %150; %--nickel thickness range and sampling (nm)
-mp.dt_diel_nm = 2/10; %--thickness step size for FPM dielectric layer  (nm)
+mp.dt_diel_nm = 1;%2/10; %--thickness step size for FPM dielectric layer  (nm)
 mp.t_diel_nm_vec = 0:mp.dt_diel_nm:900; %--PMGI thickness range and sampling (nm)
 
 %--Number of waves offset from substrate for reference plane. MUST BE MORE THAN MAX THICKNESS OF THE FPM.
@@ -292,22 +313,17 @@ mp.FPM.d0fac = 4;
 
 %% DM8
 
+mp.dm8.V0coef = 100; % Nominal Nickel layer thickness [nm]
+
 %--DM8 parameters
-dm8.Vmin = 0
-dm8.Vmax = 300
+mp.dm8.Vmin = 0;
+mp.dm8.Vmax = 300;
 
-% %--Cropped influence function for FPM phase
-% dm9.FPMbuffer = 0
-
-%--Focal Plane Mask (at F3) Properties:
-mp.dm9.V0coef = 0
 
 %% DM9
-%--DM9 weights and sensitivities
-mp.dm_weights = ones(9,1);   % vector of relative weighting of DMs' Jacobians for EFC
-mp.dm9.weight = 1;%2/3;%1;%10; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
-mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
-mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+mp.t_diel_bias_nm = 0; %--Thickness of starting uniform bias layer of PMGI [nm]. % (Requires an outer stop in reality if >0, but will run without it to see if it gives essentially the same result as the EHLC but faster)
+
+mp.dm9.V0coef = 390; % Nominal PMGI layer thickness [nm] 
 
 %--DM9 influence function options:
 % - '3x3'

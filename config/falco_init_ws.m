@@ -308,11 +308,11 @@ mp.F4.eval.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.F4.eval.res; % higher sampling at
 mp.F4.eval.deta = mp.F4.eval.dxi; % higher sampling at F4 for evaulation [meters]   
 
 % % (x,y) location [lambda_c/D] in dark hole at which to evaluate throughput
+[XIS,ETAS] = meshgrid(mp.F4.eval.xisDL - mp.thput_eval_x, mp.F4.eval.etasDL - mp.thput_eval_y);
+mp.FP4.eval.RHOS = sqrt(XIS.^2 + ETAS.^2);
 % % if(isfield(mp,'thput_eval_x')==false);  mp.thput_eval_x = 6;  end
 % % if(isfield(mp,'thput_eval_y')==false);  mp.thput_eval_y = 0;  end
 % % if(isfield(mp,'thput_eval_y')==false);  mp.thput_radius = 0.7;  end
-% [XIS,ETAS] = meshgrid(mp.F4.eval.xisDL - mp.thput_eval_x, mp.F4.eval.etasDL - mp.thput_eval_y);
-% mp.FP4.eval.RHOS = sqrt(XIS.^2 + ETAS.^2);
 % mp.maskHMcore = 0*mp.FP4.eval.RHOS;
 % mp.maskCore  = 0*mp.FP4.eval.RHOS;
 % mp.maskCore(mp.FP4.eval.RHOS<=mp.thput_radius) = 1;

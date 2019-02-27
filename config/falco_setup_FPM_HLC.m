@@ -13,7 +13,10 @@
 
 function mp = falco_setup_FPM_HLC(mp)
 
-%%
+
+
+mp.dm9.Nact = ceil_even(2*mp.F3.Rin*mp.dm9.actres); % number of actuators across DM9 (if not in a hex grid)
+
 switch mp.dm9.inf0name
     case '3x3'
         mp.dm9.inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  % influence function
