@@ -130,7 +130,8 @@ for si=1:mp.Nsbp
 
     % Set (approximate) probe intensity based on current measured Inorm
     ev.InormProbeMax = 1e-4;
-    InormProbe = min( [sqrt(ev.score.Inorm*1e-5), ev.InormProbeMax]);
+    InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
+    %InormProbe = min( [sqrt(ev.score.Inorm*1e-5), ev.InormProbeMax]);
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 
 
