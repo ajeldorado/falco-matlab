@@ -53,15 +53,15 @@ if(isfield(mp,'lowfs')==false)
 end
 
 if(flagEval)
-    dxi = mp.F4.eval.dxi;
-    Nxi = mp.F4.eval.Nxi;
-    deta = mp.F4.eval.deta;
-    Neta = mp.F4.eval.Neta; 
+    dxi = mp.Fend.eval.dxi;
+    Nxi = mp.Fend.eval.Nxi;
+    deta = mp.Fend.eval.deta;
+    Neta = mp.Fend.eval.Neta; 
 else
-    dxi = mp.F4.dxi;
-    Nxi = mp.F4.Nxi;
-    deta = mp.F4.deta;
-    Neta = mp.F4.Neta; 
+    dxi = mp.Fend.dxi;
+    Nxi = mp.Fend.Nxi;
+    deta = mp.Fend.deta;
+    Neta = mp.Fend.Neta; 
 end
 
 
@@ -204,13 +204,13 @@ end
 
 
 % DFT to camera
-EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
+EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
-    Eout = EF4; %--Don't normalize if normalization value is being found
+    Eout = EFend;  %--Don't normalize if normalization value is being found
 else
-    Eout = EF4/sqrt(normFac); %--Apply normalization
+    Eout = EFend/sqrt(normFac); %--Apply normalization
 end
 
 

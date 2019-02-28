@@ -8,7 +8,7 @@
 %   Matlab using PROPER
 % Coordinates and dimensions of the primary, secondary, and hex segments
 %   are from Matthew Bolcar (NASA GSFC).
-% Coordinates and dimenstions of the secondary mirror support struts were a
+% Coordinates and dimensions of the secondary mirror support struts were a
 %   best-fit match by A.J. Riggs by matching PROPER-made rectangles to the 
 %   pupil file from Matthew Bolcar (NASA GSFC).
 %
@@ -64,8 +64,8 @@ end
 
 
 %--Gap between primary mirror segments [meters]
-if(isfield(inputs,'gap_width_m')) 
-    hexgap0 = inputs.gap_width_m;
+if(isfield(inputs,'wGap_m')) 
+    hexgap0 = inputs.wGap_m;
 else
     hexgap0 = 6e-3; %--Default of 6.0 millimeters
 end
@@ -101,7 +101,7 @@ dx_drawing = 1.242/158; % (m) %--In actual drawing, 158 pixels across the 1.242m
 
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam/magfacD+1/2); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam/magfacD+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam/magfacD); %--number of points across output array. Same size as width when interpixel centered.
 end
@@ -131,12 +131,12 @@ switch centering % 0 for pixel-centered pupil, or -diam/np for inter-pixel cente
             cshift = -dx; 
         end
 end
-strut_width0 = 19*dx_drawing*magfacD; %%%%125e-3; % meters
-if(isfield(inputs,'strut_width'))
-    strut_width = inputs.strut_width; % width of the struts (in pupil diameters)
-    strut_width = strut_width*Darray; %--now in meters
+wStrut0 = 19*dx_drawing*magfacD; %%%%125e-3; % meters
+if(isfield(inputs,'wStrut'))
+    wStrut = inputs.wStrut; % width of the struts (in pupil diameters)
+    wStrut = wStrut*Darray; %--now in meters
 else
-    strut_width = strut_width0;
+    wStrut = wStrut0;
 end
 
 
@@ -151,16 +151,16 @@ bm = prop_begin(Dap, wl_dummy, Narray,'beam_diam_fraction',bdf);
 % bm.wf = fftshift(ap-ap2);
 
 % %--Add the struts
-bm = prop_rectangular_obscuration(bm, strut_width, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfacD*Dap/4);
+bm = prop_rectangular_obscuration(bm, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfacD*Dap/4);
 
 
 len_1a = 2*width_hex - 12*dx_drawing;
-bm = prop_rectangular_obscuration(bm, strut_width, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*strut_width0), 'YC',cshift-dy_t - len_1a/2.);
-bm = prop_rectangular_obscuration(bm, strut_width, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*strut_width0), 'YC',cshift-dy_t - len_1a/2.);
+bm = prop_rectangular_obscuration(bm, wStrut, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
+bm = prop_rectangular_obscuration(bm, wStrut, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
 
 len_1b = 3.75*width_hex;
-bm = prop_rectangular_obscuration(bm, strut_width, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
-bm = prop_rectangular_obscuration(bm, strut_width, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
+bm = prop_rectangular_obscuration(bm, wStrut, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
+bm = prop_rectangular_obscuration(bm, wStrut, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
 
 
 mask = ifftshift(abs(bm.wf)).*ap;

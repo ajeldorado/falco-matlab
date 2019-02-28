@@ -23,10 +23,9 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
     end
 
    
-    Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
+    Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
     
     for im=1:mp.jac.Nmode
-        modvar.flagCalcJac = 0; 
         modvar.sbpIndex = mp.jac.sbp_inds(im); %mp.Wttlam_si(im);
         modvar.zernIndex = mp.jac.zern_inds(im);
         %modvar.ttIndex = mp.Wttlam_ti(im);
@@ -35,7 +34,7 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
 
         E2D = model_compact(mp, modvar);
 
-        Emat(:,im) = E2D(mp.F4.corr.inds);   % Actual field in estimation area
+        Emat(:,im) = E2D(mp.Fend.corr.inds);   % Actual field in estimation area
 
     end
     

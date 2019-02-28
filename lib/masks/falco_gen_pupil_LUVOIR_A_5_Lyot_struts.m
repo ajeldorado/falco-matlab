@@ -8,7 +8,7 @@
 %   Matlab using PROPER
 % Coordinates and dimensions of the primary, secondary, and hex segments
 %   are from Matthew Bolcar (NASA GSFC).
-% Coordinates and dimenstions of the secondary mirror support struts were a
+% Coordinates and dimensions of the secondary mirror support struts were a
 %   best-fit match by A.J. Riggs by matching PROPER-made rectangles to the 
 %   pupil file from Matthew Bolcar (NASA GSFC).
 %
@@ -19,8 +19,6 @@
 %--Coordinates of hex segments to skip:
 % 1 13 114 115 126 127
 % 1 12 113 114 125 126
-%
-% Go back and do front matter later.  Above is not quite right now.
 %
 
 function mask = falco_gen_pupil_LUVOIR_A_5_Lyot_struts(inputs,varargin)
@@ -51,7 +49,7 @@ end
 % inputs.Dbeam = 14.9760; % (m)
 % inputs.ID = 0.10;
 % inputs.OD = 0.90;
-% inputs.strut_width = 1.4/100;
+% inputs.wStrut = 1.4/100;
 % flagRot180deg = true;
 % % inputs.xshift = 0;
 % % inputs.yshift = 0;
@@ -80,8 +78,8 @@ Nbeam   = inputs.Nbeam;     % number of points across the incoming beam
 % Narray = inputs.Narray;   % number of points across output array
 ID = inputs.ID; % inner diameter of mask (in pupil diameters)
 OD = inputs.OD; % outer diameter of mask (in pupil diameters)
-strut_width = inputs.strut_width; % width of the struts (in pupil diameters)
-strut_width = strut_width*Dbeam; %--now in meters
+wStrut = inputs.wStrut; % width of the struts (in pupil diameters)
+wStrut = wStrut*Dbeam; %--now in meters
 dx = Dbeam/Nbeam;
 
 %--USER INPUTS
@@ -105,7 +103,7 @@ pad_strut = 0; %2*pad_strut_pct/100*diam; %--Convert to meters. Factor of 2x nee
 Dmask = Dbeam; % width of the beam (so can have zero padding if LS is undersized) (meters)
 
 if(strcmpi(centering,'pixel') || strcmpi(centering,'odd'))
-    Narray = ceil_even(Nbeam/magfacD + 1/2); % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
+    Narray = ceil_even(Nbeam/magfacD + 1); % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
 else
     Narray = ceil_even(Nbeam/magfacD); % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
 end
@@ -135,7 +133,7 @@ hexrad = 2/sqrt(3)*width_hex/2;
 hexgap = magfac*hexgap0; % (m)
 hexsep = width_hex + hexgap; % distance from center to center of neighboring segments
 
-strut_width0 = 19*dx_drawing*magfac; %%%%125e-3; % meters
+wStrut0 = 19*dx_drawing*magfac; %%%%125e-3; % meters
 %-------- Generate the input pupil for LUVOIR
 bm = prop_begin(Dbeam, wl_dummy, Narray,'beam_diam_fraction',bdf);
 
@@ -159,19 +157,19 @@ bm2 = bm;
 
 % %--Add the struts
 
-if(strut_width>0)
-    % % % strut_width = inputs.strut_width; % width of the struts (in pupil diameters)
-    % % % strut_width = strut_width*Dbeam; %--now in meters
+if(wStrut>0)
+    % % % wStrut = inputs.wStrut; % width of the struts (in pupil diameters)
+    % % % wStrut = wStrut*Dbeam; %--now in meters
 
-    bm2 = prop_rectangular_obscuration(bm2, strut_width, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfac*Dap/4);
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfac*Dap/4);
 
     len_1a = 2*width_hex - 12*dx_drawing;
-    bm2 = prop_rectangular_obscuration(bm2, strut_width, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*strut_width0), 'YC',cshift-dy_t - len_1a/2.);
-    bm2 = prop_rectangular_obscuration(bm2, strut_width, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*strut_width0), 'YC',cshift-dy_t - len_1a/2.);
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
 
     len_1b = 3.75*width_hex;
-    bm2 = prop_rectangular_obscuration(bm2, strut_width, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
-    bm2 = prop_rectangular_obscuration(bm2, strut_width, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
 end
 
 mask = ifftshift(abs(bm2.wf));

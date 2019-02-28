@@ -62,7 +62,7 @@ switch centering % 0 for pixel-centered pupil, or -diam/np for inter-pixel cente
     case {'pixel','odd'}
         cshift = 0;
 end
-strut_width = 125e-3; % meters
+wStrut = 125e-3; % meters
 
 %-------- Generate the input pupil for LUVOIR
 bm = prop_begin(Darray, wl_dummy, Narray,'beam_diam_fraction',bdf);
@@ -73,9 +73,9 @@ bm = prop_begin(Darray, wl_dummy, Narray,'beam_diam_fraction',bdf);
 bm.wf = fftshift(ap-ap2);
 
 %--Add the struts
-bm = prop_rectangular_obscuration(bm, strut_width, 8*width_hex, 'XC',cshift, 'YC',cshift + diam/4);
-bm = prop_rectangular_obscuration(bm, strut_width, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
-bm = prop_rectangular_obscuration(bm, strut_width, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
+bm = prop_rectangular_obscuration(bm, wStrut, 8*width_hex, 'XC',cshift, 'YC',cshift + diam/4);
+bm = prop_rectangular_obscuration(bm, wStrut, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
+bm = prop_rectangular_obscuration(bm, wStrut, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
 
 pupil = fftshift(bm.wf);
 % figure(2); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',20);
@@ -101,9 +101,9 @@ bm2 = prop_circular_aperture( bm2, D_OD/2,'XC',cshift, 'YC',cshift);
 bm2 = prop_circular_obscuration(bm2, D_ID/2,'XC',cshift, 'YC',cshift);
 
 %--Add the struts
-bm2 = prop_rectangular_obscuration(bm2, strut_width, 8*width_hex, 'XC',cshift, 'YC',cshift + diam/4);
-bm2 = prop_rectangular_obscuration(bm2, strut_width, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
-bm2 = prop_rectangular_obscuration(bm2, strut_width, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
+bm2 = prop_rectangular_obscuration(bm2, wStrut, 8*width_hex, 'XC',cshift, 'YC',cshift + diam/4);
+bm2 = prop_rectangular_obscuration(bm2, wStrut, 8*width_hex, 'XC',cshift - 2.69538/2, 'YC',cshift - diam/4);
+bm2 = prop_rectangular_obscuration(bm2, wStrut, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - diam/4);
 
 pupil2 = fftshift(bm2.wf);
 figure(12); imagesc(padOrCropEven(pupil2,np/2)); axis xy equal tight; title('Input Pupil','Fontsize',20);

@@ -34,7 +34,7 @@ function jacStruct = model_Jacobian(mp)
     %--Calculate the starting DM surfaces beforehand to save time.
     if(any(mp.dm_ind==1)); mp.dm1.compact.surfM = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx,mp.dm1.compact.NdmPad); else; mp.dm1.compact.surfM = zeros(2); end
     if(any(mp.dm_ind==2)); mp.dm2.compact.surfM = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx,mp.dm2.compact.NdmPad); else; mp.dm2.compact.surfM = zeros(2); end
-    switch mp.coro
+    switch upper(mp.coro)
         case{'EHLC'}
             [mp.FPMcube,mp.dm8.surf,mp.dm9.surf] = falco_gen_EHLC_FPM_complex_trans_cube(mp,'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
             %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
@@ -52,15 +52,15 @@ function jacStruct = model_Jacobian(mp)
     end
 
     %--Initialize the Jacobian cubes for each DM.
-    if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.F4.corr.Npix,mp.dm1.Nele,mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM1
-    if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.F4.corr.Npix,mp.dm2.Nele,mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM2
-    if(any(mp.dm_ind==3)); jacStruct.G3 = zeros(mp.F4.corr.Npix,mp.dm3.Nele,mp.jac.Nmode);  else;  jacStruct.G3 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM3
-    if(any(mp.dm_ind==4)); jacStruct.G4 = zeros(mp.F4.corr.Npix,mp.dm4.Nele,mp.jac.Nmode);  else;  jacStruct.G4 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM4
-    if(any(mp.dm_ind==5)); jacStruct.G5 = zeros(mp.F4.corr.Npix,mp.dm5.Nele,mp.jac.Nmode);  else;  jacStruct.G5 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM5
-    if(any(mp.dm_ind==6)); jacStruct.G6 = zeros(mp.F4.corr.Npix,mp.dm6.Nele,mp.jac.Nmode);  else;  jacStruct.G6 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM6
-    if(any(mp.dm_ind==7)); jacStruct.G7 = zeros(mp.F4.corr.Npix,mp.dm7.Nele,mp.jac.Nmode);  else;  jacStruct.G7 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM7
-    if(any(mp.dm_ind==8)); jacStruct.G8 = zeros(mp.F4.corr.Npix,mp.dm8.Nele,mp.jac.Nmode);  else;  jacStruct.G8 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM8
-    if(any(mp.dm_ind==9)); jacStruct.G9 = zeros(mp.F4.corr.Npix,mp.dm9.Nele,mp.jac.Nmode);  else;  jacStruct.G9 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM9
+    if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.corr.Npix,mp.dm1.Nele,mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM1
+    if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.corr.Npix,mp.dm2.Nele,mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM2
+    if(any(mp.dm_ind==3)); jacStruct.G3 = zeros(mp.Fend.corr.Npix,mp.dm3.Nele,mp.jac.Nmode);  else;  jacStruct.G3 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM3
+    if(any(mp.dm_ind==4)); jacStruct.G4 = zeros(mp.Fend.corr.Npix,mp.dm4.Nele,mp.jac.Nmode);  else;  jacStruct.G4 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM4
+    if(any(mp.dm_ind==5)); jacStruct.G5 = zeros(mp.Fend.corr.Npix,mp.dm5.Nele,mp.jac.Nmode);  else;  jacStruct.G5 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM5
+    if(any(mp.dm_ind==6)); jacStruct.G6 = zeros(mp.Fend.corr.Npix,mp.dm6.Nele,mp.jac.Nmode);  else;  jacStruct.G6 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM6
+    if(any(mp.dm_ind==7)); jacStruct.G7 = zeros(mp.Fend.corr.Npix,mp.dm7.Nele,mp.jac.Nmode);  else;  jacStruct.G7 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM7
+    if(any(mp.dm_ind==8)); jacStruct.G8 = zeros(mp.Fend.corr.Npix,mp.dm8.Nele,mp.jac.Nmode);  else;  jacStruct.G8 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM8
+    if(any(mp.dm_ind==9)); jacStruct.G9 = zeros(mp.Fend.corr.Npix,mp.dm9.Nele,mp.jac.Nmode);  else;  jacStruct.G9 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM9
 
     %--Loop over the possible combinations of 1) tip/tilt-offsets, 2) sub-bandpasses, and 3) DM number 
     %   (either with parfor or for)
@@ -137,7 +137,7 @@ function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
     im = vals_list(1,ii); %--index for Zernike-&-subbandpass pair
     whichDM = vals_list(2,ii); %--number of the specified DM
 
-    switch mp.coro 
+    switch upper(mp.coro) 
         case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
             jacMode = model_Jacobian_FOHLC(mp,   im, whichDM); 
         
@@ -157,8 +157,11 @@ function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
         case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
             jacMode  = model_Jacobian_SPLC(mp,   im, whichDM); 
             
-        case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
+        case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
             jacMode  = model_Jacobian_VC(mp,   im, whichDM); 
+            
+        case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
+            jacMode  = model_Jacobian_Roddier(mp,   im, whichDM); 
             
         %case{'SPC','APP','APC'} %--Pupil-plane apodizer is only coronagraphic mask
             %Jac  = model_Jacobian_APC(mp,   tsi, whichDM); 

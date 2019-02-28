@@ -75,9 +75,9 @@ dx = 1/pixresFPM; %--lambda_c/D per pixel.
 
 if(rhoOuter==inf)
     if(strcmpi(centering,'interpixel'))
-        Narray = ceil_even((2*rhoInner/dx)); % number of points across the inner diameter of the FPM.
+        Narray = ceil_even(2*rhoInner/dx); % number of points across the inner diameter of the FPM.
     else
-        Narray = ceil_even(2*(rhoInner/dx+1/2)); % number of points across the inner diameter of the FPM. Another half pixel added for pixel-centered masks.
+        Narray = ceil_even(2*rhoInner/dx+1); % number of points across the inner diameter of the FPM. Another half pixel added for pixel-centered masks.
     end
     
     Dmask = 2*pixresFPM*rhoInner; %--Diameter of the mask
@@ -86,7 +86,7 @@ else
     if(strcmpi(centering,'interpixel'))
         Narray = ceil_even(2*rhoOuter/dx); % number of points across the outer diameter of the FPM. 
     else
-        Narray = ceil_even(2*(rhoOuter/dx+1/2)); % number of points across the outer diameter of the FPM. Another half pixel added for pixel-centered masks.
+        Narray = ceil_even(2*rhoOuter/dx+1); % number of points across the outer diameter of the FPM. Another half pixel added for pixel-centered masks.
     end
     
     Dmask = 2*pixresFPM*rhoOuter; %--Diameter of the mask

@@ -31,7 +31,7 @@ Nbeam = Dmask/dx; %--Number of points across the mask.
 
 %--Minimum number of points across the array to fully contain the mask
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam+1/2); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam); %--number of points across output array. Same size as width when interpixel centered.
 end

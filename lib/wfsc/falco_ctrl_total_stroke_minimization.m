@@ -26,6 +26,7 @@
 function [dDM,cvar,InormAvg] = falco_ctrl_total_stroke_minimization(mp,cvar)
 
 %%
+cvar.dampFac = mp.ctrl.dampFac;
 cvar.dmfac = mp.ctrl.dmfac;
 cvar.gamma = mp.ctrl.gamma;
 cvar.gamma9 = mp.ctrl.gamma9; %--weight on total DM stroke for DM9.
@@ -48,10 +49,16 @@ cvar.gamma9 = mp.ctrl.gamma9; %--weight on total DM stroke for DM9.
     u_dm_guide = [u1dummy; u2dummy; u5dummy; u8dummy; u9dummy];
 
     %%
+    
+    GstarGdiag = diag(cvar.GstarG_wsum);
+    cvar.maxDiagGstarG = max(GstarGdiag(u_dm_guide==1 | u_dm_guide==2));
+
+    
+    %%
 %--Build up the diagonal of the regularization matrix. Allow different
 %regularization values for different DMs
 EyeDiag = [];
-u_weight = []
+u_weight = [];
 for idm=1:numel(mp.dm_ind)
     dm_index = mp.dm_ind(idm);
     if(dm_index==1)
@@ -60,20 +67,25 @@ for idm=1:numel(mp.dm_ind)
     elseif(dm_index==2)
         dm_reg = cvar.gamma;
         Nele = mp.dm2.Nele;
-    elseif(dm_index==1)
+    elseif(dm_index==8)
+        dm_reg = cvar.gamma8;
+        Nele = mp.dm8.Nele;
+    elseif(dm_index==9)
         dm_reg = cvar.gamma9;
         Nele = mp.dm9.Nele;
     else
         error('falco_ctrl_total_stroke_minimization.m: Controller weight not defined for DM %d.',dm_index);
     end
     
-    EyeDiag = [EyeDiag; dm_reg*cvar.maxDiagGstarG*ones(Nele,1)];
-    u_weight = [u_weight; dm_reg*ones(Nele,1)];
+    EyeDiag = [EyeDiag; (dm_reg*cvar.maxDiagGstarG)*ones(Nele,1)];
+    u_weight = [u_weight; (dm_reg*cvar.maxDiagGstarG)*ones(Nele,1)];
 end
+
 
 %% Least-squares solution. Different from EFC because of term u_weight.*u
 
-dDMvec = -cvar.dmfac*(cvar.gamma*diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + u_weight.*u);
+dDMvec = -cvar.dmfac*(diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + cvar.dampFac*u_weight.*u);
+% dDMvec = -cvar.dmfac*(cvar.gamma*diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + u_weight.*u);
     
 
 %%
@@ -90,7 +102,7 @@ startIndex = 0; % Initialize starting index of the command vector
 %--DM1
 if(any(mp.dm_ind==1)) %--DM1
     dDM1V(mp.dm1.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm1.Nele); % Parse the command vector to get component for DM1
-    dDM1V = dDM1V*mp.dm_weights(1); %--Re-scale correctly based on the DM's weighting
+    dDM1V = dDM1V*mp.dm1.weight; %--Re-scale correctly based on the DM's weighting
     dDM1Vmax = max(abs(dDM1V(:))); % Store max absolute deviation value for later
     startIndex = startIndex + mp.dm1.Nele; % Set for next DM
 end
@@ -98,7 +110,7 @@ end
 %--DM2
 if(any(mp.dm_ind==2)) %--DM2
     dDM2V(mp.dm2.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm2.Nele);
-    dDM2V = dDM2V*mp.dm_weights(2); %--Re-scale correctly based on the DM's weighting
+    dDM2V = dDM2V*mp.dm2.weight; %--Re-scale correctly based on the DM's weighting
     dDM2Vmax = max(abs(dDM2V(:)));
     startIndex = startIndex + mp.dm2.Nele; % Set for next DM
 end
@@ -114,14 +126,14 @@ end
 %--DM8
 if(any(mp.dm_ind==8))  %--DM8
     dDM8V(mp.dm8.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm8.Nele);
-    dDM8V = dDM8V*mp.dm_weights(8); %--Re-scale correctly based on the DM's weighting
+    dDM8V = dDM8V*mp.dm8.weight; %--Re-scale correctly based on the DM's weighting
     startIndex = startIndex + mp.dm8.Nele; % Set for next DM
 end
 
 %--DM9
 if(any(mp.dm_ind==9))  %--DM9
     dDM9V(mp.dm9.act_ele) = dDMvec(startIndex+1:startIndex+mp.dm9.Nele);
-    dDM9V = dDM9V*mp.dm_weights(9); %--Re-scale correctly based on the DM's weighting
+    dDM9V = dDM9V*mp.dm9.weight; %--Re-scale correctly based on the DM's weighting
     startIndex = startIndex + mp.dm9.Nele; % Set for next DM
 end
 
@@ -150,7 +162,7 @@ if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V(:); end
 
 %% Take images to empirically check contrast at that mu value
 Itotal = falco_get_summed_image(mp);
-InormAvg = mean(Itotal(mp.F4.corr.maskBool));
+InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
 cvar.cMin = InormAvg;
 
 cvar.log10regUsed = -10; %--Dummy value

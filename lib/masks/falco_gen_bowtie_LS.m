@@ -87,7 +87,7 @@ yshift = 0;%inputs.yshift; % translation in y of pupil (in diameters)
 pad_strut = 0; %2*pad_strut_pct/100*diam; %--Convert to meters. Factor of 2x needed since strut is padded on both sides
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam+1/2); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam); %--number of points across output array. Same size as width when interpixel centered.
 end

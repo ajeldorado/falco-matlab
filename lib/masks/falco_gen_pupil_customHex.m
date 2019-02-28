@@ -8,9 +8,9 @@
 % inputs.Nbeam - Beam diameter
 % inputs.OD - Flat-to-flat diameter (fraction of Nbeam)
 % inputs.ID - Inner diameter (fraction of Nbeam)
-% inputs.num_strut - Number of struts
-% inputs.strut_angs - Array of angles for the radial struts (deg)
-% inputs.strut_width - strut width (fraction of Nbeam)
+% inputs.Nstrut - Number of struts
+% inputs.angStrut - Array of angles for the radial struts (deg)
+% inputs.wStrut - strut width (fraction of Nbeam)
 
 
 function PUPIL = falco_gen_pupil_customHex( input )
@@ -47,16 +47,16 @@ function PUPIL = falco_gen_pupil_customHex( input )
     PUPIL = PUPIL.*PUPIL0;
     
     % Create spiders 
-    if(input.strut_width > 0)
+    if(input.wStrut > 0)
         
-        numSpiders = input.num_strut;
-        angs = input.strut_angs;
+        numSpiders = input.Nstrut;
+        angs = input.angStrut;
         
         if(numSpiders~=numel(angs))
-            error('Pupil generation error: ''strut_angs'' should be an array of length ''num_strut''');
+            error('Pupil generation error: ''angStrut'' should be an array of length ''Nstrut''');
         end
         
-        halfwidth = input.strut_width*2*apRad;
+        halfwidth = input.wStrut*2*apRad;
         for ang = angs
            PUPIL = PUPIL.*(1-exp(-(RHO.*sin(THETA-ang*pi/180)/halfwidth).^hg_expon_spider).*...
                (RHO.*cos(THETA-ang*pi/180)>0));
