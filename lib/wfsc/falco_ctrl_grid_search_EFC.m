@@ -23,7 +23,9 @@
 % -Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % -Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
+
 function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
+
 
     %--STEPS:
     % Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
@@ -103,7 +105,6 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 % %     cvar.latestBestlog10reg = vals_list(1,indBest);
 % %     cvar.latestBestDMfac = vals_list(2,indBest);
 % %     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg,cvar.latestBestDMfac,cvar.cMin)
-
 
 
 end %--END OF FUNCTION

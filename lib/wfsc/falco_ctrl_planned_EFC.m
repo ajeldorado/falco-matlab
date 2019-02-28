@@ -30,14 +30,13 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
     % Step 1: If re-linearizing this iteration, empirically find the best regularization value.
     % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
     % Step 3: Compute the EFC command to use.
-
     
     %% Initializations    
     vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
     Nvals = max(size(vals_list,2));
     Inorm_list = zeros(Nvals,1);
 
-    % Temporarily store computed DM commands so that the best one does not have to be re-computed
+    %--Use these to temporarily store computed DM commands so that the best one does not have to be re-computed
     if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals); end
     if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals); end
     if(any(mp.dm_ind==5)); dDM5V_store = zeros(mp.dm5.Nact,mp.dm5.Nact,Nvals); end
@@ -82,9 +81,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
 
         %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
         [cvar.cMin,indBest] = min(Inorm_list(:));
-
-
-
+       
         cvar.latestBestlog10reg = vals_list(1,indBest);
         cvar.latestBestDMfac = vals_list(2,indBest);
         %cp.muBest(cvar.Itr) = vals_list(1,indBest);
@@ -130,5 +127,6 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
     end
     
     cvar.log10regUsed = log10regSchedOut;
+    
     
 end %--END OF FUNCTION

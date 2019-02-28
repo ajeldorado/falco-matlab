@@ -9,9 +9,9 @@ input.Npad = 600;
 input.Nbeam = 500; % number of points across the pupil diameter
 input.OD = 1; % Outer radius (fraction of Nbeam) 
 input.ID = 0.2;% Inner radius (zero if you want an off-axis telescope)
-input.num_strut = 4;% Number of struts 
-input.strut_angs = [0 90 180 270];%Angles of the struts (deg)
-input.strut_width = 0.005; % Width of the struts (fraction of pupil diam.)
+input.Nstrut = 4;% Number of struts 
+input.angStrut = [0 90 180 270];%Angles of the struts (deg)
+input.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
 input.centering = 'interpixel'; %'interpixel' or 'pixel'; 'pixel' is default
 input.flagPROPER = true;
 

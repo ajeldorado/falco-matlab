@@ -8,9 +8,9 @@
 % inputs.Nbeam
 % inputs.OD
 % inputs.ID
-% inputs.num_strut
-% inputs.strut_angs
-% inputs.strut_width
+% inputs.Nstrut
+% inputs.angStrut
+% inputs.wStrut
 %
 % Corrected on 2018-08-16 by A.J. Riggs to compute 'beam_diam_fraction' correctly.
 
@@ -91,16 +91,16 @@ function PUPIL = falco_gen_pupil_Simple_PROPER( input )
 %     end
     
     % Create spiders 
-    if(input.strut_width > 0)
+    if(input.wStrut > 0)
         
-        numSpiders = input.num_strut;
-        angs = input.strut_angs;
+        numSpiders = input.Nstrut;
+        angs = input.angStrut;
         
         if(numSpiders~=numel(angs))
-            error('Pupil generation error: ''strut_angs'' should be an array of length ''num_strut''');
+            error('Pupil generation error: ''angStrut'' should be an array of length ''Nstrut''');
         end
         
-        halfwidth = input.strut_width*2*apRad;
+        halfwidth = input.wStrut*2*apRad;
         for ang = angs
            PUPIL = PUPIL.*(1-exp(-(RHO.*sin(THETA-ang*pi/180)/halfwidth).^hg_expon_spider).*...
                (RHO.*cos(THETA-ang*pi/180)>0));

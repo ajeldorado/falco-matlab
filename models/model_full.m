@@ -36,11 +36,12 @@
 
 function Eout = model_full(mp,   modvar,varargin)
 
+
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
-    normFac = mp.F4.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 elseif(isfield(modvar,'ebpIndex')) %--Entire bandpass index, out of mp.full.Nlam
-    normFac = mp.F4.full.I00(modvar.ebpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.full.I00(modvar.ebpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
     %--Enable different arguments values by using varargin
@@ -67,8 +68,6 @@ if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9,'compact'); end
 %--Set the wavelength
 if(isfield(modvar,'lambda'))
     lambda = modvar.lambda;
-% elseif(isfield(modvar,'ebpIndex'))
-%     lambda = mp.full.lambdas(modvar.ebpIndex);
 elseif(isfield(modvar,'sbpIndex'))
     lambda = mp.sbp_centers(modvar.sbpIndex)*mp.full.sbp_facs(modvar.wpsbpIndex);
 end
@@ -118,60 +117,40 @@ if(modvar.zernIndex~=1)
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
 end
 
-
-
-%%
-%--Select the type of coronagraph
-switch mp.coro 
+%% Pre-compute the FPM first for HLC as mp.FPM.mask
+switch upper(mp.coro) 
     case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
         %--Complex transmission map of the FPM.
         ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
         if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
-            FPM = mp.FPMcubeFull(:,:,ilam); 
+            mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
         else %--Otherwise generate it
-            FPM = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
+            mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
         end
         
-        Eout = model_full_EHLC(mp,   lambda, normFac, Ein, FPM); 
-        
-    case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
+    case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
         %--Complex transmission map of the FPM.
         ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
         if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
-            FPM = mp.FPMcubeFull(:,:,ilam);
+            mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
         else %--Otherwise generate it
-            FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
+            mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
         end
         
-        Eout = model_full_HLC(mp,   lambda, normFac, Ein, FPM);
-        
-    case{'FOHLC'} %--DMs, optional apodizer, FPM with amplitude and phase modulation, and LS. Uses Babinet's principle about FPM.
-        Eout = model_full_FOHLC(mp, lambda, normFac, Ein);
-        
-    case{'SPHLC','FHLC'} %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS. Uses 2-part direct MFTs to/from FPM
-        Eout = model_full_SPHLC(mp,   lambda, Ein, normFac);
-        
-        
-    case{'LC','DMLC','APLC'} %--optional apodizer, occulting spot FPM, and LS.
-        Eout = model_full_LC(mp,   lambda, Ein, normFac);
-       
-    case{'SPLC','FLC'} %--Optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-        Eout = model_full_SPLC(mp,   lambda, Ein, normFac);
-            
-    case{'vortex','Vortex','VC','AVC'} %--Optional apodizer, vortex FPM, LS
-        Eout = model_full_VC(mp,   lambda, Ein, normFac);       
-          
-%     case{'SPC','APP','APC'} %--Pupil-plane mask only
-%         Eout = model_full_APC(mp,   modvar);   
-        
-    otherwise
-        error('model_full.m: Modely type\t %s\t not recognized.\n',mp.coro);        
-                    
 end
 
+%% Select which optical layout's full model to use.
+switch lower(mp.layout)
+    case{'fourier'}
+        Eout = model_full_Fourier(mp, lambda, Ein, normFac);
+        
+end
+
+%% Undo GPU variables if they exist
 if(mp.useGPU)
     Eout = gather(Eout);
 end
+
 
 end % End of function
 

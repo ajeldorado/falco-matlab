@@ -53,15 +53,15 @@ if(isfield(mp,'lowfs')==false)
 end
 
 if(flagEval)
-    dxi = mp.F4.eval.dxi;
-    Nxi = mp.F4.eval.Nxi;
-    deta = mp.F4.eval.deta;
-    Neta = mp.F4.eval.Neta; 
+    dxi = mp.Fend.eval.dxi;
+    Nxi = mp.Fend.eval.Nxi;
+    deta = mp.Fend.eval.deta;
+    Neta = mp.Fend.eval.Neta; 
 else
-    dxi = mp.F4.dxi;
-    Nxi = mp.F4.Nxi;
-    deta = mp.F4.deta;
-    Neta = mp.F4.Neta; 
+    dxi = mp.Fend.dxi;
+    Nxi = mp.Fend.Nxi;
+    deta = mp.Fend.deta;
+    Neta = mp.Fend.Neta; 
 end
 
 
@@ -86,7 +86,7 @@ if(any(mp.dm_ind==5)); DM5apod = falco_gen_dm_surf(mp.dm5, mp.dm1.compact.dx, Nd
 t_Ti_base = 0;
 t_Ni_vec = 0;
 t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-pol = 0;
+pol = 2;
 [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
 transOuterFPM = tCoef;
 % ilam = modvar.sbpIndex;
@@ -204,13 +204,13 @@ end
 
 
 % DFT to camera
-EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
+EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
-    Eout = EF4; %--Don't normalize if normalization value is being found
+    Eout = EFend;  %--Don't normalize if normalization value is being found
 else
-    Eout = EF4/sqrt(normFac); %--Apply normalization
+    Eout = EFend/sqrt(normFac); %--Apply normalization
 end
 
 
