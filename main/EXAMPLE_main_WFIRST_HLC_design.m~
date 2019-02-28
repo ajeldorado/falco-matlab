@@ -49,7 +49,7 @@ mp.flagPlot = true;
 %--Record Keeping
 mp.SeriesNum = 2;
 mp.TrialNum = 1;
-label = 'testNewFALCO';
+
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
 % temp = load(fn_prev,'out');
@@ -68,7 +68,7 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
     '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller,'_',label];
+    '_',mp.controller];
 
 
 %% Step 5: Perform the Wavefront Sensing and Control
