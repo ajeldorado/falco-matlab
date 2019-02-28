@@ -16,7 +16,6 @@ function [ OUT ] = hexSegMirror_getField( hexMirror_struct )
 %   tiltxs - Tilts on segment in horizontal direction (waves/apDia)
 %   tiltys - Tilts on segment in vertical direction (waves/apDia)
 
-addpath('../utils/')
 
 apDia = hexMirror_struct.apDia; % flat to flat aperture diameter (samples)
 wGap = hexMirror_struct.wGap; % samples
