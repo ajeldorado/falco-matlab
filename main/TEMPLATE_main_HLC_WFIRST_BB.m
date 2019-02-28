@@ -55,7 +55,7 @@ mp.flagPlot = true;
 %% Step 1: Define any variable values that will overwrite the defaults (in falco_config_defaults_SPLC)
 
 %%--Record Keeping
-mp.TrialNum = 1;%-1*(0 + isurvey); %--Always use a diffrent Trial # for different calls of FALCO.
+mp.TrialNum = 3;%-1*(0 + isurvey); %--Always use a diffrent Trial # for different calls of FALCO.
 mp.SeriesNum = 1; %--Use the same Series # for sets of similar trials.
 
 
@@ -122,7 +122,7 @@ switch mp.controller
         mp.ctrl.dmfacVec = 1;
         
         %%--WFSC Iterations and Control Matrix Relinearization
-        mp.Nitr = 75; %--Number of estimation+control iterations to perform
+        mp.Nitr = 25; %--Number of estimation+control iterations to perform
         mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 
     case{'plannedEFC'}

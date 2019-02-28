@@ -82,7 +82,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin,indBest] = min(Inorm_list(:));
 
-
+    indBest = indBest - 1; %JLlop
+    cvarOut.cMin = Inorm_list(indBest);
+    
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
     if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
     if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest); end
