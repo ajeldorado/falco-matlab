@@ -7,7 +7,7 @@
 %--Script to perform an HLC design run.
 %  1) Load the default model parameters for an HLC.
 %  2) Specify the values to overwrite.
-%  3) Run a single trial of WFSC using FALCO.
+%  3) Run a single trial of WFC using FALCO.
 %
 % REVISION HISTORY:
 % --------------
@@ -37,7 +37,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-defaults_WFIRST_HLC_design
+EXAMPLE_defaults_WFIRST_HLC_design
 
 
 %% Step 3: Overwrite default values as desired
@@ -57,9 +57,10 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-%--Use just 1 wavelength for initial debugging of code
+% %--Use just 1 wavelength for initial debugging of code
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+
 
 %% Step 4: Generate the label associated with this trial
 

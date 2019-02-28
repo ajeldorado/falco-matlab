@@ -4,10 +4,10 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an LC simple modeling run.
-%  1) Load the default model parameters for an LC.
+%--Script to perform a DMVC simple design run.
+%  1) Load the default model parameters for a vortex.
 %  2) Specify the values to overwrite.
-%  3) Run a single trial of WFSC using FALCO.
+%  3) Run a single trial of WFC using FALCO.
 %
 % REVISION HISTORY:
 % --------------
@@ -34,9 +34,10 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 % addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
 % rmpath([mp.path.cvx 'lib/narginchk_:']) %--Legend plotting issue if CVX's narginchk function is used instead of Matlab's default function.
 
+
 %% Step 2: Load default model parameters
 
-defaults_LUVOIRB_VC_design
+EXAMPLE_defaults_LUVOIRB_VC_design
 
 
 %% Step 3: Overwrite default values as desired
@@ -56,10 +57,10 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% mp.estimator = 'perfect';
-
+% %--Use just 1 wavelength for initial debugging of code
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+
 
 %% Step 4: Generate the label associated with this trial
 

@@ -80,11 +80,18 @@ zOUTDATED/**
 zDEPRECATED/**
 zDEBUGGING/**
 
-#--Sync only template versions of main script files
+#--Sync only example/template versions of main script files
 main/**
 !main/TEMPLATE*
 !main/EXAMPLE_*
 
+#--Sync only example config (defaults) files
+config/**
+!config/EXAMPLE_*
+
+#--Sync only example tesing files
+testing/**
+!config/EXAMPLE_*
 
 #--Documentation intermediate files
 docs/**

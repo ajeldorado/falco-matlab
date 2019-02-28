@@ -192,6 +192,14 @@ mp.P2.compact.Nbeam = 250;
 mp.P3.compact.Nbeam = 250;
 mp.P4.compact.Nbeam = 250;  % P4 must be the same as P1 for Vortex. 
 
+%--Number of re-imaging relays between pupil planesin compact model. Needed
+%to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
+%full model, which probably has extra collimated beams compared to the
+%compact model.
+mp.Nrelay1to2 = 1;
+mp.Nrelay2to3 = 1;
+mp.Nrelay3to4 = 1;
+
 % mp.F3.compact.res = 6; % sampling of FPM for compact model [pixels per lambda0/D]
 
 %% Optical Layout: Full Model 

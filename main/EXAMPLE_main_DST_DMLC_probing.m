@@ -34,9 +34,10 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 % addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
 % rmpath([mp.path.cvx 'lib/narginchk_:']) %--Legend plotting issue if CVX's narginchk function is used instead of Matlab's default function.
 
+
 %% Step 2: Load default model parameters
 
-defaults_DST_LC_design
+EXAMPLE_defaults_DST_LC_design
 
 
 %% Step 3: Overwrite default values as desired
@@ -58,7 +59,7 @@ mp.TrialNum = 1;
 
 % mp.estimator = 'perfect';
 
-%--Use just 1 wavelength for initial debugging of code
+% %--Use just 1 wavelength for initial debugging of code
 % mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 
