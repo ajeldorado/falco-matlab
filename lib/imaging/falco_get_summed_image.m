@@ -33,6 +33,5 @@ function Ibandavg = falco_get_summed_image(mp)
         Ibandavg = Ibandavg +  mp.sbp_weights(si)*falco_get_sbp_image(mp,si);
     end
 
-
 end %--END OF FUNCTION
 
