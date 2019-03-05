@@ -166,7 +166,6 @@ mp.ctrl.sched_mat = [...
     repmat(SetJ,[10,1]);...
     ];
 
-
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 %% Deformable Mirrors: Influence Functions
