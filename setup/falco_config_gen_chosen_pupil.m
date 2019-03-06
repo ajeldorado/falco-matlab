@@ -243,7 +243,7 @@ switch mp.whichPupil
 end
 mp.P1.full.Narr = length(mp.P1.full.mask);  %--Total number of pixels across array containing the pupil in the full model. Add 2 pixels to Nbeam when the beam is pixel-centered.
 mp.P1.compact.Narr = length(mp.P1.compact.mask);  %--Number of pixels across the array containing the input pupil in the compact model
-mp.sumPupil = sum(sum(abs(mp.P1.full.mask).^2));
+mp.sumPupil = sum(sum(abs(mp.P1.compact.mask).^2)); %--Throughput is computed with the compact model
 
 %--NORMALIZED (in pupil diameter) coordinate grids in the input pupil for making the tip/tilted input wavefront within the compact and full models
 if(strcmpi(mp.centering,'interpixel') )
