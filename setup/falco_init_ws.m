@@ -309,7 +309,7 @@ mp.Fend.eval.deta = mp.Fend.eval.dxi; % higher sampling at Fend.for evaulation [
 
 % % (x,y) location [lambda_c/D] in dark hole at which to evaluate throughput
 [XIS,ETAS] = meshgrid(mp.Fend.eval.xisDL - mp.thput_eval_x, mp.Fend.eval.etasDL - mp.thput_eval_y);
-mp.FP4.eval.RHOS = sqrt(XIS.^2 + ETAS.^2);
+mp.Fend.eval.RHOS = sqrt(XIS.^2 + ETAS.^2);
 % % if(isfield(mp,'thput_eval_x')==false);  mp.thput_eval_x = 6;  end
 % % if(isfield(mp,'thput_eval_y')==false);  mp.thput_eval_y = 0;  end
 % % if(isfield(mp,'thput_eval_y')==false);  mp.thput_radius = 0.7;  end
