@@ -66,6 +66,7 @@ end
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
     % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
 end
