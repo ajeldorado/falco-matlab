@@ -14,22 +14,16 @@
 % Created on 2018-05-29 by A.J. Riggs.
 
 
-
-
 function mp = falco_config_gen_chosen_pupil(mp)
 
 %% Input pupil plane resolution, masks, and coordinates
 %--Resolution at input pupil and DM1 and DM2
 mp.P2.full.dx = mp.P2.D/mp.P1.full.Nbeam; 
 mp.P2.compact.dx = mp.P2.D/mp.P1.compact.Nbeam;
-% mp.Npup1factor = mp.P1.full.Nbeam/mp.P1.compact.Nbeam; %--Scaling factor between full model and compact model of the input pupil array
-% % % mp.Npup1factor = mp.P1.full.Narr/mp.P1.compact.Narr; %--Scaling factor between full model and compact model of the input pupil array
-% % % mp.P2.compact.dx = mp.Npup1factor*mp.P2.full.dx;
-
 
 %--Generate/Load Input Pupil
-switch mp.whichPupil
-    case{'Simple','SimplePROPER'}
+switch upper(mp.whichPupil)
+    case{'SIMPLE','SIMPLEPROPER'}
         
         if(strcmpi(mp.whichPupil,'simpleproper'))
             inputs.flagPROPER = true;
@@ -64,7 +58,7 @@ switch mp.whichPupil
         %--Generate low-res input pupil for the 'compact' model
         mp.P1.compact.mask = falco_gen_pupil_WFIRST_20180103(mp.P1.compact.Nbeam, mp.centering);
         
-    case{'WFIRST_onaxis'}
+    case{'WFIRST_ONAXIS'}
         inputs.wStrut = mp.pup_wStrut; %--0.0261  is nominal from 2014 on-axis (in pupil diameters)
         %--Generate input pupil
         inputs.Nbeam = mp.P1.full.Nbeam;     % number of points across usable pupil  
@@ -101,52 +95,8 @@ switch mp.whichPupil
         %--Generate low-res input pupil for the 'compact' model
         inputs.Nbeam = mp.P1.compact.Nbeam; 
         mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
-        
-        
-%         %--TESTING TESTING TESTING: Trying downsampling pupil for full model
-%         switch mp.centering
-%             case 'interpixel'
-%                 inputs.Nbeam = 5000;
-%                 mask_temp = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
-%                 mp.P1.full.mask = imresize(mask_temp, mp.P1.full.Nbeam/inputs.Nbeam, 'cubic');
-%             case 'pixel'
-%                 Nstep2 = 2*mp.P1.full.Nbeam;
-%                 Nstep1 = 5000;%floor(5000/Nstep2)*Nstep2;
-%                 inputs.centering = 'interpixel'; %--temporarily switch
-%                 inputs.Nbeam = Nstep1;
-%                 mask_temp = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
-%                 mask_temp = imresize(mask_temp,[Nstep2,Nstep2],'bicubic');
-%                 mask_temp = padOrCropEven(mask_temp, 2*(mp.P1.full.Nbeam+1) );
-%                 mask_temp = imresize(mask_temp,1/2,'bicubic');
-%                 mp.P1.full.mask = zeros(mp.P1.full.Nbeam+2);
-%                 mp.P1.full.mask(2:end,2:end) = mask_temp;   
-%         end
-        
-        
-        
-%         %--TESTING TESTING TESTING: Trying downsampling pupil for compact model
-%         switch mp.centering
-%             case 'interpixel'
-%                 mp.P1.compact.mask = imresize(mp.P1.full.mask, mp.P1.compact.Nbeam/mp.P1.full.Nbeam, 'cubic');
-%             case 'pixel'
-%                 Nstep2 = 2*mp.P1.compact.Nbeam;
-%                 Nstep1 = 5000;%floor(5000/Nstep2)*Nstep2;
-%                 inputs.centering = 'interpixel'; %--temporarily switch
-%                 inputs.Nbeam = Nstep1;
-%                 mask_temp = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
-%                 mask_temp = imresize(mask_temp,[Nstep2,Nstep2],'bicubic');
-%                 mask_temp = padOrCropEven(mask_temp, 2*(mp.P1.compact.Nbeam+1) );
-%                 mask_temp = imresize(mask_temp,1/2,'bicubic');
-%                 mp.P1.compact.mask = zeros(mp.P1.compact.Nbeam+2);
-%                 mp.P1.compact.mask(2:end,2:end) = mask_temp;   
-%         end
-        
         clear inputs
-        
-%         %--DEBUGGING: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%         mp.P1.full.mask = ones(size(mp.P1.full.mask));
-%         mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
-        
+
     case{'LUVOIRA0'}
         inputs.centering = mp.centering;
         
@@ -158,12 +108,7 @@ switch mp.whichPupil
         inputs.Nbeam = mp.P1.compact.Nbeam; 
         mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_0(inputs);
         
-%         %--DEBUGGING: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%         mp.P1.full.mask = ones(size(mp.P1.full.mask));
-%         mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
-        
-        
-    case 'LUVOIR_B_offaxis'
+    case{'LUVOIR_B_OFFAXIS'}
         input.Nbeam = mp.P1.full.Nbeam/0.925; % number of points across the pupil diameter
         input.wGap = mp.P1.wGap*mp.P1.full.Nbeam; % samples
         %input.wGap = 6e-3/7.989*mp.P1.full.Nbeam; % samples
@@ -226,7 +171,7 @@ switch mp.whichPupil
             end
         end
         
-    case 'HabEx_B_offaxis'
+    case 'HABEX_B_OFFAXIS'
         input.Nbeam = mp.P1.full.Nbeam;
         input.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
         input.aperture_num = mp.P1.aperture_num;
@@ -255,10 +200,6 @@ else
 end
 [mp.P2.full.XsDL,mp.P2.full.YsDL] = meshgrid(mp.P2.full.xsDL);
 [mp.P2.compact.XsDL,mp.P2.compact.YsDL] = meshgrid(mp.P2.compact.xsDL);
-
-%--Interpolate the lower resolution input pupil for the compact model. 
-%  Have to use interpolate instead of imresize() if the pupil is pixel-centered.
-% % % mp.P1.compact.mask = interp2(mp.P2.full.XsDL,mp.P2.full.YsDL,mp.P1.full.mask,mp.P2.compact.XsDL,mp.P2.compact.YsDL,'linear',0);
 
 
 end %--END OF FUNCTION
