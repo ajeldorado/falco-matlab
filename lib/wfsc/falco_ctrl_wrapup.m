@@ -47,6 +47,34 @@ if(any(mp.dm_ind==7));  dDM.dDM7V(mp.dm7.act_ele) = mp.dm_weights(7)*duVec(cvar.
 if(any(mp.dm_ind==8));  dDM.dDM8V(mp.dm8.act_ele) = mp.dm8.weight*duVec(cvar.uLegend==8);  end % Parse the command vector to get component for DM and apply the DM's weight
 if(any(mp.dm_ind==9));  dDM.dDM9V(mp.dm9.act_ele) = mp.dm9.weight*duVec(cvar.uLegend==9);  end % Parse the command vector to get component for DM and apply the DM's weight
 
+%--Force DM9 to be mirror symmetric about y-axis
+if(any(mp.dm_ind==9))
+    if(isfield(mp,'flagSymmDM9')==false)
+        mp.flagSymmDM9 = false;
+    end
+    if(mp.flagSymmDM9)
+        %--Determine which actuators mirror each other along the y-axis
+        Nact = sqrt(mp.dm9.NactTotal);
+        LinIndMat = zeros(Nact);
+        LinIndMat(:) = 1:mp.dm9.NactTotal;
+        FlippedLinIndMat = fliplr(LinIndMat);
+        KeyDM9 = zeros(mp.dm9.NactTotal/2,2);
+        for jj=1:mp.dm9.NactTotal/2
+            KeyDM9(jj,1) = LinIndMat(jj);
+            KeyDM9(jj,2) = FlippedLinIndMat(jj);
+        end
+        clear jj
+
+        for jj=1:size(KeyDM9,1)
+            Index1 = KeyDM9(jj,1);
+            Index2 = KeyDM9(jj,2);
+            Vtemp = dDM.dDM9V(Index1)+dDM.dDM9V(Index2);
+            dDM.dDM9V(Index1) = Vtemp;
+            dDM.dDM9V(Index2) = Vtemp;
+        end
+    end
+end
+
 %%--Combine the delta command with the previous command
 if(any(mp.dm_ind==1));  mp.dm1.V = cvar.DM1Vnom + dDM.dDM1V;  end
 if(any(mp.dm_ind==2));  mp.dm2.V = cvar.DM2Vnom + dDM.dDM2V;  end
