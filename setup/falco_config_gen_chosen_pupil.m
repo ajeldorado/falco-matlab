@@ -170,7 +170,12 @@ switch upper(mp.whichPupil)
                 %figure;imagesc(angle(mp.P1.compact.E(:,:,1))/2/pi);axis image;colorbar;title('Phase of telescope aperture (waves)');
             end
         end
+    
+    case 'DST_LUVOIRB'
         
+        mp.P1.full.mask    = falco_gen_pupil_dst_LUVOIR_B(mp.P1.full.Nbeam   ,2^(nextpow2(mp.P1.full.Nbeam   )));
+        mp.P1.compact.mask = falco_gen_pupil_dst_LUVOIR_B(mp.P1.compact.Nbeam,2^(nextpow2(mp.P1.compact.Nbeam)));
+    
     case 'HABEX_B_OFFAXIS'
         input.Nbeam = mp.P1.full.Nbeam;
         input.Npad = 2^(nextpow2(mp.P1.full.Nbeam));

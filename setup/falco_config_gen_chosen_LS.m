@@ -25,7 +25,7 @@ mp.P4.full.dx = mp.P4.D/mp.P4.full.Nbeam;
 mp.P4.compact.dx = mp.P4.D/mp.P4.compact.Nbeam; %mp.NlyotFactor*mp.P4.full.dx;
 
 switch mp.whichPupil
-    case{'Simple','SimplePROPER'}
+    case{'Simple','SimplePROPER','DST_LUVOIRB'}
         
         if(strcmpi(mp.whichPupil,'simpleproper'))
             inputs.flagPROPER = true;
