@@ -251,9 +251,9 @@ else %--Apply FPM if normalization value is not being found
         case{'FOHLC'}
             %--FPM representation (idealized as amplitude and phase)
             DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'compact');
-            DM8ampPad = padOrCropEven( DM8amp,Nfpm,'extrapval',1);
+            DM8ampPad = padOrCropEven( DM8amp,mp.compact.Nfpm,'extrapval',1);
             DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact');
-            DM9surfPad = padOrCropEven( DM9surf,Nfpm);
+            DM9surfPad = padOrCropEven( DM9surf,mp.compact.Nfpm);
             transOuterFPM = 1; %--Is 1 because normalized out in FOHLC model
             FPM = DM8ampPad.*exp(2*pi*1i/lambda*DM9surfPad);
             

@@ -144,19 +144,19 @@ for Itr=1:mp.Nitr
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
 
-    %--Plot the intermediate E-fields
-    switch upper(mp.coro)
-        case{'FOHLC'}
-
-            %--Get E-fields at the intermediate planes
-            modvar.sbpIndex = mp.si_ref;
-            modvar.wpsbpIndex = 1; %--dummy
-            modvar.whichSource = 'star';     
-            Estruct = model_compact(mp, modvar,'all');
-            
-            if(Itr==1); hEfields.master = 1; end %--dummy value to intialize the handle variable
-            hEfields = falco_plot_Efields(hEfields,mp,Itr,InormHist,Im,Estruct);
-    end
+%     %--Plot the intermediate E-fields
+%     switch upper(mp.coro)
+%         case{'FOHLC'}
+% 
+%             %--Get E-fields at the intermediate planes
+%             modvar.sbpIndex = mp.si_ref;
+%             modvar.wpsbpIndex = 1; %--dummy
+%             modvar.whichSource = 'star';     
+%             Estruct = model_compact(mp, modvar,'all');
+%             
+%             if(Itr==1); hEfields.master = 1; end %--dummy value to intialize the handle variable
+%             hEfields = falco_plot_Efields(hEfields,mp,Itr,InormHist,Im,Estruct);
+%     end
     
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
