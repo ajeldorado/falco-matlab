@@ -277,7 +277,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Apply the Lyot stop
-EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr);
+EP40 = padOrCropEven(EP4,mp.P4.compact.Narr);
+EP4 = mp.P4.compact.croppedMask.*EP40;
 
 % DFT to camera
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
@@ -295,7 +296,9 @@ if(mp.useGPU)
     Eout = gather(Eout);
 end
 
-
+if(isfield(mp,'flagElyot'))
+    Eout = EP40;
+end
 
 end % End of entire function
 
