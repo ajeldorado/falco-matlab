@@ -187,20 +187,20 @@ mp.dm2.inf_sign = '+';
 
 %--DM1 parameters
 mp.dm1.Nact = 48;               % # of actuators across DM array
-mp.dm1.VtoH = 1*1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
+mp.dm1.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm1.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm1.ytilt = 10;               % for foreshortening. angle of rotation about y-axis [degrees]
-mp.dm1.zrot = -0.88;                % clocking of DM surface [degrees]
+mp.dm1.ytilt = 5.83;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
 mp.dm1.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm1.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
 mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
 
 %--DM2 parameters
 mp.dm2.Nact = 48;               % # of actuators across DM array
-mp.dm2.VtoH = 1*1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
+mp.dm2.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm2.ytilt = 8;               % for foreshortening. angle of rotation about y-axis [degrees]
-mp.dm2.zrot = 0.45;                % clocking of DM surface [degrees]
+mp.dm2.ytilt = 5.55;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.zrot = 0;                % clocking of DM surface [degrees]
 mp.dm2.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm2.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
 mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
@@ -209,7 +209,7 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
 mp.flagDM2stop = true;  %--Whether to apply an iris or not
-mp.dm2.Dstop = 52e-3;   %--Diameter of iris [meters]
+mp.dm2.Dstop = 50e-3;   %--Diameter of iris [meters]
 
 %--DM separations
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
@@ -246,9 +246,9 @@ mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right'
 mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Pupil Plane Diameters
-mp.P2.D = 46.3e-3;
-mp.P3.D = 46.3e-3;
-mp.P4.D = 46.3e-3;
+mp.P2.D = 46.2987e-3;
+mp.P3.D = 46.2987e-3;
+mp.P4.D = 46.2987e-3;
 
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 250;

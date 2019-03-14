@@ -49,9 +49,9 @@ lambda = mp.sbp_centers(modvar.sbpIndex);
 mirrorFac = 2; % Phase change is twice the DM surface height.f
 NdmPad = mp.compact.NdmPad;
 
-% if(isfield(mp,'propMethodPTP')==false) %--Propagation method for postage stamps around the influence functions
-%     mp.propMethodPTP = 'fft';
-% end
+if(isfield(mp,'propMethodPTP')==false) %--Propagation method for postage stamps around the influence functions
+    mp.propMethodPTP = 'fft';
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-fields
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
