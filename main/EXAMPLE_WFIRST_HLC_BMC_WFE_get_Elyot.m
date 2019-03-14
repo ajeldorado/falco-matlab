@@ -34,7 +34,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-defaults_WFIRST_HLC_BMC_WFE
+EXAMPLE_defaults_WFIRST_HLC_BMC_WFE
 
 %% Properties for BMC Analysis
 

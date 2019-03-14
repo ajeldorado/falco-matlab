@@ -34,7 +34,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-defaults_WFIRST_HLC_BMC_WFE
+EXAMPLE_defaults_WFIRST_HLC_BMC_WFE
 
 %% Properties for BMC Analysis
 
@@ -94,11 +94,11 @@ mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compu
 
 %% [OPTIONAL] Start from a previous FALCO trial's DM settings
 
-fn_prev = sprintf('Series0033_Trial%04d_HLC_WFIRST180718_3DM50_z%s_IWA2.7_OWA10_6lams575nm_BW10_plannedEFC_snippet.mat',13,num2str(mp.d_dm1_dm2));
-temp = load(fn_prev,'out');
-mp.dm1.V = temp.out.DM1V;
-mp.dm2.V = temp.out.DM2V;
-clear temp
+% fn_prev = sprintf('Series0033_Trial%04d_HLC_WFIRST180718_3DM50_z%s_IWA2.7_OWA10_6lams575nm_BW10_plannedEFC_snippet.mat',13,num2str(mp.d_dm1_dm2));
+% temp = load(fn_prev,'out');
+% mp.dm1.V = temp.out.DM1V;
+% mp.dm2.V = temp.out.DM2V;
+% clear temp
 
 %% Step 4: Generate the label associated with this trial
 
