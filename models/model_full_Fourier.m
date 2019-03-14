@@ -253,9 +253,9 @@ else
         case{'FOHLC'}
             %--FPM representation (idealized as amplitude and phase)
             DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'full');
-            DM8ampPad = padOrCropEven( DM8amp,Nfpm,'extrapval',1);
+            DM8ampPad = padOrCropEven( DM8amp,mp.full.Nfpm,'extrapval',1);
             DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'full');
-            DM9surfPad = padOrCropEven( DM9surf,Nfpm);
+            DM9surfPad = padOrCropEven( DM9surf,mp.full.Nfpm);
             transOuterFPM = 1; %--Because the complex transmission far away is divided out.
             FPM = DM8ampPad.*exp(2*pi*1i/lambda*DM9surfPad);
 

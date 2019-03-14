@@ -97,76 +97,37 @@ mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';
+mp.controller = 'gridsearchEFC';
 
-% % % % GRID SEARCH EFC DEFAULTS     
-% %--WFSC Iterations and Control Matrix Relinearization
-% mp.Nitr = 20; %--Number of estimation+control iterations to perform
-% mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-% mp.dm_ind = [1 2]; %--Which DMs to use
+% % % GRID SEARCH EFC DEFAULTS     
+%--WFSC Iterations and Control Matrix Relinearization
+switch lower(mp.controller)
+    case{'gridsearchefc'}
+        mp.Nitr = 10; %--Number of estimation+control iterations to perform
+        mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
+        mp.dm_ind = [1 2 8]; %--Which DMs to use
 
-% % PLANNED SEARCH EFC DEFAULTS     
-mp.dm_ind = [1 2 9]; % vector of DMs used in controller at ANY time (not necessarily all at once or all the time). 
-mp.ctrl.dmfacVec = 1;
-%--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
-    % Column 1: # of iterations, 
-    % Column 2: log10(regularization), 
-    % Column 3: which DMs to use (12, 128, 129, or 1289) for control
-    % Column 4: flag (0 = false, 1 = true), whether to re-linearize
-    %   at that iteration.
-    % Column 5: flag (0 = false, 1 = true), whether to perform an
-    %   EFC parameter grid search to find the set giving the best
-    %   contrast .
-    % The imaginary part of the log10(regularization) in column 2 is
-    %  replaced for that iteration with the optimal log10(regularization)
-    % A row starting with [0, 0, 0, 1...] is for relinearizing only at that time
+    case{'sm-cvx'}
+        cvx_startup %--MUST HAVE THIS LINE TO START CVX
+        cvx_solver Mosek
+        cvx_precision best %--Options: low, medium, default, high, best
 
-% SetA = ... %--DMs 1 & 2 for x iterations. Relinearize every iteration.
-%     repmat([1, 1j, 12, 1, 1], [20, 1]); 
-% SetB = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
-%     [0, 0, 0, 1, 0;...
-%     10, -3, 129, 0, 0;...
-%     5,  -4, 129, 0, 0;...
-%     10, -2, 129, 0, 0;...
-%     ];
-% SetC = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
-%     [0, 0, 0, 1, 0;...
-%     10, -4, 129, 0, 0;...
-%     5,  -5, 129, 0, 0;...
-%     10, -2, 129, 0, 0;...
-%     ];
-% SetD = ... %--DMs 1, 2, & 9. At first iteration only, relinearize and compute the new optimal Beta.
-%    [0, 0, 0, 1, 0;...
-%    10, -5, 129, 0, 0;...
-%    5,  -6, 129, 0, 0;...
-%    10, -2, 129, 0, 0;...
-%    ];
-% SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
-% SetB2 = [1, -5, 12, 1, 0];
-% SetC2 = [1, 1j, 12, 1, 1];
-% 
-% mp.ctrl.sched_mat = [...
-%    repmat(SetA2,[5,1]);...
-%    repmat(SetB2,[3,1]);...
-%    repmat(SetC2,[3,1]);...
-%    ...repmat(SetB,[2,1]);...
-%    repmat(SetC,[4,1]);...
-%    repmat(SetD,[4,1]);...
-%    ];
 
-SetJ = [...
-    repmat([1,-5,129,1,1],[4,1]);...
-    repmat([1,1j-1,129,1,1],[4,1]);...
-    repmat([1,1j,129,1,1],[2,1]);...
-    ];
-mp.ctrl.sched_mat = [...
-    repmat([1,1j,  12,1,1],[5,1]);...
-    repmat([1,1j-1,12,1,1],[6,1]);...
-    repmat([1,1j,  12,1,1],[1,1]);...
-    repmat(SetJ,[10,1]);...
-    ];
+        mp.dm_ind = [1 2 8]; %1;%[1 2 8 9]; %--Which DMs to use and when
+        mp.Nitr = 10;
+%         mp.ctrl.log10regVec = -5:1:-3;%  -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
 
-[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+end
+
+%--Delta voltage range restrictions
+mp.dm1.maxAbsdV = 30;%80;%50;%30;
+mp.dm2.maxAbsdV = 30;%80;%50;%30;
+mp.dm8.maxAbsdV = 0.05;
+mp.dm9.maxAbsdV = 50;%40;
+
+%--Absolute voltage range restrictions
+mp.dm1.maxAbsV = 150;%250;
+mp.dm2.maxAbsV = 150;%250;   
 
 %% Deformable Mirrors: Influence Functions
 %--Influence Function Options:
@@ -221,7 +182,7 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
 mp.layout = 'Fourier';  %--Which optical layout to use
-mp.coro = 'HLC';
+mp.coro = 'FOHLC';
 mp.flagApod = false;    %--Whether to use an apodizer or not
 
 %--Final Focal Plane Properties
@@ -290,66 +251,48 @@ mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
 mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
 
 %--FPM size
-mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
+mp.F3.Rin = 5;    % maximum radius of inner part of the focal plane mask [lambda0/D]
 mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 
 
-
-
-%% HLC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% FOHLC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
-%% FPM Material Properties
-mp.aoi = 6.69;%10.04; % Angle of incidence at FPM [deg]
-mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
+%% DM8: FPM amplitude profile
+mp.dm8.V0coef = 1 - 3e-3; %--Starting voltages of DM8
 
-mp.dt_metal_nm = 1;%0.25;%1/10; %--thickness step size for FPM metal layer (nm)
-mp.t_metal_nm_vec = 0:mp.dt_metal_nm:120; %150; %--nickel thickness range and sampling (nm)
-mp.dt_diel_nm = 1;%2/10; %--thickness step size for FPM dielectric layer  (nm)
-mp.t_diel_nm_vec = 0:mp.dt_diel_nm:900; %--PMGI thickness range and sampling (nm)
+mp.dm8.Vmin = 0; % 1-mp.dm8.Vmin is the maximum allowed FPM amplitude
+mp.dm8.Vmax = 1 - 1e-4; % 1-mp.dm8.Vmax is the minimum allowed FPM amplitude
 
-%--Number of waves offset from substrate for reference plane. MUST BE MORE THAN MAX THICKNESS OF THE FPM.
-mp.FPM.d0fac = 4;
+%--DM8 weights and sensitivities: Used by the controller
+mp.dm8.weight = 1e-2; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm8.act_sens = 1; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
+mp.dm8.VtoHavg = 1; %--gain of DM8 (amplitude/Volt)
 
-%% DM8: FPM Metal Thickness
+%% DM9: FPM phase profile
 
-mp.dm8.V0coef = 100; % Nominal Nickel layer thickness [nm]
+%--Voltage ranges
+mp.dm9.V0coef = 0; %--Starting voltages of DM9
+mp.dm9.Vmin = -600; % minimum thickness of FPM dielectric layer (nm)
+mp.dm9.Vmax = 600; % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
 
-%--DM8 parameters
-mp.dm8.Vmin = 0;
-mp.dm8.Vmax = 300;
-
-
-%% DM9: FPM Dielectric thickness
 
 %--DM9 weights and sensitivities: Used by the controller
 mp.dm9.weight = 1; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
 mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
-mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
-
-%--Starting dielectric thicknesses
-mp.t_diel_bias_nm = 0; %--Thickness of starting uniform bias layer of PMGI [nm]. % (Requires an outer stop in reality if >0, but will run without it to see if it gives essentially the same result as the EHLC but faster)
-mp.dm9.V0coef = 390; % Nominal PMGI layer thickness [nm] 
+%mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
 %--DM9 influence function options:
 % - '3x3'
 % - 'Xinetics'
 % - '3foldZern'
 %--DM9 parameters for 3x3 influence function
-mp.dm9.actres = 7; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
+mp.dm9.actres = 4;%7; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
 mp.dm9.FPMbuffer = -0.5; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
 mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
-
-% %%--DM9 parameters for Lanczos3 influence function
-% mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
-% mp.dm9.FPMbuffer = 0.2; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
-% mp.dm9.inf0name = 'Lanczos3'; 
-% %--FPM resolution (pixels per lambda0/D) in the compact and full models.
-% mp.F3.compact.res = 30;
-% mp.F3.full.res = 30;
 
 % %%--DM9 parameters for Xinetics influence function
 % mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
@@ -359,7 +302,24 @@ mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];
 % mp.F3.compact.res = 30;
 % mp.F3.full.res = 30;
 
-%--DM9 parameters
-mp.dm9.Vmin = 0;  % minimum thickness of FPM dielectric layer (nm)
-mp.dm9.Vmax = 400+mp.dm9.V0coef; % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
+
+switch mp.dm9.inf0name
+    case '3x3'
+        mp.dm9.inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  % influence function
+        mp.dm9.dx_inf0_act = 1/2;  % number of inter-actuator widths per pixel 
+        %--FPM resolution (pixels per lambda0/D) in the compact and full models.
+        mp.F3.compact.res = mp.dm9.actres/mp.dm9.dx_inf0_act;
+        mp.F3.full.res = mp.dm9.actres/mp.dm9.dx_inf0_act;
+
+    case 'Xinetics'
+        mp.dm9.inf0 = 1*fitsread('influence_dm5v2.fits');
+        mp.dm9.dx_inf0_act = 1/10;  % number of inter-actuator widths per pixel 
+end
+    
+    
+ %--DM9 spatial setup
+% mp.dm9.actres = 10; % number of "actuators" per lambda0/D in the FPM's focal plane. Only used for square grid
+mp.dm9.flagHexGrid = false;  %--true->hex grid. false->square/Cartesian grid
+mp.dm9.Nact = ceil_even(2*mp.F3.Rin*mp.dm9.actres); % number of actuators across DM9 (if not in a hex grid)
+
 

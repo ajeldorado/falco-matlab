@@ -88,24 +88,24 @@ mp.dm9.VtoH = mp.dm9.VtoHavg*ones(mp.dm9.NactTotal,1);%1*1e-9*ones(mp.dm9.Nact);
 
 if(isfield(mp.dm9,'V')==false); mp.dm9.V = zeros(mp.dm9.NactTotal,1); mp.dm9.V(mp.F3.RinA_inds) = mp.dm9.V0coef; else; mp.dm9.V = mp.DM9V0; end %--Initial DM9 voltages
 
-
-%--For FOHLC (amplitude and phase instead of material properties)
-mp.dm9.Vmin = -400;  % lowest allowable phase shift (nm)
-mp.dm9.Vmax = +400;  % maximum allowed phase shift (nm)
-% %--For HLC (true material properties)
-% mp.dm9.Vmin = min(mp.t_diel_nm_vec);  % minimum thickness of FPM dielectric layer (nm)
-% mp.dm9.Vmax = max(mp.t_diel_nm_vec);  % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
+% 
+% %--For FOHLC (amplitude and phase instead of material properties)
+% mp.dm9.Vmin = -400;  % lowest allowable phase shift (nm)
+% mp.dm9.Vmax = +400;  % maximum allowed phase shift (nm)
+% % %--For HLC (true material properties)
+% % mp.dm9.Vmin = min(mp.t_diel_nm_vec);  % minimum thickness of FPM dielectric layer (nm)
+% % mp.dm9.Vmax = max(mp.t_diel_nm_vec);  % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
 
 %%%%%---OPTIONS FOR DEFINING DM8 (FPM Metal)
 
-%--For FOHLC (amplitude and phase instead of material properties)
-mp.dm8.VtoHavg = 1; %--gain of DM8 (amplitude/Volt)
-mp.dm8.Vmin = 1e-5; % lowest allowable amplitude in FPM
-mp.dm8.Vmax = 1; % maximum allowed amplitude in FPM
-% %--For HLC (true material properties)
-% mp.dm8.VtoHavg = 1e-9; %--gain of DM8 (meters/Volt)
-% mp.dm8.Vmin = min(mp.t_metal_nm_vec); % minimum thickness of FPM metal layer (nm)
-% mp.dm8.Vmax = max(mp.t_metal_nm_vec); % maximum thickness (from one actuator, not of the facesheet) of FPM metal layer (nm)
+% %--For FOHLC (amplitude and phase instead of material properties)
+% mp.dm8.VtoHavg = 1; %--gain of DM8 (amplitude/Volt)
+% mp.dm8.Vmin = 1e-5; % lowest allowable amplitude in FPM
+% mp.dm8.Vmax = 1; % maximum allowed amplitude in FPM
+% % %--For HLC (true material properties)
+% % mp.dm8.VtoHavg = 1e-9; %--gain of DM8 (meters/Volt)
+% % mp.dm8.Vmin = min(mp.t_metal_nm_vec); % minimum thickness of FPM metal layer (nm)
+% % mp.dm8.Vmax = max(mp.t_metal_nm_vec); % maximum thickness (from one actuator, not of the facesheet) of FPM metal layer (nm)
 
 
 %--DM8 Option 1: Set as same basis set (DM actuators) as DM9. BE CAREFUL ABOUT OVERWRITING VALUES INADVERTENTLY!!!!!!!!!!!
@@ -114,6 +114,7 @@ dm8Vmax = mp.dm8.Vmax;
 dm8v0coef = mp.dm8.V0coef; %--Starting value. Save as temporary value to avoid overwriting
 dm8VtoHavg = mp.dm8.VtoHavg; %--Starting value. Save as temporary value to avoid overwriting
 dm8actSens = mp.dm8.act_sens;
+dm8weight = mp.dm8.weight;
 dm8maxAbsdV = mp.dm8.maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
 mp.dm8 = mp.dm9; %--DANGER: OVERWRITING ANY PREVIOUS mp.dm8 DATA!!! -----------------------------------------------!!!!!!!!!!!!!!!!!!!!
 mp.dm8 = rmfield(mp.dm8,'V');
@@ -122,6 +123,7 @@ mp.dm8.VtoHavg = dm8VtoHavg;
 mp.dm8.Vmin = dm8Vmin;
 mp.dm8.Vmax = dm8Vmax;
 mp.dm8.act_sens = dm8actSens;
+mp.dm8.weight = dm8weight;
 mp.dm8.maxAbsdV = dm8maxAbsdV;%--Starting value. Save as temporary value to avoid overwriting
 fprintf('%d actuators in DM8.\n',mp.dm8.NactTotal);
 % mp.dm8.ABfac = 1;%1/5; %--Gain factor between inner and outer FPM regions
