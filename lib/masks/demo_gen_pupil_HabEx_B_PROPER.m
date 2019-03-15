@@ -17,8 +17,13 @@
 %-------------------
 %--FOR DEBUGGING ONLY
 clear;
-addpath ~/Repos/FALCO/lib/PROPER/
-addpath ~/Repos/FALCO/lib/utils/
+
+%%--Add to the MATLAB Path
+mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
+addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+
 inputs.Nbeam = 1000;
 inputs.wGap = 25e-3; % (meters)
 inputs.centering = 'pixel';

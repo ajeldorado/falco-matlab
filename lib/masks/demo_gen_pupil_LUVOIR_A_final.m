@@ -33,8 +33,8 @@ inputs.magfacD = 1;
 inputs.wStrut = 1/100;
 
 
-pupil = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
+pupil = falco_gen_pupil_LUVOIR_A_final(inputs);
 
-figure(2); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',20);
+figure(2); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',20); colorbar;
 
 figure(3); imagesc(pupil(2:end,2:end)-fliplr(pupil(2:end,2:end))); axis xy equal tight; title('Symmetry Check: Differencing','Fontsize',20); colorbar

@@ -4,11 +4,16 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 clear; 
-addpath('segMirrorFunctions');
+%%--Add to the MATLAB Path
+mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
+addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+% addpath('segMirrorFunctions');
 
 %% Amplitude only (Keck pupil)
 
-apDia = 500;
+apDia = 1000;
 input.Nbeam = apDia; % number of points across the pupil diameter
 input.wGap = 25.4/10918*apDia/2; % samples
 input.numRings = 3;% Number of rings in hexagonally segmented mirror 
@@ -19,10 +24,10 @@ input.Nstrut = 6;% Number of struts
 input.angStrut = [0 60 120 180 240 300];%Angles of the struts (deg)
 input.wStrut = 25.4/10949; % Width of the struts (fraction of pupil diam.)
 
-PUPIL = gen_pupil_customHex( input );
+PUPIL = falco_gen_pupil_customHex( input );
 
 figure(1);
-imagesc(PUPIL);
+imagesc((PUPIL));
 axis image;
 set(gca,'ydir','normal');
 
@@ -36,7 +41,7 @@ input.pistons = piston_std.*randn(1,numSegments);% Vector of pistons per segment
 input.tiltxs = tilt_std*randn(1,numSegments); % Vector of x-tilts per segment (waves/apDia)
 input.tiltys = tilt_std*randn(1,numSegments);% Vector of y-tilts per segment (waves/apDia)
 
-PUPIL = gen_pupil_customHex( input );
+PUPIL = falco_gen_pupil_customHex( input );
 
 figure(2);
 subplot(1,2,1);
@@ -68,7 +73,7 @@ input.tiltys = tilt_std*randn(1,numSegments);% Vector of y-tilts per segment (wa
 
 numSegments = hexSegMirror_numSegments( input.numRings );
 
-PUPIL = gen_pupil_customHex( input );
+PUPIL = falco_gen_pupil_customHex( input );
 
 figure(3);
 subplot(1,2,1);

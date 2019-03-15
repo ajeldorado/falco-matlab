@@ -53,12 +53,12 @@ function Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval)
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
 
-if(flagEval) %--Higher resolution at final focal plane for computing stats
+if(flagEval) %--Higher resolution at final focal plane for computing stats such as throughput
     dxi = mp.Fend.eval.dxi;
     Nxi = mp.Fend.eval.Nxi;
     deta = mp.Fend.eval.deta;
     Neta = mp.Fend.eval.Neta; 
-else
+else %--Otherwise use the detector resolution
     dxi = mp.Fend.dxi;
     Nxi = mp.Fend.Nxi;
     deta = mp.Fend.deta;
