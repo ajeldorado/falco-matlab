@@ -24,7 +24,7 @@ for index = 0:5
 end
 input.missingSegments = missingSegments;
 
-PUPIL = gen_pupil_customHex( input );
+PUPIL = falco_gen_pupil_customHex( input );
 
 %%
 
