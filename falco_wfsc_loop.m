@@ -218,11 +218,11 @@ for Itr=1:mp.Nitr
         if(any(mp.dm_ind==8)); mp.dm8.act_ele = 1:mp.dm8.NactTotal; end
         if(any(mp.dm_ind==9)); mp.dm9.act_ele = 1:mp.dm9.NactTotal; end
         %--Update the number of elements used per DM
-        if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); end
-        if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); end
-        if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); end
-        if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); end
-        if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); end
+        if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
+        if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
+        if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); else; mp.dm5.Nele = 0; end
+        if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); else; mp.dm8.Nele = 0; end
+        if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); else; mp.dm9.Nele = 0; end
     end
 
     %% Compute the control Jacobians for each DM

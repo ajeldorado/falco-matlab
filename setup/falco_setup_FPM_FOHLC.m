@@ -73,11 +73,6 @@ for ii=1:mp.dm9.NactTotal
         mp.F3.RinA_inds = [mp.F3.RinA_inds; ii];
     else %--Get the indices for the actuators between radii mp.F3.RinA and mp.F3.Rin
         mp.F3.RinAB_inds = [mp.F3.RinAB_inds; ii];
-        
-        %--Zero out FPM actuators beyond the inner spot (mp.F3.Rin)
-        mp.dm9.inf_datacube(:,:,ii) = 0*mp.dm9.inf_datacube(:,:,ii);
-        mp.dm9.compact.inf_datacube(:,:,ii) = zeros(size(mp.dm9.compact.inf_datacube(:,:,ii)));
-        
     end
 end
 fprintf('%d actuators in DM9.\n',mp.dm9.NactTotal);
@@ -205,6 +200,16 @@ if(isfield(mp.dm8,'V')==false); mp.dm8.V = zeros(mp.dm8.NactTotal,1); mp.dm8.V(m
 %         mp.dm9.compact.inf_datacube(:,:,iact) = DM8windowCompact(x_box_ind,y_box_ind).*mp.dm9.compact.inf_datacube(:,:,iact);
 %     end
 % end
+
+% %--Zero out parts of DM9 actuators that go outside the nickel disk. Also apply the grayscale edge.
+for ii=1:mp.dm9.NactTotal
+    if(r_cent_lam0D(ii) > mp.F3.RinA-mp.dm9.FPMbuffer)
+        %--Zero out FPM actuators beyond the inner spot (mp.F3.Rin)
+        mp.dm9.inf_datacube(:,:,ii) = 0*mp.dm9.inf_datacube(:,:,ii);
+        mp.dm9.compact.inf_datacube(:,:,ii) = zeros(size(mp.dm9.compact.inf_datacube(:,:,ii)));
+    end
+end
+fprintf('%d actuators in DM9.\n',mp.dm9.NactTotal);
 
 
 
