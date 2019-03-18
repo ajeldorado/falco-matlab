@@ -73,6 +73,11 @@ for ii=1:mp.dm9.NactTotal
         mp.F3.RinA_inds = [mp.F3.RinA_inds; ii];
     else %--Get the indices for the actuators between radii mp.F3.RinA and mp.F3.Rin
         mp.F3.RinAB_inds = [mp.F3.RinAB_inds; ii];
+        
+        %--Zero out FPM actuators beyond the inner spot (mp.F3.Rin)
+        mp.dm9.inf_datacube(:,:,ii) = 0*mp.dm9.inf_datacube(:,:,ii);
+        mp.dm9.compact.inf_datacube(:,:,ii) = zeros(size(mp.dm9.compact.inf_datacube(:,:,ii)));
+        
     end
 end
 fprintf('%d actuators in DM9.\n',mp.dm9.NactTotal);
