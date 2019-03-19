@@ -56,13 +56,13 @@ data/material/**
 !data/ws/placeholder.txt
 !data/ws_inprogress/placeholder.txt
 #--Don't sync large-size mask image formats
-masks/**/*.fits
+lib/masks/**/*.fits
 **/*.bmp
-masks/**/*.tiff
-masks/**/*.tif
-masks/**/*.jpg
-masks/**/*.jpeg
-
+lib/masks/**/*.tiff
+lib/masks/**/*.tif
+lib/masks/**/*.jpg
+lib/masks/**/*.jpeg
+lib/masks/**/*.mat
 
 #--Folder of content not to sync
 DoNotPush/**

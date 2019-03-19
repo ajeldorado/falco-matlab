@@ -28,9 +28,10 @@ switch lower(mp.coro)
         
 
         
-        switch mp.SPname
-            
-            case '20170714'
+        switch upper(mp.SPname)
+            case{'SPC20190130','SPC-20190130','20190130'}
+                
+            case{'SPC20170714','SPC-20170714','20170714'}
                 load('WFIRST_CGI_apod_SPC_20170714.mat','SP'); %--Contains the 1001x1001 matrix named "SP"
                 temp = zeros(ceil_even(length(SP)));
                 temp(2:end,2:end) = SP;
@@ -61,36 +62,12 @@ switch lower(mp.coro)
         end
         
         mp.P3.full.Narr= length(mp.P3.full.mask);
-%         %%
-%         fac = 1;%15/15.022; %.9985;
-%         mp.P3.full.mask = falco_gen_multi_ring_SP(fac*mp.rEdgesLeft,fac*mp.rEdgesRight,mp.P2.full.dx,mp.P2.D,mp.centering);
-%         mp.P3.full.Narr= length(mp.P3.full.mask);
-%         A1 = mp.P3.full.mask; A1pad = padOrCropEven(A1,1000); 
-%         A2 = fitsread('~/Downloads/out_RSPLC1D_A_maxTrPH_2848Dpup9960_33WA228_38LS83_10FPres5_BW10N11_c100_Nring10_2D_N1000even_sizedForFull.fits');
-%         figure; imagesc(A2-A1pad); colorbar;
-%         %%
-%         keyboard
-        %mp.P3.compact.Nbeam = mp.P1.compact.Narr;  %--Number of pixels across the array containing the SP pupil in the compact model  
-
         mp.P3.full.dx = mp.P2.full.dx;
         mp.P3.compact.dx = mp.P2.compact.dx;
         mp.P3.compact.Narr = length(mp.P3.compact.mask);
 
         
-%         %--Downsample the SP
-%         %--Use the same values as for the regular input pupil. 
-%         SPpad = padOrCropEven(mp.P3.full.mask,mp.P1.full.Narr); %--Need to pad the SP to get the grid sizes to match the input pupil
-%         SPcompact = interp2(mp.P2.full.XsDL,mp.P2.full.YsDL,SPpad,mp.P2.compact.XsDL,mp.P2.compact.YsDL,'cubic',0);
-%         
-%         %--Crop down the low-resolution SP to get rid of extra zero padding. Speeds up the compact model.
-%         SPsum = sum(SPcompact(:));
-%         SPdiff = 0; counter = 2;
-%         while( abs(SPdiff) <= 1e-7)
-%             mp.P3.compact.Narr = length(SPcompact)-counter; %--Number of points across the cropped-down Lyot stop
-%             SPdiff = SPsum - sum(sum( padOrCropEven(SPcompact, mp.P3.compact.Narr-2) )); %--Subtract an extra 2 to negate the extra step that overshoots.
-%             counter = counter + 2;
-%         end
-%         mp.P3.compact.mask = padOrCropEven(SPcompact,mp.P3.compact.Narr); %--The cropped-down Lyot stop for the compact model       
+     
 
     case{'vortex','vc','avc'}
         
@@ -110,22 +87,7 @@ switch lower(mp.coro)
 
                 mp.P3.full.mask= falco_gen_pupil_Simple( inputs );
 
-% <<<<<<< thin_film
-% %             mp.P3.full.mask = falco_gen_multi_ring_SP([0.20, 0.55]/2, [0.50, 0.95]/2, mp.P2.full.dx, mp.P2.D, mp.centering);
-% %             mp.P3.full.mask = falco_gen_multi_ring_SP(mp.P3.IDvec, mp.P3.ODvec, mp.P2.full.dx, mp.P2.D, mp.centering);
-%             mp.P3.full.mask = padOrCropEven(mp.P3.full.mask, mp.P3.full.Narr);
-            
-            
-%             % Compact aperture stop 
-%             inputs.Nbeam = mp.P1.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
-%             inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));% 
-            
-%             mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
-% % %            mp.P3.compact.dx = mp.P1.compact.dx;
-%             mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
-% %             mp.P3.compact.mask = falco_gen_multi_ring_SP(mp.P3.IDvec,mp.P3.ODvec, mp.P2.compact.dx, mp.P2.D, mp.centering);
-%             mp.P3.compact.mask = padOrCropEven(mp.P3.compact.mask, mp.P3.compact.Narr);
-% =======
+
                 % Compact aperture stop 
                 inputs.Nbeam = mp.P1.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
                 inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));% 
@@ -140,8 +102,7 @@ switch lower(mp.coro)
                 mp.P3.compact.Narr = mp.P3.full.Narr;
                 mp.P3.compact.mask = mp.P3.full.mask;
             end
-            
-% >>>>>>> master
+
         else
             disp('Using vortex without apodizer or aperture stop.')
         end

@@ -355,7 +355,19 @@ switch mp.centering
 end
 [XS,YS] = meshgrid(xs);
 RS = sqrt(XS.^2 + YS.^2);
-rms_ele = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
+rmsSurf_ele = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
+
+%--Compute the RMS stroke
+if(any(mp.dm_ind==1))
+    Nact = mp.dm1.Nact;
+    pitch = mp.dm1.dm_spacing;
+    dx_dm = pitch/mp.P2.D; %--Normalized dx [Units of pupil diameters]
+    xs = ( -(Nact-1)/2:(Nact-1)/2 )*dx_dm;
+    [XS,YS] = meshgrid(xs);
+    RS = sqrt(XS.^2 + YS.^2);
+    rmsStroke1_ele = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
+end
+
 
 % out.dm1.Spv = max(DM1surf(:))-min(DM1surf(:));
 % out.dm2.Spv = max(DM2surf(:))-min(DM2surf(:));
@@ -392,12 +404,12 @@ end
 %--Calculate and report updated RMS DM surfaces.
 if(any(mp.dm_ind==1))
     out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
-    out.dm1.Srms(Itr) = falco_rms(DM1surf(rms_ele));
+    out.dm1.Srms(Itr) = falco_rms(DM1surf(rmsSurf_ele));
     fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
 end
 if(any(mp.dm_ind==2))
     out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
-    out.dm2.Srms(Itr) = falco_rms(DM2surf(rms_ele));
+    out.dm2.Srms(Itr) = falco_rms(DM2surf(rmsSurf_ele));
     fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
 end
 
@@ -706,6 +718,10 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
 
         case{'gridsearchefc'}  %--Empirical grid search of EFC. Scaling factor for DM commands too.
             [dDM,cvar] = falco_ctrl_grid_search_EFC(mp,cvar);
+            
+            
+        case{'plannedefccon'} %--Constrained-EFC regularization is scheduled ahead of time
+            [dDM,cvar] = falco_ctrl_planned_EFCcon(mp,cvar);
             
         case{'sm-cvx'} %--Constrained & bounded stroke minimization using CVX. The quadratic cost function is solved directly CVX.
             cvar.dummy = 1;

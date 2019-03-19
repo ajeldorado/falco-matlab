@@ -14,8 +14,9 @@
 function mp = falco_config_gen_FPM_SPLC(mp)
 
         switch mp.SPname
-            case '20170714' %--Bowtie LS
-                %--Generate the FPM amplitude for the full model
+            case{'SPC20190130','SPC-20190130','20190130'}
+                
+            case{'SPC20170714','SPC-20170714','20170714'}  %--Generate the FPM amplitude for the full model
                 inputs.pixresFPM = mp.F3.full.res; %--pixels per lambda_c/D
                 inputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
                 inputs.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
@@ -47,14 +48,17 @@ function mp = falco_config_gen_FPM_SPLC(mp)
         mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
         mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);   
         
-        %--Number of points across the FPM in the compact model
-        switch mp.centering
-            case 'pixel'
-                mp.F3.compact.Nxi = ceil_even(2*(mp.F3.Rout*mp.F3.compact.res + 0.5));
-            case 'interpixel'
-                mp.F3.compact.Nxi = ceil_even(2*mp.F3.Rout*mp.F3.compact.res);
-        end
-        mp.F3.compact.Neta = mp.F3.compact.Nxi;
+        mp.F3.compact.Nxi = size(mp.F3.compact.mask.amp,2);
+        mp.F3.compact.Neta= size(mp.F3.compact.mask.amp,1);  
+        
+%         %--Number of points across the FPM in the compact model
+%         switch mp.centering
+%             case 'pixel'
+%                 mp.F3.compact.Nxi = ceil_even(2*(mp.F3.Rout*mp.F3.compact.res + 0.5));
+%             case 'interpixel'
+%                 mp.F3.compact.Nxi = ceil_even(2*mp.F3.Rout*mp.F3.compact.res);
+%         end
+%         mp.F3.compact.Neta = mp.F3.compact.Nxi;
         
 %         %--Coordinates for the FPMs in the full and compact models
 %         if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi,2)==1  )
