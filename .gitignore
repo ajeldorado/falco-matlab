@@ -10,7 +10,7 @@
 #--Temporary MATLAB files
 **/*.asv
 **/*.m~
-
+*.m~
 
 #--Don't sync any CVX files. Each user should download from cvxr.com
 lib/cvx/**
@@ -91,7 +91,7 @@ config/**
 
 #--Sync only example tesing files
 testing/**
-!config/EXAMPLE_*
+!testing/EXAMPLE_*
 
 #--Documentation intermediate files
 docs/**
