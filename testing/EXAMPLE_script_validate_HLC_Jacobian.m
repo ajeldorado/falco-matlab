@@ -181,7 +181,7 @@ clear jacStruct  %--Save RAM
 
 %% Part 6: Compute the Jacobian using model_compact and differencing
 
-Vfrac = 1e-4; %--Want delta voltage to be tiny for DM1 and DM2 to stay linear
+Vfrac = 1e-6; %--Want delta voltage to be tiny for DM1 and DM2 to stay linear
 
 %--Re-initialize the Jacobian arrays to full size
 if(any(mp.dm_ind==1)); G1 = zeros(mp.Fend.corr.Npix,mp.dm1.NactTotal,mp.jac.Nmode); end % control Jacobian for DM1
@@ -222,13 +222,20 @@ for tsi=1:mp.jac.Nmode
     if(any(mp.dm_ind==1))
         whichDM = 1;
         parfor iact=1:mp.dm1.NactTotal
-            G1(:,iact,tsi) = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein); %, mp.FPM.mask)
+            G1(:,iact,tsi) = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein); 
         end
     end
     fprintf('done. Time = %.1f sec.\n',toc)
    
     %--DM2
-
+    fprintf('Starting Jacobian calculation with compact model for DM2...'); tic
+    if(any(mp.dm_ind==2))
+        whichDM = 2;
+        parfor iact=1:mp.dm1.NactTotal
+            G2(:,iact,tsi) = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein);
+        end
+    end
+    fprintf('done. Time = %.1f sec.\n',toc)
 
     %--DM8
     fprintf('Starting Jacobian calculation with compact model for DM8...'); tic
@@ -236,7 +243,7 @@ for tsi=1:mp.jac.Nmode
         whichDM = 8;
         Vfrac = 1;
         parfor iact=1:mp.dm8.NactTotal
-            G8(:,iact,tsi) = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein); %, mp.FPM.mask)
+            G8(:,iact,tsi) = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein);
         end
     end
     fprintf('done. Time = %.1f sec.\n',toc)
@@ -248,7 +255,7 @@ for tsi=1:mp.jac.Nmode
         whichDM = 9;
         Vfrac = 10;
         parfor iact=1:mp.dm9.NactTotal
-            G9(:,iact,tsi) = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein); %, mp.FPM.mask)
+            G9(:,iact,tsi) = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein);
         end
     end
     fprintf('done. Time = %.1f sec.\n',toc)
@@ -256,6 +263,7 @@ for tsi=1:mp.jac.Nmode
 end
 
 if(any(mp.dm_ind==1));  G1_compact = G1; clear G1;  end
+if(any(mp.dm_ind==2));  G2_compact = G2; clear G2;  end
 if(any(mp.dm_ind==8));  G8_compact = G8; clear G8;  end
 if(any(mp.dm_ind==9));  G9_compact = G9; clear G9;  end
 
@@ -269,7 +277,7 @@ figure(4); imagesc(abs(G1_jac-G1_compact)/max(abs(G1_compact(:)))); colorbar; se
 % figure(5); imagesc(abs(G1_jac-G1_compact)./abs(G1_compact),[0 1]); colorbar; set(gca,'Fontsize',20);
 
 %--Compare Jacobian for just one actuator
-whichAct = 1024;
+whichAct = 685;
 
 Etemp = model_compact(mp, modvar);
 Etemp1 = 0*Etemp;
@@ -297,7 +305,35 @@ figure(19); imagesc(angle(Etemp2)); axis xy equal tight; colorbar; set(gca,'Font
 % mp.dm8.V = DM8V0;
 % mp.dm9.V = DM9V0;
 
+%% DM2 Comparison, Compact Model
+%--Compare overall Jacobian
+figure(101); imagesc(abs(G2_jac)); colorbar; set(gca,'Fontsize',20);
+figure(102); imagesc(abs(G2_compact)); colorbar; set(gca,'Fontsize',20);
+figure(103); imagesc(abs(G2_jac-G2_compact)); colorbar; set(gca,'Fontsize',20);
+% figure(104); imagesc(abs(G2_jac-G2_compact)/max(abs(G2_compact(:)))); colorbar; set(gca,'Fontsize',20); %--Normalized error
 
+%--Compare Jacobian for just one actuator
+whichAct = 685;
+
+Etemp = model_compact(mp, modvar);
+Etemp1 = 0*Etemp;
+Etemp2 = 0*Etemp;
+Etemp1(mp.Fend.corr.inds) = G2_jac(:,whichAct,1);
+Etemp2(mp.Fend.corr.inds) = G2_compact(:,whichAct,1);
+
+
+figure(111); imagesc(abs(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
+figure(112); imagesc(abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
+figure(113); imagesc(abs(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
+figure(114); imagesc(abs(Etemp1-Etemp2)./abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20); %--Normalized error
+
+% %--Reset the voltage maps to the starting point.
+% mp.dm1.V = DM1V0;
+% mp.dm2.V = DM2V0;
+% mp.dm8.V = DM8V0;
+% mp.dm9.V = DM9V0;
+%%
+return
 %% DM8 Comparison, Compact Model
 
 jac2D = zeros(sqrt(mp.dm8.NactTotal));

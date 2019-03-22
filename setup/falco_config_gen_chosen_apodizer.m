@@ -24,9 +24,10 @@ switch lower(mp.coro)
          disp('Using Lyot coronagraph without apodizer or aperture stop.')
 	case{'roddier'}
          disp('Using Roddier coronagraph without apodizer or aperture stop.')
+ case{'flc'}
+     disp('Using spatially-filtered Lyot coronagraph without apodizer or aperture stop.')
     case{'splc','sphlc'}
         
-
         
         switch upper(mp.SPname)
             case{'SPC20190130','SPC-20190130','20190130'}

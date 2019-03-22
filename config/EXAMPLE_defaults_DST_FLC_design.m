@@ -183,7 +183,7 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
 mp.layout = 'Fourier';  %--Which optical layout to use
-mp.coro = 'LC';
+mp.coro = 'FLC';
 mp.flagApod = false;    %--Whether to use an apodizer or not
 
 %--Final Focal Plane Properties
@@ -262,7 +262,7 @@ mp.P4.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
 
 %--FPM size
 mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0/D]
-mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
+mp.F3.Rout = 30;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 mp.FPMampFac = 10^(-3.7); % amplitude transmission of the FPM
 

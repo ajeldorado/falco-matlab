@@ -131,83 +131,6 @@ if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lam
 Edm1 = Edm1WFE.*DM1stop.*DM5apod.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 
-
-
-%--DM5---------------------------------------------------------
-if(whichDM==5) 
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm5.Nele);
-    
-    %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
-    Nbox5 = mp.dm5.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
-    NboxPad1AS = mp.dm5.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
-    mp.dm5.compact.xy_box_lowerLeft_AS = mp.dm5.compact.xy_box_lowerLeft - (mp.dm5.compact.NboxAS-mp.dm5.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
-
-    if(any(mp.dm_ind==2)); DM2surf = padOrCropEven(DM2surf,mp.dm5.compact.NdmPad);  else; DM2surf = zeros(mp.dm5.compact.NdmPad); end 
-    if(mp.flagDM2stop); DM2stop = padOrCropEven(DM2stop,mp.dm5.compact.NdmPad); else; DM2stop = ones(mp.dm5.compact.NdmPad); end
-    apodRot180 = padOrCropEven( apodRot180, mp.dm5.compact.NdmPad);
-
-    Edm1pad = padOrCropEven(Edm1,mp.dm5.compact.NdmPad); %--Pad or crop for expected sub-array indexing
-    Edm2WFEpad = padOrCropEven(Edm2WFE,mp.dm5.compact.NdmPad); %--Pad or crop for expected sub-array indexing
-
-    %--Propagate each actuator from DM1 through the optical system
-    Gindex = 1; % initialize index counter
-    for iact=mp.dm5.act_ele(:).'  %--MUST BE A COLUMN VECTOR `
-        if( any(any(mp.dm5.compact.inf_datacube(:,:,iact))) )
-            %--x- and y- coordinates of the padded influence function in the full padded pupil
-            x_box_AS_ind = mp.dm5.compact.xy_box_lowerLeft_AS(1,iact):mp.dm5.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
-            y_box_AS_ind = mp.dm5.compact.xy_box_lowerLeft_AS(2,iact):mp.dm5.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
-
-            %--Propagate from DM1 to DM2, and then back to P2
-            dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm5.VtoH(iact)*mp.dm5.compact.inf_datacube(:,:,iact),NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
-            dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2); % forward propagate to DM2 and apply DM2 E-field
-            dEP2box = propcustom_PTP(dEbox.*Edm2WFEpad(y_box_AS_ind,x_box_AS_ind).*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); % back-propagate to DM1
-            dEP2box = padOrCropEven(dEP2box,Nbox5); %--Crop down from the array size that is a power of 2 to make the MFT faster
-
-            %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
-            x_box_ind = mp.dm5.compact.xy_box_lowerLeft(1,iact):mp.dm5.compact.xy_box_lowerLeft(1,iact)+Nbox5-1; % x-indices in pupil arrays for the box
-            y_box_ind = mp.dm5.compact.xy_box_lowerLeft(2,iact):mp.dm5.compact.xy_box_lowerLeft(2,iact)+Nbox5-1; % y-indices in pupil arrays for the box
-            x_box = mp.dm5.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
-            y_box = mp.dm5.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box
-
-            %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
-            % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
-            % Second, negate the coordinates of the box used.
-            dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
-            x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
-            y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
-
-            %--Matrices for the MFT from the pupil P3 to the focal plane mask
-            rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
-            rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
-
-            %--MFT from pupil P3 to FPM
-            EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
-            EF3 = (transOuterFPM-FPM).*EF3; %--Propagate through (1-complex FPM) for Babinet's principle
-
-            %--DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
-            EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  %--Subtrahend term for the Lyot plane E-field    
-
-            %--Full Lyot plane pupil (for Babinet)
-            EP4noFPM = zeros(mp.dm5.compact.NdmPad);
-            if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
-            EP4noFPM(y_box_ind,x_box_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
-            EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
-            EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
-
-            % DFT to camera
-            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend) ;end
-
-            Gzdl(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
-        end
-        Gindex = Gindex+1;
-    end
-
-end   
-
-
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
     Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
@@ -228,26 +151,29 @@ if(whichDM==1)
     Gindex = 1; % initialize index counter
     for iact=mp.dm1.act_ele(:).'  %--MUST BE A COLUMN VECTOR `
         if( any(any(mp.dm1.compact.inf_datacube(:,:,iact))) )
-            %--x- and y- coordinates of the padded influence function in the full padded pupil
+            %--x- and y- coordinates' indices of the padded influence function in the full padded pupil
             x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1,iact):mp.dm1.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
             y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2,iact):mp.dm1.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
-
+            %--x- and y- coordinates of the padded influence function in the full padded pupil
+            x_box = mp.dm1.compact.x_pupPad(x_box_AS_ind).'; % full pupil x-coordinates of the box 
+            y_box = mp.dm1.compact.y_pupPad(y_box_AS_ind); % full pupil y-coordinates of the box
+            
             %--Propagate from DM1 to DM2, and then back to P2
             dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact),NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
             dEbox = propcustom_PTP_inf_func(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2,mp.dm1.dm_spacing,mp.propMethodPTP); % forward propagate to DM2 and apply DM2 E-field
             dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind,x_box_AS_ind).*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm1.dm_spacing,mp.propMethodPTP ); % back-propagate to DM1
-            dEP2box = padOrCropEven(dEP2box,Nbox1); %--Crop down from the array size that is a power of 2 to make the MFT faster
-
-            %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
-            x_box_ind = mp.dm1.compact.xy_box_lowerLeft(1,iact):mp.dm1.compact.xy_box_lowerLeft(1,iact)+Nbox1-1; % x-indices in pupil arrays for the box
-            y_box_ind = mp.dm1.compact.xy_box_lowerLeft(2,iact):mp.dm1.compact.xy_box_lowerLeft(2,iact)+Nbox1-1; % y-indices in pupil arrays for the box
-            x_box = mp.dm1.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
-            y_box = mp.dm1.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box
+            
+%             dEP2box = padOrCropEven(dEP2box,Nbox1); %--Crop down from the array size that is a power of 2 to make the MFT faster
+%             %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
+%             x_box_ind = mp.dm1.compact.xy_box_lowerLeft(1,iact):mp.dm1.compact.xy_box_lowerLeft(1,iact)+Nbox1-1; % x-indices in pupil arrays for the box
+%             y_box_ind = mp.dm1.compact.xy_box_lowerLeft(2,iact):mp.dm1.compact.xy_box_lowerLeft(2,iact)+Nbox1-1; % y-indices in pupil arrays for the box
+%             x_box = mp.dm1.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
+%             y_box = mp.dm1.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
             % Second, negate the coordinates of the box used.
-            dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
             dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
@@ -267,11 +193,11 @@ if(whichDM==1)
             %--Full Lyot plane pupil (for Babinet)
             EP4noFPM = zeros(mp.dm1.compact.NdmPad);
             if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
-            EP4noFPM(y_box_ind,x_box_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
+            EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
             EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
 
-            % DFT to camera
+            %--DFT to detector
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
 
@@ -304,24 +230,19 @@ if(whichDM==2)
     Gindex = 1; % Initialize index counter
     for iact=mp.dm2.act_ele(:).'  %--Only compute for acutators specified %--MUST BE A COLUMN VECTOR
         if( any(any(mp.dm2.compact.inf_datacube(:,:,iact))) )
-            %--x- and y- coordinates of the padded influence function in the full padded pupil
+            %--x- and y- coordinates and their indices of the padded influence function in the full padded pupil
             x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1,iact):mp.dm2.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
             y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2,iact):mp.dm2.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
-
+            x_box = mp.dm2.compact.x_pupPad(x_box_AS_ind).'; % full pupil x-coordinates of the box 
+            y_box = mp.dm2.compact.y_pupPad(y_box_AS_ind); % full pupil y-coordinates of the box 
+            
             dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
             dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad2AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm2.dm_spacing,mp.propMethodPTP); % back-propagate to pupil P2
-            dEP2box = padOrCropEven(dEP2box,Nbox2); %--Crop down from the array size that is a power of 2 to make the MFT faster
-
-            %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
-            x_box_ind = mp.dm2.compact.xy_box_lowerLeft(1,iact):mp.dm2.compact.xy_box_lowerLeft(1,iact)+Nbox2-1; % x-indices in pupil arrays for the box
-            y_box_ind = mp.dm2.compact.xy_box_lowerLeft(2,iact):mp.dm2.compact.xy_box_lowerLeft(2,iact)+Nbox2-1; % y-indices in pupil arrays for the box
-            x_box = mp.dm2.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
-            y_box = mp.dm2.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box 
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
             % Second, negate the coordinates of the box used.
-            dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
             dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
@@ -332,7 +253,6 @@ if(whichDM==2)
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
-            dEP2box = padOrCropEven(dEP2box,Nbox2); %--Crop back down to make the MFT faster
             EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
             EF3 = (transOuterFPM-FPM).*EF3; %--Propagate through ( 1 - (complex FPM) ) for Babinet's principle
 
@@ -341,7 +261,7 @@ if(whichDM==2)
 
             EP4noFPM = zeros(mp.dm2.compact.NdmPad);
             if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
-            EP4noFPM(y_box_ind,x_box_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
+            EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
             %EP4noFPM = (1/1j)^2*rot90(EP4noFPM,2); if( strcmpi(mp.centering,'pixel') ); EP4noFPM = circshift(EP4noFPM,[1 1]); end %--Re-image to next pupil plane. (1j)^2 comes from the coefficients of the 2 skipped MFTs
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
             EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
@@ -357,7 +277,6 @@ if(whichDM==2)
     end
 
 end
-
 
 
 %--DM8--------------------------------------------------------- 
@@ -448,8 +367,6 @@ if(whichDM==8)
 end %%%%%%%%%%%%%%%%%%%
 
 
-
-
 %--DM9--------------------------------------------------------- 
 if(whichDM==9)
     Gzdl = zeros(mp.Fend.corr.Npix,mp.dm9.Nele);
@@ -522,7 +439,7 @@ if(whichDM==9)
                 end
             end            
 
-%             %--Interpolate (MORE ACCURATE, BUT MUCH SLOWER THAN LOOK-UP TABLE)
+%             %--Interpolate (SLIGHTLY MORE ACCURATE, BUT MUCH SLOWER THAN LOOK-UP TABLE)
 %             DM8surfCrop = mp.dm8.surf(eta_box_ind,xi_box_ind);
 %             DM9surfCrop = mp.dm9.surf(eta_box_ind,xi_box_ind);
 %             FPMpoked = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission

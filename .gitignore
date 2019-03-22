@@ -79,6 +79,7 @@ debugging/**
 zOUTDATED/**
 zDEPRECATED/**
 zDEBUGGING/**
+zEXTRA/**
 
 #--Sync only example/template versions of main script files
 main/**
