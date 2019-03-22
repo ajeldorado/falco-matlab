@@ -62,6 +62,11 @@ if(isfield(mp,'dm8'))
     if(isfield(mp.dm9,'V')); mp.DM9V0 = mp.dm9.V; end
 end
 
+%% Apodizer name default
+if(isfield(mp,'SPname')==false)
+   mp.SPname = 'none';
+end
+
 %% Useful factor
 mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %--Conversion factor: milliarcseconds (mas) to lambda0/D
 
@@ -221,7 +226,7 @@ end
 switch upper(mp.coro)
     case {'LC','APLC'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
         mp = falco_config_gen_FPM_LC(mp);
-    case{'SPLC'}
+    case{'SPLC','FLC'}
         mp = falco_config_gen_FPM_SPLC(mp);
     case{'RODDIER'}
         mp = falco_config_gen_FPM_Roddier(mp);  

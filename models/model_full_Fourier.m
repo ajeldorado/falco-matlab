@@ -281,7 +281,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Apply the Lyot stop
+EP40 = EP4;
 EP4 = mp.P4.full.croppedMask.*EP4; %padOrCropEven(EP4,mp.P4.full.Narr);
+
 
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend.
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta);
@@ -295,6 +297,9 @@ end
 
 if(mp.useGPU); Eout = gather(Eout); end
 
+if(isfield(mp,'flagElyot'))
+    Eout = EP40;
+end
 
 end %--END OF FUNCTION
 

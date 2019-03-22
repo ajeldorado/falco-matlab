@@ -72,14 +72,25 @@ if(mp.flagPlot)
             xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
             ylabel(ch,'amplitude','FontSize',16,'Interpreter','LaTeX');
-            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')    
+            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')  
+        case{'SPLC','FLC'}
+            h_amp = subplot(2,3,3);
+             ax3=get(h_amp,'position'); % Save the position as ax
+            set(h_amp,'position',ax3); % Manually setting this holds the position with colorbar 
+            subplot(2,3,3); 
+            imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.F3.compact.mask.amp); axis xy equal tight; colormap gray; ch = colorbar;
+            title('FPM Amplitude','Fontsize',16,'Fontweight','Bold');
+            xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+            ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+            ylabel(ch,'amplitude','FontSize',16,'Interpreter','LaTeX');
+            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')      
         otherwise
             h_amp = subplot(2,3,3);
              ax3=get(h_amp,'position'); % Save the position as ax
             set(h_amp,'position',ax3); % Manually setting this holds the position with colorbar 
             subplot(2,3,3); 
             imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.F3.compact.mask.amp); axis xy equal tight; ch = colorbar;
-            title(sprintf('FPM Amplitude\n (%.2f%% ampl. transmission)',100*mp.FPMampFac),'Fontsize',16,'Fontweight','Bold');
+            title('FPM Amplitude','Fontsize',16,'Fontweight','Bold');
             xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')

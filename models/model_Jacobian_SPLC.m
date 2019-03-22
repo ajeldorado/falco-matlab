@@ -72,8 +72,13 @@ Ein = padOrCropEven(Ein,mp.compact.NdmPad);
 if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
 if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
 
-apodRot180 = padOrCropEven( rot90(mp.P3.compact.mask,2), NdmPad );
-if( strcmpi(mp.centering,'pixel') ); apodRot180 = circshift(apodRot180,[1 1]); end %--To undo center offset when pixel centered and rotating by 180 degrees.
+
+if(mp.flagApod) 
+    apodRot180 = padOrCropEven( rot90(mp.P3.compact.mask,2), NdmPad );
+    if( strcmpi(mp.centering,'pixel') ); apodRot180 = circshift(apodRot180,[1 1]); end %--To undo center offset when pixel centered and rotating by 180 degrees.
+else
+    apodRot180 = ones(NdmPad); 
+end
 
 if(any(mp.dm_ind==1)); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
 if(any(mp.dm_ind==2)); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
@@ -116,30 +121,24 @@ if(whichDM==1)
     Gindex = 1; % initialize index counter
     for iact=mp.dm1.act_ele(:).'
         if(any(any(mp.dm1.compact.inf_datacube(:,:,iact))) )  %--Only compute for acutators specified for use or for influence functions that are not zeroed out
-            %--x- and y- coordinates of the PADDED influence function in the complete, padded pupil
+            %--x- and y- coordinates and their indices of the PADDED influence function in the complete, padded pupil
             x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1,iact):mp.dm1.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
             y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2,iact):mp.dm1.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
-
+            x_box = mp.dm1.compact.x_pupPad(x_box_AS_ind).'; % full pupil x-coordinates of the box 
+            y_box = mp.dm1.compact.y_pupPad(y_box_AS_ind); % full pupil y-coordinates of the box
+            
             %--Propagate from DM1 to DM2
             dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact),NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
             dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),mp.dm1.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2); %--Forward propagate via angular spectrum to DM2
             
             %--Propagate back from DM2 to P2
             dEP2box = propcustom_PTP(dEbox.*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); %--Apply DM2 E-field and then back-propagate to pupil P2
-            dEP2box = padOrCropEven(dEP2box,Nbox1); %--Crop back down for faster MFT.
-
-            %--x- and y- coordinates of the UN-padded influence function in the complete, padded pupil
-            x_box_ind = mp.dm1.compact.xy_box_lowerLeft(1,iact):mp.dm1.compact.xy_box_lowerLeft(1,iact)+Nbox1-1; % x-indices in pupil arrays for the box
-            y_box_ind = mp.dm1.compact.xy_box_lowerLeft(2,iact):mp.dm1.compact.xy_box_lowerLeft(2,iact)+Nbox1-1; % y-indices in pupil arrays for the box
-            x_box = mp.dm1.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
-            y_box = mp.dm1.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box
 
             %--To simulate going forward to the next pupil plane (with the SP) most efficiently, 
             % 1st back-propagate the SP (by rotating 180-degrees) to the previous pupil, and then
             % 2nd negate the coordinates of the box used. 
-            dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
             dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
-%             Esp = padOrCropEven(Esp,Nbox1); %--Crop down from the array size that is a power of 2 to make the MFT faster
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 
@@ -185,27 +184,21 @@ if(whichDM==2)
     Gindex = 1; % initialize index counter
     for iact=mp.dm2.act_ele(:).'
         if(any(any(mp.dm2.compact.inf_datacube(:,:,iact))) ) 
-            %--x- and y- coordinates of the padded influence function in the full padded pupil
+            %--x- and y- coordinates and their indices of the padded influence function in the full padded pupil
             x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1,iact):mp.dm2.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
             y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2,iact):mp.dm2.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
-
+            x_box = mp.dm2.compact.x_pupPad(x_box_AS_ind).'; % full pupil x-coordinates of the box 
+            y_box = mp.dm2.compact.y_pupPad(y_box_AS_ind); % full pupil y-coordinates of the box
+            
             dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.VtoH(iact)*mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
             dEP2box = propcustom_PTP(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad2AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); %--Apply the DM2 E-field and then back-propagate to DM1
-            dEP2box = padOrCropEven(dEP2box,Nbox2);  %--Crop back down for faster MFT.
-
-            %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
-            x_box_ind = mp.dm2.compact.xy_box_lowerLeft(1,iact):mp.dm2.compact.xy_box_lowerLeft(1,iact)+Nbox2-1; % x-indices in pupil arrays for the box
-            y_box_ind = mp.dm2.compact.xy_box_lowerLeft(2,iact):mp.dm2.compact.xy_box_lowerLeft(2,iact)+Nbox2-1; % y-indices in pupil arrays for the box
-            x_box = mp.dm2.compact.x_pupPad(x_box_ind).'; % full pupil x-coordinates of the box 
-            y_box = mp.dm2.compact.y_pupPad(y_box_ind); % full pupil y-coordinates of the box
 
             %--To simulate going forward to the next pupil plane (with the SP) most efficiently, 
             % 1st back-propagate the SP (by rotating 180-degrees) to the previous pupil, and then
             % 2nd negate the coordinates of the box used. 
             apodRot180 = padOrCropEven( apodRot180, mp.dm2.compact.NdmPad);
-            dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
             dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
-%             dEP3box = padOrCropEven(dEP3box,Nbox2); %--Crop down from the array size that is a power of 2 to make the MFT faster
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 

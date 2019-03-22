@@ -53,12 +53,12 @@ function Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval)
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
 
-if(flagEval) %--Higher resolution at final focal plane for computing stats
+if(flagEval) %--Higher resolution at final focal plane for computing stats such as throughput
     dxi = mp.Fend.eval.dxi;
     Nxi = mp.Fend.eval.Nxi;
     deta = mp.Fend.eval.deta;
     Neta = mp.Fend.eval.Neta; 
-else
+else %--Otherwise use the detector resolution
     dxi = mp.Fend.dxi;
     Nxi = mp.Fend.Nxi;
     deta = mp.Fend.deta;
@@ -277,7 +277,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Apply the Lyot stop
-EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr);
+EP40 = padOrCropEven(EP4,mp.P4.compact.Narr);
+EP4 = mp.P4.compact.croppedMask.*EP40;
 
 % DFT to camera
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta,  mp.centering);
@@ -295,7 +296,9 @@ if(mp.useGPU)
     Eout = gather(Eout);
 end
 
-
+if(isfield(mp,'flagElyot'))
+    Eout = EP40;
+end
 
 end % End of entire function
 

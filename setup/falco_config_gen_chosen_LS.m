@@ -61,8 +61,27 @@ switch mp.whichPupil
         %--Make or read in Lyot stop (LS) for the 'compact' model
         mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam,mp.centering,changes);
 
+        if(isfield(mp,'LSshape'))
+            switch lower(mp.LSshape)
+                case 'bowtie'
+                    %--Define Lyot stop generator function inputs in a structure
+                    inputs.Dbeam = mp.P4.D; % meters;
+                    inputs.Nbeam = mp.P4.full.Nbeam; 
+                    inputs.ID = mp.P4.IDnorm; % (pupil diameters)
+                    inputs.OD = mp.P4.ODnorm; % (pupil diameters)
+                    inputs.ang = mp.P4.ang; % (degrees)
+                    inputs.centering = mp.centering; % 'interpixel' or 'pixel'
+
+                    %--Make bowtie Lyot stop (LS) for the 'full' model
+                    mp.P4.full.mask = falco_gen_bowtie_LS(inputs);
+
+                    %--Make bowtie Lyot stop (LS) for the 'compact' model
+                    inputs.Nbeam = mp.P4.compact.Nbeam; 
+                    mp.P4.compact.mask = falco_gen_bowtie_LS(inputs);    
+            end
+        end
         
-    case{'WFIRST_onaxis','WFIRST20180103'}
+    case{'WFIRST_onaxis'}
         
          %--Define Lyot stop generator function inputs for the 'full' optical model
         inputs.Nbeam = mp.P4.full.Nbeam;     % number of points across incoming beam  
@@ -81,9 +100,9 @@ switch mp.whichPupil
         %inputs.Narray = mp.NlyotCompact;   % number of points across output array
         mp.P4.compact.mask = falco_gen_pupil_WFIRSTcycle6_LS(inputs,'ROT180');
         
-        if(isfield(mp,'SPname'))
-            switch mp.SPname
-                case '20170714'
+        if(isfield(mp,'LSshape'))
+            switch lower(mp.LSshape)
+                case 'bowtie'
                     %--Define Lyot stop generator function inputs in a structure
                     inputs.Dbeam = mp.P4.D; % meters;
                     inputs.Nbeam = mp.P4.full.Nbeam; 
@@ -119,22 +138,6 @@ switch mp.whichPupil
         inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
         mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_5_Lyot_struts(inputs,'ROT180');
 
-%         %--Define Lyot stop generator function inputs for the 'full' optical model
-%         inputs.Nbeam = mp.P4.full.Nbeam;     % number of points across incoming beam  
-%         inputs.Dbeam = mp.P4.D; %--diameter of the beam at the mask (meters)
-%         %inputs.Narray = mp.Nlyot;   % number of points across output array
-%         inputs.ID = mp.P4.IDnorm;
-%         inputs.OD = mp.P4.ODnorm;
-%         %inputs.wStrut = mp.LS_wStrut;
-%         inputs.wStrut = 0;
-%         inputs.centering = mp.centering;
-%         %--Make or read in Lyot stop (LS) for the 'full' model
-%         mp.P4.full.mask = falco_gen_pupil_WFIRSTcycle6_LS(inputs,'ROT180');
-% 
-%         %--Make or read in Lyot stop (LS) for the 'compact' model
-%         inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
-%         %inputs.Narray = mp.NlyotCompact;   % number of points across output array
-%         mp.P4.compact.mask = falco_gen_pupil_WFIRSTcycle6_LS(inputs,'ROT180');
         
     case {'LUVOIR_B_offaxis','HabEx_B_offaxis'}
         %--Full model

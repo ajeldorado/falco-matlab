@@ -4,8 +4,12 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 clear; 
-addpath('segMirrorFunctions');
-
+% addpath('segMirrorFunctions');
+%%--Add to the MATLAB Path
+mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
+addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 apDia = 500;
 input.Nbeam = apDia/0.925; % number of points across the pupil diameter

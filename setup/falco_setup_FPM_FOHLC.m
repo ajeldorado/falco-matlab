@@ -129,7 +129,9 @@ fprintf('%d actuators in DM8.\n',mp.dm8.NactTotal);
 % mp.dm8.ABfac = 1;%1/5; %--Gain factor between inner and outer FPM regions
 mp.dm8.VtoH = mp.dm8.VtoHavg*ones(mp.dm8.NactTotal,1);%1*1e-9*ones(mp.dm9.Nact); % Gains: volts to meters in surface height;
 % mp.dm8.VtoH(mp.F3.RinAB_inds) = mp.dm8.ABfac*mp.dm8.VtoH(mp.F3.RinAB_inds);
-if(isfield(mp.dm8,'V')==false); mp.dm8.V = zeros(mp.dm8.NactTotal,1); mp.dm8.V(mp.F3.RinA_inds) = mp.dm8.V0coef; else; mp.dm8.V = DM8V0; end %--Initial DM voltages
+if(isfield(mp,'DM8V0')); mp.dm8.V = mp.DM8V0; else; mp.dm8.V = zeros(mp.dm8.NactTotal,1); mp.dm8.V(mp.F3.RinA_inds) = mp.dm8.V0coef; end %--Initial DM voltages
+% if(isfield(mp.dm8,'V')==false); mp.dm8.V = zeros(mp.dm8.NactTotal,1); mp.dm8.V(mp.F3.RinA_inds) = mp.dm8.V0coef; else; mp.dm8.V = mp.DM8V0; end %--Initial DM voltages
+
 % %--DM8 Option 1: Set as same basis set (DM actuators) as DM9. BE CAREFUL ABOUT OVERWRITING VALUES INADVERTENTLY!!!!!!!!!!!
 % dm8Vmin = mp.dm8.Vmin;
 % dm8Vmax = mp.dm8.Vmax;
@@ -200,6 +202,16 @@ if(isfield(mp.dm8,'V')==false); mp.dm8.V = zeros(mp.dm8.NactTotal,1); mp.dm8.V(m
 %         mp.dm9.compact.inf_datacube(:,:,iact) = DM8windowCompact(x_box_ind,y_box_ind).*mp.dm9.compact.inf_datacube(:,:,iact);
 %     end
 % end
+
+% %--Zero out parts of DM9 actuators that go outside the nickel disk. Also apply the grayscale edge.
+for ii=1:mp.dm9.NactTotal
+    if(r_cent_lam0D(ii) > mp.F3.RinA-mp.dm9.FPMbuffer)
+        %--Zero out FPM actuators beyond the inner spot (mp.F3.Rin)
+        mp.dm9.inf_datacube(:,:,ii) = 0*mp.dm9.inf_datacube(:,:,ii);
+        mp.dm9.compact.inf_datacube(:,:,ii) = zeros(size(mp.dm9.compact.inf_datacube(:,:,ii)));
+    end
+end
+fprintf('%d actuators in DM9.\n',mp.dm9.NactTotal);
 
 
 
