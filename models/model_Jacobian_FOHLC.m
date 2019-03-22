@@ -249,7 +249,7 @@ if(whichDM==1)
             %--Full Lyot plane pupil (for Babinet)
             EP4noFPM = zeros(mp.dm1.compact.NdmPad);
             if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
-            EP4noFPM(y_box_AS_ind,x_box-AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
+            EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
             EP4 = mp.P4.compact.croppedMask.*(EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
 

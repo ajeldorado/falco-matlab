@@ -34,6 +34,7 @@ function [complexTransCompact, complexTransFull] = falco_gen_complex_trans_table
 
 % Set default values of input parameters
 flagRefl = false; % flag to take the value in reflection instead of transmission
+substrate = 'FS'; % material name of the mask substrate [FS or N-BK7]
 %--Enable different arguments values by using varargin
 icav = 0;                     % index in cell array varargin
 while icav < size(varargin, 2)
@@ -41,10 +42,14 @@ while icav < size(varargin, 2)
     switch lower(varargin{icav})
       case {'reflection','refl','lowfs','lowfsc'}
         flagRefl = true;  % flag to take the value in reflection instead of transmission
+      case {'substrate','sub','glass'}
+        icav = icav + 1;
+        substrate = varargin{icav}; % material name of the mask substrate [FS or N-BK7]
       otherwise
         error('falco_gen_complex_trans_table: Unknown keyword: %s\n', varargin{icav});
     end
 end
+
 %%
 
 
@@ -54,13 +59,13 @@ mp.F3.diel = 'PMGI';
 % NlamCompact = mp.Nsbp;%length(mp.sbp_centers);
 % NlamFull = mp.full.Nlam; %length(mp.lambdas);
 
-fn_cube_compact = sprintf('%s/data/material/ct_cube_BK7_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1fN%d_%.1fdeg_compact.mat',...
-    mp.path.falco,mp.t_Ti_nm,mp.F3.metal,min(mp.t_metal_nm_vec), max(mp.t_metal_nm_vec), mp.dt_metal_nm, ...
+fn_cube_compact = sprintf('%s/data/material/ct_cube_%s_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1fN%d_%.1fdeg_compact.mat',...
+    mp.path.falco,substrate,mp.t_Ti_nm,mp.F3.metal,min(mp.t_metal_nm_vec), max(mp.t_metal_nm_vec), mp.dt_metal_nm, ...
     mp.F3.diel, min(mp.t_diel_nm_vec),  max(mp.t_diel_nm_vec),  mp.dt_diel_nm, ...
     (1e9*mp.lambda0),100*mp.fracBW,mp.Nsbp,mp.aoi);
 
-fn_cube_full = sprintf('%s/data/material/ct_cube_BK7_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1f_%dN%d_%.1fdeg_full.mat',...
-    mp.path.falco,mp.t_Ti_nm,mp.F3.metal,min(mp.t_metal_nm_vec), max(mp.t_metal_nm_vec), mp.dt_metal_nm, ...
+fn_cube_full = sprintf('%s/data/material/ct_cube_%s_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1f_%dN%d_%.1fdeg_full.mat',...
+    mp.path.falco,substrate,mp.t_Ti_nm,mp.F3.metal,min(mp.t_metal_nm_vec), max(mp.t_metal_nm_vec), mp.dt_metal_nm, ...
     mp.F3.diel, min(mp.t_diel_nm_vec),  max(mp.t_diel_nm_vec),  mp.dt_diel_nm, ...
     (1e9*mp.lambda0),100*mp.fracBW,mp.Nsbp,mp.Nwpsbp,mp.aoi);
 

@@ -64,9 +64,14 @@ mp.Nsbp = 5;%1;            %--Number of sub-bandpasses to divide the whole bandp
 % mp.F3.Rin = 5;%2.7;%4;%2.7; % maximum radius of inner part of the focal plane mask, in lambda0/D
 % mp.F3.RinA = 2.7;%mp.F3.Rin; % inner hard-edge radius of the focal plane mask (lambda0/D). Needs to be <= mp.F3.Rin 
 
+%--Use just 1 wavelength for initial debugging of code
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+
 
 %--Zernikes to suppress with controller
-mp.jac.zerns = [1,2,3];  %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include the value "1" for the on-axis piston mode.
+mp.jac.zerns = 1;%[1,2,3];  %--Which Zernike modes to include in Jacobian. Given as the max Noll index. Always include the value "1" for the on-axis piston mode.
 mp.jac.Zcoef = [1, 1e-9, 1e-9];%1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
   
 
