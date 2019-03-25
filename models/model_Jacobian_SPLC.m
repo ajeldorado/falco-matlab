@@ -90,6 +90,14 @@ if(mp.useGPU)
     if(any(mp.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
 end
 
+if(mp.flagDMwfe && (mp.P1.full.Nbeam==mp.P1.compact.Nbeam))
+    if(any(mp.dm_ind==1));  Edm1WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm1.wfe,NdmPad,'extrapval',0)); else; Edm1WFE = ones(NdmPad); end
+    if(any(mp.dm_ind==2));  Edm2WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm2.wfe,NdmPad,'extrapval',0)); else; Edm2WFE = ones(NdmPad); end
+else
+    Edm1WFE = ones(NdmPad);
+    Edm2WFE = ones(NdmPad);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation: 2 DMs, apodizer, binary-amplitude FPM, LS, and final focal plane
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,7 +108,7 @@ EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil p
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
-Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
+Edm1 = DM1stop.*Edm1WFE.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 %--DM1---------------------------------------------------------
 if(whichDM==1)
@@ -115,8 +123,11 @@ if(whichDM==1)
     apodRot180 = padOrCropEven( apodRot180, mp.dm1.compact.NdmPad);
     if(any(mp.dm_ind==2)); DM2surf = padOrCropEven(DM2surf,mp.dm1.compact.NdmPad); else; DM2surf = zeros(mp.dm1.compact.NdmPad); end %--Pre-compute the previous DM2 surface
     if(mp.flagDM2stop); DM2stop = padOrCropEven(DM2stop,mp.dm1.compact.NdmPad); else; DM2stop = ones(mp.dm1.compact.NdmPad); end
+    
     Edm1pad = padOrCropEven(Edm1,mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
+    Edm2WFEpad = padOrCropEven(Edm2WFE,mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
 
+    
     %--Propagate each actuator from DM1 through the optical system
     Gindex = 1; % initialize index counter
     for iact=mp.dm1.act_ele(:).'
@@ -132,7 +143,7 @@ if(whichDM==1)
             dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),mp.dm1.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2); %--Forward propagate via angular spectrum to DM2
             
             %--Propagate back from DM2 to P2
-            dEP2box = propcustom_PTP(dEbox.*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); %--Apply DM2 E-field and then back-propagate to pupil P2
+            dEP2box = propcustom_PTP(dEbox.*DM2stop(y_box_AS_ind,x_box_AS_ind).*Edm2WFEpad(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); %--Apply DM2 E-field and then back-propagate to pupil P2
 
             %--To simulate going forward to the next pupil plane (with the SP) most efficiently, 
             % 1st back-propagate the SP (by rotating 180-degrees) to the previous pupil, and then
@@ -177,9 +188,11 @@ if(whichDM==2)
     mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
 
     %--Propagate full field to DM2 before back-propagating in small boxes
+    Edm2WFEpad = padOrCropEven(Edm2WFE,mp.dm2.compact.NdmPad);
+    DM2stopPad = padOrCropEven(DM2stop,mp.dm2.compact.NdmPad);
     Edm2inc = padOrCropEven( propcustom_PTP(Edm1,mp.compact.NdmPad*mp.P2.compact.dx,lambda,mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
-    Edm2 = Edm2inc.*padOrCropEven(DM2stop,mp.dm2.compact.NdmPad).*exp(mirrorFac*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
-
+    Edm2 = DM2stopPad.*Edm2WFEpad.*Edm2inc.*exp(mirrorFac*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
+    
     %--Propagate each actuator from DM2 through the rest of the optical system
     Gindex = 1; % initialize index counter
     for iact=mp.dm2.act_ele(:).'

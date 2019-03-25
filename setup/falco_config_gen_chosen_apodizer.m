@@ -30,6 +30,8 @@ switch lower(mp.coro)
         
         
         switch upper(mp.SPname)
+            case{'SPC20181220','SPC-20181220','20181220'}
+            
             case{'SPC20190130','SPC-20190130','20190130'}
                 
             case{'SPC20170714','SPC-20170714','20170714'}
