@@ -23,15 +23,15 @@
 
 function normI = falco_get_gpct_sbp_image(mp,si)
 
-    sbp_width = mp.bench.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
-    sbp_texp  = mp.bench.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
-    PSFpeak   = mp.bench.PSFpeaks(si);
+    bench = mp.bench;
+    sbp_width = bench.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
+    sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
+    PSFpeak   = bench.info.PSFpeaks(si);
     
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
     
-    map = mp.dm1.V'; % There's a transpose between Matlab and BMC indexing.
-    !!!!! NEED TO CHECK THIS !!!!!
+    map = mp.dm1.V'; % There's a transpose between Matlab and BMC indexing
     
     % Send the commands to the DM. 
     % Notes: bench.DM.flatmap contains the commands to flatten the DM. 
@@ -46,7 +46,7 @@ function normI = falco_get_gpct_sbp_image(mp,si)
     lam0 = mp.sbp_centers(si);
     lam1 = lam0 - sbp_width/2;
     lam2 = lam0 + sbp_width/2;
-    tb_NKT_setWvlRange(bench,lam1,lam2);
+    tb_NKT_setWvlRange(bench,lam1*1e9,lam2*1e9);
     
     % Load a dark
     dark = tb_andor_loadDark(bench,sbp_texp);

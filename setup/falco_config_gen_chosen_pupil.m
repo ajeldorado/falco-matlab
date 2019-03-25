@@ -36,7 +36,8 @@ switch upper(mp.whichPupil)
         inputs.angStrut = mp.P1.angStrut;%Angles of the struts 
         inputs.wStrut = mp.P1.wStrut;% spider width (fraction of the pupil diameter)
         inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));% 
-
+        inputs.stretch = mp.P1.stretch; 
+        
         mp.P1.full.mask = falco_gen_pupil_Simple( inputs );
         
         %--Generate low-res input pupil for the 'compact' model
