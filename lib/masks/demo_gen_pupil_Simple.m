@@ -19,7 +19,8 @@ input.Nstrut = 4;% Number of struts
 input.angStrut = [0 90 180 270];%Angles of the struts (deg)
 input.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
 input.centering = 'pixel';%'interpixel'; %'interpixel' or 'pixel'; 'pixel' is default
-input.flagPROPER = true;
+input.flagPROPER = false;
+input.stretch = 1;% Stretch the horizontal axis to create elliptical beam 
 
 PUPIL = falco_gen_pupil_Simple( input );
 

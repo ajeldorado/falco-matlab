@@ -36,7 +36,8 @@ switch upper(mp.whichPupil)
         inputs.angStrut = mp.P1.angStrut;%Angles of the struts 
         inputs.wStrut = mp.P1.wStrut;% spider width (fraction of the pupil diameter)
         inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));% 
-
+        inputs.stretch = mp.P1.stretch; 
+        
         mp.P1.full.mask = falco_gen_pupil_Simple( inputs );
         
         %--Generate low-res input pupil for the 'compact' model
@@ -170,7 +171,12 @@ switch upper(mp.whichPupil)
                 %figure;imagesc(angle(mp.P1.compact.E(:,:,1))/2/pi);axis image;colorbar;title('Phase of telescope aperture (waves)');
             end
         end
+    
+    case 'DST_LUVOIRB'
         
+        mp.P1.full.mask    = falco_gen_pupil_dst_LUVOIR_B(mp.P1.full.Nbeam   ,2^(nextpow2(mp.P1.full.Nbeam   )));
+        mp.P1.compact.mask = falco_gen_pupil_dst_LUVOIR_B(mp.P1.compact.Nbeam,2^(nextpow2(mp.P1.compact.Nbeam)));
+    
     case 'HABEX_B_OFFAXIS'
         input.Nbeam = mp.P1.full.Nbeam;
         input.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
@@ -184,7 +190,23 @@ switch upper(mp.whichPupil)
         input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
         mp.P1.compact.mask = falco_gen_pupil_HabEx_B( input );
         
+    case 'ISAT'
+        input.numRaftRings = 3;
         
+        input.Nbeam = mp.P1.full.Nbeam;
+        input.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
+        input.raftDia = input.Nbeam/19*3;% samples
+        input.wGap = mp.P1.wGap*input.Nbeam; % samples
+        input.raftGap = mp.P1.raftGap*input.Nbeam; % samples
+        mp.P1.full.mask    = falco_gen_pupil_iSAT( input );
+        
+        input.Nbeam = mp.P1.compact.Nbeam;
+        input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
+        input.raftDia = input.Nbeam/19*3;%samples
+        input.wGap = mp.P1.wGap*input.Nbeam; % samples
+        input.raftGap = mp.P1.raftGap*input.Nbeam; % samples
+        mp.P1.compact.mask = falco_gen_pupil_iSAT( input );
+    
 end
 mp.P1.full.Narr = length(mp.P1.full.mask);  %--Total number of pixels across array containing the pupil in the full model. Add 2 pixels to Nbeam when the beam is pixel-centered.
 mp.P1.compact.Narr = length(mp.P1.compact.mask);  %--Number of pixels across the array containing the input pupil in the compact model
