@@ -42,7 +42,7 @@ function PUPIL = falco_gen_pupil_Simple( input )
         otherwise
             [X,Y] = meshgrid(-N/2:N/2-1);
     end
-    [THETA,RHO] = cart2pol(X,Y*b); 
+    [THETA,RHO] = cart2pol(X*b,Y); 
     
     % Make sure the inputs make sense
     if(ID > OD)
