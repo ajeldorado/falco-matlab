@@ -477,45 +477,6 @@ if(whichDM==9)
         
     end
     
-    %--Force symmetry across the y-axis for DM9. Also requires changes in falco_ctrl_wrapup.m 
-    if(isfield(mp,'flagSymmDM9')==false)
-        mp.flagSymmDM9 = false;
-    end
-    if(mp.flagSymmDM9)
-        %--Determine which actuators mirror each other along the y-axis
-        Nact = sqrt(mp.dm9.NactTotal);
-        LinIndMat = zeros(Nact);
-        LinIndMat(:) = 1:mp.dm9.NactTotal;
-        FlippedLinIndMat = fliplr(LinIndMat);
-        KeyDM9 = zeros(mp.dm9.NactTotal/2,2);
-        for jj=1:mp.dm9.NactTotal/2
-            KeyDM9(jj,1) = LinIndMat(jj);
-            KeyDM9(jj,2) = FlippedLinIndMat(jj);
-        end
-        clear jj
-
-        for jj=1:mp.dm9.Nele/2
-            Index1 = jj;
-            
-            Ind = mp.dm9.act_ele(jj);
-            RowNum = find(KeyDM9(:,1)==Ind);
-            Index2 = find(mp.dm9.act_ele==KeyDM9(RowNum,2));
-
-            tempCol = (Gzdl(:,Index1)+Gzdl(:,Index2))/2;
-            Gzdl(:,Index1) = tempCol;
-            Gzdl(:,Index2) = tempCol;
-        end
-%         for jj=1:mp.dm9.Nele/2
-%             Index1 = mp.dm9.act_ele(jj);
-%             RowNum = find(KeyDM9(:,1)==Index1);
-%             Index2 = KeyDM9(RowNum,2);
-% 
-%             tempCol = (Gzdl(:,Index1)+Gzdl(:,Index2))/2;
-%             Gzdl(:,Index1) = tempCol;
-%             Gzdl(:,Index2) = tempCol;
-%         end
-
-    end
 
 end %%%%%%%%%%%%%%%%%%%
 

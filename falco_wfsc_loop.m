@@ -8,6 +8,8 @@
 %
 % Data are mostly passed in structures.
 %
+% Modified on 2019-03-26 by A.J. Riggs to include tied actuators and to
+%   make nested functions actually nested.
 % Modified again by A.J. Riggs on May 23, 2017 to eliminate a lot of unnecessary
 %   variables for full-knowledge design work in the main script,
 %   in the config function, in the EFC controller, and in
@@ -544,18 +546,8 @@ fnAll = [mp.path.ws mp.runLabel,'_all.mat'];
 disp(['Saving workspace to file ' fnAll '...'])
 save(fnAll);
 fprintf('done.\n\n')
-
-end %--END OF main FUNCTION
-
-
-
-
-
-
-
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -563,9 +555,8 @@ end %--END OF main FUNCTION
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% I placed the function falco_ctrl_cull.m here as a nested
-% function in order to save RAM since the output of the Jacobian structure
-% is large and I do not want it copied.
+% falco_ctrl_cull.m is a nested function in order to save RAM since the 
+% output of the Jacobian structure is large and I do not want it copied.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % INPUTS:
 % -mp = structure of model parameters
@@ -624,6 +615,36 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
                 clear G9intNorm
             end
 
+            %--Add back in all actuators that are tied (to make the tied actuator logic easier)
+            if(any(mp.dm_ind==1))
+                for ti=1:size(mp.dm1.tied,1)
+                    if(any(mp.dm1.act_ele==mp.dm1.tied(ti,1))==false);  mp.dm1.act_ele = [mp.dm1.act_ele; mp.dm1.tied(ti,1)];  end
+                    if(any(mp.dm1.act_ele==mp.dm1.tied(ti,2))==false);  mp.dm1.act_ele = [mp.dm1.act_ele; mp.dm1.tied(ti,2)];  end
+                end
+                mp.dm1.act_ele = sort(mp.dm1.act_ele); %--Need to sort for the logic in model_Jacobian.m
+            end
+            if(any(mp.dm_ind==2))
+                for ti=1:size(mp.dm2.tied,1)
+                    if(any(mp.dm2.act_ele==mp.dm2.tied(ti,1))==false);  mp.dm2.act_ele = [mp.dm2.act_ele; mp.dm2.tied(ti,1)];  end
+                    if(any(mp.dm2.act_ele==mp.dm2.tied(ti,2))==false);  mp.dm2.act_ele = [mp.dm2.act_ele; mp.dm2.tied(ti,2)];  end
+                end
+                mp.dm2.act_ele = sort(mp.dm2.act_ele);
+            end
+            if(any(mp.dm_ind==8))
+                for ti=1:size(mp.dm8.tied,1)
+                    if(any(mp.dm8.act_ele==mp.dm8.tied(ti,1))==false);  mp.dm8.act_ele = [mp.dm8.act_ele; mp.dm8.tied(ti,1)];  end
+                    if(any(mp.dm8.act_ele==mp.dm8.tied(ti,2))==false);  mp.dm8.act_ele = [mp.dm8.act_ele; mp.dm8.tied(ti,2)];  end
+                end
+                mp.dm8.act_ele = sort(mp.dm8.act_ele);
+            end
+            if(any(mp.dm_ind==9))
+                for ti=1:size(mp.dm9.tied,1)
+                    if(any(mp.dm9.act_ele==mp.dm9.tied(ti,1))==false);  mp.dm9.act_ele = [mp.dm9.act_ele; mp.dm9.tied(ti,1)];  end
+                    if(any(mp.dm9.act_ele==mp.dm9.tied(ti,2))==false);  mp.dm9.act_ele = [mp.dm9.act_ele; mp.dm9.tied(ti,2)];  end
+                end
+                mp.dm9.act_ele = sort(mp.dm9.act_ele);
+            end
+            
             %--Update the number of elements used per DM
             if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); end
             if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); end
@@ -647,10 +668,6 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
         end  
 
 end %--END OF FUNCTION falco_ctrl_cull.m
-
-
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -677,7 +694,7 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     % Control Algorithm
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
 
-    fprintf('Computing linearized control matrices from the Jacobian...'); tic;
+    fprintf('Using the Jacobian to make other matrices...'); tic;
 
     %--Compute matrices for linear control with regular EFC
 %     if(cvar.flagRelin==true);  cvar.GstarG_wsum  = zeros(cvar.NeleAll,cvar.NeleAll);  end %--Re-use cvar.GstarG_wsum since no re-linearization was done.
@@ -742,27 +759,54 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
 
     %% Updates to DM commands
 
-    %--Update the DM commands by adding the new control signal
-    if(any(mp.dm_ind==1))
-        mp.dm1.dV = dDM.dDM1V;
-        mp.dm1.V = mp.dm1.V + mp.dm1.dV; 
-    end
-    if(any(mp.dm_ind==2))
-        mp.dm2.dV = dDM.dDM2V;
-        mp.dm2.V = mp.dm2.V + mp.dm2.dV; 
-    end
-    if(any(mp.dm_ind==5))
-        mp.dm5.dV = dDM.dDM5V;
-        mp.dm5.V = mp.dm5.V + mp.dm5.dV; 
-    end
-    if(any(mp.dm_ind==8))
-        mp.dm8.dV = dDM.dDM8V(:);
-        mp.dm8.V = mp.dm8.V + mp.dm8.dV(:);
-    end
-    if(any(mp.dm_ind==9))
-        mp.dm9.dV = dDM.dDM9V;
-        mp.dm9.V = mp.dm9.V + mp.dm9.dV;
-    end
+    %--Update the DM commands by adding the delta control signal
+    if(any(mp.dm_ind==1));  mp.dm1.V = mp.dm1.V + dDM.dDM1V;  end
+    if(any(mp.dm_ind==2));  mp.dm2.V = mp.dm2.V + dDM.dDM2V;  end
+    if(any(mp.dm_ind==3));  mp.dm3.V = mp.dm3.V + dDM.dDM3V;  end
+    if(any(mp.dm_ind==4));  mp.dm4.V = mp.dm4.V + dDM.dDM4V;  end
+    if(any(mp.dm_ind==5));  mp.dm5.V = mp.dm5.V + dDM.dDM5V;  end
+    if(any(mp.dm_ind==6));  mp.dm6.V = mp.dm6.V + dDM.dDM6V;  end
+    if(any(mp.dm_ind==7));  mp.dm7.V = mp.dm7.V + dDM.dDM7V;  end
+    if(any(mp.dm_ind==8));  mp.dm8.V = mp.dm8.V + dDM.dDM8V;  end
+    if(any(mp.dm_ind==9));  mp.dm9.V = mp.dm9.V + dDM.dDM9V;  end
+
+    %%--Save the delta from the previous command
+    if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end
+    if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end
+    if(any(mp.dm_ind==3));  mp.dm3.dV = dDM.dDM3V;  end
+    if(any(mp.dm_ind==4));  mp.dm4.dV = dDM.dDM4V;  end
+    if(any(mp.dm_ind==5));  mp.dm5.dV = dDM.dDM5V;  end
+    if(any(mp.dm_ind==6));  mp.dm6.dV = dDM.dDM6V;  end
+    if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end
+    if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end
+    if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end
 
 
 end %--END OF FUNCTION
+
+
+end %--END OF main FUNCTION
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

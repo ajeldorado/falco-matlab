@@ -11,6 +11,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-03-26 by A.J. Riggs to make the nested function actually nested.
 % Modified on 2017-11-13 by A.J. Riggs to be compatible with parfor.
 % Modified on 2017-11-09 by A.J. Riggs from model_compact.m to
 %   model_Jacobian.m
@@ -30,6 +31,8 @@
 % -jacStruct = control Jacobian for the modes specified
 
 function jacStruct = model_Jacobian(mp)
+
+
 
     %--Calculate the starting DM surfaces beforehand to save time.
     if(any(mp.dm_ind==1)); mp.dm1.compact.surfM = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx,mp.dm1.compact.NdmPad); else; mp.dm1.compact.surfM = zeros(2); end
@@ -62,18 +65,79 @@ function jacStruct = model_Jacobian(mp)
     if(any(mp.dm_ind==8)); jacStruct.G8 = zeros(mp.Fend.corr.Npix,mp.dm8.Nele,mp.jac.Nmode);  else;  jacStruct.G8 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM8
     if(any(mp.dm_ind==9)); jacStruct.G9 = zeros(mp.Fend.corr.Npix,mp.dm9.Nele,mp.jac.Nmode);  else;  jacStruct.G9 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM9
 
-    %--Loop over the possible combinations of 1) tip/tilt-offsets, 2) sub-bandpasses, and 3) DM number 
+    %--Loop over the possible combinations of 1) Zernike mode, 2) sub-bandpasses, and 3) DM number 
     %   (either with parfor or for)
     fprintf('Computing control Jacobian matrices ... \n'); tic
     vals_list = allcomb(1:mp.jac.Nmode,mp.dm_ind).'; %--dimensions: [2 x length(mp.jac.Nmode)*length(mp.dm_ind) ]
     Nvals = size(vals_list,2);
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The function model_Jacobian_middle_layer.m exists at all so that parfor
+% can use a linear indexing scheme from 1 to Nmodes. 
+% This is a nested function to try to reduce RAM overhead in MATLAB.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% INPUTS:
+% -mp = structure of model parameters
+% -vals_list = structure containing combinations of:
+%     -tsi = index of the pair of sub-bandpass index and tip/tilt offset index
+%     -whichDM = which DM number
+%
+% OUTPUTS:
+% -jacMode = Jacobian for the specified combo of DM, wavelength, and Zernike mode.
+
+    function jacMode = model_Jacobian_middle_layer(mp,   vals_list,jj)
+
+        im2 = vals_list(1,jj); %--index for Zernike-&-subbandpass pair
+        whichDM2 = vals_list(2,jj); %--number of the specified DM
+
+        switch upper(mp.coro) 
+            case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
+                jacMode = model_Jacobian_FOHLC(mp,   im2, whichDM2); 
+
+            case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
+                jacMode = model_Jacobian_EHLC(mp,   im2, whichDM2); 
+
+            case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
+                jacMode = model_Jacobian_HLC(mp,   im2, whichDM2); 
+
+            case{'SPHLC','FHLC'}  %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS
+                jacMode  = model_Jacobian_SPHLC(mp,   im2, whichDM2); 
+
+            case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
+                jacMode = model_Jacobian_LC(mp,   im2, whichDM2); 
+
+            case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
+                jacMode  = model_Jacobian_SPLC(mp,   im2, whichDM2); 
+
+            case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
+                jacMode  = model_Jacobian_VC(mp,   im2, whichDM2); 
+
+            case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
+                jacMode  = model_Jacobian_Roddier(mp,   im2, whichDM2); 
+
+            %case{'SPC','APP','APC'} %--Pupil-plane apodizer is only coronagraphic mask
+                %Jac  = model_Jacobian_APC(mp,   tsi, whichDM2); 
+
+            otherwise
+                error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED IN model_Jacobian.m');        
+        end    
+
+    end %--END OF FUNCTION model_Jacobian_middle_layer.m    
+
+    funcMiddle = @(ii) model_Jacobian_middle_layer(mp,vals_list,ii); %--Make a function handle for parfor to use
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END OF model_Jacobian_middle_layer.m
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     
     %--Parallel/distributed computing
     if(mp.flagParfor) 
         parfor ii=1:Nvals
-            Jtemp{ii} = model_Jacobian_middle_layer(mp, vals_list, ii);
-        end
+            Jtemp{ii} = feval(funcMiddle, ii);
+        end        
         
         %--Re-organize the structure
         for ii=1:Nvals
@@ -82,7 +146,11 @@ function jacStruct = model_Jacobian(mp)
 
             if(whichDM==1); jacStruct.G1(:,:,im) =  Jtemp{ii};  end
             if(whichDM==2); jacStruct.G2(:,:,im) =  Jtemp{ii};  end
+            if(whichDM==3); jacStruct.G3(:,:,im) =  Jtemp{ii};  end
+            if(whichDM==4); jacStruct.G4(:,:,im) =  Jtemp{ii};  end
             if(whichDM==5); jacStruct.G5(:,:,im) =  Jtemp{ii};  end
+            if(whichDM==6); jacStruct.G6(:,:,im) =  Jtemp{ii};  end
+            if(whichDM==7); jacStruct.G7(:,:,im) =  Jtemp{ii};  end
             if(whichDM==8); jacStruct.G8(:,:,im) =  Jtemp{ii};  end
             if(whichDM==9); jacStruct.G9(:,:,im) =  Jtemp{ii};  end
         end
@@ -98,7 +166,11 @@ function jacStruct = model_Jacobian(mp)
                         
             if(whichDM==1); jacStruct.G1(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
             if(whichDM==2); jacStruct.G2(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+            if(whichDM==3); jacStruct.G3(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+            if(whichDM==4); jacStruct.G4(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
             if(whichDM==5); jacStruct.G5(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+            if(whichDM==6); jacStruct.G6(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+            if(whichDM==7); jacStruct.G7(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
             if(whichDM==8); jacStruct.G8(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
             if(whichDM==9); jacStruct.G9(:,:,im) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
         end
@@ -107,6 +179,52 @@ function jacStruct = model_Jacobian(mp)
 
     fprintf('...done.  Time = %.2f\n',toc);
 
+    %--TIED ACTUATORS
+    %--Handle tied actuators by adding the 2nd actuators Jacobian column to
+    %the first actuator's column, and then zeroing out the 2nd actuator's column.
+    if(any(mp.dm_ind==1))
+        for ti=1:size(mp.dm1.tied,1)
+            Index1all = mp.dm1.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm1.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+            Index1subset = find(mp.dm1.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+            Index2subset = find(mp.dm1.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+            jacStruct.G1(:,Index1subset,:) = jacStruct.G1(:,Index1subset,:) + jacStruct.G1(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G1(:,Index2subset,:) = 0*jacStruct.G1(:,Index2subset,:); % zero out the 2nd actuator's column.
+        end
+    end
+    if(any(mp.dm_ind==2))
+        for ti=1:size(mp.dm2.tied,1)
+            Index1all = mp.dm2.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm2.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+            Index1subset = find(mp.dm2.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+            Index2subset = find(mp.dm2.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+            jacStruct.G2(:,Index1subset,:) = jacStruct.G2(:,Index1subset,:) + jacStruct.G2(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G2(:,Index2subset,:) = 0*jacStruct.G2(:,Index2subset,:); % zero out the 2nd actuator's column.
+        end
+    end
+    if(any(mp.dm_ind==8))
+        for ti=1:size(mp.dm8.tied,1)
+            Index1all = mp.dm8.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm8.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+            Index1subset = find(mp.dm8.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+            Index2subset = find(mp.dm8.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+            jacStruct.G8(:,Index1subset,:) = jacStruct.G8(:,Index1subset,:) + jacStruct.G8(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G8(:,Index2subset,:) = 0*jacStruct.G8(:,Index2subset,:); % zero out the 2nd actuator's column.
+        end
+    end
+    if(any(mp.dm_ind==9))
+        for ti=1:size(mp.dm9.tied,1)
+            Index1all = mp.dm9.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm9.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+            Index1subset = find(mp.dm9.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+            Index2subset = find(mp.dm9.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+            jacStruct.G9(:,Index1subset,:) = jacStruct.G9(:,Index1subset,:) + jacStruct.G9(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G9(:,Index2subset,:) = 0*jacStruct.G9(:,Index2subset,:); % zero out the 2nd actuator's column.
+        end
+    end
+   
+
+    
 end %--END OF FUNCTION model_Jacobian.m
 
 
@@ -116,61 +234,7 @@ end %--END OF FUNCTION model_Jacobian.m
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The function model_Jacobian_middle_layer.m exists at all so that parfor
-% can use a linear indexing scheme from 1 to Nmodes.
-% I placed the function model_Jacobian_middle_layer.m here as a nested
-% function in order to save RAM since the output of the Jacobian structure
-% is large and I do not want it copied.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% INPUTS:
-% -mp = structure of model parameters
-% -vals_list = structure containing combinations of:
-%     -tsi = index of the pair of sub-bandpass index and tip/tilt offset index
-%     -whichDM = which DM number
-%
-% OUTPUTS:
-% -jacMode = Jacobian for the specified combo of DM, wavelength, and Zernike mode.
 
-function jacMode = model_Jacobian_middle_layer(mp,   vals_list,ii)
-
-    im = vals_list(1,ii); %--index for Zernike-&-subbandpass pair
-    whichDM = vals_list(2,ii); %--number of the specified DM
-
-    switch upper(mp.coro) 
-        case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-            jacMode = model_Jacobian_FOHLC(mp,   im, whichDM); 
-        
-        case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-            jacMode = model_Jacobian_EHLC(mp,   im, whichDM); 
-        
-        case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
-            jacMode = model_Jacobian_HLC(mp,   im, whichDM); 
-            
-        case{'SPHLC','FHLC'}  %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS
-            jacMode  = model_Jacobian_SPHLC(mp,   im, whichDM); 
-            
-            
-        case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
-            jacMode = model_Jacobian_LC(mp,   im, whichDM); 
-            
-        case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-            jacMode  = model_Jacobian_SPLC(mp,   im, whichDM); 
-            
-        case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
-            jacMode  = model_Jacobian_VC(mp,   im, whichDM); 
-            
-        case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
-            jacMode  = model_Jacobian_Roddier(mp,   im, whichDM); 
-            
-        %case{'SPC','APP','APC'} %--Pupil-plane apodizer is only coronagraphic mask
-            %Jac  = model_Jacobian_APC(mp,   tsi, whichDM); 
-            
-        otherwise
-            error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED IN model_Jacobian.m');        
-    end    
-
-end %--END OF FUNCTION model_Jacobian_middle_layer.m
 
 
 
