@@ -6,6 +6,7 @@
 %
 function handles = falco_plot_progress(handles,mp,Itr,contrast_bandavg,Im,DM1surf,DM2surf)
 
+Im(Im<0) = 0;
 
 if(mp.flagPlot)
     fig_size = [100          60        1500         900];

@@ -21,18 +21,23 @@
 % - Created on 2019-03-22 by G. Ruane 
 
 
-function normI = falco_get_gpct_sbp_image(mp,si)
+function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
 
     bench = mp.bench;
     sbp_width = bench.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
-    PSFpeak   = bench.info.PSFpeaks(si);
+    PSFpeak   = bench.info.PSFpeaks(si);% counts per second 
     
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
     
-    map = mp.dm1.V'; % There's a transpose between Matlab and BMC indexing
+    [newV,message] = tb_DM_dmsmooth( bench, mp.dm1.V );
+    disp(message);
     
+% 	newV = mp.dm1.V;
+    
+    map = newV'; % There's a transpose between Matlab and DM indexing
+
     % Send the commands to the DM. 
     % Notes: bench.DM.flatmap contains the commands to flatten the DM. 
     %        mp.dm1.V is added to the flat commands inside tb_DM_apply2Dmap. 
