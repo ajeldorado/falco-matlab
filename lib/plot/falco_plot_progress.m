@@ -6,9 +6,8 @@
 %
 function handles = falco_plot_progress(handles,mp,Itr,contrast_bandavg,Im,DM1surf,DM2surf)
 
-%--Prevent the log10(Im) plot from getting complex values.
-ImNonneg = Im;
-ImNonneg(Im<0) = 0;
+
+Im(Im<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
 
 if(mp.flagPlot)
     fig_size = [100          60        1500         900];

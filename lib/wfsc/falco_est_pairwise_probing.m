@@ -56,7 +56,7 @@ end
 
 %--Store the initial DM commands
 if(any(mp.dm_ind==1));  DM1Vnom = mp.dm1.V;  end
-if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  end
+if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm1.V)); end
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
@@ -106,7 +106,6 @@ for si=1:mp.Nsbp
     % Reset DM commands to the unprobed state:
     mp.dm1.V = DM1Vnom;
     mp.dm2.V = DM2Vnom;
-
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     Iplus  = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
     Iminus = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of minus probes' intensities
@@ -199,7 +198,7 @@ for si=1:mp.Nsbp
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.Fend.Neta,mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:,iProbe); 
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
-        if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow; pause(1);  end
+        if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
     end
     
     %% Perform the estimation

@@ -51,8 +51,9 @@ fprintf('Saved the config file: \t%s\n',fn_config)
 
 
 %% Get configuration data from a function file
+if(~mp.flagSim); bench = mp.bench;end
 [mp,out] = falco_init_ws(fn_config);
-
+if(~mp.flagSim); mp.bench = bench;end
 %% Jacobian storage
 % G_mat_fname = sprintf('G_%s_%dDM_%dx%dx%dact_%dpix_%dpctBW_at%dnm_Nsbp%02d.mat',...  %--Name of the Jacobian file if it is saved
 %     mp.coro, mp.num_dms,mp.dm1.Nact,...
