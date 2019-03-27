@@ -585,6 +585,19 @@ if(any(mp.dm_ind==7));  mp.dm7.dV = 0;  end
 if(any(mp.dm_ind==8));  mp.dm8.dV = 0;  end
 if(any(mp.dm_ind==9));  mp.dm9.dV = 0;  end
 
+%% Intialize tied actuator pairs if not already defined. 
+% Dimensions of the pair list is [Npairs x 2]
+%%--Save the delta from the previous command
+if(any(mp.dm_ind==1)); if(isfield(mp.dm1,'tied')==false); mp.dm1.tied = []; end; end
+if(any(mp.dm_ind==2)); if(isfield(mp.dm2,'tied')==false); mp.dm2.tied = []; end; end
+if(any(mp.dm_ind==3)); if(isfield(mp.dm3,'tied')==false); mp.dm3.tied = []; end; end
+if(any(mp.dm_ind==4)); if(isfield(mp.dm4,'tied')==false); mp.dm4.tied = []; end; end
+if(any(mp.dm_ind==5)); if(isfield(mp.dm5,'tied')==false); mp.dm5.tied = []; end; end
+if(any(mp.dm_ind==6)); if(isfield(mp.dm6,'tied')==false); mp.dm6.tied = []; end; end
+if(any(mp.dm_ind==7)); if(isfield(mp.dm7,'tied')==false); mp.dm7.tied = []; end; end
+if(any(mp.dm_ind==8)); if(isfield(mp.dm8,'tied')==false); mp.dm8.tied = []; end; end
+if(any(mp.dm_ind==9)); if(isfield(mp.dm9,'tied')==false); mp.dm9.tied = []; end; end
+
 
 %% Storage Arrays for DM Metrics
 %--EFC regularization history

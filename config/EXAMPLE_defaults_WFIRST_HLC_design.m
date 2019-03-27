@@ -87,10 +87,16 @@ mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annu
 mp.dm1.weight = 1;
 mp.dm2.weight = 1;
 
-%--Voltage range restrictions
+%--Voltage range restrictions: general
 mp.dm1.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
 mp.dm2.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
 mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 1 and 2 [volts] %--NOT ENFORCED YET
+
+%--Voltage range restrictions: neighboring actuators
+mp.dm1.flagNbrRule = true;
+mp.dm1.dVnbr = 150; %--absolute value of max delta voltage between neighbors [volts]
+mp.dm2.flagNbrRule = true;
+mp.dm2.dVnbr = 150; %--absolute value of max delta voltage between neighbors [volts]
 
 %% Wavefront Control: Controller Specific
 % Controller options: 
