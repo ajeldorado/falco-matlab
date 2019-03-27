@@ -127,6 +127,7 @@ cvx_begin quiet
 
         duVec <= cvar.du_UB_comb
         duVec >= cvar.du_LB_comb
+        (cvar.uVec+duVec).'*(cvar.uVec+duVec) <= (cvar.NeleAll*mp.ctrl.VrmsMax^2)
 
 cvx_end
 

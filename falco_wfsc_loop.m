@@ -170,32 +170,7 @@ for Itr=1:mp.Nitr
     
     %--Re-compute the Jacobian weights
     mp = falco_config_jac_weights(mp); 
-   
-
-    %% Wavefront Estimation
-    %----------------------      Wavefront Estimation    ----------------------
-    switch lower(mp.estimator)
-        case{'perfect'}
-            EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
-        case{'pwp-bp','pwp-kf'}
-            ev = falco_est_pairwise_probing(mp);
-            EfieldVec = ev.Eest;
-            IincoVec = ev.IincoEst;
-    end
-
-    %-----------------------------------------------------------------------------------------
-    %% Wavefront Control
-
-    cvar.Itr = Itr;
-    cvar.EfieldVec = EfieldVec;
-    cvar.InormHist = InormHist(Itr);
     
-    %--Relinearize about the DMs only at the iteration numbers in mp.relinItrVec.
-    if(any(mp.relinItrVec==Itr))
-        cvar.flagRelin=true;
-    else
-        cvar.flagRelin=false;
-    end
     
     %% Actuator Culling: Initialization of Flag and Which Actuators
 
@@ -228,26 +203,41 @@ for Itr=1:mp.Nitr
     end
 
     %% Compute the control Jacobians for each DM
+    
+    %--Relinearize about the DMs only at the iteration numbers in mp.relinItrVec.
+    if(any(mp.relinItrVec==Itr))
+        cvar.flagRelin=true;
+    else
+        cvar.flagRelin=false;
+    end
+    
     if( (Itr==1) || cvar.flagRelin )
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
     end
     
-    % %--Save or load a previous Jacobian (esp. useful for testbeds)
-    %     if(Itr==1)
-    %         cd(mp.path.jac)
-    % %             save(G_mat_fname,'G1','G2','G9','-v7.3');
-    % %             save(G_mat_fname,'G9','-v7.3');
-    %         cd(mp.path.falco)
-    %     end
-    % elseif( Itr==1 && flagCalcJac==0 )    
-    %     cd(mp.path.jac)
-    %         %load(G_mat_fname)
-    %     cd(mp.path.falco)    
     
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
     [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
 
-    % Add spatially-dependent weighting to the control Jacobians
+    %% Wavefront Estimation
+    switch lower(mp.estimator)
+        case{'perfect'}
+            EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
+        case{'pwp-bp','pwp-kf'}
+            
+            if(isfield(mp.est,'flagUseJac')==false); mp.est.flagUseJac = false; end   %--Create the flag if it doesn't exist
+            
+            if(mp.est.flagUseJac) %--Send in the Jacobian if true
+                ev = falco_est_pairwise_probing(mp,jacStruct);
+            else %--Otherwise don't pass the Jacobian
+                ev = falco_est_pairwise_probing(mp);
+            end
+            
+            EfieldVec = ev.Eest;
+            IincoVec = ev.IincoEst;
+    end
+    
+    %% Add spatially-dependent weighting to the control Jacobians
     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5.*repmat(mp.WspatialVec,[1,mp.dm5.Nele,mp.jac.Nmode]); end
@@ -317,7 +307,12 @@ for Itr=1:mp.Nitr
 % %         mp.dm1.Nele+mp.dm2.Nele+mp.dm8.Nele + dm9_subset ];
     
     %% Wavefront Control
+
+    cvar.Itr = Itr;
+    cvar.EfieldVec = EfieldVec;
+    cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
+    
     %--Save out regularization used.
     out.log10regHist(Itr) = cvar.log10regUsed; 
     

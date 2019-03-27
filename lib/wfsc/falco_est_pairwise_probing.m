@@ -40,7 +40,12 @@
 %  - mp.est.Qcoef
 %  - mp.est.Rcoef
 
-function [ev] = falco_est_pairwise_probing(mp)
+function [ev] = falco_est_pairwise_probing(mp,varargin)
+
+%--If there is a second input, it is the Jacobian structure
+if( size(varargin, 2)==1 )
+    jacStruct = varargin{1};
+end
 
 %--Select number of actuators across based on chosen DM for the probing
 if(mp.est.probe.whichDM==1)
@@ -156,9 +161,10 @@ for si=1:mp.Nsbp
 
         %--Take probed image
         Im = falco_get_sbp_image(mp,si);
+        ImNonneg = Im; ImNonneg(Im<0) = 0;
         whichImg = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
-        if(mp.flagPlot);  figure(203); imagesc(log10(Im),[-8 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
+        if(mp.flagPlot);  figure(203); imagesc(log10(ImNonneg),[-8 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
 
         %--Store probed image and its DM settings
         ev.Icube(:,:,whichImg) = Im;
@@ -184,51 +190,69 @@ for si=1:mp.Nsbp
     end
 
 
-    %% Perform the estimation
-
-    %% Propagate each DM setting to the image plane. (model based)
-    % For unprobed field based on model:
-    if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom;  end % Added July 9, 2014
-    E0 = model_compact(mp, modvar);
-    E0vec = E0(mp.Fend.corr.maskBool);
-
-    %--For probed fields based on model:
-    Eplus  = zeros(size(Iplus ));
-    Eminus = zeros(size(Iminus));
-    for iProbe=1:Npairs
-        % For plus probes:
-        if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
-        if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
-        Etemp = model_compact(mp, modvar);
-        Eplus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
-        % For minus probes:
-        if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
-        if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
-        Etemp = model_compact(mp, modvar);
-        Eminus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
-    end
-
-    %% Create delta E-fields for each probe image. Then create Npairs phase angles.
-    dEplus  = Eplus  - repmat(E0vec,[1,Npairs]);
-    dEminus = Eminus - repmat(E0vec,[1,Npairs]);
-    dphdm  = zeros( [mp.Fend.corr.Npix, Npairs]); %--phases of the probes
-    for iProbe=1:Npairs
-        dphdm(:,iProbe) = atan2( imag(dEplus(:,iProbe))-imag(dEminus(:,iProbe)),real(dEplus(:,iProbe))-real(dEminus(:,iProbe)) );
-    end
-
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
     ampSq = (Iplus+Iminus)/2 - repmat(I0vec,[1,Npairs]);  % square of probe E-field amplitudes
     ampSq(ampSq<0) = 0;  % If probe amplitude is zero, amplitude is zero there.
     amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
     isnonzero = all(amp,2);
     zAll = ( (Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs,mp.Fend.corr.Npix]
-
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.Fend.Neta,mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:,iProbe); 
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
         if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow; pause(1);  end
     end
+    
+    %% Perform the estimation
+    
+    if(mp.est.flagUseJac) %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
+        
+        dEplus  = zeros(size(Iplus ));
+        for iProbe=1:Npairs
+            if(mp.est.probe.whichDM == 1)
+                dV = DM1Vplus(:,:,iProbe)-DM1Vnom;
+                dEplus(:,iProbe) = squeeze(jacStruct.G1(:,:,si))*dV(mp.dm1.act_ele);
+            elseif(mp.est.probe.whichDM == 2)
+                dV = DM2Vplus(:,:,iProbe)-DM2Vnom;
+                dEplus(:,iProbe) = squeeze(jacStruct.G2(:,:,si))*dV(mp.dm2.act_ele);
+            end
+        end
+        
+
+    else %--Get the probe phase from the model and the probe amplitude from the measurements
+
+        % For unprobed field based on model:
+        if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom;  end
+        if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom;  end % Added July 9, 2014
+        E0 = model_compact(mp, modvar);
+        E0vec = E0(mp.Fend.corr.maskBool);
+
+        %--For probed fields based on model:
+        Eplus  = zeros(size(Iplus ));
+        Eminus = zeros(size(Iminus));
+        for iProbe=1:Npairs
+            % For plus probes:
+            if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
+            if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
+            Etemp = model_compact(mp, modvar);
+            Eplus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
+            % For minus probes:
+            if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
+            if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
+            Etemp = model_compact(mp, modvar);
+            Eminus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
+        end
+
+        %%--Create delta E-fields for each probe image. Then create Npairs phase angles.
+        dEplus  = Eplus  - repmat(E0vec,[1,Npairs]);
+        dEminus = Eminus - repmat(E0vec,[1,Npairs]);
+        dphdm  = zeros( [mp.Fend.corr.Npix, Npairs]); %--phases of the probes
+        for iProbe=1:Npairs
+            dphdm(:,iProbe) = atan2( imag(dEplus(:,iProbe))-imag(dEminus(:,iProbe)),real(dEplus(:,iProbe))-real(dEminus(:,iProbe)) );
+        end
+        
+    end 
+
+
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
@@ -236,17 +260,19 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<
     Eest = zeros(mp.Fend.corr.Npix,1);
     zerosCounter = 0;
     for ipix=1:mp.Fend.corr.Npix
-        H = zeros(Npairs,2); % Observation matrix
-        if(isnonzero(ipix)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
-            for iProbe=1:Npairs
-                H(iProbe,:) = amp(ipix,iProbe)*[cos(dphdm(ipix,iProbe)), sin(dphdm(ipix,iProbe)) ];
-            end
+        
+        if(mp.est.flagUseJac) 
+            dE = dEplus(ipix,:).';
+            H = [real(dE),imag(dE)];
         else
-            zerosCounter = zerosCounter+1;
-%             if( strcmpi(ep.probeAmpType,'both') )
-%                 dE = dEplus(ipix,:).';
-%                 H = [real(dE),imag(dE)]; %nonlinear way of calculating
-%             end
+            H = zeros(Npairs,2); % Observation matrix
+            if(isnonzero(ipix)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
+                for iProbe=1:Npairs
+                    H(iProbe,:) = amp(ipix,iProbe)*[cos(dphdm(ipix,iProbe)), sin(dphdm(ipix,iProbe)) ];
+                end
+            else
+                zerosCounter = zerosCounter+1;
+            end
         end
         Epix = pinv(H)*zAll(:,ipix); %--Batch process estimation
         Eest(ipix) = Epix(1) + 1i*Epix(2);
@@ -286,14 +312,19 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     
     %--Construct the observation matrix, H, for all pixels
     Hall = zeros(Npairs,2,mp.Fend.corr.Npix);
-    for jj=1:mp.Fend.corr.Npix
-        H = zeros(Npairs,2); % Observation matrix
-        if(isnonzero(jj)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
-            for qq=1:Npairs
-                H(qq,:) = amp(jj,qq)*[cos(dphdm(jj,qq)), sin(dphdm(jj,qq)) ];
+    for ipix=1:mp.Fend.corr.Npix
+        if(mp.est.flagUseJac)
+            dE = dEplus(ipix,:).'; % dE based on the Jacobian only
+            H = [real(dE),imag(dE)]; % Observation matrix
+        else
+            H = zeros(Npairs,2); % Observation matrix
+            if(isnonzero(ipix)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
+                for qq=1:Npairs
+                    H(qq,:) = amp(ipix,qq)*[cos(dphdm(ipix,qq)), sin(dphdm(ipix,qq)) ];
+                end
             end
-        Hall(:,:,jj) = H;    
         end
+        Hall(:,:,ipix) = H;    
     end
 
     %--Construct Gamma matrix from Matrices already constructed for least-squares
