@@ -121,7 +121,7 @@ if(mp.flagPlot)
     ax2=get(h_psf,'position'); % Save the position as ax
     set(h_psf,'position',ax2); % Manually setting this holds the position with colorbar 
     subplot(2,3,2); 
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(ImNonneg),[-10 -3]); 
+    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-10 -3]); 
     axis xy equal tight; ch_psf=colorbar; colormap parula;
     xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
     ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
