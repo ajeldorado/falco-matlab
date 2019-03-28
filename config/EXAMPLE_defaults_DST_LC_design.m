@@ -247,6 +247,7 @@ mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 mp.whichPupil = 'Simple';
 mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
+mp.P1.stretch = 1.00; % factor that stretches the horizontal axis to create elliptical beam 
 mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
 mp.P1.Nstrut = 0;% Number of struts 

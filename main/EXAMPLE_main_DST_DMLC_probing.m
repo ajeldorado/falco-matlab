@@ -57,12 +57,11 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% mp.estimator = 'perfect';
-
-% %--Use just 1 wavelength for initial debugging of code
+% %--DEBUGGING
 % mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-
+% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% % mp.estimator = 'perfect';
 
 %% Step 4: Generate the label associated with this trial
 

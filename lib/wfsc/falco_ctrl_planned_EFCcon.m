@@ -121,7 +121,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFCcon(mp, cvar)
         end
         vals_list = [log10regSchedOut; cvar.latestBestDMfac];
         
-        [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+        [cvar.cMin,dDM] = falco_ctrl_EFCcon_base(ni,vals_list,mp,cvar);
         fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
 %         fprintf('Scheduled values of: \tlog10reg = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',log10regSchedOut,cvar.latestBestDMfac,cvar.cMin)
 
