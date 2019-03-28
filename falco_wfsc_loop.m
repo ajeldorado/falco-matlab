@@ -228,6 +228,7 @@ for Itr=1:mp.Nitr
     %% Compute the control Jacobians for each DM
     if( (Itr==1) || cvar.flagRelin )
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
+        if mp.aux.omega ~= 0 && cvar.Itr>=mp.aux.firstOmegaItr; jacStructCP = model_JacobianCP(mp);end %--Get structure containing Jacobians for CP JLlop
     end
     
     % %--Save or load a previous Jacobian (esp. useful for testbeds)
@@ -244,6 +245,7 @@ for Itr=1:mp.Nitr
     
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
     [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
+    
 
     % Add spatially-dependent weighting to the control Jacobians
     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
@@ -251,11 +253,30 @@ for Itr=1:mp.Nitr
     if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5.*repmat(mp.WspatialVec,[1,mp.dm5.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end 
-
+    cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
+    % Add spatially-dependent weighting to the control Jacobians for CP
+    % JLlop
+%     [mp,jacStructCP] = falco_ctrl_cull(mp,cvar,jacStructCP); %JLlop
+            %--Crop out unused actuators from the control Jacobian
+    if mp.aux.omega ~= 0
+        if(cvar.flagCullAct && cvar.flagRelin)
+            if(any(mp.dm_ind==1)); jacStructCP.G1 = jacStructCP.G1(:,mp.dm1.act_ele,:); end
+            if(any(mp.dm_ind==2)); jacStructCP.G2 = jacStructCP.G2(:,mp.dm2.act_ele,:); end
+            if(any(mp.dm_ind==5)); jacStructCP.G5 = jacStructCP.G5(:,mp.dm5.act_ele,:); end
+            if(any(mp.dm_ind==8)); jacStructCP.G8 = jacStructCP.G8(:,mp.dm8.act_ele,:); end
+            if(any(mp.dm_ind==9)); jacStructCP.G9 = jacStructCP.G9(:,mp.dm9.act_ele,:); end
+        end
+        if(any(mp.dm_ind==1)); jacStructCP.G1 = jacStructCP.G1.*repmat(1,[1,mp.dm1.Nele,mp.jac.Nmode]); end
+        if(any(mp.dm_ind==2)); jacStructCP.G2 = jacStructCP.G2.*repmat(1,[1,mp.dm2.Nele,mp.jac.Nmode]); end
+        if(any(mp.dm_ind==5)); jacStructCP.G5 = jacStructCP.G5.*repmat(1,[1,mp.dm5.Nele,mp.jac.Nmode]); end
+        if(any(mp.dm_ind==8)); jacStructCP.G8 = jacStructCP.G8.*repmat(1,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
+        if(any(mp.dm_ind==9)); jacStructCP.G9 = jacStructCP.G9.*repmat(1,[1,mp.dm9.Nele,mp.jac.Nmode]); end 
+        jacStruct.jacStructCP = jacStructCP;
+    end
     %fprintf('Total Jacobian Calcuation Time: %.2f\n',toc);
 
     %--Compute the number of total actuators for all DMs used. 
-    cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
+%     cvar.NeleAllCP = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
 
     %% Zero out Jacobian response for railed actuators
     
@@ -318,6 +339,7 @@ for Itr=1:mp.Nitr
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
     %--Save out regularization used.
     out.log10regHist(Itr) = cvar.log10regUsed; 
+    out.omegaHist(Itr) = cvar.omegaUsed; 
     
 %     switch lower(mp.controller)
 %         case{'plannedefc','gridsearchefc'}
@@ -425,6 +447,41 @@ else
 end
 fprintf('\n\n');
 
+% Look if NI is going up too many times
+if Itr>3
+    if InormHist(Itr-1)<InormHist(Itr)
+        countNIprob=countNIprob+1;
+        if countNIprob>mp.aux.minNIprob
+            if mp.aux.flagOmega==1
+                mp.aux.flagOmega=0;
+                countNIprob=0;
+            else
+                mp.aux.flagOmega=1;
+                countNIprob=0;
+            end
+        end
+    else
+        countNIprob=0;
+    end
+else
+    countNIprob=0;
+end
+
+figure(201)
+plot(log10(InormHist(1:Itr)),mp.thput_vec(1:Itr),'LineWidth',3)
+xlabel('RC')
+ylabel('Throughput')
+set(gca,'FontSize',15)
+figure(202)
+plot(1:Itr,log10(InormHist(1:Itr)),'LineWidth',3)
+xlabel('Itr')
+ylabel('NI')
+set(gca,'FontSize',15)
+figure(203)
+plot(1:Itr,mp.thput_vec(1:Itr),'LineWidth',3)
+xlabel('Itr')
+ylabel('Throughput')
+set(gca,'FontSize',15)
 
 % %--Save out DM commands after each iteration in case the run crashes part way through.
 % fprintf('Saving DM commands for this iteration...')
@@ -694,6 +751,36 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     
     %--Make the regularization matrix. (Define only the diagonal here to save RAM.)
     cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
+%     if(cvar.flagRelin==true);   cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);  end %--Re-use cvar.GstarG_wsum since no re-linearization was done. %--No relative weighting among the DMs
+    fprintf(' done. Time: %.3f\n',toc);
+    if mp.aux.omega ~= 0
+        fprintf('Computing linearized control matrices from the JacobianCP...'); tic;
+
+        %--Compute matrices for linear control with regular EFC
+    %     if(cvar.flagRelin==true);  cvar.GstarG_wsum  = zeros(cvar.NeleAll,cvar.NeleAll);  end %--Re-use cvar.GstarG_wsum since no re-linearization was done.
+        cvar.GcptransGcp_wsum  = zeros(cvar.NeleAll,cvar.NeleAll); 
+
+        for im=1:mp.jac.Nmode
+        %     si = mp.jac.sbp_inds(im);
+        %     zi = mp.jac.zern_inds(im);
+
+            Gstack = [jacStruct.jacStructCP.G1(:,:,im), jacStruct.jacStructCP.G2(:,:,im), ...
+                jacStruct.jacStructCP.G3(:,:,im), jacStruct.jacStructCP.G4(:,:,im), jacStruct.jacStructCP.G5(:,:,im), ...
+                jacStruct.jacStructCP.G6(:,:,im), jacStruct.jacStructCP.G7(:,:,im), jacStruct.jacStructCP.G8(:,:,im), ...
+                jacStruct.jacStructCP.G9(:,:,im)];
+
+            %--Square matrix part stays the same if no re-linearization has occurrred. 
+            cvar.GcptransGcp_wsum  = cvar.GcptransGcp_wsum  + mp.jac.weights(im)*real(Gstack'*Gstack); 
+            %if(cvar.flagRelin==true);  cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(im)*real(Gstack'*Gstack);  end
+
+            %--The G^*E part changes each iteration because the E-field changes.
+        end
+        clear GallCell Gstack  % save RAM
+    end
+    %%%%%cvar.GstarG_wsum = cvar.GstarG_wsum(cvar.dm_subset,cvar.dm_subset);
+    %%%%cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum(cvar.dm_subset);
+    
+    %--Make the regularization matrix. (Define only the diagonal here to save RAM.)
 %     if(cvar.flagRelin==true);   cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);  end %--Re-use cvar.GstarG_wsum since no re-linearization was done. %--No relative weighting among the DMs
     fprintf(' done. Time: %.3f\n',toc);
 

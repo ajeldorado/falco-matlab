@@ -30,7 +30,7 @@ mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate
 
 mp.lambda0 = 575e-9;    %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 6;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nsbp = 4;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
@@ -101,7 +101,7 @@ mp.controller = 'gridsearchEFC';
 
 % % % % GRID SEARCH EFC DEFAULTS     
 % %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 20; %--Number of estimation+control iterations to perform
+mp.Nitr = 200; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2]; %--Which DMs to use
 
@@ -239,10 +239,10 @@ mp.P3.D = 46.3e-3;
 mp.P4.D = 46.3e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 250;
-mp.P2.compact.Nbeam = 250;
-mp.P3.compact.Nbeam = 250;
-mp.P4.compact.Nbeam = 250;
+mp.P1.compact.Nbeam = 150;
+mp.P2.compact.Nbeam = 150;
+mp.P3.compact.Nbeam = 150;
+mp.P4.compact.Nbeam = 150;
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -259,10 +259,10 @@ mp.Nrelay3to4 = 1;
 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 250;
-mp.P2.full.Nbeam = 250;
-mp.P3.full.Nbeam = 250;
-mp.P4.full.Nbeam = 250;
+mp.P1.full.Nbeam = 150;
+mp.P2.full.Nbeam = 150;
+mp.P3.full.Nbeam = 150;
+mp.P4.full.Nbeam = 150;
 
 %% Mask Definitions
 

@@ -34,17 +34,29 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     % Step 3: Compute the EFC command to use.
 
     
-    %% Initializations    
-    vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
+    %% Initializations   
+    if cvar.Itr<mp.aux.ItrDump 
+        vals_list = allcomb(linspace(0,3,7),mp.ctrl.dmfacVec).';
+    else
+        vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
+    end
     Nvals = max(size(vals_list,2));
-    Inorm_list = zeros(Nvals,1);
+    if mp.aux.flagOmega==1
+        NvalsOmega = 5;
+        valsOmega_list = [linspace(mp.aux.omegaMin,mp.aux.omegaMax,NvalsOmega)];
+    else
+        valsOmega_list = [-inf];
+    end
+    NvalsOmega = numel(valsOmega_list);
+    Inorm_list = zeros(Nvals,NvalsOmega);
+    thput_list = zeros(Nvals,NvalsOmega);
 
     % Temporarily store computed DM commands so that the best one does not have to be re-computed
-    if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals); end
-    if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals); end
-    if(any(mp.dm_ind==5)); dDM5V_store = zeros(mp.dm5.Nact,mp.dm5.Nact,Nvals); end
-    if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals); end
-    if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals); end
+    if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals,NvalsOmega); end
+    if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals,NvalsOmega); end
+    if(any(mp.dm_ind==5)); dDM5V_store = zeros(mp.dm5.Nact,mp.dm5.Nact,Nvals,NvalsOmega); end
+    if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals,NvalsOmega); end
+    if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals,NvalsOmega); end
 
     %% Empirically find the regularization value giving the best contrast
     
@@ -52,21 +64,25 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     %--Loop over all the settings to check empirically
     if(mp.flagParfor) %--Parallelized
         parfor ni = 1:Nvals
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
-            if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
-            if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
-            if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
-            if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
-            if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
+            for nj = 1:NvalsOmega
+            [Inorm_list(ni,nj),thput_list(ni,nj),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,mp,cvar);
+            if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj) = dDM_temp.dDM1V; end
+            if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj) = dDM_temp.dDM2V; end
+            if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj) = dDM_temp.dDM5V; end
+            if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj) = dDM_temp.dDM8V; end
+            if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj) = dDM_temp.dDM9V; end
+            end
         end
     else %--Not Parallelized
         for ni = 1:Nvals
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
-            if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
-            if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
-            if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
-            if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
-            if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
+            for nj = 1:NvalsOmega
+                [Inorm_list(ni,nj),thput_list(ni,nj),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,mp,cvar);
+                if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj) = dDM_temp.dDM1V; end
+                if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj) = dDM_temp.dDM2V; end
+                if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj) = dDM_temp.dDM5V; end
+                if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj) = dDM_temp.dDM8V; end
+                if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj) = dDM_temp.dDM9V; end
+            end
         end
     end
 
@@ -82,20 +98,44 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     fprintf('\n')
 
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
-    [cvarOut.cMin,indBest] = min(Inorm_list(:));
+    [cvarOut.cMin,indBest] = min(Inorm_list(:)./(thput_list(:).^2));
+%     [cvarOut.cMin,indBest] = min(Inorm_list(:));
+    [indBest,indBestOmega] = ind2sub(size(Inorm_list),indBest);
+    mp.aux.omega = valsOmega_list(indBestOmega);
+%     indBest = indBest - 1; %JLlop
+%     cvarOut.cMin = Inorm_list(indBest);
+%     
+%     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
+%     if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
+%     if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest); end
+%     if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest); end
+%     if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest); end
 
-    indBest = indBest - 1; %JLlop
-    cvarOut.cMin = Inorm_list(indBest);
     
-    if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
-    if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
-    if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest); end
-    if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest); end
-    if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest); end
-
-    
-    cvarOut.log10regUsed = vals_list(1,indBest);
-    dmfacBest = vals_list(2,indBest);
+    val = vals_list(1,indBest)-mp.aux.betaMinusOne;
+    if ismember(val,vals_list)
+        indBest=find(vals_list(1,:)==val);
+    	cvarOut.log10regUsed = vals_list(1,indBest);
+    	cvarOut.omegaUsed = mp.aux.omega;
+        cvarOut.cMin = Inorm_list(indBest);
+        dmfacBest = vals_list(2,indBest);
+        if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest,indBestOmega); end
+    else
+        vals_listaux = [val;vals_list(2,indBest)];
+        [Inorm,thput,dDM_temp] = falco_ctrl_EFC_base(1,vals_listaux,mp,cvar);
+        cvarOut.log10regUsed = val;
+        cvarOut.cMin = Inorm;
+        dmfacBest = vals_list(2,indBest);
+        if(any(mp.dm_ind==1)); dDM.dDM1V = dDM_temp.dDM1V; end
+        if(any(mp.dm_ind==2)); dDM.dDM2V = dDM_temp.dDM2V; end
+        if(any(mp.dm_ind==5)); dDM.dDM5V = dDM_temp.dDM5V; end
+        if(any(mp.dm_ind==8)); dDM.dDM8V = dDM_temp.dDM8V; end
+        if(any(mp.dm_ind==9)); dDM.dDM9V = dDM_temp.dDM9V; end
+    end
     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
     
 %     cp.log10regBest(Itr) = vals_list(1,indBest);
