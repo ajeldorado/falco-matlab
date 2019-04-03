@@ -21,13 +21,14 @@ raft_apDia_m = 3.5;% raft diameter in meters (20m design has 3.5m rafts)
 
 input.numRaftRings = 3;
 input.raftDia = input.Nbeam/19*3;%samples
-input.wGap = 6e-3/raft_apDia_m*input.raftDia;
-input.raftGap = 30e-3/raft_apDia_m*input.raftDia;
+input.wGap = 20e-3/raft_apDia_m*input.raftDia;
+input.raftGap = 50e-3/raft_apDia_m*input.raftDia;
 
 % input.telDia = input.Nbeam;
 
-% input.raftOffsets = zeros(hexSegMirror_numSegments( input.numRaftRings ),2);
-% input.raftOffsets(2,:) = input.raftDia/raft_apDia_m*[-10e-3,10e-3];
+% Allows to change the position of each raft individually 
+input.raftOffsets = zeros(hexSegMirror_numSegments( input.numRaftRings ),2);
+input.raftOffsets(2,:) = input.raftDia/raft_apDia_m*[0,40e-3];
 
 
 RAFT = falco_gen_pupil_iSAT( input );
