@@ -198,6 +198,9 @@ switch upper(mp.whichPupil)
         input.raftDia = input.Nbeam/19*3;% samples
         input.wGap = mp.P1.wGap*input.Nbeam; % samples
         input.raftGap = mp.P1.raftGap*input.Nbeam; % samples
+        if(isfield(mp.P1,'raftOffsets'))
+            input.raftOffsets = mp.P1.raftOffsets*input.raftDia;% samples 
+        end
         mp.P1.full.mask    = falco_gen_pupil_iSAT( input );
         
         input.Nbeam = mp.P1.compact.Nbeam;
@@ -205,6 +208,9 @@ switch upper(mp.whichPupil)
         input.raftDia = input.Nbeam/19*3;%samples
         input.wGap = mp.P1.wGap*input.Nbeam; % samples
         input.raftGap = mp.P1.raftGap*input.Nbeam; % samples
+        if(isfield(mp.P1,'raftOffsets'))
+            input.raftOffsets = mp.P1.raftOffsets*input.raftDia;% samples 
+        end
         mp.P1.compact.mask = falco_gen_pupil_iSAT( input );
     
 end
