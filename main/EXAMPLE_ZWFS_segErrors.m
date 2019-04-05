@@ -11,9 +11,9 @@ clear;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-pathStem = '/Users/gruane/Desktop/SCDA/';
 
 %--Library locations
+pathStem = '~/Desktop/SCDA/';
 mp.path.falco = [pathStem,'falco-matlab/'];  %--Location of FALCO
 mp.path.proper = [pathStem,'PROPER/'];  %--Location of FALCO; %--Location of the MATLAB PROPER library
 
@@ -27,7 +27,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-defaults_DST_LC_design
+EXAMPLE_defaults_DST_LC_design
 
 %% Step 3: Overwrite default values as desired
 

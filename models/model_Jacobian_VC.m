@@ -100,8 +100,6 @@ end
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% EP2 = (1/1j)^2*rot90(EP1,2); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP2 = circshift(EP2,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
@@ -194,10 +192,10 @@ if(whichDM==1)
             EP3pad = padOrCropEven(EP3, Nfft1 );
 
             %--FFT from P3 to Fend.and apply vortex
-            EF3 = (1/1j)*fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft1;
+            EF3 = fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft1;
 
             %--FFT from Vortex FPM to Lyot Plane
-            EP4 = (1/1j)*fftshift(fft2(EF3))/Nfft1;
+            EP4 = fftshift(fft2(EF3))/Nfft1;
             if(Nfft1 > mp.P4.compact.Narr)
                 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
             else
@@ -284,10 +282,10 @@ if(whichDM==2)
             EP3pad = padOrCropEven(EP3, Nfft2 );
 
             %--FFT from P3 to Fend.and apply vortex
-            EF3 = (1/1j)*fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft2;
+            EF3 = fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft2;
 
             %--FFT from Vortex FPM to Lyot Plane
-            EP4 = (1/1j)*fftshift(fft2(EF3))/Nfft2;
+            EP4 = fftshift(fft2(EF3))/Nfft2;
             if(Nfft2 > mp.P4.compact.Narr)
                 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
             else

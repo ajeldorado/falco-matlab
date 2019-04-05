@@ -149,13 +149,13 @@ if(whichDM==1)
             % 1st back-propagate the SP (by rotating 180-degrees) to the previous pupil, and then
             % 2nd negate the coordinates of the box used. 
             dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 
             %--Matrices for the MFT from the pupil to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--DFT from SP to FPM
@@ -211,13 +211,13 @@ if(whichDM==2)
             % 2nd negate the coordinates of the box used. 
             apodRot180 = padOrCropEven( apodRot180, mp.dm2.compact.NdmPad);
             dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 
             %--Matrices for the MFT from the pupil to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--DFT from SP to FPM

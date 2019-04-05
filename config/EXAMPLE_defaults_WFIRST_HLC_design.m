@@ -26,6 +26,10 @@ mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY fo
 mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate throughput
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
+%--Where to shift the source to compute the intensity normalization value.
+mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
+
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 575e-9;    %--Central wavelength of the whole spectral bandpass [meters]
