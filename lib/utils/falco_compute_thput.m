@@ -26,7 +26,7 @@ function [mp,thput] = falco_compute_thput(mp)
             maskHM(ImTemp>=1/2*max(max(ImTemp))) = 1;
             % figure(325); imagesc(mp.Fend.eval.xisDL,mp.Fend.eval.etasDL,maskHM); axis xy equal tight; drawnow;
             thput = sum(ImTemp(maskHM==1))/mp.sumPupil*mean(mp.Fend.eval.I00);
-            fprintf('Core throughput with the half-max isophote(s) = %.2f%% \tat separation = (%.1f, %.1f) lambda0/D.\n',100*thput,mp.thput_eval_x,mp.thput_eval_y);
+            fprintf('Core throughput within the half-max isophote(s) = %.2f%% \tat separation = (%.1f, %.1f) lambda0/D.\n',100*thput,mp.thput_eval_x,mp.thput_eval_y);
             
         case{'ee','e.e.'} %--Absolute energy encircled within a given radius
 
