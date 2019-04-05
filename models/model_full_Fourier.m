@@ -221,14 +221,14 @@ switch upper(mp.coro)
         error('model_full_Fourier.m: Modely type\t %s\t not recognized.\n',mp.coro);
 end
 
-% %--Remove the FPM completely if normalization value is being found
-% if(normFac==0)
-%     switch upper(mp.coro)
-%         case{'VORTEX','VC','AVC'}
-%             EP4 = propcustom_2FT(EP3, mp.centering);
-%             EP4 = padOrCropEven(EP4,mp.P4.full.Narr);
-%     end
-% end
+%--Remove the FPM completely if normalization value is being found
+if(normFac==0)
+    switch upper(mp.coro)
+        case{'VORTEX','VC','AVC'}
+            EP4 = propcustom_2FT(EP3, mp.centering);
+            EP4 = padOrCropEven(EP4,mp.P4.full.Narr);
+    end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Back to common propagation any coronagraph type   %%%%%%%%%%%%%
