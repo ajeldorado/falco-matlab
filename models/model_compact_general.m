@@ -217,13 +217,13 @@ switch upper(mp.coro)
 
 end
   
-% %--Remove the FPM completely if normalization value is being found
-% if(normFac==0)
-%     switch upper(mp.coro)
-%         case{'VORTEX','VC','AVC'}
-%             EP4 = propcustom_relay(EP3,mp.Nrelay3to4, mp.centering);
-%     end
-% end
+%--Remove the FPM completely if normalization value is being found
+if(normFac==0)
+    switch upper(mp.coro)
+        case{'VORTEX','VC','AVC'}
+            EP4 = propcustom_relay(EP3,mp.Nrelay3to4, mp.centering);
+    end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Back to common propagation any coronagraph type   %%%%%%%%%%%%%
