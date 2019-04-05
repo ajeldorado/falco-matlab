@@ -45,8 +45,12 @@ function mp = falco_config_gen_FPM_SPLC(mp)
         
         end
         
-        mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
-        mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);   
+        switch mp.layout
+            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            otherwise
+                mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
+                mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);  
+        end
         
         mp.F3.compact.Nxi = size(mp.F3.compact.mask.amp,2);
         mp.F3.compact.Neta= size(mp.F3.compact.mask.amp,1);  

@@ -25,13 +25,11 @@
 %
 % INPUTS:
 % -mp = structure of model parameters
-% -DM = structure of DM settings
 %
 % OUTPUTS:
 % -jacStruct = control Jacobian for the modes specified
 
 function jacStruct = model_Jacobian(mp)
-
 
 
     %--Calculate the starting DM surfaces beforehand to save time.

@@ -21,7 +21,11 @@ function mp = falco_config_gen_chosen_LS(mp)
 %% Lyot plane resolution, coordinates, and cropped-down mask for compact model
 
 %--Resolution at Lyot Plane
-mp.P4.full.dx = mp.P4.D/mp.P4.full.Nbeam;
+switch mp.layout
+    case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+    otherwise
+        mp.P4.full.dx = mp.P4.D/mp.P4.full.Nbeam;
+end
 mp.P4.compact.dx = mp.P4.D/mp.P4.compact.Nbeam; %mp.NlyotFactor*mp.P4.full.dx;
 
 switch mp.whichPupil
@@ -55,9 +59,12 @@ switch mp.whichPupil
         changes.wStrut = mp.P4.wStrut;
         changes.flagRot180 = true;
 
-        %--Make or read in Lyot stop (LS) for the 'full' model
-        mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes);
-        
+        switch mp.layout
+            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            otherwise
+                %--Make or read in Lyot stop (LS) for the 'full' model
+                mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes);
+        end
         %--Make or read in Lyot stop (LS) for the 'compact' model
         mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam,mp.centering,changes);
 
@@ -66,15 +73,19 @@ switch mp.whichPupil
                 case 'bowtie'
                     %--Define Lyot stop generator function inputs in a structure
                     inputs.Dbeam = mp.P4.D; % meters;
-                    inputs.Nbeam = mp.P4.full.Nbeam; 
                     inputs.ID = mp.P4.IDnorm; % (pupil diameters)
                     inputs.OD = mp.P4.ODnorm; % (pupil diameters)
                     inputs.ang = mp.P4.ang; % (degrees)
                     inputs.centering = mp.centering; % 'interpixel' or 'pixel'
 
-                    %--Make bowtie Lyot stop (LS) for the 'full' model
-                    mp.P4.full.mask = falco_gen_bowtie_LS(inputs);
-
+                    switch mp.layout
+                        case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+                        otherwise
+                            %--Make bowtie Lyot stop (LS) for the 'full' model
+                            inputs.Nbeam = mp.P4.full.Nbeam; 
+                            mp.P4.full.mask = falco_gen_bowtie_LS(inputs);
+                    end
+                    
                     %--Make bowtie Lyot stop (LS) for the 'compact' model
                     inputs.Nbeam = mp.P4.compact.Nbeam; 
                     mp.P4.compact.mask = falco_gen_bowtie_LS(inputs);    
@@ -255,16 +266,19 @@ switch lower(mp.coro)
         mp.P4.compact.croppedMask = mp.P4.compact.mask;
     otherwise
     
-        % --Crop down the high-resolution Lyot stop to get rid of extra zero padding
-        LSsum = sum(mp.P4.full.mask(:));
-        LSdiff = 0; counter = 2;
-        while( abs(LSdiff) <= 1e-7)
-            mp.P4.full.Narr = length(mp.P4.full.mask)-counter;
-            LSdiff = LSsum - sum(sum( padOrCropEven(mp.P4.full.mask, mp.P4.full.Narr-2) )); %--Subtract an extra 2 to negate the extra step that overshoots.
-            counter = counter + 2;
+        switch mp.layout
+            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            otherwise
+                %--Crop down the high-resolution Lyot stop to get rid of extra zero padding
+                LSsum = sum(mp.P4.full.mask(:));
+                LSdiff = 0; counter = 2;
+                while( abs(LSdiff) <= 1e-7)
+                    mp.P4.full.Narr = length(mp.P4.full.mask)-counter;
+                    LSdiff = LSsum - sum(sum( padOrCropEven(mp.P4.full.mask, mp.P4.full.Narr-2) )); %--Subtract an extra 2 to negate the extra step that overshoots.
+                    counter = counter + 2;
+                end
+                mp.P4.full.croppedMask = padOrCropEven(mp.P4.full.mask,mp.P4.full.Narr); %--The cropped-down Lyot stop for the full model.
         end
-        mp.P4.full.croppedMask = padOrCropEven(mp.P4.full.mask,mp.P4.full.Narr); %--The cropped-down Lyot stop for the full model.
-
 
         % --Crop down the low-resolution Lyot stop to get rid of extra zero padding. Speeds up the compact model.
         LSsum = sum(mp.P4.compact.mask(:));

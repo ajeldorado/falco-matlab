@@ -174,13 +174,13 @@ if(whichDM==1)
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
             % Second, negate the coordinates of the box used.
             dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 
             %--Matrices for the MFT from the pupil P3 to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
@@ -243,13 +243,13 @@ if(whichDM==2)
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
             % Second, negate the coordinates of the box used.
             dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
 
             %--Matrices for the MFT from the pupil P3 to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
@@ -262,7 +262,6 @@ if(whichDM==2)
             EP4noFPM = zeros(mp.dm2.compact.NdmPad);
             if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
             EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
-            %EP4noFPM = (1/1j)^2*rot90(EP4noFPM,2); if( strcmpi(mp.centering,'pixel') ); EP4noFPM = circshift(EP4noFPM,[1 1]); end %--Re-image to next pupil plane. (1j)^2 comes from the coefficients of the 2 skipped MFTs
             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
             EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
 
@@ -348,7 +347,7 @@ if(whichDM==8)
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
 
             %--DFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
@@ -392,8 +391,6 @@ if(whichDM==9)
     
     %--Rotate 180 degrees to propagate to pupil P3
     EP3 = propcustom_2FT(EP2eff, mp.centering);
-%     EP3 = (1/1j)^2*rot90(EP2eff,2); %--Forward propagate to the next pupil plane (with the SP) by rotating 180 deg.
-%     if( strcmpi(mp.centering,'pixel') ); EP3 = circshift(EP3,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
     %--Apply apodizer mask.
     if(mp.flagApod)
@@ -460,7 +457,7 @@ if(whichDM==9)
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
 
             %--DFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
