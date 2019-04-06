@@ -22,7 +22,7 @@ function mp = falco_config_gen_chosen_LS(mp)
 
 %--Resolution at Lyot Plane
 switch mp.layout
-    case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+    case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
     otherwise
         mp.P4.full.dx = mp.P4.D/mp.P4.full.Nbeam;
 end
@@ -60,7 +60,7 @@ switch mp.whichPupil
         changes.flagRot180 = true;
 
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
             otherwise
                 %--Make or read in Lyot stop (LS) for the 'full' model
                 mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes);
@@ -79,7 +79,7 @@ switch mp.whichPupil
                     inputs.centering = mp.centering; % 'interpixel' or 'pixel'
 
                     switch mp.layout
-                        case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+                        case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
                         otherwise
                             %--Make bowtie Lyot stop (LS) for the 'full' model
                             inputs.Nbeam = mp.P4.full.Nbeam; 
@@ -267,7 +267,7 @@ switch lower(mp.coro)
     otherwise
     
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
             otherwise
                 %--Crop down the high-resolution Lyot stop to get rid of extra zero padding
                 LSsum = sum(mp.P4.full.mask(:));

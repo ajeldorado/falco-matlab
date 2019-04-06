@@ -170,14 +170,14 @@ switch lower(mp.layout)
         if(normFac~=0);  Eout = Eout/sqrt(normFac);  end
 
 
-    case{'wfirst_phaseb_hifi'} %--Use the true full model as the full model
+    case{'wfirst_phaseb_proper'} %--Use the true full model as the full model
 
         optval = mp.full;
         optval.use_errors =true;
         optval.use_dm1 = true;
         optval.use_dm2 = true;
-        optval.dm1_m = mp.dm1.V.*mp.dm1.VtoH + fitsread ([mp.full.phaseb_dir 'dm1_flatten.fits']); %--DM1 commands in meters
-        optval.dm2_m = mp.dm2.V.*mp.dm2.VtoH; %--DM2 commands in meters
+        optval.dm1_m = mp.dm1.V.*mp.dm1.VtoH + mp.full.dm1.flatmap; %--DM1 commands in meters
+        optval.dm2_m = mp.dm2.V.*mp.dm2.VtoH + mp.full.dm2.flatmap; %--DM2 commands in meters
         if(normFac==0)
             optval.source_x_offset = -mp.source_x_offset_norm;
             optval.source_y_offset = -mp.source_y_offset_norm;
