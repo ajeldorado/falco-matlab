@@ -47,7 +47,7 @@ switch upper(mp.whichPupil)
 
     case{'WFIRST180718'}
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
                 %--Load inside the model
             otherwise
                 %--Generate high-res input pupil for the 'full' model
@@ -214,7 +214,6 @@ switch upper(mp.whichPupil)
     
 end
 mp.P1.compact.Narr = length(mp.P1.compact.mask);  %--Number of pixels across the array containing the input pupil in the compact model
-mp.sumPupil = sum(sum(abs(mp.P1.compact.mask).^2)); %--Throughput is computed with the compact model
 
 %--NORMALIZED (in pupil diameter) coordinate grids in the input pupil for making the tip/tilted input wavefront within the compact model
 if(strcmpi(mp.centering,'interpixel') )
@@ -225,7 +224,7 @@ end
 [mp.P2.compact.XsDL,mp.P2.compact.YsDL] = meshgrid(mp.P2.compact.xsDL);
 
 switch mp.layout
-    case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+    case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
         switch mp.centering
             case{'interpixel'}
                 mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam);
@@ -243,6 +242,7 @@ else
     mp.P2.full.xsDL = ( -mp.P1.full.Narr/2:(mp.P1.full.Narr/2 -1) )*mp.P2.full.dx/mp.P2.D;
 end
 [mp.P2.full.XsDL,mp.P2.full.YsDL] = meshgrid(mp.P2.full.xsDL);
+
 
 
 end %--END OF FUNCTION

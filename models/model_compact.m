@@ -144,7 +144,7 @@ switch lower(mp.layout)
     case{'wfirst_phaseb_simple'} %--Use compact model as the full model, and the general FALCO model as the compact model.
         Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
         
-    case{'wfirst_phaseb_hifi'} %--Use the actual Phase B compact model as the compact model.
+    case{'wfirst_phaseb_proper'} %--Use the actual Phase B compact model as the compact model.
         Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
 end
     

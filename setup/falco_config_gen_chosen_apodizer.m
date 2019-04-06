@@ -65,7 +65,7 @@ switch lower(mp.coro)
         end
         
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
             otherwise
                 mp.P3.full.Narr= length(mp.P3.full.mask);
                 mp.P3.full.dx = mp.P2.full.dx;

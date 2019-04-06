@@ -242,7 +242,7 @@ switch upper(mp.coro)
     otherwise %case{'LC','DMLC','APLC','SPLC','FLC','SPC'}
         
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
             otherwise
                 %--FPM (at F3) Resolution [meters]
                 mp.F3.full.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.full.res;
@@ -261,7 +261,7 @@ switch upper(mp.coro)
         end
 
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
             otherwise
                 %--Coordinates (dimensionless [DL]) for the FPMs in the full model
                 if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi,2)==1  )
@@ -538,7 +538,7 @@ mp.full.NdmPad = NdmPad;
 % Starlight. Can add some propagation here to create an aberrate wavefront
 %   starting from a primary mirror.
 % switch mp.layout
-%     case{'wfirst_phaseb_simple','wfirst_phaseb_hifi'}
+%     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
 %         
 %     otherwise
 %         if(isfield(mp.P1.full,'E')==false)
@@ -556,6 +556,7 @@ mp.Eplanet = mp.P1.full.E; %--Initialize the input E-field for the planet at the
 if(isfield(mp.P1.compact,'E')==false)
     mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
 end
+mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2)); %--Throughput is computed with the compact model
 
 %% Off-axis, incoherent point source (exoplanet)
 mp.c_planet = 1;%1e-14;%4e-10;%3e-10;%1e-8; % contrast of exoplanet

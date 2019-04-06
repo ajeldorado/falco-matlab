@@ -13,8 +13,6 @@
 function [mp,thput] = falco_compute_thput(mp)
 
 
-
-
     ImTemp = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y,'eval');
     if(mp.flagPlot); figure(324); imagesc(mp.Fend.eval.xisDL,mp.Fend.eval.etasDL,ImTemp); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 
@@ -33,9 +31,10 @@ function [mp,thput] = falco_compute_thput(mp)
             % (x,y) location [lambda_c/D] in dark hole at which to evaluate throughput
             maskEE  = 0*mp.Fend.eval.RHOS;
             maskEE(mp.Fend.eval.RHOS<=mp.thput_radius) = 1;
-            
             % figure(325); imagesc(mp.Fend.eval.xisDL,mp.Fend.eval.etasDL,maskEE); axis xy equal tight; drawnow;
             thput = sum(ImTemp(maskEE==1))/mp.sumPupil*mean(mp.Fend.eval.I00);
             fprintf('E.E. throughput within a %.2f lambda/D radius = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n',mp.thput_radius,100*thput,mp.thput_eval_x,mp.thput_eval_y);
     end
+    
+    
 end %--END OF FUNCTION
