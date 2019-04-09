@@ -21,11 +21,11 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
             error('falco_est_perfect_Efield_with_Zernikes.m: Do not call this function to retrieve the LOWFS E-field. ')
         end
     end
-
+   
     if(mp.flagFiber)
-        Emat = zeros(mp.F4.Nlens, mp.jac.Nmode);
+        Emat = zeros(mp.Fend.Nlens, mp.jac.Nmode);
     else
-        Emat = zeros(mp.F4.corr.Npix, mp.jac.Nmode);
+        Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
     end
         
     for im=1:mp.jac.Nmode
@@ -34,12 +34,12 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
         modvar.wpsbpIndex = mp.wi_ref;
         modvar.whichSource = 'star';
 
-        [E2D, EfibCompact] = model_compact(mp, modvar);
+        [E2D, EfibCompact] = model_full(mp, modvar);
         if(mp.flagFiber)
             [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
             Emat(:,im) = EfibCompact(I,J,:);
         else
-            Emat(:,im) = E2D(mp.F4.corr.inds);   % Actual field in estimation area
+            Emat(:,im) = E2D(mp.Fend.corr.inds);   % Actual field in estimation area
         end
     end
     

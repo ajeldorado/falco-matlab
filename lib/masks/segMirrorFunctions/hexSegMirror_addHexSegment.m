@@ -4,11 +4,11 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, gapWidth, piston, tiltx, tilty, arrayIn)
+function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, wGap, piston, tiltx, tilty, arrayIn)
 %hexSegMirror_addHexSegment Adds hexagonal mirror segment to arrayIn, 
 % centered at (cenrow, cencol). The full mirror have numRings rings of 
 % hexagonal segments, flat-to-flat diameter (in samples) of apDia, 
-% gapWidth (in samples) between segments, and piston, tiltx, and tilty
+% wGap (in samples) between segments, and piston, tiltx, and tilty
 % phase offsets. Piston is in units of waves. tiltx and tilty are waves
 % across the full flat-to-flat pupil diameter apDia. 
 %
@@ -17,7 +17,7 @@ function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, ap
 %   cencol - column of hexagon center (samples)
 %   numRings - number of rings in the segmented mirror (samples)
 %   apDia - flat to flat aperture diameter (samples)
-%   gapWidth - width of the gap between segments (samples)
+%   wGap - width of the gap between segments (samples)
 %   piston - Segment piston in waves
 %   tiltx - Tilt on segment in horizontal direction (waves/apDia)
 %   tilty - Tilt on segment in vertical direction (waves/apDia)
@@ -25,9 +25,9 @@ function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, ap
 %   
 %   Coordinate system origin: (rows/2+1, cols/2+1)
 
-    hexFlatDiam = (apDia-numRings*2*gapWidth)/(2*numRings+1);
+    hexFlatDiam = (apDia-numRings*2*wGap)/(2*numRings+1);
     % hexRad = hexFlatDiam/sqrt(3);% center to vertex
-    hexSep = hexFlatDiam + gapWidth;
+    hexSep = hexFlatDiam + wGap;
 
     [rows,cols]=size(arrayIn);
 

@@ -23,6 +23,7 @@
 % -Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % -Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
+
 function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     %--STEPS:
@@ -30,7 +31,6 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     % Step 1: If re-linearizing this iteration, empirically find the best regularization value.
     % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
     % Step 3: Compute the EFC command to use.
-
     
     %% Initializations    
     vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]

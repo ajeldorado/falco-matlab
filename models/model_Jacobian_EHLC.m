@@ -66,6 +66,7 @@ end
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
     % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
 end
@@ -117,7 +118,7 @@ Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving 
 
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm1.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
@@ -155,13 +156,13 @@ if(whichDM==1)
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
             % Second, negate the coordinates of the box used.
             dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
            
             %--Matrices for the MFT from the pupil P3 to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
@@ -183,9 +184,9 @@ if(whichDM==1)
 %             EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm_weights(1)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -194,7 +195,7 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm2.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox2 = mp.dm2.compact.Nbox;
@@ -232,13 +233,13 @@ if(whichDM==2)
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
             % Second, negate the coordinates of the box used.
             dEP2box = apodRot180(y_box_ind,x_box_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = (1/1j)^2*rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
+            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
             x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
             y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
             
             %--Matrices for the MFT from the pupil P3 to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P2.compact.dx*mp.P2.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
 
@@ -258,14 +259,14 @@ if(whichDM==2)
 % 
 %             EP4noFPM = zeros(mp.dm2.compact.NdmPad);
 %             EP4noFPM(y_box_ind,x_box_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
-%             %EP4noFPM = (1/1j)^2*rot90(EP4noFPM,2); if( strcmpi(mp.centering,'pixel') ); EP4noFPM = circshift(EP4noFPM,[1 1]); end %--Re-image to next pupil plane. (1j)^2 comes from the coefficients of the 2 skipped MFTs
+%             %EP4noFPM = rot90(EP4noFPM,2); if( strcmpi(mp.centering,'pixel') ); EP4noFPM = circshift(EP4noFPM,[1 1]); end %--Re-image to next pupil plane. 
 %             EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
 %             EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
 
             % DFT to camera
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm_weights(2)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -276,7 +277,7 @@ end
 
 %--DM8--------------------------------------------------------- 
 if(whichDM==8)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm8.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm8.Nele);
     Nbox8 = mp.dm8.compact.Nbox;
     
     if(isfield(mp.dm8,'stepFac')==false)
@@ -351,7 +352,7 @@ if(whichDM==8)
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
 
             %--DFT from FPM to Lyot stop
@@ -360,9 +361,9 @@ if(whichDM==8)
             EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
 
             %--DFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm8.act_sens*(1/stepFac)*mp.dm_weights(8)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm8.act_sens*(1/stepFac)*mp.dm8.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -374,7 +375,7 @@ end %%%%%%%%%%%%%%%%%%%
 
 %--DM9--------------------------------------------------------- 
 if(whichDM==9)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm9.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm9.Nele);
     Nbox9 = mp.dm9.compact.Nbox;
     
     if(isfield(mp.dm9,'stepFac')==false)
@@ -458,7 +459,7 @@ if(whichDM==9)
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
 
             %--MFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
@@ -467,9 +468,9 @@ if(whichDM==9)
             EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
 
             %--MFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm_weights(9)*EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end

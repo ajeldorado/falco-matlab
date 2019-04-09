@@ -16,9 +16,11 @@
 %  -rhoInner: radius of inner FPM amplitude spot (in lambda_c/D)
 %  -rhoOuter: radius of outer opaque FPM ring (in lambda_c/D)
 %  -angDeg: angular opening (degrees) on the left/right/both sides.
-%  -whichSide: which sides to have open. 'left','right', or 'both'
+%  -whichSide: which sides to have open. 'left','right', 'top', 'bottom', or 'both'
 %  -centering: centering of the coordinates. 'pixel' or 'interpixel'
 %  -FOV: minimum desired field of view (in lambda_c/D)
+%  -shape: 'square' makes a square. Omitting makes a circle. 
+%  -clockAngDeg: Dark hole rotation about the z-axis (deg)
 %
 %--OUTPUTS:
 % maskSW: rectangular, even-sized, binary-valued software mask
@@ -46,6 +48,12 @@ else
     centering = 'pixel'; %--Default to pixel centering if it is not specified.
 end
 
+if( isfield(inputs,'shape') ) %--shape of the outer part of the dark hole
+    DHshape = inputs.shape;
+else
+    DHshape = 'circle'; %--Default to a circular outer edge
+end
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--Convert opening angle to radians
@@ -54,10 +62,10 @@ angRad = angDeg*(pi/180);
 %--Number of points across each axis. Crop the vertical (eta) axis if angDeg<180 degrees.
 if( strcmpi(centering,'interpixel') )
     Nxi =  ceil_even(2*FOVmin*pixresFP); % Number of points across the full FPM
-    Neta = ceil_even(2*sin(angRad/2)*FOVmin*pixresFP);
+    Neta = ceil_even(2*FOVmin*pixresFP);
 else
     Nxi =  ceil_even(2*(FOVmin*pixresFP+1/2)); % Number of points across the full FPM
-    Neta = ceil_even(2*(sin(angRad/2)*FOVmin*pixresFP+1/2));
+    Neta = ceil_even(2*(FOVmin*pixresFP+1/2));
 end
 
 %--Overwrite the calculated value if it is specified.
@@ -77,29 +85,40 @@ else %--pixel centering
     etas = (-Neta/2:(Neta/2-1))*deta;
 end
 [XIS,ETAS] = meshgrid(xis,etas);
-RHOS = sqrt(XIS.^2 + ETAS.^2);
-TAN = atan(ETAS./XIS);
+[THETA,RHO] = cart2pol(XIS,ETAS);
 
-%--Generate the Software Mask
-maskSW = (RHOS>=rhoInner & RHOS<=rhoOuter & TAN<=angRad/2 & TAN>=-angRad/2);
 
-%--Determine if it is one-sided or not
-if( strcmpi(whichSide,'L') || strcmpi(whichSide,'left') )
-    maskSW(XIS>=0) = 0;
-elseif( strcmpi(whichSide,'R') || strcmpi(whichSide,'right') )
-    maskSW(XIS<=0) = 0;
-elseif( strcmpi(whichSide,'T') || strcmpi(whichSide,'top') )
-    maskSW(ETAS<=0) = 0;
-elseif( strcmpi(whichSide,'B') || strcmpi(whichSide,'bottom') )
-    maskSW(ETAS>=0) = 0;    
+%--Generate the Outer Mask
+switch lower(DHshape)
+    case{'square'}
+        maskSW0 = (RHO>=rhoInner & abs(XIS)<=rhoOuter & abs(ETAS)<=rhoOuter);
+    otherwise
+        maskSW0 = (RHO>=rhoInner & RHO<=rhoOuter);
 end
 
-if(rhoInner == 0)
-     if( strcmpi(centering,'interpixel') )
-         maskSW((Nxi-1)/2+1, (Neta-1)/2+1) = 1;
-     else
-         maskSW(Nxi/2+1, Neta/2+1) = 1;
-     end
+%--If the use doesn't pass the clocking angle 
+if(~isfield(inputs,'clockAngDeg'))
+    if( strcmpi(whichSide,'L') || strcmpi(whichSide,'left') )
+        clockAng = pi;
+    elseif( strcmpi(whichSide,'R') || strcmpi(whichSide,'right') )
+        clockAng = 0;
+    elseif( strcmpi(whichSide,'T') || strcmpi(whichSide,'top') )
+        clockAng = pi/2;
+    elseif( strcmpi(whichSide,'B') || strcmpi(whichSide,'bottom') )
+        clockAng = 3*pi/2;   
+    else
+        clockAng = 0;
+    end
+else
+    clockAng = inputs.clockAngDeg*pi/180;
+end
+
+maskSW = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<angRad/2;
+
+if(strcmpi(whichSide,'both'))
+    clockAng = clockAng + pi;
+    maskSW2 = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<angRad/2;
+    maskSW = or(maskSW,maskSW2);
 end
 
 end %--END OF FUNCTION

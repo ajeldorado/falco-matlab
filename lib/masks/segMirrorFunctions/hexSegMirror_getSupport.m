@@ -9,14 +9,19 @@ function [ OUT ] = hexSegMirror_getSupport( hexMirror_struct )
 %by a hexagonally segmented mirror 
 %   Input: hexMirror_struct - Structure with the following variables 
 %   apDia - flat to flat aperture diameter (samples)
-%   gapWidth - width of the gap between segments (samples)
+%   wGap - width of the gap between segments (samples)
 %   numRings - number of rings in the segmented mirror (samples)
 %   N - size of NxN computational grid 
+%   missingSegments - list of zeros and ones indicating if each segment is present 
+%   offset - centering offset vector [N/2+1+offset(1), N/2+1+offset(2)]
 
 apDia = hexMirror_struct.apDia; % flat to flat aperture diameter (samples)
-gapWidth = hexMirror_struct.gapWidth; % samples
+wGap = hexMirror_struct.wGap; % samples
 numRings = hexMirror_struct.numRings;% Number of rings in hexagonally segmented mirror 
 N = hexMirror_struct.Npad;
+if(isfield(hexMirror_struct,'offset'))
+    offset = hexMirror_struct.offset;
+end
 
 if(isfield(hexMirror_struct,'missingSegments'))
     missingSegments = hexMirror_struct.missingSegments;
@@ -26,14 +31,19 @@ end
     
 OUT = zeros(N);
 
-hexFlatDiam = (apDia-numRings*2*gapWidth)/(2*numRings+1);
-hexSep = hexFlatDiam + gapWidth;
+hexFlatDiam = (apDia-numRings*2*wGap)/(2*numRings+1);
+hexSep = hexFlatDiam + wGap;
 
 count = 1;
 for ringNum = 0:numRings
 
     cenrow = ringNum*hexSep;
     cencol = 0;
+    
+    if(isfield(hexMirror_struct,'offset'))
+        cenrow = cenrow + offset(1);
+        cencol = cencol + offset(2);
+    end
     
     if(missingSegments(count)==1)
         [ OUT ] = hexSegMirror_addHexagon( cenrow,cencol, hexFlatDiam, OUT );

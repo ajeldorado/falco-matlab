@@ -5,12 +5,15 @@
 % -------------------------------------------------------------------------
 %
 % Inputs: 
-% inputs.Nbeam
-% inputs.OD
-% inputs.ID
-% inputs.num_strut
-% inputs.strut_angs
-% inputs.strut_width
+% inputs.Nbeam - Number of samples across the beam 
+% inputs.OD - Outer diameter (fraction of Nbeam)
+% inputs.ID - Inner diameter (fraction of Nbeam)
+% inputs.Nstrut - Number of struts
+% inputs.angStrut - Array of struct angles (deg)
+% inputs.wStrut - Strut widths (fraction of Nbeam)
+% inputs.stretch - Create an elliptical aperture by changing Nbeam along
+%                   the horizontal direction by a factor of strech (PROPER
+%                   version isn't implemented as of March 2019).
 
 function PUPIL = falco_gen_pupil_Simple( input )
 %falco_gen_pupil_SCDA Generates a simple pupil.
@@ -30,6 +33,7 @@ function PUPIL = falco_gen_pupil_Simple( input )
     OD = input.OD; % pupil outer diameter, can be < 1
     ID = input.ID; % central obscuration radius 
     apRad = input.Nbeam/2; % aperture radius in samples 
+    if(isfield(input,'stretch'));b = input.stretch;else; b=1; end
     
     %Create coordinates
     switch centering
@@ -38,7 +42,7 @@ function PUPIL = falco_gen_pupil_Simple( input )
         otherwise
             [X,Y] = meshgrid(-N/2:N/2-1);
     end
-    [THETA,RHO] = cart2pol(X,Y); 
+    [THETA,RHO] = cart2pol(X/b,Y); 
     
     % Make sure the inputs make sense
     if(ID > OD)
@@ -113,16 +117,16 @@ function PUPIL = falco_gen_pupil_Simple( input )
     
     
     % Create spiders 
-    if(input.strut_width > 0)
+    if(input.wStrut > 0)
         
-        numSpiders = input.num_strut;
-        angs = input.strut_angs;
+        numSpiders = input.Nstrut;
+        angs = input.angStrut;
         
         if(numSpiders~=numel(angs))
-            error('Pupil generation error: ''strut_angs'' should be an array of length ''num_strut''');
+            error('Pupil generation error: ''angStrut'' should be an array of length ''Nstrut''');
         end
         
-        halfwidth = input.strut_width*2*apRad;
+        halfwidth = input.wStrut*2*apRad;
         for ang = angs
            PUPIL = PUPIL.*(1-exp(-(RHO.*sin(THETA-ang*pi/180)/halfwidth).^hg_expon_spider).*...
                (RHO.*cos(THETA-ang*pi/180)>0));

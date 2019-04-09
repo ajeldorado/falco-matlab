@@ -9,7 +9,7 @@ function [ OUT ] = hexSegMirror_getSurfHeight( hexMirror_struct, lambda0 )
 % hexagonally segmented mirror assuming a central wavelength lambda0
 %   Input: hexMirror_struct - Structure with the following variables 
 %   apDia - flat to flat aperture diameter (samples)
-%   gapWidth - width of the gap between segments (samples)
+%   wGap - width of the gap between segments (samples)
 %   numRings - number of rings in the segmented mirror (samples)
 %   N - size of NxN computational grid 
 %   pistons - Segment pistons in waves
@@ -22,7 +22,7 @@ function [ OUT ] = hexSegMirror_getSurfHeight( hexMirror_struct, lambda0 )
 %   lambda0)
 
 apDia = hexMirror_struct.apDia; % flat to flat aperture diameter (samples)
-gapWidth = hexMirror_struct.gapWidth; % samples
+wGap = hexMirror_struct.wGap; % samples
 numRings = hexMirror_struct.numRings;% Number of rings in hexagonally segmented mirror 
 N = hexMirror_struct.Npad;
 pistons = hexMirror_struct.pistons;
@@ -31,8 +31,8 @@ tiltys = hexMirror_struct.tiltys;
 
 OUT = zeros(N);
 
-hexFlatDiam = (apDia-numRings*2*gapWidth)/(2*numRings+1);
-hexSep = hexFlatDiam + gapWidth;
+hexFlatDiam = (apDia-numRings*2*wGap)/(2*numRings+1);
+hexSep = hexFlatDiam + wGap;
 
 segNum = 1;
 for ringNum = 0:numRings
@@ -41,7 +41,7 @@ for ringNum = 0:numRings
     cencol = 0;
     
     [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
-                gapWidth, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+                wGap, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
     segNum = segNum + 1;
     
     for face = 1:6
@@ -59,7 +59,7 @@ for ringNum = 0:numRings
                 disp(['Finished ring ',num2str(ringNum)]);
             else
                 [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
-                            gapWidth, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+                            wGap, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
                 segNum = segNum + 1;
             end
             stepnum = stepnum + 1;

@@ -21,14 +21,14 @@ function pupil = falco_gen_pupil_HabEx_B_PROPER(inputs,varargin)
 % addpath ~/Repos/FALCO/lib/PROPER/
 % addpath ~/Repos/FALCO/lib/utils/
 % inputs.Nbeam = 1000;
-% inputs.gap_width = 6e-3; % (meters)
+% inputs.wGap = 6e-3; % (meters)
 % inputs.centering = 'pixel';
 % %-------------------
 
 %--USER INPUTS
 Nbeam   = inputs.Nbeam; % number of points across FULL usable pupil
 centering = inputs.centering;% 'pixel' or 'interpixel' centering of the array
-gap_width = inputs.gap_width;
+wGap = inputs.wGap;
 
 
 %--Do not change
@@ -37,7 +37,7 @@ dx = Dmask/Nbeam;
 hexradius = .2374*4; %--Radius of circumscribing circle for the inner hex (NOT INCLUDING SEGMENT GAP) (meters)
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam+1/2); %--number of points across output array. Requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam+1); %--number of points across output array. Requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam);
 end
@@ -68,13 +68,13 @@ cy_OD = 0 + cshift;
 bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);
 
 %--Inner Hex Ring
-hexOut = prop_polygon( bm, 6, hexradius+gap_width , 'XC', cshift  , 'YC', cshift, 'DARK' , 'ROTATION', 30 ); 
+hexOut = prop_polygon( bm, 6, hexradius+wGap , 'XC', cshift  , 'YC', cshift, 'DARK' , 'ROTATION', 30 ); 
 hexIn = prop_polygon( bm, 6, hexradius , 'XC', cshift  , 'YC', cshift , 'ROTATION', 30 ); 
 bm.wf = bm.wf.*fftshift(hexOut+hexIn);
 
 
 %--Rectangular Gaps:
-buffer = 2*gap_width;
+buffer = 2*wGap;
 length_rect = (Dmask - 2*hexradius)/2 + buffer;
 R_rect_cent = length_rect/2 + hexradius ;
 
@@ -82,7 +82,7 @@ R_rect_cent = length_rect/2 + hexradius ;
 Nrect = 6;
 for ii=1:Nrect
     angDeg = (ii-1)*60;
-    bm = prop_rectangular_obscuration(bm, gap_width, length_rect, 'XC',cshift + R_rect_cent*sind(angDeg), 'YC',cshift + R_rect_cent*cosd(angDeg),'ROTATION',-angDeg );
+    bm = prop_rectangular_obscuration(bm, wGap, length_rect, 'XC',cshift + R_rect_cent*sind(angDeg), 'YC',cshift + R_rect_cent*cosd(angDeg),'ROTATION',-angDeg );
 end
 
 pupil = fftshift(bm.wf);

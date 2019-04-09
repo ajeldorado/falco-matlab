@@ -12,6 +12,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-02-12 by G. Ruane to allow scalar vortex models 
 % Modified on 2018-03-01 by A.J. Riggs to debug the vortex coronagraph.
 % Modified on 2017-11-13 by A.J. Riggs to be compatible with parfor.
 % Modified on 2017-11-09 by A.J. Riggs to have the Jacobian calculation be
@@ -58,6 +59,7 @@ Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
     % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
 end
@@ -98,8 +100,6 @@ end
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% EP2 = (1/1j)^2*rot90(EP1,2); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
-% if( strcmpi(mp.centering,'pixel') ); EP2 = circshift(EP2,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
@@ -118,7 +118,7 @@ minPadFacVortex = 8;
 
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm1.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
 
 %     if(mp.useGPU)
 %         Gzdl = gpuArray(Gzdl);
@@ -127,8 +127,14 @@ if(whichDM==1)
     %--Array size for planes P3, F3, and P4
     Nfft1 = 2^( ceil( log2(   max([mp.dm1.compact.NdmPad, minPadFacVortex*mp.dm1.compact.Nbox]) ) ) ); %--Don't crop--but do pad if necessary.
     
+	if(numel(mp.F3.VortexCharge)==1)
+        charge = mp.F3.VortexCharge;
+    else
+        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+    end
+
     %--Generate vortex FPM with fftshift already applied
-    fftshiftVortex = fftshift( falco_gen_vortex_mask( mp.F3.VortexCharge, Nfft1) );
+    fftshiftVortex = fftshift( falco_gen_vortex_mask( charge, Nfft1) );
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
 %     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
@@ -185,11 +191,11 @@ if(whichDM==1)
             %--Pad pupil P3 for FFT
             EP3pad = padOrCropEven(EP3, Nfft1 );
 
-            %--FFT from P3 to F4 and apply vortex
-            EF3 = (1/1j)*fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft1;
+            %--FFT from P3 to Fend.and apply vortex
+            EF3 = fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft1;
 
             %--FFT from Vortex FPM to Lyot Plane
-            EP4 = (1/1j)*fftshift(fft2(EF3))/Nfft1;
+            EP4 = fftshift(fft2(EF3))/Nfft1;
             if(Nfft1 > mp.P4.compact.Narr)
                 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
             else
@@ -197,11 +203,11 @@ if(whichDM==1)
             end
 
             % DFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta);
 
-            if(mp.useGPU);EF4 = gather(EF4);end
+            if(mp.useGPU);EFend = gather(EFend);end
             
-            Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -213,13 +219,19 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    Gzdl = zeros(mp.F4.corr.Npix,mp.dm2.Nele);
+    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
     
     %--Array size for planes P3, F3, and P4
     Nfft2 = 2^( ceil( log2(   max([mp.dm2.compact.NdmPad, minPadFacVortex*mp.dm2.compact.Nbox]) ) ) ); %--Don't crop--but do pad if necessary.
     
+	if(numel(mp.F3.VortexCharge)==1)
+        charge = mp.F3.VortexCharge;
+    else
+        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+    end
+
     %--Generate vortex FPM with fftshift already applied
-    fftshiftVortex = fftshift( falco_gen_vortex_mask( mp.F3.VortexCharge, Nfft2) );
+    fftshiftVortex = fftshift( falco_gen_vortex_mask( charge, Nfft2) );
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
 %     Nbox2 = mp.dm2.compact.Nbox;
@@ -269,11 +281,11 @@ if(whichDM==2)
             %--Pad pupil P3 for FFT
             EP3pad = padOrCropEven(EP3, Nfft2 );
 
-            %--FFT from P3 to F4 and apply vortex
-            EF3 = (1/1j)*fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft2;
+            %--FFT from P3 to Fend.and apply vortex
+            EF3 = fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft2;
 
             %--FFT from Vortex FPM to Lyot Plane
-            EP4 = (1/1j)*fftshift(fft2(EF3))/Nfft2;
+            EP4 = fftshift(fft2(EF3))/Nfft2;
             if(Nfft2 > mp.P4.compact.Narr)
                 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
             else
@@ -281,11 +293,11 @@ if(whichDM==2)
             end
             
             % DFT to final focal plane
-            EF4 = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.F4.dxi,mp.F4.Nxi,mp.F4.deta,mp.F4.Neta);
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta);
             
-            if(mp.useGPU);EF4 = gather(EF4);end
+            if(mp.useGPU); EFend = gather(EFend); end
             
-            Gzdl(:,Gindex) = EF4(mp.F4.corr.inds)/sqrt(mp.F4.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end

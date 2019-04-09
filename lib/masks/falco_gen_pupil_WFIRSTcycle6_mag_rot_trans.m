@@ -40,7 +40,7 @@ function mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs,varargin)
 % inputs.Nbeam = 100;
 % inputs.ID = 0.35;
 % inputs.OD = 0.99;
-% inputs.strut_width = 0.04;
+% inputs.wStrut = 0.04;
 % inputs.magfacD = 1;
 % inputs.centering = 'pixel';
 % inputs.xshift = 0;
@@ -93,9 +93,9 @@ Dmask = Dbeam; % % width of the mask (meters)
 diam = Dmask;% width of the mask (meters)
 % NapAcross = Dmask/dx; % minimum even number of points across to fully contain the actual aperture (if interpixel centered)
 if(strcmpi(centering,'pixel'))
-    Narray = 2*ceil(1/2*(Dmask/dx+1/2)); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(Dmask/dx+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
-    Narray = 2*ceil(1/2*Dmask/dx); %--number of points across output array. Same size as width when interpixel centered.
+    Narray = ceil_even(Dmask/dx); %--number of points across output array. Same size as width when interpixel centered.
 end
 
 Darray = Narray*dx; %--width of the output array (meters)
@@ -118,11 +118,11 @@ x0 = -26; % inches, pupil center in x in Visio file
 y0 = 20.25; % inches, pupil center in y in Visio file
 Dconv = (Dbeam/D0); % conversion factor from inches and Visio units to meters 
 
-if(isfield(inputs,'strut_width'))
-    strut_width = inputs.strut_width; %--strut width in pupil diameters
-    strut_width = strut_width*Dbeam; %--now in meters
+if(isfield(inputs,'wStrut'))
+    wStrut = inputs.wStrut; %--strut width in pupil diameters
+    wStrut = wStrut*Dbeam; %--now in meters
 else
-    strut_width = (0.209/D0)*Dbeam;
+    wStrut = (0.209/D0)*Dbeam;
 end
 
 
@@ -160,7 +160,7 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     %--STRUT 1
     rot_s1 = 77.56 + clock_deg; % degrees
     sx_s1 = magfacD*((3.6/D0)*diam + pad_strut);
-    sy_s1 = magfacD*(strut_width + pad_strut);
+    sy_s1 = magfacD*(wStrut + pad_strut);
     cx_s1 = (-24.8566 - x0)*Dconv;
     cy_s1 = (22.2242 - y0)*Dconv;
     cxy1 = magfacD*[cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)]*([cx_s1; cy_s1] - cshift) + cshift;
@@ -173,7 +173,7 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     %--STRUT 2
     rot_s2 = -17.56 + clock_deg; % degrees
     sx_s2 = magfacD*((3.6/D0)*diam + pad_strut);
-    sy_s2 = magfacD*(strut_width + pad_strut);
+    sy_s2 = magfacD*(wStrut + pad_strut);
     cx_s2 = (-23.7187 - x0)*Dconv;
     cy_s2 = (20.2742 - y0)*Dconv;
     cxy2 = magfacD*[cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)]*([cx_s2; cy_s2] - cshift) + cshift;
@@ -186,7 +186,7 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     %--STRUT 3
     rot_s3 = -42.44 + clock_deg; % degrees
     sx_s3 = magfacD*((3.6/D0)*diam + pad_strut);
-    sy_s3 = magfacD*(strut_width + pad_strut);
+    sy_s3 = magfacD*(wStrut + pad_strut);
     cx_s3 = (-24.8566 - x0)*Dconv;
     cy_s3 = (18.2758 - y0)*Dconv;
     cxy3 = magfacD*[cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)]*([cx_s3; cy_s3] - cshift) + cshift;
@@ -199,7 +199,7 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     %--STRUT 4
     rot_s4 = 42.44 + clock_deg; % degrees
     sx_s4 = magfacD*((3.6/D0)*diam + pad_strut);
-    sy_s4 = magfacD*(strut_width + pad_strut);
+    sy_s4 = magfacD*(wStrut + pad_strut);
     cx_s4 = (-27.1434 - x0)*Dconv;
     cy_s4 = (18.2758 - y0)*Dconv;
     cxy4 = magfacD*[cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)]*([cx_s4; cy_s4] - cshift) + cshift;
@@ -211,7 +211,7 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     %--STRUT 5
     rot_s5 = 17.56 + clock_deg; % degrees
     sx_s5 = magfacD*((3.6/D0)*diam + pad_strut);
-    sy_s5 = magfacD*(strut_width + pad_strut);
+    sy_s5 = magfacD*(wStrut + pad_strut);
     cx_s5 = (-28.2813 - x0)*Dconv;
     cy_s5 = (20.2742 - y0)*Dconv;
     cxy5 = magfacD*[cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)]*([cx_s5; cy_s5] - cshift) + cshift;
@@ -223,7 +223,7 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     %--STRUT 6
     rot_s6 = 102.44 + clock_deg; % degrees
     sx_s6 = magfacD*((3.6/D0)*diam + pad_strut);
-    sy_s6 = magfacD*(strut_width + pad_strut);
+    sy_s6 = magfacD*(wStrut + pad_strut);
     cx_s6 = (-27.1434 - x0)*Dconv;
     cy_s6 = (22.2242 - y0)*Dconv;
     cxy6 = magfacD*[cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)]*([cx_s6; cy_s6] - cshift) + cshift;

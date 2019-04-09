@@ -23,7 +23,23 @@
 %- distance from pupil that the actuators aren't computed. --> Move this
 %outside the function and let that be the user's choice which ones to zero.
 %Instead, just output the 
-
+%
+%
+%--VERSION CHANGE HISTORY
+% - Modified on 2019-03-04 by A.J. Riggs to re-include the hex tiling
+% option.
+% - Modified by A.J. Riggs on September 23, 2017 to allow for pixel centering.
+%  Also added model_params (aka, mp or mp) as an input. Now computes NboxAS and 
+%  dmPad based on the angular spectrum padding necessary for inter-DM propagation. This 
+%  is to prevent the indexing outside the array if the Fresnel number becomes too small 
+%  for a hard-coded value of the padding of the full DM array.
+% - Written by A.J. Riggs on September 1, 2016.
+%
+%--SUGGESTED CHANGES
+% -Clean up uses of dm.dx_dm vs dm.dx_dm to avoid any possible differences
+% since they need to be the same value.
+%
+% % % HARD-CODED INPUTS FOR DEBUGGING ONLY:
 % %--Load the beam diameter and size
 % Npup = length(pupil);
 % Dpup = 46.3e-3; % meters, distance across pupil file
@@ -39,24 +55,9 @@
 % dm.ycent_dm = dm.Nact/2 - 1/2; % x-center of DM in mm, in actuator widths
 % 
 % %--DM Actuator characteristics
-% dm.dx_inf0 = 1e-4; % meters, sampling of the influence function;
-% dm.dm_spacing = 0.9906e-3; % meters, pitch of DM actuators
-% dm.inf0 = -1*fitsread('influence_dm5v2.fits');s
-%
-%
-%
-%--VERSION CHANGE HISTORY
-% -Modified by A.J. Riggs on September 23, 2017 to allow for pixel centering.
-%  Also added model_params (aka, mp or mp) as an input. Now computes NboxAS and 
-%  dmPad based on the angular spectrum padding necessary for inter-DM propagation. This 
-%  is to prevent the indexing outside the array if the Fresnel number becomes too small 
-%  for a hard-coded value of the padding of the full DM array.
-% -Written by A.J. Riggs on September 1, 2016.
-%
-%--SUGGESTED CHANGES
-% -Clean up uses of dm.dx_dm vs dm.dx_dm to avoid any possible differences
-% since they need to be the same value.
-
+% dm.dx_inf0 =  % meters, sampling of the influence function;
+% dm.dm_spacing =  % meters, pitch of DM actuators
+% dm.inf0 = 
 
 
 %-------------------------------------------------------------------
@@ -64,9 +65,9 @@ function dm = falco_fpm_inf_cube(dm)
 
 fprintf('Computing datacube of FPM influence functions... ');
 
-% if(isfield(dm,'flag_hex_array')==false) %--Define this flag if it doesn't exist (in older code for square actuator arrays only)
-%     dm.flag_hex_array=false;
-% end
+if(isfield(dm,'flagHexGrid')==false) %--Define this flag if it doesn't exist (in older code for square actuator arrays only)
+    dm.flagHexGrid=false;
+end
     
 %--Compute sampling of the pupil. Assume that it is square.
 dm.dx_dm = dm.dxi;
@@ -91,34 +92,34 @@ x_inf0 = (-(Ninf0-1)/2:(Ninf0-1)/2)*dm.dx_inf0; % True for even- or odd-sized in
 [Xinf0,Yinf0] = meshgrid(x_inf0);
 
 
-%--Compute list of initial actuator center coordinates (in actutor widths).
-% if(dm.flag_hex_array) %--Hexagonal, hex-packed grid
-%     Nrings = dm.Nrings;
-%     x_vec = [];
-%     y_vec = [];
-%     % row number (rowNum) is 1 for the center row and 2 is above it, etc.
-%     % Nacross is the total number of segments across that row
-%     for rowNum = 1:Nrings
-%         Nacross = 2*Nrings - rowNum; % Number of actuators across at that row (for hex tiling in a hex shape)
-%         yval = sqrt(3)/2*(rowNum-1);
-%         bx = Nrings - (rowNum+1)/2; % x offset from origin
-% 
-%         xs = (0:Nacross-1).' - bx; % x values are 1 apart
-%         ys = yval*ones(Nacross,1); % same y-value for the entire row
-% 
-%         if(rowNum==1)
-%             x_vec = [x_vec;xs];
-%             y_vec = [y_vec;ys]; 
-%         else
-%             x_vec = [x_vec;xs;xs];
-%             y_vec = [y_vec;ys;-ys]; % rows +/-n have +/- y coordinates
-%         end
-%     end    
-% else %--Square grid
+%--Compute list of initial actuator center coordinates (in actuAtor widths).
+if(dm.flagHexGrid) %--Hexagonal, hex-packed grid
+    Nrings = dm.Nrings;
+    x_vec = [];
+    y_vec = [];
+    % row number (rowNum) is 1 for the center row and 2 is above it, etc.
+    % Nacross is the total number of segments across that row
+    for rowNum = 1:Nrings
+        Nacross = 2*Nrings - rowNum; % Number of actuators across at that row (for hex tiling in a hex shape)
+        yval = sqrt(3)/2*(rowNum-1);
+        bx = Nrings - (rowNum+1)/2; % x offset from origin
+
+        xs = (0:Nacross-1).' - bx; % x values are 1 apart
+        ys = yval*ones(Nacross,1); % same y-value for the entire row
+
+        if(rowNum==1)
+            x_vec = [x_vec;xs];
+            y_vec = [y_vec;ys]; 
+        else
+            x_vec = [x_vec;xs;xs];
+            y_vec = [y_vec;ys;-ys]; % rows +/-n have +/- y coordinates
+        end
+    end    
+else %--Square grid
     [dm.Xact,dm.Yact] = meshgrid((0:dm.Nact-1)-dm.xcent_dm,(0:dm.Nact-1)-dm.ycent_dm); % in actuator widths
     x_vec = dm.Xact(:);
     y_vec = dm.Yact(:);
-% end
+end
 dm.NactTotal = length(x_vec); %--Total number of actuators in the 2-D array
 
 dm.xy_cent_act  = [x_vec*cosd(dm.ytilt),y_vec*cosd(dm.xtilt)].'; % in actuator widths, Perform x/y projections because of foreshortening
@@ -163,7 +164,12 @@ NpixPerAct = dm.dm_spacing/dm.dx_dm;
 % end
 % % dm.NxiFPM = ceil_even( dm.Nact*NpixPerAct ); % Cropped down number of points for plotting
 
-dm.NdmPad = 2 + ceil_even( (dm.Nact+10)*NpixPerAct ); % prevent indexing outside the array 
+%--Pad the FPM to avoid indexing outside the array
+if(dm.flagHexGrid)
+    dm.NdmPad = ceil_even((2*(dm.rmax+2))*NpixPerAct + 1); % padded 2 actuators past the last actuator center to avoid trying to index outside the array
+else
+    dm.NdmPad = 2 + ceil_even( (dm.Nact+10)*NpixPerAct ); % prevent indexing outside the array 
+end
 
 %--Compute coordinates (in meters) of the full DM array
 if(strcmpi(dm.centering,'pixel')  ) 
@@ -172,7 +178,6 @@ else
     dm.x_pupPad = (-(dm.NdmPad-1)/2:(dm.NdmPad-1)/2)*dm.dx_dm; % meters, coords for the full DM arrays. Origin is centered between pixels for an even-sized array
 end
 dm.y_pupPad = dm.x_pupPad;
-
 
 
 %% DM: (use NboxPad-sized postage stamps,

@@ -20,7 +20,6 @@
 %
 % INPUTS:
 % -mp = structure of model parameters
-% -DM = structure of DM settings
 % -modvar = structure of model variables
 %
 %
@@ -38,12 +37,14 @@
 
 function [Eout, Efiber] = model_compact(mp, modvar,varargin)
 
+
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
 % Set default values of input parameters
-normFac = mp.F4.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
+flagAllPlanes = false; %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
@@ -54,6 +55,8 @@ while icav < size(varargin, 2)
             flagNewNorm = true;
         case {'eval'} % Set to 0 when finding the normalization factor
             flagEval = true; 
+        case{'all'} %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
+            flagAllPlanes = true;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
     end
@@ -61,7 +64,7 @@ end
 
 %--Normalization factor for compact evaluation model
 if( (flagNewNorm==false) && (flagEval==true) )
-    normFac = mp.F4.eval.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.eval.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
 %--Set the wavelength
@@ -94,6 +97,16 @@ else %--Backward compatible with code without tip/tilt offsets in the Jacobian
     Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
 end
 
+%--Shift the source off-axis to compute the intensity normalization value.
+%  This replaces the previous way of taking the FPM out in the optical model.
+if(normFac==0)
+    source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
+    source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
+    TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.compact.XsDL + source_y_offset*mp.P2.compact.YsDL));
+    Ett = exp(1i*TTphase*mp.lambda0/lambda);
+    Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex); 
+end
+
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
     modvar.zernIndex = 1;
@@ -104,42 +117,29 @@ if(modvar.zernIndex~=1)
     indZernVec = find(mp.jac.zerns==modvar.zernIndex); %--Index in vector of RMS values for Zernikes.
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
+    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
 end
 
-%--Select the type of coronagraph
-switch mp.coro 
-    
+%--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
+switch upper(mp.coro) 
     case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
-        %--Complex transmission map of the FPM.
-        FPM = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
-        Eout = model_compact_EHLC(mp, lambda, normFac, Ein, FPM, flagEval);
-                
+        mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
     case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-        %--Complex transmission map of the FPM.
-        FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
-        Eout = model_compact_HLC(mp, lambda, normFac, Ein, FPM, flagEval);
-    
-    case{'FOHLC'} %--DMs, optional apodizer, FPM with amplitude and phase modulation, and LS. Uses Babinet's principle about FPM.
-        Eout = model_compact_FOHLC(mp, lambda, normFac, Ein, flagEval);    
-        
-    case{'SPHLC','FHLC'} %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS. Uses 2-part direct MFTs to/from FPM
-        Eout = model_compact_SPHLC(mp, lambda, Ein, normFac);
-        
-    case{'LC','DMLC','APLC'} %--DMs, optional apodizer, FPM with/without phase contribution, and LS.
-        Eout = model_compact_LC(mp, lambda, Ein, normFac, flagEval);  
-       
-    case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-        [Eout, Efiber] = model_compact_SPLC(mp, lambda, Ein, normFac, flagEval);
-            
-    case{'vortex','Vortex','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
-        Eout = model_compact_VC(mp,lambda, Ein, normFac, flagEval);      
+        mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+end
 
-    otherwise
-        disp('ERROR: CASE NOT RECOGNIZED IN model_compact.m');        
+%--Select which optical layout's compact model to use and get the output E-field
+switch lower(mp.layout)
+    case{'fourier'}
+        [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+        
+    case{'wfirst_phaseb_simple'} %--Use compact model as the full model, and the general FALCO model as the compact model.
+        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+        
+    case{'wfirst_phaseb_proper'} %--Use the actual Phase B compact model as the compact model.
+        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
 end
     
-end % End of function
-
-
-    
+end %--END OF FUNCTION
