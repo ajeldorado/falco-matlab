@@ -117,26 +117,28 @@ if(modvar.zernIndex~=1)
 end
 
 %% Pre-compute the FPM first for HLC as mp.FPM.mask
-switch upper(mp.coro) 
-    case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
-        %--Complex transmission map of the FPM.
-        ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-        if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
-            mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
-        else %--Otherwise generate it
-            mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
-        end
+switch lower(mp.layout)
+    case{'fourier'}
         
-    case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-        %--Complex transmission map of the FPM.
-        ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-        if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
-            mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
-        else %--Otherwise generate it
-            mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
+        switch upper(mp.coro) 
+            case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
+                %--Complex transmission map of the FPM.
+                ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
+                if(isfield(mp,'FPMcubeFull')) %--Load it if stored
+                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
+                    mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
+                end
+
+            case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
+                %--Complex transmission map of the FPM.
+                ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
+                if(isfield(mp,'FPMcubeFull')) %--Load it if stored
+                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
+                else %--Otherwise generate it
+                    mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
+                end
         end
 end
-
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
     case{'fourier'}
@@ -153,7 +155,8 @@ switch lower(mp.layout)
             optval.source_x_offset = -mp.source_x_offset_norm;
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
-        Eout = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
+
+        [Eout, ~] = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
@@ -162,7 +165,6 @@ switch lower(mp.layout)
     case{'wfirst_phaseb_proper'} %--Use the true full model as the full model
 
         optval = mp.full;
-        optval.use_errors =true;
         optval.use_dm1 = true;
         optval.use_dm2 = true;
         optval.dm1_m = mp.dm1.V.*mp.dm1.VtoH + mp.full.dm1.flatmap; %--DM1 commands in meters
@@ -171,7 +173,8 @@ switch lower(mp.layout)
             optval.source_x_offset = -mp.source_x_offset_norm;
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
-        Eout = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
+
+        [Eout, ~] = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);

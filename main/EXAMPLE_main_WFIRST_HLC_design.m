@@ -15,7 +15,6 @@
 % ---------------
 
 clear all;
-close all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 

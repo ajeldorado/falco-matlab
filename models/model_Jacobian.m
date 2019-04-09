@@ -41,10 +41,13 @@ function jacStruct = model_Jacobian(mp)
             mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
             mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
         case{'HLC','APHLC','SPHLC'}
-            [mp.FPMcube,mp.dm8.surf,mp.dm9.surf] = falco_gen_HLC_FPM_complex_trans_cube(mp,'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
-            %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
-            mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
-            mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
+            switch lower(mp.layout)
+                case{'fourier'}
+                    [mp.FPMcube,mp.dm8.surf,mp.dm9.surf] = falco_gen_HLC_FPM_complex_trans_cube(mp,'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
+                    %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
+                    mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
+                    mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
+            end
         case{'FOHLC'}
             %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
             mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
@@ -100,35 +103,47 @@ function jacStruct = model_Jacobian(mp)
         im2 = vals_list(1,jj); %--index for Zernike-&-subbandpass pair
         whichDM2 = vals_list(2,jj); %--number of the specified DM
 
-        switch upper(mp.coro) 
-            case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-                jacMode = model_Jacobian_FOHLC(mp,   im2, whichDM2); 
-
-            case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-                jacMode = model_Jacobian_EHLC(mp,   im2, whichDM2); 
-
-            case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
-                jacMode = model_Jacobian_HLC(mp,   im2, whichDM2); 
-
-            case{'SPHLC','FHLC'}  %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS
-                jacMode = model_Jacobian_SPHLC(mp,   im2, whichDM2); 
-
-            case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
-                jacMode = model_Jacobian_LC(mp,   im2, whichDM2); 
-
-            case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-                jacMode = model_Jacobian_SPLC(mp,   im2, whichDM2); 
-
-            case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
-                jacMode = model_Jacobian_VC(mp,   im2, whichDM2); 
-
-            case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
-                jacMode = model_Jacobian_Roddier(mp,   im2, whichDM2);
+        %--Select which optical layout's Jacobian model to use and get the output E-field
+        switch lower(mp.layout)
+            case{'fourier'}
+                
+                switch upper(mp.coro) 
+                    case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
+                        jacMode = model_Jacobian_FOHLC(mp, im2, whichDM2); 
+                    case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
+                        jacMode = model_Jacobian_EHLC(mp, im2, whichDM2); 
+                    case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
+                        jacMode = model_Jacobian_HLC(mp, im2, whichDM2); 
+                    case{'SPHLC','FHLC'}  %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS
+                        jacMode = model_Jacobian_SPHLC(mp, im2, whichDM2); 
+                    case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
+                        jacMode = model_Jacobian_LC(mp, im2, whichDM2); 
+                    case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
+                        jacMode = model_Jacobian_SPLC(mp, im2, whichDM2); 
+                    case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
+                        jacMode = model_Jacobian_VC(mp, im2, whichDM2); 
+                    case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
+                        jacMode = model_Jacobian_Roddier(mp, im2, whichDM2); 
+                    otherwise
+                        error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
+                end  
+                                
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--WFIRST CGI Phase B Models
+                
+                switch upper(mp.coro) 
+                    case{'HLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
+                        jacMode = model_Jacobian_HLC_scale(mp, im2, whichDM2); 
+                    case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
+                        jacMode  = model_Jacobian_SPLC(mp, im2, whichDM2); 
+                    otherwise
+                        error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
+                end                  
 
             otherwise
-                error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED IN model_Jacobian.m');        
-        end    
-
+                error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');  
+                
+        end
+ 
     end %--END OF FUNCTION model_Jacobian_middle_layer.m    
 
     funcMiddle = @(ii) model_Jacobian_middle_layer(mp,vals_list,ii); %--Make a function handle for parfor to use

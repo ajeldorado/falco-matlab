@@ -49,16 +49,19 @@ if(mp.flagPlot)
             ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
         case{'HLC','APHLC','SPHLC'}
-            h_amp = subplot(2,3,3);
-             ax3=get(h_amp,'position'); % Save the position as ax
-            set(h_amp,'position',ax3); % Manually setting this holds the position with colorbar 
-            subplot(2,3,3); 
-            imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM8surf*1e9); axis xy equal tight; colormap gray; ch = colorbar;
-            title('FPM Nickel Profile','Fontsize',16,'Fontweight','Bold');
-            xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
-            ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
-            ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
-            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+            switch lower(mp.layout)
+                case 'fourier'
+                    h_amp = subplot(2,3,3);
+                     ax3=get(h_amp,'position'); % Save the position as ax
+                    set(h_amp,'position',ax3); % Manually setting this holds the position with colorbar 
+                    subplot(2,3,3); 
+                    imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM8surf*1e9); axis xy equal tight; colormap gray; ch = colorbar;
+                    title('FPM Nickel Profile','Fontsize',16,'Fontweight','Bold');
+                    xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+                    ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+                    ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
+                    set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+            end
         case{'FOHLC'}
             h_amp = subplot(2,3,3);
              ax3=get(h_amp,'position'); % Save the position as ax
@@ -166,38 +169,41 @@ if(mp.flagPlot)
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
         
         case{'HLC','APHLC','SPHLC'}
-            
-            if( max(mp.DM9surf(:))==0 )
-                cutoffFloor = max(mp.DM9surf(:)) -1e-9;
-            else
-            
-                DM9surfNZ = mp.DM9surf(mp.DM9surf~=0);
-                DM9surfNZsort = sort(DM9surfNZ(:));
-                cutoffFrac = 0.02;
-                cutoffInd = ceil(cutoffFrac*length(DM9surfNZsort));
-                if(cutoffInd<1)
-                    cutoffInd = 1;
-                elseif(cutoffInd>length(DM9surfNZsort))
-                    cutoffInd = length(DM9surfNZsort);
-                end
-                cutoffFloor = DM9surfNZsort( cutoffInd );
-                if( cutoffFloor >= max(mp.DM9surf(:)) )
-                    cutoffFloor = 0.9*max(mp.DM9surf(:));
-                end
-                
+            switch lower(mp.layout)
+                case 'fourier'
+                    
+                    if( max(mp.DM9surf(:))==0 )
+                        cutoffFloor = max(mp.DM9surf(:)) -1e-9;
+                    else
+
+                        DM9surfNZ = mp.DM9surf(mp.DM9surf~=0);
+                        DM9surfNZsort = sort(DM9surfNZ(:));
+                        cutoffFrac = 0.02;
+                        cutoffInd = ceil(cutoffFrac*length(DM9surfNZsort));
+                        if(cutoffInd<1)
+                            cutoffInd = 1;
+                        elseif(cutoffInd>length(DM9surfNZsort))
+                            cutoffInd = length(DM9surfNZsort);
+                        end
+                        cutoffFloor = DM9surfNZsort( cutoffInd );
+                        if( cutoffFloor >= max(mp.DM9surf(:)) )
+                            cutoffFloor = 0.9*max(mp.DM9surf(:));
+                        end
+
+                    end
+
+                    h_dm9 = subplot(2,3,6);
+                    ax6=get(h_dm9,'position'); % Save the position as ax
+                    set(h_dm9,'position',ax6); % Manually setting this holds the position with colorbar 
+                    subplot(2,3,6); 
+                    imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM9surf*1e9,1e9*[cutoffFloor,max(mp.DM9surf(:))]); axis xy equal tight; ch = colorbar;
+                    title('FPM PMGI Profile','Fontsize',16,'Fontweight','Bold');
+                    xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+                    ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+                    ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
+                    set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
             end
-           
-            h_dm9 = subplot(2,3,6);
-            ax6=get(h_dm9,'position'); % Save the position as ax
-            set(h_dm9,'position',ax6); % Manually setting this holds the position with colorbar 
-            subplot(2,3,6); 
-            imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM9surf*1e9,1e9*[cutoffFloor,max(mp.DM9surf(:))]); axis xy equal tight; ch = colorbar;
-            title('FPM PMGI Profile','Fontsize',16,'Fontweight','Bold');
-            xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
-            ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
-            ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
-            set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
-        
+            
         otherwise %--No subplot
 
     end
