@@ -181,31 +181,35 @@ mp.dm1.Nele=0; mp.dm2.Nele=0;  mp.dm3.Nele=0;  mp.dm4.Nele=0;  mp.dm5.Nele=0;  m
 %mp.dm1.Nele=[]; mp.dm2.Nele=[];  mp.dm3.Nele=[];  mp.dm4.Nele=[];  mp.dm5.Nele=[];  mp.dm6.Nele=[];  mp.dm7.Nele=[];  mp.dm8.Nele=[];  mp.dm9.Nele=[]; %--Initialize for Jacobian calculations later. 
 
 %% HLC and EHLC FPM: Initialization and Generation
-switch upper(mp.coro)
-    case{'HLC'}
-        switch mp.dm9.inf0name
-            case '3foldZern'
-                mp = falco_setup_FPM_HLC_3foldZern(mp);
-            otherwise
-                mp = falco_setup_FPM_HLC(mp);
-        end
-        mp = falco_config_gen_FPM_HLC(mp);
-    case{'FOHLC'}
-        mp = falco_setup_FPM_FOHLC(mp);
-        mp = falco_config_gen_FPM_FOHLC(mp);
-        mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
-        mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
-    case{'EHLC'}
-        mp = falco_setup_FPM_EHLC(mp);
-        mp = falco_config_gen_FPM_EHLC(mp);
-    case 'SPHLC'
-        mp = falco_config_gen_FPM_SPHLC(mp);
-end
 
-%%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.
-switch upper(mp.coro)
-    case{'EHLC','HLC','SPHLC'}
-        [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
+switch lower(mp.layout)
+    case 'fourier'
+        switch upper(mp.coro)
+            case{'HLC'}
+                switch mp.dm9.inf0name
+                    case '3foldZern'
+                        mp = falco_setup_FPM_HLC_3foldZern(mp);
+                    otherwise
+                        mp = falco_setup_FPM_HLC(mp);
+                end
+                mp = falco_config_gen_FPM_HLC(mp);
+            case{'FOHLC'}
+                mp = falco_setup_FPM_FOHLC(mp);
+                mp = falco_config_gen_FPM_FOHLC(mp);
+                mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
+                mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
+            case{'EHLC'}
+                mp = falco_setup_FPM_EHLC(mp);
+                mp = falco_config_gen_FPM_EHLC(mp);
+            case 'SPHLC'
+                mp = falco_config_gen_FPM_SPHLC(mp);
+        end
+
+        %%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.
+        switch upper(mp.coro)
+            case{'EHLC','HLC','SPHLC'}
+                [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
+        end
 end
 
 %% Generate FPM

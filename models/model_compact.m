@@ -129,11 +129,17 @@ end
 
 
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
-switch upper(mp.coro) 
-    case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
-        mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
-    case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-        mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+switch lower(mp.layout)
+    case{'fourier'}
+        switch upper(mp.coro) 
+            case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
+                mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+            case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
+                mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+        end
+        
+    case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
+            mp.FPM.mask = mp.compact.FPMcube(:,:,modvar.sbpIndex);
 end
 
 %--Select which optical layout's compact model to use and get the output E-field
@@ -141,11 +147,13 @@ switch lower(mp.layout)
     case{'fourier'}
         Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
         
-    case{'wfirst_phaseb_simple'} %--Use compact model as the full model, and the general FALCO model as the compact model.
-        Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
-        
-    case{'wfirst_phaseb_proper'} %--Use the actual Phase B compact model as the compact model.
-        Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+    case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
+        switch upper(mp.coro)
+            case{'SPLC'}
+                Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+            case{'HLC'}
+                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
+        end
 end
     
 

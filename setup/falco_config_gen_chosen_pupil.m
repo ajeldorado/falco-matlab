@@ -46,16 +46,27 @@ switch upper(mp.whichPupil)
         mp.P1.compact.mask = falco_gen_pupil_Simple( inputs );
 
     case{'WFIRST180718'}
-        switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-                %--Load inside the model
-            otherwise
-                %--Generate high-res input pupil for the 'full' model
-                mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
-        end
+%         switch mp.layout
+%             case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+%                 %--Load inside the model
+%             otherwise
+%                 %--Generate high-res input pupil for the 'full' model
+%                 mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+%         end
         
         %--Generate low-res input pupil for the 'compact' model
-        mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);        
+        if(isfield(mp,'P1'))
+            if(isfield(mp.P1,'full'))
+                if(isfield(mp.P1.full,'mask')==false)
+                    mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+                end
+            end
+            if(isfield(mp.P1,'compact'))
+                if(isfield(mp.P1.compact,'mask')==false)
+                    mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);     
+                end
+            end
+        end
         
     case{'WFIRST20180103'}
         %--Generate high-res input pupil for the 'full' model
