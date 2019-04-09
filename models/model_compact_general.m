@@ -103,7 +103,11 @@ EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
-if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
+if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
+    Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1);
+else
+    Edm1 = EP2;
+end
 Edm1 = Edm1WFE.*DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
@@ -111,7 +115,11 @@ Edm2 = propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2);
 Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
 
 %--Back-propagate to pupil P2
-if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 ); EP2eff = Edm2; else; EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); end %--Back propagate to pupil P2
+if(mp.d_P2_dm1 + mp.d_dm1_dm2 == 0)
+    EP2eff = Edm2;
+else
+    EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
+end
 
 %--Rotate 180 degrees to propagate to pupil P3
 EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering);
@@ -233,7 +241,7 @@ end
 EP4 = mp.P4.compact.croppedMask.*EP4;
 
 % DFT to camera
-EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta, mp.centering);
+EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,dxi,Nxi,deta,Neta,mp.centering);
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
@@ -244,6 +252,20 @@ end
 
 if(mp.useGPU)
     Eout = gather(Eout);
+end
+
+%--Fiber propagation
+if(mp.flagFiber)
+    Efiber = cell(np.Fend.Nlens,1);
+    
+    for nlens = 1:mp.Fend.Nlens
+        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,dxi,Nxi,deta,Neta,mp.centering,'xfc',mp.Fend.x_lenslet_phys(nlens),'yfc',mp.Fend.y_lenslet_phys(nlens));
+        Elenslet = EFend.*mp.Fend.lenslet.mask;
+        EF5 = propcustom_mft_PtoF(Elenslet,mp.lensletFL,lambda,dxi,mp.F5.dxi,mp.F5.Nxi,mp.F5.deta,mp.F5.Neta,mp.centering);
+        Efiber{nlens} = mp.F5.fiberMode(:).*sum(sum(mp.F5.fiberMode.*conj(EF5)));
+    end
+
+    Efiber = permute(reshape(cell2mat(Efiber)', mp.F5.Nxi, mp.F5.Neta, mp.Fend.Nlens), [2,1,3]);
 end
 
 end % End of entire function

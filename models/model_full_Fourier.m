@@ -248,4 +248,17 @@ if(isfield(mp,'flagElyot'))
     Eout = EP40;
 end
 
+if(mp.flagFiber)
+    Efiber = cell(np.Fend.Nlens,1);
+    
+    for nlens = 1:mp.Fend.Nlens
+        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering,'xfc',mp.Fend.x_lenslet_phys(nlens),'yfc',mp.Fend.y_lenslet_phys(nlens));
+        Elenslet = EFend.*mp.Fend.lenslet.mask;
+        EF5 = propcustom_mft_PtoF(Elenslet,mp.lensletFL,lambda,mp.Fend.dxi,mp.F5.dxi,mp.F5.Nxi,mp.F5.deta,mp.F5.Neta,mp.centering);
+        Efiber{nlens} = mp.F5.fiberMode(:).*sum(sum(mp.F5.fiberMode.*conj(EF5)));
+    end
+
+    Efiber = permute(reshape(cell2mat(Efiber)', mp.F5.Nxi, mp.F5.Neta, mp.Fend.Nlens), [2,1,3]);
+end
+
 end %--END OF FUNCTION
