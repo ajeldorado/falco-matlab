@@ -38,7 +38,6 @@ while icav < size(varargin, 2)
     end
 end
 
-
 %-----------------------------------------------------
 % %--FOR DEBUGGING ONLY
 % clear all
@@ -55,9 +54,6 @@ end
 % % inputs.yshift = 0;
 %-----------------------------------------------------
 
-
-
-
 %--Centering of array: 'pixel' or 'interpixel'
 if(isfield(inputs,'centering'))
     centering = inputs.centering;
@@ -65,17 +61,8 @@ else %--Default to pixel centering
     centering = 'pixel';
 end
 
-% %--Magnification factor of the pupil diameter
-% if(isfield(inputs,'magfacD')) 
-%     magfacD = inputs.magfacD;
-% else
-%     magfacD = 1;
-% end
-
 Dbeam = inputs.Dbeam; %--diameter of the beam at the mask (meters)
-% dx = inputs.dx; %--width of a pixel in the mask representation (meters)
 Nbeam   = inputs.Nbeam;     % number of points across the incoming beam           
-% Narray = inputs.Narray;   % number of points across output array
 ID = inputs.ID; % inner diameter of mask (in pupil diameters)
 OD = inputs.OD; % outer diameter of mask (in pupil diameters)
 wStrut = inputs.wStrut; % width of the struts (in pupil diameters)
@@ -88,7 +75,6 @@ Nap   = Nbeam;%250;%324;%1500;%250;                  % number of points across F
 width_hex0 = 1.242; %-- flat-to-flat (m)
 hexgap0 = 6e-3; % (m)
 Dap = (12*width_hex0 + 12*hexgap0);
-% % % dx = Dap/Nap;
 dx_drawing = 1.242/158; % (m) %--In actual drawing, 158 pixels across the 1.242m, so dx_pixel =
 %dx_drawing. strut in drawing is 19 pixels across, so dx_strut =
 %19*dx_drawing = 0.1494m
@@ -120,7 +106,6 @@ switch centering % 0 shift for pixel-centered pupil, or -diam/Narray shift for i
 end
 
 %--For PROPER 
-% diam = Darray; %Dap;%15.05 ;%16; % width of the array (m)
 wl_dummy   = 1e-6;               % wavelength (m)
 bdf = Nbeam/Narray; %--beam diameter factor in output array
 dx_t = 0;
@@ -137,9 +122,6 @@ wStrut0 = 19*dx_drawing*magfac; %%%%125e-3; % meters
 %-------- Generate the input pupil for LUVOIR
 bm = prop_begin(Dbeam, wl_dummy, Narray,'beam_diam_fraction',bdf);
 
-% Subtract the inner ring from all the rings
-%[ap] = falco_hex_aperture_LUVOIR_A_5(bm,nrings,hexrad,hexsep,'XC',cshift-dx_t,'YC',cshift-dy_t,'DARKCENTER'); %--Official Matlab PROPER from August 2017
-
 %--PRIMARY MIRROR (OUTER DIAMETER)
 ra_OD = (Dbeam*OD/2)*magfacD;
 cx_OD = 0 + cshift + xshift;
@@ -154,13 +136,9 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);
 
 bm2 = bm;
 
-
 % %--Add the struts
 
 if(wStrut>0)
-    % % % wStrut = inputs.wStrut; % width of the struts (in pupil diameters)
-    % % % wStrut = wStrut*Dbeam; %--now in meters
-
     bm2 = prop_rectangular_obscuration(bm2, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfac*Dap/4);
 
     len_1a = 2*width_hex - 12*dx_drawing;
@@ -176,10 +154,8 @@ mask = ifftshift(abs(bm2.wf));
 if(flagRot180deg)
     mask = rot90(mask,2);
 end
-% figure(52); imagesc(mask); axis xy equal tight; colorbar;
 
 end %--END OF FUNCTION
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
@@ -194,4 +170,3 @@ end %--END OF FUNCTION
 % drawnow;
 % 
 % sum(sum(mask))
-

@@ -36,12 +36,12 @@ function [complexTransCompact, complexTransFull] = falco_gen_complex_trans_table
 flagRefl = false; % flag to take the value in reflection instead of transmission
 substrate = 'FS'; % material name of the mask substrate [FS or N-BK7]
 %--Enable different arguments values by using varargin
-icav = 0;                     % index in cell array varargin
+icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
       case {'reflection','refl','lowfs','lowfsc'}
-        flagRefl = true;  % flag to take the value in reflection instead of transmission
+        flagRefl = true; % flag to take the value in reflection instead of transmission
       case {'substrate','sub','glass'}
         icav = icav + 1;
         substrate = varargin{icav}; % material name of the mask substrate [FS or N-BK7]
@@ -52,12 +52,8 @@ end
 
 %%
 
-
 mp.F3.metal = 'Ni';
 mp.F3.diel = 'PMGI';
-
-% NlamCompact = mp.Nsbp;%length(mp.sbp_centers);
-% NlamFull = mp.full.Nlam; %length(mp.lambdas);
 
 fn_cube_compact = sprintf('%s/data/material/ct_cube_%s_Ti%.1fnm_%s_%.1fto%.1fby%.2f_%s_%.1fto%.1fby%.2f_wvl%dnm_BW%.1fN%d_%.1fdeg_compact.mat',...
     mp.path.falco,substrate,mp.t_Ti_nm,mp.F3.metal,min(mp.t_metal_nm_vec), max(mp.t_metal_nm_vec), mp.dt_metal_nm, ...
@@ -84,12 +80,10 @@ t_metal_m_vec = 1e-9*mp.t_metal_nm_vec; %--nickel thickness range
 Nmetal = length(mp.t_metal_nm_vec);
 Ndiel  = length(mp.t_diel_nm_vec);
 
-
 %--Compact Model: Load the data if it has been generated before; otherwise generate it.
 if(exist(fn_cube_compact,'file')==2)
     load(fn_cube_compact,'complexTransCompact');
-    fprintf('Loaded complex transmission datacube: %s\n', fn_cube_compact)
-    
+    fprintf('Loaded complex transmission datacube: %s\n', fn_cube_compact)    
 else
 
     fprintf('Computing thin film equations for compact model:\n')
@@ -123,10 +117,6 @@ else
             else
                 complexTransCompact(:,:,si) = tCoef;
             end
-%             for imetal = 1:Nmetal        
-%                 [ampc,~] = falco_thin_film_material_def(lam, aoi, t_Ti, t_metal_m_vec(imetal), t_diel_m_vec, d0, 2);            
-%                 complexTransCompact(:,imetal,si) = ampc;
-%             end
             fprintf('\tDone computing wavelength %d of %d.\n',si,Nsbp);
         end        
     end
@@ -137,13 +127,12 @@ else
 
 end
 
-
 %--Full Model: Load the data if it has been generated before; otherwise generate it.
 if(exist(fn_cube_full,'file')==2)
     load(fn_cube_full,'complexTransFull');
-    fprintf('Loaded complex transmission datacube: %s\n', fn_cube_full)
-    
+    fprintf('Loaded complex transmission datacube: %s\n', fn_cube_full)    
 else
+    
     fprintf('Computing thin film equations for full model:\n')
     if(mp.Nwpsbp==1)
         complexTransFull = complexTransCompact;
@@ -158,7 +147,6 @@ else
                 d0 = lam * d0fac; % Max thickness of PMGI + Ni
                 
                 for imetal = 1:Nmetal
-                    %t_Ni = t_Ni(imetal)*1e-9;
                     [tCoef,rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_m, t_metal_m_vec(imetal), t_diel_m_vec, d0, 2);            
                     if(flagRefl)
                         complexTransFull(:,imetal,li) = tCoef;
@@ -179,10 +167,6 @@ else
                 else
                     complexTransFull(:,:,li) = tCoef;
                 end
-%                 for imetal = 1:Nmetal
-%                     [ampc,~] = falco_thin_film_material_def(lam, aoi, t_Ti, t_metal_m_vec(imetal), t_diel_m_vec, d0, 0);            
-%                     complexTransFull(:,imetal,li) = ampc;
-%                 end
                 fprintf('\tDone computing wavelength %d of %d.\n',li,length(lambdas));
             end
         end
@@ -192,7 +176,4 @@ else
     save(fn_cube_full,'complexTransFull')
     fprintf('Saved complex transmission datacube: %s\n', fn_cube_full)
 
-
-
-
-end % END OF FUNCTION -----------------------------------------------------
+end % END OF FUNCTION

@@ -35,7 +35,6 @@
 % Modified on 2018-04-26 by A.J. Riggs to correct the sampling requirement.
 % Written by A.J. on April 30, 2013. 
 
-
 function Eout = propcustom_PTP_inf_func(Ein,Larray,lambda,dz,actPitch,propMethod)
     
     [M,N] = size(Ein);  
@@ -50,17 +49,16 @@ function Eout = propcustom_PTP_inf_func(Ein,Larray,lambda,dz,actPitch,propMethod
         error('propcustom_PTP: WARNING, NOT ENOUGH POINTS USED!')
     end
     
-    
     switch lower(propMethod)
         case{'fft'}
             
             %--Make coordinate vectors and maps in the frequency plane (faster than using meshgrid.m)
-            fx = [0:(N/2-1),(-N/2:-1)]/(N*dx);    % fftshifted frequency-plane coordinates.  dimensions = 1xN
+            fx = [0:(N/2-1),(-N/2:-1)]/(N*dx); % fftshifted frequency-plane coordinates.  dimensions = 1xN
             FX2 = ones(N,1)*fx.^2; % squared, shifted frequency-plane coordinates. dimensions = NxN
             H = exp(-1i*pi*lambda*dz*(FX2+FX2.')); % transfer function
 
-            U1=fft2(fftshift(Ein));      % shift, then fft source field
-            Eout=ifftshift(ifft2(H.*U1));    % inv fft, then center observation field    
+            U1=fft2(fftshift(Ein)); % shift, then fft source field
+            Eout=ifftshift(ifft2(H.*U1)); % inv fft, then center observation field    
         
         case{'mft'}
             
@@ -71,7 +69,7 @@ function Eout = propcustom_PTP_inf_func(Ein,Larray,lambda,dz,actPitch,propMethod
             dxi = (f*lambda/Larray);
             
             %--Make coordinate vectors and maps in the frequency plane (faster than using meshgrid.m)
-            fx = (-Nxi/2:Nxi/2-1)*dxi/lambda; %[0:(Nxi/2-1),(-Nxi/2:-1)]*dxi;    % fftshifted frequency-plane coordinates.  dimensions = 1xN
+            fx = (-Nxi/2:Nxi/2-1)*dxi/lambda; % fftshifted frequency-plane coordinates.  dimensions = 1xN
             FX2 = ones(Nxi,1)*fx.^2; % squared, shifted frequency-plane coordinates. dimensions = NxN
             H = exp(-1i*pi*lambda*dz*(FX2+FX2.')); % transfer function
             
@@ -83,8 +81,6 @@ function Eout = propcustom_PTP_inf_func(Ein,Larray,lambda,dz,actPitch,propMethod
             else
                 xs = (-M/2:(M/2-1)).'*dx;
             end
-            % ys = xs.';
-            % dy = dx;
             
             %--Focal Plane Coordinates
             if(  (mod(Nxi,2)==1) ) %--Odd-sized array
@@ -94,13 +90,10 @@ function Eout = propcustom_PTP_inf_func(Ein,Larray,lambda,dz,actPitch,propMethod
             else%--Even-sized array, pixel centered
                 xis = ( -Nxi/2:(Nxi/2-1) )*dxi;
             end
-            % etas = xis.';    
-            
-            %rect_mat_pre = (exp(-2*pi*1i*(etas*ys)/(lambda*f)));
+
             rect_mat_post  = (exp(-2*pi*1i*(xs*xis)/(lambda*f))); %--Just the transpose of rect_mat_pre for square input and output matrices with same samplings in x and y.
             U1 = 1/(lambda*f)*(rect_mat_post.'*Ein*rect_mat_post);
             Eout = (dx*dx)*(dxi*dxi)/(lambda*f)*conj(rect_mat_post)*(H.*U1)*rect_mat_post';
-
 
     end
 end %--END OF FUNCTION

@@ -23,7 +23,6 @@
 % -Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % -Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
-
 function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     %--STEPS:

@@ -47,21 +47,4 @@ for ix = 1:Nxi
     end
 end
 
-%     %--Coordinates for metal thickness and dielectric thickness
-%     [X,Y] = meshgrid(mp.t_metal_nm_vec,mp.t_diel_nm_vec);
-%     
-%     %--Interpolate values
-%     FPMmat = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission    
-% %     fprintf('Beginning computation of complex transmission for FPM...\t'); tic
-%     for ix = 1:Nxi
-%             fprintf('Beginning computation of complex transmission for FPM row %d (%d points)...\t',ix,Nxi); tic
-%         for iy = 1:Neta
-%             FPMmat(iy,ix) = interp2(X, Y, squeeze(complexTransCube(:,:,ilam)), DM8surf(iy,ix), DM9surf(iy,ix),'nearest');
-%         end
-%         tend = toc;
-%         fprintf('done.\tTime = %.2fs\t(%.2fs per pixel)\n',tend,tend/Nxi);
-%     end
-% %     fprintf('done.\tTime = %.2fs\n',toc);
-    
-
 end %--END OF FUNCTION

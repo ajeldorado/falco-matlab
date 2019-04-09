@@ -39,8 +39,7 @@
 % Modified on 2015-02-18 by A.J. Riggs from hcil_model.m to hcil_simTestbed.m to include
 %  extra errors in the model to simulate the actual testbed for fake images.
 
-
-function Eout = model_full_Fourier(mp, lambda, Ein, normFac)
+function [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac)
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.full.NdmPad;
@@ -66,23 +65,8 @@ end
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 if(any(mp.dm_ind==1));  DM1surf = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,NdmPad); end
 if(any(mp.dm_ind==2));  DM2surf = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,NdmPad); end
-
-% if(any(mp.dm_ind==1))
-%     if( isfield(mp.dm1,'surfM') );   DM1surf = padOrCropEven(mp.dm1.surfM, NdmPad);
-%     else                             DM1surf = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,NdmPad); end
-% else
-%     DM1surf = 0;
-% end
-% if(any(mp.dm_ind==2))
-%     if( isfield(mp.dm2,'surfM') );   DM2surf = padOrCropEven(mp.dm2.surfM, NdmPad);
-%     else                             DM2surf = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,NdmPad); end
-% else
-%     DM2surf = 0;
-% end
-
 
 pupil = padOrCropEven(mp.P1.full.mask,NdmPad);
 Ein = padOrCropEven(Ein,NdmPad);
@@ -131,7 +115,6 @@ EP3 = propcustom_2FT(EP2eff, mp.centering);
 if(mp.flagApod)
     EP3 = mp.P3.full.mask.*padOrCropEven(EP3, mp.P3.full.Narr); 
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%  Select propagation based on coronagraph type   %%%%%%%%%%%%%%
@@ -201,14 +184,7 @@ switch upper(mp.coro)
         EP4 = EP4noFPM-EP4subtra;
 
     case{'EHLC'}
-        %--Complex transmission of the points outside the inner part of the FPM (just fused silica with optional dielectric and no metal).
-        t_Ti_base = 0;
-        t_Ni_vec = 0;
-        t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-        pol = 2;
-        [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-        transOuterFPM = tCoef;
-
+        
         %--MFT from apodizer plane to FPM (i.e., P3 to F3)
         EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
         EF3 = mp.FPM.mask.*EF3inc; %--Apply FPM
@@ -221,13 +197,12 @@ switch upper(mp.coro)
         DM8ampPad = padOrCropEven( DM8amp,mp.full.Nfpm,'extrapval',1);
         DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'full');
         DM9surfPad = padOrCropEven( DM9surf,mp.full.Nfpm);
-        transOuterFPM = 1; %--Because the complex transmission far away is divided out.
         FPM = DM8ampPad.*exp(2*pi*1i/lambda*DM9surfPad);
 
         %--MFT from apodizer plane to FPM (i.e., P3 to F3)
         EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
         % Apply (1-FPM) for Babinet's principle later
-        EF3 = (1 - FPM/transOuterFPM).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
+        EF3 = (1 - FPM).*EF3inc;
         % Use Babinet's principle at the Lyot plane.
         EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
         EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.full.Narr);
@@ -257,7 +232,6 @@ end
 EP40 = EP4;
 EP4 = mp.P4.full.croppedMask.*EP4; %padOrCropEven(EP4,mp.P4.full.Narr);
 
-
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend.
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta);
 
@@ -275,6 +249,3 @@ if(isfield(mp,'flagElyot'))
 end
 
 end %--END OF FUNCTION
-
-
-    

@@ -39,7 +39,6 @@ while icav < size(varargin, 2)
     end
 end
 
-
 Eout = rot90(Ein,2);  %--Forward propagate two Fourier transforms by rotating 180 degrees.
 
 switch centering
@@ -52,4 +51,3 @@ switch centering
 end
 
 end %--END OF FUNCTION
-

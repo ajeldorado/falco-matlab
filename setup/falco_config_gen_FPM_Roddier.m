@@ -4,7 +4,6 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%
 % REVISION HISTORY:
 % --------------
 % Created by A.J. Riggs on 2018-10-01 by extracting material from
@@ -21,7 +20,6 @@ function [mp] = falco_config_gen_FPM_Roddier(mp)
         FPMgenInputs.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
         FPMgenInputs.centering = mp.centering;
         mp.F3.full.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
-        % figure(204); imagesc(mp.F3.full.mask.amp); axis xy equal tight;
 
         mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
         mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);   
@@ -47,7 +45,6 @@ function [mp] = falco_config_gen_FPM_Roddier(mp)
         %--Make or read in focal plane mask (FPM) amplitude for the compact model
         FPMgenInputs.pixresFPM = mp.F3.compact.res; %--pixels per lambda_c/D
         mp.F3.compact.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
-        
 
         %-- Make a mask for the phase pattern
         FPMgenInputsPhz = FPMgenInputs;
@@ -58,9 +55,6 @@ function [mp] = falco_config_gen_FPM_Roddier(mp)
         
         FPMgenInputsPhz.pixresFPM = mp.F3.compact.res; %--pixels per lambda_c/D
         mp.F3.compact.mask.phzSupport = 1-falco_gen_annular_FPM(FPMgenInputsPhz);
-        
-        %--Compute refractive index
-        %n^2-1=\frac{0.6961663?^2}{?^2-0.0684043^2}+\frac{0.4079426?^2}{?^2-0.1162414^2}+\frac{0.8974794?^2}{?^2-9.896161^2}
         
         if(strcmp(mp.FPMmaterial,'FS'))
             nsquared = @(lam_um) 1 + (0.6961663*lam_um^2)/(lam_um^2-0.0684043^2)+ ...
@@ -73,5 +67,4 @@ function [mp] = falco_config_gen_FPM_Roddier(mp)
         
         mp.F3.n = n;
         
-
 end %--END OF FUNCTION

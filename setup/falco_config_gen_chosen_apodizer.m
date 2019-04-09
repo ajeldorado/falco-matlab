@@ -13,21 +13,17 @@
 % ----------------
 % Created on 2018-05-29 by A.J. Riggs.
 
-
-
-
 function mp = falco_config_gen_chosen_apodizer(mp)
 
 switch lower(mp.coro)
     
 	case{'lc','hlc','ehlc','fohlc'}
-         disp('Using Lyot coronagraph without apodizer or aperture stop.')
+        disp('Using Lyot coronagraph without apodizer or aperture stop.')
 	case{'roddier'}
-         disp('Using Roddier coronagraph without apodizer or aperture stop.')
- case{'flc'}
-     disp('Using spatially-filtered Lyot coronagraph without apodizer or aperture stop.')
+        disp('Using Roddier coronagraph without apodizer or aperture stop.')
+    case{'flc'}
+        disp('Using spatially-filtered Lyot coronagraph without apodizer or aperture stop.')
     case{'splc','sphlc'}
-        
         
         switch upper(mp.SPname)
             case{'SPC20181220','SPC-20181220','20181220'}
@@ -49,15 +45,6 @@ switch lower(mp.coro)
                 
                 %--Generate lower-resolution SP for the compact model
                 mp.P3.compact.mask = falco_gen_multi_ring_SP(mp.rEdgesLeft,mp.rEdgesRight,mp.P2.compact.dx,mp.P2.D,mp.centering);
-
-                %--Shaped Pupil Plane Coordinates (meters)
-                if( strcmpi(mp.centering,'interpixel') )
-                    % mp.P3.full.xs = ( -(mp.P3.full.Narr-1)/2:(mp.P3.full.Narr-1)/2 ).'*mp.P3.full.dx;
-                    %mp.P3.compact.xs = ( -(mp.P3.compact.Narr-1)/2:(mp.P3.compact.Narr-1)/2 ).'*mp.P3.compact.dx;
-                else
-                    % mp.P3.full.xs = (-mp.P3.full.Narr/2:(mp.P3.full.Narr/2-1)).'*mp.P3.full.dx;
-                    %mp.P3.compact.xs = (-mp.P3.compact.Narr/2:(mp.P3.compact.Narr/2-1)).'*mp.P3.compact.dx;
-                end
         
                 if(mp.flagPlot)
                     figure(504); imagesc(padOrCropEven(mp.P3.full.mask,length(mp.P1.full.mask)) + mp.P1.full.mask); axis xy equal tight; colorbar;
@@ -66,6 +53,7 @@ switch lower(mp.coro)
         
         switch mp.layout
             case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+                
             otherwise
                 mp.P3.full.Narr= length(mp.P3.full.mask);
                 mp.P3.full.dx = mp.P2.full.dx;
@@ -74,39 +62,32 @@ switch lower(mp.coro)
         mp.P3.compact.dx = mp.P2.compact.dx;
         mp.P3.compact.Narr = length(mp.P3.compact.mask);
 
-        
-     
-
     case{'vortex','vc','avc'}
         
         if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
             % Full aperture stop 
             mp.P3.full.Narr = 2^(nextpow2(mp.P1.full.Nbeam));
-%             mp.P3.full.dx = mp.P2.full.dx;
 
             if(strcmp(mp.P3.apodType,'Simple'))
-                inputs.Nbeam = mp.P1.full.Nbeam;     % number of points across incoming beam 
-                inputs.Npad = mp.P3.full.Narr;% 
+                inputs.Nbeam = mp.P1.full.Nbeam; % number of points across incoming beam 
+                inputs.Npad = mp.P3.full.Narr;
                 inputs.OD = mp.P3.ODnorm;
                 inputs.ID = mp.P3.IDnorm;
                 inputs.Nstrut = 0;
-                inputs.angStrut = [];%Angles of the struts 
-                inputs.wStrut = 0;% spider width (fraction of the pupil diameter)
+                inputs.angStrut = []; %Angles of the struts 
+                inputs.wStrut = 0; % spider width (fraction of the pupil diameter)
 
                 mp.P3.full.mask= falco_gen_pupil_Simple( inputs );
 
-
                 % Compact aperture stop 
                 inputs.Nbeam = mp.P1.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
-                inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));% 
+                inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); 
 
                 mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
-    %            mp.P3.compact.dx = mp.P1.compact.dx;
                 mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
             else
                 load(mp.P3.apodType)
                 mp.P3.full.mask = padOrCropEven(APOD,mp.P3.full.Narr);
-                %mp.P3.full.mask = propcustom_2FT(mp.P3.full.mask);
                 mp.P3.compact.Narr = mp.P3.full.Narr;
                 mp.P3.compact.mask = mp.P3.full.mask;
             end
@@ -136,21 +117,9 @@ switch lower(mp.coro)
         if(mp.flagPlot)
             figure(504); imagesc(padOrCropEven(mp.P3.full.mask,length(mp.P1.full.mask)).*mp.P1.full.mask); axis xy equal tight; colorbar;
         end
-        
-%         %--Generate lower-resolution SP for the compact model
-%         mp.P3.compact.mask = falco_gen_multi_ring_SP(mp.rEdgesLeft,mp.rEdgesRight,mp.P2.compact.dx,mp.P2.D,mp.centering);
 
     otherwise
         error([mp.coro,' is not a valid option for mp.coro.']);
 end
-% figure;
-% imagesc(mp.P1.full.mask+mp.P3.full.mask);
-% axis image;
-% 
-% asdf
-
 
 end %--END OF FUNCTION
-
-
-

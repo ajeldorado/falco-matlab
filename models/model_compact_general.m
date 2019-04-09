@@ -49,7 +49,6 @@
 % like this:
 % mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
 
-
 function Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval)
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
@@ -121,7 +120,6 @@ EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering);
 if(mp.flagApod)
     EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P3.compact.Narr); 
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%  Select propagation based on coronagraph type   %%%%%%%%%%%%%%
@@ -231,13 +229,11 @@ end
 %%%%%%%%%%  Back to common propagation any coronagraph type   %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 %--Apply the Lyot stop
 EP4 = mp.P4.compact.croppedMask.*EP4;
 
 % DFT to camera
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta, mp.centering);
-% EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta); %--Code from before flagEval
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
@@ -246,13 +242,8 @@ else
     Eout = EFend/sqrt(normFac); %--Apply normalization
 end
 
-
 if(mp.useGPU)
     Eout = gather(Eout);
 end
 
-
 end % End of entire function
-
-
-    

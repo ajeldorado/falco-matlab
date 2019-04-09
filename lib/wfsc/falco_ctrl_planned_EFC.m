@@ -84,8 +84,6 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
        
         cvar.latestBestlog10reg = vals_list(1,indBest);
         cvar.latestBestDMfac = vals_list(2,indBest);
-        %cp.muBest(cvar.Itr) = vals_list(1,indBest);
-        %cp.dmfacBest(cvar.Itr) = vals_list(2,indBest);
         fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg,cvar.latestBestDMfac,cvar.cMin)
 
     end
@@ -109,9 +107,6 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         else
             log10regSchedOut = mp.ctrl.log10regSchedIn(cvar.Itr);
         end
-    %     fprintf('log10reg = %.1f \n',log10regSchedOut )
-    %     fprintf('mp.dm_ind = ['); for jj = 1:length(mp.dm_ind); fprintf(' %d',mp.dm_ind(jj)); end; fprintf(' ]\n');
-
 
         %% Step 3: Compute the EFC command to use.
         ni = 1;
@@ -122,11 +117,9 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         
         [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
         fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
-%         fprintf('Scheduled values of: \tlog10reg = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',log10regSchedOut,cvar.latestBestDMfac,cvar.cMin)
 
     end
     
     cvar.log10regUsed = log10regSchedOut;
-    
-    
+       
 end %--END OF FUNCTION

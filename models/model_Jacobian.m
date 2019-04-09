@@ -111,22 +111,19 @@ function jacStruct = model_Jacobian(mp)
                 jacMode = model_Jacobian_HLC(mp,   im2, whichDM2); 
 
             case{'SPHLC','FHLC'}  %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS
-                jacMode  = model_Jacobian_SPHLC(mp,   im2, whichDM2); 
+                jacMode = model_Jacobian_SPHLC(mp,   im2, whichDM2); 
 
             case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
                 jacMode = model_Jacobian_LC(mp,   im2, whichDM2); 
 
             case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-                jacMode  = model_Jacobian_SPLC(mp,   im2, whichDM2); 
+                jacMode = model_Jacobian_SPLC(mp,   im2, whichDM2); 
 
             case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
-                jacMode  = model_Jacobian_VC(mp,   im2, whichDM2); 
+                jacMode = model_Jacobian_VC(mp,   im2, whichDM2); 
 
             case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
-                jacMode  = model_Jacobian_Roddier(mp,   im2, whichDM2); 
-
-            %case{'SPC','APP','APC'} %--Pupil-plane apodizer is only coronagraphic mask
-                %Jac  = model_Jacobian_APC(mp,   tsi, whichDM2); 
+                jacMode = model_Jacobian_Roddier(mp,   im2, whichDM2);
 
             otherwise
                 error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED IN model_Jacobian.m');        

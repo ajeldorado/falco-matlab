@@ -71,10 +71,7 @@ function PUPIL = falco_gen_pupil_Simple_PROPER( input )
     ra_OD = OD/2;
     cx_OD = 0 + cshift + xshift;
     cy_OD = 0 + cshift + yshift;
-    % norm = false;
     bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);%, cx, cy, norm);
-    % figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
-    % figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
     if(ID > 0)
         %--SECONDARY MIRROR (INNER DIAMETER)
@@ -84,11 +81,6 @@ function PUPIL = falco_gen_pupil_Simple_PROPER( input )
         bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     end
     PUPIL = ifftshift(abs(bm.wf));
-%     if(ID > 0)
-%         PUPIL = exp(-(RHO/(apRad*OD)).^hg_expon) - exp(-(RHO/(apRad*ID)).^hg_expon);
-%     else
-%         PUPIL = exp(-(RHO/(apRad*OD)).^hg_expon);
-%     end
     
     % Create spiders 
     if(input.wStrut > 0)
@@ -107,6 +99,4 @@ function PUPIL = falco_gen_pupil_Simple_PROPER( input )
         end
     end
     
-    
 end
-

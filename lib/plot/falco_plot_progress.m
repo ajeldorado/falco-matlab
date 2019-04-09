@@ -6,7 +6,6 @@
 %
 function handles = falco_plot_progress(handles,mp,Itr,contrast_bandavg,Im,DM1surf,DM2surf)
 
-
 Im(Im<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
 
 if(mp.flagPlot)
@@ -140,8 +139,6 @@ if(mp.flagPlot)
     set(gca,'FontSize',20 ,'FontName','Times','FontWeight','Normal')
 
     switch upper(mp.coro)
-%         case{'Vortex'}
-%             %--No subplot
         case{'FOHLC'}
            
             h_dm9 = subplot(2,3,6);

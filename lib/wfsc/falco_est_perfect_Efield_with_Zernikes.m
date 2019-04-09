@@ -39,7 +39,7 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
             [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
             Emat(:,im) = EfibCompact(I,J,:);
         else
-            Emat(:,im) = E2D(mp.Fend.corr.inds);   % Actual field in estimation area
+            Emat(:,im) = E2D(mp.Fend.corr.inds); % Actual field in estimation area
         end
     end
     

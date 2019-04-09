@@ -38,7 +38,6 @@ cvar.gamma9 = mp.ctrl.gamma9; %--weight on total DM stroke for DM9.
     if(any(mp.dm_ind==8));  u8 = mp.dm8.V(mp.dm8.act_ele);  else;  u8 = [];  end
     if(any(mp.dm_ind==9));  u9 = mp.dm9.V(mp.dm9.act_ele);  else;  u9 = [];  end
     u = [u1; u2; u5; u8; u9]; %--column vector
-    %Nele = length(u);
     
     %--Get the indices of each DM's command within the full command
     if(any(mp.dm_ind==1));  u1dummy = 1*ones(mp.dm1.Nele,1);  else;  u1dummy = [];  end
@@ -53,7 +52,6 @@ cvar.gamma9 = mp.ctrl.gamma9; %--weight on total DM stroke for DM9.
     GstarGdiag = diag(cvar.GstarG_wsum);
     cvar.maxDiagGstarG = max(GstarGdiag(u_dm_guide==1 | u_dm_guide==2));
 
-    
     %%
 %--Build up the diagonal of the regularization matrix. Allow different
 %regularization values for different DMs
@@ -81,12 +79,9 @@ for idm=1:numel(mp.dm_ind)
     u_weight = [u_weight; (dm_reg*cvar.maxDiagGstarG)*ones(Nele,1)];
 end
 
-
 %% Least-squares solution. Different from EFC because of term u_weight.*u
 
 dDMvec = -cvar.dmfac*(diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + cvar.dampFac*u_weight.*u);
-% dDMvec = -cvar.dmfac*(cvar.gamma*diag(EyeDiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum + u_weight.*u);
-    
 
 %%
 %--Initialize delta DM commands
@@ -137,7 +132,6 @@ if(any(mp.dm_ind==9))  %--DM9
     startIndex = startIndex + mp.dm9.Nele; % Set for next DM
 end
 
- 
 %% Add the delta command to the command
 
 %--Save starting point for each delta command to be added to.
@@ -159,14 +153,11 @@ if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V; end
 if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V(:); end
 if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V(:); end
 
-
 %% Take images to empirically check contrast at that mu value
 Itotal = falco_get_summed_image(mp);
 InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
 cvar.cMin = InormAvg;
 
 cvar.log10regUsed = -10; %--Dummy value
-
-
 
 end

@@ -18,11 +18,8 @@
 
 function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
 
-
-
     %% Make vector of variable combinations to try
     vals_list = mp.ctrl.log10regVec; %--dimensions: [1 x length(mp.ctrl.muVec) ]
-    %         vals_list = allcomb(mp.ctrl.muVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
 
     Nvals = max(size(vals_list,2));
     
@@ -36,13 +33,6 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
     cvar = falco_ctrl_setup(mp,cvar);
 
     %% Constraints on Actuation
-    %--Put constraints in same format (du isolated on one side)
-    % du <= du_max
-    % du >= -du_max
-    % du <= u_ub - u0
-    % du >= u_lb - u0
-    % % u0+du <= u_ub
-    % % u0+du >= u_lb
 
     %--Constraints: Lower bounds on total control commands
     if(any(mp.dm_ind==1));  u1_LB = -1*mp.dm1.maxAbsV*ones(1,mp.dm1.Nele);  else;  u1_LB = [];  end
@@ -78,7 +68,6 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
     
     %% Diagonal of the regularization matrix
     
-    
     %--The entire regularization matrix will be normalized based on the max
     %response of DMs 1 and 2
     temp = diag(cvar.GstarG_wsum);
@@ -96,7 +85,6 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
     mp.ctrl.relReg9 = 1;
     if(any(mp.dm_ind==8));  cvar.RegMatDiag(cvar.uLegend==8) = mp.ctrl.relReg8*cvar.RegMatDiag(cvar.uLegend==8) ;  end
     if(any(mp.dm_ind==9));  cvar.RegMatDiag(cvar.uLegend==9) = mp.ctrl.relReg9*cvar.RegMatDiag(cvar.uLegend==9) ;  end
-    
     
     %% Loop over CVX calls for different regularizations
     for ni = 1:Nvals
@@ -119,13 +107,11 @@ function [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar)
 
     end
 
-
     %% Find the best regularization value based on the best normalized intensity.
     [cvar.cMin,indBest] = min(Inorm_list(:));
     dDM = dDM_cells{indBest};
   
     cvar.log10regUsed = vals_list(1,indBest);
     fprintf('Empirically chosen log10reg = %.2f\t   gives %4.2e normalized intensity.\n',cvar.log10regUsed,cvar.cMin)    
-
 
 end %--END OF FUNCTION

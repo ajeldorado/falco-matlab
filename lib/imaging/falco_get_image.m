@@ -23,9 +23,7 @@
 %  wavelengths instead of just 1. Also added a separate flag for the
 %  planet.
 
-
 function Iout = falco_get_image(mp, modvar)
-
 
     if(isfield(mp,'flagTestbed'))
         if(mp.flagTestbed) 
@@ -39,6 +37,5 @@ function Iout = falco_get_image(mp, modvar)
     else %--Get image in simulation
         Iout = falco_sim_image(mp, modvar);
     end
-
 
 end

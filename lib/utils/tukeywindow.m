@@ -14,7 +14,6 @@ function window = tukeywindow(n,alpha)
 %--Initialize
 window = ones(n,1);
 
-
 if alpha >= 1
     ts = (0:1:(n-1)).';
     window = 1/2*( 1 - cos(2*pi*ts/(n-1)) );

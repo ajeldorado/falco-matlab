@@ -20,7 +20,6 @@
 % REVISION HISTORY
 % - Created on 2019-03-22 by G. Ruane 
 
-
 function normI = falco_get_testbed_sbp_image(mp,si)
     
     switch upper(mp.testbed)
@@ -35,5 +34,4 @@ function normI = falco_get_testbed_sbp_image(mp,si)
             normI = falco_get_sim_sbp_image(mp,si);   
     end
     
-end 
-
+end

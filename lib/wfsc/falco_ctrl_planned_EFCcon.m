@@ -49,25 +49,14 @@ function [dDM,cvar] = falco_ctrl_planned_EFCcon(mp, cvar)
     if(any(mp.gridSearchItrVec==cvar.Itr))
         
         %--Loop over all the settings to check empirically
-%         if(mp.flagParfor) %--Parallelized
-%             parfor ni = 1:Nvals
-%                 [Inorm_list(ni),dDM_temp] = falco_ctrl_EFCcon_base(ni,vals_list,mp,cvar);
-%                 if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
-%                 if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
-%                 if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
-%                 if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
-%                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-%             end
-%         else %--Not Parallelized
-            for ni = 1:Nvals
-                [Inorm_list(ni),dDM_temp] = falco_ctrl_EFCcon_base(ni,vals_list,mp,cvar);
-                if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
-                if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
-                if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
-                if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
-                if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            end
-%         end
+        for ni = 1:Nvals
+           [Inorm_list(ni),dDM_temp] = falco_ctrl_EFCcon_base(ni,vals_list,mp,cvar);
+           if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
+           if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
+           if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
+           if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
+           if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
+        end
 
         %--Print out results to the command line
         fprintf('Scaling factor:\t')
@@ -85,8 +74,6 @@ function [dDM,cvar] = falco_ctrl_planned_EFCcon(mp, cvar)
        
         cvar.latestBestlog10reg = vals_list(1,indBest);
         cvar.latestBestDMfac = vals_list(2,indBest);
-        %cp.muBest(cvar.Itr) = vals_list(1,indBest);
-        %cp.dmfacBest(cvar.Itr) = vals_list(2,indBest);
         fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg,cvar.latestBestDMfac,cvar.cMin)
 
     end
@@ -110,9 +97,6 @@ function [dDM,cvar] = falco_ctrl_planned_EFCcon(mp, cvar)
         else
             log10regSchedOut = mp.ctrl.log10regSchedIn(cvar.Itr);
         end
-    %     fprintf('log10reg = %.1f \n',log10regSchedOut )
-    %     fprintf('mp.dm_ind = ['); for jj = 1:length(mp.dm_ind); fprintf(' %d',mp.dm_ind(jj)); end; fprintf(' ]\n');
-
 
         %% Step 3: Compute the EFC command to use.
         ni = 1;
@@ -123,7 +107,6 @@ function [dDM,cvar] = falco_ctrl_planned_EFCcon(mp, cvar)
         
         [cvar.cMin,dDM] = falco_ctrl_EFCcon_base(ni,vals_list,mp,cvar);
         fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
-%         fprintf('Scheduled values of: \tlog10reg = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',log10regSchedOut,cvar.latestBestDMfac,cvar.cMin)
 
     end
     

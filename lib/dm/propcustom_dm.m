@@ -8,7 +8,7 @@
 %   Modified to take accept influence function by G. Ruane 
 
 function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
-%        [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
+
 % Simulate a deformable mirror of specified actuator spacing,
 % including the effects of the DM influence function.
 %
@@ -89,7 +89,6 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
 %                   -Allow the sign of the influence function to be + or -
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  
   if ischar(dmz0)               % then open 2D FITS image file
     dmz  = fitsread(dmz0);
   else
@@ -148,7 +147,6 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
     end
   end
 
-    
     % Read the influence function data from the specified FITS file
     info = fitsinfo(DMinf_name);
     inf  = fitsread(DMinf_name);
@@ -174,7 +172,6 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
     [ldef, idef] = ismember('C2CDY_M', info.PrimaryData.Keywords(:, 1));
     acdy = info.PrimaryData.Keywords{idef, 2};    % actuator spacing y (m)
 
-  
   ifcx = floor(ifnx / 2) + 1;           % inf func center pixel x
   ifcy = floor(ifny / 2) + 1;           % inf func center pixel y
   raix = round(acdx / ifdx);            % ratio actuator / inf func dx

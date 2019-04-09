@@ -26,7 +26,6 @@ function Ibandavg = falco_get_summed_image(mp)
     if(any(mp.dm_ind==2)); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.NdmPad); end
     if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
 
-    % facContrastToCounts = model_params.texp*model_params.peakCountsPerPixPerSec;
     Ibandavg = 0; % Initialize image
 
     for si=1:mp.Nsbp    
@@ -34,4 +33,3 @@ function Ibandavg = falco_get_summed_image(mp)
     end
 
 end %--END OF FUNCTION
-

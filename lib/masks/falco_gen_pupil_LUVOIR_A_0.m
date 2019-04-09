@@ -80,11 +80,8 @@ bm = prop_rectangular_obscuration(bm, width_strut, 8*width_hex, 'XC',cshift - 2.
 bm = prop_rectangular_obscuration(bm, width_strut, 8*width_hex, 'XC',cshift + 2.69538/2, 'YC',cshift - Dap/4);
 
 pupil = fftshift(bm.wf);
-% figure(4); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',20); colorbar;
-
 
 end %---END OF FUNCTION
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % mask = pupil;
@@ -100,4 +97,3 @@ end %---END OF FUNCTION
 % drawnow;
 % 
 % sum(sum(mask))
-

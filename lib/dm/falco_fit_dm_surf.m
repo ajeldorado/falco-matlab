@@ -38,22 +38,4 @@ inf2 = interp2(X,Y,inf1,Xq,Yq,'cubic',0);
 %--Perform the fit
 [Vout, ~] = prop_fit_dm(Vin, inf2);
 
-% %--DEBUGGING: Figures
-% figure(1); imagesc(inf); axis xy equal tight; colorbar;
-% figure(2); imagesc(X); axis xy equal tight; colorbar;
-% figure(3); imagesc(Xq); axis xy equal tight; colorbar;
-% figure(4); imagesc(inf2); axis xy equal tight; colorbar;
-% figure(5); imagesc(Vin); axis xy equal tight; colorbar;
-% figure(6); imagesc(Vout); axis xy equal tight; colorbar;
-% figure(7); imagesc(Vout-Vin); axis xy equal tight; colorbar;
-% drawnow;
-
 end %--END OF FUNCTION
-
-
-
-
-
-
-
-

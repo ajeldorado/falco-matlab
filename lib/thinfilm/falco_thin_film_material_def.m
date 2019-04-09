@@ -34,7 +34,6 @@
 
 function [tCoef, rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol, varargin)
 
-
 %% Optional Keyword Inputs
 
 flagOPD = false; %--Default value for OPD phase sign convention is false.
@@ -183,7 +182,6 @@ nti    = interp1(lam_ti, n_ti, lam_nm, 'linear');
 kti    = interp1(lam_ti, k_ti, lam_nm, 'linear');
 % ---------------------------------------------
 
-
 %% Compute the complex transmission
 tCoef = zeros(Ndiel,Nmetal); %--initialize
 rCoef = zeros(Ndiel,Nmetal); %--initialize
@@ -220,7 +218,5 @@ for jj = 1:Ndiel
         
     end
 end
-
-        
+      
 end %--END OF FUNCTION
-

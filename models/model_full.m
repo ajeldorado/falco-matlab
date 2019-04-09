@@ -22,7 +22,6 @@
 % -mp = structure of model parameters
 % -modvar = structure of model variables
 %
-%
 % OUTPUTS:
 % -Eout
 %
@@ -37,8 +36,6 @@ function [Eout, Efiber] = model_full(mp,modvar,varargin)
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
     normFac = mp.Fend.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
-% elseif(isfield(modvar,'ebpIndex')) %--Entire bandpass index, out of mp.full.Nlam
-%     normFac = mp.Fend.full.I00(modvar.ebpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
 %--Enable different arguments values by using varargin
@@ -116,7 +113,6 @@ if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat,mp.P1.full.Narr);
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
 end
 
@@ -128,7 +124,7 @@ switch upper(mp.coro)
         if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
             mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
         else %--Otherwise generate it
-            mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
+            mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
         end
         
     case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
@@ -137,9 +133,8 @@ switch upper(mp.coro)
         if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
             mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
         else %--Otherwise generate it
-            mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
+            mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
         end
-        
 end
 
 %% Select which optical layout's full model to use.
@@ -158,10 +153,11 @@ switch lower(mp.layout)
             optval.source_x_offset = -mp.source_x_offset_norm;
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
-%         [Eout,~]= wfirst_phaseb_v2b_compact(lambda, mp.Fend.Nxi, optval); %--Alternate way to get Eout
-        Eout = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
+        Eout = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
         Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
-        if(normFac~=0);  Eout = Eout/sqrt(normFac);  end
+        if(normFac~=0)
+            Eout = Eout/sqrt(normFac);
+        end
 
     case{'wfirst_phaseb_proper'} %--Use the true full model as the full model
 
@@ -175,11 +171,11 @@ switch lower(mp.layout)
             optval.source_x_offset = -mp.source_x_offset_norm;
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
-%         [Eout,~]= wfirst_phaseb_v2b(lambda, mp.Fend.Nxi, optval); %--Alternate way to get Eout
-        Eout = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
+        Eout = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
         Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
-        if(normFac~=0);  Eout = Eout/sqrt(normFac);  end
-
+        if(normFac~=0)
+            Eout = Eout/sqrt(normFac);
+        end
 end
 
 %% Undo GPU variables if they exist

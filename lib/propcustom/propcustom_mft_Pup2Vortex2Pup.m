@@ -64,13 +64,9 @@ function OUT = propcustom_mft_Pup2Vortex2Pup( IN, charge, apRad,  inVal, outVal,
     LP2 = 2*outVal/(1*D*NB)*exp(-1i*2*pi*x'*u2)*(FP2.*FPM.*windowMASK2)*exp(-1i*2*pi*u2'*x);        
     if showPlots2debug; figure;imagesc(abs(FP2.*windowMASK2));axis image;colorbar; title('Fine sampled DFT (windowed)'); end;
     OUT = LP1 + LP2;
-    %disp('Propagating through vortex with forward DFT.');
     if showPlots2debug; figure;imagesc(abs(OUT));axis image;colorbar; title('Lyot plane'); end;
-    %if showPlots2debug; figure;imagesc(abs(LP1+LP2-IN));axis image;colorbar; title('Lyot plane - Entrance Pupil'); end;
-
 
     if(useGPU)
         OUT = gather(OUT);
     end
 end
-

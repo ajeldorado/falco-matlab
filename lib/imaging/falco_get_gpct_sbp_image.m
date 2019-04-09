@@ -20,7 +20,6 @@
 % - Modified from falco_get_hcst_sbp_image on 2019-03-22 by G. Ruane
 % - Created on 2019-03-22 by G. Ruane 
 
-
 function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
 
     bench = mp.bench;
@@ -33,8 +32,6 @@ function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
     
     [newV,message] = tb_DM_dmsmooth( bench, mp.dm1.V );
     disp(message);
-    
-% 	newV = mp.dm1.V;
     
     map = newV'; % There's a transpose between Matlab and DM indexing
 
@@ -62,4 +59,4 @@ function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     normI = (tb_andor_getImage(bench,sbp_texp)-dark)/PSFpeak_counts; 
     
-end 
+end

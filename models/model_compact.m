@@ -22,7 +22,6 @@
 % -mp = structure of model parameters
 % -modvar = structure of model variables
 %
-%
 % OUTPUTS:
 % -Eout
 %  -> Note: When computing the control Jacobian, Eout is a structure
@@ -37,14 +36,12 @@
 
 function [Eout, Efiber] = model_compact(mp, modvar,varargin)
 
-
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
 % Set default values of input parameters
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
-flagAllPlanes = false; %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
@@ -54,9 +51,7 @@ while icav < size(varargin, 2)
             normFac = 0; 
             flagNewNorm = true;
         case {'eval'} % Set to 0 when finding the normalization factor
-            flagEval = true; 
-        case{'all'} %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
-            flagAllPlanes = true;
+            flagEval = true;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
     end
@@ -114,12 +109,10 @@ end
 %--Only used for Zernike sensitivity control, which requires the perfect 
 % E-field of the differential Zernike term.
 if(modvar.zernIndex~=1)
-    indZernVec = find(mp.jac.zerns==modvar.zernIndex); %--Index in vector of RMS values for Zernikes.
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
-    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
+    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
 end
 
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.

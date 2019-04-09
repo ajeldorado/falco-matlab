@@ -26,7 +26,6 @@
 
 function pupil = falco_gen_pupil_WFIRST_CGI_180718(Nbeam,centering,varargin)
 
-
 %% Define the best-fit values for circles and rectangles (DO NOT CHANGE)
 %--Values were found by fitting to the full-resolution, 4096x4096 pupil
 %file, 'CGI_Entrance_Pupil_180718_No-labels.bmp'.
@@ -116,16 +115,12 @@ if(~isfield(changes,'pad_COBS')); changes.pad_COBS = 0.0; end
 if(~isfield(changes,'pad_COBStabs')); changes.pad_COBStabs = 0.0; end
 if(~isfield(changes,'pad_OD')); changes.pad_OD = 0.0; end
 
-
 %--Values to use for bulk clocking, magnification, and translation
 xShear = changes.xShear;% - xcOD;
 yShear = changes.yShear;% - ycOD;
 magFac = changes.magFac;
 clock_deg = changes.clock_deg;
 flagRot180 = changes.flagRot180;
-% % if(flagRot180)
-% %     clock_deg = clock_deg-180;
-% % end
 
 %--Padding values. (pad_all is added to all the rest)
 pad_all = changes.pad_all;%0.2/100; %--Uniform padding on all features
@@ -133,13 +128,6 @@ pad_strut = changes.pad_strut + pad_all;
 pad_COBS = changes.pad_COBS + pad_all;
 pad_COBStabs = changes.pad_COBStabs + pad_all;
 pad_OD = changes.pad_OD + pad_all; %--Radial padding at the edge
- 
-% %--Padding values:
-% pad_all = 0.2/100; %--Uniform padding on all features
-% pad_strut = 2.9e-3/Dtel + pad_all;
-% pad_COBS = 6e-3/Dtel + pad_all;
-% pad_COBStabs = 6e-3/Dtel + pad_all;
-% pad_OD = 0.3/100 + pad_all; %--Radial padding at the edge
 
 %--Rotation matrix used on center coordinates.
 rotMat = [cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)];
@@ -159,8 +147,6 @@ else
 end
 
 [XS,YS] = meshgrid(xs);
-% RS = sqrt(XS.^2 + YS.^2);
-% THETAS = atan2(YS,XS);
 
 %% PROPER SETUP VALUES
 
@@ -181,10 +167,8 @@ end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
-
 %% INITIALIZE PROPER
 bm = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
-% figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 %% PRIMARY MIRROR (OUTER DIAMETER)
 ra_OD = magFac*(OD/2-pad_OD);
@@ -194,7 +178,6 @@ cxy = rotMat*[cx_OD; cy_OD];
 cx_OD = cxy(1)-xShear;
 cy_OD = cxy(2)-yShear;
 bm = prop_circular_aperture(bm, ra_OD,'XC',cx_OD+cshift,'YC',cy_OD+cshift);
-% figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
 %% SECONDARY MIRROR (INNER DIAMETER)
 ra_ID = magFac*(ID/2 + pad_COBS);
@@ -204,7 +187,6 @@ cxy = rotMat*[cx_ID; cy_ID];
 cx_ID = cxy(1)-xShear;
 cy_ID = cxy(2)-yShear;
 bm = prop_circular_obscuration(bm, ra_ID,'XC',cx_ID+cshift,'YC',cy_ID+cshift);
-% figure(4); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
 %% Struts
 
@@ -218,19 +200,15 @@ for istrut=1:6
     xc = cxy(1)-xShear;
     yc = cxy(2)-yShear;
     bm = prop_rectangular_obscuration(bm, lStrutIn, wStrut, 'XC',xc+cshift, 'YC',yc+cshift, 'ROTATION',angDeg);%, norm)
-    % figure(5); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 end
 
 %% TABS ON SECONDARY MIRROR
 %--Compute as new shape, and then multiply the obscuration with the rest of
 %the pupil.
 
-
-
 %--SOFTWARE MASK:
 XSnew = (1/1*XS+xcCOBStabs)+xShear;
 YSnew = (1/1*YS+ycCOBStabs)+yShear;
-% RSnew = (XSnew).^2 + (YSnew).^2;
 
 overSizeFac = 1.3;
 cobsTabsMask = zeros(Narray);
@@ -251,7 +229,6 @@ else
         ) = 1;
 end
 
-
 %--CIRCLE:
 %--Initialize PROPER
 bm2 = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
@@ -269,10 +246,6 @@ temp = 1-ifftshift(abs(bm2.wf));
 temp = cobsTabsMask.*temp;
 
 cobsTabs = 1-temp;
-% figure(111); imagesc(cobsTabs); axis xy equal tight; colorbar; drawnow;
-% figure(112); imagesc(RSnew); axis xy equal tight; colorbar; drawnow;
-% figure(113); imagesc(THETAS); axis xy equal tight; colorbar; drawnow;
-
 
 %% Output
 
@@ -282,21 +255,4 @@ if(flagRot180)
    pupil = rot90(pupil,2); 
 end
 
-% figure(11); imagesc(pupil); axis xy equal tight; colorbar; drawnow;
-
-
-% %--Write out pupil to file.
-% fn_out = 
-% dlmwrite(fn_out,pupil,'precision','%d','delimiter',' ');
-% pause(0.1)
-
 end % EOF
-
-
-
-
-
-
-
-
-
