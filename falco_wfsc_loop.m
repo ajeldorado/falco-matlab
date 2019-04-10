@@ -254,6 +254,7 @@ for Itr=1:mp.Nitr
     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end 
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
+    cvar.NeleAllCP = mp.dm1.Nele + mp.dm2.Nele ; %--Number of total actuators used 
     % Add spatially-dependent weighting to the control Jacobians for CP
     % JLlop
 %     [mp,jacStructCP] = falco_ctrl_cull(mp,cvar,jacStructCP); %JLlop

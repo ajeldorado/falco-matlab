@@ -43,7 +43,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     Nvals = max(size(vals_list,2));
     if mp.aux.flagOmega==1
         NvalsOmega = 5;
-        valsOmega_list = [linspace(mp.aux.omegaMin,mp.aux.omegaMax,NvalsOmega)];
+        valsOmega_list = linspace(mp.aux.omegaMin,mp.aux.omegaMax,NvalsOmega);
     else
         valsOmega_list = [-inf];
     end

@@ -33,7 +33,7 @@
 % -jacStruct = control Jacobian for the modes specified
 
 function jacStruct = model_JacobianCP(mp)
-
+%     mp.dm_ind = [1,2];
     %--Calculate the starting DM surfaces beforehand to save time.
     if(any(mp.dm_ind==1)); mp.dm1.compact.surfM = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx,mp.dm1.compact.NdmPad); else; mp.dm1.compact.surfM = zeros(2); end
     if(any(mp.dm_ind==2)); mp.dm2.compact.surfM = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx,mp.dm2.compact.NdmPad); else; mp.dm2.compact.surfM = zeros(2); end
@@ -85,9 +85,9 @@ function jacStruct = model_JacobianCP(mp)
 
             if(whichDM==1); jacStruct.G1(:,:,im) =  Jtemp{ii};  end
             if(whichDM==2); jacStruct.G2(:,:,im) =  Jtemp{ii};  end
-            if(whichDM==5); jacStruct.G5(:,:,im) =  Jtemp{ii};  end
-            if(whichDM==8); jacStruct.G8(:,:,im) =  Jtemp{ii};  end
-            if(whichDM==9); jacStruct.G9(:,:,im) =  Jtemp{ii};  end
+%             if(whichDM==5); jacStruct.G5(:,:,im) =  Jtemp{ii};  end
+%             if(whichDM==8); jacStruct.G8(:,:,im) =  Jtemp{ii};  end
+%             if(whichDM==9); jacStruct.G9(:,:,im) =  Jtemp{ii};  end
         end
         clear Jtemp
 

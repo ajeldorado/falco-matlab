@@ -561,9 +561,11 @@ if(whichDM==9)
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
             
-            cp = max(max(abs(EFend).^2)); %JLop
+            cp = EFend(2,2); %JLlop
             
-            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight* cp /sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+%             Gzdl(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*cp/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            
         end
         Gindex = Gindex + 1;
         
