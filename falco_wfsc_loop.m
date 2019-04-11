@@ -220,7 +220,7 @@ for Itr=1:mp.Nitr
     
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
     [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
-
+    
     %% Wavefront Estimation
     switch lower(mp.estimator)
         case{'perfect'}
@@ -238,6 +238,69 @@ for Itr=1:mp.Nitr
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
     end
+    
+    %% Compute the Singular Mode Spectrum
+    
+    %--Create the flag and set to false if it doesn't exist
+    if(isfield(mp,'flagSVD')==false);  mp.flagSVD=false;  end
+    
+    if(mp.flagSVD)
+        
+        if(cvar.flagRelin)
+            
+            ii=1;
+            Gcomplex = [jacStruct.G1(:,:,ii), jacStruct.G2(:,:,ii), jacStruct.G3(:,:,ii), jacStruct.G4(:,:,ii), jacStruct.G5(:,:,ii), jacStruct.G6(:,:,ii), jacStruct.G7(:,:,ii), jacStruct.G8(:,:,ii), jacStruct.G9(:,:,ii)];
+
+            Gall = zeros(mp.jac.Nmode*size(Gcomplex,1),size(Gcomplex,2));
+            Eall = zeros(mp.jac.Nmode*size(EfieldVec,1),1);
+
+            for ii=1:mp.jac.Nmode
+                N = size(Gcomplex,1);
+                inds = (ii-1)*N+1:ii*N;
+                Gcomplex = [jacStruct.G1(:,:,ii), jacStruct.G2(:,:,ii), jacStruct.G3(:,:,ii), jacStruct.G4(:,:,ii), jacStruct.G5(:,:,ii), jacStruct.G6(:,:,ii), jacStruct.G7(:,:,ii), jacStruct.G8(:,:,ii), jacStruct.G9(:,:,ii)];
+                Gall(inds,:) = Gcomplex;
+                Eall(inds) = EfieldVec(:,ii);
+            end
+
+            Eri = [real(Eall); imag(Eall)];
+            alpha2 = max(diag(real(Gall'*Gall)));
+            Gri = [real(Gall); imag(Gall)];
+            [U,S,~] = svd(Gri,'econ');
+            s = diag(S);
+        else
+           
+            for ii=1:mp.jac.Nmode
+                N = size(Gcomplex,1);
+                inds = (ii-1)*N+1:ii*N;
+                Eall(inds) = EfieldVec(:,ii);
+            end
+            Eri = [real(Eall); imag(Eall)];
+        
+        end
+        
+        EriPrime = U'*Eri;
+        IriPrime = abs(EriPrime).^2;
+    
+        %--Save out for later analysis
+        out.EforSpectra{Itr} = EriPrime;
+        out.smspectra{Itr} = IriPrime;
+        out.sm{Itr} = s;
+        out.alpha2{Itr} = alpha2;
+        
+        if(mp.flagPlot)
+            figure(401); 
+            loglog(out.sm{Itr}.^2/out.alpha2{Itr},smooth(out.smspectra{Itr},31),'Linewidth',3,'Color',[0.3, 1-(0.2+Itr/mp.Nitr)/(1.3),1 ]);
+            set(gca,'Fontsize',20); grid on; 
+            set(gcf,'Color',[1 1 1]);
+            title('Singular Mode Spectrum','Fontsize',20)
+            xlim([1e-10, 2*max(s.^2/alpha2)])
+            ylim([1e-12, 1e-0]) 
+            drawnow;
+            hold on;
+        end
+        
+    end
+
     
     %% Add spatially-dependent weighting to the control Jacobians
     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
