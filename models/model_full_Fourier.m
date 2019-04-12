@@ -248,8 +248,10 @@ if(isfield(mp,'flagElyot'))
     Eout = EP40;
 end
 
+Efiber = 0;
+
 if(mp.flagFiber)
-    Efiber = cell(np.Fend.Nlens,1);
+    Efiber = cell(mp.Fend.Nlens,1);
     
     for nlens = 1:mp.Fend.Nlens
         EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering,'xfc',mp.Fend.x_lenslet_phys(nlens),'yfc',mp.Fend.y_lenslet_phys(nlens));

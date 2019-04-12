@@ -14,23 +14,23 @@
 
 function [Iout, Ifiber] = falco_sim_image_compact_offaxis(mp,x_offset,y_offset,varargin)
     
-flagEval  = false;    % flag to use a different (usually higher) resolution at final focal plane for evaluation
-modvar.whichSource = 'offaxis';    
+flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
+modvar.whichSource = 'offaxis';
 modvar.x_offset = x_offset; % mp.thput_eval_x;
 modvar.y_offset = y_offset; % mp.thput_eval_y;
   
-icav = 0;             % index in cell array varargin
+icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
         case {'eval'}
-            flagEval  = true;   % flag to use a different (usually higher) resolution at final focal plane for evaluation 
+            flagEval = true; % flag to use a different (usually higher) resolution at final focal plane for evaluation 
         otherwise
             error('falco_sim_image_compact: Unknown keyword: %s\n', varargin{icav});
     end
 end
 
-Ifiber = 0;
+Ifiber = 0; %Dummy initialization to make MATLAB happy
 
 if(mp.flagFiber)
     Ifiber = zeros(mp.F5.Neta, mp.F5.Nxi);

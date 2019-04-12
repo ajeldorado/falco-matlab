@@ -405,7 +405,7 @@ mp.Fend.score.maskBool = logical(mp.Fend.score.mask);
 % the full model has a different detector resolution than the compact model.
 
 if(mp.flagFiber)
-    mp.WspatialVec = ones(mp.Fend.Nlens);
+    mp.WspatialVec = ones(mp.Fend.Nlens,1);
 else
     mp = falco_config_spatial_weights(mp);
     %--Extract the vector of weights at the pixel locations of the dark hole pixels.

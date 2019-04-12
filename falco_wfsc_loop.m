@@ -126,8 +126,12 @@ for Itr=1:mp.Nitr
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
     [mp,thput] = falco_compute_thput(mp);
-    mp.thput_vec(Itr) = thput; %--record keeping
-
+    if(mp.flagFiber)
+        mp.thput_vec(Itr) = max(thput);
+    else
+        mp.thput_vec(Itr) = thput; %--record keeping
+    end
+    
     %--Compute the current contrast level
     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
 
@@ -225,11 +229,12 @@ for Itr=1:mp.Nitr
     end
     
     %% Add spatially-dependent weighting to the control Jacobians
+
     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5.*repmat(mp.WspatialVec,[1,mp.dm5.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
-    if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end 
+    if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end
 
     %fprintf('Total Jacobian Calcuation Time: %.2f\n',toc);
 

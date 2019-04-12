@@ -49,7 +49,7 @@
 % like this:
 % mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
 
-function Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval)
+function [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval)
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
@@ -254,9 +254,11 @@ if(mp.useGPU)
     Eout = gather(Eout);
 end
 
+Efiber = 0;
+
 %--Fiber propagation
-if(mp.flagFiber)
-    Efiber = cell(np.Fend.Nlens,1);
+if(mp.flagFiber && ~flagEval)
+    Efiber = cell(mp.Fend.Nlens,1);
     
     for nlens = 1:mp.Fend.Nlens
         EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,dxi,Nxi,deta,Neta,mp.centering,'xfc',mp.Fend.x_lenslet_phys(nlens),'yfc',mp.Fend.y_lenslet_phys(nlens));
