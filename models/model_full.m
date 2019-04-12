@@ -136,6 +136,7 @@ switch lower(mp.layout)
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
                 if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
                     mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
+                else %--Otherwise generate it
                     mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
                 end
 

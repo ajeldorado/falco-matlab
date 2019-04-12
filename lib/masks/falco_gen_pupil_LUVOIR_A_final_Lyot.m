@@ -21,7 +21,7 @@
 % 1 12 113 114 125 126
 %
 
-function mask = falco_gen_pupil_LUVOIR_A_5_Lyot_struts(inputs,varargin)
+function mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,varargin)
 % 
 %--Set default values of input parameters
 flagRot180deg = false;
@@ -139,15 +139,22 @@ bm2 = bm;
 % %--Add the struts
 
 if(wStrut>0)
-    bm2 = prop_rectangular_obscuration(bm2, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfac*Dap/4);
+%     bm2 = prop_rectangular_obscuration(bm2, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfac*Dap/4);
+% 
+%     len_1a = 2*width_hex - 12*dx_drawing;
+%     bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
+%     bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
+% 
+%     len_1b = 3.75*width_hex;
+%     bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
+%     bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
 
-    len_1a = 2*width_hex - 12*dx_drawing;
-    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1a, 'XC',cshift-dx_t + (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
-    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1a, 'XC',cshift-dx_t - (hexrad-0.5*wStrut0), 'YC',cshift-dy_t - len_1a/2.);
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, 7*width_hex, 'XC',cshift-dx_t, 'YC',cshift-dy_t + magfacD*Dap/4);
 
-    len_1b = 3.75*width_hex;
-    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t + 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',30);
-    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t - 1.25*hexrad*2, 'YC',cshift-dy_t - 3.5*width_hex,'ROT',-30);
+    len_1b = (sqrt(93)+0.5)*hexrad;
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t + 1.5*hexrad, 'YC',cshift-dy_t - 11*sqrt(3)/4*hexrad,'ROT',12.7);
+    bm2 = prop_rectangular_obscuration(bm2, wStrut, len_1b, 'XC',cshift-dx_t - 1.5*hexrad, 'YC',cshift-dy_t - 11*sqrt(3)/4*hexrad,'ROT',-12.7);
+    
 end
 
 mask = ifftshift(abs(bm2.wf));
