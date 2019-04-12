@@ -137,7 +137,22 @@ for Itr=1:mp.Nitr
 
     %--Plot the updates to the DMs and PSF
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+    if(isfield(mp,'testbed') )
+        InormHist_tb.total = InormHist; 
+        Im_tb.Im = Im;
+        Im_tb.E = zeros(size(Im));
+        if(Itr>1)
+            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec).^2);
+            InormHist_tb.unmod(Itr-1) = mean(IincoVec);
+            Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
+        else
+            InormHist_tb.mod = NaN;
+            InormHist_tb.unmod = NaN;
+        end
+        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+    else
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+    end
 
 %     %--Plot the intermediate E-fields
 %     switch upper(mp.coro)
@@ -439,7 +454,17 @@ if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 [mp,thput] = falco_compute_thput(mp);
 mp.thput_vec(Itr) = thput;
 
-hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+if(isfield(mp,'testbed'))
+    InormHist_tb.total = InormHist; 
+    InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec).^2);
+    InormHist_tb.unmod(Itr-1) = mean(IincoVec);
+    Im_tb.Im = Im;
+    Im_tb.E = zeros(size(Im));
+    Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
+    hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+else
+    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+end
 
 %% Save the final DM commands separately for faster reference
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V')); out.DM1V = mp.dm1.V; end; end
