@@ -21,8 +21,15 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 
-%--Temporary
-if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end
+%% Optional/Hidden flags or variables
+if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whehter to save otu the entire workspace at the end of the trial. Can take up lots of space.
+if(isfield(mp,'flagSaveEachItr')==false);  mp.flagSaveEachItr = false;  end  %--Whether to save out the performance at each iteration. Useful for long trials in case it crashes or is stopped early.
+if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
+if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
+if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study
+%--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
+%--Tied actuator pair definitions: See Section with variables mp.dmX.tied for X=1:9
+if(isfield(mp,'SPname')==false);  mp.SPname = 'none';  end %--Apodizer name default
 
 %% File Paths
 
@@ -39,11 +46,6 @@ if(isfield(mp.path,'ws_inprogress')==false); mp.path.ws_inprogress = [mainPath f
 if(isfield(mp,'dm8'))
     if(isfield(mp.dm8,'V')); mp.DM8V0 = mp.dm8.V; end
     if(isfield(mp.dm9,'V')); mp.DM9V0 = mp.dm9.V; end
-end
-
-%% Apodizer name default
-if(isfield(mp,'SPname')==false)
-   mp.SPname = 'none';
 end
 
 %% Useful factor
@@ -268,9 +270,7 @@ maskCorr.angDeg = mp.Fend.corr.ang; %--degrees
 maskCorr.centering = mp.centering;
 maskCorr.FOV = mp.Fend.FOV;
 maskCorr.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
-if(isfield(mp.Fend,'shape'))
-    maskCorr.shape = mp.Fend.shape;
-end
+if(isfield(mp.Fend,'shape'));  maskCorr.shape = mp.Fend.shape;  end
 
 %--Compact Model: Generate Software Mask for Correction 
 [mp.Fend.corr.mask, mp.Fend.xisDL, mp.Fend.etasDL] = falco_gen_SW_mask(maskCorr); 
@@ -374,9 +374,7 @@ maskScore.angDeg = mp.Fend.score.ang; %--degrees
 maskScore.centering = mp.centering;
 maskScore.FOV = mp.Fend.FOV; %--Determines max dimension length
 maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
-if(isfield(mp.Fend,'shape'))
-    maskScore.shape = mp.Fend.shape;
-end
+if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
 %--Compact Model: Generate Software Mask for Scoring Contrast 
 maskScore.Nxi = mp.Fend.Nxi; %--Set min dimension length to be same as for corr 
 maskScore.pixresFP = mp.Fend.res;

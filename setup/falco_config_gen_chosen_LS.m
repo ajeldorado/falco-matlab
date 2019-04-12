@@ -25,13 +25,10 @@ switch mp.layout
 end
 mp.P4.compact.dx = mp.P4.D/mp.P4.compact.Nbeam;
 
-switch mp.whichPupil
-    case{'Simple','SimplePROPER','DST_LUVOIRB','iSAT'}
+switch upper(mp.whichPupil)
+    case{'SIMPLE','SIMPLEPROPER','DST_LUVOIRB','ISAT'}
         
-        if(strcmpi(mp.whichPupil,'simpleproper'))
-            inputs.flagPROPER = true;
-        end
-        
+        if(strcmpi(mp.whichPupil,'SIMPLEPROPER'));  inputs.flagPROPER = true;  end
         inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam 
         inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
         inputs.OD = mp.P4.ODnorm;
@@ -56,8 +53,7 @@ switch mp.whichPupil
         changes.flagRot180 = true;
 
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-                
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--The full model's pupil is loaded, so don't generate it here
             otherwise
                 %--Make or read in Lyot stop (LS) for the 'full' model
                 mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes);
@@ -76,9 +72,8 @@ switch mp.whichPupil
                     inputs.centering = mp.centering; % 'interpixel' or 'pixel'
 
                     switch mp.layout
-                        case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-                        otherwise
-                            %--Make bowtie Lyot stop (LS) for the 'full' model
+                        case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--The full model's LS is loaded, so don't generate it here
+                        otherwise %--Make bowtie Lyot stop (LS) for the 'full' model
                             inputs.Nbeam = mp.P4.full.Nbeam; 
                             mp.P4.full.mask = falco_gen_bowtie_LS(inputs);
                     end
@@ -89,7 +84,7 @@ switch mp.whichPupil
             end
         end
         
-    case{'WFIRST_onaxis'}
+    case{'WFIRST_ONAXIS'}
         
          %--Define Lyot stop generator function inputs for the 'full' optical model
         inputs.Nbeam = mp.P4.full.Nbeam;     % number of points across incoming beam  
@@ -126,6 +121,22 @@ switch mp.whichPupil
             end
         end
         
+    case{'LUVOIRAFINAL'}
+    
+        %--Define Lyot stop generator function inputs for the 'full' optical model
+        inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam  
+        inputs.Dbeam = mp.P1.D;
+        inputs.ID = mp.P4.IDnorm;
+        inputs.OD = mp.P4.ODnorm;
+        inputs.wStrut = mp.P4.wStrut;
+        inputs.centering = mp.centering;
+        %--Make or read in Lyot stop (LS) for the 'full' model
+        mp.P4.full.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
+        
+        %--Make or read in Lyot stop (LS) for the 'compact' model
+        inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
+        mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
+    
 	case{'LUVOIRA5','LUVOIRA0'}
         
         %--Define Lyot stop generator function inputs for the 'full' optical model
@@ -142,7 +153,7 @@ switch mp.whichPupil
         inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
         mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_5_Lyot_struts(inputs,'ROT180');
         
-    case {'LUVOIR_B_offaxis','HabEx_B_offaxis'}
+    case {'LUVOIR_B_OFFAXIS','HABEX_B_OFFAXIS'}
         %--Full model
         inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam 
         inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
@@ -218,8 +229,8 @@ switch mp.whichPupil
 end
 
 %% Crop down the Lyot stop(s) to get rid of extra zero padding for the full model
-switch lower(mp.coro)
-    case{'vortex','vc','avc'}
+switch upper(mp.coro)
+    case{'VORTEX','VC','AVC'}
         mp.P4.full.Narr = length(mp.P4.full.mask);
         mp.P4.full.croppedMask = mp.P4.full.mask;
         mp.P4.compact.Narr = length(mp.P4.compact.mask);

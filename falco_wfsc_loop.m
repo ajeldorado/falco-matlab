@@ -228,11 +228,8 @@ for Itr=1:mp.Nitr
             IincoVec = ev.IincoEst;
     end
     
-    %% Compute the Singular Mode Spectrum
-    
-    %--Create the flag and set to false if it doesn't exist
-    if(isfield(mp,'flagSVD')==false);  mp.flagSVD=false;  end
-    
+    %% Compute the Singular Mode Spectrum of the Control Jacobian
+
     if(mp.flagSVD)
         
         if(cvar.flagRelin)
@@ -402,10 +399,29 @@ else
 end
 fprintf('\n\n');
 
+%--Save out DM commands after each iteration in case the trial crashes part way through.
+if(mp.flagSaveEachItr)
+    fprintf('Saving DM commands for this iteration...')
+    if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
+    if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
+    if(any(mp.dm_ind==3)); DM3V = mp.dm3.V; else; DM3V = 0; end
+    if(any(mp.dm_ind==4)); DM4V = mp.dm4.V; else; DM4V = 0; end
+    if(any(mp.dm_ind==5)); DM5V = mp.dm5.V; else; DM5V = 0; end
+    if(any(mp.dm_ind==6)); DM6V = mp.dm6.V; else; DM6V = 0; end
+    if(any(mp.dm_ind==7)); DM7V = mp.dm7.V; else; DM7V = 0; end
+    if(any(mp.dm_ind==8)); DM8V = mp.dm8.V; else; DM8V = 0; end
+    if(any(mp.dm_ind==9)); DM9V = mp.dm9.V; else; DM9V = 0; end
+    Nitr = mp.Nitr;
+    thput_vec = mp.thput_vec;
+    fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.ws_inprogress,mp.runLabel,Itr,mp.Nitr);
+    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM4V','DM5V','DM6V','DM7V','DM8V','DM9V','InormHist','thput_vec')
+    fprintf('done.\n\n')
+end
+
 end %--END OF ESTIMATION + CONTROL LOOP
 %% ------------------------------------------------------------------------
 
-%% Update plot one last time
+%% Update progress plot one last time
 Itr = Itr + 1;
 
 %--Compute the DM surfaces
@@ -453,30 +469,33 @@ save(fnOut,'out');
 fprintf('...done.\n\n')
 
 %% Save out the data from the workspace
-clear cvar G* h* jacStruct; % Save a ton of space when storing the workspace
+if(mp.flagSaveWS)
+    clear cvar G* h* jacStruct; % Save a ton of space when storing the workspace
 
-% Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
-mp.P1.full.mask=1; mp.P1.compact.mask=1;
-mp.P3.full.mask=1; mp.P3.compact.mask=1;
-mp.P4.full.mask=1; mp.P4.compact.mask=1;
-mp.F3.full.mask=1; mp.F3.compact.mask=1;
+    % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
+    mp.P1.full.mask=1; mp.P1.compact.mask=1;
+    mp.P3.full.mask=1; mp.P3.compact.mask=1;
+    mp.P4.full.mask=1; mp.P4.compact.mask=1;
+    mp.F3.full.mask=1; mp.F3.compact.mask=1;
 
-mp.P1.full.E = 1; mp.P1.compact.E=1; mp.Eplanet=1; 
-mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
-mp.complexTransFull = 1; mp.complexTransCompact = 1;
+    mp.P1.full.E = 1; mp.P1.compact.E=1; mp.Eplanet=1; 
+    mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
+    mp.complexTransFull = 1; mp.complexTransCompact = 1;
 
-mp.dm1.compact.inf_datacube = 0;
-mp.dm2.compact.inf_datacube = 0;
-mp.dm8.compact.inf_datacube = 0;
-mp.dm9.compact.inf_datacube = 0;
-mp.dm8.inf_datacube = 0;
-mp.dm9.inf_datacube = 0;
+    mp.dm1.compact.inf_datacube = 0;
+    mp.dm2.compact.inf_datacube = 0;
+    mp.dm8.compact.inf_datacube = 0;
+    mp.dm9.compact.inf_datacube = 0;
+    mp.dm8.inf_datacube = 0;
+    mp.dm9.inf_datacube = 0;
 
-fnAll = [mp.path.ws mp.runLabel,'_all.mat'];
-
-disp(['Saving workspace to file ' fnAll '...'])
-save(fnAll);
-fprintf('done.\n\n')
+    fnAll = [mp.path.ws mp.runLabel,'_all.mat'];
+    disp(['Saving entire workspace to file ' fnAll '...'])
+    save(fnAll);
+    fprintf('done.\n\n')
+else
+    disp('Entire workspace NOT saved because mp.flagSaveWS==false')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % falco_ctrl_cull.m is a nested function in order to save RAM since the 
