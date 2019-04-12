@@ -44,13 +44,6 @@ switch upper(mp.whichPupil)
         mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
     case{'WFIRST180718'}
-%         switch mp.layout
-%             case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-%                 %--Load inside the model
-%             otherwise
-%                 %--Generate high-res input pupil for the 'full' model
-%                 mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
-%         end
         
         %--Generate low-res input pupil for the 'compact' model
         if(isfield(mp,'P1'))
@@ -91,28 +84,11 @@ switch upper(mp.whichPupil)
         inputs.Dbeam = mp.P2.D;
         mp.P1.compact.mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs);
         
-    case{'LUVOIRAFINAL'}
-        inputs.centering = mp.centering;
-        
-        %--Option to overwrite the default
-        if(isfield(mp.P1,'wGap_m'))
-            inputs.wGap_m = mp.P1.wGap_m; % spider width (fraction of the pupil diameter)
-        end
-        
-        %--Generate high-res input pupil for the 'full' model
-        inputs.Nbeam = mp.P1.full.Nbeam; 
-        mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
-        
-        %--Generate low-res input pupil for the 'compact' model
-        inputs.Nbeam = mp.P1.compact.Nbeam; 
-        mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
-        clear inputs
-    
     case{'LUVOIRA5'}
         inputs.centering = mp.centering;
-%         if(isfield(mp.P1,'wStrut'))
-%             inputs.wStrut = mp.P1.wStrut; % spider width (fraction of the pupil diameter)
-%         end
+        if(isfield(mp.P1,'wStrut'))
+            inputs.wStrut = mp.P1.wStrut; % spider width (fraction of the pupil diameter)
+        end
         
         if(isfield(mp.P1,'wGap_m'))
             inputs.wGap_m = mp.P1.wGap_m; % spider width (fraction of the pupil diameter)
@@ -227,7 +203,7 @@ switch upper(mp.whichPupil)
         if(isfield(mp.P1,'raftOffsets'))
             input.raftOffsets = mp.P1.raftOffsets*input.Nbeam;% samples 
         end
-        mp.P1.full.mask    = falco_gen_pupil_iSAT( input );
+        mp.P1.full.mask = falco_gen_pupil_iSAT(input);
         
         input.Nbeam = mp.P1.compact.Nbeam;
         input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
@@ -237,8 +213,7 @@ switch upper(mp.whichPupil)
         if(isfield(mp.P1,'raftOffsets'))
             input.raftOffsets = mp.P1.raftOffsets*input.Nbeam;% samples 
         end
-        mp.P1.compact.mask = falco_gen_pupil_iSAT( input );
-    
+        mp.P1.compact.mask = falco_gen_pupil_iSAT(input);
 end
 mp.P1.compact.Narr = length(mp.P1.compact.mask); %--Number of pixels across the array containing the input pupil in the compact model
 
