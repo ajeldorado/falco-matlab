@@ -192,9 +192,9 @@ mp.P4.D = 0.4*48e-3;
 
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 250;
-mp.P2.compact.Nbeam = 250;
-mp.P3.compact.Nbeam = 250;
-mp.P4.compact.Nbeam = 250;  % P4 must be the same as P1 for Vortex. 
+mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
+mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
+mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -212,10 +212,10 @@ mp.Nrelay3to4 = 1;
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 250;
-mp.P2.full.Nbeam = 250;
-mp.P3.full.Nbeam = 250;
-mp.P4.full.Nbeam = 250;  % P4 must be the same as P1 for Vortex. 
+mp.P1.full.Nbeam = mp.P1.compact.Nbeam;
+mp.P2.full.Nbeam = mp.P1.full.Nbeam;
+mp.P3.full.Nbeam = mp.P1.full.Nbeam;
+mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
