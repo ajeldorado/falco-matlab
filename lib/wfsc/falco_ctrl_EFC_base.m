@@ -27,7 +27,6 @@
 % - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
-
 %--Return values:
 %  Measured average normalized intensity
 %  DM commands
@@ -36,24 +35,12 @@ function [InormAvg,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar)
 
 
 %% Initializations
-% Itr = cvar.Itr ;
 log10reg = vals_list(1,ni); %--Lagrange multiplier
 dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
 
 %--Save starting point for each delta command to be added to.
 %--Get the indices of each DM's command vector within the single concatenated command vector
 cvar = falco_ctrl_setup(mp,cvar);
-
-%% Define the diagonal of the regularization matrix differently
-% % %--Diagonal of the Weighted Regularization Matrix
-% % EyeGstarGdiag = [];
-% % maxDiagGstarG = max(diag(cvar.GstarG_wsum));
-% % for idm=1:numel(mp.dm_ind)
-% %     dm_index = mp.dm_ind(idm);
-% %     dm_weight = 1; %mp.dm_weights(dm_index);
-% %     if(any(mp.dm_ind==9)); dm_weight = dm9regfac*dm_weight; end
-% %     EyeGstarGdiag = [EyeGstarGdiag; maxDiagGstarG*dm_weight*ones(cvar.NeleVec(idm),1)];
-% % end
 
 %% Least-squares solution with regularization:
 duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum;
@@ -62,13 +49,12 @@ duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.
 [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec);
 
 %% Take images and compute average intensity in dark hole
-Itotal = falco_get_summed_image(mp);
-InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+if(mp.flagFiber)
+    IfiberTotal = falco_get_summed_image_fiber(mp);
+    InormAvg = mean(max(max(IfiberTotal)));
+else
+    Itotal = falco_get_summed_image(mp);
+    InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+end
         
-
 end %--END OF FUNCTION
-
-
-
-
-

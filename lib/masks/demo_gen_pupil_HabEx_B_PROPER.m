@@ -34,7 +34,6 @@ Nbeam   = inputs.Nbeam; % number of points across FULL usable pupil
 centering = inputs.centering;% 'pixel' or 'interpixel' centering of the array
 wGap = inputs.wGap;
 
-
 %--Do not change
 Dap = 4.0; % Circumscribing aperture diameter (meters)
 dx = Dap/Nbeam;
@@ -64,7 +63,6 @@ end
 %-------- Generate the input pupil for LUVOIR with PROPER
 bm = prop_begin(Darray, wl_dummy, Narray,'beam_diam_fraction',bdf);
 
-
 %--OUTER CIRCLE
 ra_OD = Dap/2;
 cx_OD = 0 + cshift;
@@ -75,7 +73,6 @@ bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);
 hexOut = prop_polygon( bm, 6, hexradius+wGap , 'XC', cshift  , 'YC', cshift, 'DARK' , 'ROTATION', 30 ); 
 hexIn = prop_polygon( bm, 6, hexradius , 'XC', cshift  , 'YC', cshift , 'ROTATION', 30 ); 
 bm.wf = bm.wf.*fftshift(hexOut+hexIn);
-
 
 %--Rectangular Gaps:
 buffer = 2*wGap;

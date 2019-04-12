@@ -4,8 +4,9 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to get an image in the specified sub-bandpass.
-%
+% Function to get an image in the specified sub-bandpass from an optical
+% fiber.
+% 
 % ---------------
 % INPUTS:
 % - mp = structure of model parameters
@@ -15,14 +16,14 @@
 % - Im: sub-bandpass image in units of normalized intensity
 %
 % REVISION HISTORY
-% - Created on 2019-02-06 by A.J. Riggs.
+% - Created on 4/11/2019 by Carl Coker.
 
-function ImNI = falco_get_sbp_image(mp,si)
+function ImNI = falco_get_sbp_image_fiber(mp,si)
 
     if(mp.flagSim) %--Generate simulated image
-        ImNI = falco_get_sim_sbp_image(mp,si);
-    else %--Retrieve testbed image
-        ImNI = falco_get_testbed_sbp_image(mp,si);
+        ImNI = falco_get_sim_sbp_image_fiber(mp,si);
+    else
+        error('Testbed functionality not implemented for fibers yet.')
     end
 
 end %--END OF FUNCTION

@@ -1,6 +1,4 @@
-
 function Isum = falco_zwfs_sim_image(mp)
-
 
     %--Compute the DM surfaces outside the full model to save lots of time
     if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
@@ -29,4 +27,3 @@ function Isum = falco_zwfs_sim_image(mp)
     end
 
 end %--END OF FUNCTION
-

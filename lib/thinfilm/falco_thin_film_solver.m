@@ -8,7 +8,6 @@
 %
 % Function from David Marx to compute thin film equations.
 
-
 function [R, T, rr, tt] = falco_thin_film_solver(n,d,theta,lam,tetm)
 % [R, T, rr, tt] = thin_film_filter_2(n,d,theta,lam,[tetm])
 % n = index of refraction for each layer. 

@@ -22,7 +22,6 @@
 % REVISION HISTORY
 % - Created on 2019-02-22 by G. Ruane 
 
-
 function normI = falco_get_hcst_sbp_image(mp,si)
     
     %----- Send commands to the DM -----
@@ -55,4 +54,3 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 
     
 end 
-

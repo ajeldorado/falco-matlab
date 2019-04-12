@@ -61,11 +61,9 @@ else % Default to using the starlight
         Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
 
     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-%         Ein = mp.Estar(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
         Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
     end
 end
-
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
@@ -75,7 +73,6 @@ end
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
 end
 
@@ -84,18 +81,11 @@ end
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
 
-% dxi = mp.Fend.dxi;
-% Nxi = mp.Fend.Nxi;
-% deta = mp.Fend.deta;
-% Neta = mp.Fend.Neta; 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Compute the DM surfaces for the current DM commands
-% % % mp.dm1.V = 100*(eye(mp.dm1.Nact)+rot90(eye(mp.dm1.Nact),1)); %--DEBUGGING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, NdmPad); else; DM1surf = 0; end %--Pre-compute the starting DM1 surface
 if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, NdmPad); else; DM2surf = 0; end %--Pre-compute the starting DM2 surface
@@ -112,7 +102,6 @@ if(mp.useGPU)
     if(any(mp.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation: 2 DMs, apodizer, binary-amplitude FPM, LS, and final focal plane
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,7 +111,11 @@ EP1 = pupil.*Ein; %--E-field at pupil plane P1
 EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
-if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
+if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
+    Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1);
+else
+    Edm1 = EP2;
+end
 Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
@@ -130,13 +123,14 @@ Edm2 = propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2);
 Edm2 = DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
 
 %--Back-propagate to pupil P2
-if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 ); EP2eff = Edm2; else; EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); end %--Back propagate to pupil P2
-
+if(mp.d_P2_dm1 + mp.d_dm1_dm2 == 0)
+    EP2eff = Edm2;
+else
+    EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
+end
 
 if(to_input) % if the user only wants to propagate to the input pupil (i.e. through primary and DMs)
-    
     Eout = EP2eff;
-    
 else % otherwise, go through the mask and on to the next pupil.
 
     %--Rotate 180 degrees to propagate to pupil P3
@@ -177,6 +171,3 @@ if(mp.useGPU)
 end
 
 end % End of function
-
-
-    

@@ -18,7 +18,6 @@
 %   together later via superposition. Units of pixels assuming dm.Ndmpad
 %   points across.
 %
-%
 %--Inputs
 %- distance from pupil that the actuators aren't computed. --> Move this
 %outside the function and let that be the user's choice which ones to zero.
@@ -37,9 +36,7 @@
 % since they need to be the same value.
 %-------------------------------------------------------------------
 
-
 function dm = falco_gen_dm_poke_cube(dm,mp,dx_dm,varargin)
-
 
 %--Enable the ability to turn off the data cube calculation with a keyword.
 flagGenCube = true;
@@ -74,9 +71,7 @@ dm.dx_dm = dx_dm;
 dm.dx = dx_dm;
 
 %--Default to being centered on a pixel (FFT-style) if no centering is specified
-if(isfield(dm,'centering'))
-    %dm.centering = dm.centering;
-else
+if(~isfield(dm,'centering'))
     dm.centering = 'pixel'; %--Centered on a pixel (default if not specified)
 end
 
@@ -89,7 +84,6 @@ dm.NdmMin = ceil_even( Ndm0*(dm.dx_inf0/dm.dx))+2; %--Number of points across th
 dm.Ndm = ceil_even( max(abs([sqrt(2)*cosd(45-dm.zrot),sqrt(2)*sind(45-dm.zrot)]))*Ndm0*(dm.dx_inf0/dm.dx))+2; %--Number of points across the array to fully contain the DM surface at new, desired resolution and z-rotation angle.
 
 [Xinf0,Yinf0] = meshgrid(x_inf0);
-
 
 %--Compute list of initial actuator center coordinates (in actutor widths).
 if(dm.flag_hex_array) %--Hexagonal, hex-packed grid
@@ -121,7 +115,6 @@ else %--Square grid
 end
 dm.NactTotal = length(x_vec); %--Total number of actuators in the 2-D array
 
-
 tlt  = zeros(1, 3);
 tlt(1) = dm.xtilt;
 tlt(2) = dm.ytilt;
@@ -152,7 +145,6 @@ for iact=1:dm.NactTotal
     dm.xy_cent_act(:,iact) = xyzValsRot(1:2);
 end
 
-
 N0 = max(size(dm.inf0));
 Npad = ceil_odd( sqrt(2)*max(size(dm.inf0)) );
 inf0pad = zeros(Npad,Npad);
@@ -180,24 +172,17 @@ end
 % Calculate the interpolated DM grid (set extrapolated values to 0.0)
 dm.infMaster = griddata(xsNew,ysNew,inf0pad,Xs0,Ys0,'cubic');%,'cubic',0);
 dm.infMaster(isnan(dm.infMaster)) = 0;
- 
-% x_inf0 = (-(Npad-1)/2:(Npad-1)/2)*dm.dx_inf0; % True for even- or odd-sized influence function maps as long as they are centered on the array.
-% [Xinf0,Yinf0] = meshgrid(x_inf0);
- 
 
 %--Crop down the influence function until it has no zero padding left
 infSum = sum(dm.infMaster(:));
 infDiff = 0; counter = 0;
 while( abs(infDiff) <= 1e-7)
     counter = counter + 2;
-    %Ninf0pad = length(dm.infMaster)-counter; %--Number of points across the rotated, cropped-down influence function at the original resolution
     infDiff = infSum - sum(sum( abs(dm.infMaster(1+counter/2:end-counter/2,1+counter/2:end-counter/2)) )); %--Subtract an extra 2 to negate the extra step that overshoots.
 end
 counter = counter - 2;
-Ninf0pad = length(dm.infMaster)-counter; %Ninf0pad = Ninf0pad+2;
-infMaster2 = dm.infMaster(1+counter/2:end-counter/2,1+counter/2:end-counter/2); % padOrCropEven(dm.infMaster,Ncrop); %--The cropped-down Lyot stop for the compact model       
-% figure; imagesc(log10(abs(infMaster2)));
-
+Ninf0pad = length(dm.infMaster)-counter;
+infMaster2 = dm.infMaster(1+counter/2:end-counter/2,1+counter/2:end-counter/2); %--The cropped-down Lyot stop for the compact model       
 
 dm.infMaster = infMaster2;
 Npad = Ninf0pad;
@@ -205,9 +190,7 @@ Npad = Ninf0pad;
 x_inf0 = (-(Npad-1)/2:(Npad-1)/2)*dm.dx_inf0; % True for even- or odd-sized influence function maps as long as they are centered on the array.
 [Xinf0,Yinf0] = meshgrid(x_inf0);
 
-
 %%%%%%%%%%%%%%%%%%%%%%%
-
 
 % %--Apply x- and y-projections and then z-rotation to the original influence
 % %    function to make a master influence function.
@@ -221,16 +204,7 @@ Nbox = ceil_even(((Ninf0pad*dm.dx_inf0)/dx_dm)); % Number of points across the i
 dm.Nbox = Nbox;
 %--Also compute their padded sizes for the angular spectrum (AS) propagation between P2 and DM1 or between DM1 and DM2
 Nmin = ceil_even( max(mp.sbp_centers)*max(abs([mp.d_P2_dm1, mp.d_dm1_dm2,(mp.d_P2_dm1+mp.d_dm1_dm2)]))/dx_dm^2 ); %--Minimum number of points across for accurate angular spectrum propagation
-% dm.NboxAS = 2^(nextpow2(max([Nbox,Nmin])));  %--Zero-pad for FFTs in A.S. propagation. Use a larger array if the max sampling criterion for angular spectrum propagation is violated
 dm.NboxAS = max([Nbox,Nmin]);  %--Use a larger array if the max sampling criterion for angular spectrum propagation is violated
-
-% dm.NdmPad = ceil_even( dm.Ndm + (dm.NboxAS-dm.Nbox) ); %--Number of points across the DM surface (with padding for angular spectrum propagation) at new, desired resolution.
-
-% if( Nbox < Nmin ) %--Use a larger array if the max sampling criterion for angular spectrum propagation is violated
-%     dm.NboxAS = 2^(nextpow2(Nmin)); %2*ceil(1/2*min(mp.sbp_centers)*mp.d_dm1_dm2/dx_dm^2);
-% else
-%     dm.NboxAS = 2^(nextpow2(Nbox));
-% end
 
 %% Pad the pupil to at least the size of the DM(s) surface(s) to allow all actuators to be located outside the pupil.
 % (Same for both DMs)
@@ -240,7 +214,6 @@ dm.r_cent_act = sqrt(dm.xy_cent_act(1,:).^2 + dm.xy_cent_act(2,:).^2);
 dm.rmax = max(abs(dm.r_cent_act));
 NpixPerAct = dm.dm_spacing/dx_dm;
 if(dm.flag_hex_array)
-    %dm.NdmPad = 2*ceil(1/2*Nbox*2) + 2*ceil((1/2*2*(dm.rmax)*dm.dx_inf0_act)*Nbox); %2*ceil((dm.rmax+3)*dm.dm_spacing/Dpup*Npup);
     dm.NdmPad = ceil_even((2*(dm.rmax+2))*NpixPerAct + 1); % padded 2 actuators past the last actuator center to avoid trying to index outside the array 
 else
     dm.NdmPad = ceil_even( ( dm.NboxAS + 2*(1+ (max(max(abs(dm.xy_cent_act)))+0.5)*NpixPerAct)) ); % DM surface array padded by the width of the padded influence function to prevent indexing outside the array. The 1/2 term is because the farthest actuator center is still half an actuator away from the nominal array edge. 
@@ -254,22 +227,18 @@ else
 end
 dm.y_pupPad = dm.x_pupPad;
 
-
 %% DM: (use NboxPad-sized postage stamps)
 
 if(flagGenCube)
     if(dm.flag_hex_array==false)
         fprintf('  Influence function padded from %d to %d points for A.S. propagation.\n',Nbox,dm.NboxAS);
-        %fprintf('  Influence function padded to 2^nextpow2(%d) = %d for A.S. propagation.\n',2*ceil(1/2*max([Nbox,Nmin])),dm.NboxAS);
     end
     tic
     fprintf('Computing datacube of DM influence functions... ');
 
     %--Find the locations of the postage stamps arrays in the larger pupilPad array
     dm.xy_cent_act_inPix = dm.xy_cent_act*(dm.dm_spacing/dx_dm); % Convert units to pupil-file pixels
-%     if(strcmpi(dm.centering,'pixel')  ) 
-       dm.xy_cent_act_inPix = dm.xy_cent_act_inPix + 0.5; %--For the half-pixel offset if pixel centered. 
-%     end
+    dm.xy_cent_act_inPix = dm.xy_cent_act_inPix + 0.5; %--For the half-pixel offset if pixel centered. 
     dm.xy_cent_act_box = round(dm.xy_cent_act_inPix); % Center locations of the postage stamps (in between pixels), in actuator widths
     dm.xy_cent_act_box_inM = dm.xy_cent_act_box*dx_dm; % now in meters 
     dm.xy_box_lowerLeft = dm.xy_cent_act_box + (dm.NdmPad-Nbox)/2 + 1; % indices of pixel in lower left of the postage stamp within the whole pupilPad array
@@ -282,15 +251,13 @@ if(flagGenCube)
     %--Limit the actuators used to those within 1 actuator width of the pupil
     r_cent_act_box_inM = sqrt(dm.xy_cent_act_box_inM(1,:).^2 + dm.xy_cent_act_box_inM(2,:).^2);
     %--Compute and store all the influence functions:
-    dm.inf_datacube = zeros(Nbox,Nbox,dm.NactTotal);%dm.Nact^2); %--initialize array of influence function "postage stamps"
+    dm.inf_datacube = zeros(Nbox,Nbox,dm.NactTotal); %--initialize array of influence function "postage stamps"
     dm.act_ele = []; % Indices of nonzero-ed actuators
-    for iact=1:dm.NactTotal %dm.Nact^2
-%         if(r_cent_act_box_inM(iact) < D/2 + dm.edgeBuffer*Nbox*dx_dm) %--Don't use actuators too far outside the beam
-            dm.act_ele = [dm.act_ele; iact]; % Add actuator index to the keeper list
-            dm.Xbox = dm.Xbox0 - (dm.xy_cent_act_inPix(1,iact)-dm.xy_cent_act_box(1,iact))*dx_dm; % X = X0 -(x_true_center-x_box_center)
-            dm.Ybox = dm.Ybox0 - (dm.xy_cent_act_inPix(2,iact)-dm.xy_cent_act_box(2,iact))*dx_dm; % Y = Y0 -(y_true_center-y_box_center)
-            dm.inf_datacube(:,:,iact) = interp2(Xinf0,Yinf0,dm.infMaster,dm.Xbox,dm.Ybox,'spline',0);
-%         end
+    for iact=1:dm.NactTotal
+       dm.act_ele = [dm.act_ele; iact]; % Add actuator index to the keeper list
+       dm.Xbox = dm.Xbox0 - (dm.xy_cent_act_inPix(1,iact)-dm.xy_cent_act_box(1,iact))*dx_dm; % X = X0 -(x_true_center-x_box_center)
+       dm.Ybox = dm.Ybox0 - (dm.xy_cent_act_inPix(2,iact)-dm.xy_cent_act_box(2,iact))*dx_dm; % Y = Y0 -(y_true_center-y_box_center)
+       dm.inf_datacube(:,:,iact) = interp2(Xinf0,Yinf0,dm.infMaster,dm.Xbox,dm.Ybox,'spline',0);
     end
     
     fprintf('done.  Time = %.1fs\n',toc);

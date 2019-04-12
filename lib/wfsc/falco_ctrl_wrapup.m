@@ -23,12 +23,9 @@
 
 function [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec)
 
-
 %--Initialize delta DM commands
 if(any(mp.dm_ind==1)); dDM.dDM1V = zeros(mp.dm1.Nact,mp.dm1.Nact); end
 if(any(mp.dm_ind==2)); dDM.dDM2V = zeros(mp.dm2.Nact,mp.dm2.Nact); end
-% if(any(mp.dm_ind==1)); dDM.dDM1V = zeros(mp.dm1.NactTotal,1); end
-% if(any(mp.dm_ind==2)); dDM.dDM2V = zeros(mp.dm2.NactTotal,1); end
 if(any(mp.dm_ind==3)); dDM.dDM3V = zeros(mp.dm3.NactTotal,1); end
 if(any(mp.dm_ind==4)); dDM.dDM4V = zeros(mp.dm4.NactTotal,1); end
 if(any(mp.dm_ind==5)); dDM.dDM5V = zeros(mp.dm5.NactTotal,1); end
@@ -112,6 +109,5 @@ if(any(mp.dm_ind==6));  mp.dm6.dV = mp.dm6.V - cvar.DM6Vnom;  end
 if(any(mp.dm_ind==7));  mp.dm7.dV = mp.dm7.V - cvar.DM7Vnom;  end
 if(any(mp.dm_ind==8));  mp.dm8.dV = mp.dm8.V - cvar.DM8Vnom;  end
 if(any(mp.dm_ind==9));  mp.dm9.dV = mp.dm9.V - cvar.DM9Vnom;  ends
-
 
 end %--END OF FUNCTION

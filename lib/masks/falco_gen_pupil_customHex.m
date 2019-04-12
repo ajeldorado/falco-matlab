@@ -12,7 +12,6 @@
 % inputs.angStrut - Array of angles for the radial struts (deg)
 % inputs.wStrut - strut width (fraction of Nbeam)
 
-
 function PUPIL = falco_gen_pupil_customHex( input )
 %gen_pupil_SCDA Generates a simple pupil.
 %   Function may be used to generate circular, annular, and simple on-axis 
@@ -62,7 +61,5 @@ function PUPIL = falco_gen_pupil_customHex( input )
                (RHO.*cos(THETA-ang*pi/180)>0));
         end
     end
-    
-    
+        
 end
-

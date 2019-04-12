@@ -67,9 +67,7 @@ for jj = 1:Nact           % Row
         kr = jj + kx(:,1);
         kc = ii + kx(:,2);
         ns = length(kr);
-        
-        %cont = [jj ii]
-        
+                
         if ns >= 1
         for j1 = 1:ns
             

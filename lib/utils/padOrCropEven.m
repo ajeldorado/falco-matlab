@@ -26,7 +26,7 @@ function Aout = padOrCropEven(Ain,Ndes,varargin)
     extrapval = 0; %--Value to use for extrapolated points
 
     %--Enable different extrapolation values by using varargin
-    icav = 0;                     % index in cell array varargin
+    icav = 0; % index in cell array varargin
     while icav < size(varargin, 2)
         icav = icav + 1;
         switch lower(varargin{icav})
@@ -38,9 +38,6 @@ function Aout = padOrCropEven(Ain,Ndes,varargin)
               varargin{icav});
         end
     end
-
-
-
 
     Nx0 = size(Ain,2);
     Ny0 = size(Ain,1);
@@ -68,40 +65,4 @@ function Aout = padOrCropEven(Ain,Ndes,varargin)
             Aout = Ain;
         end
     end
-
-
 end %--END OF FUNCTION
-
-
-
-
-
-% %--OLD VERSION RELYING ON THE FUNCTION padarray.m
-% NnowXi = size(Ain,2);
-% NnowEta = size(Ain,1);
-% 
-% if(length(Ndes)==1) % Make the output square
-% 
-%     if(mod(Ndes,2)==1 || mod(NnowXi,2)==1 || mod(NnowEta,2)==1)
-%         disp('ERROR: TRIED TO PAD OR CROP AN ODD-SIZED ARRAY IN padOrCropEven.m !!!'); disp(' ');
-%         return
-%     end
-% 
-%     NnowHalfXi = NnowXi/2;
-%     NnowHalfEta = NnowEta/2;
-%     NdesHalf = Ndes/2;
-% 
-%     if(min(NnowXi,NnowEta)>Ndes) % Crop
-%         Aout = Ain(NnowHalfEta+1-NdesHalf:NnowHalfEta+NdesHalf,NnowHalfXi+1-NdesHalf:NnowHalfXi+NdesHalf,:);
-%     elseif(max(NnowXi,NnowEta)<Ndes) % Pad
-%         Aout = padarray(Ain,[NdesHalf-NnowHalfEta,NdesHalf-NnowHalfXi],extrapval);
-%     else
-%         Aout = Ain;
-%     end
-% 
-% elseif(length(Ndes)==2) % Make the output a rectangle
-%     
-% else
-%     disp('ERROR in padOrCropEven.m: wrong number of dimensions specified.')
-% end
-
