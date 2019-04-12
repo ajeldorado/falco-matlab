@@ -84,13 +84,27 @@ switch upper(mp.whichPupil)
         inputs.Dbeam = mp.P2.D;
         mp.P1.compact.mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs);
         
-    case{'LUVOIRA5'}
+    case{'LUVOIRAFINAL'}
         inputs.centering = mp.centering;
-        if(isfield(mp.P1,'wStrut'))
-            inputs.wStrut = mp.P1.wStrut; % spider width (fraction of the pupil diameter)
+        if(isfield(mp.P1,'wGap_m')) %--Option to overwrite the default
+            inputs.wGap_m = mp.P1.wGap_m; % spider width (fraction of the pupil diameter)
         end
         
-        if(isfield(mp.P1,'wGap_m'))
+        %--Generate high-res input pupil for the 'full' model
+        inputs.Nbeam = mp.P1.full.Nbeam; 
+        mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
+        
+        %--Generate low-res input pupil for the 'compact' model
+        inputs.Nbeam = mp.P1.compact.Nbeam; 
+        mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
+        clear inputs
+
+    case{'LUVOIRA5'}
+        inputs.centering = mp.centering;
+        if(isfield(mp.P1,'wStrut'))  %--Option to overwrite the default
+            inputs.wStrut = mp.P1.wStrut; % spider width (fraction of the pupil diameter)
+        end
+        if(isfield(mp.P1,'wGap_m'))  %--Option to overwrite the default
             inputs.wGap_m = mp.P1.wGap_m; % spider width (fraction of the pupil diameter)
         end
         
