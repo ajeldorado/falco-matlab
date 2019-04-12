@@ -25,4 +25,3 @@ if(LSspiders > 0)
     LS = ErodeAperture(round(EPsupport),LSspiders).*LS;
 end
 end
-

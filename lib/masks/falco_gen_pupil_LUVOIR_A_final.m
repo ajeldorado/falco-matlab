@@ -24,7 +24,6 @@
 % 1 13 114 115 126 127
 % 1 12 113 114 125 126
 
-
 function mask = falco_gen_pupil_LUVOIR_A_final(inputs,varargin)
 
 %--Set default values of input parameters
@@ -65,7 +64,6 @@ else
     magfacD = 1;
 end
 
-
 %--Gap between primary mirror segments [meters]
 if(isfield(inputs,'wGap_m')) 
     hexgap0 = inputs.wGap_m;
@@ -79,7 +77,6 @@ Nbeam   = inputs.Nbeam;     % number of points across the incoming beam
 
 %--USER INPUTS
 Nap   = Nbeam; % number of points across FULL usable pupil
-
 width_hex0 = 1.2225; %-- flat-to-flat (m)
 Dap = (12*width_hex0 + 11*hexgap0);%(12*width_hex0 + 12*hexgap0);
 dx = Dap/Nap;
@@ -87,14 +84,12 @@ dx_drawing = 1.2225/158; % (m) %--In actual drawing, 158 pixels across the 1.222
 %dx_drawing. strut in drawing is 19 pixels across, so dx_strut =
 %19*dx_drawing = 0.1470m
 
-
 if(strcmpi(centering,'pixel'))
     Narray = ceil_even(Nbeam/magfacD+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
     Narray = ceil_even(Nbeam/magfacD); %--number of points across output array. Same size as width when interpixel centered.
 end
 Darray = Narray*dx;
-
 
 %--For PROPER 
 wl_dummy = 1e-6; % wavelength (m)
@@ -136,15 +131,12 @@ bm = prop_rectangular_obscuration(bm, wStrut, len_1b, 'XC',cshift-dx_t - 1.5*hex
 mask = ifftshift(abs(bm.wf)).*ap;
 
 mask(mask>1) = 1; %--Get rid of overlapping segment edges at low resolution if the gap size is zero.
-%figure(51); imagesc(mask); axis xy equal tight; colorbar;
 
 if(flagRot180deg)
     mask = rot90(mask,2);
 end
 
 end %--END OF FUNCTION
-
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
@@ -159,5 +151,3 @@ end %--END OF FUNCTION
 % drawnow;
 % 
 % sum(sum(mask))
-
-

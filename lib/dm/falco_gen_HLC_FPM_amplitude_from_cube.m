@@ -27,7 +27,6 @@ function FPMamp = falco_gen_HLC_FPM_amplitude_from_cube(dm,flagModel)
         end
     end
     
-    
     FPMamp = 1 - DMsurf;
     
     %--Values must be between 0 and 1

@@ -14,12 +14,10 @@
 %are done.
 %--Created on 2018-05-09 by A.J. Riggs.
 
-
 function [Nitr, relinItrVec, gridSearchItrVec, log10regSched, dm_ind_sched] = falco_ctrl_EFC_schedule_generator(sched_mat)
 
     %--Number of correction iterations
     Nitr = sum(sched_mat(:,1));
-
 
     %--Create the vectors of 
     %  1) iteration numbers at which to relinearize the Jacobian
@@ -38,8 +36,7 @@ function [Nitr, relinItrVec, gridSearchItrVec, log10regSched, dm_ind_sched] = fa
         if( (sched_mat(ii,5)==1) ) %--When to re-do the empirical EFC grid search
             gridSearchItrVec = [gridSearchItrVec, ItCounter];
         end
-        
-        
+                
         if( (sched_mat(ii,1)~=0) )
             %--Make the vector of regularizations at each iteration
             log10regSched(ItCounter:(ItCounter+sched_mat(ii,1)-1)) = sched_mat(ii,2);
@@ -47,11 +44,8 @@ function [Nitr, relinItrVec, gridSearchItrVec, log10regSched, dm_ind_sched] = fa
         end
 
         ItCounter = ItCounter + sched_mat(ii,1);
-%         figure(201); plot(1:Nitr,log10regSched,'-bo');
-%         figure(202); plot(1:Nitr,dmIndList,'-bo');
-%         keyboard
+
     end
-    %figure(503); plot(1:Nitr,regSched);
 
     %--Store DM number index vectors as cells since they can vary in length
     for Itr = 1:Nitr
@@ -62,8 +56,5 @@ function [Nitr, relinItrVec, gridSearchItrVec, log10regSched, dm_ind_sched] = fa
         end        
         dm_ind_sched{Itr} = dm_ind;
     end
-    
-
-
 
 end %--END OF FUNCTION

@@ -17,7 +17,6 @@
 
 function PUPIL = falco_gen_pupil_iSAT( input )
 %falco_gen_pupil_iSAT Generates an iSAT pupil
-%   
 
     f2f = input.raftDia/3;% flat-to-flat diameter of a single segment 
     numRaftRings = input.numRaftRings;
@@ -34,8 +33,6 @@ function PUPIL = falco_gen_pupil_iSAT( input )
     else
         PUPIL = hexSegMirror_getSupport( input_sub );
     end
-    
-
     
     % Make the rings of rafts
     count = 1;    
@@ -76,16 +73,5 @@ function PUPIL = falco_gen_pupil_iSAT( input )
 
         end
     end
-    
-%     if(isfield(input,'telDia'))
-%         N = input.Npad;%Number of samples in NxN grid 
-%         %Create coordinates
-%         [X,Y] = meshgrid(-N/2:N/2-1);
-%         [~,RHO] = cart2pol(X,Y); 
-%         hg_expon = 5000;    
-% %         OD = input.OD;
-%         PUPIL = PUPIL+exp(-(RHO/(input.telDia/2)).^hg_expon);
-%     end
 
 end
-

@@ -11,10 +11,7 @@ M = size(Phase_in,1);
 xpup = -1:(2/(M-1)):1; %spacing is just constant
 ypup = -1:(2/(M-1)):1;
 k = 1;
-% xVec = zeros(length(ypup)*length(xpup));
-% yVec = zeros(length(ypup)*length(xpup));
-% th = zeros(length(ypup)*length(xpup));
-% r = zeros(length(ypup)*length(xpup));
+
 for i = 1:length(xpup)
     for j = 1:length(ypup)
         if((xpup(i)^2 + ypup(j)^2)<= 1)
@@ -26,10 +23,7 @@ for i = 1:length(xpup)
     end
 end
 indx = sub2ind([M M], xVec, yVec);
-% fprintf('done.\n');
-% whos indx
 
-% fprintf('Making fit of wavefront to Zernikes...');
 % number of Zernike modes
 sz = .5*(maxZerN+1)*(maxZerN+2) - .5*(minZerN+1)*(minZerN);
 A = zeros(M*M, sz);
@@ -37,7 +31,6 @@ oddeven = zeros(sz, 1);
 % Evaluate and store Zernike polynomials
 k = 1;
 for n = minZerN:maxZerN
-%     fprintf('%d ',n);
     for m = -n:2:n
         ZP = zeros(M,M);
         ZP(indx) = propcustom_zernfun(n, m, r, th, 'norm');
@@ -52,7 +45,6 @@ end
 
 B = reshape(Phase_in,M*M,1);
 
-Zern_coeff = pinv(A)*B;%(A'*A)\(A'*B);
+Zern_coeff = pinv(A)*B;
 Amat = reshape(A,[M,M,size(A,2)]);
-% fprintf('done.\n');
 end

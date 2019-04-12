@@ -28,16 +28,13 @@
 % - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
-
 %--Return values:
 %  Measured average normalized intensity
 %  DM commands
 
 function [InormAvg,dDM] = falco_ctrl_EFCcon_base(ni,vals_list,mp,cvar)
 
-
 %% Initializations
-% Itr = cvar.Itr ;
 log10reg = vals_list(1,ni); %--Lagrange multiplier
 dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
 
@@ -46,13 +43,6 @@ dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
 cvar = falco_ctrl_setup(mp,cvar);
 
 %% Constraints on Actuation
-%--Put constraints in same format (du isolated on one side)
-% du <= du_max
-% du >= -du_max
-% du <= u_ub - u0
-% du >= u_lb - u0
-% % u0+du <= u_ub
-% % u0+du >= u_lb
 
 %--Constraints: Lower bounds on total control commands
 if(any(mp.dm_ind==1));  u1_LB = -1*mp.dm1.maxAbsV*ones(1,mp.dm1.Nele);  else;  u1_LB = [];  end
@@ -88,7 +78,6 @@ cvar.du_UB_comb = min(du_UB_total,du_UB);
     
 %% Diagonal of the regularization matrix
 
-
 %--The entire regularization matrix will be normalized based on the max
 %response of DMs 1 and 2
 temp = diag(cvar.GstarG_wsum);
@@ -107,20 +96,14 @@ mp.ctrl.relReg9 = 1;
 if(any(mp.dm_ind==8));  cvar.RegMatDiag(cvar.uLegend==8) = mp.ctrl.relReg8*cvar.RegMatDiag(cvar.uLegend==8) ;  end
 if(any(mp.dm_ind==9));  cvar.RegMatDiag(cvar.uLegend==9) = mp.ctrl.relReg9*cvar.RegMatDiag(cvar.uLegend==9) ;  end
     
-
-
 %% Least-squares solution with regularization:
-% duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum;
 
  %% Perform constrained optimization with CVX
 log10reg = vals_list(1,ni);
-%NeleAll = length(uNom);
 
 cvx_begin quiet
-%         cvx_precision default
-%         cvx_solver Mosek
+
     variables maxContrast duVec(cvar.NeleAll,1)
-    % variables maxContrast u1(mp.dm1.Nele) u2(mp.dm2.Nele) u8(mp.dm8.Nele) u9(mp.dm9.Nele) 
     minimize (maxContrast)
     subject to
         (duVec.' * (cvar.GstarG_wsum + 10.^(log10reg)*diag(cvar.RegMatDiag))  + 2*cvar.RealGstarEab_wsum.') * duVec <= maxContrast
@@ -138,10 +121,4 @@ cvx_end
 Itotal = falco_get_summed_image(mp);
 InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
         
-
 end %--END OF FUNCTION
-
-
-
-
-

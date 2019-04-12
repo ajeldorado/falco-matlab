@@ -27,7 +27,4 @@ function DMsurf = falco_gen_EHLC_FPM_surf_from_cube(dm,flagModel)
         end
     end
     
-%     %--Non-negative values only
-%     DMsurf(DMsurf<0) = 0;
-    
 end

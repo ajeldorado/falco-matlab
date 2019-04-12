@@ -10,10 +10,9 @@ function [ outputAP ] = falco_erode_aperture( inputAP, pixelsInSE )
 %   Detailed explanation goes here
 
 % Define the structuring element
-se = strel('disk',pixelsInSE);        % disk, radius 1
+se = strel('disk',pixelsInSE); % disk, radius 1
 
 % Erode the rounded aperture
 outputAP = imerode(round(inputAP),se);
 
 end
-

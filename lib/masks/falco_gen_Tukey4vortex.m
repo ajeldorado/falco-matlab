@@ -24,4 +24,3 @@ lut = tukeywindow(Nlut,alpha);
 
 w = interp1(p,lut,RHO,'linear',0);
 end
-

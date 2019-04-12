@@ -12,8 +12,7 @@
 % zeroing out of the command first (to allow a non-zero starting point).
 % Created on 2018-03-28 by A.J. Riggs.
 
-function JacCol = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM,dV,EunpokedVec,mp,  lambda, normFac, Ein) %, FPM)
-%                   func_validate_Jacobian_with_compact_model_HLC(iact,whichDM, Vfrac, EunpokedVec, mp,  lambda, normFac, Ein)
+function JacCol = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM,dV,EunpokedVec,mp,  lambda, normFac, Ein)
     act_sens = 1; %--Default unless overwritten
     stepFac = 1; %--Default unless overwritten
     
@@ -49,7 +48,7 @@ function JacCol = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM
     elseif(whichDM==9)
         
         if(isfield(mp.dm9,'stepFac')==false)
-            stepFac = 20;%10; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+            stepFac = 20; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
         else
             stepFac = mp.dm9.stepFac;
         end
@@ -64,16 +63,13 @@ function JacCol = EXAMPLE_func_validate_Jacobian_with_compact_model(iact,whichDM
             flagSkipAct = false;
         end
     end
-
     
     if(flagSkipAct)
         JacCol = zeros(size(mp.Fend.corr.inds)); 
     else
-        
         flagEval = false;
         Epoked = model_compact_general(mp,  lambda, Ein, normFac,flagEval);
         JacCol = act_sens*weight/stepFac*(Epoked(mp.Fend.corr.inds)-EunpokedVec)/dV; %--column of the Jacobian for actuator # iact
     end
-    
     
 end %--END OF FUNCTION

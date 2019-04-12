@@ -46,7 +46,6 @@ while icav < size(varargin, 2)
     end
 end
 
-
 % %--DEBUGGING ONLY: HARD-CODED INPUTS
 % clear all
 % addpath(genpath('~/Repos/FALCO/'))
@@ -57,8 +56,6 @@ end
 % inputs.ang = 65; % (degrees)
 % flagRot180deg = false;
 
-
-
 FPMampFac = 0; %--Amplitude transmission of the center spot
 pixresFPM = inputs.pixresFPM; %--pixels per lambda_c/D
 rhoInner = inputs.rhoInner; % radius of inner FPM amplitude spot (in lambda_c/D)
@@ -67,7 +64,6 @@ centering = inputs.centering; % Centering of array: 'pixel' or 'interpixel'
 ang = inputs.ang; %--Opening angle on each side of the bowtie (degrees)
 
 dx = 1/pixresFPM; %--lambda_c/D per pixel. "UL" for unitless
-
 
 if(rhoOuter==inf)
     if(strcmpi(centering,'interpixel'))
@@ -92,7 +88,6 @@ end
 xshift = 0;%inputs.xshift; % translation in x of FPM (in lambda_c/D)
 yshift = 0;%inputs.yshift; % translation in y of FPM (in lambda_c/D)
 
-
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--GENERAL SPECS
@@ -114,7 +109,6 @@ end
 %--INITIALIZE PROPER
 bdf = Dmask/Darray; %--beam diameter factor in output array
 bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
-% figure(1); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 if(rhoOuter ~= inf)
     %--Outer opaque ring of FPM
@@ -122,9 +116,7 @@ if(rhoOuter ~= inf)
     cx_OD = 0 + cshift + xshift;
     cy_OD = 0 + cshift + yshift;
     bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);%, cx, cy, norm);
-    % figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
-    % figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-    
+
      %--Create the bowtie region
     if(ang<180)
         %--Top part
@@ -132,13 +124,11 @@ if(rhoOuter ~= inf)
         xvert = cshift + xshift + [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
         yvert = cshift + xshift + [0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
         bowtieTop = prop_irregular_polygon( bm, xvert, yvert,'DARK');
-        % figure(5); imagesc((abs(bowtieTop))); axis xy equal tight; colorbar
         
         %--Bottom part
         xvert = cshift + xshift + [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
         yvert = cshift + xshift + -1*[0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
         bowtieBottom = prop_irregular_polygon( bm, xvert, yvert,'DARK');
-        % figure(6); imagesc((abs(bowtieBottom))); axis xy equal tight; colorbar;
     else
         bowtieTop = 1;
         bowtieBottom = 1;
@@ -155,7 +145,6 @@ ra_ID = rhoInner;
 cx_ID = 0 + cshift + xshift;
 cy_ID = 0 + cshift + yshift;
 innerSpot = prop_ellipse(bm, ra_ID,ra_ID,'cx',cx_ID,'cy',cy_ID,'DARK')*(1-FPMampFac) + FPMampFac;
-% figure(4); imagesc((abs(innerSpot))); axis xy equal tight; colorbar;
 
 mask = ifftshift(abs(bm.wf)); %--undo PROPER's fftshift
 mask = mask.*innerSpot; %--Include the inner FPM spot
@@ -165,10 +154,7 @@ if(flagRot180deg)
     mask = rot90(mask,2);
 end
 
-
 end %--END OF FUNCTION
-
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
@@ -183,13 +169,3 @@ end %--END OF FUNCTION
 % drawnow;
 % 
 % sum(sum(mask))
-
-
-
-
-
-
-
-
-
-

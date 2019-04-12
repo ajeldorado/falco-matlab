@@ -8,7 +8,6 @@
 % Nbeam - Beam diameter in samples
 % Npad  - Size of the full, padded array (NpadxNpad)
 
-
 function PUPIL = falco_gen_pupil_dst_LUVOIR_B( Nbeam, Npad )
 %PUPIL = falco_gen_pupil_dst_LUVOIR_B( Nbeam, Npad )
 %   Generates the DST LUVOIR B mask  
@@ -40,4 +39,3 @@ function PUPIL = falco_gen_pupil_dst_LUVOIR_B( Nbeam, Npad )
     PUPIL = padOrCropEven(out,Npad);
     
 end
-

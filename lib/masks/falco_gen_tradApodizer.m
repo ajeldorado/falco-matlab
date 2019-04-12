@@ -34,11 +34,9 @@ function APOD = falco_gen_tradApodizer(PUPIL,apDiaSamps,effIWA,effOWA,useGPU)
     [X,Y]=meshgrid(-Narray/2:Narray/2-1);
     [~,RHO]=cart2pol(X,Y);
     
-%     Q = 1 - exp(-(RHO/(effIWA*lamOverD)).^1000);
     Q = exp(-(RHO/(effOWA*lamOverD)).^1000) - exp(-(RHO/(effIWA*lamOverD)).^1000);
     Q = fftshift(Q);
     
-
     prevMetric = 1; 
     minThpt = 0.3;
     maxIts = 50;
@@ -46,13 +44,11 @@ function APOD = falco_gen_tradApodizer(PUPIL,apDiaSamps,effIWA,effOWA,useGPU)
     A = PUPIL;
     normI = max(max(abs(fft2(PUPIL)).^2));
     
-    
     % Initial conditions 
     B = fft2(A);
     peakPSFthpt = max(abs(B(:)).^2/normI);
     currMetric = mean(abs(B(logical(Q))).^2/normI)/peakPSFthpt.^2;
-    
-    
+      
 	disp('Optimizing traditional grayscale apodizer...');
     it = 0;
     while(it < maxIts && peakPSFthpt>minThpt && currMetric<prevMetric )
@@ -60,8 +56,7 @@ function APOD = falco_gen_tradApodizer(PUPIL,apDiaSamps,effIWA,effOWA,useGPU)
         B = B.*(1-Q);
         A = abs(ifft2(B)).*round(PUPIL);
         
-        A(A>1) = 1; 
-%         A = A/max(A(:));
+        A(A>1) = 1;
        
         B = fft2(A);
         
@@ -80,6 +75,5 @@ function APOD = falco_gen_tradApodizer(PUPIL,apDiaSamps,effIWA,effOWA,useGPU)
     end
     
     disp(['Traditional grayscale apodizer returned with T=',num2str(peakPSFthpt*100,2),'% and M=',num2str(currMetric)]);
-
 
 end %--END OF FUNCTION

@@ -7,7 +7,6 @@
 %--Function to generate the LUVOIR A architecture 5/6 pupil mask in Matlab using PROPER.
 %
 % Created in March 2018 by A.J. Riggs.
-
 %
 % REQUIRED INPUTS: 
 % bmi  = beam structure input (used only to get sampling info)
@@ -27,7 +26,6 @@
 %
 % OUTPUTS:
 %  ap:     2-D square array of the amplitude for the specified hex aperture 
-
 
 function ap = falco_hex_aperture_LUVOIR_A_5(bmi, nr, hr, hs, varargin)
 %        ap = prop_hex_aperture(bmi, nr, hr, hs, varargin)
@@ -99,8 +97,8 @@ function ap = falco_hex_aperture_LUVOIR_A_5(bmi, nr, hr, hs, varargin)
     hy   = hs * (ir * cosd(60d0) - nr); % hexagonal segment center y (m)
 
     for iseg = 0 : 2 * nr - ir
-      if(0)% (ir==0 && iseg==0) || (ir==nr && iseg==0)  || (ir==0 && iseg==12) );%|| (ir==nr && iseg==(2 * nr - ir))  ) %(ir==0 && iseg==2 * nr - ir) )%|| 
-              fprintf('Now skipping segment %d \n',counter); %%d/%d\n',iseg,2 * nr - ir);
+      if(0) 
+        fprintf('Now skipping segment %d \n',counter);
       else
     % create hexagonal segment on one side
           if (ir ~= 0) || ~((iseg == nr) && dc)
@@ -113,11 +111,6 @@ function ap = falco_hex_aperture_LUVOIR_A_5(bmi, nr, hr, hs, varargin)
             end
 
           end
-%           if(counter==1)
-%             figure(1); imagesc(Xs,Ys,ap); axis xy equal tight; colorbar;
-%           end
-%           text(hexx,hexy,sprintf('%d',counter),'Color','red');
-%           hold on;
           
     % create hexagonal segment on opposite side
           if (ir ~= 0)
@@ -129,16 +122,9 @@ function ap = falco_hex_aperture_LUVOIR_A_5(bmi, nr, hr, hs, varargin)
                 ap   = ap + prop_polygon(bmi,6,hr,'cx',hexx,'cy',hexy,'rot',rot);
             end
           end
-          
-%           text(hexx,hexy,sprintf('%d',counter),'Color','red');
-%           hold on;
-%           pause(1/20);
-        
 
           hy   = hy + hs;
       end
-%         figure(1); imagesc(ap); axis xy equal tight; colorbar; pause(1/20);
-
         
     end                 % for iseg = 0 : 2 * nr - ir
   end                   % for ir = 0 : nr

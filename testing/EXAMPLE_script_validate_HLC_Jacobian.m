@@ -27,7 +27,6 @@ mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
-
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_WFIRST_HLC_BMC_WFE
@@ -134,7 +133,6 @@ fn_config = [mp.path.config mp.runLabel,'_config.mat'];
 save(fn_config)
 fprintf('Saved the config file: \t%s\n',fn_config)
 
-
 %--Get configuration data from a function file
 [mp,out] = falco_init_ws(fn_config);
 
@@ -177,8 +175,6 @@ if(any(mp.dm_ind==8)); G8_jac = jacStruct.G8; end
 if(any(mp.dm_ind==9)); G9_jac = jacStruct.G9; end
 clear jacStruct  %--Save RAM
 
-
-
 %% Part 6: Compute the Jacobian using model_compact and differencing
 
 Vfrac = 1e-6; %--Want delta voltage to be tiny for DM1 and DM2 to stay linear
@@ -188,9 +184,6 @@ if(any(mp.dm_ind==1)); G1 = zeros(mp.Fend.corr.Npix,mp.dm1.NactTotal,mp.jac.Nmod
 if(any(mp.dm_ind==2)); G2 = zeros(mp.Fend.corr.Npix,mp.dm2.NactTotal,mp.jac.Nmode); end % control Jacobian for DM2
 if(any(mp.dm_ind==8)); G8 = zeros(mp.Fend.corr.Npix,mp.dm8.NactTotal,mp.jac.Nmode); end % control Jacobian for DM8
 if(any(mp.dm_ind==9)); G9 = zeros(mp.Fend.corr.Npix,mp.dm9.NactTotal,mp.jac.Nmode); end % control Jacobian for DM9
-    
-
-
 
 for tsi=1:mp.jac.Nmode
     
@@ -216,7 +209,6 @@ for tsi=1:mp.jac.Nmode
             mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
     end
 
-    
     %--DM1
     fprintf('Starting Jacobian calculation with compact model for DM1...'); tic
     if(any(mp.dm_ind==1))
@@ -248,7 +240,6 @@ for tsi=1:mp.jac.Nmode
     end
     fprintf('done. Time = %.1f sec.\n',toc)
 
-
     %--DM9
     fprintf('Starting Jacobian calculation with compact model for DM9...'); tic
     if(any(mp.dm_ind==9))
@@ -274,7 +265,6 @@ figure(1); imagesc(abs(G1_jac)); colorbar; set(gca,'Fontsize',20);
 figure(2); imagesc(abs(G1_compact)); colorbar; set(gca,'Fontsize',20);
 figure(3); imagesc(abs(G1_jac-G1_compact)); colorbar; set(gca,'Fontsize',20);
 figure(4); imagesc(abs(G1_jac-G1_compact)/max(abs(G1_compact(:)))); colorbar; set(gca,'Fontsize',20); %--Normalized error
-% figure(5); imagesc(abs(G1_jac-G1_compact)./abs(G1_compact),[0 1]); colorbar; set(gca,'Fontsize',20);
 
 %--Compare Jacobian for just one actuator
 whichAct = 685;
@@ -285,32 +275,19 @@ Etemp2 = 0*Etemp;
 Etemp1(mp.Fend.corr.inds) = G1_jac(:,whichAct,1);
 Etemp2(mp.Fend.corr.inds) = G1_compact(:,whichAct,1);
 
-
 figure(11); imagesc(abs(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(12); imagesc(abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(13); imagesc(abs(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(14); imagesc(abs(Etemp1-Etemp2)./abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20); %--Normalized error
- 
-% figure(15); imagesc(angle(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-% figure(16); imagesc(real(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-% figure(16); imagesc(imag(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-
 
 figure(18); imagesc(angle(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(19); imagesc(angle(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-
-% %--Reset the voltage maps to the starting point.
-% mp.dm1.V = DM1V0;
-% mp.dm2.V = DM2V0;
-% mp.dm8.V = DM8V0;
-% mp.dm9.V = DM9V0;
 
 %% DM2 Comparison, Compact Model
 %--Compare overall Jacobian
 figure(101); imagesc(abs(G2_jac)); colorbar; set(gca,'Fontsize',20);
 figure(102); imagesc(abs(G2_compact)); colorbar; set(gca,'Fontsize',20);
 figure(103); imagesc(abs(G2_jac-G2_compact)); colorbar; set(gca,'Fontsize',20);
-% figure(104); imagesc(abs(G2_jac-G2_compact)/max(abs(G2_compact(:)))); colorbar; set(gca,'Fontsize',20); %--Normalized error
 
 %--Compare Jacobian for just one actuator
 whichAct = 685;
@@ -321,17 +298,11 @@ Etemp2 = 0*Etemp;
 Etemp1(mp.Fend.corr.inds) = G2_jac(:,whichAct,1);
 Etemp2(mp.Fend.corr.inds) = G2_compact(:,whichAct,1);
 
-
 figure(111); imagesc(abs(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(112); imagesc(abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(113); imagesc(abs(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(114); imagesc(abs(Etemp1-Etemp2)./abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20); %--Normalized error
 
-% %--Reset the voltage maps to the starting point.
-% mp.dm1.V = DM1V0;
-% mp.dm2.V = DM2V0;
-% mp.dm8.V = DM8V0;
-% mp.dm9.V = DM9V0;
 %%
 return
 %% DM8 Comparison, Compact Model
@@ -344,9 +315,8 @@ jac2Db = zeros(sqrt(mp.dm8.NactTotal));
 jac2Db(:) = sum(abs(G8_compact).^2,1);
 figure(30); imagesc(abs(jac2Db)); colorbar; set(gca,'Fontsize',20);
 
-
 %--Compare Jacobian for just one actuator
-whichAct = 14*28+14;%13*54+50;%27+54*27;%1024;
+whichAct = 14*28+14;
 
 Etemp = model_compact(mp, modvar); %--Just used to get the right sized image
 Etemp1 = 0*Etemp;
@@ -354,34 +324,18 @@ Etemp2 = 0*Etemp;
 Etemp1(mp.Fend.corr.inds) = G8_jac(:,whichAct,1);
 Etemp2(mp.Fend.corr.inds) = G8_compact(:,whichAct,1);
 
-
 figure(31); imagesc(abs(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(32); imagesc(abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(33); imagesc(abs(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(34); imagesc(abs(Etemp1-Etemp2)./abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20); %--Normalized error
- 
-% figure(15); imagesc(angle(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-% figure(16); imagesc(real(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-% figure(16); imagesc(imag(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-
 
 figure(38); imagesc(angle(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(39); imagesc(angle(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 
-
 %% DM9 Comparison, Compact Model
-% 
-% jac2D = zeros(sqrt(mp.dm9.NactTotal));
-% jac2D(:) = sum(abs(G9_jac).^2,1);
-% figure(20); imagesc(abs(jac2D)); colorbar; set(gca,'Fontsize',20);
-% 
-% jac2Db = zeros(sqrt(mp.dm9.NactTotal));
-% jac2Db(:) = sum(abs(G9_compact).^2,1);
-% figure(30); imagesc(abs(jac2Db)); colorbar; set(gca,'Fontsize',20);
-
 
 %--Compare Jacobian for just one actuator
-whichAct = 13*54+50;%27+54*27;%1024;
+whichAct = 13*54+50;
 
 Etemp = model_compact(mp, DM, modvar); %--Just used to get the right sized image
 Etemp1 = 0*Etemp;
@@ -389,16 +343,10 @@ Etemp2 = 0*Etemp;
 Etemp1(mp.Fend.corr.inds) = G9_jac(:,whichAct,1);
 Etemp2(mp.Fend.corr.inds) = G9_compact(:,whichAct,1);
 
-
 figure(31); imagesc(abs(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(32); imagesc(abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(33); imagesc(abs(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(34); imagesc(abs(Etemp1-Etemp2)./abs(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20); %--Normalized error
- 
-% figure(15); imagesc(angle(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-% figure(16); imagesc(real(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-% figure(16); imagesc(imag(Etemp1-Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
-
 
 figure(38); imagesc(angle(Etemp1)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 figure(39); imagesc(angle(Etemp2)); axis xy equal tight; colorbar; set(gca,'Fontsize',20);

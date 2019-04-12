@@ -57,7 +57,6 @@ end
 % inputs.centering = 'interpixel';
 % flagRot180deg = false;
 
-
 pixresFPM = inputs.pixresFPM; %--pixels per lambda_c/D
 rhoInner = inputs.rhoInner; % radius of inner FPM amplitude spot (in lambda_c/D)
 rhoOuter = inputs.rhoOuter; % radius of outer opaque FPM ring (in lambda_c/D)
@@ -65,13 +64,6 @@ FPMampFac = inputs.FPMampFac; % amplitude transmission of inner FPM spot
 centering = inputs.centering; % Centering of array: 'pixel' or 'interpixel'
 
 dx = 1/pixresFPM; %--lambda_c/D per pixel.
-
-% % Centering of array: 'pixel' or 'interpixel'
-% if(isfield(inputs,'centering'))
-%     centering = inputs.centering;
-% else %--Default to pixel centering
-%     centering = 'pixel';
-% end
 
 if(rhoOuter==inf)
     if(strcmpi(centering,'interpixel'))
@@ -112,13 +104,11 @@ switch centering % 0 for pixel-centered FPM, or -diam/Narray for inter-pixel cen
         end
 end
 
-
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--INITIALIZE PROPER. Note that:  bm.dx = diam / bdf / np;
 bdf = Dmask/Darray; %--beam diameter factor in output array
 bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
-% figure(1); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 if(rhoOuter ~= inf)
     %--Outer opaque ring of FPM
@@ -126,8 +116,6 @@ if(rhoOuter ~= inf)
     cx_OD = 0 + cshift + xshift;
     cy_OD = 0 + cshift + yshift;
     bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);%, cx, cy, norm);
-    % figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
-    % figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 end
 
 %--Inner spot of FPM (Amplitude transmission can be nonzero)
@@ -135,15 +123,11 @@ ra_ID = (rhoInner);
 cx_ID = 0 + cshift + xshift;
 cy_ID = 0 + cshift + yshift;
 innerSpot = prop_ellipse(bm, ra_ID,ra_ID,'cx',cx_ID,'cy',cy_ID,'DARK')*(1-FPMampFac) + FPMampFac;
-% figure(4); imagesc((abs(innerSpot))); axis xy equal tight; colorbar;
 
 mask = ifftshift(abs(bm.wf)); %--undo PROPER's fftshift
 mask = mask.*innerSpot; %--Include the inner FPM spot
-% figure(19); imagesc(mask); axis xy equal tight; colorbar;
-
 
 end %--END OF FUNCTION
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
@@ -158,13 +142,3 @@ end %--END OF FUNCTION
 % drawnow;
 % 
 % sum(sum(mask))
-
-
-
-
-
-
-
-
-
-

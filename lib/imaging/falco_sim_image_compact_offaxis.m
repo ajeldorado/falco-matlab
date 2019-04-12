@@ -12,50 +12,53 @@
 %    Erkin's code.
 %--Created on 2018-01-24 by A.J. Riggs.
 
-function Iout = falco_sim_image_compact_offaxis(mp,x_offset,y_offset,varargin)
+function [Iout, Ifiber] = falco_sim_image_compact_offaxis(mp,x_offset,y_offset,varargin)
     
-flagEval  = false;    % flag to use a different (usually higher) resolution at final focal plane for evaluation
-modvar.whichSource = 'offaxis';    
+flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
+modvar.whichSource = 'offaxis';
 modvar.x_offset = x_offset; % mp.thput_eval_x;
 modvar.y_offset = y_offset; % mp.thput_eval_y;
   
-  icav = 0;             % index in cell array varargin
-  while icav < size(varargin, 2)
+icav = 0; % index in cell array varargin
+while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
         case {'eval'}
-            flagEval  = true;   % flag to use a different (usually higher) resolution at final focal plane for evaluation 
-%       case {'nact', 'n_act_across_pupil'}
-%         icav = icav + 1;
-%         nAct = varargin{icav};  % number of actuators across pupil
-      otherwise
-        error('falco_sim_image_compact: Unknown keyword: %s\n', varargin{icav});
+            flagEval = true; % flag to use a different (usually higher) resolution at final focal plane for evaluation 
+        otherwise
+            error('falco_sim_image_compact: Unknown keyword: %s\n', varargin{icav});
     end
-  end
+end
 
+Ifiber = 0; %Dummy initialization to make MATLAB happy
 
+if(mp.flagFiber)
+    Ifiber = zeros(mp.F5.Neta, mp.F5.Nxi);
+end
   
-    if(flagEval)
-        Iout = zeros(mp.Fend.eval.Neta, mp.Fend.eval.Nxi);
-    else
-        Iout = zeros(mp.Fend.Neta, mp.Fend.Nxi);            
-    end
+if(flagEval)
+    Iout = zeros(mp.Fend.eval.Neta, mp.Fend.eval.Nxi);
+else
+    Iout = zeros(mp.Fend.Neta, mp.Fend.Nxi);            
+end
     
-    for si=1:mp.Nsbp
-        modvar.sbpIndex = si; 
-        modvar.zernIndex = 1;
-        %modvar.ttIndex = mp.Wttlam_ti(im);
-        modvar.wpsbpIndex = mp.wi_ref;
-        % modvar.whichSource = 'star';
+for si=1:mp.Nsbp
+    modvar.sbpIndex = si; 
+    modvar.zernIndex = 1;
+    modvar.wpsbpIndex = mp.wi_ref;
 
-        if(flagEval)
-            E2D = model_compact(mp, modvar,'eval');
-        else
-            E2D = model_compact(mp, modvar);
-        end
-        
-        Iout = Iout + (abs(E2D).^2)*mp.jac.weightMat(si,1);
+    if(mp.flagFiber)
+        [E2D, Efiber] = model_compact(mp, modvar);
+    elseif(flagEval)
+        E2D = model_compact(mp, modvar, 'eval');
+    else
+        E2D = model_compact(mp, modvar);
     end
-
+        
+    Iout = Iout + (abs(E2D).^2)*mp.jac.weightMat(si,1);
+    if(mp.flagFiber)
+        Ifiber = Ifiber + (abs(Efiber).^2)*mp.jac.weightMat(si,1);
+    end
+end
 
 end %--END OF FUNCTION

@@ -48,17 +48,14 @@ function Eout = propcustom_PTP(Ein,Larray,lambda,dz)
         fprintf('Min allowed (ideal) number of points across = %u, and actual number = %u \n', Ncritical, N);
         error('propcustom_PTP: WARNING, NOT ENOUGH POINTS USED!')
     else
-%         fx = ( -M/2:1:(M/2-1) )/Larray;   % dx = Larray/M; fx=-1/(2*dx):1/Larray:1/(2*dx)-1/Larray;    % freq coords
-%         [FX,FY]=meshgrid(fx,fx);
-%         H = fftshift( exp(-1i*pi*lambda*dz*(FX.^2+FY.^2)) ); % transfer function
 
         %--Make coordinate vectors and maps in the frequency plane (faster than using meshgrid.m)
-        fx = [0:(N/2-1),(-N/2:-1)]/(N*dx);    % fftshifted frequency-plane coordinates.  dimensions = 1xN
+        fx = [0:(N/2-1),(-N/2:-1)]/(N*dx); % fftshifted frequency-plane coordinates.  dimensions = 1xN
         FX2 = ones(N,1)*fx.^2; % squared, shifted frequency-plane coordinates. dimensions = NxN
         H = exp(-1i*pi*lambda*dz*(FX2+FX2.')); % transfer function
 
-        U1=fft2(fftshift(Ein));      % shift, then fft source field
-        Eout=ifftshift(ifft2(H.*U1));    % inv fft, then center observation field    
+        U1=fft2(fftshift(Ein)); % shift, then fft source field
+        Eout=ifftshift(ifft2(H.*U1)); % inv fft, then center observation field    
 
     end
 end

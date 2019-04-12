@@ -76,4 +76,3 @@ function [mask] = falco_gen_pupil_HabEx_B(inputs)
     
     mask = interp2(X1,Y1,mask,(X2-shiftcols)/scal_fac,(Y2-shiftrows)/scal_fac,'linear',0);
 end
-

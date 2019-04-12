@@ -68,11 +68,10 @@ if(any(mp.dm_ind==2));  ev.Vcube.dm2 = zeros(mp.dm2.Nact,mp.dm2.Nact,1+2*Npairs)
 % NOTE: Nprobes=Npairs*2;   
 probePhaseVec = [0 Npairs];
 for k = 1:Npairs-1
-    probePhaseVec = [probePhaseVec probePhaseVec(end)-(Npairs-1)];% % #ok<AGstroke2ROW>
+    probePhaseVec = [probePhaseVec probePhaseVec(end)-(Npairs-1)]; % #ok<AGstroke2ROW>
     probePhaseVec = [probePhaseVec probePhaseVec(end)+(Npairs)]; % #ok<AGstroke2ROW>
 end
 probePhaseVec = probePhaseVec*pi/(Npairs);
-% ProbePhsVec = (offset + ProbePhsVec)*pi/(Npairs);
 
 switch lower(mp.est.probe.axis)
     case 'y'
@@ -98,7 +97,7 @@ fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 for si=1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ',si,mp.Nsbp);
 
-    % % Valid for all calls to model_compact.m:
+    % Valid for all calls to model_compact.m:
     modvar.sbpIndex = si;
     modvar.whichSource = 'star';
 
@@ -135,9 +134,7 @@ for si=1:mp.Nsbp
     % Set (approximate) probe intensity based on current measured Inorm
     ev.InormProbeMax = 1e-4;
     InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
-    %InormProbe = min( [sqrt(ev.score.Inorm*1e-5), ev.InormProbeMax]);
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
-
 
     %--Perform the probing
     iOdd=1; iEven=1; %--Initialize index counters
@@ -156,7 +153,6 @@ for si=1:mp.Nsbp
         end
         if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom+dDM1Vprobe;  end
         if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom+dDM2Vprobe;  end
-        %figure(202); imagesc(dDM1Vprobe); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
 
         %--Take probed image
         Im = falco_get_sbp_image(mp,si);
@@ -188,7 +184,6 @@ for si=1:mp.Nsbp
         end
     end
 
-
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
     ampSq = (Iplus+Iminus)/2 - repmat(I0vec,[1,Npairs]);  % square of probe E-field amplitudes
     ampSq(ampSq<0) = 0;  % If probe amplitude is zero, amplitude is zero there.
@@ -216,7 +211,6 @@ for si=1:mp.Nsbp
             end
         end
         
-
     else %--Get the probe phase from the model and the probe amplitude from the measurements
 
         % For unprobed field based on model:
@@ -250,8 +244,6 @@ for si=1:mp.Nsbp
         end
         
     end 
-
-
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
@@ -276,13 +268,8 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<
         Epix = pinv(H)*zAll(:,ipix); %--Batch process estimation
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
-    %if(ev.Itr>2)
     Eest(abs(Eest).^2 > 1e-2) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
-    %end
-    % Eest = Eest.*isnonzero; 
     fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
-    % end % End of if-elseif statements for ep.probeAmpType
-
 
     %--Initialize the state and state covariance estimates for Kalman
     %filter. The state is the real and imag parts of the E-field.
@@ -299,7 +286,6 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<
     end
 
 end   
-    
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%--Kalman Filter Update
@@ -340,8 +326,7 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     %--Construct dX, the change in state since last correction iteration
     dX = zeros(size(xOld));
     for ii=1:mp.Fend.corr.Npix
-            %dX(2*(ii-1)+1:2*(ii-1)+2) = Gamma(2*(ii-1)+1:2*(ii-1)+2,:)*u; % From Jacobian
-            dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
+       dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
     end
 
     %--Compute Sensor Noise, R. You can calculate this from the properties
@@ -350,7 +335,6 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     % ncounts_shot = sqrt(ev.IprobedMean*mp.peakCountsPerPixPerSec);
     % Dark current not included here (yet).
     ncounts_std = sqrt( (sqrt(2)*ev.IprobedMean*mp.peakCountsPerPixPerSec*mp.est.tExp + mp.readNoiseStd^2)/mp.est.num_im);
-% %     ncounts_std = sqrt( (CurCont*model_params.peakCountsPerPixPerSec*FITSparam.tExp + model_params.readNoiseStd^2)/FITSparam.num_im); %--Old way, but think is wrong
     Rvar = (ncounts_std/(mp.peakCountsPerPixPerSec*mp.tExp))^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
     Rmat = mp.est.Rcoef*Rvar*eye(Npairs); % A.J.'s way, used in v2
     fprintf('Sensor noise coefficient: %.3e\n',Rmat(1,1));
@@ -360,12 +344,6 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     Q = Q00*mp.est.Qcoef*repmat( eye(2), [mp.Fend.corr.Npix, 1]);
     dP = Q;
     fprintf('Process noise coefficient: %.3e\n',Q(1,1));
-    %--Other way to define Q is as the scaled squared Jacobian.
-    % Q = zeros(size(Pold));
-    % for jj=1:mp.Fend.corr.Npix
-    %     Q(2*jj-1:2*jj,:) = Qcoef*eye(2);
-    % end
-    % Qcoef = 1e-7; dP = Qcoef*Gamma*(Gamma.');  
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Compute Kalman Filter Equations
@@ -420,7 +398,6 @@ ev.IincoEst(:,si) =  I0vec-abs(Eest).^2; %--Compute the incoherent light
 
 end %--End of loop over the wavelengths
 
-
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
@@ -432,34 +409,4 @@ ev.InormEst = mean(ev.Iest(:));
 
 fprintf(' done. Time: %.3f\n',toc);
 
-
 end %--END OF FUNCTION
-
-
-
-%      ___         ___                     ___         ___         ___
-%     /__/|       /  /\                   /__/\       /  /\       /__/\
-%    |  |:|      /  /::\                 |  |::\     /  /::\      \  \:\
-%    |  |:|     /  /:/\:\  ___     ___   |  |:|:\   /  /:/\:\      \  \:\
-%  __|  |:|    /  /:/~/::\/__/\   /  /\__|__|:|\:\ /  /:/~/::\ _____\__\:\
-% /__/\_|:|___/__/:/ /:/\:\  \:\ /  /:/__/::::| \:/__/:/ /:/\:/__/::::::::\
-% \  \:\/:::::\  \:\/:/__\/\  \:\  /:/\  \:\~~\__\\  \:\/:/__\\  \:\~~\~~\/
-%  \  \::/~~~~ \  \::/      \  \:\/:/  \  \:\      \  \::/     \  \:\  ~~~
-%   \  \:\      \  \:\       \  \::/    \  \:\      \  \:\      \  \:\
-%    \  \:\      \  \:\       \__\/      \  \:\      \  \:\      \  \:\
-%     \__\/       \__\/                   \__\/       \__\/       \__\/
-% 
-%       ___           ___                                   ___           ___                       ___     
-%      /  /\         /  /\          ___       ___          /__/\         /  /\          ___        /  /\    
-%     /  /:/_       /  /:/_        /  /\     /  /\        |  |::\       /  /::\        /  /\      /  /:/_   
-%    /  /:/ /\     /  /:/ /\      /  /:/    /  /:/        |  |:|:\     /  /:/\:\      /  /:/     /  /:/ /\  
-%   /  /:/ /:/_   /  /:/ /::\    /  /:/    /__/::\      __|__|:|\:\   /  /:/~/::\    /  /:/     /  /:/ /:/_ 
-%  /__/:/ /:/ /\ /__/:/ /:/\:\  /  /::\    \__\/\:\__  /__/::::| \:\ /__/:/ /:/\:\  /  /::\    /__/:/ /:/ /\
-%  \  \:\/:/ /:/ \  \:\/:/~/:/ /__/:/\:\      \  \:\/\ \  \:\~~\__\/ \  \:\/:/__\/ /__/:/\:\   \  \:\/:/ /:/
-%   \  \::/ /:/   \  \::/ /:/  \__\/  \:\      \__\::/  \  \:\        \  \::/      \__\/  \:\   \  \::/ /:/ 
-%    \  \:\/:/     \__\/ /:/        \  \:\     /__/:/    \  \:\        \  \:\           \  \:\   \  \:\/:/  
-%     \  \::/        /__/:/          \__\/     \__\/      \  \:\        \  \:\           \__\/    \  \::/   
-%      \__\/         \__\/                                 \__\/         \__\/                     \__\/    
-% 
-
-
