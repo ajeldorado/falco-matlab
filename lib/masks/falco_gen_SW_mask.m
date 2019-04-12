@@ -73,7 +73,6 @@ if(isfield(inputs,'Nxi'))
     Nxi = inputs.Nxi;
 end
 
-
 %--Focal Plane Coordinates
 dxi = 1/pixresFP;
 deta = dxi;
@@ -86,7 +85,6 @@ else %--pixel centering
 end
 [XIS,ETAS] = meshgrid(xis,etas);
 [THETA,RHO] = cart2pol(XIS,ETAS);
-
 
 %--Generate the Outer Mask
 switch lower(DHshape)

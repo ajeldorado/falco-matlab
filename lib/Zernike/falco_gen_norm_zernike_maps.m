@@ -25,19 +25,18 @@ function ZmapCube = falco_gen_norm_zernike_maps(Nbeam,centering,indsZnoll)
 
     %--Set array size as minimum width to contain the beam.
     if(strcmpi(centering,'interpixel') )
-        Narray = ceil_even(Nbeam);    %--Minimal zero-padding needed if beam is centered between pixels
+        Narray = ceil_even(Nbeam); %--Minimal zero-padding needed if beam is centered between pixels
     else
         Narray = ceil_even(Nbeam+1); %--Number of points across output array. Sometimes requires two more pixels when pixel centered.
     end
 
     %--PROPER setup values
-    Dbeam = 1;                 %--Diameter of aperture, normalized to itself
-    wl   = 1e-6;              % wavelength (m); Dummy value--no propagation here, so not used.
+    Dbeam = 1; %--Diameter of aperture, normalized to itself
+    wl   = 1e-6; % wavelength (m); Dummy value--no propagation here, so not used.
     beamdiamfrac = Narray/Nbeam;
 
     %--Initialize wavefront structure in PROPER
     bm = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',beamdiamfrac);
-    % figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
     %--Use modified PROPER function to generate the Zernike datacube
     Nzern = length(indsZnoll);
@@ -47,15 +46,5 @@ function ZmapCube = falco_gen_norm_zernike_maps(Nbeam,centering,indsZnoll)
     for iz = 1:Nzern
         [~, ZmapCube(:,:,iz)] = propcustom_zernikes( bm, indsZnoll(iz), 1 );
     end
-
-    % %--DEBUGGING: Verify centering is correct.
-    % Zmap1 = ZmapCube(:,:,1);
-    % if(strcmpi(centering,'pixel'))
-    %     Zmap1 = Zmap1(2:end,2:end);
-    % end
-    % figure(1); imagesc(Zmap1); axis xy equal tight; colorbar;
-    % figure(11); imagesc(Zmap1-rot90(Zmap1,2)); axis xy equal tight; colorbar;
-
-
 
 end %--END OF FUNCTION

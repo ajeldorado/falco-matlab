@@ -1,11 +1,10 @@
 function phz = falco_zwfs_reconstructor(IC0,IC, mask, b, type,varargin)
-%phz = falco_zwfs_reconstructor(IC0,IC, mask, b, type, (modelparams))
-%   IC0 - image without Zernike mask
-%   IC - iamge with Zernike mask aligned 
-%   mask - pupil support mask 
-%   b - Reference wave
-%   type - string - 'wallace' or 'ndiaye' reconstructors 
-%   Need to pass mp when using ndiaye
+% IC0 - image without Zernike mask
+% IC - iamge with Zernike mask aligned 
+% mask - pupil support mask 
+% b - Reference wave
+% type - string - 'wallace' or 'ndiaye' reconstructors 
+% Need to pass mp when using ndiaye
 
     A02 = mean(IC0(mask));
     P = sqrt(IC0/A02);
@@ -29,4 +28,3 @@ function phz = falco_zwfs_reconstructor(IC0,IC, mask, b, type,varargin)
 	phz = phz - mean(phz(mask));
 
 end
-

@@ -44,7 +44,6 @@ function Gzdl = model_Jacobian_Roddier(mp, im, whichDM)
 
 modvar.sbpIndex = mp.jac.sbp_inds(im);
 modvar.zernIndex = mp.jac.zern_inds(im);
-indZernVec = find(mp.jac.zerns==modvar.zernIndex);
 
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 mirrorFac = 2; % Phase change is twice the DM surface height.f
@@ -61,11 +60,8 @@ if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
-    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
+    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
 end
-% figure(71); imagesc(real(Ein)); axis xy equal tight; colorbar; 
-% figure(72); imagesc(imag(Ein)); axis xy equal tight; colorbar;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
@@ -79,7 +75,6 @@ if(mp.flagApod)
 else
     apodRot180 = ones(NdmPad); 
 end
-
 
 if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
 if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
@@ -110,7 +105,6 @@ if(whichDM==1)
     Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
-%     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
     NboxPad1AS = mp.dm1.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
@@ -174,7 +168,6 @@ if(whichDM==1)
         end
         Gindex = Gindex + 1;
     end
-
 end    
 
 %--DM2---------------------------------------------------------
@@ -244,16 +237,10 @@ if(whichDM==2)
         end
         Gindex = Gindex + 1;
     end
-
 end
-
-
 
 if(mp.useGPU)
     Gzdl = gather(Gzdl);
 end
 
 end %--END OF FUNCTION
-
-
-    

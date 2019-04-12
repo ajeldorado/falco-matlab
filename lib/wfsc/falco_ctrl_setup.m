@@ -17,9 +17,7 @@
 % REVISION HISTORY
 % - Created on 2019-02-13 by A.J. Riggs.
 
-
 function cvar = falco_ctrl_setup(mp,cvar)
-
 
 %--Save starting point for each delta command to be added to.
 if(any(mp.dm_ind==1)); cvar.DM1Vnom = mp.dm1.V; end
@@ -67,6 +65,5 @@ if(any(mp.dm_ind==6)); cvar.DM6Vnom = mp.dm6.V; end
 if(any(mp.dm_ind==7)); cvar.DM7Vnom = mp.dm7.V; end
 if(any(mp.dm_ind==8)); cvar.DM8Vnom = mp.dm8.V(:); end
 if(any(mp.dm_ind==9)); cvar.DM9Vnom = mp.dm9.V; end
-
 
 end %--END OF FUNCTION

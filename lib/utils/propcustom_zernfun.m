@@ -88,7 +88,6 @@ function z = propcustom_zernfun(n,m,r,theta,nflag)
 
 %   Paul Fricker 11/13/2006
 
-
 % Check and prepare the inputs:
 % -----------------------------
 if ( ~any(size(n)==1) ) || ( ~any(size(m)==1) )
@@ -199,5 +198,4 @@ end
 if any(idx_neg)
     z(:,idx_neg) = y(:,idx_neg).*cos(theta*m(idx_neg)');
 end
-
 % EOF zernfun

@@ -22,7 +22,6 @@
 % -mp = structure of model parameters
 % -modvar = structure of model variables
 %
-%
 % OUTPUTS:
 % -Eout
 %  -> Note: When computing the control Jacobian, Eout is a structure
@@ -35,33 +34,26 @@
 % -whichSource
 % -flagGenMat
 
-
-function Eout = model_compact(mp, modvar,varargin)
-
+function [Eout, Efiber] = model_compact(mp, modvar,varargin)
 
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
 % Set default values of input parameters
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
-flagEval = false;             % flag to use a different (usually higher) resolution at final focal plane for evaluation
+flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
-flagAllPlanes = false; %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
 %--Enable different arguments values by using varargin
-icav = 0;                     % index in cell array varargin
+icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
         case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
             normFac = 0; 
             flagNewNorm = true;
-            %fprintf('model_compact: Not normalized.\n');
         case {'eval'} % Set to 0 when finding the normalization factor
-            flagEval = true; 
-        case{'all'} %--Flag to return all intermediate planes. In this case, Eout is a structure of 2-D arrays instead of a 2-D array.
-            flagAllPlanes = true;
+            flagEval = true;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
-          
     end
 end
 
@@ -110,8 +102,6 @@ if(normFac==0)
     Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex); 
 end
 
-
-
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
     modvar.zernIndex = 1;
@@ -119,14 +109,11 @@ end
 %--Only used for Zernike sensitivity control, which requires the perfect 
 % E-field of the differential Zernike term.
 if(modvar.zernIndex~=1)
-    indZernVec = find(mp.jac.zerns==modvar.zernIndex); %--Index in vector of RMS values for Zernikes.
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
-    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
+    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
 end
-
 
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
 switch lower(mp.layout)
@@ -145,19 +132,15 @@ end
 %--Select which optical layout's compact model to use and get the output E-field
 switch lower(mp.layout)
     case{'fourier'}
-        Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+        [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
         
     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
         switch upper(mp.coro)
             case{'SPLC'}
-                Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+                [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
             case{'HLC'}
-                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
+                [Eout, ~] = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
         end
 end
     
-
 end %--END OF FUNCTION
-
-
-    

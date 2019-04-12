@@ -36,4 +36,3 @@ function [ EPsupport, apRad ] = falco_gen_pupil_SCDA( apType, spiderType, spider
     end
     
 end
-

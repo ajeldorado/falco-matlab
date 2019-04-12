@@ -18,8 +18,9 @@
 %           by a photometry measurement at a single offset)
 %
 % REVISION HISTORY
-% - Created on 2019-03-22 by G. Ruane 
-
+% - Created on 2019-03-22 by G. Ruane
+% - Silent failure if no testbed case sepcified removed by C. Coker
+% (2019-04-11)
 
 function normI = falco_get_testbed_sbp_image(mp,si)
     
@@ -32,8 +33,7 @@ function normI = falco_get_testbed_sbp_image(mp,si)
         %case 'WHATEVER'
             %normI = falco_get_whatever_sbp_image(mp,si); 
         otherwise
-            normI = falco_get_sim_sbp_image(mp,si);   
+            error('Case not recognized.  Check falco_get_testbed_sbp_image.m to make sure this case is specified.');
     end
     
-end 
-
+end

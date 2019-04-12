@@ -15,9 +15,9 @@
 % - Isum: sub-bandpass image
 %
 % REVISION HISTORY
-% - Created on 2019-02-06 by A.J. Riggs.
+% - Created on 2019-04-11 by Carl Coker.
 
-function Isum = falco_get_sim_sbp_image(mp,si)
+function Isum = falco_get_sim_sbp_image_fiber(mp,si)
 
 %--Compute the DM surfaces outside the full model to save lots of time
 if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
@@ -31,7 +31,7 @@ modvar.sbpIndex = si;
 modvar.whichSource = 'star';
 for wi=1:mp.Nwpsbp
     modvar.wpsbpIndex = wi;
-    Etemp = model_full(mp, modvar);
+    [~, Etemp] = model_full(mp, modvar);
     Isum = Isum + (abs(Etemp).^2)*mp.full.lambda_weights(wi); %--Do not apply sbp_weight unless full bandpass image is being created.
 end 
 
@@ -40,7 +40,7 @@ if(mp.planetFlag)
     modvar.whichSource = 'exoplanet';
     for wi=1:mp.Nwpsbp
         modvar.wpsbpIndex = wi;
-        Eplanet = model_full(mp,modvar);
+        [~, Eplanet] = model_full(mp,modvar);
         Isum = Isum + abs(Eplanet).^2*mp.full.lambda_weights(wi); %--Do not apply sbp_weight unless full bandpass image is being created.
     end
 end

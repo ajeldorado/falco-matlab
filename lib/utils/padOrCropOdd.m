@@ -60,5 +60,4 @@ function Aout = padOrCropOdd(Ain,Ndes,varargin)
         end
     end
 
-
 end %--END OF FUNCTION

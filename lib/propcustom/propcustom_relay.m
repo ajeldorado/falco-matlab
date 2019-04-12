@@ -34,7 +34,7 @@ function Eout = propcustom_relay(Ein,Nrelay,varargin)
     centering = 'pixel';
 
     %--Look for Optional Keywords
-    icav = 0;                     % index in cell array varargin
+    icav = 0; % index in cell array varargin
     while icav < size(varargin, 2)
         icav = icav + 1;
         switch lower(varargin{icav})
@@ -48,13 +48,10 @@ function Eout = propcustom_relay(Ein,Nrelay,varargin)
         end
     end
 
-
     Eout = rot90(Ein,2*Nrelay);  %--Forward propagate two Fourier transforms by rotating 180 degrees. The (1/1j)^2 is from the coefficients of the two FTs.
 
     if(strcmpi(centering,'pixel') && mod(Nrelay,2)==1)
         Eout = circshift(Eout,[1 1]);   %--To undo center offset when beam is pixel centered and rotating by 180 degrees.
     end
 
-
 end %--END OF FUNCTION
-

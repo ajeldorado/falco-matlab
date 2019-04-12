@@ -12,6 +12,13 @@
 
 function [mp,thput] = falco_compute_thput(mp)
 
+if(mp.flagFiber)
+
+	[~, ImTemp] = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y);
+	thput = sum(sum(ImTemp))/mp.sumPupil;
+	fprintf('Fiber throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', 100*thput, mp.thput_eval_x, mp.thput_eval_y);
+
+else
 
     ImTemp = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y,'eval');
     if(mp.flagPlot); figure(324); imagesc(mp.Fend.eval.xisDL,mp.Fend.eval.etasDL,ImTemp); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
@@ -36,5 +43,5 @@ function [mp,thput] = falco_compute_thput(mp)
             fprintf('E.E. throughput within a %.2f lambda/D radius = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n',mp.thput_radius,100*thput,mp.thput_eval_x,mp.thput_eval_y);
     end
     
-    
+end
 end %--END OF FUNCTION

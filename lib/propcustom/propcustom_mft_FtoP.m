@@ -46,7 +46,6 @@ while icav < size(varargin, 2)
     end
 end
 
-
 %--Focal Plane Coordinates
 [Neta,Nxi] = size(Efoc);
 if(  (mod(Nxi,2)==1) ) %--Odd-sized array
@@ -65,7 +64,6 @@ else%--Even-sized array, pixel centered
     etas = ( -Neta/2:(Neta/2-1) )*deta;
 end
 
-
 %--Pupil Plane Coordinates
 if( mod(N,2)==1 )
     %dx = L2/(N-1);
@@ -79,7 +77,6 @@ else
 end
 ys = xs.';
 dy = dx;
-
 
 %--Matrix Fourier Transform (MFT)
 rect_mat_pre = (exp(-2*pi*1i*(ys*etas)/(lambda*fl)));
