@@ -32,7 +32,8 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
         modvar.wpsbpIndex = mp.wi_ref;
         modvar.whichSource = 'star';
 
-        E2D = model_compact(mp, modvar);
+        E2D = model_full(mp, modvar);
+%         E2D = model_compact(mp, modvar);
 
         Emat(:,im) = E2D(mp.Fend.corr.inds);   % Actual field in estimation area
 

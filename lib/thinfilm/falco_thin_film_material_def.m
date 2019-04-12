@@ -103,11 +103,14 @@ t_Ti_vec = zeros(Nmetal,1);
 for ii = 1:Nmetal
     if(t_Ni_vec(ii) > t_Ti_base) %--For thicker layers
         t_Ni_vec(ii) = t_Ni_vec(ii) - t_Ti_base;
+        t_Ti_vec(ii) = t_Ti_base;
     else %--For very thin layers.
         t_Ti_vec(ii) = t_Ni_vec(ii);
         t_Ni_vec(ii) = 0;
     end
 end
+
+
 % % GUIDE:
 % if(t_Ni > t_Ti) %--For thicker layers
 %     t_Ni = t_Ni - t_Ti;
@@ -192,7 +195,7 @@ for jj = 1:Ndiel
         dti = t_Ti_vec(ii);
         
         nvec = [1 1 npmgi nnickel-1i*knickel nti-1i*kti n_substrate];
-        dvec = [d0-dpm-dni-dti dpm dni dti];
+        dvec = [d0-dpm-dni-dti, dpm, dni, dti];
         
         %--Choose polarization
         if(pol==2) %--Mean of the two

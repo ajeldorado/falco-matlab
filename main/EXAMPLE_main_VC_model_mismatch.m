@@ -4,8 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an HLC design run.
-%  1) Load the default model parameters for an HLC.
+%--Script to perform a DMVC simple design run.
+%  1) Load the default model parameters for a vortex.
 %  2) Specify the values to overwrite.
 %  3) Run a single trial of WFC using FALCO.
 %
@@ -15,6 +15,7 @@
 % ---------------
 
 clear all;
+
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -36,7 +37,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_HLC_design
+EXAMPLE_defaults_VC_simple
 
 
 %% Step 3: Overwrite default values as desired
@@ -49,18 +50,6 @@ mp.flagPlot = true;
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
 
-%--Force DM9 to be mirror symmetric about y-axis
-NactTotal = ceil_even(mp.dm9.actres*mp.F3.Rin*2)^2; %-NOTE: This will be different if influence function for DM9 is not '3x3'. Needs to be the same value as mp.dm9.NactTotal, which is calculated later.
-Nact = sqrt(NactTotal);
-LinIndMat = zeros(Nact); %--Matrix of the linear indices
-LinIndMat(:) = 1:NactTotal;
-FlippedLinIndMat = fliplr(LinIndMat);
-mp.dm9.tied = zeros(NactTotal/2,2);
-for jj=1:NactTotal/2
-    mp.dm9.tied(jj,1) = LinIndMat(jj);
-    mp.dm9.tied(jj,2) = FlippedLinIndMat(jj);
-end
-
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
 % temp = load(fn_prev,'out');
@@ -68,10 +57,17 @@ end
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% %--DEBUGGING ONLY: Monochromatic light
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+%--DEBUGGING
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% mp.estimator = 'perfect';
+
+%--Sources of model mismatch to include in full model
+mp.full.dm1.V0 = 2*randn(34);
+mp.full.dm2.V0 = 2*randn(34);
+mp.full.dm1.xc = 16.5 - 1; %--16.5 is centered and expected
+mp.full.dm2.yc = 16.5 + 1; %--16.5 is centered and expected
 
 
 %% Step 4: Generate the label associated with this trial

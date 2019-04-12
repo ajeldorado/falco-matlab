@@ -122,6 +122,8 @@ else %--For cases with estimation (est/ctrl wavelengths at subbandpass centers).
     mp.full.sbp_facs = linspace( 1-(mp.fracBWsbp/2)*(1-1/mp.Nwpsbp),...
                            1+(mp.fracBWsbp/2)*(1-1/mp.Nwpsbp),  mp.Nwpsbp);
 end
+if(mp.Nwpsbp==1);  mp.full.sbp_facs = 1;  end %--Set factor to 1 if only 1 value.
+
 mp.full.lambda_weights = mp.full.lambda_weights/sum(mp.full.lambda_weights); %--Normalize sum of the weights
 
 %--Make vector of all wavelengths and weights used in the full model
@@ -179,31 +181,35 @@ mp.dm1.Nele=0; mp.dm2.Nele=0;  mp.dm3.Nele=0;  mp.dm4.Nele=0;  mp.dm5.Nele=0;  m
 %mp.dm1.Nele=[]; mp.dm2.Nele=[];  mp.dm3.Nele=[];  mp.dm4.Nele=[];  mp.dm5.Nele=[];  mp.dm6.Nele=[];  mp.dm7.Nele=[];  mp.dm8.Nele=[];  mp.dm9.Nele=[]; %--Initialize for Jacobian calculations later. 
 
 %% HLC and EHLC FPM: Initialization and Generation
-switch upper(mp.coro)
-    case{'HLC'}
-        switch mp.dm9.inf0name
-            case '3foldZern'
-                mp = falco_setup_FPM_HLC_3foldZern(mp);
-            otherwise
-                mp = falco_setup_FPM_HLC(mp);
-        end
-        mp = falco_config_gen_FPM_HLC(mp);
-    case{'FOHLC'}
-        mp = falco_setup_FPM_FOHLC(mp);
-        mp = falco_config_gen_FPM_FOHLC(mp);
-        mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
-        mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
-    case{'EHLC'}
-        mp = falco_setup_FPM_EHLC(mp);
-        mp = falco_config_gen_FPM_EHLC(mp);
-    case 'SPHLC'
-        mp = falco_config_gen_FPM_SPHLC(mp);
-end
 
-%%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.
-switch upper(mp.coro)
-    case{'EHLC','HLC','SPHLC'}
-        [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
+switch lower(mp.layout)
+    case 'fourier'
+        switch upper(mp.coro)
+            case{'HLC'}
+                switch mp.dm9.inf0name
+                    case '3foldZern'
+                        mp = falco_setup_FPM_HLC_3foldZern(mp);
+                    otherwise
+                        mp = falco_setup_FPM_HLC(mp);
+                end
+                mp = falco_config_gen_FPM_HLC(mp);
+            case{'FOHLC'}
+                mp = falco_setup_FPM_FOHLC(mp);
+                mp = falco_config_gen_FPM_FOHLC(mp);
+                mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
+                mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
+            case{'EHLC'}
+                mp = falco_setup_FPM_EHLC(mp);
+                mp = falco_config_gen_FPM_EHLC(mp);
+            case 'SPHLC'
+                mp = falco_config_gen_FPM_SPHLC(mp);
+        end
+
+        %%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.
+        switch upper(mp.coro)
+            case{'EHLC','HLC','SPHLC'}
+                [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
+        end
 end
 
 %% Generate FPM
@@ -239,9 +245,13 @@ switch upper(mp.coro)
     case 'SPHLC' %--Moved to separate function
     otherwise %case{'LC','DMLC','APLC','SPLC','FLC','SPC'}
         
-        %--FPM (at F3) Resolution [meters]
-        mp.F3.full.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.full.res;
-        mp.F3.full.deta = mp.F3.full.dxi;
+        switch mp.layout
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+            otherwise
+                %--FPM (at F3) Resolution [meters]
+                mp.F3.full.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.full.res;
+                mp.F3.full.deta = mp.F3.full.dxi;
+        end
         mp.F3.compact.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.compact.res;
         mp.F3.compact.deta = mp.F3.compact.dxi;
         
@@ -254,17 +264,24 @@ switch upper(mp.coro)
             mp.F3.compact.etas = (-mp.F3.compact.Neta/2:(mp.F3.compact.Neta/2-1)).'*mp.F3.compact.deta;
         end
 
-        %--Coordinates (dimensionless [DL]) for the FPMs in the full and compact models
-        if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi,2)==1  )
-            mp.F3.full.xisDL  = (-(mp.F3.full.Nxi -1)/2:(mp.F3.full.Nxi -1)/2)/mp.F3.full.res;
-            mp.F3.full.etasDL = (-(mp.F3.full.Neta-1)/2:(mp.F3.full.Neta-1)/2)/mp.F3.full.res;
-            
+        switch mp.layout
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+            otherwise
+                %--Coordinates (dimensionless [DL]) for the FPMs in the full model
+                if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi,2)==1  )
+                    mp.F3.full.xisDL  = (-(mp.F3.full.Nxi -1)/2:(mp.F3.full.Nxi -1)/2)/mp.F3.full.res;
+                    mp.F3.full.etasDL = (-(mp.F3.full.Neta-1)/2:(mp.F3.full.Neta-1)/2)/mp.F3.full.res;
+                else
+                    mp.F3.full.xisDL  = (-mp.F3.full.Nxi/2:(mp.F3.full.Nxi/2-1))/mp.F3.full.res;
+                    mp.F3.full.etasDL = (-mp.F3.full.Neta/2:(mp.F3.full.Neta/2-1))/mp.F3.full.res;
+                end
+        end
+        
+        %--Coordinates (dimensionless [DL]) for the FPMs in the compact model
+        if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.compact.Nxi,2)==1  )
             mp.F3.compact.xisDL  = (-(mp.F3.compact.Nxi -1)/2:(mp.F3.compact.Nxi -1)/2)/mp.F3.compact.res;
             mp.F3.compact.etasDL = (-(mp.F3.compact.Neta-1)/2:(mp.F3.compact.Neta-1)/2)/mp.F3.compact.res;
         else
-            mp.F3.full.xisDL  = (-mp.F3.full.Nxi/2:(mp.F3.full.Nxi/2-1))/mp.F3.full.res;
-            mp.F3.full.etasDL = (-mp.F3.full.Neta/2:(mp.F3.full.Neta/2-1))/mp.F3.full.res;
-            
             mp.F3.compact.xisDL  = (-mp.F3.compact.Nxi/2:(mp.F3.compact.Nxi/2-1))/mp.F3.compact.res;
             mp.F3.compact.etasDL = (-mp.F3.compact.Neta/2:(mp.F3.compact.Neta/2-1))/mp.F3.compact.res;
         end
@@ -293,7 +310,7 @@ end
 %--Compact Model: Generate Software Mask for Correction 
 [mp.Fend.corr.mask, mp.Fend.xisDL, mp.Fend.etasDL] = falco_gen_SW_mask(maskCorr); 
 mp.Fend.corr.settings = maskCorr; %--Store values for future reference
-
+% figure(601); imagesc(mp.Fend.etasDL,mp.Fend.xisDL,mp.Fend.corr.mask); axis xy equal tight; colorbar; drawnow;
 %--Size of the output image 
 %--Need the sizes to be the same for the correction and scoring masks
 mp.Fend.Nxi  = size(mp.Fend.corr.mask,2);
@@ -524,15 +541,26 @@ mp.full.NdmPad = NdmPad;
 %% % % Initial Electric Fields for Star and Exoplanet
 % Starlight. Can add some propagation here to create an aberrate wavefront
 %   starting from a primary mirror.
+% switch mp.layout
+%     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+%         
+%     otherwise
+%         if(isfield(mp.P1.full,'E')==false)
+%             mp.P1.full.E  = ones(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
+%         end
+% 
+%         mp.Eplanet = mp.P1.full.E; %--Initialize the input E-field for the planet at the entrance pupil. Will apply the phase ramp later
+% end
 if(isfield(mp.P1.full,'E')==false)
     mp.P1.full.E  = ones(mp.P1.full.Narr,mp.P1.full.Narr,mp.Nwpsbp,mp.Nsbp); % Input E-field at entrance pupil
 end
 
 mp.Eplanet = mp.P1.full.E; %--Initialize the input E-field for the planet at the entrance pupil. Will apply the phase ramp later
-
+        
 if(isfield(mp.P1.compact,'E')==false)
     mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
 end
+mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2)); %--Throughput is computed with the compact model
 
 %% Off-axis, incoherent point source (exoplanet)
 mp.c_planet = 1;%1e-14;%4e-10;%3e-10;%1e-8; % contrast of exoplanet

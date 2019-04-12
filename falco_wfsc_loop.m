@@ -71,13 +71,11 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of
 % ImHist = single( zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.Nitr+1) ); %--Full PSF after each correction step
 
 
-%% Take initial broadband images
-%EfieldCorrTrue = zeros(mp.Fend.corr.Npix,mp.jac.Nmode,mp.Nitr+1); % (Simulation only) Vectorized true starlight E-field at each pixel and wavelength
+%% Plot the pupil masks
 
-if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
-
-if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis image; colorbar; title('Lyot stop');drawnow; end
-if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end
+% if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
+% if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis image; colorbar; title('Lyot stop');drawnow; end
+% if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end
 
 %% Take initial broadband image 
 
@@ -128,8 +126,11 @@ for Itr=1:mp.Nitr
             mp.DM8surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
             mp.DM9surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
         case{'HLC','APHLC','SPHLC'}
-            mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
-            mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
+            switch lower(mp.layout)
+                case 'fourier'
+                    mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
+                    mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
+            end
         case{'FOHLC'}
             mp.DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'compact'); %--FPM amplitude transmission [amplitude]
             mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--FPM phase shift in transmission [m]    
@@ -138,7 +139,7 @@ for Itr=1:mp.Nitr
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
     [mp,thput] = falco_compute_thput(mp);
-    mp.thput_vec(Itr) = thput;
+    mp.thput_vec(Itr) = thput; %--record keeping
 
     %--Compute the current contrast level
     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));

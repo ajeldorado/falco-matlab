@@ -20,7 +20,6 @@
 %
 % INPUTS:
 % -mp = structure of model parameters
-% -DM = structure of DM settings
 % -modvar = structure of model variables
 %
 %
@@ -38,6 +37,7 @@
 
 
 function Eout = model_compact(mp, modvar,varargin)
+
 
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
@@ -100,6 +100,17 @@ else %--Backward compatible with code without tip/tilt offsets in the Jacobian
     Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
 end
 
+%--Shift the source off-axis to compute the intensity normalization value.
+%  This replaces the previous way of taking the FPM out in the optical model.
+if(normFac==0)
+    source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
+    source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
+    TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.compact.XsDL + source_y_offset*mp.P2.compact.YsDL));
+    Ett = exp(1i*TTphase*mp.lambda0/lambda);
+    Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex); 
+end
+
+
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
@@ -118,11 +129,17 @@ end
 
 
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
-switch upper(mp.coro) 
-    case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
-        mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
-    case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-        mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+switch lower(mp.layout)
+    case{'fourier'}
+        switch upper(mp.coro) 
+            case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
+                mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+            case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
+                mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+        end
+        
+    case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
+            mp.FPM.mask = mp.compact.FPMcube(:,:,modvar.sbpIndex);
 end
 
 %--Select which optical layout's compact model to use and get the output E-field
@@ -130,48 +147,17 @@ switch lower(mp.layout)
     case{'fourier'}
         Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
         
+    case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
+        switch upper(mp.coro)
+            case{'SPLC'}
+                Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+            case{'HLC'}
+                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
+        end
 end
-
-
-% %--Select the type of coronagraph
-% switch upper(mp.coro) 
-%     
-%     case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
-%         %--Complex transmission map of the FPM.
-%         FPM = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
-%         Eout = model_compact_EHLC(mp, lambda, normFac, Ein, FPM, flagEval);
-%                 
-%     case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-%         %--Complex transmission map of the FPM.
-%         FPM = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact');
-%         Eout = model_compact_HLC(mp, lambda, normFac, Ein, FPM, flagEval);
-%     
-%     case{'FOHLC'} %--DMs, optional apodizer, FPM with amplitude and phase modulation, and LS. Uses Babinet's principle about FPM.
-%         Eout = model_compact_FOHLC(mp, lambda, normFac, Ein, flagEval,flagAllPlanes);    
-%         
-%     case{'SPHLC','FHLC'} %--DMs, optional apodizer, complex/hybrid FPM with outer diaphragm, LS. Uses 2-part direct MFTs to/from FPM
-%         %Eout = model_compact_SPHLC(mp,   lambda, Ein, normFac);
-%         
-%         
-%     
-%     case{'LC','DMLC','APLC'} %--DMs, optional apodizer, FPM with/without phase contribution, and LS.
-%         Eout = model_compact_LC(mp, lambda, Ein, normFac, flagEval);  
-%        
-%     case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-%         Eout = model_compact_SPLC(mp, lambda, Ein, normFac, flagEval);
-%             
-%     case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
-%         Eout = model_compact_VC(mp,lambda, Ein, normFac, flagEval);      
-%         
-% %     case{'SPC','APP','APC'} %--Pupil-plane mask only
-% %         Eout = model_compact_APC(mp,   modvar);             
-% 
-%     otherwise
-%         disp('ERROR: CASE NOT RECOGNIZED IN model_compact.m');        
-% end
     
 
-end % End of function
+end %--END OF FUNCTION
 
 
     

@@ -64,8 +64,13 @@ switch lower(mp.coro)
                 end
         end
         
-        mp.P3.full.Narr= length(mp.P3.full.mask);
-        mp.P3.full.dx = mp.P2.full.dx;
+        switch mp.layout
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+            otherwise
+                mp.P3.full.Narr= length(mp.P3.full.mask);
+                mp.P3.full.dx = mp.P2.full.dx;
+        end
+        
         mp.P3.compact.dx = mp.P2.compact.dx;
         mp.P3.compact.Narr = length(mp.P3.compact.mask);
 

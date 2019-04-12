@@ -23,8 +23,12 @@ mp.planetFlag = false;
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
 mp.thput_metric = 'HMI'; 
 mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY for 'EE' method.
-mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate throughput
+mp.thput_eval_x = 7; % x location [lambda_c/D] in dark hole at which to evaluate throughput
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
+
+%--Where to shift the source to compute the intensity normalization value.
+mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
 
@@ -213,49 +217,54 @@ mp.P3.D = 46.2987e-3;
 mp.P4.D = 46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 386;
-mp.P2.compact.Nbeam = 386;
-mp.P3.compact.Nbeam = 386;
+mp.P1.compact.Nbeam = 1000;%386;
+mp.P2.compact.Nbeam = 1000;%386;
+mp.P3.compact.Nbeam = 1000;%386;
 mp.P4.compact.Nbeam = 60;
 
 %--Shaped Pupil Mask: Load and downsample.
 mp.SPname = 'SPC-20190130';
 SP0 = fitsread('SPM_SPC-20190130.fits');
-SP0 = SP0(2:end,2:end);
-% figure(1); imagesc(SP0); axis xy equal tight; colormap jet; colorbar;
-% figure(11); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
-dx0 = 1/1000;
-dx1 = 1/mp.P3.compact.Nbeam;
-N0 = size(SP0,1);
-switch lower(mp.centering)
-    case{'pixel'}
-        N1 = ceil_odd(N0*dx0/dx1);
-    case{'interpixel'}
-        N1 = ceil_even(N0*dx0/dx1);
-end
-x0 = (-(N0-1)/2:(N0-1)/2)*dx0;
-[X0,Y0] = meshgrid(x0);
-R0 = sqrt(X0.^2+Y0.^2);
-Window = 0*R0;
-Window(R0<=dx1) = 1; Window = Window/sum(sum(Window));
-% figure(10); imagesc(Window); axis xy equal tight; colormap jet; colorbar;
-SP0 = ifftshift(  ifft2( fft2(fftshift(Window)).*fft2(fftshift(SP0)) )); %--To get good grayscale edges, convolve with the correct window before downsampling.
-SP0 = circshift(SP0,[1 1]); %--Undo a centering shift
-x1 = (-(N1-1)/2:(N1-1)/2)*dx1;
-[X1,Y1] = meshgrid(x1);
-SP1 = interp2(X0,Y0,SP0,X1,Y1,'cubic',0); %--Downsample by interpolation
 
-switch lower(mp.centering)
-    case{'pixel'}
-        mp.P3.compact.mask = zeros(N1+1,N1+1);
-        mp.P3.compact.mask(2:end,2:end) = SP1;
-    otherwise
-        mp.P3.compact.mask = SP1;
+if(mp.P1.compact.Nbeam==1000)
+    mp.P3.compact.mask = SP0;
+else
+    SP0 = SP0(2:end,2:end);
+    % figure(1); imagesc(SP0); axis xy equal tight; colormap jet; colorbar;
+    % figure(11); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
+    dx0 = 1/1000;
+    dx1 = 1/mp.P3.compact.Nbeam;
+    N0 = size(SP0,1);
+    switch lower(mp.centering)
+        case{'pixel'}
+            N1 = ceil_odd(N0*dx0/dx1);
+        case{'interpixel'}
+            N1 = ceil_even(N0*dx0/dx1);
+    end
+    x0 = (-(N0-1)/2:(N0-1)/2)*dx0;
+    [X0,Y0] = meshgrid(x0);
+    R0 = sqrt(X0.^2+Y0.^2);
+    Window = 0*R0;
+    Window(R0<=dx1) = 1; Window = Window/sum(sum(Window));
+    % figure(10); imagesc(Window); axis xy equal tight; colormap jet; colorbar;
+    SP0 = ifftshift(  ifft2( fft2(fftshift(Window)).*fft2(fftshift(SP0)) )); %--To get good grayscale edges, convolve with the correct window before downsampling.
+    SP0 = circshift(SP0,[1 1]); %--Undo a centering shift
+    x1 = (-(N1-1)/2:(N1-1)/2)*dx1;
+    [X1,Y1] = meshgrid(x1);
+    SP1 = interp2(X0,Y0,SP0,X1,Y1,'cubic',0); %--Downsample by interpolation
+
+    switch lower(mp.centering)
+        case{'pixel'}
+            mp.P3.compact.mask = zeros(N1+1,N1+1);
+            mp.P3.compact.mask(2:end,2:end) = SP1;
+        otherwise
+            mp.P3.compact.mask = SP1;
+    end
+    figure(2); imagesc(SP0); axis xy equal tight; colormap jet; colorbar;
+    figure(3); imagesc(SP1); axis xy equal tight; colormap jet; colorbar;
+    % figure(12); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
+    % figure(13); imagesc(SP1-fliplr(SP1)); axis xy equal tight; colormap jet; colorbar;
 end
-figure(2); imagesc(SP0); axis xy equal tight; colormap jet; colorbar;
-figure(3); imagesc(SP1); axis xy equal tight; colormap jet; colorbar;
-% figure(12); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
-% figure(13); imagesc(SP1-fliplr(SP1)); axis xy equal tight; colormap jet; colorbar;
 
 %%
 %--Number of re-imaging relays between pupil planesin compact model. Needed
