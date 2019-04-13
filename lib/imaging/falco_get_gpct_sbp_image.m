@@ -31,7 +31,7 @@ function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
     %disp('Sending current DM voltages to testbed') 
     
     [newV,message] = tb_DM_dmsmooth( bench, mp.dm1.V );
-    disp(message);
+
 
     map = newV'; % There's a transpose between Matlab and DM indexing
 
