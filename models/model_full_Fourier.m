@@ -66,7 +66,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if(any(mp.dm_ind==1));  DM1surf = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,NdmPad); end
-if(any(mp.dm_ind==2));  DM2surf = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,NdmPad); end
+if(any(mp.dm_ind==2));  DM2surf = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,NdmPad); else; DM2surf=zeros(NdmPad); end
 
 pupil = padOrCropEven(mp.P1.full.mask,NdmPad);
 Ein = padOrCropEven(Ein,NdmPad);
