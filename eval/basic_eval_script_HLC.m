@@ -13,12 +13,10 @@ mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER 
 mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
 mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
-
 %%--Add to the MATLAB Path
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 % addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
-
 
 %%
 fn_prefix = '/Users/ajriggs/Repos/falco-matlab/data/brief/';
@@ -37,19 +35,11 @@ load(fn_init_ws)
 load(fn_snippet_ws)
 figure(70); semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); set(gca,'Fontsize',20); grid on;
 
-% return
 %%
 mp.dm1.V = out.DM1V;
 mp.dm2.V = out.DM2V;
 mp.dm8.V = out.DM8V;
 mp.dm9.V = out.DM9V;
-
-% % whichItr = out.Nitr+1;%54;%6;%5;
-% % DM1V = out.dm1.Vall(:,:,whichItr);
-% % DM2V = out.dm2.Vall(:,:,whichItr);
-% % if(whichItr==out.Nitr+1);  extra = -1; end
-% % DM8V = out.dm8.Vall(:,whichItr+extra);
-% % DM9V = out.dm9.Vall(:,whichItr+extra); 
 
 %% Increase Spatial Resolution in FP4 if desired
 mp.Fend.res = 10;

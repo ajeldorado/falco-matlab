@@ -29,6 +29,9 @@
 % 'ypc' = change the y-center of the pupil plane to the value after this flag
 % 'xfc' = change the x-center of the focal plane to the value after this flag
 % 'yfc' = change the y-center of the focal plane to the value after this flag
+%
+% - Modified on 2019-04-05 by A.J. Riggs to remove the 1/1i term from each FT.
+
 %--------------------------------------------------------------------------
 
 function [Efoc] = propcustom_mft_PtoF(Epup, f,lambda,dx,dxi,Nxi,deta,Neta,varargin)
@@ -68,21 +71,16 @@ while icav < size(varargin, 2)
     end
 end
 
-
-
 %--Pupil Plane Coordinates
 [M,N] = size(Epup);
 if M~=N % Just use square inputs for the time being. Can change later
     disp('Error: input matrix is not square');
 end
 if( mod(M,2)==1 )
-    %dx = L1/(M-1);
     xs = ( -(M-1)/2:(M-1)/2 ).'*dx;
 elseif( (mod(M,2)==0) && strcmpi(centering,'interpixel') )
-    %dx = L1/M;
     xs = ( -(M-1)/2:(M-1)/2 ).'*dx;
 else
-    %dx = L1/M;
     xs = (-M/2:(M/2-1)).'*dx;
 end
 ys = xs.';
@@ -91,7 +89,6 @@ dy = dx;
 %--Translate the pupil plane coordinates
 xs = xs - xpc;
 ys = ys - ypc;
-
 
 %--Focal Plane Coordinates
 if(  (mod(Nxi,2)==1) ) %--Odd-sized array
@@ -114,10 +111,9 @@ end
 xis = xis - xfc;
 etas = etas - yfc;
 
-
 %--Matrix Fourier Transform (MFT)
 rect_mat_pre = (exp(-2*pi*1i*(etas*ys)/(lambda*f)));
 rect_mat_post  = (exp(-2*pi*1i*(xs*xis)/(lambda*f)));
-Efoc = sqrt(dx*dy)*sqrt(dxi*deta)/(1i*lambda*f)*(rect_mat_pre*Epup*rect_mat_post);
+Efoc = sqrt(dx*dy)*sqrt(dxi*deta)/(1*lambda*f)*(rect_mat_pre*Epup*rect_mat_post);
 
 end %--END OF FUNCTION

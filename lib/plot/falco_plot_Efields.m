@@ -6,7 +6,6 @@
 %
 function handles = falco_plot_Efields(handles,mp,Itr,contrast_bandavg,Im,E)
 
-
 IF3 = abs(E.F3).^2;
 IF3 = IF3/max(IF3(:));
 
@@ -16,7 +15,7 @@ IP4 = abs(E.P4).^2;
 
 if(mp.flagPlot)
     
-    fig_size = [100          60        1500         900];
+    fig_size = [100 60 1500 900];
 
     if(Itr>1)
         delete(handles.tb1)
@@ -25,28 +24,16 @@ if(mp.flagPlot)
         delete(handles.tb4)
         figure(handles.master);
     else
-%         handles.master = figure(123);
-%         set(gcf,'Color',[1 1 1],'Position',fig_size);
         handles.master = figure('Color',[1 1 1],'Position',fig_size);
         set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
     end
 
-    
-
-    
-    
-
-    
     h_text = subplot(2,3,1); % Save the handle of the subplot
     ax1=get(h_text,'position'); % Save the position as ax
     set(h_text,'position',ax1); % Manually setting this holds the position with colorbar 
     subplot(2,3,1); 
     axis off
-%     ht1 = text(0.05,0.9,sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',24);
-%     ht2 = text(0.05,0.5,sprintf('NI = %.2e',contrast_bandavg(Itr)),'Fontsize',24);
-%     ht3 = text(0.05,0.1,sprintf('T_{core} = %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',24);
     handles.tb1 = text(0.1,0.9,sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',24);
-%     handles.tb1 = text(0.05,0.9,sprintf('%s, %d%% BW',mp.coro,round(100*mp.fracBW)),'Fontsize',24);
     handles.tb2 = text(0.1,0.65,sprintf('%.1f%% BW @ %dnm',(100*mp.fracBW),round(mp.lambda0*1e9)),'Fontsize',24);
     handles.tb3 = text(0.1,0.35,sprintf('I_{norm} = %.2e',contrast_bandavg(Itr)),'Fontsize',24);
     handles.tb4 = text(0.1,0.05,sprintf('T_{core} =   %.2f%%',100*mp.thput_vec(Itr)),'Fontsize',24);
@@ -63,8 +50,6 @@ if(mp.flagPlot)
     set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
     ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',24,'Interpreter','LaTex');
     title('PSF at FPM','Fontsize',20,'Fontweight','Bold');
-%     title(sprintf('PSF, NI=%.2e',contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
-%       title(sprintf('PSF at Iter=%03d,   NI=%.2e',Itr,contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
 
     %--Middle right: F4
     h_psf = subplot(2,3,3); % Save the handle of the subplot
@@ -78,9 +63,6 @@ if(mp.flagPlot)
     set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
     ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',24,'Interpreter','LaTex');
     title('Stellar PSF after Coronagraph','Fontsize',20,'Fontweight','Bold');
-%     title(sprintf('PSF, NI=%.2e',contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
-%       title(sprintf('PSF at Iter=%03d,   NI=%.2e',Itr,contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
-
 
     %--Bottom Left: P1
     h_psf = subplot(2,3,4); % Save the handle of the subplot
@@ -111,12 +93,9 @@ if(mp.flagPlot)
     axis xy equal tight; colormap parula;   axis off; colorbar;
     set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
     title('Pupil at Lyot Plane','Fontsize',20,'Fontweight','Bold');
-
     
     drawnow;
    
 end
-
-
 
 end %--END OF FUNCTION

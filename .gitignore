@@ -10,7 +10,7 @@
 #--Temporary MATLAB files
 **/*.asv
 **/*.m~
-
+*.m~
 
 #--Don't sync any CVX files. Each user should download from cvxr.com
 lib/cvx/**
@@ -56,13 +56,13 @@ data/material/**
 !data/ws/placeholder.txt
 !data/ws_inprogress/placeholder.txt
 #--Don't sync large-size mask image formats
-masks/**/*.fits
+lib/masks/**/*.fits
 **/*.bmp
-masks/**/*.tiff
-masks/**/*.tif
-masks/**/*.jpg
-masks/**/*.jpeg
-
+lib/masks/**/*.tiff
+lib/masks/**/*.tif
+lib/masks/**/*.jpg
+lib/masks/**/*.jpeg
+lib/masks/**/*.mat
 
 #--Folder of content not to sync
 DoNotPush/**
@@ -79,6 +79,7 @@ debugging/**
 zOUTDATED/**
 zDEPRECATED/**
 zDEBUGGING/**
+zEXTRA/**
 
 #--Sync only example/template versions of main script files
 main/**
@@ -91,7 +92,7 @@ config/**
 
 #--Sync only example tesing files
 testing/**
-!config/EXAMPLE_*
+!testing/EXAMPLE_*
 
 #--Documentation intermediate files
 docs/**
@@ -145,3 +146,5 @@ docs/**
 
 
 
+HLCLSplotter.m
+PMGIplotter.m

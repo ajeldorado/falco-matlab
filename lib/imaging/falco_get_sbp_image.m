@@ -26,4 +26,3 @@ function ImNI = falco_get_sbp_image(mp,si)
     end
 
 end %--END OF FUNCTION
-

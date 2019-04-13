@@ -8,9 +8,7 @@
 %   Centering option by A.J. Riggs
 % -------------------------------------------------------------------------
 
-
 function [bmo, amap] = propcustom_zernikes(bmi, zn, zv, varargin)
-%        [bmo, amap] = prop_zernikes(bmi, zn, zv, varargin)
 % Add Zernike-polynomial wavefront errors to current wavefront.
 % Noll ordering is used and a circular system is assumed.
 % An arbitrary number of Zernikes normalized for an unobscured circular
@@ -120,7 +118,7 @@ function [bmo, amap] = propcustom_zernikes(bmi, zn, zv, varargin)
     end
   end
 
-  maxz = max(zn);               % maximum Zernike index
+  maxz = max(zn); % maximum Zernike index
 
   if (bc ~= 0.0) & (maxz > 22)
     error('PROP_ZERNIKES:', ...
@@ -128,13 +126,8 @@ function [bmo, amap] = propcustom_zernikes(bmi, zn, zv, varargin)
   end
 
   [ny, nx] = size(bmi.wf);
-  amap = zeros(ny, nx);         % aberration map added to wavefront (m)
+  amap = zeros(ny, nx); % aberration map added to wavefront (m)
   
-  
-%   cx   = fix(nx / 2) + 1;       % center pixel x (pixels)
-%   cy   = fix(ny / 2) + 1;       % center pixel y (pixels)
-%   [px, py] = meshgrid((1 : nx) - cx, (1 : ny) - cy); % Create coordinate arrays (pixels)
-
 % Create coordinate arrays, pixel-centered (units of pixels)
 xs = -nx/2:(nx/2-1);
 ys = -ny/2:(ny/2-1);
@@ -153,7 +146,7 @@ ys = -ny/2:(ny/2-1);
   r    = sqrt(px.^2 + py.^2) * bmi.dx / brad;   % normalized radius
   t    = atan2(py, px);                         % azimuth angle (radians)
 
-  if bc == 0.0                  % Zernikes for unobscured region
+  if bc == 0.0 % Zernikes for unobscured region
 
 % Get list of executable equations defining Zernike polynomials
     zca  = prop_noll_zernikes(maxz);
@@ -161,9 +154,9 @@ ys = -ny/2:(ny/2-1);
     for iz = 1 : max(size(zn))
       ab   = eval(char(zca(zn(iz))));
       amap = amap + zv(iz) * ab;
-    end                         % for iz = 1 : max(size(zn))
+    end
 
-  else                          % Zernikes for a centrally-obscured region
+  else % Zernikes for a centrally-obscured region
     sr02 = sqrt( 2);
     sr03 = sqrt( 3);
     sr05 = sqrt( 5);

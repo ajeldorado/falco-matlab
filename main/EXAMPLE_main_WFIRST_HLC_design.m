@@ -15,7 +15,6 @@
 % ---------------
 
 clear all;
-close all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -50,6 +49,20 @@ mp.flagPlot = true;
 mp.SeriesNum = 2;
 mp.TrialNum = 1;
 label = 'testNewFALCO';
+
+
+%--Force DM9 to be mirror symmetric about y-axis
+NactTotal = ceil_even(mp.dm9.actres*mp.F3.Rin*2)^2; %-NOTE: This will be different if influence function for DM9 is not '3x3'. Needs to be the same value as mp.dm9.NactTotal, which is calculated later.
+Nact = sqrt(NactTotal);
+LinIndMat = zeros(Nact); %--Matrix of the linear indices
+LinIndMat(:) = 1:NactTotal;
+FlippedLinIndMat = fliplr(LinIndMat);
+mp.dm9.tied = zeros(NactTotal/2,2);
+for jj=1:NactTotal/2
+    mp.dm9.tied(jj,1) = LinIndMat(jj);
+    mp.dm9.tied(jj,2) = FlippedLinIndMat(jj);
+end
+
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
 % temp = load(fn_prev,'out');
@@ -57,9 +70,10 @@ label = 'testNewFALCO';
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% %--Use just 1 wavelength for initial debugging of code
+% %--DEBUGGING ONLY: Monochromatic light
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 
 %% Step 4: Generate the label associated with this trial

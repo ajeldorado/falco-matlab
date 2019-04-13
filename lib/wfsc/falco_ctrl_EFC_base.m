@@ -27,7 +27,6 @@
 % - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
-
 %--Return values:
 %  Measured average normalized intensity
 %  DM commands
@@ -36,7 +35,6 @@ function [InormAvg,thput,dDM] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_li
 
 
 %% Initializations
-% Itr = cvar.Itr ;
 log10reg = vals_list(1,ni); %--Lagrange multiplier
 dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
 mp.aux.omega = valsOmega_list(nj);
@@ -78,15 +76,14 @@ end
 [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec);
 
 %% Take images and compute average intensity in dark hole
-Itotal = falco_get_summed_image(mp);
-[mp,thput] = falco_compute_thput(mp);
+if(mp.flagFiber)
+    IfiberTotal = falco_get_summed_image_fiber(mp);
+    InormAvg = mean(max(max(IfiberTotal)));
+else
+    Itotal = falco_get_summed_image(mp);
+    [mp,thput] = falco_compute_thput(mp);
 
-InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+    InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+end
         
-
 end %--END OF FUNCTION
-
-
-
-
-

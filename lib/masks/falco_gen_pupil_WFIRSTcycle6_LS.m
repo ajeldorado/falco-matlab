@@ -37,7 +37,7 @@ function mask = falco_gen_pupil_WFIRSTcycle6_LS(inputs,varargin)
 % Set default values of input parameters
 flagRot180deg = false;
 %--Look for Optional Keywords
-icav = 0;                     % index in cell array varargin
+icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
@@ -48,7 +48,6 @@ while icav < size(varargin, 2)
             varargin{icav});
     end
 end
-
 
 % %--DEBUGGING ONLY: HARD-CODED INPUTS
 % clear all
@@ -61,7 +60,6 @@ end
 % inputs.centering = 'pixel';
 % flagRot180deg = false;
 % %--------------------------------------
-
 
 Dbeam = inputs.Dbeam; %--diameter of the beam at the mask (meters)
 Nbeam   = inputs.Nbeam;     % number of points across the incoming beam           
@@ -86,10 +84,8 @@ xshift = 0;%inputs.xshift; % translation in x of pupil (in diameters)
 yshift = 0;%inputs.yshift; % translation in y of pupil (in diameters)
 pad_strut = 0; %2*pad_strut_pct/100*diam; %--Convert to meters. Factor of 2x needed since strut is padded on both sides
 
-
 Dmask = Dbeam; % % width of the beam (so can have zero padding if LS is undersized) (meters)
 diam = Dmask;% width of the mask (meters)
-
 
 if(strcmpi(centering,'pixel'))
     Narray = ceil_even(Nbeam+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
@@ -113,48 +109,26 @@ end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-
 %--DATA FROM THE VISIO FILE
 D0 = 8; % inches, pupil diameter in Visio file
 x0 = -26; % inches, pupil center in x in Visio file
 y0 = 20.25; % inches, pupil center in y in Visio file
 Dconv = (diam/D0); % conversion factor from inches and Visio units to meters 
 
-%--Nominal strut width in units of normalized diameters.
-% wStrut = 0.209*(diam/D0);
-
 %--INITIALIZE PROPER
 bm = prop_begin(Dbeam, wl_dummy, Narray,'beam_diam_fraction',bdf);
-% figure(1); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 %--PRIMARY MIRROR (OUTER DIAMETER)
-% ra_OD = (diam/2 - pad_idod)*magfacD;
 ra_OD = (Dbeam*OD/2)*magfacD;
 cx_OD = 0 + cshift + xshift;
 cy_OD = 0 + cshift + yshift;
-% norm = false;
 bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);%, cx, cy, norm);
-% figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
-% figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
 %--SECONDARY MIRROR (INNER DIAMETER)
 ra_ID = (Dbeam*ID/2)*magfacD; %((2.46/2)*Dconv + pad_idod)*magfacD;
 cx_ID = 0 + cshift + xshift;
 cy_ID = 0 + cshift + yshift;
 bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
-% figure(4); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-% figure(104); imagesc(ifftshift(abs(bm.wf))-rot90(ifftshift(abs(bm.wf)),2)); axis xy equal tight; colorbar;
-
-
-
-% if(rot_deg0==0)
-%     rot_coefs = 0;
-% else
-%     rot_coefs = [0,-1,1];
-% end
-% for ri = 1:length(rot_coefs)  %length(pad_rot_rad_vec);
-%     rot_deg = rot_deg0*rot_coefs(ri);
-
 
     %--STRUT 1
     rot_s1 = 77.56 + clock_deg; % degrees
@@ -166,8 +140,6 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     cx_s1 = cxy1(1) + xshift;
     cy_s1 = cxy1(2) + yshift;
     bm = prop_rectangular_obscuration(bm, sx_s1, sy_s1, 'cx',cx_s1, 'cy',cy_s1, 'rot', rot_s1);%, norm)
-    % figure(5); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-
 
     %--STRUT 2
     rot_s2 = -17.56 + clock_deg; % degrees
@@ -179,8 +151,6 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     cx_s2 = cxy2(1) + xshift;
     cy_s2 = cxy2(2) + yshift;
     bm = prop_rectangular_obscuration(bm, sx_s2, sy_s2, 'cx',cx_s2, 'cy',cy_s2, 'rot', rot_s2);%, norm)
-    % figure(6); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-
 
     %--STRUT 3
     rot_s3 = -42.44 + clock_deg; % degrees
@@ -192,8 +162,6 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     cx_s3 = cxy3(1) + xshift;
     cy_s3 = cxy3(2) + yshift;
     bm = prop_rectangular_obscuration(bm, sx_s3, sy_s3, 'cx',cx_s3, 'cy',cy_s3, 'rot', rot_s3);%, norm)
-    % figure(7); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-
 
     %--STRUT 4
     rot_s4 = 42.44 + clock_deg; % degrees
@@ -205,7 +173,6 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     cx_s4 = cxy4(1) + xshift;
     cy_s4 = cxy4(2) + yshift;
     bm = prop_rectangular_obscuration(bm, sx_s4, sy_s4, 'cx',cx_s4, 'cy',cy_s4, 'rot', rot_s4);%, norm)
-    % figure(8); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
     %--STRUT 5
     rot_s5 = 17.56 + clock_deg; % degrees
@@ -217,7 +184,6 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     cx_s5 = cxy5(1) + xshift;
     cy_s5 = cxy5(2) + yshift;
     bm = prop_rectangular_obscuration(bm, sx_s5, sy_s5, 'cx',cx_s5, 'cy',cy_s5, 'rot', rot_s5);%, norm)
-    % figure(9); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
     %--STRUT 6
     rot_s6 = 102.44 + clock_deg; % degrees
@@ -229,24 +195,13 @@ bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
     cx_s6 = cxy6(1) + xshift;
     cy_s6 = cxy6(2) + yshift;
     bm = prop_rectangular_obscuration(bm, sx_s6, sy_s6, 'cx',cx_s6, 'cy',cy_s6, 'rot', rot_s6);%, norm)
-%     figure(10); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-
-%     pause(1)
-
 
 mask = ifftshift(abs(bm.wf));
 if(flagRot180deg)
     mask = rot90(mask,2);
 end
 
-% figure(18); imagesc(mask); axis xy equal tight; colorbar;
-% figure(19); imagesc(mask-rot90(mask,2)); axis xy equal tight; colorbar;
-
-
 end %--END OF FUNCTION
-
-
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
@@ -261,11 +216,3 @@ end %--END OF FUNCTION
 % drawnow;
 % 
 % sum(sum(mask))
-
-
-
-
-
-
-
-

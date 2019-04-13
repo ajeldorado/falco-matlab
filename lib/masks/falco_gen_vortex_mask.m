@@ -12,13 +12,10 @@
 %
 % Created in 2018 by Garreth Ruane.
 
-
 function V = falco_gen_vortex_mask( charge, N )
-%V = makeVortex( charge, N )
 %   Detailed explanation goes here
 
 [X,Y] = meshgrid(-N/2:N/2-1);
 V = exp(1i*charge*atan2(Y,X));
 
 end
-

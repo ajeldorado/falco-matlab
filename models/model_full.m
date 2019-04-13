@@ -4,10 +4,10 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function Eout = model_full(mp,   modvar)
+% function Eout = model_full(mp,modvar,varargin)
 %--Full-knowledge optical model.
 %    --> Not used by the estimator and controller.
-%    --> Only used to create simulated intensity images.
+%    --> Used only to create simulated intensity images.
 %
 % REVISION HISTORY:
 % --------------
@@ -20,9 +20,7 @@
 % ---------------
 % INPUTS:
 % -mp = structure of model parameters
-% -DM = structure of DM settings
 % -modvar = structure of model variables
-%
 %
 % OUTPUTS:
 % -Eout
@@ -33,31 +31,24 @@
 % -whichSource
 % -flagGenMat
 
-
-function Eout = model_full(mp,   modvar,varargin)
-
+function [Eout, Efiber] = model_full(mp,modvar,varargin)
 
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
     normFac = mp.Fend.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
-elseif(isfield(modvar,'ebpIndex')) %--Entire bandpass index, out of mp.full.Nlam
-    normFac = mp.Fend.full.I00(modvar.ebpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
-    %--Enable different arguments values by using varargin
-icav = 0;                     % index in cell array varargin
+%--Enable different arguments values by using varargin
+icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
       case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
         normFac = 0; 
-        %fprintf('model_full: Not normalized.\n');
       otherwise
         error('model_full: Unknown keyword: %s\n', varargin{icav});
-          
     end
 end
-
 
 %--Save a lot of RAM (remove compact model data from full model inputs)
 if(any(mp.dm_ind==1)); mp.dm1 = rmfield(mp.dm1,'compact'); end
@@ -80,7 +71,7 @@ if strcmpi(modvar.whichSource, 'exoplanet') %--Don't include tip/tilt jitter for
     %--The planet does not move in sky angle, so the actual tip/tilt angle needs to scale inversely with wavelength.
     planetAmp = sqrt(mp.c_planet);  % Scale the E field to the correct contrast
     planetPhase = (-1)*(2*pi*(mp.x_planet*mp.P2.full.XsDL + mp.y_planet*mp.P2.full.YsDL));
-    Ein = planetAmp*exp(1i*planetPhase*mp.lambda0/lambda);
+    Ein = planetAmp*exp(1i*planetPhase*mp.lambda0/lambda).*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);
 
 elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
@@ -99,11 +90,19 @@ else % Default to using the starlight
         Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
 
     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-%         Ein = mp.Estar(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
         Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
     end
 end
 
+%--Shift the source off-axis to compute the intensity normalization value.
+%  This replaces the previous way of taking the FPM out in the optical model.
+if(normFac==0)
+    source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
+    source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
+    TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.full.XsDL + source_y_offset*mp.P2.full.YsDL));
+    Ett = exp(1i*TTphase*mp.lambda0/lambda);
+    Ein = Ett.*mp.P1.full.E(:,:,modvar.sbpIndex); 
+end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
 if(isfield(modvar,'zernIndex')==false)
@@ -113,37 +112,73 @@ end
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    % figure(1); imagesc(zernMat); axis xy equal tight; colorbar; 
+    zernMat = padOrCropEven(zernMat,mp.P1.full.Narr);
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
 end
 
 %% Pre-compute the FPM first for HLC as mp.FPM.mask
-switch upper(mp.coro) 
-    case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
-        %--Complex transmission map of the FPM.
-        ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-        if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
-            mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
-        else %--Otherwise generate it
-            mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
-        end
+switch lower(mp.layout)
+    case{'fourier'}
         
-    case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-        %--Complex transmission map of the FPM.
-        ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-        if( isfield(mp,'FPMcubeFull') )  %--Load it if stored
-            mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
-        else %--Otherwise generate it
-            mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'full'); %padOrCropEven( ,mp.dm9.NxiFPM);
-        end
-        
-end
+        switch upper(mp.coro) 
+            case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
+                %--Complex transmission map of the FPM.
+                ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
+                if(isfield(mp,'FPMcubeFull')) %--Load it if stored
+                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
+                    mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
+                end
 
+            case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
+                %--Complex transmission map of the FPM.
+                ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
+                if(isfield(mp,'FPMcubeFull')) %--Load it if stored
+                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
+                else %--Otherwise generate it
+                    mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
+                end
+        end
+end
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
     case{'fourier'}
-        Eout = model_full_Fourier(mp, lambda, Ein, normFac);
+        [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac);
         
+    case{'wfirst_phaseb_simple'} %--Use compact model as the full model.
+                
+        optval = mp.full;
+        optval.use_dm1 = true;
+        optval.use_dm2 = true;
+        optval.dm1_m = mp.dm1.V.*mp.dm1.VtoH; %--DM1 commands in meters
+        optval.dm2_m = mp.dm2.V.*mp.dm2.VtoH; %--DM2 commands in meters
+        if(normFac==0)
+            optval.source_x_offset = -mp.source_x_offset_norm;
+            optval.source_y_offset = -mp.source_y_offset_norm;
+        end
+
+        Eout = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
+        Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        if(normFac~=0)
+            Eout = Eout/sqrt(normFac);
+        end
+
+    case{'wfirst_phaseb_proper'} %--Use the true full model as the full model
+
+        optval = mp.full;
+        optval.use_dm1 = true;
+        optval.use_dm2 = true;
+        optval.dm1_m = mp.dm1.V.*mp.dm1.VtoH + mp.full.dm1.flatmap; %--DM1 commands in meters
+        optval.dm2_m = mp.dm2.V.*mp.dm2.VtoH + mp.full.dm2.flatmap; %--DM2 commands in meters
+        if(normFac==0)
+            optval.source_x_offset = -mp.source_x_offset_norm;
+            optval.source_y_offset = -mp.source_y_offset_norm;
+        end
+
+        Eout = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
+        Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        if(normFac~=0)
+            Eout = Eout/sqrt(normFac);
+        end
 end
 
 %% Undo GPU variables if they exist
@@ -151,8 +186,4 @@ if(mp.useGPU)
     Eout = gather(Eout);
 end
 
-
 end % End of function
-
-
-    

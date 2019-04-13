@@ -1,4 +1,4 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018, 2019, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -40,7 +40,12 @@
 %  - mp.est.Qcoef
 %  - mp.est.Rcoef
 
-function [ev] = falco_est_pairwise_probing(mp)
+function [ev] = falco_est_pairwise_probing(mp,varargin)
+
+%--If there is a second input, it is the Jacobian structure
+if( size(varargin, 2)==1 )
+    jacStruct = varargin{1};
+end
 
 %--Select number of actuators across based on chosen DM for the probing
 if(mp.est.probe.whichDM==1)
@@ -51,7 +56,7 @@ end
 
 %--Store the initial DM commands
 if(any(mp.dm_ind==1));  DM1Vnom = mp.dm1.V;  end
-if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  end
+if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm1.V)); end
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
@@ -63,11 +68,10 @@ if(any(mp.dm_ind==2));  ev.Vcube.dm2 = zeros(mp.dm2.Nact,mp.dm2.Nact,1+2*Npairs)
 % NOTE: Nprobes=Npairs*2;   
 probePhaseVec = [0 Npairs];
 for k = 1:Npairs-1
-    probePhaseVec = [probePhaseVec probePhaseVec(end)-(Npairs-1)];% % #ok<AGstroke2ROW>
+    probePhaseVec = [probePhaseVec probePhaseVec(end)-(Npairs-1)]; % #ok<AGstroke2ROW>
     probePhaseVec = [probePhaseVec probePhaseVec(end)+(Npairs)]; % #ok<AGstroke2ROW>
 end
 probePhaseVec = probePhaseVec*pi/(Npairs);
-% ProbePhsVec = (offset + ProbePhsVec)*pi/(Npairs);
 
 switch lower(mp.est.probe.axis)
     case 'y'
@@ -93,7 +97,7 @@ fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 for si=1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ',si,mp.Nsbp);
 
-    % % Valid for all calls to model_compact.m:
+    % Valid for all calls to model_compact.m:
     modvar.sbpIndex = si;
     modvar.whichSource = 'star';
 
@@ -101,7 +105,6 @@ for si=1:mp.Nsbp
     % Reset DM commands to the unprobed state:
     mp.dm1.V = DM1Vnom;
     mp.dm2.V = DM2Vnom;
-
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     Iplus  = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
     Iminus = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of minus probes' intensities
@@ -131,9 +134,7 @@ for si=1:mp.Nsbp
     % Set (approximate) probe intensity based on current measured Inorm
     ev.InormProbeMax = 1e-4;
     InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
-    %InormProbe = min( [sqrt(ev.score.Inorm*1e-5), ev.InormProbeMax]);
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
-
 
     %--Perform the probing
     iOdd=1; iEven=1; %--Initialize index counters
@@ -152,13 +153,13 @@ for si=1:mp.Nsbp
         end
         if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom+dDM1Vprobe;  end
         if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom+dDM2Vprobe;  end
-        %figure(202); imagesc(dDM1Vprobe); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;
 
         %--Take probed image
         Im = falco_get_sbp_image(mp,si);
+        ImNonneg = Im; ImNonneg(Im<0) = 0;
         whichImg = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
-        if(mp.flagPlot);  figure(203); imagesc(log10(Im),[-8 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
+        if(mp.flagPlot);  figure(203); imagesc(log10(ImNonneg),[-8 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
 
         %--Store probed image and its DM settings
         ev.Icube(:,:,whichImg) = Im;
@@ -183,81 +184,92 @@ for si=1:mp.Nsbp
         end
     end
 
-
-    %% Perform the estimation
-
-    %% Propagate each DM setting to the image plane. (model based)
-    % For unprobed field based on model:
-    if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom;  end % Added July 9, 2014
-    E0 = model_compact(mp, modvar);
-    E0vec = E0(mp.Fend.corr.maskBool);
-
-    %--For probed fields based on model:
-    Eplus  = zeros(size(Iplus ));
-    Eminus = zeros(size(Iminus));
-    for iProbe=1:Npairs
-        % For plus probes:
-        if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
-        if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
-        Etemp = model_compact(mp, modvar);
-        Eplus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
-        % For minus probes:
-        if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
-        if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
-        Etemp = model_compact(mp, modvar);
-        Eminus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
-    end
-
-    %% Create delta E-fields for each probe image. Then create Npairs phase angles.
-    dEplus  = Eplus  - repmat(E0vec,[1,Npairs]);
-    dEminus = Eminus - repmat(E0vec,[1,Npairs]);
-    dphdm  = zeros( [mp.Fend.corr.Npix, Npairs]); %--phases of the probes
-    for iProbe=1:Npairs
-        dphdm(:,iProbe) = atan2( imag(dEplus(:,iProbe))-imag(dEminus(:,iProbe)),real(dEplus(:,iProbe))-real(dEminus(:,iProbe)) );
-    end
-
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
     ampSq = (Iplus+Iminus)/2 - repmat(I0vec,[1,Npairs]);  % square of probe E-field amplitudes
     ampSq(ampSq<0) = 0;  % If probe amplitude is zero, amplitude is zero there.
     amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
     isnonzero = all(amp,2);
     zAll = ( (Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs,mp.Fend.corr.Npix]
-
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.Fend.Neta,mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:,iProbe); 
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
-        if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow; pause(1);  end
+        if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
     end
+    
+    %% Perform the estimation
+    
+    if(mp.est.flagUseJac) %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
+        
+        dEplus  = zeros(size(Iplus ));
+        for iProbe=1:Npairs
+            if(mp.est.probe.whichDM == 1)
+                dV = DM1Vplus(:,:,iProbe)-DM1Vnom;
+                dEplus(:,iProbe) = squeeze(jacStruct.G1(:,:,si))*dV(mp.dm1.act_ele);
+            elseif(mp.est.probe.whichDM == 2)
+                dV = DM2Vplus(:,:,iProbe)-DM2Vnom;
+                dEplus(:,iProbe) = squeeze(jacStruct.G2(:,:,si))*dV(mp.dm2.act_ele);
+            end
+        end
+        
+    else %--Get the probe phase from the model and the probe amplitude from the measurements
+
+        % For unprobed field based on model:
+        if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom;  end
+        if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom;  end % Added July 9, 2014
+        E0 = model_compact(mp, modvar);
+        E0vec = E0(mp.Fend.corr.maskBool);
+
+        %--For probed fields based on model:
+        Eplus  = zeros(size(Iplus ));
+        Eminus = zeros(size(Iminus));
+        for iProbe=1:Npairs
+            % For plus probes:
+            if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
+            if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
+            Etemp = model_compact(mp, modvar);
+            Eplus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
+            % For minus probes:
+            if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
+            if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
+            Etemp = model_compact(mp, modvar);
+            Eminus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
+        end
+
+        %%--Create delta E-fields for each probe image. Then create Npairs phase angles.
+        dEplus  = Eplus  - repmat(E0vec,[1,Npairs]);
+        dEminus = Eminus - repmat(E0vec,[1,Npairs]);
+        dphdm  = zeros( [mp.Fend.corr.Npix, Npairs]); %--phases of the probes
+        for iProbe=1:Npairs
+            dphdm(:,iProbe) = atan2( imag(dEplus(:,iProbe))-imag(dEminus(:,iProbe)),real(dEplus(:,iProbe))-real(dEminus(:,iProbe)) );
+        end
+        
+    end 
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
-if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && estvar.Itr<mp.est.ItrStartKF ) )
+if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<mp.est.ItrStartKF ) )
     Eest = zeros(mp.Fend.corr.Npix,1);
     zerosCounter = 0;
     for ipix=1:mp.Fend.corr.Npix
-        H = zeros(Npairs,2); % Observation matrix
-        if(isnonzero(ipix)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
-            for iProbe=1:Npairs
-                H(iProbe,:) = amp(ipix,iProbe)*[cos(dphdm(ipix,iProbe)), sin(dphdm(ipix,iProbe)) ];
-            end
+        
+        if(mp.est.flagUseJac) 
+            dE = dEplus(ipix,:).';
+            H = [real(dE),imag(dE)];
         else
-            zerosCounter = zerosCounter+1;
-%             if( strcmpi(ep.probeAmpType,'both') )
-%                 dE = dEplus(ipix,:).';
-%                 H = [real(dE),imag(dE)]; %nonlinear way of calculating
-%             end
+            H = zeros(Npairs,2); % Observation matrix
+            if(isnonzero(ipix)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
+                for iProbe=1:Npairs
+                    H(iProbe,:) = amp(ipix,iProbe)*[cos(dphdm(ipix,iProbe)), sin(dphdm(ipix,iProbe)) ];
+                end
+            else
+                zerosCounter = zerosCounter+1;
+            end
         end
         Epix = pinv(H)*zAll(:,ipix); %--Batch process estimation
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
-    %if(ev.Itr>2)
     Eest(abs(Eest).^2 > 1e-2) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
-    %end
-    % Eest = Eest.*isnonzero; 
     fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
-    % end % End of if-elseif statements for ep.probeAmpType
-
 
     %--Initialize the state and state covariance estimates for Kalman
     %filter. The state is the real and imag parts of the E-field.
@@ -275,7 +287,6 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && estvar.
 
 end   
     
-    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%--Kalman Filter Update
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%      
@@ -286,14 +297,19 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     
     %--Construct the observation matrix, H, for all pixels
     Hall = zeros(Npairs,2,mp.Fend.corr.Npix);
-    for jj=1:mp.Fend.corr.Npix
-        H = zeros(Npairs,2); % Observation matrix
-        if(isnonzero(jj)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
-            for qq=1:Npairs
-                H(qq,:) = amp(jj,qq)*[cos(dphdm(jj,qq)), sin(dphdm(jj,qq)) ];
+    for ipix=1:mp.Fend.corr.Npix
+        if(mp.est.flagUseJac)
+            dE = dEplus(ipix,:).'; % dE based on the Jacobian only
+            H = [real(dE),imag(dE)]; % Observation matrix
+        else
+            H = zeros(Npairs,2); % Observation matrix
+            if(isnonzero(ipix)==1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
+                for qq=1:Npairs
+                    H(qq,:) = amp(ipix,qq)*[cos(dphdm(ipix,qq)), sin(dphdm(ipix,qq)) ];
+                end
             end
-        Hall(:,:,jj) = H;    
         end
+        Hall(:,:,ipix) = H;    
     end
 
     %--Construct Gamma matrix from Matrices already constructed for least-squares
@@ -310,8 +326,7 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     %--Construct dX, the change in state since last correction iteration
     dX = zeros(size(xOld));
     for ii=1:mp.Fend.corr.Npix
-            %dX(2*(ii-1)+1:2*(ii-1)+2) = Gamma(2*(ii-1)+1:2*(ii-1)+2,:)*u; % From Jacobian
-            dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
+       dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
     end
 
     %--Compute Sensor Noise, R. You can calculate this from the properties
@@ -320,7 +335,6 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     % ncounts_shot = sqrt(ev.IprobedMean*mp.peakCountsPerPixPerSec);
     % Dark current not included here (yet).
     ncounts_std = sqrt( (sqrt(2)*ev.IprobedMean*mp.peakCountsPerPixPerSec*mp.est.tExp + mp.readNoiseStd^2)/mp.est.num_im);
-% %     ncounts_std = sqrt( (CurCont*model_params.peakCountsPerPixPerSec*FITSparam.tExp + model_params.readNoiseStd^2)/FITSparam.num_im); %--Old way, but think is wrong
     Rvar = (ncounts_std/(mp.peakCountsPerPixPerSec*mp.tExp))^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
     Rmat = mp.est.Rcoef*Rvar*eye(Npairs); % A.J.'s way, used in v2
     fprintf('Sensor noise coefficient: %.3e\n',Rmat(1,1));
@@ -330,12 +344,6 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     Q = Q00*mp.est.Qcoef*repmat( eye(2), [mp.Fend.corr.Npix, 1]);
     dP = Q;
     fprintf('Process noise coefficient: %.3e\n',Q(1,1));
-    %--Other way to define Q is as the scaled squared Jacobian.
-    % Q = zeros(size(Pold));
-    % for jj=1:mp.Fend.corr.Npix
-    %     Q(2*jj-1:2*jj,:) = Qcoef*eye(2);
-    % end
-    % Qcoef = 1e-7; dP = Qcoef*Gamma*(Gamma.');  
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Compute Kalman Filter Equations
@@ -390,7 +398,6 @@ ev.IincoEst(:,si) =  I0vec-abs(Eest).^2; %--Compute the incoherent light
 
 end %--End of loop over the wavelengths
 
-
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
@@ -402,34 +409,4 @@ ev.InormEst = mean(ev.Iest(:));
 
 fprintf(' done. Time: %.3f\n',toc);
 
-
 end %--END OF FUNCTION
-
-
-
-%      ___         ___                     ___         ___         ___
-%     /__/|       /  /\                   /__/\       /  /\       /__/\
-%    |  |:|      /  /::\                 |  |::\     /  /::\      \  \:\
-%    |  |:|     /  /:/\:\  ___     ___   |  |:|:\   /  /:/\:\      \  \:\
-%  __|  |:|    /  /:/~/::\/__/\   /  /\__|__|:|\:\ /  /:/~/::\ _____\__\:\
-% /__/\_|:|___/__/:/ /:/\:\  \:\ /  /:/__/::::| \:/__/:/ /:/\:/__/::::::::\
-% \  \:\/:::::\  \:\/:/__\/\  \:\  /:/\  \:\~~\__\\  \:\/:/__\\  \:\~~\~~\/
-%  \  \::/~~~~ \  \::/      \  \:\/:/  \  \:\      \  \::/     \  \:\  ~~~
-%   \  \:\      \  \:\       \  \::/    \  \:\      \  \:\      \  \:\
-%    \  \:\      \  \:\       \__\/      \  \:\      \  \:\      \  \:\
-%     \__\/       \__\/                   \__\/       \__\/       \__\/
-% 
-%       ___           ___                                   ___           ___                       ___     
-%      /  /\         /  /\          ___       ___          /__/\         /  /\          ___        /  /\    
-%     /  /:/_       /  /:/_        /  /\     /  /\        |  |::\       /  /::\        /  /\      /  /:/_   
-%    /  /:/ /\     /  /:/ /\      /  /:/    /  /:/        |  |:|:\     /  /:/\:\      /  /:/     /  /:/ /\  
-%   /  /:/ /:/_   /  /:/ /::\    /  /:/    /__/::\      __|__|:|\:\   /  /:/~/::\    /  /:/     /  /:/ /:/_ 
-%  /__/:/ /:/ /\ /__/:/ /:/\:\  /  /::\    \__\/\:\__  /__/::::| \:\ /__/:/ /:/\:\  /  /::\    /__/:/ /:/ /\
-%  \  \:\/:/ /:/ \  \:\/:/~/:/ /__/:/\:\      \  \:\/\ \  \:\~~\__\/ \  \:\/:/__\/ /__/:/\:\   \  \:\/:/ /:/
-%   \  \::/ /:/   \  \::/ /:/  \__\/  \:\      \__\::/  \  \:\        \  \::/      \__\/  \:\   \  \::/ /:/ 
-%    \  \:\/:/     \__\/ /:/        \  \:\     /__/:/    \  \:\        \  \:\           \  \:\   \  \:\/:/  
-%     \  \::/        /__/:/          \__\/     \__\/      \  \:\        \  \:\           \__\/    \  \::/   
-%      \__\/         \__\/                                 \__\/         \__\/                     \__\/    
-% 
-
-

@@ -10,6 +10,7 @@
 % pupil plane after it.
 %
 % Written by Garreth Ruane.
+% - Modified on 2019-04-05 by A.J. Riggs to remove the 1/1i term from each FT.
 
 function OUT = propcustom_mft_Pup2Vortex2Pup( IN, charge, apRad,  inVal, outVal, useGPU )
 %propcustom_mft_Pup2Vortex2Pup Propagates from the input pupil to output pupil
@@ -50,26 +51,22 @@ function OUT = propcustom_mft_Pup2Vortex2Pup( IN, charge, apRad,  inVal, outVal,
 
     %%%%%%% Large scale DFT
 
-    FP1 = 1/(1i*D*lambdaOverD)*exp(-1i*2*pi*u1'*x)*IN*exp(-1i*2*pi*x'*u1); 
+    FP1 = 1/(1*D*lambdaOverD)*exp(-1i*2*pi*u1'*x)*IN*exp(-1i*2*pi*x'*u1); 
     if showPlots2debug; figure;imagesc(log10(abs(FP1).^2));axis image;colorbar; title('Large scale DFT'); end;
 
-    LP1 = 1/(1i*D*lambdaOverD)*exp(-1i*2*pi*x'*u1)*(FP1.*FPM.*(1-windowMASK1))*exp(-1i*2*pi*u1'*x);
+    LP1 = 1/(1*D*lambdaOverD)*exp(-1i*2*pi*x'*u1)*(FP1.*FPM.*(1-windowMASK1))*exp(-1i*2*pi*u1'*x);
     if showPlots2debug; figure;imagesc(abs(FP1.*(1-windowMASK1)));axis image;colorbar; title('Large scale DFT (windowed)'); end;
     %%%%%%% Fine sampled DFT
 
-    FP2 = 2*outVal/(1i*D*NB)*exp(-1i*2*pi*u2'*x)*IN*exp(-1i*2*pi*x'*u2); 
+    FP2 = 2*outVal/(1*D*NB)*exp(-1i*2*pi*u2'*x)*IN*exp(-1i*2*pi*x'*u2); 
     if showPlots2debug; figure;imagesc(log10(abs(FP2).^2));axis image;colorbar; title('Fine sampled DFT'); end;
     FPM = falco_gen_vortex_mask( charge, NB );
-    LP2 = 2*outVal/(1i*D*NB)*exp(-1i*2*pi*x'*u2)*(FP2.*FPM.*windowMASK2)*exp(-1i*2*pi*u2'*x);        
+    LP2 = 2*outVal/(1*D*NB)*exp(-1i*2*pi*x'*u2)*(FP2.*FPM.*windowMASK2)*exp(-1i*2*pi*u2'*x);        
     if showPlots2debug; figure;imagesc(abs(FP2.*windowMASK2));axis image;colorbar; title('Fine sampled DFT (windowed)'); end;
     OUT = LP1 + LP2;
-    %disp('Propagating through vortex with forward DFT.');
     if showPlots2debug; figure;imagesc(abs(OUT));axis image;colorbar; title('Lyot plane'); end;
-    %if showPlots2debug; figure;imagesc(abs(LP1+LP2-IN));axis image;colorbar; title('Lyot plane - Entrance Pupil'); end;
-
 
     if(useGPU)
         OUT = gather(OUT);
     end
 end
-

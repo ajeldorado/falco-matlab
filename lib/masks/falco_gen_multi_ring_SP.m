@@ -33,7 +33,6 @@ function CRMcrop = falco_gen_multi_ring_SP(rEdgesLeft,rEdgesRight,dx,Dbeam,cente
 % Dbeam = 48e-3;
 % centering = 'pixel'; % 'pixel'/'odd' or 'interpixel'/'even'
 
-
 Nrings = length(rEdgesLeft);
 Nbeam = Dbeam/dx; % Number of points across the beam
 
@@ -45,7 +44,7 @@ end
 
 Darray = Narray*dx; %--width of the output array (meters)
 bdf = Dbeam/Darray; %--beam diameter factor in output array
-wl_dummy   = 1e-6;     % wavelength (m); Dummy value--no propagation here, so not used.
+wl_dummy = 1e-6; % wavelength (m); Dummy value--no propagation here, so not used.
 
 switch centering % 0 shift for pixel-centered pupil, or -dx/2 shift for interpixel centering
     case {'interpixel'}
@@ -54,18 +53,15 @@ switch centering % 0 shift for pixel-centered pupil, or -dx/2 shift for interpix
         cshift = 0;
 end
 
-
-
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--CREATE THE CONCENTRIC RING SHAPED PUPIL ONE RING AT A TIME
 ring_cube = zeros(Narray,Narray,Nrings); %--Storage array
 
-for ni=Nrings:-1:1;%length(od_vec)
+for ni=Nrings:-1:1;
 
 %--(RE-)INITIALIZE PROPER
 bm = prop_begin(Dbeam, wl_dummy, Narray,'beam_diam_fraction',bdf);
-% figure(1); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 %--Outer diameter of ring
 ra_OD = (rEdgesRight(ni)*Dbeam); 
@@ -73,27 +69,20 @@ cx_OD = 0 + cshift;
 cy_OD = 0 + cshift;
 
 bm = prop_circular_aperture(bm, ra_OD,'XC',cx_OD,'YC',cy_OD);%, cx, cy, norm);
-% figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
-% figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-
 
 %--Inner diameter of ring
 ra_ID = (rEdgesLeft(ni)*Dbeam);
 cx_ID = 0 + cshift;
 cy_ID = 0 + cshift;
 bm = prop_circular_obscuration(bm, ra_ID,'XC',cx_ID,'YC',cy_ID);%, cx, cy, norm)
-% figure(4); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
 ap = ifftshift(abs(bm.wf));
 apCrop = padOrCropEven(ap,Narray);
 ring_cube(:,:,ni) = apCrop;
 
-% figure(10); imagesc(ap); axis xy equal tight; colorbar; pause(1/20)
-    
 end
 
 CRM = sum(ring_cube,3);
-% figure(21); imagesc(CRM); axis xy equal tight; colorbar;
 
 %--Crop down the mask to get rid of extra zero padding. Speeds up MFTs.
 CRMsum = sum(CRM(:));
@@ -104,11 +93,8 @@ while( abs(CRMdiff) <= 1e-7)
     counter = counter + 2;
 end
 CRMcrop = padOrCropEven(CRM,NcrmCrop); %--The cropped-down Lyot stop for the compact model       
-% figure(22); imagesc(CRMcrop); axis xy equal tight; colorbar;
-
 
 end %--END OF FUNCTION
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % mask = CRMcrop;

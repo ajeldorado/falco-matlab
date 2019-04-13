@@ -40,7 +40,6 @@
 %    -mp.lambda0:       central wavelength of bandpass [meters]
 %    -mp.est.probe.axis:    which axis to have the phase discontinuity along [x or y]
 
-
 function probeCmd = falco_gen_pairwise_probe(mp,InormDes,psi,badAxis)
 
 %--Number of actuators across DM surface (independent of beam for time being)
@@ -63,7 +62,7 @@ end
 
 %--Generate the DM command for the probe
 magn = 4*pi*mp.lambda0*sqrt(InormDes);   % surface height to get desired intensity [meters]
-switch lower(badAxis) %lower(mp.est.probe.axis)
+switch lower(badAxis)
     case 'y'
         mX = mp.est.probe.radius;
         mY = 2*mp.est.probe.radius;
@@ -89,21 +88,5 @@ end
 probeCmd = falco_fit_dm_surf(dm,probeCmd);
 
 probeCmd = mp.est.probe.gainFudge*probeCmd; % Scale the probe amplitude empirically if needed
-% figure(101); imagesc(probeCmd); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 
 end %--END OF FUNCTION
-
-
-%% DEBUGGING ONLY
-% %%
-% keyboard
-% %%
-% 
-% LS = mp.P4.compact.mask;
-% figure(204); imagesc(LS); axis xy equal tight; 
-% N = ceil_even(48/46.3*size(LS,1));
-% LSpad = padOrCropEven(LS,N);
-% 
-% probePad = imresize(probeCmd,[1 1]*N);
-% 
-% figure(205); imagesc(LSpad+probePad*1e9); axis xy equal tight; 

@@ -60,9 +60,6 @@ end
 % addpath(genpath('~/Repos/FALCO/'))
 % flagRot180deg = false;
 
-
-
-
 Dbeam = inputs.Dbeam; %--diameter of the beam at the mask (meters)
 Nbeam   = inputs.Nbeam;     % number of points across the incoming beam           
 ID = inputs.ID; % inner diameter of mask (in pupil diameters)
@@ -108,30 +105,20 @@ end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-
-
 %--INITIALIZE PROPER
 bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
-% figure(1); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
 
 %--PRIMARY MIRROR (OUTER DIAMETER)
-% ra_OD = (diam/2 - pad_idod)*magfacD;
 ra_OD = (Dbeam*OD/2)*magfacD;
 cx_OD = 0 + cshift + xshift;
 cy_OD = 0 + cshift + yshift;
-% norm = false;
 bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);%, cx, cy, norm);
-% figure(2); imagesc(abs(bm.wf)); axis xy equal tight; colorbar;
-% figure(3); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
 
 %--SECONDARY MIRROR (INNER DIAMETER)
 ra_ID = (Dbeam*ID/2)*magfacD; %((2.46/2)*Dconv + pad_idod)*magfacD;
 cx_ID = 0 + cshift + xshift;
 cy_ID = 0 + cshift + yshift;
 bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
-% figure(4); imagesc(ifftshift(abs(bm.wf))); axis xy equal tight; colorbar;
-% figure(104); imagesc(ifftshift(abs(bm.wf))-rot90(ifftshift(abs(bm.wf)),2)); axis xy equal tight; colorbar;
 
 mask = ifftshift(abs(bm.wf));
 
@@ -143,15 +130,11 @@ if(ang<180)
     Lside = 1.1*ra_OD;
     xvert = cshift+[0, Lside*cosd(ang2), Lside,             Lside,             Lside*cosd(ang2), 0];
     yvert = cshift+[0, Lside*sind(ang2), Lside*sind(ang2), -Lside*sind(ang2), -Lside*sind(ang2), 0];     
-    %figure(30); plot(xvert,yvert,'-bo');
     bowtieRight = prop_irregular_polygon( bm, xvert, yvert,'DARK');
-    % figure(5); imagesc((abs(bowtieRight))); axis xy equal tight; colorbar
-
     
     %--Left part
     xvert = cshift - [0, Lside*cosd(ang2), Lside,             Lside,             Lside*cosd(ang2), 0];
     bowtieLeft = prop_irregular_polygon( bm, xvert, yvert,'DARK');
-    %figure(6); imagesc((abs(bowtieLeft))); axis xy equal tight; colorbar
     
     mask = mask.*bowtieRight.*bowtieLeft;
 end
@@ -159,10 +142,8 @@ end
 if(flagRot180deg)
     mask = rot90(mask,2);
 end
-% figure(18); imagesc(mask); axis xy equal tight; colorbar;
 
 end %--END OF FUNCTION
-
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
 % figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
@@ -177,15 +158,3 @@ end %--END OF FUNCTION
 % drawnow;
 % 
 % sum(sum(mask))
-
-
-
-
-
-
-
-
-
-
-
-

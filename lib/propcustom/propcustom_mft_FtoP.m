@@ -21,6 +21,9 @@
 % dx = resolution of a pixel in the pupil plane in meters
 % N = number of points across the pupil plane
 % 'INTERPIXEL' = optional flag to change the centering of the array to be between pixels
+%
+% - Modified on 2019-04-05 by A.J. Riggs to remove the 1/1i term from each FT.
+%
 %--------------------------------------------------------------------------
 
 function [Epup] = propcustom_mft_FtoP(Efoc,fl,lambda,dxi,deta,dx,N,varargin)
@@ -43,7 +46,6 @@ while icav < size(varargin, 2)
     end
 end
 
-
 %--Focal Plane Coordinates
 [Neta,Nxi] = size(Efoc);
 if(  (mod(Nxi,2)==1) ) %--Odd-sized array
@@ -62,7 +64,6 @@ else%--Even-sized array, pixel centered
     etas = ( -Neta/2:(Neta/2-1) )*deta;
 end
 
-
 %--Pupil Plane Coordinates
 if( mod(N,2)==1 )
     %dx = L2/(N-1);
@@ -77,10 +78,9 @@ end
 ys = xs.';
 dy = dx;
 
-
 %--Matrix Fourier Transform (MFT)
 rect_mat_pre = (exp(-2*pi*1i*(ys*etas)/(lambda*fl)));
 rect_mat_post  = (exp(-2*pi*1i*(xis*xs)/(lambda*fl)));
-Epup = sqrt(dx*dy)*sqrt(dxi*deta)/(1i*lambda*fl)*(rect_mat_pre*Efoc*rect_mat_post); 
+Epup = sqrt(dx*dy)*sqrt(dxi*deta)/(1*lambda*fl)*(rect_mat_pre*Efoc*rect_mat_post); 
 
 end %--END OF FUNCTION

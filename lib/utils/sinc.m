@@ -9,4 +9,4 @@ function y = sinc(x)
 x0 = x;
 x(x0==0)= 1;                           
 y = sin(pi*x)./(pi*x);                                                     
-y(x0==0) = 1;  
+y(x0==0) = 1;

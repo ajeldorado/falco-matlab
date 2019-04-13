@@ -23,16 +23,13 @@
 % -Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % -Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
-
 function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
-
 
     %--STEPS:
     % Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
     % Step 1: If re-linearizing this iteration, empirically find the best regularization value.
     % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
     % Step 3: Compute the EFC command to use.
-
     
     %% Initializations   
     if cvar.Itr<mp.aux.ItrDump 
@@ -60,7 +57,6 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     %% Empirically find the regularization value giving the best contrast
     
-        
     %--Loop over all the settings to check empirically
     if(mp.flagParfor) %--Parallelized
         parfor ni = 1:Nvals
@@ -137,14 +133,5 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         if(any(mp.dm_ind==9)); dDM.dDM9V = dDM_temp.dDM9V; end
     end
     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
-    
-%     cp.log10regBest(Itr) = vals_list(1,indBest);
-%     cp.dmfacBest(Itr) = vals_list(2,indBest);
-%     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cp.log10regBest(Itr),cp.dmfacBest(Itr), cvar.cMin)
-
-% %     cvar.latestBestlog10reg = vals_list(1,indBest);
-% %     cvar.latestBestDMfac = vals_list(2,indBest);
-% %     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg,cvar.latestBestDMfac,cvar.cMin)
-
 
 end %--END OF FUNCTION

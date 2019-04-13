@@ -14,6 +14,9 @@
 %--INPUTS
 % Ein = electric field at at input (focal) plane
 % 'INTERPIXEL' = optional flag to set the centering of the array between pixels
+%
+% - Modified on 2019-04-05 by A.J. Riggs to remove the 1/1i term from each FT.
+%
 %--------------------------------------------------------------------------
 
 function Eout = propcustom_2FT(Ein,varargin)
@@ -36,8 +39,7 @@ while icav < size(varargin, 2)
     end
 end
 
-
-Eout = (1/1j)^2*rot90(Ein,2);  %--Forward propagate two Fourier transforms by rotating 180 degrees. The (1/1j)^2 is from the coefficients of the two FTs.
+Eout = rot90(Ein,2);  %--Forward propagate two Fourier transforms by rotating 180 degrees.
 
 switch centering
     case{'pixel'}
@@ -49,4 +51,3 @@ switch centering
 end
 
 end %--END OF FUNCTION
-

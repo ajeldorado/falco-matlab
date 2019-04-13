@@ -26,6 +26,10 @@ mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY fo
 mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate throughput
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
+%--Where to shift the source to compute the intensity normalization value.
+mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
+
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 550e-9;    %--Central wavelength of the whole spectral bandpass [meters]
@@ -171,7 +175,7 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
 mp.flagDM2stop = true;  %--Whether to apply an iris or not
-mp.dm2.Dstop = 52e-3;   %--Diameter of iris [meters]
+mp.dm2.Dstop = 50e-3;   %--Diameter of iris [meters]
 
 %--DM separations
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
@@ -247,6 +251,7 @@ mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 mp.whichPupil = 'Simple';
 mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
+mp.P1.stretch = 1.00; % factor that stretches the horizontal axis to create elliptical beam 
 mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
 mp.P1.Nstrut = 0;% Number of struts 

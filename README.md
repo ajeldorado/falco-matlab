@@ -65,7 +65,7 @@ DOCUMENTATION: We will experiment with the best way to document the code. We wil
 * Installation Instructions *
 %----------------------------------------------------------------------------------%
 
-1) You need a MATLAB license and an install of MATLAB. Multi-wavelength simulations will probably need a desktop computer or server instead of a laptop to run unless you set samplings really low. Monochromatic tests usually run quickly on a laptop with 8+GB of RAM.
+1) You need a MATLAB license and an install of MATLAB. Multi-wavelength simulations will probably need a desktop computer or server instead of a laptop to run. Monochromatic tests usually run quickly on a laptop with a few GB of RAM.
 
 2) Linking to PROPER (in MATLAB): Download the latest MATLAB version of the PROPER optical propagation library from https://sourceforge.net/projects/proper-library/. Wherever you decide to unzip and place the PROPER library on your machine, add the path to the PROPER folder to the MATLAB path. 
   A) You can temporarily do that by defining the variable "mp.path.proper" in each main script of config file you use, or 
@@ -75,7 +75,7 @@ DOCUMENTATION: We will experiment with the best way to document the code. We wil
 
 3) (Optional--not used for regular functionality.) Download CVX from cvxr.com. Wherever you decide to unzip and place the PROPER library on your machine, add the path to the CVX directory to the MATLAB path (similar to how it was done for PROPER). Then, perform the CVX installation instructions listed on the cvxd.com website.
 
-4) Try to run one of the example script files, which starts with "EXAMPLE_", in the folder “main” as it is, except for adjusting the file path definitions listed near the very top. FALCO must know where the FALCO library resides (given by "mp.path.falco") and where the PROPER library resides (given by "mp.path.proper" if it is not in MATLAB's path already). If the template script runs through with no errors, then all the file paths are set correctly. For this initial functionality test, in the main script you should set the number of wavelengths to 1 (mp.Nsbp = 1;) and turn off the parallel computing  flag (mp.flagParfor = false;) for it to run quickly.
+4) Try to run one of the example script files (in particular EXAMPLE_try_running_FALCO.m), which start with "EXAMPLE_", in the folder “main” as it is, except for adjusting the file path definitions listed near the very top. FALCO must know where the FALCO library resides (given by "mp.path.falco") and where the PROPER library resides (given by "mp.path.proper" if it is not in MATLAB's path already). If the template script runs through with no errors, then all the file paths are set correctly. For this initial functionality test, in the main script you should set the number of wavelengths to 1 (mp.Nsbp = 1;) and turn off the parallel computing  flag (mp.flagParfor = false;) for it to run quickly.
 
 %----------------------------------------------------------------------------------%
 *  *
