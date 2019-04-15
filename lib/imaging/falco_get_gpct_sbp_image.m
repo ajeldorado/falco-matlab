@@ -28,11 +28,11 @@ function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
     PSFpeak   = bench.info.PSFpeaks(si);% counts per second 
     
     %----- Send commands to the DM -----
-    disp('Sending current DM voltages to testbed') 
+    %disp('Sending current DM voltages to testbed') 
     
     [newV,message] = tb_DM_dmsmooth( bench, mp.dm1.V );
-    disp(message);
-    
+
+
     map = newV'; % There's a transpose between Matlab and DM indexing
 
     % Send the commands to the DM. 
@@ -41,10 +41,10 @@ function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
     tb_DM_apply2Dmap(bench,map);
     
     %----- Get image from the testbed -----
-    disp(['Getting image from testbed in band',num2str(si)])
+    disp(['Getting image from testbed in band ',num2str(si)])
     
     % Set wavelength
-    disp(['Setting varia to bandpass',num2str(si)])
+    %disp(['Setting varia to bandpass',num2str(si)])
     lam0 = mp.sbp_centers(si);
     lam1 = lam0 - sbp_width/2;
     lam2 = lam0 + sbp_width/2;
