@@ -137,7 +137,22 @@ for Itr=1:mp.Nitr
 
     %--Plot the updates to the DMs and PSF
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+    if(isfield(mp,'testbed') )
+        InormHist_tb.total = InormHist; 
+        Im_tb.Im = Im;
+        Im_tb.E = zeros(size(Im));
+        if(Itr>1)
+            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec).^2);
+            InormHist_tb.unmod(Itr-1) = mean(IincoVec);
+            Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
+        else
+            InormHist_tb.mod = NaN;
+            InormHist_tb.unmod = NaN;
+        end
+        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+    else
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+    end
 
 %     %--Plot the intermediate E-fields
 %     switch upper(mp.coro)
@@ -209,7 +224,7 @@ for Itr=1:mp.Nitr
 
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
     [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
-
+    
     %% Wavefront Estimation
     switch lower(mp.estimator)
         case{'perfect'}
@@ -227,6 +242,66 @@ for Itr=1:mp.Nitr
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
     end
+    
+    %% Compute the Singular Mode Spectrum of the Control Jacobian
+
+    if(mp.flagSVD)
+        
+        if(cvar.flagRelin)
+            
+            ii=1;
+            Gcomplex = [jacStruct.G1(:,:,ii), jacStruct.G2(:,:,ii), jacStruct.G3(:,:,ii), jacStruct.G4(:,:,ii), jacStruct.G5(:,:,ii), jacStruct.G6(:,:,ii), jacStruct.G7(:,:,ii), jacStruct.G8(:,:,ii), jacStruct.G9(:,:,ii)];
+
+            Gall = zeros(mp.jac.Nmode*size(Gcomplex,1),size(Gcomplex,2));
+            Eall = zeros(mp.jac.Nmode*size(EfieldVec,1),1);
+
+            for ii=1:mp.jac.Nmode
+                N = size(Gcomplex,1);
+                inds = (ii-1)*N+1:ii*N;
+                Gcomplex = [jacStruct.G1(:,:,ii), jacStruct.G2(:,:,ii), jacStruct.G3(:,:,ii), jacStruct.G4(:,:,ii), jacStruct.G5(:,:,ii), jacStruct.G6(:,:,ii), jacStruct.G7(:,:,ii), jacStruct.G8(:,:,ii), jacStruct.G9(:,:,ii)];
+                Gall(inds,:) = Gcomplex;
+                Eall(inds) = EfieldVec(:,ii);
+            end
+
+            Eri = [real(Eall); imag(Eall)];
+            alpha2 = max(diag(real(Gall'*Gall)));
+            Gri = [real(Gall); imag(Gall)];
+            [U,S,~] = svd(Gri,'econ');
+            s = diag(S);
+        else
+           
+            for ii=1:mp.jac.Nmode
+                N = size(Gcomplex,1);
+                inds = (ii-1)*N+1:ii*N;
+                Eall(inds) = EfieldVec(:,ii);
+            end
+            Eri = [real(Eall); imag(Eall)];
+        
+        end
+        
+        EriPrime = U'*Eri;
+        IriPrime = abs(EriPrime).^2;
+    
+        %--Save out for later analysis
+        out.EforSpectra{Itr} = EriPrime;
+        out.smspectra{Itr} = IriPrime;
+        out.sm{Itr} = s;
+        out.alpha2{Itr} = alpha2;
+        
+        if(mp.flagPlot)
+            figure(401); 
+            loglog(out.sm{Itr}.^2/out.alpha2{Itr},smooth(out.smspectra{Itr},31),'Linewidth',3,'Color',[0.3, 1-(0.2+Itr/mp.Nitr)/(1.3),1 ]);
+            set(gca,'Fontsize',20); grid on; 
+            set(gcf,'Color',[1 1 1]);
+            title('Singular Mode Spectrum','Fontsize',20)
+            xlim([1e-10, 2*max(s.^2/alpha2)])
+            ylim([1e-12, 1e-0]) 
+            drawnow;
+            hold on;
+        end
+        
+    end
+
     
     %% Add spatially-dependent weighting to the control Jacobians
 
@@ -339,10 +414,29 @@ else
 end
 fprintf('\n\n');
 
+%--Save out DM commands after each iteration in case the trial crashes part way through.
+if(mp.flagSaveEachItr)
+    fprintf('Saving DM commands for this iteration...')
+    if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
+    if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
+    if(any(mp.dm_ind==3)); DM3V = mp.dm3.V; else; DM3V = 0; end
+    if(any(mp.dm_ind==4)); DM4V = mp.dm4.V; else; DM4V = 0; end
+    if(any(mp.dm_ind==5)); DM5V = mp.dm5.V; else; DM5V = 0; end
+    if(any(mp.dm_ind==6)); DM6V = mp.dm6.V; else; DM6V = 0; end
+    if(any(mp.dm_ind==7)); DM7V = mp.dm7.V; else; DM7V = 0; end
+    if(any(mp.dm_ind==8)); DM8V = mp.dm8.V; else; DM8V = 0; end
+    if(any(mp.dm_ind==9)); DM9V = mp.dm9.V; else; DM9V = 0; end
+    Nitr = mp.Nitr;
+    thput_vec = mp.thput_vec;
+    fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.ws_inprogress,mp.runLabel,Itr,mp.Nitr);
+    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM4V','DM5V','DM6V','DM7V','DM8V','DM9V','InormHist','thput_vec')
+    fprintf('done.\n\n')
+end
+
 end %--END OF ESTIMATION + CONTROL LOOP
 %% ------------------------------------------------------------------------
 
-%% Update plot one last time
+%% Update progress plot one last time
 Itr = Itr + 1;
 
 %--Compute the DM surfaces
@@ -364,7 +458,17 @@ else
     mp.thput_vec(Itr) = thput; %--record keeping
 end
 
-hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+if(isfield(mp,'testbed'))
+    InormHist_tb.total = InormHist; 
+    InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec).^2);
+    InormHist_tb.unmod(Itr-1) = mean(IincoVec);
+    Im_tb.Im = Im;
+    Im_tb.E = zeros(size(Im));
+    Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
+    hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+else
+    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+end
 
 %% Save the final DM commands separately for faster reference
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V')); out.DM1V = mp.dm1.V; end; end
@@ -394,30 +498,33 @@ save(fnOut,'out');
 fprintf('...done.\n\n')
 
 %% Save out the data from the workspace
-clear cvar G* h* jacStruct; % Save a ton of space when storing the workspace
+if(mp.flagSaveWS)
+    clear cvar G* h* jacStruct; % Save a ton of space when storing the workspace
 
-% Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
-mp.P1.full.mask=1; mp.P1.compact.mask=1;
-mp.P3.full.mask=1; mp.P3.compact.mask=1;
-mp.P4.full.mask=1; mp.P4.compact.mask=1;
-mp.F3.full.mask=1; mp.F3.compact.mask=1;
+    % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
+    mp.P1.full.mask=1; mp.P1.compact.mask=1;
+    mp.P3.full.mask=1; mp.P3.compact.mask=1;
+    mp.P4.full.mask=1; mp.P4.compact.mask=1;
+    mp.F3.full.mask=1; mp.F3.compact.mask=1;
 
-mp.P1.full.E = 1; mp.P1.compact.E=1; mp.Eplanet=1; 
-mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
-mp.complexTransFull = 1; mp.complexTransCompact = 1;
+    mp.P1.full.E = 1; mp.P1.compact.E=1; mp.Eplanet=1; 
+    mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
+    mp.complexTransFull = 1; mp.complexTransCompact = 1;
 
-mp.dm1.compact.inf_datacube = 0;
-mp.dm2.compact.inf_datacube = 0;
-mp.dm8.compact.inf_datacube = 0;
-mp.dm9.compact.inf_datacube = 0;
-mp.dm8.inf_datacube = 0;
-mp.dm9.inf_datacube = 0;
+    mp.dm1.compact.inf_datacube = 0;
+    mp.dm2.compact.inf_datacube = 0;
+    mp.dm8.compact.inf_datacube = 0;
+    mp.dm9.compact.inf_datacube = 0;
+    mp.dm8.inf_datacube = 0;
+    mp.dm9.inf_datacube = 0;
 
-fnAll = [mp.path.ws mp.runLabel,'_all.mat'];
-
-disp(['Saving workspace to file ' fnAll '...'])
-save(fnAll);
-fprintf('done.\n\n')
+    fnAll = [mp.path.ws mp.runLabel,'_all.mat'];
+    disp(['Saving entire workspace to file ' fnAll '...'])
+    save(fnAll);
+    fprintf('done.\n\n')
+else
+    disp('Entire workspace NOT saved because mp.flagSaveWS==false')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % falco_ctrl_cull.m is a nested function in order to save RAM since the 
