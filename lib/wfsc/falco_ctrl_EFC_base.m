@@ -27,6 +27,7 @@
 % - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
 % - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
+
 %--Return values:
 %  Measured average normalized intensity
 %  DM commands
@@ -35,6 +36,7 @@ function [InormAvg,thput,dDM] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_li
 
 
 %% Initializations
+% Itr = cvar.Itr ;
 log10reg = vals_list(1,ni); %--Lagrange multiplier
 dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
 mp.aux.omega = valsOmega_list(nj);
@@ -57,15 +59,20 @@ cvar = falco_ctrl_setup(mp,cvar);
 % duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum;
 % duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum+0.0*10^(log10reg)*cvar.EyeGstarGdiag.*...
 %     [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele)]);
-if mp.aux.omega ~= 0 && cvar.Itr>=mp.aux.firstOmegaItr
+if(any(mp.dm_ind==9))
+    vec_dm_ele = [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele);mp.dm9.V(mp.dm9.act_ele)];
+else
+    vec_dm_ele = [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele)];
+end
+if mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr
     duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum - 10^mp.aux.omega * cvar.GcptransGcp_wsum)...
         \(cvar.RealGstarEab_wsum...
         +mp.aux.gamma*10^(log10reg)*cvar.EyeGstarGdiag.*...
-        [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele)]);
+        vec_dm_ele);
 else
     duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)...
         \(cvar.RealGstarEab_wsum+mp.aux.gamma*10^(log10reg)*cvar.EyeGstarGdiag.*...
-        [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele)]);
+        vec_dm_ele);
 end
 
 % dDMvec = -dmfac*(diag(EyeGstarGdiag)/mu + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum;
@@ -76,14 +83,15 @@ end
 [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec);
 
 %% Take images and compute average intensity in dark hole
-if(mp.flagFiber)
-    IfiberTotal = falco_get_summed_image_fiber(mp);
-    InormAvg = mean(max(max(IfiberTotal)));
-else
-    Itotal = falco_get_summed_image(mp);
-    [mp,thput] = falco_compute_thput(mp);
+Itotal = falco_get_summed_image(mp);
+[mp,thput] = falco_compute_thput(mp);
 
-    InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
-end
+InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
         
+
 end %--END OF FUNCTION
+
+
+
+
+

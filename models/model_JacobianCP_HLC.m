@@ -363,213 +363,213 @@ end
 
 
 
-%--DM8--------------------------------------------------------- 
-if(whichDM==8)
-    Gzdl = zeros(1,mp.dm8.Nele);
-    Nbox8 = mp.dm8.compact.Nbox;
-    
-    stepFac = 1; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
-    
-    %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
-    Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
-    
-    %--Back-propagate to pupil P2
-    if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 )
-        EP2eff = Edm2; 
-    else
-        EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); 
-    end
-    
-    %--Rotate 180 degrees to propagate to pupil P3
-    EP3 = propcustom_2FT(EP2eff, mp.centering);
-
-    %--Apply apodizer mask.
-    if(mp.flagApod)
-        EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P1.compact.Narr); 
-    end
-    
-    %--MFT from pupil P3 to FPM (at focus F3)
-    EF3inc = padOrCropEven( propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering), mp.dm8.compact.NdmPad);
-    
-    %--Coordinates for metal thickness and dielectric thickness
-%     DM8transIndAll = falco_discretize_FPM_surf(mp.dm8.surf, mp.t_metal_nm_vec, mp.dt_metal_nm); %--All of the mask
-    DM9transIndAll = falco_discretize_FPM_surf(mp.dm9.surf, mp.t_diel_nm_vec, mp.dt_diel_nm); %--All of the mask
-    
-    %--Propagate each actuator from DM9 through the rest of the optical system
-    Gindex = 1; % initialize index counter
-    for iact=mp.dm8.act_ele(:).' %--MUST BE A COLUMN VECTOR 
-         if( any(any(mp.dm8.compact.inf_datacube(:,:,iact))) )    
-            %--xi- and eta- coordinates in the full FPM portion of the focal plane
-            xi_box_ind = mp.dm8.compact.xy_box_lowerLeft(1,iact):mp.dm8.compact.xy_box_lowerLeft(1,iact)+mp.dm8.compact.Nbox-1; % xi-indices in image arrays for the box
-            eta_box_ind = mp.dm8.compact.xy_box_lowerLeft(2,iact):mp.dm8.compact.xy_box_lowerLeft(2,iact)+mp.dm8.compact.Nbox-1; % eta-indices in image arrays for the box
-            xi_box = mp.dm8.compact.x_pupPad(xi_box_ind).'; % full image xi-coordinates of the box 
-            eta_box = mp.dm8.compact.y_pupPad(eta_box_ind); % full image eta-coordinates of the box 
-
-            %--Obtain values for the "poked" FPM's complex transmission (only in the sub-array where poked)
-            Nxi = Nbox8;
-            Neta = Nbox8;
-            
-            DM8surfCropNew = stepFac*mp.dm8.VtoH(iact).*mp.dm8.compact.inf_datacube(:,:,iact) + mp.dm8.surf(eta_box_ind,xi_box_ind); % New DM8 surface profile in the poked region (meters)
-            DM8transInd = falco_discretize_FPM_surf(DM8surfCropNew, mp.t_metal_nm_vec,  mp.dt_metal_nm);
-            DM9transInd = DM9transIndAll(eta_box_ind,xi_box_ind); %--Cropped region of the FPM.
-
-            %             DM9surfCropNew = stepFac*mp.dm9.VtoH(iact).*mp.dm9.compact.inf_datacube(:,:,iact) + mp.dm9.surf(eta_box_ind,xi_box_ind); % New DM9 surface profile in the poked region (meters)
-%             DM9transInd = falco_discretize_FPM_surf(DM9surfCropNew, mp.t_diel_nm_vec,  mp.dt_diel_nm);
-%             DM8transInd = DM8transIndAll(eta_box_ind,xi_box_ind); %--Cropped region of the FPM.
-            
-            %--Look up table to compute complex transmission coefficient of the FPM at each pixel
-            FPMpoked = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission    
-            for ix = 1:Nxi
-                for iy = 1:Neta
-                    ind_metal = DM8transInd(iy,ix);
-                    ind_diel  = DM9transInd(iy,ix);
-                    %fprintf('\t%d\t%d\n',ind_metal,ind_diel)
-                    FPMpoked(iy,ix) = mp.complexTransCompact(ind_diel,ind_metal,modvar.sbpIndex);
-                end
-            end            
-  
-%          JLlop   dEF3box = ( (transOuterFPM-FPMpoked) - (transOuterFPM-FPM(eta_box_ind,xi_box_ind)) ).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
-            dEF3box =EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
-
-            %--Matrices for the MFT from the FPM stamp to the Lyot stop
-            rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
-            rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
-
-            %--DFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
-            EP4 = 0 - rect_mat_pre*dEF3box*rect_mat_post; % MFT from FPM (F3) to Lyot stop plane (P4)
-            EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
-
-            %--DFT to final focal plane
-            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend) ;end
-            
-            cp = max(max(abs(EFend).^2)); %JLlop
-%             Gzdl(:,Gindex) = (1/stepFac)*mp.dm8.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
-            Gzdl(:,Gindex) = (1/stepFac)*mp.dm8.weight*cp/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
-            Gindex = Gindex + 1;
-        end
-    end
-
-end %%%%%%%%%%%%%%%%%%%
-
-
-
-
-%--DM9--------------------------------------------------------- 
+% %--DM8--------------------------------------------------------- 
+% if(whichDM==8)
+%     Gzdl = zeros(1,mp.dm8.Nele);
+%     Nbox8 = mp.dm8.compact.Nbox;
+%     
+%     stepFac = 1; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+%     
+%     %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
+%     Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
+%     
+%     %--Back-propagate to pupil P2
+%     if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 )
+%         EP2eff = Edm2; 
+%     else
+%         EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); 
+%     end
+%     
+%     %--Rotate 180 degrees to propagate to pupil P3
+%     EP3 = propcustom_2FT(EP2eff, mp.centering);
+% 
+%     %--Apply apodizer mask.
+%     if(mp.flagApod)
+%         EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P1.compact.Narr); 
+%     end
+%     
+%     %--MFT from pupil P3 to FPM (at focus F3)
+%     EF3inc = padOrCropEven( propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering), mp.dm8.compact.NdmPad);
+%     
+%     %--Coordinates for metal thickness and dielectric thickness
+% %     DM8transIndAll = falco_discretize_FPM_surf(mp.dm8.surf, mp.t_metal_nm_vec, mp.dt_metal_nm); %--All of the mask
+%     DM9transIndAll = falco_discretize_FPM_surf(mp.dm9.surf, mp.t_diel_nm_vec, mp.dt_diel_nm); %--All of the mask
+%     
+%     %--Propagate each actuator from DM9 through the rest of the optical system
+%     Gindex = 1; % initialize index counter
+%     for iact=mp.dm8.act_ele(:).' %--MUST BE A COLUMN VECTOR 
+%          if( any(any(mp.dm8.compact.inf_datacube(:,:,iact))) )    
+%             %--xi- and eta- coordinates in the full FPM portion of the focal plane
+%             xi_box_ind = mp.dm8.compact.xy_box_lowerLeft(1,iact):mp.dm8.compact.xy_box_lowerLeft(1,iact)+mp.dm8.compact.Nbox-1; % xi-indices in image arrays for the box
+%             eta_box_ind = mp.dm8.compact.xy_box_lowerLeft(2,iact):mp.dm8.compact.xy_box_lowerLeft(2,iact)+mp.dm8.compact.Nbox-1; % eta-indices in image arrays for the box
+%             xi_box = mp.dm8.compact.x_pupPad(xi_box_ind).'; % full image xi-coordinates of the box 
+%             eta_box = mp.dm8.compact.y_pupPad(eta_box_ind); % full image eta-coordinates of the box 
+% 
+%             %--Obtain values for the "poked" FPM's complex transmission (only in the sub-array where poked)
+%             Nxi = Nbox8;
+%             Neta = Nbox8;
+%             
+%             DM8surfCropNew = stepFac*mp.dm8.VtoH(iact).*mp.dm8.compact.inf_datacube(:,:,iact) + mp.dm8.surf(eta_box_ind,xi_box_ind); % New DM8 surface profile in the poked region (meters)
+%             DM8transInd = falco_discretize_FPM_surf(DM8surfCropNew, mp.t_metal_nm_vec,  mp.dt_metal_nm);
+%             DM9transInd = DM9transIndAll(eta_box_ind,xi_box_ind); %--Cropped region of the FPM.
+% 
+%             %             DM9surfCropNew = stepFac*mp.dm9.VtoH(iact).*mp.dm9.compact.inf_datacube(:,:,iact) + mp.dm9.surf(eta_box_ind,xi_box_ind); % New DM9 surface profile in the poked region (meters)
+% %             DM9transInd = falco_discretize_FPM_surf(DM9surfCropNew, mp.t_diel_nm_vec,  mp.dt_diel_nm);
+% %             DM8transInd = DM8transIndAll(eta_box_ind,xi_box_ind); %--Cropped region of the FPM.
+%             
+%             %--Look up table to compute complex transmission coefficient of the FPM at each pixel
+%             FPMpoked = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission    
+%             for ix = 1:Nxi
+%                 for iy = 1:Neta
+%                     ind_metal = DM8transInd(iy,ix);
+%                     ind_diel  = DM9transInd(iy,ix);
+%                     %fprintf('\t%d\t%d\n',ind_metal,ind_diel)
+%                     FPMpoked(iy,ix) = mp.complexTransCompact(ind_diel,ind_metal,modvar.sbpIndex);
+%                 end
+%             end            
+%   
+% %          JLlop   dEF3box = ( (transOuterFPM-FPMpoked) - (transOuterFPM-FPM(eta_box_ind,xi_box_ind)) ).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
+%             dEF3box =EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
+% 
+%             %--Matrices for the MFT from the FPM stamp to the Lyot stop
+%             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
+%                 *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+%             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
+% 
+%             %--DFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
+%             EP4 = 0 - rect_mat_pre*dEF3box*rect_mat_post; % MFT from FPM (F3) to Lyot stop plane (P4)
+%             EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
+% 
+%             %--DFT to final focal plane
+%             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+%             if(mp.useGPU); EFend = gather(EFend) ;end
+%             
+%             cp = max(max(abs(EFend).^2)); %JLlop
+% %             Gzdl(:,Gindex) = (1/stepFac)*mp.dm8.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+%             Gzdl(:,Gindex) = (1/stepFac)*mp.dm8.weight*cp/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+%             Gindex = Gindex + 1;
+%         end
+%     end
+% 
+% end %%%%%%%%%%%%%%%%%%%
+% 
+% 
+% 
+% 
+% %--DM9--------------------------------------------------------- 
 if(whichDM==9)
     Gzdl = zeros(1,mp.dm9.Nele);
-    Nbox9 = mp.dm9.compact.Nbox;
-    
-    if(isfield(mp.dm9,'stepFac')==false)
-        stepFac = 20;%10; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
-    else
-        stepFac = mp.dm9.stepFac;
-    end
-    %DM9phasePad = padOrCropEven(DM9phase,mp.dm9.compact.NdmPad); 
-    %FPMampPad = padOrCropEven(mp.F3.compact.mask.amp,mp.dm9.compact.NdmPad,'extrapval',1);
-    
-    %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
-    Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
-    
-    %--Back-propagate to pupil P2
-    if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 )
-        EP2eff = Edm2; 
-    else
-        EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); 
-    end
-    
-    %--Rotate 180 degrees to propagate to pupil P3
-    EP3 = propcustom_2FT(EP2eff, mp.centering);
-%     EP3 = (1/1j)^2*rot90(EP2eff,2); %--Forward propagate to the next pupil plane (with the SP) by rotating 180 deg.
-%     if( strcmpi(mp.centering,'pixel') ); EP3 = circshift(EP3,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
-
-    %--Apply apodizer mask.
-    if(mp.flagApod)
-        EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P1.compact.Narr); 
-    end
-    
-    %--MFT from pupil P3 to FPM (at focus F3)
-    EF3inc = padOrCropEven( propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering), mp.dm9.compact.NdmPad);
-    
-    %--Coordinates for metal thickness and dielectric thickness
-%     [X,Y] = meshgrid(mp.t_metal_nm_vec,mp.t_diel_nm_vec); %--Grid for interpolation
-% %     DM8surfNM = round(1e9*mp.dm8.surf); % meters -> discretized nanometers
-    DM8transIndAll = falco_discretize_FPM_surf(mp.dm8.surf, mp.t_metal_nm_vec, mp.dt_metal_nm); %--All of the mask
-    
-    %--Propagate each actuator from DM9 through the rest of the optical system
-    Gindex = 1; % initialize index counter
-    for iact=mp.dm9.act_ele(:).' %--MUST BE A COLUMN VECTOR  
-        if( any(any(mp.dm9.compact.inf_datacube(:,:,iact))) )             
-            %--xi- and eta- coordinates in the full FPM portion of the focal plane
-            xi_box_ind = mp.dm9.compact.xy_box_lowerLeft(1,iact):mp.dm9.compact.xy_box_lowerLeft(1,iact)+mp.dm9.compact.Nbox-1; % xi-indices in image arrays for the box
-            eta_box_ind = mp.dm9.compact.xy_box_lowerLeft(2,iact):mp.dm9.compact.xy_box_lowerLeft(2,iact)+mp.dm9.compact.Nbox-1; % eta-indices in image arrays for the box
-            xi_box = mp.dm9.compact.x_pupPad(xi_box_ind).'; % full image xi-coordinates of the box 
-            eta_box = mp.dm9.compact.y_pupPad(eta_box_ind); % full image eta-coordinates of the box 
-
-            %--Obtain values for the "poked" FPM's complex transmission (only in the sub-array where poked)
-            Nxi = Nbox9;
-            Neta = Nbox9;
-% %             DM8surfCropNM = DM8surfNM(eta_box_ind,xi_box_ind);
+%     Nbox9 = mp.dm9.compact.Nbox;
+%     
+%     if(isfield(mp.dm9,'stepFac')==false)
+%         stepFac = 20;%10; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
+%     else
+%         stepFac = mp.dm9.stepFac;
+%     end
+%     %DM9phasePad = padOrCropEven(DM9phase,mp.dm9.compact.NdmPad); 
+%     %FPMampPad = padOrCropEven(mp.F3.compact.mask.amp,mp.dm9.compact.NdmPad,'extrapval',1);
+%     
+%     %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
+%     Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
+%     
+%     %--Back-propagate to pupil P2
+%     if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 )
+%         EP2eff = Edm2; 
+%     else
+%         EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); 
+%     end
+%     
+%     %--Rotate 180 degrees to propagate to pupil P3
+%     EP3 = propcustom_2FT(EP2eff, mp.centering);
+% %     EP3 = (1/1j)^2*rot90(EP2eff,2); %--Forward propagate to the next pupil plane (with the SP) by rotating 180 deg.
+% %     if( strcmpi(mp.centering,'pixel') ); EP3 = circshift(EP3,[1 1]); end;   %--To undo center offset when beam and mask are pixel centered and rotating by 180 degrees.
+% 
+%     %--Apply apodizer mask.
+%     if(mp.flagApod)
+%         EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P1.compact.Narr); 
+%     end
+%     
+%     %--MFT from pupil P3 to FPM (at focus F3)
+%     EF3inc = padOrCropEven( propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering), mp.dm9.compact.NdmPad);
+%     
+%     %--Coordinates for metal thickness and dielectric thickness
+% %     [X,Y] = meshgrid(mp.t_metal_nm_vec,mp.t_diel_nm_vec); %--Grid for interpolation
+% % %     DM8surfNM = round(1e9*mp.dm8.surf); % meters -> discretized nanometers
+%     DM8transIndAll = falco_discretize_FPM_surf(mp.dm8.surf, mp.t_metal_nm_vec, mp.dt_metal_nm); %--All of the mask
+%     
+%     %--Propagate each actuator from DM9 through the rest of the optical system
+%     Gindex = 1; % initialize index counter
+%     for iact=mp.dm9.act_ele(:).' %--MUST BE A COLUMN VECTOR  
+%         if( any(any(mp.dm9.compact.inf_datacube(:,:,iact))) )             
+%             %--xi- and eta- coordinates in the full FPM portion of the focal plane
+%             xi_box_ind = mp.dm9.compact.xy_box_lowerLeft(1,iact):mp.dm9.compact.xy_box_lowerLeft(1,iact)+mp.dm9.compact.Nbox-1; % xi-indices in image arrays for the box
+%             eta_box_ind = mp.dm9.compact.xy_box_lowerLeft(2,iact):mp.dm9.compact.xy_box_lowerLeft(2,iact)+mp.dm9.compact.Nbox-1; % eta-indices in image arrays for the box
+%             xi_box = mp.dm9.compact.x_pupPad(xi_box_ind).'; % full image xi-coordinates of the box 
+%             eta_box = mp.dm9.compact.y_pupPad(eta_box_ind); % full image eta-coordinates of the box 
+% 
+%             %--Obtain values for the "poked" FPM's complex transmission (only in the sub-array where poked)
+%             Nxi = Nbox9;
+%             Neta = Nbox9;
+% % %             DM8surfCropNM = DM8surfNM(eta_box_ind,xi_box_ind);
+% %             DM9surfCropNew = stepFac*mp.dm9.VtoH(iact).*mp.dm9.compact.inf_datacube(:,:,iact) + mp.dm9.surf(eta_box_ind,xi_box_ind); % New DM9 surface profile in the poked region (meters)
+% % %             DM9surfCropNewNM = round(1e9*DM9surfCropNew); %  meters -> discretized nanometers
 %             DM9surfCropNew = stepFac*mp.dm9.VtoH(iact).*mp.dm9.compact.inf_datacube(:,:,iact) + mp.dm9.surf(eta_box_ind,xi_box_ind); % New DM9 surface profile in the poked region (meters)
-% %             DM9surfCropNewNM = round(1e9*DM9surfCropNew); %  meters -> discretized nanometers
-            DM9surfCropNew = stepFac*mp.dm9.VtoH(iact).*mp.dm9.compact.inf_datacube(:,:,iact) + mp.dm9.surf(eta_box_ind,xi_box_ind); % New DM9 surface profile in the poked region (meters)
-            DM9transInd = falco_discretize_FPM_surf(DM9surfCropNew, mp.t_diel_nm_vec,  mp.dt_diel_nm);
-            DM8transInd = DM8transIndAll(eta_box_ind,xi_box_ind); %--Cropped region of the FPM.
-
-            %--Look up table to compute complex transmission coefficient of the FPM at each pixel
-            FPMpoked = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission    
-            for ix = 1:Nxi
-                for iy = 1:Neta
-                    ind_metal = DM8transInd(iy,ix);
-                    ind_diel  = DM9transInd(iy,ix);
-                    %fprintf('\t%d\t%d\n',ind_metal,ind_diel)
-                    FPMpoked(iy,ix) = mp.complexTransCompact(ind_diel,ind_metal,modvar.sbpIndex);
-                end
-            end            
-
-%             %--Interpolate (MORE ACCURATE, BUT MUCH SLOWER THAN LOOK-UP TABLE)
-%             DM8surfCrop = mp.dm8.surf(eta_box_ind,xi_box_ind);
-%             DM9surfCrop = mp.dm9.surf(eta_box_ind,xi_box_ind);
-%             FPMpoked = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission
-%             for il=1:Nlam        
-%                 for ix = 1:Nxi
-%                     for iy = 1:Neta
-%                         DM9surfNew = mp.dm9.compact.inf_datacube(:,:,iact) + DM9surfCrop;
-%                         FPMpoked(iy,ix) = interp2(X, Y, squeeze(mp.complexTransCompact(:,:,modvar.sbpIndex)), DM8surfCrop(iy,ix), DM9surfNew(iy,ix));
-%                     end
+%             DM9transInd = falco_discretize_FPM_surf(DM9surfCropNew, mp.t_diel_nm_vec,  mp.dt_diel_nm);
+%             DM8transInd = DM8transIndAll(eta_box_ind,xi_box_ind); %--Cropped region of the FPM.
+% 
+%             %--Look up table to compute complex transmission coefficient of the FPM at each pixel
+%             FPMpoked = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission    
+%             for ix = 1:Nxi
+%                 for iy = 1:Neta
+%                     ind_metal = DM8transInd(iy,ix);
+%                     ind_diel  = DM9transInd(iy,ix);
+%                     %fprintf('\t%d\t%d\n',ind_metal,ind_diel)
+%                     FPMpoked(iy,ix) = mp.complexTransCompact(ind_diel,ind_metal,modvar.sbpIndex);
 %                 end
-%             end
-
-
-%      JLlop       dEF3box = ( (transOuterFPM-FPMpoked) - (transOuterFPM-FPM(eta_box_ind,xi_box_ind)) ).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
-            dEF3box = EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
-
-%             dEF3box = -(2*pi*1j/lambda)*(mp.dm9.VtoH(iact)*mp.dm9.compact.inf_datacube(:,:,iact))...
-%             .*(FPMampPad(eta_box_ind,xi_box_ind).*exp(2*pi*1i/lambda*DM9phasePad(eta_box_ind,xi_box_ind))).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
-
-            %--Matrices for the MFT from the FPM stamp to the Lyot stop
-            rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
-            rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
-
-            %--DFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
-            EP4 = 0 - rect_mat_pre*dEF3box*rect_mat_post; % MFT from FPM (F3) to Lyot stop plane (P4)
-            EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
-
-            %--DFT to final focal plane
-            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend) ;end
-            
-            cp = EFend(2,2); %JLlop
-            
-%             Gzdl(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
-            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*cp/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
-            
-        end
-        Gindex = Gindex + 1;
-        
-    end
+%             end            
+% 
+% %             %--Interpolate (MORE ACCURATE, BUT MUCH SLOWER THAN LOOK-UP TABLE)
+% %             DM8surfCrop = mp.dm8.surf(eta_box_ind,xi_box_ind);
+% %             DM9surfCrop = mp.dm9.surf(eta_box_ind,xi_box_ind);
+% %             FPMpoked = zeros(Neta, Nxi); %--Initialize output array of FPM's complex transmission
+% %             for il=1:Nlam        
+% %                 for ix = 1:Nxi
+% %                     for iy = 1:Neta
+% %                         DM9surfNew = mp.dm9.compact.inf_datacube(:,:,iact) + DM9surfCrop;
+% %                         FPMpoked(iy,ix) = interp2(X, Y, squeeze(mp.complexTransCompact(:,:,modvar.sbpIndex)), DM8surfCrop(iy,ix), DM9surfNew(iy,ix));
+% %                     end
+% %                 end
+% %             end
+% 
+% 
+% %      JLlop       dEF3box = ( (transOuterFPM-FPMpoked) - (transOuterFPM-FPM(eta_box_ind,xi_box_ind)) ).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
+%             dEF3box = EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
+% 
+% %             dEF3box = -(2*pi*1j/lambda)*(mp.dm9.VtoH(iact)*mp.dm9.compact.inf_datacube(:,:,iact))...
+% %             .*(FPMampPad(eta_box_ind,xi_box_ind).*exp(2*pi*1i/lambda*DM9phasePad(eta_box_ind,xi_box_ind))).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
+% 
+%             %--Matrices for the MFT from the FPM stamp to the Lyot stop
+%             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
+%                 *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(1j*lambda*mp.fl);
+%             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
+% 
+%             %--DFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
+%             EP4 = 0 - rect_mat_pre*dEF3box*rect_mat_post; % MFT from FPM (F3) to Lyot stop plane (P4)
+%             EP4 = mp.P4.compact.croppedMask.*EP4; %--Apply Lyot stop
+% 
+%             %--DFT to final focal plane
+%             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+%             if(mp.useGPU); EFend = gather(EFend) ;end
+%             
+%             cp = EFend(2,2); %JLlop
+%             
+% %             Gzdl(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+%             Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*cp/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+%             
+%         end
+%         Gindex = Gindex + 1;
+%         
+%     end
 
 end %%%%%%%%%%%%%%%%%%%
 
