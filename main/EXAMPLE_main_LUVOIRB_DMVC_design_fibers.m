@@ -41,7 +41,7 @@ EXAMPLE_defaults_LUVOIRB_VC_design
 %% Step 3: Overwrite default values as desired
 
 %--Special Computational Settings
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 mp.flagFiber = true;
 
@@ -49,8 +49,9 @@ mp.flagFiber = true;
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
 
-mp.fracBW = 0.01;
-mp.Nsbp = 1;
+mp.fracBW = 0.3;
+mp.Nsbp = 10;
+mp.Nitr = 2;
 
 %--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -67,7 +68,7 @@ mp.Nsbp = 1;
 %--Special settings for fibers
 
 if(mp.flagFiber)
-%     mp.Fend.FOV = 1.5;
+    mp.Fend.FOV = 1.5;
     mp.Fend.res = 15; %Has to be much higher than normal to avoid checkerboarding/ringing when going to F5.
 
     %--Fiber properties
