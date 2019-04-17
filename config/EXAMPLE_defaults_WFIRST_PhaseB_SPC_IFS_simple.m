@@ -5,7 +5,7 @@
 
 %--Record Keeping
 mp.SeriesNum = 1;
-mp.TrialNum = 34;
+mp.TrialNum = 1;
 
 %--Special Computational Settings
 mp.flagParfor = true;
@@ -19,7 +19,7 @@ mp.centering = 'pixel';
 mp.planetFlag = false;
 
 %--Method of computing core throughput:
-% - 'HMI' for energy within half-max isophote divided by energy at telescope pupil
+% - 'HMI' for energy within half-max isophote(s) divided by energy at telescope pupil
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
 mp.thput_metric = 'HMI'; 
 mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY for 'EE' method.
@@ -217,9 +217,9 @@ mp.P3.D = 46.2987e-3;
 mp.P4.D = 46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 1000;%386;
-mp.P2.compact.Nbeam = 1000;%386;
-mp.P3.compact.Nbeam = 1000;%386;
+mp.P1.compact.Nbeam = 386;%1000;%386;
+mp.P2.compact.Nbeam = 386;%1000;%386;
+mp.P3.compact.Nbeam = 386;%1000;%386;
 mp.P4.compact.Nbeam = 60;
 
 %--Shaped Pupil Mask: Load and downsample.
