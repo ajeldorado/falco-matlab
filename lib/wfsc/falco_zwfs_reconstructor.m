@@ -1,6 +1,6 @@
 function phz = falco_zwfs_reconstructor(IC0,IC, mask, b, type,varargin)
 % IC0 - image without Zernike mask
-% IC - iamge with Zernike mask aligned 
+% IC - image with Zernike mask aligned 
 % mask - pupil support mask 
 % b - Reference wave
 % type - string - 'wallace' or 'ndiaye' reconstructors 
