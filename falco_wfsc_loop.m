@@ -779,11 +779,15 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
 
     end
     clear GallCell Gstack Eweighted % save RAM
+
+    %%%%%cvar.GstarG_wsum = cvar.GstarG_wsum(cvar.dm_subset,cvar.dm_subset);
+    %%%%cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum(cvar.dm_subset);
     
     %--Make the regularization matrix. (Define only the diagonal here to save RAM.)
     cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
+%     if(cvar.flagRelin==true);   cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);  end %--Re-use cvar.GstarG_wsum since no re-linearization was done. %--No relative weighting among the DMs
     fprintf(' done. Time: %.3f\n',toc);
-    if mp.aux.omega ~= 0
+    if mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr
         fprintf('Computing linearized control matrices from the JacobianCP...'); tic;
 
         %--Compute matrices for linear control with regular EFC
