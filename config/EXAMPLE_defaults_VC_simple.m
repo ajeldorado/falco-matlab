@@ -54,7 +54,7 @@ mp.est.probe.radius = 12;    % Max x/y extent of probed region [actuators].
 mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
 mp.est.probe.offsetY = 0;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
 mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
-mp.est.probe.gainFudge = 5;     % empirical fudge factor to make average probe amplitude match desired value.
+mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
 
 %--New variables for pairwise probing with a Kalman filter
 %  mp.est.ItrStartKF =  %Which correction iteration to start recursive estimate
