@@ -11,6 +11,8 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
+% of having Efiber as a required output. 
 % Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
 %  actual full models have been moved to sub-routines for clarity.
 % model_full.m - Modified from hcil_simTestbed.m
@@ -24,14 +26,14 @@
 %
 % OUTPUTS:
 % -Eout
+% -Efiber==varargout{1}
 %
-% modvar structure fields (4):
+% modvar structure fields for model_full:
 % -sbpIndex
 % -wpsbpIndex
 % -whichSource
-% -flagGenMat
 
-function [Eout, Efiber] = model_full(mp,modvar,varargin)
+function [Eout, varargout] = model_full(mp,modvar,varargin)
 
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
@@ -142,7 +144,12 @@ end
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
     case{'fourier'}
-        [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac);
+        if(mp.flagFiber)
+            [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac);
+            varargout{1} = Efiber;
+        else
+            Eout = model_full_Fourier(mp, lambda, Ein, normFac);
+        end
         
     case{'wfirst_phaseb_simple'} %--Use compact model as the full model.
                 
