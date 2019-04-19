@@ -25,9 +25,13 @@
 %
 % OUTPUTS:
 % - Eout = 2-D electric field at final plane of optical layout
+% - varargout{1}==Efiber = E-field at final plane when a single mode fiber
+% is used
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
+% of having Efiber as a required output. 
 % Modified on 2019-04-05 by A.J. Riggs to have the normalization be
 %   computed by moving the source off-axis instead of removing the FPM.
 % Modified on 2019-02-14 by G. Ruane to handle scalar vortex FPMs
@@ -39,7 +43,7 @@
 % Modified on 2015-02-18 by A.J. Riggs from hcil_model.m to hcil_simTestbed.m to include
 %  extra errors in the model to simulate the actual testbed for fake images.
 
-function [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac)
+function [Eout, varargout] = model_full_Fourier(mp, lambda, Ein, normFac)
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.full.NdmPad;
@@ -248,8 +252,6 @@ if(isfield(mp,'flagElyot'))
     Eout = EP40;
 end
 
-Efiber = 0;
-
 if(mp.flagFiber)
     Efiber = cell(mp.Fend.Nlens,1);
     
@@ -261,6 +263,15 @@ if(mp.flagFiber)
     end
 
     Efiber = permute(reshape(cell2mat(Efiber)', mp.F5.Nxi, mp.F5.Neta, mp.Fend.Nlens), [2,1,3]);
+    varargout{1} = Efiber;
 end
+
+% function [s,varargout] = returnVariableNumOutputs(x)
+%     nout = max(nargout,1) - 1;
+%     s = size(x);
+%     for k = 1:nout
+%         varargout{k} = s(k);
+%     end
+% end
 
 end %--END OF FUNCTION
