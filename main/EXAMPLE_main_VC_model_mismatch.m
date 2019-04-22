@@ -4,13 +4,14 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform a DMVC simple design run.
+%--Script to perform a VC simple design run.
 %  1) Load the default model parameters for a vortex.
 %  2) Specify the values to overwrite.
 %  3) Run a single trial of WFC using FALCO.
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-04-22 by A.J. Riggs to re-organize the system ID code.
 % Modified on 2019-04-12 by He Sun to add the system ID function.
 % Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
 % ---------------
@@ -57,7 +58,7 @@ systemID_mod = py.importlib.import_module('falco_systemID');
 
 %--Record Keeping
 mp.SeriesNum = 40;
-mp.TrialNum = 3;%2;%1;
+mp.TrialNum = 2;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
@@ -67,7 +68,7 @@ mp.dm_ind = [1 2]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
 
 %--Training the model
-mp.flagTrainModel = false;%true;
+mp.flagTrainModel = true;
 mp.est.flagUseJac = true; 
 mp.NitrTrain = 5; %--How many iterations to use per training set.
 
@@ -105,9 +106,9 @@ load('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
 mp.full.dm1.V0 = DM1V;
 mp.full.dm2.V0 = DM2V;
 
-% %--Mis-align the DMs for added errors
-% mp.full.dm1.xc = 16.5 - 0.5; %--16.5 is centered and expected
-% mp.full.dm2.yc = 16.5 + 0.5; %--16.5 is centered and expected
+%--Mis-align the DMs for added errors
+mp.full.dm1.xc = 16.5 - 0.5; %--16.5 is centered and expected
+mp.full.dm2.yc = 16.5 + 0.5; %--16.5 is centered and expected
 
 
 %% Step 4: Generate the label associated with this trial
