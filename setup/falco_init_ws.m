@@ -12,34 +12,44 @@
 function [mp,out] = falco_init_ws(fn_config)
 
 %% Read inputs as structures from a .mat config file
-mainPath = pwd;
 
-load(fn_config);
+load(fn_config,'mp');
+
+mainPath = mp.path.falco;
 
 disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_dm1_dm2*mp.lambda0))]);
 
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 
-%% Optional/Hidden flags or variables
+%% Optional/Hidden flags
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whehter to save otu the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSaveEachItr')==false);  mp.flagSaveEachItr = false;  end  %--Whether to save out the performance at each iteration. Useful for long trials in case it crashes or is stopped early.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
 if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study
+if(isfield(mp,'flagTrainModel')==false);  mp.flagTrainModel = false;  end  %--Whether to call the Expectation-Maximization (E-M) algorithm to improve the linearized model. 
+if(isfield(mp,'flagUseLearnedJac')==false);  mp.flagUseLearnedJac = false;  end  %--Whether to load and use an improved Jacobian from the Expectation-Maximization (E-M) algorithm 
+if(isfield(mp.est,'flagUseJac')==false); mp.est.flagUseJac = false; end   %--Whether to use the Jacobian or not for estimation. (If not using Jacobian, model is called and differenced.)
+
+%% Optional/Hidden variables
+if(isfield(mp,'SPname')==false);  mp.SPname = 'none';  end %--Apodizer name default
+%--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
 %--Tied actuator pair definitions: See Section with variables mp.dmX.tied for X=1:9
-if(isfield(mp,'SPname')==false);  mp.SPname = 'none';  end %--Apodizer name default
+%--Quantization of DM actuation steps based on least significant bit of the
+% DAC (digital-analog converter). In height, so called HminStep. If HminStep (minimum step in H) is defined, then quantize the DM voltages
+% Variables to define if wanted: mp.dm1.HminStep, mp.dm2.HminStep
 
 %% File Paths
 
 %--Storage directories (data in these folders will not be synced via Git
-if(isfield(mp.path,'ws')==false); mp.path.ws = [mainPath filesep 'data' filesep 'ws' filesep]; end % Store final workspace data here
-if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mainPath filesep 'maps' filesep]; end % Maps go here
-if(isfield(mp.path,'jac')==false); mp.path.jac = [mainPath filesep 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
-if(isfield(mp.path,'images')==false); mp.path.images = [mainPath filesep 'data' filesep 'images' filesep]; end % Store all full, reduced images here
-if(isfield(mp.path,'dm')==false); mp.path.dm = [mainPath filesep 'data' filesep 'DMmaps' filesep]; end % Store DM command maps here
-if(isfield(mp.path,'ws_inprogress')==false); mp.path.ws_inprogress = [mainPath filesep 'data' filesep 'ws_inprogress' filesep]; end % Store in progress workspace data here
+if(isfield(mp.path,'ws')==false); mp.path.ws = [mainPath 'data' filesep 'ws' filesep]; end % Store final workspace data here
+if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mainPath 'maps' filesep]; end % Maps go here
+if(isfield(mp.path,'jac')==false); mp.path.jac = [mainPath 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
+if(isfield(mp.path,'images')==false); mp.path.images = [mainPath 'data' filesep 'images' filesep]; end % Store all full, reduced images here
+if(isfield(mp.path,'dm')==false); mp.path.dm = [mainPath 'data' filesep 'DM' filesep]; end % Store DM command maps here
+if(isfield(mp.path,'ws_inprogress')==false); mp.path.ws_inprogress = [mainPath 'data' filesep 'ws_inprogress' filesep]; end % Store in progress workspace data here
 
 %% Loading previous DM commands as the starting point
 %--Stash DM8 and DM9 starting commands if they are given in the main script
