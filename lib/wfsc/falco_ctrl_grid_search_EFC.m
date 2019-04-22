@@ -90,4 +90,24 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     dmfacBest = vals_list(2,indBest);
     fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
 
+    if(mp.flagPlot)
+        if(length(mp.ctrl.dmfacVec)==1)
+            figure(499); semilogy(mp.ctrl.log10regVec,Inorm_list,'-bd','Linewidth',3)
+            title('Grid Search EFC','Fontsize',20,'Interpreter','Latex');
+            xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
+            ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
+            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
+            drawnow;
+        elseif(length(mp.ctrl.dmfacVec)>1)
+            figure(499); imagesc(mp.ctrl.log10regVec,mp.ctrl.dmfacVec,reshape(log10(Inorm_list),[length(mp.ctrl.dmfacVec),length(mp.ctrl.log10regVec)])); 
+            ch = colorbar; axis xy tight;
+            title('Grid Search EFC','Fontsize',20,'Interpreter','Latex');
+            xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
+            ylabel('Proportional Gain','Fontsize',20,'Interpreter','Latex');
+            ylabel(ch,'log10(Inorm)','Fontsize',20,'Interpreter','Latex');
+            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]);
+            drawnow;
+        end
+    end
+%%
 end %--END OF FUNCTION
