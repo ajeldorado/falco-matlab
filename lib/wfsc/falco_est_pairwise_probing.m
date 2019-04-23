@@ -197,7 +197,7 @@ for si=1:mp.Nsbp
     end
 
     %% Plot relevant data for all the probes
-    falco_plot_pairwise_probes(mp,ev,DM1Vplus,ampSq2Dcube)
+    falco_plot_pairwise_probes(mp,ev,DM1Vplus-repmat(DM1Vnom,[1,1,size(DM1Vplus,3)]),ampSq2Dcube)
 
     %% Perform the estimation
     
