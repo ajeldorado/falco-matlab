@@ -99,7 +99,7 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
+EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.full.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
@@ -112,8 +112,8 @@ Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
 %--Back-propagate to pupil P2
 if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 ); EP2eff = Edm2; else; EP2eff = propcustom_PTP(Edm2,mp.P2.full.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); end %--Back propagate to pupil P2
 
-%--Rotate 180 degrees to propagate to pupil P3
-EP3 = propcustom_2FT(EP2eff, mp.centering);
+%--Re-image to pupil P3
+EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering);
 
 %--Apply the apodizer mask (if there is one)
 if(mp.flagApod)
@@ -160,7 +160,7 @@ switch upper(mp.coro)
             EF3 = (1-mp.F3.full.mask.amp).*EF3inc;
         end
         % Use Babinet's principle at the Lyot plane. This is the term without the FPM.
-        EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
+        EP4noFPM = propcustom_relay(EP3,mp.Nrelay3to4,mp.centering); %--Propagate forward another pupil plane 
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4subtrahend = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
         %--Babinet's principle at P4
@@ -180,7 +180,7 @@ switch upper(mp.coro)
         % Apply (1-FPM) for Babinet's principle later
         EF3 = (transOuterFPM-mp.FPM.mask).*EF3inc; %- transOuterFPM instead of 1 because of the complex transmission of the glass as well as the arbitrary phase shift.
         % Use Babinet's principle at the Lyot plane.
-        EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
+        EP4noFPM = propcustom_relay(EP3,mp.Nrelay3to4,mp.centering); %--Propagate forward another pupil plane 
         EP4noFPM = transOuterFPM*padOrCropEven(EP4noFPM,mp.P4.full.Narr); %--Apply the phase and amplitude change from the FPM's outer complex transmission.
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4subtra = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
@@ -208,7 +208,7 @@ switch upper(mp.coro)
         % Apply (1-FPM) for Babinet's principle later
         EF3 = (1 - FPM).*EF3inc;
         % Use Babinet's principle at the Lyot plane.
-        EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
+        EP4noFPM = propcustom_relay(EP3,mp.Nrelay3to4,mp.centering); %--Propagate forward another pupil plane 
         EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.full.Narr);
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4subtra = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
@@ -223,7 +223,7 @@ end
 if(normFac==0)
     switch upper(mp.coro)
         case{'VORTEX','VC','AVC'}
-            EP4 = propcustom_2FT(EP3, mp.centering);
+            EP4 = propcustom_relay(EP3,mp.Nrelay3to4, mp.centering);
             EP4 = padOrCropEven(EP4,mp.P4.full.Narr);
     end
 end
@@ -233,10 +233,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Apply the Lyot stop
-EP40 = EP4;
 EP4 = mp.P4.full.croppedMask.*EP4; %padOrCropEven(EP4,mp.P4.full.Narr);
 
-%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend.
+%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
+EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta);
 
 %--Don't apply FPM if normalization value is being found
@@ -247,10 +247,6 @@ else
 end
 
 if(mp.useGPU); Eout = gather(Eout); end
-
-if(isfield(mp,'flagElyot'))
-    Eout = EP40;
-end
 
 if(mp.flagFiber)
     Efiber = cell(mp.Fend.Nlens,1);

@@ -93,7 +93,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if(mp.flagPlot)
         if(length(mp.ctrl.dmfacVec)==1)
             figure(499); semilogy(mp.ctrl.log10regVec,Inorm_list,'-bd','Linewidth',3)
-            title('Grid Search EFC','Fontsize',20,'Interpreter','Latex');
+            title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
             set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;

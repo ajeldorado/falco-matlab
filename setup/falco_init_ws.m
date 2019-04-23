@@ -33,6 +33,7 @@ if(isfield(mp,'flagUseLearnedJac')==false);  mp.flagUseLearnedJac = false;  end 
 if(isfield(mp.est,'flagUseJac')==false); mp.est.flagUseJac = false; end   %--Whether to use the Jacobian or not for estimation. (If not using Jacobian, model is called and differenced.)
 
 %% Optional/Hidden variables
+if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
 if(isfield(mp,'SPname')==false);  mp.SPname = 'none';  end %--Apodizer name default
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
