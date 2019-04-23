@@ -619,7 +619,10 @@ function mp = falco_train_model(mp,ev)
             R2 = exp(jacStructLearned.noise_coef(5));
             print_flag = false;
             path2data = mp.path.jac;
-            py.falco_systemID.linear_vl(Q0, Q1, R0, R1, R2, 1e-9, 1e-3, 10, print_flag,path2data);
+            lr = mp.est.lr;
+            lr2 = mp.est.lr2;
+            epoch = mp.est.epoch;
+            py.falco_systemID.linear_vl(Q0, Q1, R0, R1, R2, lr, lr2, epoch, print_flag,path2data);
         end
         mp.flagUseLearnedJac = 1;
         data_train.u1 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);

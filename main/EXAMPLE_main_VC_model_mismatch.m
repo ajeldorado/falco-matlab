@@ -19,8 +19,8 @@
 clear all;
 
 %% Tell Matlab which Python to use from where. Needed for the E-M algorithm.
-% setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin')
-% pyversion('/usr/local/opt/python3/bin/python3.6');
+% setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin') %--Put the parent directory of the python version you want Matlab to use.
+% pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the python version you want Matlab to use.
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -87,12 +87,16 @@ mp.TrialNum = 1;%k_runTrial;%
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-%--DEBUGGING
+%--DEBUGGING IN MONOCHROMATIC LIGHT
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-% mp.estimator = 'perfect';
 
+
+%% Tuning parameters for System Identification
+mp.est.lr  = 1e-9; % learning rate
+mp.est.lr2 = 1e-3; % learning rate2
+mp.est.epoch = 10; % 
 
 %% Sources of model mismatch to include in full model
 
