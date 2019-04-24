@@ -190,6 +190,7 @@ switch upper(mp.coro)
         EP4noFPM = transOuterFPM*EP4noFPM; %--Apply the phase and amplitude change from the FPM's outer complex transmission.
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,scaleFac*mp.F3.compact.dxi,scaleFac*mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+        EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Propagate forward more pupil planes if necessary.
         %--Babinet's principle at P4
         EP4 = (EP4noFPM-EP4sub); 
 
@@ -213,7 +214,8 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.compact.croppedMask.*EP4;
 
-% DFT to camera
+%--MFT to detector
+EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Get orientation of final image correct.
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx, dxi,Nxi,deta,Neta, mp.centering);
 % EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta); %--Code from before flagEval
 

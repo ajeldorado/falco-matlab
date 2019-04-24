@@ -12,6 +12,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2018-04-22 by A.J. Riggs to use propcustom_relay.
 % Modified on 2019-02-12 by G. Ruane to allow scalar vortex models 
 % Modified on 2018-03-01 by A.J. Riggs to debug the vortex coronagraph.
 % Modified on 2017-11-13 by A.J. Riggs to be compatible with parfor.
@@ -68,13 +69,12 @@ end
 
 pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
 Ein = padOrCropEven(Ein,NdmPad);
-if(mp.flagApod)
-    apodRot180 = padOrCropEven(rot90(mp.P3.compact.mask,2), NdmPad);
-    if(strcmpi(mp.centering,'pixel')) %--To undo center offset when pixel centered and rotating by 180 degrees.
-        apodRot180 = circshift(apodRot180,[1 1]);
-    end
+%--Re-image the apodizer from pupil P3 back to pupil P2. (Sign of mp.Nrelay2to3 doesn't matter.)
+if(mp.flagApod) 
+    apodReimaged = padOrCropEven(mp.P3.compact.mask, NdmPad);
+    apodReimaged = propcustom_relay(apodReimaged,mp.Nrelay2to3,mp.centering);
 else
-    apodRot180 = ones(NdmPad); 
+    apodReimaged = ones(NdmPad); 
 end
 
 if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
@@ -97,7 +97,7 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
+EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
@@ -150,7 +150,7 @@ if(whichDM==1)
         DM2stop = ones(mp.dm1.compact.NdmPad);
     end
     
-    apodRot180 = padOrCropEven( apodRot180, mp.dm1.compact.NdmPad);
+    apodReimaged = padOrCropEven( apodReimaged, mp.dm1.compact.NdmPad);
     Edm1pad = padOrCropEven(Edm1,mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
 
     %--Propagate each actuator from DM2 through the optical system
@@ -174,7 +174,7 @@ if(whichDM==1)
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
-            dEP2boxEff = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP2boxEff = apodReimaged(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
             
             %--Re-insert the window around the influence function back into the full beam array.
             if(isa(dEP2boxEff,'gpuArray'))
@@ -186,23 +186,25 @@ if(whichDM==1)
             EP2eff(y_box_AS_ind,x_box_AS_ind) = dEP2boxEff;
             
             %--Forward propagate from P2 (effective) to P3
-            EP3 = propcustom_2FT(EP2eff,mp.centering); 
-
+            EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering); 
+            
             %--Pad pupil P3 for FFT
-            EP3pad = padOrCropEven(EP3, Nfft1 );
+            EP3pad = padOrCropEven(EP3, Nfft1);
 
             %--FFT from P3 to Fend.and apply vortex
             EF3 = fftshiftVortex.*fft2(fftshift(EP3pad))/Nfft1;
 
             %--FFT from Vortex FPM to Lyot Plane
             EP4 = fftshift(fft2(EF3))/Nfft1;
+            EP4 = propcustom_relay(EP4,mp.Nrelay3to4-1,mp.centering); %--Add more re-imaging relays if necessary
             if(Nfft1 > mp.P4.compact.Narr)
                 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
             else
                 EP4 = padOrCropEven(mp.P4.compact.croppedMask,Nfft1).*EP4; %--Crop the Lyot stop and then apply it.
             end
+            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
 
-            % DFT to camera
+            %--MFT to detector
             if(mp.flagFiber)
                 for nlens = 1:mp.Fend.Nlens
                     EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
@@ -248,7 +250,7 @@ if(whichDM==2)
     NboxPad2AS = mp.dm2.compact.NboxAS; 
     mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
     
-    apodRot180 = padOrCropEven( apodRot180, mp.dm2.compact.NdmPad);
+    apodReimaged = padOrCropEven( apodReimaged, mp.dm2.compact.NdmPad);
     DM2stop = padOrCropEven(DM2stop,mp.dm2.compact.NdmPad);
         
     %--Propagate full field to DM2 before back-propagating in small boxes
@@ -275,7 +277,7 @@ if(whichDM==2)
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
-            dEP2boxEff = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP2boxEff = apodReimaged(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply de-rotated SP mask.
 
             if(isa(dEP2boxEff,'gpuArray'))
                 EP2eff = gpuArray.zeros(mp.dm2.compact.NdmPad);
@@ -286,7 +288,7 @@ if(whichDM==2)
             EP2eff(y_box_AS_ind,x_box_AS_ind) = dEP2boxEff;
 
             %--Forward propagate from P2 (effective) to P3
-            EP3 = propcustom_2FT(EP2eff,mp.centering); 
+            EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering); 
 
             %--Pad pupil P3 for FFT
             EP3pad = padOrCropEven(EP3, Nfft2);
@@ -296,13 +298,15 @@ if(whichDM==2)
 
             %--FFT from Vortex FPM to Lyot Plane
             EP4 = fftshift(fft2(EF3))/Nfft2;
+            EP4 = propcustom_relay(EP4,mp.Nrelay3to4-1,mp.centering); %--Add more re-imaging relays if necessary
             if(Nfft2 > mp.P4.compact.Narr)
                 EP4 = mp.P4.compact.croppedMask.*padOrCropEven(EP4,mp.P4.compact.Narr); %--Crop EP4 and then apply Lyot stop 
             else
                 EP4 = padOrCropEven(mp.P4.compact.croppedMask,Nfft2).*EP4; %--Crop the Lyot stop and then apply it.
             end
-            
-            % DFT to camera
+            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
+
+            %--MFT to detector
             if(mp.flagFiber)
                 for nlens = 1:mp.Fend.Nlens
                     EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));

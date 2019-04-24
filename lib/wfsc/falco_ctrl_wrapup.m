@@ -108,6 +108,6 @@ if(any(mp.dm_ind==5));  mp.dm5.dV = mp.dm5.V - cvar.DM5Vnom;  end
 if(any(mp.dm_ind==6));  mp.dm6.dV = mp.dm6.V - cvar.DM6Vnom;  end
 if(any(mp.dm_ind==7));  mp.dm7.dV = mp.dm7.V - cvar.DM7Vnom;  end
 if(any(mp.dm_ind==8));  mp.dm8.dV = mp.dm8.V - cvar.DM8Vnom;  end
-if(any(mp.dm_ind==9));  mp.dm9.dV = mp.dm9.V - cvar.DM9Vnom;  ends
+if(any(mp.dm_ind==9));  mp.dm9.dV = mp.dm9.V - cvar.DM9Vnom;  end
 
 end %--END OF FUNCTION
