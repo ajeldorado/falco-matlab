@@ -142,9 +142,9 @@ for Itr=1:mp.Nitr
         Im_tb.Im = Im;
         Im_tb.E = zeros(size(Im));
         if(Itr>1)
-            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec).^2);
-            InormHist_tb.unmod(Itr-1) = mean(IincoVec);
-            Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
+            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
+            InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
+            Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
         else
             InormHist_tb.mod = NaN;
             InormHist_tb.unmod = NaN;
@@ -456,11 +456,11 @@ mp.thput_vec(Itr) = thput;
 
 if(isfield(mp,'testbed'))
     InormHist_tb.total = InormHist; 
-    InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec).^2);
-    InormHist_tb.unmod(Itr-1) = mean(IincoVec);
+    InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
+    InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
     Im_tb.Im = Im;
     Im_tb.E = zeros(size(Im));
-    Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
+    Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
     hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
