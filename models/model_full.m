@@ -164,7 +164,7 @@ switch lower(mp.layout)
         end
 
         Eout = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
-        Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        %Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
@@ -182,7 +182,7 @@ switch lower(mp.layout)
         end
 
         Eout = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
-        Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        %Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end

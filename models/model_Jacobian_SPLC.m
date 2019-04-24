@@ -12,6 +12,7 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2018-04-22 by A.J. Riggs to use propcustom_relay.
 % Modified on 2017-11-13 by A.J. Riggs to be compatible with parfor.
 % Modified on 2017-11-09 by A.J. Riggs to have the Jacobian calculation be
 % its own function.
@@ -68,13 +69,12 @@ Ein = padOrCropEven(Ein,mp.compact.NdmPad);
 if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
 if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
 
+%--Re-image the apodizer from pupil P3 back to pupil P2. (Sign of mp.Nrelay2to3 doesn't matter.)
 if(mp.flagApod) 
-    apodRot180 = padOrCropEven( rot90(mp.P3.compact.mask,2), NdmPad );
-    if(strcmpi(mp.centering,'pixel')) %--To undo center offset when pixel centered and rotating by 180 degrees.
-        apodRot180 = circshift(apodRot180,[1 1]);
-    end
+    apodReimaged = padOrCropEven(mp.P3.compact.mask, NdmPad);
+    apodReimaged = propcustom_relay(apodReimaged,mp.Nrelay2to3,mp.centering);
 else
-    apodRot180 = ones(NdmPad); 
+    apodReimaged = ones(NdmPad); 
 end
 
 if(any(mp.dm_ind==1)); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
@@ -100,7 +100,7 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
+EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
@@ -123,7 +123,7 @@ if(whichDM==1)
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
     %--Resize starting matrices at DM1/pupil1
-    apodRot180 = padOrCropEven( apodRot180, mp.dm1.compact.NdmPad);
+    apodReimaged = padOrCropEven( apodReimaged, mp.dm1.compact.NdmPad);
     if(any(mp.dm_ind==2)) %--Pre-compute the previous DM2 surface
         DM2surf = padOrCropEven(DM2surf,mp.dm1.compact.NdmPad);
     else
@@ -155,15 +155,13 @@ if(whichDM==1)
             %--Propagate back from DM2 to P2
             dEP2box = propcustom_PTP(dEbox.*DM2stop(y_box_AS_ind,x_box_AS_ind).*Edm2WFEpad(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); %--Apply DM2 E-field and then back-propagate to pupil P2
 
-            %--To simulate going forward to the next pupil plane (with the SP) most efficiently, 
-            % 1st back-propagate the SP (by rotating 180-degrees) to the previous pupil, and then
-            % 2nd negate the coordinates of the box used. 
-
-            dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
-
-            x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
-            y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
+            %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
+            % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
+            % Second, negate the coordinates of the box used.
+            dEP2box = apodReimaged(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP3box = rot90(dEP2box,2*mp.Nrelay2to3); %--Forward propagate the cropped box by rotating 180 degrees mp.Nrelay2to3 times.
+            x_box = (-1)^mp.Nrelay2to3*rot90(x_box,2*mp.Nrelay2to3); %--Negate and rotate coordinates to effectively rotate by 180 degrees. No change if 360 degree rotation.
+            y_box = (-1)^mp.Nrelay2to3*rot90(y_box,2*mp.Nrelay2to3); %--Negate and rotate coordinates to effectively rotate by 180 degrees. No change if 360 degree rotation.
 
             %--Matrices for the MFT from the pupil to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
@@ -174,11 +172,13 @@ if(whichDM==1)
             EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
             EF3 = mp.F3.compact.mask.amp.*EF3; %--Multiply by FPM
 
-            %--DFT to Lyot Plane
+            %--MFT to Lyot Plane
             EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  
+            EP4 = propcustom_relay(EP4,mp.Nrelay3to4-1,mp.centering); %--Add more re-imaging relays between pupils P3 and P4 if necessary
             EP4 = mp.P4.compact.croppedMask.*(EP4); %--Apply Lyot stop
+            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
 
-            % DFT to camera
+            %--MFT to detector
             if(mp.flagFiber)
                 for nlens = 1:mp.Fend.Nlens
                     EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
@@ -209,6 +209,8 @@ if(whichDM==2)
         Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele); %--Initialize the Jacobian
     end
     
+    apodReimaged = padOrCropEven( apodReimaged, mp.dm2.compact.NdmPad);
+
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS;
     mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
@@ -218,7 +220,7 @@ if(whichDM==2)
     DM2stopPad = padOrCropEven(DM2stop,mp.dm2.compact.NdmPad);
     Edm2inc = padOrCropEven( propcustom_PTP(Edm1,mp.compact.NdmPad*mp.P2.compact.dx,lambda,mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
     Edm2 = DM2stopPad.*Edm2WFEpad.*Edm2inc.*exp(mirrorFac*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
-    
+
     %--Propagate each actuator from DM2 through the rest of the optical system
     Gindex = 1; % initialize index counter
     for iact=mp.dm2.act_ele(:).'
@@ -235,13 +237,10 @@ if(whichDM==2)
             %--To simulate going forward to the next pupil plane (with the SP) most efficiently, 
             % 1st back-propagate the SP (by rotating 180-degrees) to the previous pupil, and then
             % 2nd negate the coordinates of the box used. 
-            apodRot180 = padOrCropEven( apodRot180, mp.dm2.compact.NdmPad);
-
-            dEP2box = apodRot180(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
-            dEP3box = rot90(dEP2box,2); %--Forward propagate the cropped box by rotating 180 degrees.
-
-            x_box = rot90(-x_box,2); %--Negate to effectively rotate by 180 degrees
-            y_box = rot90(-y_box,2); %--Negate to effectively rotate by 180 degrees
+            dEP2box = apodReimaged(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply 180deg-rotated SP mask.
+            dEP3box = rot90(dEP2box,2*mp.Nrelay2to3); %--Forward propagate the cropped box by rotating 180 degrees mp.Nrelay2to3 times.
+            x_box = (-1)^mp.Nrelay2to3*rot90(x_box,2*mp.Nrelay2to3); %--Negate and rotate coordinates to effectively rotate by 180 degrees. No change if 360 degree rotation.
+            y_box = (-1)^mp.Nrelay2to3*rot90(y_box,2*mp.Nrelay2to3); %--Negate and rotate coordinates to effectively rotate by 180 degrees. No change if 360 degree rotation.
 
             %--Matrices for the MFT from the pupil to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(mp.F3.compact.etas*y_box)/(lambda*mp.fl)))...
@@ -252,10 +251,12 @@ if(whichDM==2)
             EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
             EfpmOut = mp.F3.compact.mask.amp.*EF3; %--Multiply by FPM
 
-            %--DFT to Lyot Plane
+            %--MFT to Lyot Plane
             EP4 = propcustom_mft_FtoP(EfpmOut,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  
+            EP4 = propcustom_relay(EP4,mp.Nrelay3to4-1,mp.centering); %--Add more re-imaging relays between pupils P3 and P4 if necessary
             EP4 = mp.P4.compact.croppedMask.*(EP4); %--Apply Lyot stop
-
+            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
+            
             % DFT to camera
             if(mp.flagFiber)
                 for nlens = 1:mp.Fend.Nlens
@@ -264,7 +265,7 @@ if(whichDM==2)
                     EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
                     Gzdl(nlens,Gindex) = max(mp.F5.fiberMode(:)).*sum(sum(mp.F5.fiberMode.*EF5));
                 end
-            else    
+            else
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
                 if(mp.useGPU)

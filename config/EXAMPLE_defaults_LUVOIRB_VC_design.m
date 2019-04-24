@@ -203,6 +203,7 @@ mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vort
 mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
+mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
 % mp.F3.compact.res = 6; % sampling of FPM for compact model [pixels per lambda0/D]
 
