@@ -23,6 +23,11 @@
 % - Created on 2019-02-22 by G. Ruane 
 
 function normI = falco_get_hcst_sbp_image(mp,si)
+
+    bench = mp.bench;
+    sbp_width = bench.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
+    sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
+    PSFpeak   = bench.info.PSFpeaks(si);% counts per second 
     
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
@@ -37,18 +42,25 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     %        are handled outside of this function. 
     cmds = hcst_DM_apply2Dmap(bench,map,1);% Returns actual DM commands 
     
-    %----- Get image from the testbed -----
-    disp(['Getting image from testbed in band',num2str(si)])
+    if(isfield(bench.info,'source') && srtcmpi(bench.info.source,'nkt'))
+        %----- Get image from the testbed -----
+        disp(['Getting image from testbed in band ',num2str(si)])
     
-    % disp('Setting varia to bandpass',num2str(si)])
-    %   NOT IMPLEMENTED YET!!! ONLY WILL WORK FOR MONOCHROMATIC EFC
-    
+        % Set wavelength
+        lam0 = mp.sbp_centers(si);
+        lam1 = lam0 - sbp_width/2;
+        lam2 = lam0 + sbp_width/2;
+        tb_NKT_setWvlRange(bench,lam1*1e9,lam2*1e9);
+    else
+        disp('Getting image from testbed (using laser source)')
+    end
+
     % Load the dark with the correct tint. It must exist in the dark
     % library. 
     dark = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
     
     % Scale the PSF photometry by the current integration time
-    peakPSF = mp.peakPSF/mp.peakPSFtint*bench.andor.tint; 
+    peakPSF = mp.peakPSF/mp.peakPSFtint*bench.andor.tint*mp.NDfilter_cal; 
     
     % Get normalized intensity (dark subtracted and normalized by peakPSF)
     normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 
