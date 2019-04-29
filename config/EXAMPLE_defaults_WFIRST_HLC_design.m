@@ -273,6 +273,7 @@ mp.P4.compact.Nbeam = 150;
 mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
+mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
 %% Optical Layout: Full Model 
 

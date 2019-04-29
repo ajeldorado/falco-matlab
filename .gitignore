@@ -36,7 +36,7 @@ data/configs/**
 data/DM/**
 data/figures/**
 data/images/**
-data/Jacobians/**
+data/jac/**
 data/logs/**
 data/maps/**
 data/ws/**
@@ -50,7 +50,7 @@ data/material/**
 !data/DM/placeholder.txt
 !data/figures/placeholder.txt
 !data/images/placeholder.txt
-!data/Jacobians/placeholder.txt
+!data/jac/placeholder.txt
 !data/logs/placeholder.txt
 !data/maps/placeholder.txt
 !data/ws/placeholder.txt
@@ -85,6 +85,7 @@ zEXTRA/**
 main/**
 !main/TEMPLATE*
 !main/EXAMPLE_*
+!main/falco_*
 
 #--Sync only example config (defaults) files
 config/**

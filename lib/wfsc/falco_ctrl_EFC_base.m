@@ -14,8 +14,10 @@
 %
 %
 % REVISION HISTORY: 
+% - Modified on 2019-04-23 by A.J. Riggs to have an option for a
+%   model-based grid search.
 % - Modified on 2019-02-13 by A.J. Riggs to use falco_ctrl_setup.m and
-% falco_ctrl_wrapup.m to save a bunch of space.
+%   falco_ctrl_wrapup.m to save a bunch of space.
 % - Modified on 2018-11-12 by A.J. Riggs to clean up code, especially to 
 %   remove the large commented-out blocks.
 % - Modified on 2018-07-24 by A.J. Riggs to switch from the Lagrange multiplier to the Tikhonov regularization.
@@ -83,10 +85,23 @@ end
 [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec);
 
 %% Take images and compute average intensity in dark hole
-Itotal = falco_get_summed_image(mp);
-[mp,thput] = falco_compute_thput(mp);
 
-InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+if(mp.ctrl.flagUseModel) %--Perform a model-based grid search
+    if(mp.flagFiber)
+        %--Not available yet
+    else
+        Itotal = falco_get_expected_summed_image(mp,cvar);
+        InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+    end
+else %--Perform an empirical grid search with actual images from the testbed or full model
+    if(mp.flagFiber)
+        IfiberTotal = falco_get_summed_image_fiber(mp);
+        InormAvg = mean(max(max(IfiberTotal)));
+    else
+        Itotal = falco_get_summed_image(mp);
+        InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+    end
+end
         
 
 end %--END OF FUNCTION
