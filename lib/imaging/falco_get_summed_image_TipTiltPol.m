@@ -50,7 +50,7 @@ function Imean = falco_get_summed_image_TipTiltPol(mp)
 
     
     if(mp.flagParfor && mp.flagSim) %(mp.flagSim && mp.full.flagPROPER) %--Save a lot of time by making all PROPER full model in parallel
-        %--Loop over all wavelengths and polarizations        
+        %--Loop over all wavelengths, tip/tilt offsets, and polarizations        
         inds_list = allcomb(1:mp.full.NlamUnique,1:Ntt,1:Npol).'; %--dimensions: [3 x mp.full.NlamUnique*Ntt*Npol ]
         %inds_list = allcomb(1:mp.Nsbp,1:mp.Nwpsbp,1:Ntt,1:Npol).'; %--dimensions: [4 x mp.Nsbp*Nwpsbp*Ntt*Npol ]
         Nvals = size(inds_list,2);

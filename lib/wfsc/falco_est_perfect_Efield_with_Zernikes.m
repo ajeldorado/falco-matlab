@@ -17,9 +17,7 @@
 function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
 
     if(isfield(mp,'lowfs'))
-        if(mp.lowfs)
-            error('falco_est_perfect_Efield_with_Zernikes.m: Do not call this function to retrieve the LOWFS E-field. ')
-        end
+        if(mp.lowfs);  error('falco_est_perfect_Efield_with_Zernikes.m: Do not call this function to retrieve the LOWFS E-field. ');  end
     end
 
     %--Polarization states as defined in the guide by John Krist for the

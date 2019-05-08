@@ -4,10 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% High-level function to run design simulations of various types of Lyot coronagraphs.
+% Function to run wavefront estimation and control simulations of various 
+% types of coronagraphs.
+% - Data are mostly passed in structures.
+% - Nested functions are used in some places to prevent large structures 
+%   such as mp from being copied when passed to those functions.
 %
-% Data are mostly passed in structures.
-%
+% Modified on 2019-05-08 by A.J. Riggs to have mp be an optional output.
 % Modified on 2019-03-26 by A.J. Riggs to include tied actuators and to
 %   make nested functions actually nested.
 % Modified again by A.J. Riggs on May 23, 2017 to eliminate a lot of unnecessary
