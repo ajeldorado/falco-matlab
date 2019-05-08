@@ -1,11 +1,11 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018,2019, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to provide input parameters as structures
-% Setup parameters for a mock SPLC at the HCIT.
+% Function to finish initializing the workspace prior to wavefront
+% estimation and control.
 %
 % Created by A.J. Riggs on 2017-10-31.
 
@@ -21,19 +21,29 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
+mp.full.dummy = 1;
 
 %% Optional/Hidden flags
+%--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whehter to save otu the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSaveEachItr')==false);  mp.flagSaveEachItr = false;  end  %--Whether to save out the performance at each iteration. Useful for long trials in case it crashes or is stopped early.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
-if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
-if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study
+%--Jacobian or controller related
 if(isfield(mp,'flagTrainModel')==false);  mp.flagTrainModel = false;  end  %--Whether to call the Expectation-Maximization (E-M) algorithm to improve the linearized model. 
 if(isfield(mp,'flagUseLearnedJac')==false);  mp.flagUseLearnedJac = false;  end  %--Whether to load and use an improved Jacobian from the Expectation-Maximization (E-M) algorithm 
 if(isfield(mp.est,'flagUseJac')==false);  mp.est.flagUseJac = false;  end   %--Whether to use the Jacobian or not for estimation. (If not using Jacobian, model is called and differenced.)
-if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end %--Whether to perform a model-based (vs empirical) grid search for the controller
+if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end %--Whether to perform a model-based (instead of empirical) grid search for the controller
+%--Neighbor rule
+if(isfield(mp.dm1,'flagNbrRule'));  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if(isfield(mp.dm2,'flagNbrRule'));  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+%--Model options
+if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER
+if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
+if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
+
 
 %% Optional/Hidden variables
+if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
 if(isfield(mp,'SPname')==false);  mp.SPname = 'none';  end %--Apodizer name default
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
@@ -66,32 +76,23 @@ mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %--Conversion factor: mi
 %% Estimator
 if(isfield(mp,'estimator')==false); mp.estimator = 'perfect'; end
 
-%% Bandwidth and Wavelength Specs
+%% Bandwidth and Wavelength Specs: Compact Model
 
-if(isfield(mp,'Nwpsbp')==false)
-    mp.Nwpsbp = 1;
-end
-mp.full.Nlam = mp.Nsbp*mp.Nwpsbp; %--Total number of wavelengths in the full model
+if(isfield(mp,'Nwpsbp')==false);  mp.Nwpsbp = 1;  end
 
-%--When in simulation and using perfect estimation, use end wavelengths in bandbass, which (currently) requires Nwpsbp=1. 
-if(strcmpi(mp.estimator,'perfect') && mp.Nsbp>1)
-    if(mp.Nwpsbp>1)
-        fprintf('* Forcing mp.Nwpsbp = 1 * \n')
-        mp.Nwpsbp = 1; % number of wavelengths per sub-bandpass. To approximate better each finite sub-bandpass in full model with an average of images at these values. Only >1 needed when each sub-bandpass is too large (say >3%).
-    end
-end
-
-%--Center-ish wavelength indices (ref = reference)
+%--Center(-ish) wavelength indices (ref = reference). (Only the center if
+%  an odd number of wavelengths is used.)
 mp.si_ref = ceil(mp.Nsbp/2);
-mp.wi_ref = ceil(mp.Nwpsbp/2);
 
 %--Wavelengths used for Compact Model (and Jacobian Model)
 mp.sbp_weights = ones(mp.Nsbp,1);
-if(strcmpi(mp.estimator,'perfect') && mp.Nsbp>1) %--For design or modeling without estimation: Choose ctrl wvls evenly between endpoints (inclusive) of the total bandpass
-    mp.fracBWsbp = mp.fracBW/(mp.Nsbp-1);
-    mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
+if(strcmpi(mp.estimator,'perfect') && mp.Nwpsbp==1) %--Set ctrl wvls evenly between endpoints (inclusive) of the total bandpass. For design or modeling.
+    if(mp.Nsbp==1)
+        mp.sbp_centers = mp.lambda0;
+    else
+        mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
+    end
 else %--For cases with estimation: Choose est/ctrl wavelengths to be at subbandpass centers.
-    mp.fracBWsbp = mp.fracBW/mp.Nsbp;
     mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
     mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBWcent2cent/2,1+mp.fracBWcent2cent/2,mp.Nsbp); %--Space evenly at the centers of the subbandpasses.
 end
@@ -100,33 +101,79 @@ mp.sbp_weights = mp.sbp_weights/sum(mp.sbp_weights); %--Normalize the sum of the
 fprintf(' Using %d discrete wavelength(s) in each of %d sub-bandpasses over a %.1f%% total bandpass \n', mp.Nwpsbp, mp.Nsbp,100*mp.fracBW);
 fprintf('Sub-bandpasses are centered at wavelengths [nm]:\t '); fprintf('%.2f  ',1e9*mp.sbp_centers); fprintf('\n\n');
 
-%--Wavelength factors/weights within sub-bandpasses in the full model
-mp.full.lambda_weights = ones(mp.Nwpsbp,1); %--Initialize as all ones. Weights within a single sub-bandpass
-if(mp.Nsbp==1)
-    mp.full.sbp_facs = linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nwpsbp);
-    if(mp.Nwpsbp>2) %--Include end wavelengths with half weights
-        mp.full.lambda_weights(1) = 1/2;
-        mp.full.lambda_weights(end) = 1/2;
-    end
-else %--For cases with estimation (est/ctrl wavelengths at subbandpass centers). Full model only
-    mp.full.sbp_facs = linspace(1-(mp.fracBWsbp/2)*(1-1/mp.Nwpsbp),...
-                           1+(mp.fracBWsbp/2)*(1-1/mp.Nwpsbp), mp.Nwpsbp);
-end
-if(mp.Nwpsbp==1);  mp.full.sbp_facs = 1;  end %--Set factor to 1 if only 1 value.
+%% Bandwidth and Wavelength Specs: Full Model
 
-mp.full.lambda_weights = mp.full.lambda_weights/sum(mp.full.lambda_weights); %--Normalize sum of the weights
+
+%--Center(-ish) wavelength indices (ref = reference). (Only the center if an odd number of wavelengths is used.)
+mp.wi_ref = ceil(mp.Nwpsbp/2);
+
+%--Wavelength factors/weights within each sub-bandpass. For full model only
+mp.full.lambda_weights = ones(mp.Nwpsbp,1); %--Initialize as all ones. Weights within a single sub-bandpass
+if(mp.Nwpsbp==1)
+    mp.full.dlam = 0; %--Delta lambda between every wavelength in the sub-band in the full model
+else
+    %--Spectral weighting in image
+    mp.full.lambda_weights(1) = 1/2; %--Include end wavelengths with half weights
+    mp.full.lambda_weights(end) = 1/2; %--Include end wavelengths with half weights
+    mp.fracBWsbp = mp.fracBW/mp.Nsbp; %--Bandwidth per sub-bandpass
+    %--Indexing of wavelengths in each sub-bandpass
+    sbp_facs = linspace(1-mp.fracBWsbp/2,1+mp.fracBWsbp/2,mp.Nwpsbp); %--Factor applied to lambda0 only
+    mp.full.dlam = (sbp_facs(2) - sbp_facs(1))*mp.lambda0; %--Delta lambda between every wavelength in the full model 
+end
+mp.full.lambda_weights = mp.full.lambda_weights/sum(mp.full.lambda_weights); %--Normalize sum of the weights (within the sub-bandpass)
 
 %--Make vector of all wavelengths and weights used in the full model
-mp.full.lambdas = zeros(mp.Nsbp*mp.Nwpsbp,1);
-mp.full.weights = zeros(mp.Nsbp*mp.Nwpsbp,1);
-counter = 1;
+lambdas = zeros(mp.Nsbp*mp.Nwpsbp,1);
+lambda_weights_all = zeros(mp.Nsbp*mp.Nwpsbp,1);
+mp.full.lambdasMat = zeros(mp.Nsbp,mp.Nwpsbp);
+mp.full.indsLambdaMat = zeros(mp.Nsbp*mp.Nwpsbp,2);
+counter = 0;
 for si=1:mp.Nsbp
+    mp.full.lambdasMat(si,:) = (-(mp.Nwpsbp-1)/2:(mp.Nwpsbp-1)/2)*mp.full.dlam + mp.sbp_centers(si); 
     for wi=1:mp.Nwpsbp
-        mp.full.lambdas(counter) = mp.sbp_centers(si)*mp.full.sbp_facs(wi);
-        mp.full.all_weights = mp.sbp_weights(si)*mp.full.lambda_weights(wi);
         counter = counter+1;
+        lambdas(counter) = mp.full.lambdasMat(si,wi);
+        lambda_weights_all(counter) = mp.sbp_weights(si)*mp.full.lambda_weights(wi);
+        mp.full.indsLambdaMat(counter,:) = [si,wi];
     end
+    
 end
+
+%--Get rid of redundant wavelengths in the complete list, and sum weights for repeated wavelengths
+% indices of unique wavelengths
+[~, inds_unique] = unique(round(1e12*lambdas)); %--Check equality at the picometer level for wavelength
+mp.full.indsLambdaUnique = inds_unique;
+% indices of duplicate wavelengths
+duplicate_inds = setdiff( 1:length(lambdas) , inds_unique);
+% duplicate weight values
+duplicate_values = lambda_weights_all(duplicate_inds);
+
+%--Shorten the vectors to contain only unique values. Combine weights for repeated wavelengths.
+mp.full.lambdas = lambdas(inds_unique);
+mp.full.lambda_weights_all = lambda_weights_all(inds_unique);
+for idup=1:length(duplicate_inds)
+    lambda = lambdas(idup); 
+    weight = lambda_weights_all(idup);
+    ind = find(mp.full.lambdas==lambda);
+    mp.full.lambda_weights_all(ind) = mp.full.lambda_weights_all(ind) + weight;
+end
+mp.full.NlamUnique = length(inds_unique);
+%%
+
+% %--Make vector of all wavelengths and weights used in the full model
+% mp.full.lambdas = zeros(mp.Nsbp*mp.Nwpsbp,1);
+% mp.full.lambda_weights_all = zeros(mp.Nsbp*mp.Nwpsbp,1);
+% mp.full.lambdaInds = zeros(mp.Nsbp*mp.Nwpsbp,2); %--Indices as a guide
+% counter = 0;
+% for si=1:mp.Nsbp
+%     for wi=1:mp.Nwpsbp
+%         counter = counter+1;
+%         mp.full.lambdas(counter) = mp.sbp_centers(si)*mp.full.sbp_facs(wi);
+%         mp.full.lambda_weights_all = mp.sbp_weights(si)*mp.full.lambda_weights(wi);
+%         mp.full.lambdaInds(counter,:) = [si,wi]; %--Indices
+%     end
+% end
+% mp.full.Nlambdas = mp.Nsbp*mp.Nwpsbp;
 
 %% Zernike and Chromatic Weighting of the Control Jacobian
 if(isfield(mp.jac,'zerns')==false);  mp.jac.zerns = 1; end %--Which Zernike modes to include in Jacobian [Noll index]. Always include 1 for piston term.
@@ -291,6 +338,9 @@ mp.Fend.corr.settings = maskCorr; %--Store values for future reference
 %--Need the sizes to be the same for the correction and scoring masks
 mp.Fend.Nxi  = size(mp.Fend.corr.mask,2);
 mp.Fend.Neta = size(mp.Fend.corr.mask,1);
+
+[XIS,ETAS] = meshgrid(mp.Fend.xisDL, mp.Fend.etasDL);
+mp.Fend.RHOS = sqrt(XIS.^2 + ETAS.^2);
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -11,6 +11,8 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-05-06 to have mp.Fend.full.I00 be a matrix that includes
+% an index for the wavelength per sub-bandpass index.
 % Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
 % of having Efiber as a required output. 
 % Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
@@ -37,7 +39,7 @@ function [Eout, varargout] = model_full(mp,modvar,varargin)
 
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
-    normFac = mp.Fend.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.full.I00(modvar.sbpIndex,modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
 %--Enable different arguments values by using varargin
@@ -59,10 +61,12 @@ if(any(mp.dm_ind==8)); mp.dm8 = rmfield(mp.dm8,'compact'); end
 if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9,'compact'); end
 
 %--Set the wavelength
-if(isfield(modvar,'lambda'))
+if(isfield(modvar,'lambda')) %--For FALCO or for evaluation without WFSC
     lambda = modvar.lambda;
-elseif(isfield(modvar,'sbpIndex'))
-    lambda = mp.sbp_centers(modvar.sbpIndex)*mp.full.sbp_facs(modvar.wpsbpIndex);
+elseif(isfield(modvar,'sbpIndex')) %--For use in FALCO
+    lambda = mp.full.lambdasMat(modvar.sbpIndex,modvar.wpsbpIndex);
+else
+    error('model_full: Need to specify a value or indices for a wavelength.')
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

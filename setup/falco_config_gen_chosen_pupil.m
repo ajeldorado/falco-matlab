@@ -172,7 +172,7 @@ switch upper(mp.whichPupil)
             % Full model can have more than one field per sub-bandpass
             for sbpIndex = 1:mp.Nsbp
                 for wpsbpIndex = 1:mp.Nwpsbp
-                    lambda = mp.sbp_centers(sbpIndex)*mp.full.sbp_facs(wpsbpIndex);
+                    lambda = mp.full.lambdasMat(sbpIndex,wpsbpIndex);
                     phz = angle(mp.P1.full.mask)*mp.lambda0/lambda;
                     mp.P1.full.E(:,:,wpsbpIndex,sbpIndex) = exp(1i*phz);
                 end

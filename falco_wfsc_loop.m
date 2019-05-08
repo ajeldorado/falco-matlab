@@ -22,7 +22,7 @@
 %   in April 2016.
 % Adapted by A.J. Riggs from A.J.'s Princeton HCIL code on August 31, 2016.
 
-function [out] = falco_wfsc_loop(mp)
+function [out,varargout] = falco_wfsc_loop(mp)
 
 %% Sort out file paths and save the config file    
 
@@ -404,15 +404,10 @@ end
 Im = falco_get_summed_image(mp);
 
 %--REPORTING NORMALIZED INTENSITY
-if( (Itr==mp.Nitr) || (strcmpi(mp.controller,'conEFC') && (numel(mp.ctrl.muVec)==1)  ) ) 
-    InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
+InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
+fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+    InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
 
-    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-        InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
-else
-    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-        InormHist(Itr), cvar.cMin, InormHist(Itr)/cvar.cMin ); 
-end
 fprintf('\n\n');
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
@@ -479,6 +474,8 @@ if(isfield(mp,'testbed'))
 else
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
 end
+%% Optional output variable: mp
+varargout{1} = mp;
 
 %% Save the final DM commands separately for faster reference
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V')); out.DM1V = mp.dm1.V; end; end
