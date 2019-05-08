@@ -70,18 +70,18 @@ if(mp.full.flagPROPER)  %--Use self-contained full models written in PROPER
     for ni=1:Nvals  
         ilam = inds_list(1,ni);
         ipol = inds_list(2,ni);
-        E0array(:,:,ilam,ipol);
+        E0array(:,:,ilam,ipol) = Estruct{ni};
     end 
     clear Estruct
     
     %% Get E-fields with Zernike aberrations
     %--Loop over all wavelengths, polarizations, and Zernike modes   
-    inds_list_zern = allcomb(1:mp.full.NlamUnique,1:Npol,Nzern).'; %--dimensions: [3 x mp.full.NlamUnique*Npol*Nzern ]
+    inds_list_zern = allcomb(1:mp.full.NlamUnique,1:Npol,1:Nzern).'; %--dimensions: [3 x mp.full.NlamUnique*Npol*Nzern ]
     NvalsZern = size(inds_list_zern,2);
 
     %--Get nominal, unaberrated final E-field at each wavelength and polarization
-    EZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern); %--initialize
-    dEZarray = zeros(size(EZarray));
+    %EZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern); %--initialize
+    dEZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern); %--initialize 
     
     %--Obtain all the images in parallel
     tic; fprintf('Computing aberrated E-fields for Zernike sensitivities...\t');
@@ -97,9 +97,11 @@ if(mp.full.flagPROPER)  %--Use self-contained full models written in PROPER
         ilam = inds_list_zern(1,ni);
         ipol = inds_list_zern(2,ni);
         izern = inds_list_zern(3,ni);
-        EZarray(:,:,ilam,ipol,izern) = Estruct{ni}; 
-        dEZarray(:,:,ilam,ipol,izern) = EZarray(:,:,ilam,ipol,izern) - E0array(:,:,ilam,ipol); %--Compute the delta E-field
+        dEZarray(:,:,ilam,ipol,izern) = Estruct{ni}  - E0array(:,:,ilam,ipol); %--Compute the delta E-field
+%         EZarray(:,:,ilam,ipol,izern) = Estruct{ni}; 
+%         dEZarray(:,:,ilam,ipol,izern) = EZarray(:,:,ilam,ipol,izern) - E0array(:,:,ilam,ipol); %--Compute the delta E-field
     end
+    clear Estruct
 
 % %     %--Get aberrated, final focal-plane E-fields for each Zernike mode
 % %     EZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,Nzern,Nvals); %--initialize
@@ -200,11 +202,11 @@ end %--END OF FUNCTION
 
 
 %% Get the stellar E-field for the specified wavelength, polarization, and Zernike aberration
-function Estar = falco_get_single_sim_Efield_LamPolZern(ni,inds_list,mp)
+function Estar = falco_get_single_sim_Efield_LamPolZern(ni,inds_list_zern,mp)
 
-ilam = inds_list(1,ni);
-ipol = inds_list(2,ni);
-izern = inds_list(3,ni);
+ilam  = inds_list_zern(1,ni);
+ipol  = inds_list_zern(2,ni);
+izern = inds_list_zern(3,ni);
 
 indsZnoll = mp.eval.indsZnoll;
 % Rsens = mp.eval.Rsens; %--Radii ranges for the zernike sensitivity calcuations. they are allowed to overlap
