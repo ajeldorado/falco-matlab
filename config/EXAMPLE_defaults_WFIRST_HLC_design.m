@@ -238,7 +238,7 @@ mp.flagApod = false;    %--Whether to use an apodizer or not
 mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 12; %--half-width of the field of view in both dimensions [lambda0/D]
 
-%--Correction and scoring region definition
+%--Correction and scog region definition
 mp.Fend.corr.Rin = 2.7;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
@@ -261,10 +261,10 @@ mp.P3.D = 46.2987e-3;
 mp.P4.D = 46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 150;
-mp.P2.compact.Nbeam = 150;
-mp.P3.compact.Nbeam = 150;
-mp.P4.compact.Nbeam = 150;
+mp.P1.compact.Nbeam = 250;
+mp.P2.compact.Nbeam = 250;
+mp.P3.compact.Nbeam = 250;
+mp.P4.compact.Nbeam = 250;
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -282,10 +282,10 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 150;
-mp.P2.full.Nbeam = 150;
-mp.P3.full.Nbeam = 150;
-mp.P4.full.Nbeam = 150;
+mp.P1.full.Nbeam = 250;
+mp.P2.full.Nbeam = 250;
+mp.P3.full.Nbeam = 250;
+mp.P4.full.Nbeam = 250;
 
 %% Mask Definitions
 

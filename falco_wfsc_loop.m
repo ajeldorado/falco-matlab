@@ -219,7 +219,7 @@ for Itr=1:mp.Nitr
     
     if( (Itr==1) || cvar.flagRelin )
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
-        if mp.aux.omega ~= 0 && cvar.Itr>=mp.aux.firstOmegaItr; jacStructCP = model_JacobianCP(mp);end %--Get structure containing Jacobians for CP JLlop
+        if mp.aux.omega ~= 0 && Itr>=mp.aux.firstOmegaItr; jacStructCP = model_JacobianCP(mp);end %--Get structure containing Jacobians for CP JLlop
     end
 
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
