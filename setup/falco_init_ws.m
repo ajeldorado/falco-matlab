@@ -103,7 +103,6 @@ fprintf('Sub-bandpasses are centered at wavelengths [nm]:\t '); fprintf('%.2f  '
 
 %% Bandwidth and Wavelength Specs: Full Model
 
-
 %--Center(-ish) wavelength indices (ref = reference). (Only the center if an odd number of wavelengths is used.)
 mp.wi_ref = ceil(mp.Nwpsbp/2);
 
@@ -136,7 +135,6 @@ for si=1:mp.Nsbp
         lambda_weights_all(counter) = mp.sbp_weights(si)*mp.full.lambda_weights(wi);
         mp.full.indsLambdaMat(counter,:) = [si,wi];
     end
-    
 end
 
 %--Get rid of redundant wavelengths in the complete list, and sum weights for repeated wavelengths
@@ -158,8 +156,8 @@ for idup=1:length(duplicate_inds)
     mp.full.lambda_weights_all(ind) = mp.full.lambda_weights_all(ind) + weight;
 end
 mp.full.NlamUnique = length(inds_unique);
-%%
 
+%%
 % %--Make vector of all wavelengths and weights used in the full model
 % mp.full.lambdas = zeros(mp.Nsbp*mp.Nwpsbp,1);
 % mp.full.lambda_weights_all = zeros(mp.Nsbp*mp.Nwpsbp,1);

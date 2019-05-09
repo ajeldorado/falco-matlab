@@ -70,7 +70,7 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
                 EsbpMean = 0;
                 for wi=1:mp.Nwpsbp
                     counter = counter + 1;
-                    EsbpMean = EsbpMean + EmatAll(:,counter)/mp.Nwpsbp;
+                    EsbpMean = EsbpMean + EmatAll(:,counter)*mp.full.lambda_weights(wi);
                 end
                 Emat(:,im) = EsbpMean;
             end
@@ -86,9 +86,9 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
                 for wi=1:mp.Nwpsbp
                     modvar.wpsbpIndex = wi;
                     E2D = model_full(mp, modvar);
-                    EmatSbp(:,wi) = E2D(mp.Fend.corr.inds); % Actual field in estimation area
+                    EmatSbp(:,wi) = mp.full.lambda_weights(wi)*E2D(mp.Fend.corr.inds); %--Actual field in estimation area. Apply spectral weight within the sub-bandpass
                 end
-                Emat(:,im) = mean(EmatSbp,2);
+                Emat(:,im) = sum(EmatSbp,2);
             end
         end
         
@@ -110,7 +110,7 @@ function Evec = falco_est_perfect_Efield_with_Zernikes_parfor(ni,ind_list,mp)
     modvar.whichSource = 'star';
     
     E2D = model_full(mp, modvar);
-    Evec = E2D(mp.Fend.corr.inds); % Actual field in estimation area
+    Evec = E2D(mp.Fend.corr.inds); % Actual field in estimation area. Don't apply spectral weight here.
 
 end
 
