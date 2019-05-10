@@ -511,20 +511,32 @@ fprintf('\n\n');
 if Itr>3
     if InormHist(Itr-1)<InormHist(Itr)
         countNIprob=countNIprob+1;
-        if countNIprob>mp.aux.minNIprob
+        if countNIprob>=mp.aux.minNIprob
             if mp.aux.flagOmega==1
                 mp.aux.flagOmega=0;
                 countNIprob=0;
+                flagNIprob = true;
             else
                 mp.aux.flagOmega=1;
                 countNIprob=0;
+                flagNIprob = true;
             end
         end
     else
         countNIprob=0;
     end
+    if flagNIprob
+        countNumConvCFIt = countNumConvCFIt + 1;
+        if countNumConvCFIt>=mp.aux.NumConvCFIt
+            mp.aux.flagOmega=1;
+            flagNIprob = false;
+            countNumConvCFIt = 0;
+        end
+    end
 else
     countNIprob=0;
+    flagNIprob = false;
+    countNumConvCFIt = 0;
 end
 
 figure(201)
@@ -919,7 +931,7 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
 %     if(cvar.flagRelin==true);   cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);  end %--Re-use cvar.GstarG_wsum since no re-linearization was done. %--No relative weighting among the DMs
     fprintf(' done. Time: %.3f\n',toc);
-    if mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr
+    if mp.aux.flagOmega==1 && Itr>=mp.aux.firstOmegaItr
         fprintf('Computing linearized control matrices from the JacobianCP...'); tic;
 
         %--Compute matrices for linear control with regular EFC
