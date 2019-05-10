@@ -100,6 +100,7 @@ else %--Perform an empirical grid search with actual images from the testbed or 
     else
         Itotal = falco_get_summed_image(mp);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+        [mp,thput] = falco_compute_thput(mp);
     end
 end
         
