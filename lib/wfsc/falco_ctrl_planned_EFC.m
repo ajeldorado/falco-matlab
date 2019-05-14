@@ -142,11 +142,11 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
     
     if( (imag(mp.ctrl.log10regSchedIn(cvar.Itr)) ~= 0) && (real(mp.ctrl.log10regSchedIn(cvar.Itr)) == 0) && any(mp.gridSearchItrVec==cvar.Itr) )
     
-        if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
-        if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
-        if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest); end
-        if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest); end
-        if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest); end
+        if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest,indBestOmega); end
         
         log10regSchedOut = cvar.latestBestlog10reg;
     else
