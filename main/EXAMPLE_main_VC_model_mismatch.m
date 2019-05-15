@@ -17,30 +17,31 @@
 % ---------------
 
 clear all;
-
+% clc
 %% Tell Matlab which Python to use from where. Needed for the E-M algorithm.
 % setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin') %--Put the parent directory of the python version you want Matlab to use.
 % pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the python version you want Matlab to use.
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '/Users/ajriggs/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '/Users/ajriggs/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-% mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
-
-%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '/Users/ajriggs/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '/Users/ajriggs/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
 % %--Library locations. FALCO and PROPER are required. CVX is optional.
-% mp.path.falco = 'C:\Lab\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
-% mp.path.proper = 'C:\Lab\falco-matlab\proper';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+% mp.path.falco = '/Users/ajriggs/Repos/falco-matlab/';  %--Location of FALCO
+% mp.path.proper = '/Users/ajriggs/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
 % % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 % 
 % %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-% mp.path.config = 'C:\Lab\falco-matlab\data\configs';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-% mp.path.ws = 'C:\Lab\falco-matlab\data\ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+% mp.path.config = '/Users/ajriggs/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = '/Users/ajriggs/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+
+
+%--Library locations. FALCO and PROPER are required. CVX is optional.
+mp.path.falco = 'C:\Lab\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = 'C:\Lab\falco-matlab\proper';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+% mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
+
+%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+mp.path.config = 'C:\Lab\falco-matlab\data\configs';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = 'C:\Lab\falco-matlab\data\ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 %%--Add to the MATLAB Path
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
@@ -52,8 +53,8 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_VC_simple
-systemID_mod = py.importlib.import_module('falco_systemID');
-
+% systemID_mod = py.importlib.import_module('falco_systemID');
+py.importlib.reload(systemID_mod)
 %% Step 3: Overwrite default values as desired
 
 %--Record Keeping
@@ -68,9 +69,9 @@ mp.dm_ind = [1 2]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
 
 %--Training the model
-mp.flagTrainModel = true;
-mp.est.flagUseJac = true; 
-mp.NitrTrain = 5; %--How many iterations to use per training set.
+mp.flagTrainModel = true;%false;%
+mp.est.flagUseJac = true;%false;%
+mp.NitrTrain = 3; %--How many iterations to use per training set.
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -94,9 +95,13 @@ mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 
 %% Tuning parameters for System Identification
-mp.est.lr  = 1e-9; % learning rate
+mp.est.lr  = 1e-7; % learning rate
 mp.est.lr2 = 1e-3; % learning rate2
 mp.est.epoch = 10; % 
+mp.est.Q0 = 1e-14;
+mp.est.Q1 = 0.5;
+mp.est.R0 = 1e-20;
+mp.est.R1 = 1e-20;
 
 %% Sources of model mismatch to include in full model
 
@@ -106,13 +111,14 @@ mp.est.epoch = 10; %
 % save('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
 
 %--Load the errors the following times
-load('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
+% load('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
+load('C:\Lab\falco-matlab\data\maps\dm_errors.mat','DM1V','DM2V')
 mp.full.dm1.V0 = DM1V;
 mp.full.dm2.V0 = DM2V;
 
 %--Mis-align the DMs for added errors
-mp.full.dm1.xc = 16.5 - 0.5; %--16.5 is centered and expected
-mp.full.dm2.yc = 16.5 + 0.5; %--16.5 is centered and expected
+mp.full.dm1.xc = 16.5 - 1; %--16.5 is centered and expected
+mp.full.dm2.yc = 16.5 + 1; %--16.5 is centered and expected
 
 
 %% Step 4: Generate the label associated with this trial
@@ -129,7 +135,7 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 out = falco_wfsc_loop(mp);
 
 if(mp.flagPlot)
-    figure; semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
+    figure(300); hold on, semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
 end
 
 
