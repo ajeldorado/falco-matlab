@@ -167,13 +167,12 @@ switch lower(mp.layout)
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
 
-        Eout = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
-        %Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        Eout = prop_run('wfirst_phaseb_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
 
-    case{'wfirst_phaseb_proper'} %--Use the true full model as the full model
+    case{'wfirst_phaseb_proper'} %--Use the true full model in PROPER as the full model
 
         optval = mp.full;
         optval.use_dm1 = true;
@@ -185,8 +184,7 @@ switch lower(mp.layout)
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
 
-        Eout = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
-        %Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        Eout = prop_run('wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
