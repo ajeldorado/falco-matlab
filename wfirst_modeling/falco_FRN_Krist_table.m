@@ -15,7 +15,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
     
 
     %%--Misc setup
-    I00 = mean(mp.Fend.full.I00);
+    I00 = mean(mp.Fend.full.I00(:));
 %     if(flagFull)
 %         I00 = mean(mp.Fend.full.I00);
 %     else
@@ -45,7 +45,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
     inds_list_on = allcomb(1:length(mp.full.pol_conds),1:mp.Nsbp,1:mp.Nwpsbp).'; %--dimensions: [3 x length(mp.full.pol_conds)*mp.Nsbp*mp.Nwpsbp ]
     NvalsOn = max(size(vals_list_on,2));
     
-    %% Nested function for use in Sections with Off-axis PSF calculation
+    %% Nested function for use in Sections with OFF-axis PSF calculation
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % The function func_offset_wavelength.m exists at all so that parfor
     % can use a linear indexing scheme from 1 to Nvals. 
@@ -69,6 +69,8 @@ function tableKrist = falco_FRN_Krist_table(mp)
         wi = vals_list(3,jj); %--wavelength index within a sub-bandpass
         
         modvar.whichSource = 'offaxis';
+        mp.full.source_x_offset = offsetVal;
+        mp.full.source_y_offset = 0;
         modvar.x_offset = offsetVal; % mp.thput_eval_x;
         modvar.y_offset = 0; % mp.thput_eval_y;
         modvar.sbpIndex = si; 
@@ -76,15 +78,15 @@ function tableKrist = falco_FRN_Krist_table(mp)
         modvar.zernIndex = 1; %--Piston only
         E2D = model_full(mp, modvar);
         
-        Iout = (abs(E2D).^2)*mp.jac.weightMat(si,1)*mp.full.lambda_weights(wi); %--Include sbp and wavelength weights
-        fprintf('Image generated for      offset = %.2f        sbp %d/%d        wvl %d/%d\n',offsetVal,si,mp.Nsbp,wi,mp.Nwpsbp);
+        Iout = (abs(E2D).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi); %--Include sbp and wavelength weights
+        % fprintf('Image generated for      offset = %.2f        sbp %d/%d        wvl %d/%d\n',offsetVal,si,mp.Nsbp,wi,mp.Nwpsbp);
  
     end %--END OF FUNCTION func_offset_wavelength.m    
 
     funcOffaxis = @(ii) func_offset_wavelength(mp,vals_list_off,ii); %--Make a function handle for parfor to use
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    %% Nested function for use in Sections with On-axis PSF calculation
+    %% Nested function for use in Sections with ON-axis PSF calculation
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % The function func_offset_wavelength.m exists at all so that parfor
     % can use a linear indexing scheme from 1 to Nvals. 
@@ -106,6 +108,8 @@ function tableKrist = falco_FRN_Krist_table(mp)
         
         Npol = length(mp.full.pol_conds);
         modvar.whichSource = 'offaxis';
+        mp.full.source_x_offset = 0;
+        mp.full.source_y_offset = 0;
         modvar.x_offset = 0;
         modvar.y_offset = 0;
         modvar.sbpIndex = si; 
@@ -113,8 +117,8 @@ function tableKrist = falco_FRN_Krist_table(mp)
         modvar.zernIndex = 1;
         E2D = model_full(mp, modvar);
 
-        Iout = (abs(E2D).^2)*mp.jac.weightMat(si,1)*mp.full.lambda_weights(wi)/Npol;
-        fprintf('Image generated for      polaxis = %.2f        sbp %d/%d        wvl %d/%d\n',mp.full.polaxis,si,mp.Nsbp,wi,mp.Nwpsbp);
+        Iout = (abs(E2D).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi)/Npol;
+        % fprintf('Image generated for      polaxis = %.2f        sbp %d/%d        wvl %d/%d\n',mp.full.polaxis,si,mp.Nsbp,wi,mp.Nwpsbp);
  
     end %--END OF FUNCTION func_offset_wavelength.m    
 
@@ -129,12 +133,14 @@ function tableKrist = falco_FRN_Krist_table(mp)
     fprintf('Computing columns 1,2,5,6,7 of the Krist table.\n')
 
     %--Parallel/distributed computing
+    tic; fprintf('Computing off-axis PSFs... ');
     if(mp.flagParfor) 
         parfor ni=1:NvalsOff;  IoffaxisArray{ni} = feval(funcOffaxis, ni);  end    
     else
         for ni=NvalsOff:-1:1;  IoffaxisArray{ni} = feval(funcOffaxis, ni);  end
     end
-    
+    fprintf('done. Time = %.2f s\n',toc)
+
     %--Sum up sub-bandpasses and wavelengths at each radial offset
     IoffaxisCube = zeros(mp.Fend.Neta,mp.Fend.Nxi,Noff);
     for ni=1:NvalsOff
@@ -183,11 +189,13 @@ function tableKrist = falco_FRN_Krist_table(mp)
     fprintf('Computing columns 3 and 4 of the Krist table.\n')
     
     %--Parallel/distributed computing
+    tic; fprintf('Computing on-axis PSFs... ');
     if(mp.flagParfor) 
         parfor ii=1:NvalsOn;  IonaxisArray{ii} = feval(funcOnaxis, ii);  end    
     else
         for ii=NvalsOn:-1:1;  IonaxisArray{ii} = feval(funcOnaxis, ii);  end
     end
+    fprintf('done. Time = %.2f s\n',toc)
     
     %--Sum up sub-bandpasses
     Icam = 0;
@@ -233,6 +241,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
     fprintf('Computing column 8 of the Krist table.\n')
     
     %--Create a new mp as mpTemp to change some values for this column's calculation.
+    mp.full.use_field_stop = 0; %--Make sure the field stop is not used
     mpTemp = mp;
     mpTemp.Fend.res = 1; %--Can use low sampling when just summin the total energy in the  plane.
     FOV = 50; %--Use a large enough FOV [lambda0/D]
@@ -241,16 +250,18 @@ function tableKrist = falco_FRN_Krist_table(mp)
     funcOffaxis2 = @(ii) func_offset_wavelength(mpTemp,vals_list_off,ii); %--Make a function handle for parfor to use
     
     %--Parallel/distributed computing
+    tic; fprintf('Computing Lyot transmission... ');
     if(mp.flagParfor) 
         parfor ni=1:NvalsOff;  IoffaxisArray{ni} = feval(funcOffaxis2, ni);  end    
     else
         for ni=NvalsOff:-1:1;  IoffaxisArray{ni} = feval(funcOffaxis2, ni);  end
     end
-    
+    fprintf('done. Time = %.2f s\n',toc)
+
     %--Sum up sub-bandpasses
     IoffaxisCube = zeros(mp.Fend.Neta,mp.Fend.Nxi,Noff);
     for ni=1:NvalsOff
-        ioff = inds_list_off(2,ni); %--index of the radial offset
+        ioff = inds_list_off(1,ni); %--index of the radial offset
         IoffaxisCube(:,:,ioff) = IoffaxisCube(:,:,ioff) + IoffaxisArray{ni};
     end
     clear IoffaxisArray

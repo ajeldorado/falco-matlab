@@ -24,18 +24,22 @@ tableContrast(2*Nann+1:end,4) = 1; %--Fourth Column
 
 %% Get PSFs
 %--Compute coherent-only image
+tic; fprintf('Generating the PSF of only coherent light... ')
 mp.full.pol_conds = 10; %--Which polarization states to use when creating an image.
 ImCoh = falco_get_summed_image(mp);
+fprintf('done. Time = %.2f s\n',toc)
 
 %--Compute coherent+incoherent light image
+tic; fprintf('Generating the PSF with polarization aberrations and stellar size... ')
 mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
-% ImBoth = falco_get_summed_image(mp);
 mp.full.TTrms = 0; % [mas]
 mp.full.Dstar = 1; % [mas]
 mp.full.Dtel = 2.3631; % [meters]
-mp.full.TipTiltNacross = 7; 
+mp.full.TipTiltNacross = 5; 
 ImBoth = falco_get_summed_image_TipTiltPol(mp);
+fprintf('done. Time = %.2f s\n',toc)
 
+%--Subtract to get the incoherent component
 ImInco = ImBoth-ImCoh;
 ImInco(ImInco<0) = 0;
 
@@ -61,7 +65,7 @@ Nc = size(coords,1); %--Number of pixels
 %--Obtain the peak pixel value of an off-axis source centered at each pixel
 %  in Quadrant 1 of the dark hole. Compute as a vector in order to use
 %  parfor.
-tic
+tic; fprintf('Generating the contrast-to-NI map... ')
 peakVals = zeros(Nc,1);
 if(mp.flagParfor)
     parfor ic = 1:Nc
@@ -78,7 +82,7 @@ else
         peakVals(ic) = max(abs(E2D(:)).^2);
     end  
 end
-fprintf('Time = %.2f s\n',toc)
+fprintf('done. Time = %.2f s\n',toc)
 
 %--Convert vector back into 2-D. Then fill in the other quadrants.
 peak2D = zeros(size(ETAS));

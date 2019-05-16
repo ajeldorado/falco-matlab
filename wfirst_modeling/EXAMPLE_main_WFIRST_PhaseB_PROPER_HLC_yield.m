@@ -304,8 +304,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC %--Load default model parameters
-% EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_s383 %--Load default model parameters
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_s383 %--Load default model parameters
 
 mp.Fend.res = 5; %--Change the image resolution [pixels per lambda0/D]
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)

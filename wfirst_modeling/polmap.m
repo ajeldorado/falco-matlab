@@ -88,11 +88,11 @@ end
 % endelse
 
 %size(amp), size(wavefront.wf)
-wavefront = prop_multiply(wavefront, pad(amp,size(wavefront.wf,1)));
+wavefront = prop_multiply(wavefront, falco_pad(amp,size(wavefront.wf,1)));
 
 if ( lambda_m_pol ~= lambda_m ); pha = pha / lambda_m_pol * lambda_m; end
 
-wavefront = prop_add_phase(wavefront, pad(pha,size(wavefront.wf,1)));
+wavefront = prop_add_phase(wavefront, falco_pad(pha,size(wavefront.wf,1)));
 
 end
 % prop_multiply, wavefront, trim(amp,n) 
