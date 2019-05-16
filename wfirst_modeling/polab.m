@@ -26,8 +26,8 @@ function [amp,pha] = polab(polfile, lambda_m, pupil_diam_pix, condition)
 % condition = -2;
 
 %--Choose 
-if ( abs(condition) == 1 );  dir_out = 1; else; dir_out = 2; end
-if ( condition < 0 );  dir_in = 1; else; dir_in = 2; end
+if ( abs(condition) == 1 );  dir_out = 1; else dir_out = 2; end
+if ( condition < 0 );  dir_in = 1; else dir_in = 2; end
 
 %--Read in known points for polarization aberrations
 zamp_array = fitsread([polfile 'amp.fits']);
@@ -92,7 +92,7 @@ for itype = 0:1 		%-- 0 = amp, 1 = phase
         map = map + z(21) * sqrt(12) .* r5 .* sin(5*t);
         map = map + z(22) * sqrt(7) .* (20*r6 - 30*r4 + 12*r2 - 1);
 
-    if( itype == 0 ) 
+    if( itype == 0 ); 
         amp = map; 
     else
         pha = map; 

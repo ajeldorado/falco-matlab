@@ -145,7 +145,7 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+prefix = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
 fpm_axis = 'p';
 
 for si=1:mp.Nsbp
@@ -168,7 +168,7 @@ end
 % return
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
 
 
 
@@ -330,8 +330,7 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
-% prefix = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+prefix = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
 fpm_axis = 'p';
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
@@ -366,7 +365,7 @@ mp.eval.Rsens = ...
                 6., 7.;...
                 7., 8.]; 
             
-tableAnn = falco_gen_FRNtable_AnnZoneList(mp);
+tableAnn = falco_FRN_AnnularZone_table(mp);
 tableAnn  
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
