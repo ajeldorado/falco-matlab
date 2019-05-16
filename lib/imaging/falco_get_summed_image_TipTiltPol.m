@@ -88,8 +88,10 @@ modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),2);
 mp.full.polaxis = mp.full.pol_conds(ipol);
 
 modvar.whichSource = 'offaxis';
-modvar.x_offset = mp.full.xsTT(itt); % [lambda0/D]
-modvar.y_offset = mp.full.ysTT(itt); % [lambda0/D]
+modvar.x_offset = mp.full.xsTT(itt); % used for FALCO full models [lambda0/D]
+modvar.y_offset = mp.full.ysTT(itt); % used for FALCO full models [lambda0/D]
+mp.full.source_x_offset = mp.full.xsTT(itt); % used for PROPER full models [lambda0/D]
+mp.full.source_y_offset = mp.full.ysTT(itt); % used for PROPER full models [lambda0/D]
 
 Estar = model_full(mp, modvar);
 Iout = (abs(Estar).^2); %--Apply spectral weighting outside this function

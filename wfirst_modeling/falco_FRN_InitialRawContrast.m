@@ -147,8 +147,8 @@ tableContrast(2*Nann+1:2:end,5) = CcohVec; %--Coherent, no MUF
 %--NOTICE: UNKNOWN YET WHETHER THE "incoherent" PART OF THE TABLE INCLUDES
 %THE COHERENT PART TOO, AND HOW MUFs ARE IMPLEMENTED.
 %--Incoherent
-tableContrast(2:2:2*Nann,5) = 2*(CincoVec-CcohVec); %--Incoherent x 2, MUFs of 2 ???????? %--NEED TO FIND OUT HOW MUFS ARE CALCULATED BY BRIAN. THIS IS A PLACEHOLDER
-tableContrast(2*Nann+2:2:end,5) = CincoVec-CcohVec; %--Incoherent, no MUF
+tableContrast(2:2:2*Nann,5) = 2*(CincoVec); %--Incoherent x 2, MUFs of 2 ???????? %--NEED TO FIND OUT HOW MUFS ARE CALCULATED BY BRIAN. THIS IS A PLACEHOLDER
+tableContrast(2*Nann+2:2:end,5) = CincoVec; %--Incoherent, no MUF
 
 
 
