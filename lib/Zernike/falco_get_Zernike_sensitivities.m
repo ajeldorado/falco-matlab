@@ -37,60 +37,70 @@ for ni = 1:Nannuli
 end
 
 
-if(mp.full.flagPROPER)  %--Use self-contained full models written in PROPER
-    
-    %--Zernike modes are made directly in the PROPER model. Not needed here.
-    
-    %--Number of polarization states used
-    mp.full.dummy = 1; %--Initialize if this doesn't exist
-    if(isfield(mp.full,'pol_conds'))  
-        Npol = length(mp.full.pol_conds);  
-    else
-        Npol = 1;
-    end
-    
-    %% Get unaberrated E-fields
-    %--Loop over all wavelengths and polarizations        
-    inds_list = allcomb(1:mp.full.NlamUnique,1:Npol).'; %--dimensions: [2 x mp.full.NlamUnique*Npol ]
-    Nvals = size(inds_list,2);
-    
-    %--Get nominal, unaberrated final E-field at each wavelength and polarization
-    E0array = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol); %--initialize
-        
-    tic; fprintf('Computing unaberrated E-fields...\t');
-    %--Obtain all the images in parallel
-    if(mp.flagParfor)
-        parfor ni=1:Nvals;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,mp);  end
-    else
-        for ni=Nvals:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,mp);  end
-    end
-    fprintf('done. Time = %.2f s\n',toc);
+if(mp.full.flagPROPER==false)  %--When using built-in FALCO full models
+    %%--Generate Zernike map datacube
+    ZmapCube = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    %--Make sure ZmapCube is padded or cropped to the right array size
+    if(size(ZmapCube,1)~=mp.P1.full.Narr)
+        ZmapCubeTemp = zeros(mp.P1.full.Narr,mp.P1.full.Narr);
+        for zi=1:size(ZmapCube,3)
+            ZmapCubeTemp(:,:,zi) = padOrCropEven(ZmapCube(:,:,zi),mp.P1.full.Narr);
+        end
+        ZmapCube = ZmapCubeTemp; 
+        clear ZmapCubeTemp
+    end    
+end
+       
+%--Number of polarization states used
+mp.full.dummy = 1; %--Initialize if this doesn't exist
+if(isfield(mp.full,'pol_conds'))  
+    Npol = length(mp.full.pol_conds);  
+else
+    Npol = 1;
+end
 
-    %--Reorganize the output
-    for ni=1:Nvals  
-        ilam = inds_list(1,ni);
-        ipol = inds_list(2,ni);
-        E0array(:,:,ilam,ipol) = Estruct{ni};
-    end 
-    clear Estruct
-    
-    %% Get E-fields with Zernike aberrations
-    %--Loop over all wavelengths, polarizations, and Zernike modes   
-    inds_list_zern = allcomb(1:mp.full.NlamUnique,1:Npol,1:Nzern).'; %--dimensions: [3 x mp.full.NlamUnique*Npol*Nzern ]
-    NvalsZern = size(inds_list_zern,2);
+%% Get unaberrated E-fields
+%--Loop over all wavelengths and polarizations        
+inds_list = allcomb(1:mp.full.NlamUnique,1:Npol).'; %--dimensions: [2 x mp.full.NlamUnique*Npol ]
+Nvals = size(inds_list,2);
 
-    %--Get nominal, unaberrated final E-field at each wavelength and polarization
-    %EZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern); %--initialize
-    dEZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern); %--initialize 
+%--Get nominal, unaberrated final E-field at each wavelength and polarization
+E0array = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol); %--initialize
+
+tic; fprintf('Computing unaberrated E-fields...\t');
+%--Obtain all the images in parallel
+if(mp.flagParfor)
+    parfor ni=1:Nvals;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,mp);  end
+else
+    for ni=Nvals:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,mp);  end
+end
+fprintf('done. Time = %.2f s\n',toc);
+
+%--Reorganize the output
+for ni=1:Nvals  
+    ilam = inds_list(1,ni);
+    ipol = inds_list(2,ni);
+    E0array(:,:,ilam,ipol) = Estruct{ni};
+end 
+clear Estruct
     
-    %--Obtain all the images in parallel
-    tic; fprintf('Computing aberrated E-fields for Zernike sensitivities...\t');
-    if(mp.flagParfor)
-        parfor ni=1:NvalsZern;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZern(ni,inds_list_zern,mp);  end
-    else
-        for ni=NvalsZern:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZern(ni,inds_list_zern,mp);  end
-    end
-    fprintf('done. Time = %.2f s\n',toc);
+%% Get E-fields with Zernike aberrations
+%--Loop over all wavelengths, polarizations, and Zernike modes   
+inds_list_zern = allcomb(1:mp.full.NlamUnique,1:Npol,1:Nzern).'; %--dimensions: [3 x mp.full.NlamUnique*Npol*Nzern ]
+NvalsZern = size(inds_list_zern,2);
+
+%--Get nominal, unaberrated final E-field at each wavelength and polarization
+%EZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern); %--initialize
+dEZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern); %--initialize 
+
+%--Obtain all the images in parallel
+tic; fprintf('Computing aberrated E-fields for Zernike sensitivities...\t');
+if(mp.flagParfor)
+    parfor ni=1:NvalsZern;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZern(ni,inds_list_zern,mp);  end
+else
+    for ni=NvalsZern:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZern(ni,inds_list_zern,mp);  end
+end
+fprintf('done. Time = %.2f s\n',toc);
     
     %--Reorganize the output
     for ni=1:NvalsZern
@@ -139,8 +149,8 @@ if(mp.full.flagPROPER)  %--Use self-contained full models written in PROPER
 %     end
     
     
-else %--Use a full model included in FALCO
-%--NOT UPDATED YET
+% % else %--Use a full model included in FALCO
+% % --NOT UPDATED YET
 %     %%--Generate Zernike map datacube
 %     ZmapCube = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
 %     %--Make sure ZmapCube is the right array size
@@ -174,9 +184,9 @@ else %--Use a full model included in FALCO
 %             dEZarray(:,:,iz,si) = EZarray(:,:,iz,si)-E0cube(:,:,si);
 %         end
 %     end
+%     
     
-    
-end
+% end
 
 
 %% Compute Zernike sensitivity values averaged across each annulus (or annular sector) in the dark hole
@@ -209,9 +219,14 @@ ipol  = inds_list_zern(2,ni);
 izern = inds_list_zern(3,ni);
 
 indsZnoll = mp.eval.indsZnoll;
-% Rsens = mp.eval.Rsens; %--Radii ranges for the zernike sensitivity calcuations. they are allowed to overlap
-% Nannuli = size(Rsens,1);
-% Nzern = length(indsZnoll);
+
+%--Get the stellar E-field
+si = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),1);
+wi = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),2);
+modvar.sbpIndex   = si;
+modvar.wpsbpIndex = wi;
+mp.full.polaxis = mp.full.pol_conds(ipol);
+modvar.whichSource = 'star';
 
 if(mp.full.flagPROPER)
     %--Initialize the Zernike modes to include as empty if the variable doesn't exist already
@@ -230,16 +245,15 @@ if(mp.full.flagPROPER)
         mp.full.zindex = [mp.full.zindex(:),indsZnoll(izern)];
         mp.full.zval_m = [zval_m0(:), mp.full.ZrmsVal]; % [meters]
     end
+    
+else %--Include the Zernike map at the input pupil for the FALCO full model
+    ZernMap = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll(izern)); %--2-D map of the normalized (RMS = 1) Zernike mode
+    ZernMap = padOrCropEven(ZernMap,mp.P1.full.Narr); %--Adjust zero padding if necessary
+    mp.P1.full.E(:,:,wi,si) = exp(1i*2*pi/mp.full.lambdasMat(si,wi)*mp.full.ZrmsVal*ZernMap).*mp.P1.full.E(:,:,wi,si); 
+    
 end %--End of mp.full.flagPROPER if statement
 
-%--Get the stellar E-field
-modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),1);
-modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),2);
-mp.full.polaxis = mp.full.pol_conds(ipol);
-modvar.whichSource = 'star';
-
 Estar = model_full(mp, modvar);
-% Iout = (abs(Estar).^2); %--Apply spectral weighting outside this function
     
 end %--END OF FUNCTION
 
