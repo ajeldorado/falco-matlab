@@ -225,7 +225,7 @@ for Itr=1:mp.Nitr
     [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
 
     %% Load the improved Jacobian if using the E-M technique
-    if(mp.flagUseLearnedJac)
+    if(mp.flagUseLearnedJac)% && Itr > mp.NitrTrain
         jacStructLearned = load('jacStructLearned.mat');
         if(any(mp.dm_ind==1));  jacStruct.G1 = jacStructLearned.G1;  end
         if(any(mp.dm_ind==2));  jacStruct.G2 = jacStructLearned.G2;  end

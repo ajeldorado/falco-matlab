@@ -205,25 +205,25 @@ class vl_net:
 
 
 		_, Ip_pred = model.observation(Enp_est, u1p, u2p)
-		Ip_pred_err = tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
-		obs_cov = 4 * tf.tensordot(tf.expand_dims(tf.reduce_mean(Ip, -1), -1), tf.ones((1, n_pix), dtype=tf.float64), [-1, 0]) * tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
+		# Ip_pred_err = tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
+		# obs_cov = 4 * tf.tensordot(tf.expand_dims(tf.reduce_mean(Ip, -1), -1), tf.ones((1, n_pix), dtype=tf.float64), [-1, 0]) * tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
 		Rp = model.observation_covariance(Ip, u1p, u2p)
 
-		# Ip_pred_diff = Ip_pred[:, 1::2, :] - Ip_pred[:, 2::2, :]
-		# Ip_diff = Ip[:, 1::2, :] - Ip[:, 2::2, :]
-		# Rp_diff = Rp[:, 1::2, :] + Rp[:, 2::2, :]
-		# HPHt = tf.matmul(tf.matmul(H, P_est), tf.transpose(H, [0, 1, 3, 2]))
-		# obs_bias = tf.transpose(tf.linalg.diag_part(HPHt), [0, 2, 1])
+		Ip_pred_diff = Ip_pred[:, 1::2, :] - Ip_pred[:, 2::2, :]
+		Ip_diff = Ip[:, 1::2, :] - Ip[:, 2::2, :]
+		Rp_diff = Rp[:, 1::2, :] + Rp[:, 2::2, :]
+		HPHt = tf.matmul(tf.matmul(H, P_est), tf.transpose(H, [0, 1, 3, 2]))
+		obs_bias = tf.transpose(tf.linalg.diag_part(HPHt), [0, 2, 1])
 		
 		# evidence lower bound (elbo): cost function for system identification
 		# we need to maximize the elbo for system ID
-		elbo = - tf.reduce_sum((tf.abs(Ip-Ip_pred-Ip_pred_err)**2 + obs_cov) / Rp) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
-				(tf.reduce_sum(tf.abs(Enp_pred-Enp_est)**2 / Qco) + tf.reduce_sum(2 * tf.log(Qco)) - \
-				 tf.reduce_sum(tf.linalg.logdet(P_est)) + tf.reduce_sum(tf.trace(P_est) / Qco))
-
-		# elbo = - tf.reduce_sum((tf.abs(Ip_diff-Ip_pred_diff)**2 + obs_bias) / Rp_diff) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
+		# elbo = - tf.reduce_sum((tf.abs(Ip-Ip_pred-Ip_pred_err)**2 + obs_cov) / Rp) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
 				# (tf.reduce_sum(tf.abs(Enp_pred-Enp_est)**2 / Qco) + tf.reduce_sum(2 * tf.log(Qco)) - \
 				 # tf.reduce_sum(tf.linalg.logdet(P_est)) + tf.reduce_sum(tf.trace(P_est) / Qco))
+
+		elbo = - tf.reduce_sum((tf.abs(Ip_diff-Ip_pred_diff)**2 + obs_bias) / Rp_diff) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
+				(tf.reduce_sum(tf.abs(Enp_pred-Enp_est)**2 / Qco) + tf.reduce_sum(2 * tf.log(Qco)) - \
+				 tf.reduce_sum(tf.linalg.logdet(P_est)) + tf.reduce_sum(tf.trace(P_est) / Qco))
 
 				 
 		# mean squared error (MSE): a metric for checking the system ID results

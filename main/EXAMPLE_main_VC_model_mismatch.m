@@ -53,8 +53,8 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_VC_simple
-% systemID_mod = py.importlib.import_module('falco_systemID');
-py.importlib.reload(systemID_mod)
+systemID_mod = py.importlib.import_module('falco_systemID');
+% py.importlib.reload(systemID_mod)
 %% Step 3: Overwrite default values as desired
 
 %--Record Keeping
@@ -63,10 +63,10 @@ mp.TrialNum = 2;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 20; %--Number of estimation+control iterations to perform
+mp.Nitr = 50; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2]; %--Which DMs to use
-mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -1;%--log10 of the regularization exponents (often called Beta values)
 
 %--Training the model
 mp.flagTrainModel = true;%false;%
@@ -76,6 +76,7 @@ mp.NitrTrain = 3; %--How many iterations to use per training set.
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
+mp.flagUseLearnedJac = true;
 
 %--Record Keeping
 mp.SeriesNum = 1;
@@ -91,17 +92,17 @@ mp.TrialNum = 1;%k_runTrial;%
 %--DEBUGGING IN MONOCHROMATIC LIGHT
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 
 
 %% Tuning parameters for System Identification
-mp.est.lr  = 1e-7; % learning rate
-mp.est.lr2 = 1e-3; % learning rate2
-mp.est.epoch = 10; % 
+mp.est.lr  = 3e-8; % learning rate
+mp.est.lr2 = 1e-2; % learning rate2
+mp.est.epoch = 5; % 
 mp.est.Q0 = 1e-14;
-mp.est.Q1 = 0.5;
-mp.est.R0 = 1e-20;
-mp.est.R1 = 1e-20;
+mp.est.Q1 = 0.3;
+mp.est.R0 = 1e-24;
+mp.est.R1 = 1e-24;
 
 %% Sources of model mismatch to include in full model
 
@@ -117,8 +118,8 @@ mp.full.dm1.V0 = DM1V;
 mp.full.dm2.V0 = DM2V;
 
 %--Mis-align the DMs for added errors
-mp.full.dm1.xc = 16.5 - 1; %--16.5 is centered and expected
-mp.full.dm2.yc = 16.5 + 1; %--16.5 is centered and expected
+mp.full.dm1.xc = 16.5 - 0.5; %--16.5 is centered and expected
+mp.full.dm2.yc = 16.5 + 0.5; %--16.5 is centered and expected
 
 
 %% Step 4: Generate the label associated with this trial
@@ -135,7 +136,10 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 out = falco_wfsc_loop(mp);
 
 if(mp.flagPlot)
-    figure(300); hold on, semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
+    figure(300); semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
+    hold on
+    drawnow
 end
+
 
 
