@@ -14,14 +14,7 @@
 function tableKrist = falco_FRN_Krist_table(mp)
     
 
-    %%--Misc setup
-    I00 = mean(mp.Fend.full.I00(:));
-%     if(flagFull)
-%         I00 = mean(mp.Fend.full.I00);
-%     else
-%         I00 = mean(mp.Fend.compact.I00);
-%     end
-    
+    %%--Misc setup    
     arcsecPerLamD = mp.lambda0/mp.yield.Dtel*180/pi*3600;
 
     %--Define radial sampling and offset values
@@ -30,7 +23,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
     Noff = length(rs);
     
     %--Initializations
-    tableKrist = zeros(Noff,8);
+    matKrist = zeros(Noff,8);
     thput_vec = zeros(Noff,1);
     PSF_peak_vec = zeros(Noff,1);
     area_vec = zeros(Noff,1);
@@ -130,10 +123,10 @@ function tableKrist = falco_FRN_Krist_table(mp)
     %--Fastest way to compute: Make a single parfor loop over both
     %  wavelength and PSF offset and save all images into a datacube. Then run a loop over radius to compute the various metrics. 
     
-    fprintf('Computing columns 1,2,5,6,7 of the Krist table.\n')
+    
 
     %--Parallel/distributed computing
-    tic; fprintf('Computing off-axis PSFs... ');
+    tic; fprintf('Computing columns 1,2,5,6,7 of the Krist table... ')
     if(mp.flagParfor) 
         parfor ni=1:NvalsOff;  IoffaxisArray{ni} = feval(funcOffaxis, ni);  end    
     else
@@ -158,26 +151,26 @@ function tableKrist = falco_FRN_Krist_table(mp)
         if(mp.flagPlot); figure(324); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,Icam); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 
         %--Peak pixel value
-        PSF_peak_vec(ioff) = max(Icam(:));%*I00;
+        PSF_peak_vec(ioff) = max(Icam(:));
 
         %--Absolute energy within half-max isophote(s)
         maskHM = 0*mp.Fend.RHOS;
         maskHM(Icam>=1/2*max(max(Icam))) = 1;
         if(mp.flagPlot);  figure(325); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,maskHM); axis xy equal tight; drawnow;  end
-        thput_vec(ioff) = sum(Icam(maskHM==1))*I00; %--half-max throughput
+        thput_vec(ioff) = sum(Icam(maskHM==1)); %--half-max throughput
         fprintf('Core throughput within the half-max isophote(s) = %.2f%% \tat separation = (%.1f, %.1f) lambda0/D.\n',100*thput_vec(ioff),xi_offset,eta_offset);
 
         area_vec(ioff) = (arcsecPerLamD/mp.Fend.res)^2*length(Icam(Icam>=1/2*max(max(Icam)))); %--area of the photometric aperture used for throughput [arcsec^2]
     end
     clear IoffaxisCube
     
-    tableKrist(:,1) = rs.';                % [lambda0/D]
-    tableKrist(:,2) = arcsecPerLamD*rs.';  % [arcseconds]
+    matKrist(:,1) = rs.';                % [lambda0/D]
+    matKrist(:,2) = arcsecPerLamD*rs.';  % [arcseconds]
     % Column 3 is intensity
     % Column 4 is contrast
-    tableKrist(:,5) = thput_vec;
-    tableKrist(:,6) = PSF_peak_vec;
-    tableKrist(:,7) = area_vec;
+    matKrist(:,5) = thput_vec;
+    matKrist(:,6) = PSF_peak_vec;
+    matKrist(:,7) = area_vec;
     % Column 8 is the Lyot stop transmission
 
     % %--Shows that the conversion from intensity to contrast is pretty much the
@@ -186,10 +179,10 @@ function tableKrist = falco_FRN_Krist_table(mp)
     
 %% On-axis calculations (intensity,contrast)
     %--Have to use all polarization states since care about PSF wings.
-    fprintf('Computing columns 3 and 4 of the Krist table.\n')
+    
     
     %--Parallel/distributed computing
-    tic; fprintf('Computing on-axis PSFs... ');
+    tic; fprintf('Computing columns 3 and 4 of the Krist table... ')
     if(mp.flagParfor) 
         parfor ii=1:NvalsOn;  IonaxisArray{ii} = feval(funcOnaxis, ii);  end    
     else
@@ -226,10 +219,10 @@ function tableKrist = falco_FRN_Krist_table(mp)
         %--Compute the average intensity over the selected region
         int_vec(ioff) = sum(sum(maskPartial.*Icam))/sum(sum(maskPartial));
     end
-    c_vec = int_vec./(PSF_peak_vec);%/I00); %--Convert intensity to contrast
+    c_vec = int_vec./(PSF_peak_vec); %--Convert intensity to contrast
 
-    tableKrist(:,3) = int_vec; % [intensity (not normalized)]
-    tableKrist(:,4) = c_vec; % [raw contrast]
+    matKrist(:,3) = int_vec; % [intensity (not normalized)]
+    matKrist(:,4) = c_vec; % [raw contrast]
 %     figure(195); semilogy(rs,int_vec);  drawnow;
 %     figure(197); semilogy(rs,c_vec);  drawnow;
 
@@ -238,7 +231,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
     %--Can use polaxis=10 since care only about the total energy.
     %--Fastest way to compute: Make a single parfor loop over both
     %wavelength and PSF offset and save all images into a datacube. Then run a loop over radius to compute the various metrics. 
-    fprintf('Computing column 8 of the Krist table.\n')
+    
     
     %--Create a new mp as mpTemp to change some values for this column's calculation.
     mp.full.use_field_stop = 0; %--Make sure the field stop is not used
@@ -250,7 +243,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
     funcOffaxis2 = @(ii) func_offset_wavelength(mpTemp,vals_list_off,ii); %--Make a function handle for parfor to use
     
     %--Parallel/distributed computing
-    tic; fprintf('Computing Lyot transmission... ');
+    tic; fprintf('Computing column 8 of the Krist table (Lyot transmission)... ')
     if(mp.flagParfor) 
         parfor ni=1:NvalsOff;  IoffaxisArray{ni} = feval(funcOffaxis2, ni);  end    
     else
@@ -273,9 +266,15 @@ function tableKrist = falco_FRN_Krist_table(mp)
         if(mp.full.flagPROPER==false);  Icam = Icam/mp.sumPupil;  end%--PROPER already normalizes the energy
 %         if(mp.flagPlot); figure(324); imagesc(Icam); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 %         if(mp.flagPlot); figure(325); imagesc(log10(Icam)); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
-        occ_trans_vec(ioff) = sum(sum(Icam))*I00;
+        occ_trans_vec(ioff) = sum(sum(Icam));
     end
-    tableKrist(:,8) = occ_trans_vec; %--[Lyot stop transmission = total focal plane energy]
+    matKrist(:,8) = occ_trans_vec; %--[Lyot stop transmission = total focal plane energy]
+    
+    %% Make into a table for printing as a CSV file
+
+    colNames = {'r_lam_D'; 'r_arcsec'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area_sq_arcsec'; 'trans_Lyot'}.';
+    tableKrist = table(matKrist(:,1),matKrist(:,2),matKrist(:,3),matKrist(:,4),matKrist(:,5),matKrist(:,6),matKrist(:,7),matKrist(:,8));
+    tableKrist.Properties.VariableNames = colNames;
 
 
 end %--END OF FUNCTION

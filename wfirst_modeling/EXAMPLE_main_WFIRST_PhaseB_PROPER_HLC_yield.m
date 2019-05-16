@@ -19,6 +19,10 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
+%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+mp.path.coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
+
+
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
@@ -385,12 +389,44 @@ mp.yield.Dtel = 2.3631; % meters
 mp.yield.R0 = 2.5;
 mp.yield.R1 = 9.1;
 
- 
+%--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);
+writetable(tableKrist,[mp.path.coro 'KristTable.csv']); %--Save to CSV file
 
-figure(200); imagesc(tableKrist); axis tight;
-figure(201); imagesc(log10(tableKrist)); axis tight;
+matKrist = tableKrist{:,:};
+figure(200); imagesc(matKrist); axis tight;
+figure(201); imagesc(log10(matKrist)); axis tight;
+figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,4),'-r','Linewidth',3); %--Compare intensity and contrast plots
 
+
+
+
+% %%
+% tableKrist = zeros(10,8);
+% % colNames = {'r(lam/D)'; 'r(arcsec)'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area(sq_arcsec)'; 'Lyot trans'}.';
+% colNames = {'r_lam_D'; 'r_arcsec'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area_sq_arcsec'; 'trans_Lyot'}.';
+% % T = table([colNames.';tableKrist]);
+% %
+% % r_lamD = tableKrist(:,1);
+% % r_arcsec = tableKrist(:,2);
+% % I = tableKrist(:,3);
+% % contrast = tableKrist(:,4);
+% % core_thput = tableKrist(:,5);
+% % PSF_peak = tableKrist(:,6);
+% % area_sq_as = tableKrist(:,7);
+% % Lyot_trans = tableKrist(:,8);
+% % T = table(r_lamD,r_arcsec,I,contrast,core_thput,PSF_peak,area_sq_as,Lyot_trans);
+% % T.Properties.VariableNames = colNames;
+% 
+% colNames = {'r_lam_D'; 'r_arcsec'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area_sq_arcsec'; 'trans_Lyot'}.';
+% T = table(tableKrist(:,1),tableKrist(:,2),tableKrist(:,3),tableKrist(:,4),tableKrist(:,5),tableKrist(:,6),tableKrist(:,7),tableKrist(:,8));
+% T.Properties.VariableNames = colNames;
+% 
+% T
+% whos T
+% 
+% fn = '/Users/ajriggs/Downloads/tableTest.csv';
+% writetable(T,fn);%,'WriteRowNames',false)
 %% Calculate Sensitivities.csv 
 
 %--Rows 1 to 10: Z2 to Z11 sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
