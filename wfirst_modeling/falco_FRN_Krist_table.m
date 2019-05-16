@@ -76,7 +76,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
         modvar.sbpIndex = si; 
         modvar.wpsbpIndex = wi;
         modvar.zernIndex = 1; %--Piston only
-        E2D = model_full(mp, modvar);
+        E2D = model_full(mp, modvar,'Unnorm'); %--un-normalized to PSF peak. Instead normalized to energy at the input pupil
         
         Iout = (abs(E2D).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi); %--Include sbp and wavelength weights
         % fprintf('Image generated for      offset = %.2f        sbp %d/%d        wvl %d/%d\n',offsetVal,si,mp.Nsbp,wi,mp.Nwpsbp);
@@ -115,7 +115,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
         modvar.sbpIndex = si; 
         modvar.wpsbpIndex = wi; 
         modvar.zernIndex = 1;
-        E2D = model_full(mp, modvar);
+        E2D = model_full(mp, modvar,'Unnorm'); %--un-normalized to PSF peak. Instead normalized to energy at the input pupil
 
         Iout = (abs(E2D).^2)*mp.sbp_weights(si)*mp.full.lambda_weights(wi)/Npol;
         % fprintf('Image generated for      polaxis = %.2f        sbp %d/%d        wvl %d/%d\n',mp.full.polaxis,si,mp.Nsbp,wi,mp.Nwpsbp);
@@ -158,7 +158,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
         if(mp.flagPlot); figure(324); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,Icam); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 
         %--Peak pixel value
-        PSF_peak_vec(ioff) = max(Icam(:))*I00;
+        PSF_peak_vec(ioff) = max(Icam(:));%*I00;
 
         %--Absolute energy within half-max isophote(s)
         maskHM = 0*mp.Fend.RHOS;
@@ -226,7 +226,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
         %--Compute the average intensity over the selected region
         int_vec(ioff) = sum(sum(maskPartial.*Icam))/sum(sum(maskPartial));
     end
-    c_vec = int_vec./(PSF_peak_vec/I00); %--Convert intensity to contrast
+    c_vec = int_vec./(PSF_peak_vec);%/I00); %--Convert intensity to contrast
 
     tableKrist(:,3) = int_vec; % [intensity (not normalized)]
     tableKrist(:,4) = c_vec; % [raw contrast]

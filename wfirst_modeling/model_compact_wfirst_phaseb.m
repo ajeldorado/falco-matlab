@@ -24,7 +24,7 @@
 %  Matlab translation, 3/14/2019, Hanying Zhou;
 %  Minor changes to syntax, 4/3/2019, A.J. Riggs.
 
-function [wavefront,  sampling_m]= wfirst_phaseb_compact(lambda_m, output_dim0, optval)
+function [wavefront,  sampling_m]= model_compact_wfirst_phaseb(lambda_m, output_dim0, optval)
 
 %   "output_dim" is used to specify the output dimension in pixels at the final image plane.  
 %   The computational grid sizes are hardcoded for each coronagraph.

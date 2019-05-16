@@ -36,7 +36,7 @@
 % part of the HLC occulters get rid of arbitrary phase differences between
 % at different wavelengths.
 
-function [wavefront,  sampling_m]= wfirst_phaseb(lambda_m, output_dim0, optval)
+function [wavefront,  sampling_m]= model_full_wfirst_phaseb(lambda_m, output_dim0, optval)
 
 % "output_dim" is used to specify the output dimension in pixels at the final image plane.
 % The computational grid sizes are hardcoded for each coronagraph.
@@ -366,7 +366,7 @@ pupil =fitsread( pupil_file);
 wavefront = prop_multiply(wavefront, falco_pad(pupil,n));
 clear pupil; %pupil = 0;
 
-if ( polaxis ~= 0 );  wavefront =  polmap(wavefront, polfile, pupil_diam_pix, polaxis,lambda_m); end
+if ( polaxis ~= 0 );  wavefront =  wfirst_polmap(wavefront, polfile, pupil_diam_pix, polaxis,lambda_m); end
 
 wavefront = prop_define_entrance(wavefront);
 

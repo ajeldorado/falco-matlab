@@ -1,11 +1,11 @@
-% Function to compute the polarization aberrations by calling polab.m. 
+% Function to compute the polarization aberrations by calling wfirst_polab.m. 
 % The mean polarization aberrations can be returned to mimic the effect of 
 % wavefront sensing. 
 %
 % Translated by A.J. Riggs on 2017-06-26 from IDL code polmap.pro by John Krist.
 
 
-% pro polmap, wavefront, polfile, pupil_diam_pix, condition, lambda_m_pol
+% pro wfirst_polmap, wavefront, polfile, pupil_diam_pix, condition, lambda_m_pol
 % 
 % ;-- wavefront: current wavefront structure
 % ;-- polfile: rootname of file containing polarization coefficients
@@ -28,7 +28,7 @@
 % ;--	polarization aberrations IN WAVES at the shorter wavelength (e.g., 
 % ;--	lambda_m_pol=460 nm) will be used at the current wavelength (e.g., 550 nm)   
 
-function [wavefront] = polmap(wavefront, polfile, pupil_diam_pix, condition, lambda_m_pol)
+function [wavefront] = wfirst_polmap(wavefront, polfile, pupil_diam_pix, condition, lambda_m_pol)
 
 
 n = prop_get_gridsize();
@@ -40,22 +40,22 @@ if ( numel(lambda_m_pol) == 0 ); lambda_m_pol = lambda_m; end
 % if ( n_elements(lambda_m_pol) eq 0 ) then lambda_m_pol = lambda_m
 
 if ( (condition == -2) || (condition == -1) || (condition == 1) || (condition == 2) )
-	[amp, pha] = polab(polfile, lambda_m_pol, pupil_diam_pix, condition);
+	[amp, pha] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, condition);
 elseif ( condition == 5 ) %--For sensing of X polarization only
-	[amp_m45_x, pha_m45_x] = polab(polfile, lambda_m_pol, pupil_diam_pix, -1);
-	[amp_p45_x, pha_p45_x] = polab(polfile, lambda_m_pol, pupil_diam_pix, +1);
+	[amp_m45_x, pha_m45_x] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, -1);
+	[amp_p45_x, pha_p45_x] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, +1);
 	amp = (amp_m45_x + amp_p45_x) / 2;
 	pha = (pha_m45_x + pha_p45_x) / 2;
 elseif ( condition == 6 ) %--For sensing of Y polarization only
-	[amp_m45_y, pha_m45_y] = polab(polfile, lambda_m_pol, pupil_diam_pix, -2);
-	[amp_p45_y, pha_p45_y] = polab(polfile, lambda_m_pol, pupil_diam_pix, +2); 
+	[amp_m45_y, pha_m45_y] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, -2);
+	[amp_p45_y, pha_p45_y] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, +2); 
 	amp = (amp_m45_y + amp_p45_y) / 2;
 	pha = (pha_m45_y + pha_p45_y) / 2;
 elseif ( condition == 10 ) %--For sensing of all polarizations only
-	[amp_m45_x, pha_m45_x] = polab(polfile, lambda_m_pol, pupil_diam_pix, -1);
-	[amp_p45_x, pha_p45_x] = polab(polfile, lambda_m_pol, pupil_diam_pix, +1);
-	[amp_m45_y, pha_m45_y] = polab(polfile, lambda_m_pol, pupil_diam_pix, -2); 
-	[amp_p45_y, pha_p45_y] = polab(polfile, lambda_m_pol, pupil_diam_pix, +2); 
+	[amp_m45_x, pha_m45_x] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, -1);
+	[amp_p45_x, pha_p45_x] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, +1);
+	[amp_m45_y, pha_m45_y] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, -2); 
+	[amp_p45_y, pha_p45_y] = wfirst_polab(polfile, lambda_m_pol, pupil_diam_pix, +2); 
 	amp = (amp_m45_x + amp_p45_x + amp_m45_y + amp_p45_y) / 4;
 	pha = (pha_m45_x + pha_p45_x + pha_m45_y + pha_p45_y) / 4;
 else
@@ -64,22 +64,22 @@ else
 end
 
 % if ( condition le 2 ) then begin
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, condition, amp, pha
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, condition, amp, pha
 % endif else if ( condition eq 5 ) then begin
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, -1, amp_m45_x, pha_m45_x
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, +1, amp_p45_x, pha_p45_x
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, -1, amp_m45_x, pha_m45_x
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, +1, amp_p45_x, pha_p45_x
 % 	amp = (amp_m45_x + amp_p45_x) / 2
 % 	pha = (pha_m45_x + pha_p45_x) / 2
 % endif else if ( condition eq 6 ) then begin
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, -2, amp_m45_y, pha_m45_y
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, +2, amp_p45_y, pha_p45_y
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, -2, amp_m45_y, pha_m45_y
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, +2, amp_p45_y, pha_p45_y
 % 	amp = (amp_m45_y + amp_p45_y) / 2
 % 	pha = (pha_m45_y + pha_p45_y) / 2
 % endif else if ( condition eq 10 ) then begin
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, -1, amp_m45_x, pha_m45_x
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, +1, amp_p45_x, pha_p45_x
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, -2, amp_m45_y, pha_m45_y
-% 	polab, polfile, lambda_m_pol, pupil_diam_pix, +2, amp_p45_y, pha_p45_y
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, -1, amp_m45_x, pha_m45_x
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, +1, amp_p45_x, pha_p45_x
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, -2, amp_m45_y, pha_m45_y
+% 	wfirst_polab, polfile, lambda_m_pol, pupil_diam_pix, +2, amp_p45_y, pha_p45_y
 % 	amp = (amp_m45_x + amp_p45_x + amp_m45_y + amp_p45_y) / 4
 % 	pha = (pha_m45_x + pha_p45_x + pha_m45_y + pha_p45_y) / 4
 % endif else begin

@@ -7,6 +7,17 @@
 % Function to compute the table in Sensitivities.csv, which is used to  
 % compute the flux ratio noise (FRN) for the WFIRST CGI.
 %
+%
+%  The 21 sensitivities--in order--in Sensitivities.csv:
+%--Rows 1 to 10: Z2 to Z11 sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
+%--Rows 11 to 17: Gain Z5 to Z11 sensitivities. (errors caused by DM
+%  acutator gain uncertainty when correcting Z5-Z11 with DMs)
+%--Row 18: Pupil X shear
+%--Row 19: Pupil Y shear
+%--Row 20: DM Settling
+%--Row 21: DM Thermal
+%
+%
 % REVISION HISTORY:
 % - Created by A.J. Riggs on 2019-05-15.
 % -------------------------------------------------------------------------

@@ -17,7 +17,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [amp,pha] = polab(polfile, lambda_m, pupil_diam_pix, condition)
+function [amp,pha] = wfirst_polab(polfile, lambda_m, pupil_diam_pix, condition)
 
 % %--Temporarily hard-code input values in order to test as a script first.
 % polfile = 'cycle6_polarization_'; % rootname of file containing polarization coefficients

@@ -38,14 +38,14 @@ modvar.whichSource = 'star';
 %--Compact Model Normalizations
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
-    Etemp = model_compact(mp, modvar,'NormOff');
+    Etemp = model_compact(mp, modvar,'getNorm');
     mp.Fend.compact.I00(si) = max(max(abs(Etemp).^2));
 end
 
 %--Compact Evaluation Model Normalizations
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
-    Etemp = model_compact(mp, modvar,'NormOff','eval');
+    Etemp = model_compact(mp, modvar,'getNorm','eval');
     mp.Fend.eval.I00(si) = max(max(abs(Etemp).^2));
 end
 
@@ -68,7 +68,7 @@ if(mp.flagSim)
             for wi=1:mp.Nwpsbp
                 modvar.sbpIndex = si;
                 modvar.wpsbpIndex = wi;
-                Etemp = model_full(mp, modvar,'NormOff');
+                Etemp = model_full(mp, modvar,'getNorm');
                 mp.Fend.full.I00(si,wi) = max(max(abs(Etemp).^2));
             end
         end
@@ -87,6 +87,6 @@ function I00 = model_full_norm_wrapper(li,mp)
     modvar.zernIndex = 1;
     modvar.whichSource = 'star'; 
     
-    Etemp = model_full(mp, modvar,'NormOff');
+    Etemp = model_full(mp, modvar,'getNorm');
     I00 = max(max(abs(Etemp).^2));
 end

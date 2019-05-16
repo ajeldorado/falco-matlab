@@ -47,10 +47,12 @@ icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
-      case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
-        normFac = 0; 
-      otherwise
-        error('model_full: Unknown keyword: %s\n', varargin{icav});
+        case{'getnorm'} % Set to 0 when finding the normalization factor
+            normFac = 0; 
+        case {'normoff','unnorm','nonorm'} 
+            normFac = 1;
+        otherwise
+            error('model_full: Unknown keyword: %s\n', varargin{icav});
     end
 end
 
@@ -167,7 +169,7 @@ switch lower(mp.layout)
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
 
-        Eout = prop_run('wfirst_phaseb_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
+        Eout = prop_run('model_compact_wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
@@ -184,7 +186,7 @@ switch lower(mp.layout)
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
 
-        Eout = prop_run('wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
+        Eout = prop_run('model_full_wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
