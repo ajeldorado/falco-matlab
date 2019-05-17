@@ -47,8 +47,8 @@ for ii=1:Nann;  matSens((ii-1)*Nmode+1:(ii-1)*Nmode+10,4) = Zsens(:,ii);  end %-
 
 %% Make into a table for printing as a CSV file
 
-tableContrast = table(matSens(:,1),matSens(:,2),matSens(:,3),matSens(:,4));
-tableContrast.Properties.VariableNames = {'index','sensmode','annzone','sens'};
+tableSens = table(matSens(:,1),matSens(:,2),matSens(:,3),matSens(:,4));
+tableSens.Properties.VariableNames = {'index','sensmode','annzone','sens'};
 
 
 end %--END OF FUNCTION
