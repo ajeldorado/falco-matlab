@@ -227,8 +227,8 @@ class vl_net:
 
 				 
 		# mean squared error (MSE): a metric for checking the system ID results
-		MSE = tf.reduce_sum(tf.abs(Ip - Ip_pred)**2)
-		# MSE = tf.reduce_sum(tf.abs(Ip_diff-Ip_pred_diff)**2)
+		# MSE = tf.reduce_sum(tf.abs(Ip - Ip_pred)**2)
+		MSE = tf.reduce_sum(tf.abs(Ip_diff-Ip_pred_diff)**2)
 
 		params_list = model.get_params() # parameters to be identified
 
@@ -237,7 +237,7 @@ class vl_net:
 		train_Jacobian = tf.train.AdamOptimizer(learning_rate=learning_rate, 
 												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[0:4])
 		train_noise_coef = tf.train.AdamOptimizer(learning_rate=learning_rate2, 
-												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[4::])
+												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[5])
 		train_op = tf.group(train_Jacobian, train_noise_coef)
 		# train_op = tf.train.AdamOptimizer(learning_rate=learning_rate, 
 		# 										beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list)
@@ -315,7 +315,7 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 		# 								u2p: np.transpose(u2p_train, [2, 1, 0]),
 		# 								noises: np.zeros((n_step, n_pix, 2,	mc_sampling))})
 
-		EEnp_est_values, P_est_values = sess.run([net.Enp_est, net.P_est], feed_dict={net.Ip: np.transpose(image_train, [2, 1, 0]),
+		Enp_est_values, P_est_values = sess.run([net.Enp_est, net.P_est], feed_dict={net.Ip: np.transpose(image_train, [2, 1, 0]),
 															net.u1p: np.transpose(u1p_train, [2, 1, 0]),
 															net.u2p: np.transpose(u2p_train, [2, 1, 0])})
 		mse = sess.run(net.MSE, feed_dict={net.Ip: np.transpose(image_train[:, :, 1:n_step], [2, 1, 0]),
@@ -324,8 +324,18 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 
 		mse_list.append(mse)
 		print('initial MSE: {}'.format(mse))
-
-
+		for k2 in range(50):
+			sess.run(net.train_noise_coef, feed_dict={net.Enp_old: Enp_est_values[0:n_step-1, :], net.P_old: P_est_values[0:n_step-1, :, :, :],
+										net.Ip: np.transpose(image_train[:, :, 1:n_step], [2, 1, 0]),
+										net.u1c: np.transpose(u1_train[:,0:n_step-1]), net.u2c: np.transpose(u2_train[:,0:n_step-1]),
+										net.u1p: np.transpose(u1p_train[:, :, 1:n_step], [2, 1, 0]), net.u2p: np.transpose(u2p_train[:, :, 1:n_step], [2, 1, 0]),
+										net.learning_rate: lr, net.learning_rate2: lr2})
+			
+			net.model.q1.load(np.max([np.log(1e-2), sess.run(net.model.q1)]))
+		print('initial Q0: {}, Q1: {}, R0: {}, R1: {}'.format(sess.run(net.model.Q0), sess.run(net.model.Q1),
+												sess.run(net.model.R0), sess.run(net.model.R1)))
+		# print('initial Q1: {}'.format(sess.run(net.model.Q1)))
+												
 		for k in range(epoch):
 			Enp_est_values, P_est_values = sess.run([net.Enp_est, net.P_est], feed_dict={net.Ip: np.transpose(image_train, [2, 1, 0]),
 															net.u1p: np.transpose(u1p_train, [2, 1, 0]),
@@ -338,7 +348,15 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 			mse = sess.run(net.MSE, feed_dict={net.Ip: np.transpose(image_train[:, :, 1:n_step], [2, 1, 0]),
 											net.u1p: np.transpose(u1p_train[:, :, 1:n_step], [2, 1, 0]),
 											net.u2p: np.transpose(u2p_train[:, :, 1:n_step], [2, 1, 0])})
-
+			
+			net.model.q1.load(np.max([np.log(1e-2), sess.run(net.model.q1)]))
+			for k2 in range(10):
+				sess.run(net.train_noise_coef, feed_dict={net.Enp_old: Enp_est_values[0:n_step-1, :], net.P_old: P_est_values[0:n_step-1, :, :, :],
+											net.Ip: np.transpose(image_train[:, :, 1:n_step], [2, 1, 0]),
+											net.u1c: np.transpose(u1_train[:,0:n_step-1]), net.u2c: np.transpose(u2_train[:,0:n_step-1]),
+											net.u1p: np.transpose(u1p_train[:, :, 1:n_step], [2, 1, 0]), net.u2p: np.transpose(u2p_train[:, :, 1:n_step], [2, 1, 0]),
+											net.learning_rate: lr, net.learning_rate2: lr2})
+				net.model.q1.load(np.max([np.log(1e-2), sess.run(net.model.q1)]))
 			# Enp_est_values0, P_est_values0 = sess.run([net.Enp_est2, net.P_est2], feed_dict={net.Ip: np.transpose(np.expand_dims(image_train[:, :, 0], -1), [2, 1, 0]),
 			# 											net.u1p: np.transpose(np.expand_dims(u1p_train[:, :, 0], -1), [2, 1, 0]),
 			# 											net.u2p: np.transpose(np.expand_dims(u2p_train[:, :, 0], -1), [2, 1, 0])})
@@ -383,7 +401,8 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 				print('epoch {} MSE: {}'.format(k, mse))
 				print('Q0: {}, Q1: {}, R0: {}, R1: {}'.format(sess.run(net.model.Q0), sess.run(net.model.Q1),
 																	sess.run(net.model.R0), sess.run(net.model.R1)))
-
+				# print('Q1: {}'.format(sess.run(net.model.Q1)))
+				
 		params_values_list = []
 		for param in net.params_list:
 			params_values_list.append(sess.run(param))

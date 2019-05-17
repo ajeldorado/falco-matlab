@@ -53,8 +53,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_VC_simple
-systemID_mod = py.importlib.import_module('falco_systemID');
-% py.importlib.reload(systemID_mod)
+
 %% Step 3: Overwrite default values as desired
 
 %--Record Keeping
@@ -96,14 +95,24 @@ mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 
 
 %% Tuning parameters for System Identification
-mp.est.lr  = 3e-8; % learning rate
-mp.est.lr2 = 1e-2; % learning rate2
-mp.est.epoch = 5; % 
-mp.est.Q0 = 1e-14;
-mp.est.Q1 = 0.3;
-mp.est.R0 = 1e-24;
-mp.est.R1 = 1e-24;
-
+flagUseTensorflow = true;
+if flagUseTensorflow
+    mp.est.lr  = 1e-7; % learning rate
+    mp.est.lr2 = 1e-2; % learning rate2
+    mp.est.epoch = 3; % 
+    mp.est.Q0 = 1e-15;
+    mp.est.Q1 = 0.3;
+    mp.est.R0 = 1e-25;
+    mp.est.R1 = 1e-25;
+    systemID_mod = py.importlib.import_module('falco_systemID');
+else
+    mp.est.EMitr = 2;
+    mp.est.Q = 3e-9;
+    mp.est.R = 3e-14;
+    mp.est.delta1 = 1e-1;
+    mp.est.delta2 = 1e-2;
+end
+mp.est.flagUseTensorflow = flagUseTensorflow;
 %% Sources of model mismatch to include in full model
 
 % %--Generate and save the errors the first time.
