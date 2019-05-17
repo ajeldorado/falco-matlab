@@ -64,34 +64,37 @@ mp.TrialNum = 1;
 % mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 
-%--DEBUGGING:
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+% %--DEBUGGING:
+% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 
 % %--DEBUGGING:
 % mp.fracBW = 0.04;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 2;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 
-% mp.controller = 'plannedEFC';
-% mp.ctrl.sched_mat = [...
-%     repmat([1,1j,  12,1,1],[1,1]);...
-%     repmat([1,1j-1,12,1,1],[10,1]);...
-%     repmat([1,1j,  12,1,1],[1,1]);...
-%     ];
-% [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-
-%--GRID SEARCH EFC    
-mp.controller = 'gridsearchEFC';
-mp.Nitr = 5; %--Number of estimation+control iterations to perform
-mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
+mp.controller = 'plannedEFC';
+mp.ctrl.sched_mat = [...
+    [0,0,0,1,0];...
+    repmat([1,1j,12,0,1],[5,1]);...
+    [1,-5,12,0,0];...
+    repmat([1,1j,12,0,1],[9,1]);...
+    ];
+[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
+
+
+% %--GRID SEARCH EFC    
+% mp.controller = 'gridsearchEFC';
+% mp.Nitr = 5; %--Number of estimation+control iterations to perform
+% mp.relinItrVec = 1; %1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
+% mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
 
 
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
 
 mp.P1.compact.E = zeros(mp.P1.compact.Nbeam+2,mp.P1.compact.Nbeam+2,mp.Nsbp); %--Initialize
 
@@ -220,13 +223,13 @@ for si=1:mp.Nsbp
     %--Subtract out the tip/tilt
     Narray = ceil_even(mp.P1.compact.Nbeam+1);
 
-    x = (-Narray/2:Narray/2-1)/mp.P1.compact.Nbeam; 
-    [tip,tilt] = meshgrid(x);
+%     x = (-Narray/2:Narray/2-1)/mp.P1.compact.Nbeam; 
+%     [tip,tilt] = meshgrid(x);
     
     fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
-    if(mp.full.dm1.flatmap ~= 0)
-        fldC = fldC.*exp(1i*tilt*0.87*(1/lambdaFacs(si)));
-    end
+%     if(mp.full.dm1.flatmap ~= 0)
+%         fldC = fldC.*exp(1i*tilt*0.87*(1/lambdaFacs(si)));
+%     end
     
     temp = 0*fldC;
     temp(2:end,2:end) = rot90(fldC(2:end,2:end),2);
@@ -237,41 +240,6 @@ for si=1:mp.Nsbp
     
 
 end
-
-% %% Find the coefficient of the tip to use on the phase retrieval map to flatten it
-% Narray = ceil_even(mp.P1.compact.Nbeam+1);
-% 
-% x = (-Narray/2:Narray/2-1)/mp.P1.compact.Nbeam; 
-% [tip,tilt] = meshgrid(x);
-% % [tilt,tip] = meshgrid(x);
-% 
-% fldCcrop = padOrCropEven(fldC,Narray);
-% ang = angle(fldCcrop);
-% absF = abs(fldCcrop);
-% mask = zeros(Narray);
-% mask(absF>=0.5*max(absF(:))) = 1;
-% mask_ele = find(mask==1);
-% figure(610); imagesc(mask); axis xy equal tight; colorbar; colormap jet;
-% figure(611); imagesc(mask.*ang); axis xy equal tight; colorbar; colormap jet;
-% 
-% 
-% a2 = tip(:).'*ang(:);
-% a3 = tilt(:).'*ang(:);
-% piston = ones(size(tip));
-% 
-% facs = -1:0.01:1.5; %1.01:0.01:1.5;
-% Nfacs = length(facs);
-% rms_vec = zeros(Nfacs,1);
-% 
-% for ii=1:Nfacs
-%     angNew = angle(fldCcrop.*exp(1i*tilt*facs(ii)));
-%     rms_vec(ii) = falco_rms(angNew(mask_ele));
-%     
-% end
-% figure(600); plot(facs,rms_vec);
-% 
-% % figure(610); imagesc(mask.*angle(fldCcrop.*exp(1i*tilt*1.2)) ); axis xy equal tight; colorbar; colormap jet;
-
 
 %% Step 4: Generate the label associated with this trial
 
@@ -284,39 +252,6 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 %% Step 5: Perform the Wavefront Sensing and Control
 
 [out,mp] = falco_wfsc_loop(mp);
-
-%% Initialize: Sort out file paths and save the config file    
-
-% %--Add the slash or backslash to the FALCO path if it isn't there.
-% if( strcmp(mp.path.falco(end),'/')==false && strcmp(mp.path.falco(end),'\')==false )
-%     mp.path.falco = [mp.path.falco filesep];
-% end
-% 
-% mp.path.dummy = 1; %--Initialize the folders structure in case it doesn't already exist
-% 
-% %--Store minimal data to re-construct the data from the run: the config files and "out" structure after a trial go here
-% if(isfield(mp.path,'config')==false)
-%     mp.path.config = [mp.path.falco filesep 'data' filesep 'config' filesep];     
-% end
-% 
-% %--Entire final workspace from FALCO gets saved here.
-% if(isfield(mp.path,'ws')==false)
-%     mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];      
-% end
-% 
-% %--Save the config file
-% fn_config = [mp.path.config mp.runLabel,'_config.mat'];
-% save(fn_config)
-% fprintf('Saved the config file: \t%s\n',fn_config)
-% 
-% %%--Get configuration data from a function file
-% % if(~mp.flagSim);  bench = mp.bench;  end %--Save the testbed structure "mp.bench" into "bench" so it isn't overwritten by falco_init_ws
-% [mp,out] = falco_init_ws(fn_config);
-% % if(~mp.flagSim);  mp.bench = bench;  end
-
-
-
-
 
 
 %%
@@ -331,6 +266,9 @@ clear mp
 mp.runLabel = runLabel;
 mp.P1.compact.E = E0; 
 mp.path = paths;
+
+%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+mp.path.frn_coro = '/home/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
@@ -366,150 +304,47 @@ mp.eval.Rsens = ...
                 6., 7.;...
                 7., 8.]; 
             
-%--Annular Zone Table
-Nann = size(mp.eval.Rsens,1);
-tableAnn = zeros(2*Nann,3);
-tableAnn(:,1) = [(0:(Nann-1)).';(0:(Nann-1)).']; %--First column
-tableAnn(Nann+1:end,2) = 1; %--Second column
-tableAnn(1:Nann,3) = mp.eval.Rsens(:,1); %--Third column, 1st half
-tableAnn(Nann+1:end,3) = mp.eval.Rsens(:,2); %--Third column, 2nd half
-tableAnn
+tableAnn = falco_FRN_AnnularZone_table(mp);
+writetable(tableAnn,[mp.path.frn_coro 'AnnZoneList.csv']); %--Save to CSV file
+tableAnn  
 
-% [tableAnn,fnAnn] = falco_gen_FRNtable_AnnZoneList(mp);
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-            
-% [tableRaw,fnRaw] = falco_gen_FRNtable_InitialRawContrast(mp);
+tableContrast = falco_FRN_InitialRawContrast(mp);
+writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+tableContrast
 
-%--Initial Raw Contrast
-Nann = size(mp.eval.Rsens,1);
-tableRaw = zeros(4*Nann,5);
-tableRaw(:,1) = 0:(4*Nann-1); %--First column
-tableRaw(2:2:end,2) = 1; %--Second column
-tableRaw(1:2:end,3) = [(0:(Nann-1)).';(0:(Nann-1)).']; %--Third column, one half
-tableRaw(2:2:end,3) = [(0:(Nann-1)).';(0:(Nann-1)).']; %--Third column, other half
-tableRaw(2*Nann+1:end,4) = 1; %--Fourth Column
-tableRaw
-
-%--Compute coherent-only image
-mp.full.pol_conds = 10; %--Which polarization states to use when creating an image.
-ImCoh = falco_get_summed_image(mp);
-
-%--Compute coherent+incoherent light image
-mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
-ImBoth = falco_get_summed_image(mp);
-ImInco = ImBoth-ImCoh;
-
-%% Compute 2-D intensity-to-contrast map. 
-%  Compute at the center wavelength with the compact model
-
-%--Compute the (x,y) pairs in the image for each pixel
-[XIS,ETAS] = meshgrid(mp.Fend.xisDL,mp.Fend.etasDL);
-
-maskBoolQuad1 = mp.Fend.corr.maskBool & XIS>=0 & ETAS>=0;
-figure(89); imagesc(maskBoolQuad1); axis xy equal tight; colorbar;
-
-coords = [XIS(maskBoolQuad1),ETAS(maskBoolQuad1)];
-Nc = size(coords,1);
-
-tic
-peakVals = zeros(Nc,1);
-if(mp.flagParfor)
-    parfor ic = 1:Nc
-        peakVals(ic) = falco_get_offset_peak(mp,coords,ic);
-    end
-else
-   for ic = 1:Nc
-        modvar.whichSource = 'offaxis';
-        modvar.x_offset = coords(ic,1); 
-        modvar.y_offset = coords(ic,2); 
-        modvar.sbpIndex = mp.si_ref; 
-        modvar.wpsbpIndex = mp.wi_ref;
-        E2D = model_compact(mp, modvar);
-        peakVals(ic) = max(abs(E2D(:)).^2);
-    end  
-end
-fprintf('Time = %.2f s\n',toc)
-
-peak2D = zeros(size(ETAS));
-peak2D(maskBoolQuad1) = peakVals;
-
-peak2D(2:mp.Fend.Neta/2,:) = flipud(peak2D(mp.Fend.Neta/2+2:end,:)); %--Fill in Quadrant 4
-peak2D(:,2:mp.Fend.Neta/2) = fliplr(peak2D(:,mp.Fend.Neta/2+2:end)); %--Fill in Quadrants 2 and 3
-
-CtoNI = peak2D/max(peakVals);
-
-figure(90); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,peak2D); axis xy equal tight; colorbar;
-figure(91); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,CtoNI); axis xy equal tight; colorbar;
-
-%%
-%--Compute the average contrast in each sector or annulus
-% int_vec = zeros(Noff,1);
-% for ioff=1:Noff        
-%     min_r = rs(ioff) - dr/2;
-%     max_r = rs(ioff) + dr/2;
-% 
-%     %--Compute the software mask for the scoring region
-%     maskScore.pixresFP = mp.Fend.res;
-%     maskScore.rhoInner = min_r; %--lambda0/D
-%     maskScore.rhoOuter = max_r; %--lambda0/D
-%     maskScore.angDeg = mp.Fend.score.ang; %--degrees
-%     maskScore.centering = mp.centering;
-%     maskScore.FOV = mp.Fend.FOV;
-%     maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
-%     if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
-%     [maskPartial,xis,etas] = falco_gen_SW_mask(maskScore);
-% 
-%     %--Compute the average intensity over the selected region
-%     int_vec(ioff) = sum(sum(maskPartial.*Icam))/sum(sum(maskPartial));
-% end
 
 %% Compute the Krist table
 
+%--Other constants
+mp.yield.Dtel = 2.3631; % meters
 
-% %--Other constants
-% % lambda_center = mp.lambda0;
-% mp.yield.Dtel = 2.3631; % meters
-% 
-% %--Define radial sampling and range
-% % pixel_step = 1/mp.Fend.eval.res; %1/mp.Fend.res; % step size between pixels[lambda0/D]
-% mp.yield.R0 = 2.5;
-% mp.yield.R1 = 9.1;
-% 
-%  
-% tableOut = falco_compute_FRN_input_table(mp);
-% 
-% figure(200); imagesc(tableOut); axis tight;
-% figure(201); imagesc(log10(tableOut)); axis tight;
+%--Define radial sampling and range
+mp.yield.R0 = 2.5;
+mp.yield.R1 = 9.1;
 
-%% Calculate sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
+%--Compute and save the table
+tableKrist = falco_FRN_Krist_table(mp);
+writetable(tableKrist,[mp.path.frn_coro 'KristTable.csv']); %--Save to CSV file
 
-mp.full.ZrmsVal = 1e-9; %--RMS values for each Zernike specified in vector indsZnoll [meters] 
-mp.eval.Rsens = ...
-                [3., 4.;...
-                4., 5.;...
-                5., 6.;...
-                6., 7.;...
-                7., 8.]; 
-mp.eval.indsZnoll = 2:3; %[2,3];
-
-if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
-    Zsens = falco_get_Zernike_sensitivities(mp);
-end
-
-%%
+%--Plot the table data
+matKrist = tableKrist{:,:};
+figure(200); imagesc(matKrist); axis tight;
+figure(201); imagesc(log10(matKrist)); axis tight;
+figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,4),'-r','Linewidth',3); %--Compare intensity and contrast plots
 
 
-function peakVal = falco_get_offset_peak(mp,coords,ic)
-    
-    modvar.whichSource = 'offaxis';
-    modvar.x_offset = coords(ic,1); 
-    modvar.y_offset = coords(ic,2); 
-    modvar.sbpIndex = mp.si_ref; 
-    modvar.wpsbpIndex = mp.wi_ref;
-    E2D = model_compact(mp, modvar);
-    peakVal = max(abs(E2D(:)).^2);
-    
-end
+%% Calculate Sensitivities.csv 
 
+%--Rows 1 to 10: Z2 to Z11 sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
+%--Rows 11 to 17: Gain Z5 to Z11 sensitivities
+%--Row 18: Pupil X shear
+%--Row 19: Pupil Y shear
+%--Row 20: DM Settling
+%--Row 21: DM Thermal
+
+tableSens = falco_FRN_Sens_table(mp);
+writetable(tableSens,[mp.path.frn_coro 'Sensitivities.csv']); %--Save to CSV file
+tableSens
