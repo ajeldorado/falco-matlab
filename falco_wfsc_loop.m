@@ -464,7 +464,11 @@ if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
 %--Calculate the core throughput (at higher resolution to be more accurate)
 [mp,thput] = falco_compute_thput(mp);
-mp.thput_vec(Itr) = thput;
+if(mp.flagFiber)
+    mp.thput_vec(Itr) = max(thput);
+else
+    mp.thput_vec(Itr) = thput; %--record keeping
+end
 
 if(isfield(mp,'testbed'))
     InormHist_tb.total = InormHist; 
