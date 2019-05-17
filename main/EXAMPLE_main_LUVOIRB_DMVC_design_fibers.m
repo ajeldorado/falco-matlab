@@ -46,12 +46,19 @@ mp.flagPlot = true;
 mp.flagFiber = true;
 
 %--Record Keeping
-mp.SeriesNum = 1;
+mp.SeriesNum = 6482648;
 mp.TrialNum = 1;
 
-mp.fracBW = 0.3;
-mp.Nsbp = 10;
-mp.Nitr = 2;
+mp.fracBW = 0.5;
+mp.Nsbp = 22;
+mp.Nitr = 10;
+
+%--LSB settings
+mp.dm1.HminStep = 5e-11;
+mp.dm2.HminStep = 5e-11;
+
+%--Grid- or Line-Search Settings
+% mp.ctrl.log10regVec = -5:1/2:0; %--log10 of the regularization exponents (often called Beta values)
 
 %--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -83,9 +90,9 @@ if(mp.flagFiber)
     
     %--Lenslet properties
     mp.Fend.lensletWavRad = 1.22; %Radius of the lenslet(s) in lambda_0/D
-    mp.Fend.Nlens = 4; %Number of lenslets in Fend
-    mp.Fend.x_lenslet = [4 9 14 19]; %Lenslet positions in Fend in lambda_0/D
-    mp.Fend.y_lenslet = [0 0 0 0];
+    mp.Fend.Nlens = 5; %Number of lenslets in Fend
+    mp.Fend.x_lenslet = [4 9 14 19 24]; %Lenslet positions in Fend in lambda_0/D
+    mp.Fend.y_lenslet = [0 0 0 0 0];
     mp.lensletFL = 150e-6; %Lenslet focal length in meters
     
     %--Off-axis, incoherent point source (exoplanet)

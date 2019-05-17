@@ -149,3 +149,4 @@ docs/**
 
 HLCLSplotter.m
 PMGIplotter.m
+*.mat
