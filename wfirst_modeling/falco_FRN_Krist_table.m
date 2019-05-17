@@ -272,9 +272,8 @@ function tableKrist = falco_FRN_Krist_table(mp)
     
     %% Make into a table for printing as a CSV file
 
-    colNames = {'r_lam_D'; 'r_arcsec'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area_sq_arcsec'; 'trans_Lyot'}.';
     tableKrist = table(matKrist(:,1),matKrist(:,2),matKrist(:,3),matKrist(:,4),matKrist(:,5),matKrist(:,6),matKrist(:,7),matKrist(:,8));
-    tableKrist.Properties.VariableNames = colNames;
+    tableKrist.Properties.VariableNames = {'r_lamOverD', 'r_arcsec', 'I', 'contrast', 'core_thruput', 'PSF_peak', 'area_sq_arcsec', 'trans_Lyot'};
 
 
 end %--END OF FUNCTION

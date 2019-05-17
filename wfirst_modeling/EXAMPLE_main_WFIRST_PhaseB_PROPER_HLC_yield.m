@@ -19,10 +19,6 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
-
-
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
@@ -43,6 +39,8 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_s383
 
 %% Step 3: Overwrite default values as desired
 
+%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+mp.path.frn_coro = '/home/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
 
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -290,6 +288,8 @@ load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_
 load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
 
 
+%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+mp.path.frn_coro = '/home/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
 
 
 
@@ -369,64 +369,37 @@ mp.eval.Rsens = ...
                 7., 8.]; 
             
 tableAnn = falco_FRN_AnnularZone_table(mp);
+writetable(tableAnn,[mp.path.frn_coro 'AnnZoneList.csv']); %--Save to CSV file
 tableAnn  
+
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
 tableContrast = falco_FRN_InitialRawContrast(mp);
+writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
 tableContrast
 
 
 %% Compute the Krist table
 
-
 %--Other constants
-% lambda_center = mp.lambda0;
 mp.yield.Dtel = 2.3631; % meters
 
 %--Define radial sampling and range
-% pixel_step = 1/mp.Fend.eval.res; %1/mp.Fend.res; % step size between pixels[lambda0/D]
 mp.yield.R0 = 2.5;
 mp.yield.R1 = 9.1;
 
 %--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);
-writetable(tableKrist,[mp.path.coro 'KristTable.csv']); %--Save to CSV file
+writetable(tableKrist,[mp.path.frn_coro 'KristTable.csv']); %--Save to CSV file
 
+%--Plot the table data
 matKrist = tableKrist{:,:};
 figure(200); imagesc(matKrist); axis tight;
 figure(201); imagesc(log10(matKrist)); axis tight;
 figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,4),'-r','Linewidth',3); %--Compare intensity and contrast plots
 
 
-
-
-% %%
-% tableKrist = zeros(10,8);
-% % colNames = {'r(lam/D)'; 'r(arcsec)'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area(sq_arcsec)'; 'Lyot trans'}.';
-% colNames = {'r_lam_D'; 'r_arcsec'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area_sq_arcsec'; 'trans_Lyot'}.';
-% % T = table([colNames.';tableKrist]);
-% %
-% % r_lamD = tableKrist(:,1);
-% % r_arcsec = tableKrist(:,2);
-% % I = tableKrist(:,3);
-% % contrast = tableKrist(:,4);
-% % core_thput = tableKrist(:,5);
-% % PSF_peak = tableKrist(:,6);
-% % area_sq_as = tableKrist(:,7);
-% % Lyot_trans = tableKrist(:,8);
-% % T = table(r_lamD,r_arcsec,I,contrast,core_thput,PSF_peak,area_sq_as,Lyot_trans);
-% % T.Properties.VariableNames = colNames;
-% 
-% colNames = {'r_lam_D'; 'r_arcsec'; 'I'; 'contrast'; 'core_thruput'; 'PSF_peak'; 'area_sq_arcsec'; 'trans_Lyot'}.';
-% T = table(tableKrist(:,1),tableKrist(:,2),tableKrist(:,3),tableKrist(:,4),tableKrist(:,5),tableKrist(:,6),tableKrist(:,7),tableKrist(:,8));
-% T.Properties.VariableNames = colNames;
-% 
-% T
-% whos T
-% 
-% fn = '/Users/ajriggs/Downloads/tableTest.csv';
-% writetable(T,fn);%,'WriteRowNames',false)
 %% Calculate Sensitivities.csv 
 
 %--Rows 1 to 10: Z2 to Z11 sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
@@ -437,4 +410,6 @@ figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,
 %--Row 21: DM Thermal
 
 tableSens = falco_FRN_Sens_table(mp);
+writetable(tableSens,[mp.path.frn_coro 'Sensitivities.csv']); %--Save to CSV file
 tableSens
+

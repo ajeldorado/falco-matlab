@@ -15,12 +15,12 @@ function tableContrast = falco_FRN_InitialRawContrast(mp)
     
 %--First 4 columns (the easy, bookkeeping parts of the table)
 Nann = size(mp.eval.Rsens,1); %--Number of annuli
-tableContrast = zeros(4*Nann,5);
-tableContrast(:,1) = 0:(4*Nann-1); %--First column
-tableContrast(2:2:end,2) = 1; %--Second column
-tableContrast(1:2:end,3) = [(0:(Nann-1)).';(0:(Nann-1)).']; %--Third column, one half
-tableContrast(2:2:end,3) = [(0:(Nann-1)).';(0:(Nann-1)).']; %--Third column, other half
-tableContrast(2*Nann+1:end,4) = 1; %--Fourth Column
+matContrast = zeros(4*Nann,5);
+matContrast(:,1) = 0:(4*Nann-1); %--First column
+matContrast(2:2:end,2) = 1; %--Second column
+matContrast(1:2:end,3) = [(0:(Nann-1)).';(0:(Nann-1)).']; %--Third column, one half
+matContrast(2:2:end,3) = [(0:(Nann-1)).';(0:(Nann-1)).']; %--Third column, other half
+matContrast(2*Nann+1:end,4) = 1; %--Fourth Column
 
 %% Get PSFs
 %--Compute coherent-only image
@@ -141,19 +141,24 @@ end
 %% Fill in Column 5 of the table
 
 %--Coherent component
-tableContrast(1:2:2*Nann,5) = 2*CcohVec; %--Coherent, MUF=2xCoherent
-tableContrast(2*Nann+1:2:end,5) = CcohVec; %--Coherent, no MUF
+matContrast(1:2:2*Nann,5) = 2*CcohVec; %--Coherent, MUF=2xCoherent
+matContrast(2*Nann+1:2:end,5) = CcohVec; %--Coherent, no MUF
 
 %--NOTICE: UNKNOWN YET WHETHER THE "incoherent" PART OF THE TABLE INCLUDES
 %THE COHERENT PART TOO, AND HOW MUFs ARE IMPLEMENTED.
 %--Incoherent
-tableContrast(2:2:2*Nann,5) = 2*(CincoVec); %--Incoherent x 2, MUFs of 2 ???????? %--NEED TO FIND OUT HOW MUFS ARE CALCULATED BY BRIAN. THIS IS A PLACEHOLDER
-tableContrast(2*Nann+2:2:end,5) = CincoVec; %--Incoherent, no MUF
+matContrast(2:2:2*Nann,5) = 2*(CincoVec); %--Incoherent x 2, MUFs of 2 ???????? %--NEED TO FIND OUT HOW MUFS ARE CALCULATED BY BRIAN. THIS IS A PLACEHOLDER
+matContrast(2*Nann+2:2:end,5) = CincoVec; %--Incoherent, no MUF
 
+%% Make into a table for printing as a CSV file
 
+tableContrast = table(matContrast(:,1),matContrast(:,2),matContrast(:,3),matContrast(:,4),matContrast(:,5));
+tableContrast.Properties.VariableNames = {'','coh_vs_incoh','annzone','NoMUF_vs_MUF','contrast'};
 
 
 end %--END OF FUNCTION
+
+
 
 
 %% Extra function needed to use parfor because parfor requires linear indexing
@@ -168,3 +173,4 @@ function peakVal = falco_get_offset_peak(mp,coords,ic)
     peakVal = max(abs(E2D(:)).^2);
     
 end
+
