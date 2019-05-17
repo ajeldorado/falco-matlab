@@ -42,7 +42,7 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     %        are handled outside of this function. 
     cmds = hcst_DM_apply2Dmap(bench,map,1);% Returns actual DM commands 
     
-    if(isfield(bench.info,'source') && srtcmpi(bench.info.source,'nkt'))
+    if(isfield(bench.info,'source') && strcmpi(bench.info.source,'nkt'))
         %----- Get image from the testbed -----
         disp(['Getting image from testbed in band ',num2str(si)])
     
@@ -50,7 +50,7 @@ function normI = falco_get_hcst_sbp_image(mp,si)
         lam0 = mp.sbp_centers(si);
         lam1 = lam0 - sbp_width/2;
         lam2 = lam0 + sbp_width/2;
-        tb_NKT_setWvlRange(bench,lam1*1e9,lam2*1e9);
+        hcst_NKT_setWvlRange(mp,bench,lam1*1e9,lam2*1e9,si);
     else
         disp('Getting image from testbed (using laser source)')
     end
@@ -60,7 +60,7 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     dark = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
     
     % Scale the PSF photometry by the current integration time
-    peakPSF = mp.peakPSF/mp.peakPSFtint*bench.andor.tint*mp.NDfilter_cal; 
+    peakPSF = PSFpeak/mp.peakPSFtint*bench.andor.tint*mp.NDfilter_cal; 
     
     % Get normalized intensity (dark subtracted and normalized by peakPSF)
     normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 

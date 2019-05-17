@@ -132,7 +132,7 @@ for si=1:mp.Nsbp
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
-    ev.InormProbeMax = 1e-4;
+    ev.InormProbeMax = 1e-4;% 2^16/(mp.peakPSF/mp.peakPSFtint*mp.bench.andor.tint*mp.NDfilter_cal) * 0.7;
     InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 
@@ -159,7 +159,7 @@ for si=1:mp.Nsbp
         ImNonneg = Im; ImNonneg(Im<0) = 0;
         whichImg = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
-        if(mp.flagPlot);  figure(203); imagesc(log10(ImNonneg),[-8 -3]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
+        if(mp.flagPlot);  figure(203); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(ImNonneg),[-8 -3]); title(['Probed Image ',num2str(iProbe),'/',num2str(2*Npairs)]);axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
 
         %--Store probed image and its DM settings
         ev.Icube(:,:,whichImg) = Im;
@@ -193,7 +193,7 @@ for si=1:mp.Nsbp
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.Fend.Neta,mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:,iProbe); 
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
-        if(mp.flagPlot);  figure(201); imagesc(ampSq2D); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
+        if(mp.flagPlot);  figure(201); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,ampSq2D);title(['ampSq2D Pair ',num2str(iProbe),'/',num2str(Npairs)]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
     end
     
     %% Perform the estimation
@@ -270,6 +270,7 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<
     end
     Eest(abs(Eest).^2 > 1e-2) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
     fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
+    Eest(abs(Eest).^2 < 0) = 1e-12;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
 
     %--Initialize the state and state covariance estimates for Kalman
     %filter. The state is the real and imag parts of the E-field.

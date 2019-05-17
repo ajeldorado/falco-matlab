@@ -79,7 +79,11 @@ for Itr=1:mp.Nitr
 
     %--Start of new estimation+control iteration
     fprintf(['Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
-
+    
+    if(any(mp.fineAlignment_it==Itr))
+        bench = hcstr_realignFPMAndRecenter(bench,mp);
+    end
+    
     %--Re-compute the starlight normalization factor for the compact and full models (to convert images to normalized intensity). No tip/tilt necessary.
     mp = falco_get_PSF_norm_factor(mp);
     
@@ -142,14 +146,17 @@ for Itr=1:mp.Nitr
         Im_tb.Im = Im;
         Im_tb.E = zeros(size(Im));
         if(Itr>1)
-            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec).^2);
-            InormHist_tb.unmod(Itr-1) = mean(IincoVec);
-            Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
+            InormHist_tb.mod(Itr-1) = mean(mean(abs(EfieldVec).^2));
+            InormHist_tb.unmod(Itr-1) = mean(mean(IincoVec));
+            InormHist_tb.beta(Itr-1) = out.log10regHist(Itr-1);
+            Im_tb.E(mp.Fend.corr.mask) = sum(EfieldVec,2)/mp.Nsbp;
         else
             InormHist_tb.mod = NaN;
             InormHist_tb.unmod = NaN;
         end
-        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+        hProgress = falco_plot_progress_hcst(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+        Im_tb.Im_prev = zeros(size(Im));
+        Im_tb.Im_prev(mp.Fend.corr.mask) = Im(mp.Fend.corr.mask);
     else
         hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
     end
@@ -433,6 +440,11 @@ if(mp.flagSaveEachItr)
     fprintf('done.\n\n')
 end
 
+% Save cmds for each iteration
+datacmds = hcst_DM_2Dto1D(bench,mp.dm1.V');
+cmds = datacmds+bench.DM.flatvec;
+save([bench.info.outDir,'cdms',datestr(now,'yyyymmddTHHMMSS'),'.mat'],'cmds');
+
 end %--END OF ESTIMATION + CONTROL LOOP
 %% ------------------------------------------------------------------------
 
@@ -461,7 +473,8 @@ if(isfield(mp,'testbed'))
     Im_tb.Im = Im;
     Im_tb.E = zeros(size(Im));
     Im_tb.E(mp.Fend.corr.mask) = EfieldVec;
-    hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+    InormHist_tb.beta(Itr-1) = out.log10regHist(Itr-1);
+    hProgress = falco_plot_progress_hcst(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
 end
