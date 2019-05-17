@@ -252,7 +252,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
     fprintf('done. Time = %.2f s\n',toc)
 
     %--Sum up sub-bandpasses
-    IoffaxisCube = zeros(mp.Fend.Neta,mp.Fend.Nxi,Noff);
+    IoffaxisCube = zeros(mpTemp.full.output_dim,mpTemp.full.output_dim,Noff);
     for ni=1:NvalsOff
         ioff = inds_list_off(1,ni); %--index of the radial offset
         IoffaxisCube(:,:,ioff) = IoffaxisCube(:,:,ioff) + IoffaxisArray{ni};

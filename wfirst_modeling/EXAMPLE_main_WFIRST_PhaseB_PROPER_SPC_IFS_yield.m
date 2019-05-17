@@ -99,11 +99,11 @@ mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input
 mp.P1.compact.E = zeros(mp.P1.compact.Nbeam+2,mp.P1.compact.Nbeam+2,mp.Nsbp); %--Initialize
 
 
-%--DEBUGGING: Perfect wavefront
-mp.full.pol_conds = [0];
-mp.full.polaxis = 0;
-mp.full.use_errors = false;
-mp.full.dm1.flatmap = 0;
+% %--DEBUGGING: Perfect wavefront
+% mp.full.pol_conds = [0];
+% mp.full.polaxis = 0;
+% mp.full.use_errors = false;
+% mp.full.dm1.flatmap = 0;
 
 optval.phaseb_dir = mp.full.phaseb_dir;
 

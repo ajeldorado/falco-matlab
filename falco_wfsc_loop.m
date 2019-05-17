@@ -404,7 +404,9 @@ if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
 end
 
 % Take the next image to check the contrast level (in simulation only)
+tic; fprintf('Getting updated summed image... ');
 Im = falco_get_summed_image(mp);
+fprintf('done. Time = %.1f s\n',toc);
 
 %--REPORTING NORMALIZED INTENSITY
 InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));

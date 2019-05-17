@@ -34,8 +34,8 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 7;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -362,7 +362,7 @@ mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
 mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
-mp.full.pol_conds = 10;%[-2,-1,1,2]; %--Which polarization states to use when creating an image.
+mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
 mp.full.use_errors = true;
 mp.full.phaseb_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
