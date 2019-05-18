@@ -75,7 +75,12 @@ Im = falco_get_summed_image(mp);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for Itr=1:mp.Nitr
-
+    
+    %% weight on DM9
+    if ~isempty(mp.aux.wDM9_arr)
+        mp.dm9.weight = mp.aux.wDM9_arr(Itr);
+    end
+    %%
     %--Start of new estimation+control iteration
     fprintf(['Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
 
