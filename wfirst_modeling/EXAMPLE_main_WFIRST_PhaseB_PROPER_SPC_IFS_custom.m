@@ -46,7 +46,7 @@ mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image
 
 %--Full model mask files and resolutions
 mp.full.cor_type = 'spc_ifs_custom';
-file_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/spc_ifs_custom/';
+file_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/spc_ifs_custom/';
 mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];        mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
 % mp.full.pupil_mask_file = [file_dir, 'minpadSPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];  mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
 % mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW2Nlam6.fits'];         mp.fracBW = 0.02; mp.Nsbp = 1;%--SPM file name
@@ -111,11 +111,11 @@ mp.ctrl.sched_mat = [...
     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
-%--GRID SEARCH EFC    
-mp.controller = 'gridsearchEFC';
-mp.Nitr = 5; %--Number of estimation+control iterations to perform
-mp.relinItrVec = 1;  %--Which correction iterations at which to re-compute the control Jacobian
-mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
+% %--GRID SEARCH EFC    
+% mp.controller = 'gridsearchEFC';
+% mp.Nitr = 5; %--Number of estimation+control iterations to perform
+% mp.relinItrVec = 1;  %--Which correction iterations at which to re-compute the control Jacobian
+% mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
 
 %%
 %--Shaped Pupil Mask: Load and downsample.
@@ -168,7 +168,7 @@ end
 
 %% Step 3c: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
 
 
 optval = mp.full;
