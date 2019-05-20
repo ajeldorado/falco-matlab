@@ -48,7 +48,7 @@ end
 
 % %--DEBUGGING ONLY: HARD-CODED INPUTS
 % clear all
-% addpath(genpath('~/Repos/FALCO/'))
+% addpath(genpath('~/Repos/falco-matlab/'))
 % inputs.pixresFPM = 6; %--pixels per lambda_c/D
 % inputs.rhoInner = 2.8; % radius of inner FPM amplitude spot (in lambda_c/D)
 % inputs.rhoOuter = 10.1; % radius of outer opaque FPM ring (in lambda_c/D)

@@ -131,7 +131,7 @@ mp.ctrl.dmfacVec = 1;
 
 mp.ctrl.sched_mat = [...
     [0,0,0,1,0];
-    repmat([1,1j,12,0,1],[2,1]);...
+    repmat([1,1j,12,0,1],[10,1]);...
     ];
 
 % mp.ctrl.sched_mat = [...
@@ -365,7 +365,7 @@ mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear ape
 mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
 mp.full.use_errors = true;
-mp.full.phaseb_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;

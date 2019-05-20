@@ -35,6 +35,8 @@
 % Modified on 2019-05-07 by A.J. Riggs to zero out the phase in the outer
 % part of the HLC occulters get rid of arbitrary phase differences between
 % at different wavelengths.
+% Modified on 2019-05-07 by A.J. Riggs to include the case 'spc_ifs_custom'
+% for custom SPC-IFS designs.
 
 function [wavefront,  sampling_m]= model_full_wfirst_phaseb(lambda_m, output_dim0, optval)
 
@@ -171,6 +173,20 @@ elseif  strcmp(cor_type,'hlc_erkin')
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
     field_stop_radius_lam0 = 9.0;
+elseif(strcmpi(cor_type, 'spc_ifs_custom')) 
+    pupil_file = optval.pupil_file;
+    pupil_diam_pix = optval.pupil_diam_pix; %1000;
+    pupil_mask_file = optval.pupil_mask_file;% [file_dir  'SPM_SPC-20190130.fits']; %--SPM file name
+    fpm_file = optval.fpm_file; %[file_dir 'fpm_0.05lamdivD.fits'];
+    fpm_sampling_lam0 = optval.fpm_sampling_lam0;% 0.05; 	% sampling in lambda0/D of FPM mask
+    lyot_stop_file = optval.lyot_stop_file; %[file_dir  'LS_SPC-20190130.fits'];
+    lambda0_m = optval.lambda0_m; %0.73e-6;        % FPM scaled for this central wavelength
+    
+    n_default = 2048;           % gridsize in non-critical areas
+    n_to_fpm = 2048;            % gridsize to/from FPM
+    n_mft = 1400;
+    n_from_lyotstop = 4096;
+    
 elseif  sum(strfind(cor_type, 'spc-ifs' ))
     file_dir = [phaseb_dir '/spc_20190130/'];       % must have trailing "/"
     pupil_diam_pix = 1000;
@@ -211,7 +227,7 @@ elseif strcmp(cor_type, 'none' )
     n_to_fpm = 1024;
     n_from_lyotstop = 1024;
 else
-    disp([ 'cor_type = ' cor_type ' is not supported in wfirst_phaseb_v2'])
+    disp([ 'cor_type = ' cor_type ' is not supported in model_full_wfirst_phaseb'])
     return
 end
 
