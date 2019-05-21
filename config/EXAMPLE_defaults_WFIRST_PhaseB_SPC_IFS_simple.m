@@ -34,8 +34,8 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 7;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -65,6 +65,8 @@ mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe a
 %  mp.est.Rcoef =
 
 %% Wavefront Control: General
+
+mp.ctrl.flagUseModel = true; %--Use the compact model for the grid search
 
 %--Threshold for culling weak actuators from the Jacobian:
 mp.logGmin = -6;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
@@ -102,15 +104,16 @@ mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'gridsearchEFC';
 
 % % % GRID SEARCH EFC DEFAULTS     
 %--WFSC Iterations and Control Matrix Relinearization
+mp.controller = 'gridsearchEFC';
 mp.Nitr = 5; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2]; %--Which DMs to use
 
-% % % PLANNED SEARCH EFC DEFAULTS     
+% % % PLANNED SEARCH EFC DEFAULTS  
+% mp.controller = 'plannedEFC';
 % mp.dm_ind = [1 2 ]; % vector of DMs used in controller at ANY time (not necessarily all at once or all the time). 
 % mp.ctrl.dmfacVec = 1;
 % %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 

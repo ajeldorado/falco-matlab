@@ -45,9 +45,11 @@ icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
-        case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
+        case{'getnorm'}
             normFac = 0; 
             flagNewNorm = true;
+        case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
+            normFac = 1;
         case {'eval'} % Set to 0 when finding the normalization factor
             flagEval = true;
         otherwise
