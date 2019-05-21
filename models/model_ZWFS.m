@@ -31,7 +31,7 @@ if(isfield(modvar,'lambda'))
 elseif(isfield(modvar,'ebpIndex'))
     lambda = mp.full.lambdas(modvar.ebpIndex);
 elseif(isfield(modvar,'sbpIndex'))
-    lambda = mp.sbp_centers(modvar.sbpIndex)*mp.full.sbp_facs(modvar.wpsbpIndex);
+    lambda = mp.full.lambdasMat(modvar.sbpIndex,modvar.wpsbpIndex);
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

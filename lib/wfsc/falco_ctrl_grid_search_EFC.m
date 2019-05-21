@@ -88,8 +88,12 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     cvarOut.log10regUsed = vals_list(1,indBest);
     dmfacBest = vals_list(2,indBest);
-    fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
-
+    if(mp.ctrl.flagUseModel)
+        fprintf('Model-based grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+    else
+        fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+    end
+    
     if(mp.flagPlot)
         if(length(mp.ctrl.dmfacVec)==1)
             figure(499); semilogy(mp.ctrl.log10regVec,Inorm_list,'-bd','Linewidth',3)

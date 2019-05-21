@@ -46,18 +46,24 @@ switch upper(mp.whichPupil)
     case{'WFIRST180718'}
         
         %--Generate low-res input pupil for the 'compact' model
-        if(isfield(mp,'P1'))
-            if(isfield(mp.P1,'full'))
-                if(isfield(mp.P1.full,'mask')==false)
-                    mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
-                end
+%         if(isfield(mp,'P1'))
+            if(mp.full.flagPROPER==false)
+                mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
             end
-            if(isfield(mp.P1,'compact'))
-                if(isfield(mp.P1.compact,'mask')==false)
-                    mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);     
-                end
+%             if(isfield(mp.P1,'full'))
+%                 if(isfield(mp.P1.full,'mask')==false)
+%                     mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+%                 end
+%             end
+            if(mp.compact.flagGenPupil)
+                mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);  
             end
-        end
+%             if(isfield(mp.P1,'compact'))
+%                 if(isfield(mp.P1.compact,'mask')==false)
+%                     mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);     
+%                 end
+%             end
+%         end
         
     case{'WFIRST20180103'}
         %--Generate high-res input pupil for the 'full' model
@@ -172,7 +178,7 @@ switch upper(mp.whichPupil)
             % Full model can have more than one field per sub-bandpass
             for sbpIndex = 1:mp.Nsbp
                 for wpsbpIndex = 1:mp.Nwpsbp
-                    lambda = mp.sbp_centers(sbpIndex)*mp.full.sbp_facs(wpsbpIndex);
+                    lambda = mp.full.lambdasMat(sbpIndex,wpsbpIndex);
                     phz = angle(mp.P1.full.mask)*mp.lambda0/lambda;
                     mp.P1.full.E(:,:,wpsbpIndex,sbpIndex) = exp(1i*phz);
                 end
@@ -240,17 +246,17 @@ end
 
 [mp.P2.compact.XsDL,mp.P2.compact.YsDL] = meshgrid(mp.P2.compact.xsDL);
 
-switch mp.layout
-    case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-        switch mp.centering
-            case{'interpixel'}
-                mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam);
-            otherwise
-                mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam+1);
-        end
-    otherwise
-        mp.P1.full.Narr = length(mp.P1.full.mask);  %--Total number of pixels across array containing the pupil in the full model. Add 2 pixels to Nbeam when the beam is pixel-centered.
+if(mp.full.flagPROPER)
+    switch mp.centering
+        case{'interpixel'}
+            mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam);
+        otherwise
+            mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam+1);
+    end
+else
+    mp.P1.full.Narr = length(mp.P1.full.mask);  %--Total number of pixels across array containing the pupil in the full model. Add 2 pixels to Nbeam when the beam is pixel-centered.
 end
+
 %--NORMALIZED (in pupil diameter) coordinate grids in the input pupil for making the tip/tilted input wavefront within the full model
 if(strcmpi(mp.centering,'interpixel') )
     mp.P2.full.xsDL = (- (mp.P1.full.Narr-1)/2:(mp.P1.full.Narr-1)/2)*mp.P2.full.dx/mp.P2.D;
