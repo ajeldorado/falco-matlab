@@ -156,3 +156,4 @@ docs/**
 
 HLCLSplotter.m
 PMGIplotter.m
+*.pyc

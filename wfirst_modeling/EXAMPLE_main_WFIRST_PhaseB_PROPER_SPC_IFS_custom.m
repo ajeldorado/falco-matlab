@@ -36,29 +36,6 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS_custom
 
-
-%% Step 3a) Define custom SPC values.
-
-% %--Bandwidth and Wavelength Specs
-% mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters]
-% mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% 
-% %--Full model mask files and resolutions
-% mp.full.cor_type = 'spc_ifs_custom';
-% file_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/spc_ifs_custom/';
-% mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];        mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
-% % mp.full.pupil_mask_file = [file_dir, 'minpadSPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];  mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
-% % mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW2Nlam6.fits'];         mp.fracBW = 0.02; mp.Nsbp = 1;%--SPM file name
-% % mp.full.pupil_mask_file = [file_dir, 'minpadSPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW2Nlam6.fits'];   mp.fracBW = 0.02; mp.Nsbp = 1;%--SPM file name
-% 
-% mp.full.pupil_file = [file_dir, 'pupil_SPC-20190130_rotated.fits'];
-% mp.full.pupil_diam_pix = 1000;
-% mp.full.fpm_file = [file_dir, 'fpm_sharp_26WA90_65deg_res20.fits'];
-% mp.full.fpm_sampling_lam0 = 0.05; 	% sampling in lambda0/D of FPM mask
-% mp.full.lyot_stop_file = [file_dir,'LS_sharp_20D96_95deg_N1000.fits'];
-% mp.full.lambda0_m = mp.lambda0;       % FPM scaled for this central wavelength
-
-
 %% Step 3a: Overwrite default values as desired
 
 % %%--Special Computational Settings
