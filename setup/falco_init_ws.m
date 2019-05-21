@@ -41,6 +41,11 @@ if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--W
 if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
 
+%--Whether to generate or load various masks
+if(isfield(mp.compact,'flagGenPupil')==false);mp.compact.flagGenPupil = true;  end
+
+mp.compact.flagGenFPM = true;
+mp.compact.flagGenLS = true;
 
 %% Optional/Hidden variables
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
@@ -184,6 +189,13 @@ mp = falco_config_jac_weights(mp);
 mp = falco_config_gen_chosen_pupil(mp); %--input pupil mask
 mp = falco_config_gen_chosen_apodizer(mp); %--apodizer mask
 mp = falco_config_gen_chosen_LS(mp); %--Lyot stop
+
+%--Compare apodizer and pupil mask overlap
+if(mp.flagApod)
+    if(mp.flagPlot)
+    figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
+    end
+end
 
 %% Plot the pupil and Lyot stop on top of each other to make sure they are aligned correctly
 %--Only for coronagraphs using Babinet's principle, for which the input

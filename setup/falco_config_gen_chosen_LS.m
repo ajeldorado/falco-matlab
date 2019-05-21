@@ -58,12 +58,7 @@ switch upper(mp.whichPupil)
         if(mp.full.flagPROPER==false)
             mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes);
         end
-%         switch mp.layout
-%             case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--The full model's pupil is loaded, so don't generate it here
-%             otherwise
-%                 %--Make or read in Lyot stop (LS) for the 'full' model
-%                 mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes);
-%         end
+
         %--Make or read in Lyot stop (LS) for the 'compact' model
         mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam,mp.centering,changes);
 
@@ -81,12 +76,6 @@ switch upper(mp.whichPupil)
                         inputs.Nbeam = mp.P4.full.Nbeam; 
                         mp.P4.full.mask = falco_gen_bowtie_LS(inputs);
                     end
-%                     switch mp.layout
-%                         case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--The full model's LS is loaded, so don't generate it here
-%                         otherwise %--Make bowtie Lyot stop (LS) for the 'full' model
-%                             inputs.Nbeam = mp.P4.full.Nbeam; 
-%                             mp.P4.full.mask = falco_gen_bowtie_LS(inputs);
-%                     end
                     
                     %--Make bowtie Lyot stop (LS) for the 'compact' model
                     inputs.Nbeam = mp.P4.compact.Nbeam; 
@@ -257,19 +246,6 @@ switch upper(mp.coro)
             end
             mp.P4.full.croppedMask = padOrCropEven(mp.P4.full.mask,mp.P4.full.Narr); %--The cropped-down Lyot stop for the full model. 
         end
-%         switch mp.layout
-%             case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-%             otherwise
-%                 %--Crop down the high-resolution Lyot stop to get rid of extra zero padding
-%                 LSsum = sum(mp.P4.full.mask(:));
-%                 LSdiff = 0; counter = 2;
-%                 while(abs(LSdiff) <= 1e-7)
-%                     mp.P4.full.Narr = length(mp.P4.full.mask)-counter;
-%                     LSdiff = LSsum - sum(sum(padOrCropEven(mp.P4.full.mask, mp.P4.full.Narr-2))); %--Subtract an extra 2 to negate the extra step that overshoots.
-%                     counter = counter + 2;
-%                 end
-%                 mp.P4.full.croppedMask = padOrCropEven(mp.P4.full.mask,mp.P4.full.Narr); %--The cropped-down Lyot stop for the full model.
-%         end
 
         % --Crop down the low-resolution Lyot stop to get rid of extra zero padding. Speeds up the compact model.
         LSsum = sum(mp.P4.compact.mask(:));

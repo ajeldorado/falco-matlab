@@ -47,16 +47,22 @@ switch upper(mp.whichPupil)
         
         %--Generate low-res input pupil for the 'compact' model
         if(isfield(mp,'P1'))
-            if(isfield(mp.P1,'full'))
-                if(isfield(mp.P1.full,'mask')==false)
-                    mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
-                end
+            if(mp.full.flagPROPER==false)
+                mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
             end
-            if(isfield(mp.P1,'compact'))
-                if(isfield(mp.P1.compact,'mask')==false)
-                    mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);     
-                end
+%             if(isfield(mp.P1,'full'))
+%                 if(isfield(mp.P1.full,'mask')==false)
+%                     mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+%                 end
+%             end
+            if(mp.compact.flagGenPupil)
+                mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);  
             end
+%             if(isfield(mp.P1,'compact'))
+%                 if(isfield(mp.P1.compact,'mask')==false)
+%                     mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);     
+%                 end
+%             end
         end
         
     case{'WFIRST20180103'}
@@ -250,18 +256,6 @@ if(mp.full.flagPROPER)
 else
     mp.P1.full.Narr = length(mp.P1.full.mask);  %--Total number of pixels across array containing the pupil in the full model. Add 2 pixels to Nbeam when the beam is pixel-centered.
 end
-% 
-% switch mp.layout
-%     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-%         switch mp.centering
-%             case{'interpixel'}
-%                 mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam);
-%             otherwise
-%                 mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam+1);
-%         end
-%     otherwise
-%         mp.P1.full.Narr = length(mp.P1.full.mask);  %--Total number of pixels across array containing the pupil in the full model. Add 2 pixels to Nbeam when the beam is pixel-centered.
-% end
 
 %--NORMALIZED (in pupil diameter) coordinate grids in the input pupil for making the tip/tilted input wavefront within the full model
 if(strcmpi(mp.centering,'interpixel') )
