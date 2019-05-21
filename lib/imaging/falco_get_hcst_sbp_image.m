@@ -31,6 +31,23 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
+
+    
+    %--Quantization of DM actuation steps based on least significant bit of the
+    % DAC (digital-analog converter). In height, so called HminStep_tb
+    % If HminStep_tb (minimum step in H) is defined, then quantize the DM voltages
+    % This is for simulating the LSB effect (Dan's experiment) 
+    if(isfield(mp.dm1,'HminStep_tb') && ~any(isnan(mp.dm1.HminStep_tb(:))))
+
+        % If desired method is not defined, set it to the default. 
+        if(~isfield(mp.dm1,'HminStepMethod')); mp.dm1.HminStepMethod = 'round'; end
+
+        % Discretize/Quantize the DM voltages (creates dm.Vquantized)
+        mp.dm1 = falco_discretize_dm_surf(mp.dm1, mp.dm1.HminStepMethod, 'tb');
+        mp.dm1.V = mp.dm1.Vquantized;
+
+    end
+    
     
     map = mp.dm1.V'; % There's a transpose between Matlab and BMC indexing
     
