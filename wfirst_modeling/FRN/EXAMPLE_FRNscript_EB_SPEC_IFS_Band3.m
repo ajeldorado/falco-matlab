@@ -11,7 +11,9 @@ addpath(fullfile(parent_path, 'calculateFRN')); % add full path of calculateFRN 
 
 % Specify full path of folder contaning coronagraph data. See README to find what what
 % files this directory requires.
-CG_Directory = fullfile(parent_path, 's_EB_SPEC_IFS_Band3/CGdata');
+CG_Directory = '~/Repos/falco-matlab/data/frn/CGdata_EB_SPEC_IFS_Band3';
+
+% CG_Directory = fullfile(parent_path, 's_EB_SPEC_IFS_Band3/CGdata');
 MUFcaseInput = 'Standard'; % choices are 'Standard' and 'Unity'
 NItoContrast = 0.786; % user needs to calculate this for this annular zone
 mode = 'IFS'; % choices are: 'IMG' 'IFS'

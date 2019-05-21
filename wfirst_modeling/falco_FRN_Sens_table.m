@@ -39,8 +39,8 @@ for ii=1:Nann;  matSens((ii-1)*Nmode+1:ii*Nmode,3) = ii-1;  end %--annzone
 mp.full.ZrmsVal = 1e-9; %--RMS values for each Zernike specified in vector indsZnoll [meters] 
 mp.eval.indsZnoll = 2:11; %--Use tip/tilt through spherical modes
 
-Zsens = falco_get_Zernike_sensitivities(mp); % dimensions of [Nzern,Nann]
-for ii=1:Nann;  matSens((ii-1)*Nmode+1:(ii-1)*Nmode+10,4) = Zsens(:,ii);  end %--Re-organize into column 4 of Sensitivities table
+Zsens = falco_get_Zernike_sensitivities(mp); %--dimensions of [Nzern,Nann]
+for ii=1:Nann;  matSens((ii-1)*Nmode+1:(ii-1)*Nmode+10,4) = 1e9*Zsens(:,ii);  end %--Multiply by 1e9 to go from m to nm. Re-organize into column 4 of Sensitivities table
 
 %% Compute sensitivities to 1 micron of X- and Y- Pupil Shear
 
