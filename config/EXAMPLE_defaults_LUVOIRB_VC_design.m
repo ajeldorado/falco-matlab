@@ -74,7 +74,7 @@ mp.jac.zerns = 1;  %--Which Zernike modes to include in Jacobian. Given as the m
 mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
     
 %--Zernikes to compute sensitivities for
-mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
+mp.eval.indsZnoll = []; %--Noll indices of Zernikes to compute values for
 %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
 mp.eval.Rsens = []; 
 
@@ -154,7 +154,7 @@ mp.dm2.Dstop = mp.dm1.Nact*mp.dm1.dm_spacing;   %--Diameter of iris [meters]
 
 %--DM separations
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
-mp.d_dm1_dm2 = 0.5;   % distance between DM1 and DM2 [meters]
+mp.d_dm1_dm2 = 0.8;   % distance between DM1 and DM2 [meters]
 
 
 %% Optical Layout: All models
@@ -169,13 +169,13 @@ mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 30; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
-mp.Fend.corr.Rin = 2.0;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 28;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rin  = 2.0;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout = 26;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = 2.0;  % inner radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.Rout = 28;  % outer radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
+mp.Fend.score.Rin  = mp.Fend.corr.Rin;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = mp.Fend.corr.Rout;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.ang  = mp.Fend.corr.ang;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
@@ -186,12 +186,12 @@ mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right'
 mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Pupil Plane Diameters
-mp.P2.D = mp.dm1.Nact*mp.dm1.dm_spacing;
+mp.P2.D = (mp.dm1.Nact-2)*mp.dm1.dm_spacing;
 mp.P3.D = mp.P2.D;
 mp.P4.D = mp.P2.D;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 250;
+mp.P1.compact.Nbeam = 500;
 mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -204,8 +204,6 @@ mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
-
-% mp.F3.compact.res = 6; % sampling of FPM for compact model [pixels per lambda0/D]
 
 %% Optical Layout: Full Model 
 
