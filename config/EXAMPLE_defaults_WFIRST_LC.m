@@ -222,12 +222,13 @@ mp.P3.compact.Nbeam = 250;
 mp.P4.compact.Nbeam = 250;
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
-%to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
-%full model, which probably has extra collimated beams compared to the
-%compact model.
+% to keep track of 180-degree rotations compared to the full model, which 
+% in general can have probably has extra collimated beams compared to the
+% compact model.
 mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
+mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
 mp.F3.compact.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
 

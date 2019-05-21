@@ -34,11 +34,13 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
         modvar.wpsbpIndex = mp.wi_ref;
         modvar.whichSource = 'star';
 
-        [E2D, EfibCompact] = model_full(mp, modvar);
+        
         if(mp.flagFiber)
+            [E2D, EfibCompact] = model_full(mp, modvar);
             [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
             Emat(:,im) = EfibCompact(I,J,:);
         else
+            E2D = model_full(mp, modvar);
             Emat(:,im) = E2D(mp.Fend.corr.inds); % Actual field in estimation area
         end
     end

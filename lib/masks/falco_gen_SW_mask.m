@@ -111,11 +111,11 @@ else
     clockAng = inputs.clockAngDeg*pi/180;
 end
 
-maskSW = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<angRad/2;
+maskSW = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<=angRad/2;
 
 if(strcmpi(whichSide,'both'))
     clockAng = clockAng + pi;
-    maskSW2 = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<angRad/2;
+    maskSW2 = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<=angRad/2;
     maskSW = or(maskSW,maskSW2);
 end
 

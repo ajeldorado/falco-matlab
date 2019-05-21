@@ -100,7 +100,7 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
+EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
@@ -121,7 +121,7 @@ else
     EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
 end
 
-%--Rotate 180 degrees to propagate to pupil P3
+%--Re-image to pupil P3
 EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering);
 
 %--Apply apodizer mask.
@@ -169,6 +169,7 @@ switch upper(mp.coro)
         EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+        EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Propagate forward more pupil planes if necessary.
         %--Babinet's principle at P4
         EP4 = (EP4noFPM-EP4sub);
 
@@ -190,6 +191,7 @@ switch upper(mp.coro)
         EP4noFPM = transOuterFPM*EP4noFPM; %--Apply the phase and amplitude change from the FPM's outer complex transmission.
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+        EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Propagate forward more pupil planes if necessary.
         %--Babinet's principle at P4
         EP4 = (EP4noFPM-EP4sub); 
 
@@ -219,6 +221,7 @@ switch upper(mp.coro)
         EP4noFPM = padOrCropEven(EP4noFPM0,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
         EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+        EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Propagate forward more pupil planes if necessary.
         %--Babinet's principle at P4
         EP4 = EP4noFPM - EP4sub; 
 
@@ -240,7 +243,8 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.compact.croppedMask.*EP4;
 
-% DFT to camera
+%--MFT to camera
+EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,dxi,Nxi,deta,Neta,mp.centering);
 
 %--Don't apply FPM if normalization value is being found

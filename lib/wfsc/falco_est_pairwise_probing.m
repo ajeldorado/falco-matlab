@@ -190,12 +190,17 @@ for si=1:mp.Nsbp
     amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
     isnonzero = all(amp,2);
     zAll = ( (Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs,mp.Fend.corr.Npix]
+    ampSq2Dcube = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.est.probe.Npairs);
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.Fend.Neta,mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:,iProbe); 
+        ampSq2Dcube(:,:,iProbe) = ampSq2D;
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
         if(mp.flagPlot);  figure(201); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,ampSq2D);title(['ampSq2D Pair ',num2str(iProbe),'/',num2str(Npairs)]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
     end
-    
+
+    %% Plot relevant data for all the probes
+    falco_plot_pairwise_probes(mp,ev,DM1Vplus-repmat(DM1Vnom,[1,1,size(DM1Vplus,3)]),ampSq2Dcube)
+
     %% Perform the estimation
     
     if(mp.est.flagUseJac) %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.

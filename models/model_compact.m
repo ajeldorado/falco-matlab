@@ -10,10 +10,12 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
+% of having Efiber as a required output. 
 % Modified on 2017-10-17 by A.J. Riggs to have model_compact.m be a wrapper. All the 
 %  actual compact models have been moved to sub-routines for clarity.
-% Modified on 19 June 2017 by A.J. Riggs to use lower resolution than the
-%   full model.
+% Modified on 19 June 2017 by A.J. Riggs to use resolutions independent of 
+% the full model.
 % model_compact.m - 18 August 2016: Modified from hcil_model.m
 % hcil_model.m - 18 Feb 2015: Modified from HCIL_model_lab_BB_v3.m
 % ---------------
@@ -24,17 +26,13 @@
 %
 % OUTPUTS:
 % -Eout
-%  -> Note: When computing the control Jacobian, Eout is a structure
-%  containing the Jacobians. Otherwise, it is just the E-field at the
-%  second focal plane.
+% -
 %
-% modvar structure fields (4):
+% modvar structure fields required for model_compact:
 % -sbpIndex
-% -wpsbpIndex
 % -whichSource
-% -flagGenMat
 
-function [Eout, Efiber] = model_compact(mp, modvar,varargin)
+function [Eout, varargout] = model_compact(mp, modvar,varargin)
 
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
@@ -121,25 +119,33 @@ switch lower(mp.layout)
         switch upper(mp.coro) 
             case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
                 mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
-            case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
+            case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
                 mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
         end
         
     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
-            mp.FPM.mask = mp.compact.FPMcube(:,:,modvar.sbpIndex);
+        switch upper(mp.coro)     
+            case{'HLC'}
+                mp.FPM.mask = mp.compact.FPMcube(:,:,modvar.sbpIndex);
+        end
 end
 
 %--Select which optical layout's compact model to use and get the output E-field
 switch lower(mp.layout)
     case{'fourier'}
-        [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+        if(mp.flagFiber)
+            [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+            varargout{1} = Efiber;
+        else
+            Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+        end
         
     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
         switch upper(mp.coro)
             case{'SPLC'}
-                [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+                Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
             case{'HLC'}
-                [Eout, ~] = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
+                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
         end
 end
     
