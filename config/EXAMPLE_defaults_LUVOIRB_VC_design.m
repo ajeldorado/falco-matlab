@@ -127,8 +127,8 @@ mp.dm2.inf_sign = '+';
 %% Deformable Mirrors: Optical Layout Parameters
 
 %--DM1 parameters
-mp.dm1.Nact = 48;               % # of actuators across DM array
-mp.dm1.VtoH = 1*1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
+mp.dm1.Nact = 64;               % # of actuators across DM array
+mp.dm1.VtoH = 1e-9*ones(mp.dm1.Nact);  % gains of all actuators [nm/V of free stroke]
 mp.dm1.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
 mp.dm1.ytilt = 0;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
@@ -137,8 +137,8 @@ mp.dm1.yc = (mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actu
 mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
 
 %--DM2 parameters
-mp.dm2.Nact = 48;               % # of actuators across DM array
-mp.dm2.VtoH = 1*1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
+mp.dm2.Nact = 64;               % # of actuators across DM array
+mp.dm2.VtoH = 1e-9*ones(mp.dm1.Nact);  % gains of all actuators [nm/V of free stroke]
 mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
 mp.dm2.ytilt = 0;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm2.zrot = 0;                % clocking of DM surface [degrees]
@@ -148,13 +148,13 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
-mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = true;  %--Whether to apply an iris or not
-mp.dm2.Dstop = 0.4*50e-3;   %--Diameter of iris [meters]
+mp.dm1.Dstop = mp.dm1.Nact*mp.dm1.dm_spacing;  %--Diameter of iris [meters]
+mp.flagDM2stop = false;  %--Whether to apply an iris or not
+mp.dm2.Dstop = mp.dm1.Nact*mp.dm1.dm_spacing;   %--Diameter of iris [meters]
 
 %--DM separations
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
-mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
+mp.d_dm1_dm2 = 0.5;   % distance between DM1 and DM2 [meters]
 
 
 %% Optical Layout: All models
@@ -166,15 +166,15 @@ mp.coro = 'vortex';
 
 %--Final Focal Plane Properties
 mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
-mp.Fend.FOV = 20; %--half-width of the field of view in both dimensions [lambda0/D]
+mp.Fend.FOV = 30; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 2.0;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 15;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 28;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
 mp.Fend.score.Rin = 2.0;  % inner radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.Rout = 15;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = 28;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
@@ -186,9 +186,9 @@ mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right'
 mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Pupil Plane Diameters
-mp.P2.D = 0.4*48e-3;
-mp.P3.D = 0.4*48e-3;
-mp.P4.D = 0.4*48e-3;
+mp.P2.D = mp.dm1.Nact*mp.dm1.dm_spacing;
+mp.P3.D = mp.P2.D;
+mp.P4.D = mp.P2.D;
 
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 250;
