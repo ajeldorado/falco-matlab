@@ -76,7 +76,7 @@ mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberratio
 %--Zernikes to compute sensitivities for
 mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
 %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
-mp.eval.Rsens = []; 
+mp.eval.Rsens = [2,3; 3,4; 4,5]; 
 
 %--Grid- or Line-Search Settings
 mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)

@@ -21,6 +21,7 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
+mp.compact.dummy = 1;
 mp.full.dummy = 1;
 
 %% Optional/Hidden flags
@@ -37,15 +38,23 @@ if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end 
 if(isfield(mp.dm1,'flagNbrRule'));  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if(isfield(mp.dm2,'flagNbrRule'));  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 %--Model options
-if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER
 if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
 
-%--Whether to generate or load various masks
-if(isfield(mp.compact,'flagGenPupil')==false);mp.compact.flagGenPupil = true;  end
-
-mp.compact.flagGenFPM = true;
-mp.compact.flagGenLS = true;
+%--Whether to generate or load various masks: compact model
+if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
+if(isfield(mp.compact,'flagGenFPM')==false);  mp.compact.flagGenFPM = true;  end
+if(isfield(mp.compact,'flagGenLS')==false);  mp.compact.flagGenLS = true;  end
+%--Whether to generate or load various masks: full model
+if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
+if( mp.full.flagPROPER)
+    mp.full.flagGenPupil = false;
+    mp.full.flagGenFPM = false;
+    mp.full.flagGenLS = false;
+end
+if(isfield(mp.full,'flagGenPupil')==false);  mp.full.flagGenPupil = true;  end
+if(isfield(mp.full,'flagGenFPM')==false);  mp.full.flagGenFPM = true;  end
+if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 
 %% Optional/Hidden variables
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
