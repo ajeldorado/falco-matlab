@@ -35,13 +35,13 @@ clear all;
 
 
 %--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = 'C:\Lab\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = 'C:\Lab\falco-matlab\proper';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+mp.path.falco = '/home/hcst/falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '/home/hcst/PROPER';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
 % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = 'C:\Lab\falco-matlab\data\configs';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = 'C:\Lab\falco-matlab\data\ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.config = '/home/hcst/falco-matlab/data/configs';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '/home/hcst/falco-matlab/data/ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 %%--Add to the MATLAB Path
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
@@ -62,7 +62,7 @@ mp.TrialNum = 2;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 50; %--Number of estimation+control iterations to perform
+mp.Nitr = 10; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2]; %--Which DMs to use
 mp.ctrl.log10regVec = -1;%--log10 of the regularization exponents (often called Beta values)
@@ -70,7 +70,7 @@ mp.ctrl.log10regVec = -1;%--log10 of the regularization exponents (often called 
 %--Training the model
 mp.flagTrainModel = true;%false;%
 mp.est.flagUseJac = true;%false;%
-mp.NitrTrain = 3; %--How many iterations to use per training set.
+mp.NitrTrain = mp.Nitr; %--How many iterations to use per training set.
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -97,14 +97,17 @@ mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 %% Tuning parameters for System Identification
 flagUseTensorflow = true;
 if flagUseTensorflow
-    mp.est.lr  = 1e-7; % learning rate
+    mp.est.lr  = 5e-8; % learning rate
     mp.est.lr2 = 1e-2; % learning rate2
-    mp.est.epoch = 3; % 
-    mp.est.Q0 = 1e-15;
-    mp.est.Q1 = 0.3;
+    mp.est.epoch = 10; % 
+    mp.est.Q0 = 1e-9;
+    mp.est.Q1 = 0.4;
     mp.est.R0 = 1e-25;
     mp.est.R1 = 1e-25;
-    systemID_mod = py.importlib.import_module('falco_systemID');
+    mp.est.R2 = 0.4;
+%     setenv('PATH', '/home/hcst/anaconda3/envs/py35/bin')
+%     pyversion('/home/hcst/anaconda3/envs/py35/bin/python3.5')
+%     systemID_mod = py.importlib.import_module('falco_systemID');
 else
     mp.est.EMitr = 2;
     mp.est.Q = 3e-9;
@@ -118,11 +121,11 @@ mp.est.flagUseTensorflow = flagUseTensorflow;
 % %--Generate and save the errors the first time.
 % DM1V = 2*randn(34);
 % DM2V = 2*randn(34);
-% save('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
+% save('/home/hcst/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
 
 %--Load the errors the following times
 % load('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
-load('C:\Lab\falco-matlab\data\maps\dm_errors.mat','DM1V','DM2V')
+load('/home/hcst/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
 mp.full.dm1.V0 = DM1V;
 mp.full.dm2.V0 = DM2V;
 
@@ -142,12 +145,47 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 % [out, data_train] = falco_adaptive_wfsc_loop(mp);
-out = falco_wfsc_loop(mp);
 
-if(mp.flagPlot)
-    figure(300); semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
-    hold on
-    drawnow
+for klearning = 1 : 10
+    if klearning == 1
+        mp.flagUseLearnedJac = false;
+    else
+        mp.flagUseLearnedJac = true;
+    end
+
+    out = falco_wfsc_loop(mp);
+
+    if(mp.flagPlot)
+        figure(300); semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
+        hold on
+        drawnow
+    end
+    if klearning == 1
+        lr = mp.est.lr;
+        lr2 = mp.est.lr2;
+        epoch = mp.est.epoch;
+        Q0 = mp.est.Q0;
+        Q1 = mp.est.Q1;
+        R0 = mp.est.R0;
+        R1 = mp.est.R1;
+        R2 = mp.est.R2;
+    else
+        lr = mp.est.lr;
+        lr2 = mp.est.lr2;
+        epoch = mp.est.epoch;
+        jacLearned = load(['/home/hcst/falco-matlab/data/jac/', 'jacStructLearned.mat']);
+        Q0 = jacLearned.noise_coef(1);
+        Q1 = jacLearned.noise_coef(2);
+        R0 = jacLearned.noise_coef(3);
+        R1 = jacLearned.noise_coef(4);
+        R2 = jacLearned.noise_coef(5);
+    end
+    pycommand = ['python falco_systemID_main.py /home/hcst/falco-matlab/data/jac/ ', ...
+                num2str(lr), ' ', num2str(lr2), ' ', num2str(epoch), ' ', 'True ', ...
+                num2str(Q0), ' ', num2str(Q1), ' ', num2str(R0), ' ', num2str(R1), ' ', ...
+                num2str(R2)];
+    
+    system(pycommand);
 end
 
 

@@ -5,15 +5,10 @@ import scipy.io as sio
 
 plt.ion()
 
-plt.ion()
-
 class SSM(object):
 	# linear state space model for the optical system
 	# the incoherent light is not considered here, however, it should be easy to include them
-	def __init__(self, Jacobian1, Jacobian2, Q0, Q1, R0, R1, n_observ=4):
-		# parameters Q0, Q1, R0, R1 define the noise covariance of the state space model
-		# process noises covariance: Q = Q0 + Q1 * sum(uc^2)
-		# observation noises covariance: R = R0 + R1 * probe_contrast + R2 * probe_contrast^2
+	def __init__(self, Jacobian1, Jacobian2, Q0, Q1, R0, R1, R2, n_observ=4):
 		# Jacobian matrices
 		self.G1_real = tf.Variable(Jacobian1.real, dtype=tf.float64)
 		self.G1_imag = tf.Variable(Jacobian1.imag, dtype=tf.float64)
@@ -25,13 +20,13 @@ class SSM(object):
 		self.q1 = tf.Variable(np.log(Q1), dtype=tf.float64)
 		self.r0 = tf.Variable(np.log(R0), dtype=tf.float64)
 		self.r1 = tf.Variable(np.log(R1), dtype=tf.float64)
-		# self.r2 = tf.Variable(np.log(R2), dtype=tf.float64)
+		self.r2 = tf.Variable(np.log(R2), dtype=tf.float64)
 
 		self.Q0 = tf.exp(self.q0)
 		self.Q1 = tf.exp(self.q1)
 		self.R0 = tf.exp(self.r0)
 		self.R1 = tf.exp(self.r1)
-		# self.R2 = tf.exp(self.r2)
+		self.R2 = tf.exp(self.r2)
 		self.num_pix = Jacobian1.shape[0]
 		self.num_act = Jacobian1.shape[1]
 		self.n_observ = int(n_observ)
@@ -42,14 +37,11 @@ class SSM(object):
 		return Enp_next
 	def transition_covariance(self, Enp, u1, u2):
 		# covariance of process/transition noises
-		# u1_square = tf.reduce_sum(tf.abs(u1)**2, axis=1)
-		# u2_square = tf.reduce_sum(tf.abs(u2)**2, axis=1)
-		# Qco = tf.tensordot(tf.expand_dims(u1_square, 1), tf.expand_dims(self.Q1*tf.ones(self.num_pix, dtype=tf.float64), 0), axes=[[1], [0]]) + \
-		# 	tf.tensordot(tf.expand_dims(u2_square, 1), tf.expand_dims(self.Q1*tf.ones(self.num_pix, dtype=tf.float64), 0), axes=[[1], [0]]) + self.Q0 + 1e-14
-		# u1_cubic = tf.reduce_sum(tf.abs(u1)**3, axis=1)
-		# u2_cubic = tf.reduce_sum(tf.abs(u2)**3, axis=1)
-		# Qco = tf.tensordot(tf.expand_dims(u1_cubic, 1), tf.expand_dims(self.Q1*tf.ones(self.num_pix, dtype=tf.float64), 0), axes=[[1], [0]]) + \
-		# 	tf.tensordot(tf.expand_dims(u2_cubic, 1), tf.expand_dims(self.Q1*tf.ones(self.num_pix, dtype=tf.float64), 0), axes=[[1], [0]]) + self.Q0 + 1e-14
+#		u1_square = tf.reduce_sum(tf.abs(u1)**2, axis=1)
+#		u2_square = tf.reduce_sum(tf.abs(u2)**2, axis=1)
+#		Qco = tf.tensordot(tf.expand_dims(u1_square, 1), tf.expand_dims(self.Q1*tf.ones(self.num_pix, dtype=tf.float64), 0), axes=[[1], [0]]) + \
+#			tf.tensordot(tf.expand_dims(u2_square, 1), tf.expand_dims(self.Q1*tf.ones(self.num_pix, dtype=tf.float64), 0), axes=[[1], [0]]) + self.Q0 + 1e-14
+    
 		dE = tf.cast(tf.tensordot(u1, self.G1_real, axes=[[-1], [1]]) + tf.tensordot(u2, self.G2_real, axes=[[-1], [1]]), tf.complex128) + \
 					+ 1j * tf.cast(tf.tensordot(u1, self.G1_imag, axes=[[-1], [1]]) + tf.tensordot(u2, self.G2_imag, axes=[[-1], [1]]), tf.complex128)
 		dE_square = tf.reduce_mean(tf.abs(dE)**2, axis=1)
@@ -63,26 +55,32 @@ class SSM(object):
 		for k in range(n_probe):
 			E_p = self.transition(Enp, u_p1[:, k, :], u_p2[:, k, :])
 			E_p_list.append(tf.expand_dims(E_p, 1))
-			I_p_correction = 2*self.transition_covariance(Enp, u_p1[:, k, :], u_p2[:, k, :])
-			I_p_correction_list.append(tf.expand_dims(I_p_correction, 1))
-
+			# I_p_correction = 2*self.transition_covariance(Enp, u_p1[:, k, :], u_p2[:, k, :])
+			# I_p_correction_list.append(tf.expand_dims(I_p_correction, 1))
 		E_p_obs = tf.concat(E_p_list, axis=1)
-		I_p_cor = tf.concat(I_p_correction_list, axis=1)
-		I_p_obs = tf.abs(E_p_obs)**2 + I_p_cor
+		# I_p_cor = tf.concat(I_p_correction_list, axis=1)
+		I_p_obs = tf.abs(E_p_obs)**2
 		return E_p_obs, I_p_obs
 	def observation_covariance(self, I_p_obs, u_p1, u_p2):#(self, Enp, u_p1, u_p2):
 		# covariance of observation noises
-		# _, I_p_obs = self.observation(Enp, u_p1, u_p2)
+#		_, I_p_obs = self.observation(Enp, u_p1, u_p2)
+#		contrast_p = tf.reduce_mean(I_p_obs, axis=2)
+
 		contrast_p = tf.reduce_mean(I_p_obs, axis=2)
 		dEp = tf.cast(tf.tensordot(u_p1, self.G1_real, axes=[[-1], [1]]) + tf.tensordot(u_p2, self.G2_real, axes=[[-1], [1]]), tf.complex128) + \
 					+ 1j * tf.cast(tf.tensordot(u_p1, self.G1_imag, axes=[[-1], [1]]) + tf.tensordot(u_p2, self.G2_imag, axes=[[-1], [1]]), tf.complex128)
 		d_contrast_p = tf.reduce_mean(tf.abs(dEp)**2, axis=2)
-		R = tf.tensordot(tf.expand_dims(self.R0 + self.R1*contrast_p + 4*(self.Q0+self.Q1*d_contrast_p)*contrast_p, axis=-1), tf.ones((1, self.num_pix), dtype=tf.float64), axes=[[-1], [0]]) + 1e-24	
+
+#		R = tf.tensordot(tf.expand_dims(self.R0 + self.R1*contrast_p + self.R2*contrast_p**2, axis=-1), tf.ones((1, self.num_pix), dtype=tf.float64), axes=[[-1], [0]]) + 1e-24	
+
+		R = tf.tensordot(tf.expand_dims(self.R0 + self.R1*contrast_p + self.R2*d_contrast_p*contrast_p, axis=-1), tf.ones((1, self.num_pix), dtype=tf.float64), axes=[[-1], [0]]) + 1e-24
 		return R
 	def get_params(self):
 		# get the parameters of the identified system
 		return [self.G1_real, self.G1_imag, self.G2_real, self.G2_imag,
-				self.q0, self.q1, self.r0, self.r1]
+				self.q0, self.q1, self.r0, self.r1, self.r2]
+		# return [self.G1_real, self.G1_imag, self.G2_real, self.G2_imag,
+		# 		self.q0, self.q1, self.r0, self.r1, self.r2]
 
 
 def LSEnet(model, Ip, u1p, u2p):
@@ -100,10 +98,9 @@ def LSEnet(model, Ip, u1p, u2p):
 	
 	n_observ = model.n_observ
 	contrast_p = tf.reduce_mean(Ip, axis=2)
-
 	d_contrast_p = tf.reduce_mean(tf.abs(delta_Ep_pred)**2, axis=2)
 
-	Rp = tf.tensordot(tf.expand_dims(model.R0 + model.R1*contrast_p + 4*(model.Q0+model.Q1*d_contrast_p)*contrast_p, axis=-1), 
+	Rp = tf.tensordot(tf.expand_dims(model.R0 + model.R1*contrast_p + model.R2*d_contrast_p*contrast_p, axis=-1), 
 						tf.ones((1, model.num_pix), dtype=tf.float64), axes=[[-1], [0]]) + 1e-24	
 	Rp = tf.transpose(Rp, [0, 2, 1])
 	R_diff = Rp[:, :, 1::2]+Rp[:, :, 2::2]
@@ -125,8 +122,7 @@ def KFnet(model, Ip, Enp_old, P_old, u1c, u2c, u1p, u2p):
 	n_observ = model.n_observ
 	contrast_p = tf.reduce_mean(Ip, axis=2)
 	d_contrast_p = tf.reduce_mean(tf.abs(delta_Ep_pred)**2, axis=2)
-
-	Rp = tf.tensordot(tf.expand_dims(model.R0 + model.R1*contrast_p + 4*(model.Q0+model.Q1*d_contrast_p)*contrast_p, axis=-1), 
+	Rp = tf.tensordot(tf.expand_dims(model.R0 + model.R1*contrast_p + model.R2*d_contrast_p*contrast_p, axis=-1), 
 						tf.ones((1, model.num_pix), dtype=tf.float64), axes=[[-1], [0]]) + 1e-24	
 	Rp = tf.transpose(Rp, [0, 2, 1])
 	R_diff = Rp[:, :, 1::2]+Rp[:, :, 2::2]
@@ -154,7 +150,7 @@ def KFnet(model, Ip, Enp_old, P_old, u1c, u2c, u1p, u2p):
 
 
 class vl_net:
-	def __init__(self, Q0=1e-14, Q1=0.05, R0=1e-14, R1=1e-9, 
+	def __init__(self, Q0=1e-14, Q1=0.05, R0=1e-14, R1=1e-9, R2=0.2,
 				path2data='/Users/ajriggs/Repos/falco-matlab/data/jac/'):
 		# load training data and biased Jacobian matrices
 		data_train = sio.loadmat( (path2data+'data_train.mat'))
@@ -190,10 +186,10 @@ class vl_net:
 		Jacobian = sio.loadmat((path2data+'jacStruct.mat'))
 		G1 = Jacobian['jacStruct']['G1'][0, 0]
 		G2 = Jacobian['jacStruct']['G2'][0, 0]
-		model = SSM(G1, G2, Q0, Q1, R0, R1, n_image)
+		model = SSM(G1, G2, Q0, Q1, R0, R1, R2, n_image)
 		sio.savemat(path2data+'jacStructLearned.mat', {'G1': G1,
 										'G2': G2,
-										'noise_coef': np.squeeze(np.array([Q0, Q1, R0, R1]))})
+										'noise_coef': np.squeeze(np.array([Q0, Q1, R0, R1, R2]))})
 
 		# define the relations of the control/probe inputs, camera images and hidden electric fields
 		Enp_pred = model.transition(Enp_old, u1c, u2c)
@@ -311,6 +307,7 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 		net.model.q1.load(np.log(noise_coef[1]))
 		net.model.r0.load(np.log(noise_coef[2]))
 		net.model.r1.load(np.log(noise_coef[3]))
+		net.model.r2.load(np.log(noise_coef[4]))
 		# mse = sess.run(MSE, feed_dict={Ip: np.transpose(image_train, [2, 1, 0]),
 		# 								u1p: np.transpose(u1p_train, [2, 1, 0]),
 		# 								u2p: np.transpose(u2p_train, [2, 1, 0]),
@@ -338,8 +335,8 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 		# 								net.learning_rate: lr, net.learning_rate2: lr2})
 			
 		# 	net.model.q1.load(np.max([np.log(1e-2), sess.run(net.model.q1)]))
-		print('initial Q0: {}, Q1: {}, R0: {}, R1: {}'.format(sess.run(net.model.Q0), sess.run(net.model.Q1),
-												sess.run(net.model.R0), sess.run(net.model.R1)))
+		print('initial Q0: {}, Q1: {}, R0: {}, R1: {}, R2: {}'.format(sess.run(net.model.Q0), sess.run(net.model.Q1),
+												sess.run(net.model.R0), sess.run(net.model.R1), sess.run(net.model.R2)))
 		# print('initial Q1: {}'.format(sess.run(net.model.Q1)))
 												
 		for k in range(epoch):
@@ -409,8 +406,8 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 				# break
 			if print_flag:
 				print('epoch {} MSE: {}'.format(k, mse))
-				print('Q0: {}, Q1: {}, R0: {}, R1: {}'.format(sess.run(net.model.Q0), sess.run(net.model.Q1),
-																	sess.run(net.model.R0), sess.run(net.model.R1)))
+				print('Q0: {}, Q1: {}, R0: {}, R1: {}, R2: {}'.format(sess.run(net.model.Q0), sess.run(net.model.Q1),
+																	sess.run(net.model.R0), sess.run(net.model.R1), sess.run(net.model.R2)))
 				# print('Q1: {}'.format(sess.run(net.model.Q1)))
 				
 		params_values_list = []
@@ -419,7 +416,7 @@ def linear_vl(net, lr=1e-7, lr2=1e-2, epoch=10, print_flag=False):
 
 	sio.savemat(path2data+'jacStructLearned.mat', {'G1': params_values_list[0]+1j*params_values_list[1],
 										'G2': params_values_list[2]+1j*params_values_list[3],
-										'noise_coef': np.squeeze(np.exp(np.array(params_values_list[-4::])))})
+										'noise_coef': np.squeeze(np.exp(np.array(params_values_list[4::])))})
 
 
 

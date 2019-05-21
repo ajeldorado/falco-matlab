@@ -70,6 +70,9 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of
 Im = falco_get_summed_image(mp);
 
 %%
+sz = size(Im);
+out.aux.EfieldVec_est = zeros(1776,mp.Nitr);
+%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Begin the Correction Iterations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -225,7 +228,7 @@ for Itr=1:mp.Nitr
     [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
 
     %% Load the improved Jacobian if using the E-M technique
-    if(mp.flagUseLearnedJac) && Itr > mp.NitrTrain
+    if(mp.flagUseLearnedJac)
         if mp.est.flagUseTensorflow
             jacStructLearned = load('jacStructLearned.mat');
         else
@@ -248,6 +251,7 @@ for Itr=1:mp.Nitr
             
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
+            out.aux.EfieldVec_est(:,Itr) = EfieldVec;
     end
     
     %% Compute and Plot the Singular Mode Spectrum of the Control Jacobian
@@ -616,36 +620,8 @@ function mp = falco_train_model(mp,ev)
         data_train.I = IAll;
 
         save([mp.path.jac, 'data_train.mat'],'data_train') %    save data_train data_train
-%         save([mp.path.jac, 'jacStruct.mat'], 'jacStruct'); %save jacStruct jacStruct
-
-        if Itr == n_batch %--Call System ID after final iteration of training
-%             py.falco_systemID.linear_vl() %--First training            
-            path2data = mp.path.jac;
-            print_flag = true;%false;
-            lr = mp.est.lr * 10 / Itr;
-            lr2 = mp.est.lr2 * 10 / Itr;
-            epoch = mp.est.epoch;
-            Q0 = mp.est.Q0;
-            Q1 = mp.est.Q1;
-            R0 = mp.est.R0;
-            R1 = mp.est.R1;
-            mp.vl_net = py.falco_systemID.vl_net(Q0, Q1, R0, R1, path2data);
-            py.falco_systemID.linear_vl(mp.vl_net, lr, lr2, epoch, print_flag) %--First training
-        else %--All later trainings
-%             Q0 = exp(jacStructLearned.noise_coef(1));
-%             Q1 = exp(jacStructLearned.noise_coef(2));
-%             R0 = exp(jacStructLearned.noise_coef(3));
-%             R1 = exp(jacStructLearned.noise_coef(4));
-%             R2 = exp(jacStructLearned.noise_coef(5));
-%             path2data = mp.path.jac;
-            print_flag = true;%false;
-            lr = mp.est.lr * 10 / Itr;
-            lr2 = mp.est.lr2 * 10 / Itr;
-            epoch = mp.est.epoch;
-%             py.falco_systemID.linear_vl(Q0, Q1, R0, R1, R2, lr, lr2, epoch, print_flag,path2data);
-            py.falco_systemID.linear_vl(mp.vl_net, lr, lr2, epoch, print_flag)
-        end
-        mp.flagUseLearnedJac = 1;
+        
+%         mp.flagUseLearnedJac = 1;
         data_train.u1 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
         data_train.u2 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
         data_train.u1p = zeros(mp.dm1.Nact, mp.dm1.Nact, 2*mp.est.probe.Npairs+1, n_batch);
