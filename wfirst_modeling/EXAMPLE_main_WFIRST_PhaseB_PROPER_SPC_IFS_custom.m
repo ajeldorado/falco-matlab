@@ -57,6 +57,7 @@ mp.TrialNum = 2;
 % %--DEBUGGING:
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 %% Step 3b: Obtain the phase retrieval phase.
@@ -148,7 +149,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/home/ajriggs/Downloads/s44t02/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
+mp.path.frn_coro = '/home/ajriggs/Downloads/s44t23/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS_custom %--Load default model parameters
