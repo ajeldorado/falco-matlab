@@ -325,19 +325,27 @@ if(strcmpi(mp.estimator,'pwp-kf') && (ev.Itr>=mp.est.ItrStartKF) )
         end
         Hall(:,:,ipix) = H;    
     end
+    
+    %--Compute the change in E-field since last correction iteration
+    if(mp.est.flagUseJac) %--Use Jacobian to compute delta E-field from previous correction step to now.
+        if(mp.est.probe.whichDM == 1)
+            dE = squeeze(jacStruct.G1(:,:,si))*mp.dm1.dV(mp.dm1.act_ele);
+        elseif(mp.est.probe.whichDM == 2)
+            dE = squeeze(jacStruct.G2(:,:,si))*mp.dm2.dV(mp.dm2.act_ele);
+        end
+    else
+        % For Xminus, use nonlinear dynamics instead of Gamma. This means
+        % difference the output of model_compact rather than using the
+        % Jacobian.
+        %--Previous unprobed field based on model:
+        if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom-mp.dm1.dV;  end
+        if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom-mp.dm2.dV;  end
+        Eprev = model_compact(mp, modvar);
+        EprevVec = Eprev(mp.Fend.corr.maskBool);
+        dE = E0vec-EprevVec; % Change in unprobed E-field between correction iterations
+    end
 
-    %--Construct Gamma matrix from Matrices already constructed for least-squares
-    % For Xminus, use nonlinear dynamics instead of Gamma. This means
-    % difference the output of model_compact rather than using the
-    % Jacobian. Can switch back to the Jacobian for an adaptive model.
-    %--Previous unprobed field based on model:
-    if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom-mp.dm1.dV;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom-mp.dm2.dV;  end
-    Eprev = model_compact(mp, modvar);
-    EprevVec = Eprev(mp.Fend.corr.maskBool);
-    dE = E0vec-EprevVec; % Change in unprobed E-field between correction iterations
-
-    %--Construct dX, the change in state since last correction iteration
+    %--Construct dX, the change in state, from dE
     dX = zeros(size(xOld));
     for ii=1:mp.Fend.corr.Npix
        dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
