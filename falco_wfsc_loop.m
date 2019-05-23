@@ -71,7 +71,6 @@ Im = falco_get_summed_image(mp);
 
 %%
 sz = size(Im);
-out.aux.EfieldVec_est = zeros(1776,mp.Nitr);
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Begin the Correction Iterations
@@ -227,7 +226,7 @@ for Itr=1:mp.Nitr
         cvar.flagRelin=false;
     end
     
-    if( (Itr==1) || cvar.flagRelin )
+    if( (Itr==1) || cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
     end
 
@@ -238,7 +237,8 @@ for Itr=1:mp.Nitr
     if(mp.flagUseLearnedJac)
         if mp.est.flagUseTensorflow
             jacStructLearned = load('jacStructLearned.mat');
-        else
+        end
+        if mp.est.flagEM
             load('jacStructLearned.mat');
         end
         if(any(mp.dm_ind==1));  jacStruct.G1 = jacStructLearned.G1;  end
@@ -258,7 +258,6 @@ for Itr=1:mp.Nitr
             
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
-            out.aux.EfieldVec_est(:,Itr) = EfieldVec;
     end
     
     %% Compute and Plot the Singular Mode Spectrum of the Control Jacobian
@@ -586,15 +585,27 @@ function mp = falco_train_model(mp,ev)
     end
 
     data_train.u1(:, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = mp.dm1.dV;
-    data_train.u2(:, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = mp.dm2.dV;
+    if any(mp.dm_ind==2)
+        data_train.u2(:, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = mp.dm2.dV;
+    else
+        data_train.u2(:, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = zeros(size(mp.dm1.dV));
+    end
     data_train.u1p(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = ev.Vcube.dm1;
-    data_train.u2p(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = ev.Vcube.dm2;
+    if any(mp.dm_ind==2)
+        data_train.u2p(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = ev.Vcube.dm2;
+    else
+        data_train.u2p(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = zeros(size(ev.Vcube.dm1));
+    end
     data_train.I(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = ev.Icube;
 
     if rem(Itr, n_batch) == 0
         % convert the WFSC data to standard input to the system ID function
         n_activeAct1 = length(mp.dm1.act_ele);
-        n_activeAct2 = length(mp.dm2.act_ele);
+        if any(mp.dm_ind==2)
+            n_activeAct2 = length(mp.dm2.act_ele);
+        else
+            n_activeAct2 = length(mp.dm1.act_ele);
+        end
         n_pairs = mp.est.probe.Npairs;
         n_pix = sum(sum(mp.Fend.corr.mask));
 
@@ -607,7 +618,11 @@ function mp = falco_train_model(mp,ev)
             u1_2D = data_train.u1(:, :, kc);
             u2_2D = data_train.u2(:, :, kc);
             uAll(1:n_activeAct1, kc) = u1_2D(mp.dm1.act_ele);
-            uAll(n_activeAct1+1:end, kc) = u2_2D(mp.dm2.act_ele);
+            if any(mp.dm_ind==2)
+                uAll(n_activeAct1+1:end, kc) = u2_2D(mp.dm2.act_ele);
+            else
+                uAll(n_activeAct1+1:end, kc) = u2_2D(mp.dm1.act_ele);
+            end
             I_2D = data_train.I(:, :,1, kc);
             IAll(:, 1, kc) = I_2D(mp.Fend.corr.mask);
             for kp = 1 : 2*mp.est.probe.Npairs
@@ -616,7 +631,11 @@ function mp = falco_train_model(mp,ev)
                 I_2D = data_train.I(:, :,kp+1, kc);
 
                 uProbeAll(1:n_activeAct1, kp, kc) = u1p_2D(mp.dm1.act_ele);
-                uProbeAll(n_activeAct1+1:end, kp, kc) = u2p_2D(mp.dm2.act_ele);
+                if any(mp.dm_ind==2)
+                    uProbeAll(n_activeAct1+1:end, kp, kc) = u2p_2D(mp.dm2.act_ele);
+                else
+                    uProbeAll(n_activeAct1+1:end, kp, kc) = u2p_2D(mp.dm1.act_ele);
+                end
                 IAll(:, kp+1, kc) = I_2D(mp.Fend.corr.mask);
             end
         end

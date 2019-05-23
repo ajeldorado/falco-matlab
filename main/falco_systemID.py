@@ -110,6 +110,8 @@ def LSEnet(model, Ip, u1p, u2p):
 	R = tf.matrix_set_diag(tf.concat([tf.expand_dims(tf.zeros_like(R_diff), -1)]*(n_observ//2), -1), R_diff)
 	P_new = tf.matmul(tf.matmul(Ht_H_inv_Ht, R), tf.transpose(Ht_H_inv_Ht, [0, 1, 3, 2]))
 	Enp_pred_new = tf.cast(x_new[:, :, 0], dtype=tf.complex128) + 1j * tf.cast(x_new[:, :, 1], dtype=tf.complex128)
+
+	Enp_pred_new = tf.cast(tf.sqrt(tf.abs(Ip[:, 0, :])) / tf.abs(Enp_pred_new), tf.complex128) * Enp_pred_new
 	return Enp_pred_new, P_new, H
 
 def KFnet(model, Ip, Enp_old, P_old, u1c, u2c, u1p, u2p):
@@ -150,6 +152,8 @@ def KFnet(model, Ip, Enp_old, P_old, u1c, u2c, u1p, u2p):
 	P_new = P - tf.matmul(tf.matmul(K, H), P)
 	
 	Enp_pred_new = tf.cast(x_new[:, :, 0], dtype=tf.complex128) + 1j * tf.cast(x_new[:, :, 1], dtype=tf.complex128)
+
+	# Enp_pred_new = tf.cast(tf.sqrt(tf.abs(Ip[:, 0, :])) / tf.abs(Enp_pred_new), tf.complex128) * Enp_pred_new
 	return Enp_pred_new, P_new
 
 
@@ -190,6 +194,8 @@ class vl_net:
 		Jacobian = sio.loadmat((path2data+'jacStruct.mat'))
 		G1 = Jacobian['jacStruct']['G1'][0, 0]
 		G2 = Jacobian['jacStruct']['G2'][0, 0]
+		if len(G2)==0:
+			G2 = np.zeros(G1.shape, dtype=np.complex)
 		model = SSM(G1, G2, Q0, Q1, R0, R1, n_image)
 		sio.savemat(path2data+'jacStructLearned.mat', {'G1': G1,
 										'G2': G2,
@@ -236,7 +242,7 @@ class vl_net:
 
 		# start identifying/learning the model parameters
 		train_Jacobian = tf.train.AdamOptimizer(learning_rate=learning_rate, 
-												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[0:4])
+												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[0:2])
 		train_noise_coef = tf.train.AdamOptimizer(learning_rate=learning_rate2, 
 												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[4::])
 		train_op = tf.group(train_Jacobian, train_noise_coef)

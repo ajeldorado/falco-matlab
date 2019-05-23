@@ -107,6 +107,8 @@ def LSEnet(model, Ip, u1p, u2p):
 	R = tf.matrix_set_diag(tf.concat([tf.expand_dims(tf.zeros_like(R_diff), -1)]*(n_observ//2), -1), R_diff)
 	P_new = tf.matmul(tf.matmul(Ht_H_inv_Ht, R), tf.transpose(Ht_H_inv_Ht, [0, 1, 3, 2]))
 	Enp_pred_new = tf.cast(x_new[:, :, 0], dtype=tf.complex128) + 1j * tf.cast(x_new[:, :, 1], dtype=tf.complex128)
+
+	Enp_pred_new = tf.cast(tf.sqrt(tf.abs(Ip[:, 0, :])) / tf.abs(Enp_pred_new), tf.complex128) * Enp_pred_new
 	return Enp_pred_new, P_new, H
 
 def KFnet(model, Ip, Enp_old, P_old, u1c, u2c, u1p, u2p):
@@ -146,6 +148,8 @@ def KFnet(model, Ip, Enp_old, P_old, u1c, u2c, u1p, u2p):
 	P_new = P - tf.matmul(tf.matmul(K, H), P)
 	
 	Enp_pred_new = tf.cast(x_new[:, :, 0], dtype=tf.complex128) + 1j * tf.cast(x_new[:, :, 1], dtype=tf.complex128)
+
+	# Enp_pred_new = tf.cast(tf.sqrt(tf.abs(Ip[:, 0, :])) / tf.abs(Enp_pred_new), tf.complex128) * Enp_pred_new
 	return Enp_pred_new, P_new
 
 
@@ -186,6 +190,8 @@ class vl_net:
 		Jacobian = sio.loadmat((path2data+'jacStruct.mat'))
 		G1 = Jacobian['jacStruct']['G1'][0, 0]
 		G2 = Jacobian['jacStruct']['G2'][0, 0]
+		if len(G2)==0:
+			G2 = np.zeros(G1.shape, dtype=np.complex)
 		model = SSM(G1, G2, Q0, Q1, R0, R1, R2, n_image)
 		sio.savemat(path2data+'jacStructLearned.mat', {'G1': G1,
 										'G2': G2,
@@ -201,30 +207,30 @@ class vl_net:
 
 
 		_, Ip_pred = model.observation(Enp_est, u1p, u2p)
-		# Ip_pred_err = tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
-		# obs_cov = 4 * tf.tensordot(tf.expand_dims(tf.reduce_mean(Ip, -1), -1), tf.ones((1, n_pix), dtype=tf.float64), [-1, 0]) * tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
+		Ip_pred_err = tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
+		obs_cov = 4 * tf.tensordot(tf.expand_dims(tf.reduce_mean(Ip, -1), -1), tf.ones((1, n_pix), dtype=tf.float64), [-1, 0]) * tf.tile(tf.expand_dims(tf.trace(P_est), 1), [1, n_image, 1])
 		Rp = model.observation_covariance(Ip, u1p, u2p)
 
-		Ip_pred_diff = Ip_pred[:, 1::2, :] - Ip_pred[:, 2::2, :]
-		Ip_diff = Ip[:, 1::2, :] - Ip[:, 2::2, :]
-		Rp_diff = Rp[:, 1::2, :] + Rp[:, 2::2, :]
-		HPHt = tf.matmul(tf.matmul(H, P_est), tf.transpose(H, [0, 1, 3, 2]))
-		obs_bias = tf.transpose(tf.linalg.diag_part(HPHt), [0, 2, 1])
+		# Ip_pred_diff = Ip_pred[:, 1::2, :] - Ip_pred[:, 2::2, :]
+		# Ip_diff = Ip[:, 1::2, :] - Ip[:, 2::2, :]
+		# Rp_diff = Rp[:, 1::2, :] + Rp[:, 2::2, :]
+		# HPHt = tf.matmul(tf.matmul(H, P_est), tf.transpose(H, [0, 1, 3, 2]))
+		# obs_bias = tf.transpose(tf.linalg.diag_part(HPHt), [0, 2, 1])
 		
 		# evidence lower bound (elbo): cost function for system identification
 		# we need to maximize the elbo for system ID
-		# elbo = - tf.reduce_sum((tf.abs(Ip-Ip_pred-Ip_pred_err)**2 + obs_cov) / Rp) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
-				# (tf.reduce_sum(tf.abs(Enp_pred-Enp_est)**2 / Qco) + tf.reduce_sum(2 * tf.log(Qco)) - \
-				 # tf.reduce_sum(tf.linalg.logdet(P_est)) + tf.reduce_sum(tf.trace(P_est) / Qco))
-
-		elbo = - tf.reduce_sum((tf.abs(Ip_diff-Ip_pred_diff)**2 + obs_bias) / Rp_diff) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
+		elbo = - tf.reduce_sum((tf.abs(Ip-Ip_pred-Ip_pred_err)**2 + obs_cov) / Rp) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
 				(tf.reduce_sum(tf.abs(Enp_pred-Enp_est)**2 / Qco) + tf.reduce_sum(2 * tf.log(Qco)) - \
 				 tf.reduce_sum(tf.linalg.logdet(P_est)) + tf.reduce_sum(tf.trace(P_est) / Qco))
 
+		# elbo = - tf.reduce_sum((tf.abs(Ip_diff-Ip_pred_diff)**2 + obs_bias) / Rp_diff) - tf.reduce_sum(tf.log(2*np.pi*Rp)) - \
+		# 		(tf.reduce_sum(tf.abs(Enp_pred-Enp_est)**2 / Qco) + tf.reduce_sum(2 * tf.log(Qco)) - \
+		# 		 tf.reduce_sum(tf.linalg.logdet(P_est)) + tf.reduce_sum(tf.trace(P_est) / Qco))
+
 				 
 		# mean squared error (MSE): a metric for checking the system ID results
-		# MSE = tf.reduce_sum(tf.abs(Ip - Ip_pred)**2)
-		MSE = tf.reduce_sum(tf.abs(Ip_diff-Ip_pred_diff)**2)
+		MSE = tf.reduce_sum(tf.abs(Ip - Ip_pred)**2)
+		# MSE = tf.reduce_sum(tf.abs(Ip_diff-Ip_pred_diff)**2)
 		# MSE = -elbo
 
 		params_list = model.get_params() # parameters to be identified
@@ -232,7 +238,7 @@ class vl_net:
 
 		# start identifying/learning the model parameters
 		train_Jacobian = tf.train.AdamOptimizer(learning_rate=learning_rate, 
-												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[0:4])
+												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[0:2])
 		train_noise_coef = tf.train.AdamOptimizer(learning_rate=learning_rate2, 
 												beta1=0.99, beta2=0.9999, epsilon=1e-08).minimize(-elbo, var_list=params_list[4::])
 		train_op = tf.group(train_Jacobian, train_noise_coef)
