@@ -58,7 +58,8 @@ mp.TrialNum = 1;
 % mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-% % mp.estimator = 'perfect';
+% % mp.estimator = 'perfect'; 
+% % mp.est.flagUseJac = true; %--Whether to use the Jacobian or not for estimation. (If not using Jacobian, model is called and differenced.)
 
 
 %% Step 4: Generate the label associated with this trial
