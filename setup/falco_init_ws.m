@@ -47,7 +47,7 @@ if(isfield(mp.compact,'flagGenFPM')==false);  mp.compact.flagGenFPM = true;  end
 if(isfield(mp.compact,'flagGenLS')==false);  mp.compact.flagGenLS = true;  end
 %--Whether to generate or load various masks: full model
 if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
-if( mp.full.flagPROPER)
+if(mp.full.flagPROPER)
     mp.full.flagGenPupil = false;
     mp.full.flagGenFPM = false;
     mp.full.flagGenLS = false;

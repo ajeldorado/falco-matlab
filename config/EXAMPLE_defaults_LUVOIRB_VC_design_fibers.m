@@ -57,13 +57,14 @@ mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuit
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
 
 %--New variables for pairwise probing with a Kalman filter
-%  mp.est.ItrStartKF =  %Which correction iteration to start recursive estimate
-%  mp.est.tExp =
-%  mp.est.num_im =
-%  mp.readNoiseStd =
-%  mp.peakCountsPerPixPerSec =
-%  mp.est.Qcoef =
-%  mp.est.Rcoef =
+% mp.est.ItrStartKF = 2 %Which correction iteration to start recursive estimate
+% mp.est.tExp =
+% mp.est.num_im =
+% mp.readNoiseStd =
+% mp.peakCountsPerPixPerSec =
+% mp.est.Qcoef =
+% mp.est.Rcoef =
+% mp.est.Pcoef0 = 
 
 %% Wavefront Control: General
 
