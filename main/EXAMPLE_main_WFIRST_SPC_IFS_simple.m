@@ -57,12 +57,13 @@ mp.TrialNum = 1;
 % %--DEBUGGING:
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 % % % GRID-SEARCH EFC     
 mp.Nitr = 5; %--Number of estimation+control iterations to perform
-mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-
+mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
+mp.ctrl.flagUseModel = true; %--Use the compact model for the grid search
 
 %% Step 4: Generate the label associated with this trial
 

@@ -4,10 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% High-level function to run design simulations of various types of Lyot coronagraphs.
+% Function to run wavefront estimation and control simulations of various 
+% types of coronagraphs.
+% - Data are mostly passed in structures.
+% - Nested functions are used in some places to prevent large structures 
+%   such as mp from being copied when passed to those functions.
 %
-% Data are mostly passed in structures.
-%
+% Modified on 2019-05-08 by A.J. Riggs to have mp be an optional output.
 % Modified on 2019-03-26 by A.J. Riggs to include tied actuators and to
 %   make nested functions actually nested.
 % Modified again by A.J. Riggs on May 23, 2017 to eliminate a lot of unnecessary
@@ -22,7 +25,7 @@
 %   in April 2016.
 % Adapted by A.J. Riggs from A.J.'s Princeton HCIL code on August 31, 2016.
 
-function [out] = falco_wfsc_loop(mp)
+function [out,varargout] = falco_wfsc_loop(mp)
 
 %% Sort out file paths and save the config file    
 
@@ -250,10 +253,11 @@ for Itr=1:mp.Nitr
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
         case{'pwp-bp','pwp-kf'}
+            ev.Itr = Itr;
             if(mp.est.flagUseJac) %--Send in the Jacobian if true
-                ev = falco_est_pairwise_probing(mp,jacStruct);
+                ev = falco_est_pairwise_probing(mp,ev,jacStruct);
             else %--Otherwise don't pass the Jacobian
-                ev = falco_est_pairwise_probing(mp);
+                ev = falco_est_pairwise_probing(mp,ev);
             end
             
             EfieldVec = ev.Eest;
@@ -415,18 +419,15 @@ if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
 end
 
 % Take the next image to check the contrast level (in simulation only)
+tic; fprintf('Getting updated summed image... ');
 Im = falco_get_summed_image(mp);
+fprintf('done. Time = %.1f s\n',toc);
 
 %--REPORTING NORMALIZED INTENSITY
-if( (Itr==mp.Nitr) || (strcmpi(mp.controller,'conEFC') && (numel(mp.ctrl.muVec)==1)  ) ) 
-    InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
+InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
+fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+    InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
 
-    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-        InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
-else
-    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-        InormHist(Itr), cvar.cMin, InormHist(Itr)/cvar.cMin ); 
-end
 fprintf('\n\n');
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
@@ -498,6 +499,8 @@ if(isfield(mp,'testbed'))
 else
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
 end
+%% Optional output variable: mp
+varargout{1} = mp;
 
 %% Save the final DM commands separately for faster reference
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V')); out.DM1V = mp.dm1.V; end; end

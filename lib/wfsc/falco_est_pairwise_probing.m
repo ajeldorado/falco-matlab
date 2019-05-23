@@ -40,12 +40,20 @@
 %  - mp.est.Qcoef
 %  - mp.est.Rcoef
 
-function [ev] = falco_est_pairwise_probing(mp,varargin)
+function [ev] = falco_est_pairwise_probing(mp,ev,varargin)
 
-%--If there is a second input, it is the Jacobian structure
+%--If there is a third input, it is the Jacobian structure
 if( size(varargin, 2)==1 )
     jacStruct = varargin{1};
 end
+
+%--"ev" is passed in only for the Kalman filter. Clear it for the batch
+% process to avoid accidentally using old data.
+switch lower(mp.estimator)
+    case{'pwp-bp'}
+        clear ev
+end
+
 
 %--Select number of actuators across based on chosen DM for the probing
 if(mp.est.probe.whichDM==1)
@@ -288,7 +296,7 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<
         ev.xOld = xOld; %--Save out for returning later
 
         %--Initialize the state covariance matrix (2x2 for each dark hole pixel)
-        ev.Pold_KF_array = repmat(mp.est.Pcoef0*eye(2), [mp.Fend.corr.Npix,1,Nsbp]);
+        ev.Pold_KF_array = repmat(mp.est.Pcoef0*eye(2), [mp.Fend.corr.Npix,1,mp.Nsbp]);
     end
 
 end   
@@ -296,7 +304,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%--Kalman Filter Update
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%      
-if(strcmpi(mp.estimator,'pwp-kf') )
+if(strcmpi(mp.estimator,'pwp-kf') && (ev.Itr>=mp.est.ItrStartKF) )
     
     xOld = ev.xOld;
     Pold = ev.Pold_KF_array(:,:,si);
@@ -341,7 +349,7 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     % ncounts_shot = sqrt(ev.IprobedMean*mp.peakCountsPerPixPerSec);
     % Dark current not included here (yet).
     ncounts_std = sqrt( (sqrt(2)*ev.IprobedMean*mp.peakCountsPerPixPerSec*mp.est.tExp + mp.readNoiseStd^2)/mp.est.num_im);
-    Rvar = (ncounts_std/(mp.peakCountsPerPixPerSec*mp.tExp))^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
+    Rvar = (ncounts_std/(mp.peakCountsPerPixPerSec*mp.est.tExp))^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
     Rmat = mp.est.Rcoef*Rvar*eye(Npairs); % A.J.'s way, used in v2
     fprintf('Sensor noise coefficient: %.3e\n',Rmat(1,1));
 

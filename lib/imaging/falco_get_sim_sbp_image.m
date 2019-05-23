@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to get an image in the specified sub-bandpass.
+% Function to get a simulated image in the specified sub-bandpass.
 %
 % ---------------
 % INPUTS:
