@@ -62,6 +62,14 @@ wfirst_modeling/FRN/*.m
 !wfirst_modeling/FRN/EXAMPLE*
 #!data/frn/s_EB_IMG_NF_Band1/*
 
+eval/**
+!eval/placeholder.txt
+!eval/EXAMPLE_*
+!eval/falco_*
+
+
+
+
 #--Don't sync large-size mask image formats
 lib/masks/**/*.fits
 **/*.bmp

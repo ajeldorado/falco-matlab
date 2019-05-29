@@ -133,7 +133,8 @@ switch lower(mp.layout)
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
                 if(isfield(mp,'FPMcubeFull')) %--Load it if stored
-                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
+                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
+                else
                     mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
                 end
 
