@@ -108,7 +108,7 @@ def LSEnet(model, Ip, u1p, u2p):
 	P_new = tf.matmul(tf.matmul(Ht_H_inv_Ht, R), tf.transpose(Ht_H_inv_Ht, [0, 1, 3, 2]))
 	Enp_pred_new = tf.cast(x_new[:, :, 0], dtype=tf.complex128) + 1j * tf.cast(x_new[:, :, 1], dtype=tf.complex128)
 
-	Enp_pred_new = tf.cast(tf.sqrt(tf.abs(Ip[:, 0, :])) / tf.abs(Enp_pred_new), tf.complex128) * Enp_pred_new
+	# Enp_pred_new = tf.cast(tf.sqrt(tf.abs(Ip[:, 0, :])) / tf.abs(Enp_pred_new), tf.complex128) * Enp_pred_new
 	return Enp_pred_new, P_new, H
 
 def KFnet(model, Ip, Enp_old, P_old, u1c, u2c, u1p, u2p):

@@ -577,6 +577,7 @@ function mp = falco_train_model(mp,ev)
     % n_batch = 5; %% INITIALIZE THE DATA STRUCTURE THAT SAVES THE TRAINING DATA
 
     if(Itr==1)
+%     if(rem(Itr, n_batch)==1)
         data_train.u1 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
         data_train.u2 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
         data_train.u1p = zeros(mp.dm1.Nact, mp.dm1.Nact, 2*mp.est.probe.Npairs+1, n_batch);
@@ -650,8 +651,34 @@ function mp = falco_train_model(mp,ev)
         data_train.I = IAll;
 
         save([mp.path.jac, 'data_train.mat'],'data_train') %    save data_train data_train
-        
-%         mp.flagUseLearnedJac = 1;
+%         
+%         if Itr == n_batch && mp.est.klearning == 1
+%             lr = mp.est.lr;
+%             lr2 = mp.est.lr2;
+%             epoch = mp.est.epoch;
+%             Q0 = mp.est.Q0;
+%             Q1 = mp.est.Q1;
+%             R0 = mp.est.R0;
+%             R1 = mp.est.R1;
+%             R2 = mp.est.R2;
+%         else
+%             lr = mp.est.lr;
+%             lr2 = mp.est.lr2;
+%             epoch = mp.est.epoch;
+%             jacLearned = load([mp.path.jac, 'jacStructLearned.mat']);
+%             Q0 = jacLearned.noise_coef(1);
+%             Q1 = jacLearned.noise_coef(2);
+%             R0 = jacLearned.noise_coef(3);
+%             R1 = jacLearned.noise_coef(4);
+%             R2 = jacLearned.noise_coef(5);
+%         end
+%         pycommand = ['python falco_systemID_main.py ', mp.path.jac, ' ', ...
+%                     num2str(lr), ' ', num2str(lr2), ' ', num2str(epoch), ' ', 'True ', ...
+%                     num2str(Q0), ' ', num2str(Q1), ' ', num2str(R0), ' ', num2str(R1), ' ', ...
+%                     num2str(R2)];
+%         system(pycommand);
+        mp.flagUseLearnedJac = true;
+
         data_train.u1 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
         data_train.u2 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
         data_train.u1p = zeros(mp.dm1.Nact, mp.dm1.Nact, 2*mp.est.probe.Npairs+1, n_batch);
