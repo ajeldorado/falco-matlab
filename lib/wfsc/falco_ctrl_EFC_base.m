@@ -86,7 +86,7 @@ end
 
 %% Take images and compute average intensity in dark hole
 
-if(mp.ctrl.flagUseModel) %--Perform a model-based grid search
+if(mp.ctrl.flagUseModel) %--Perform a model-based grid search using the compact model
     if(mp.flagFiber)
         %--Not available yet
     else

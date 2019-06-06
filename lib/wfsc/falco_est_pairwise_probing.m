@@ -40,12 +40,20 @@
 %  - mp.est.Qcoef
 %  - mp.est.Rcoef
 
-function [ev] = falco_est_pairwise_probing(mp,varargin)
+function [ev] = falco_est_pairwise_probing(mp,ev,varargin)
 
-%--If there is a second input, it is the Jacobian structure
+%--If there is a third input, it is the Jacobian structure
 if( size(varargin, 2)==1 )
     jacStruct = varargin{1};
 end
+
+%--"ev" is passed in only for the Kalman filter. Clear it for the batch
+% process to avoid accidentally using old data.
+switch lower(mp.estimator)
+    case{'pwp-bp'}
+        clear ev
+end
+
 
 %--Select number of actuators across based on chosen DM for the probing
 if(mp.est.probe.whichDM==1)
@@ -285,7 +293,7 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<
         ev.xOld = xOld; %--Save out for returning later
 
         %--Initialize the state covariance matrix (2x2 for each dark hole pixel)
-        ev.Pold_KF_array = repmat(mp.est.Pcoef0*eye(2), [mp.Fend.corr.Npix,1,Nsbp]);
+        ev.Pold_KF_array = repmat(mp.est.Pcoef0*eye(2), [mp.Fend.corr.Npix,1,mp.Nsbp]);
     end
 
 end   
@@ -293,7 +301,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%--Kalman Filter Update
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%      
-if(strcmpi(mp.estimator,'pwp-kf') )
+if(strcmpi(mp.estimator,'pwp-kf') && (ev.Itr>=mp.est.ItrStartKF) )
     
     xOld = ev.xOld;
     Pold = ev.Pold_KF_array(:,:,si);
@@ -314,19 +322,27 @@ if(strcmpi(mp.estimator,'pwp-kf') )
         end
         Hall(:,:,ipix) = H;    
     end
+    
+    %--Compute the change in E-field since last correction iteration
+    if(mp.est.flagUseJac) %--Use Jacobian to compute delta E-field from previous correction step to now.
+        if(mp.est.probe.whichDM == 1)
+            dE = squeeze(jacStruct.G1(:,:,si))*mp.dm1.dV(mp.dm1.act_ele);
+        elseif(mp.est.probe.whichDM == 2)
+            dE = squeeze(jacStruct.G2(:,:,si))*mp.dm2.dV(mp.dm2.act_ele);
+        end
+    else
+        % For Xminus, use nonlinear dynamics instead of Gamma. This means
+        % difference the output of model_compact rather than using the
+        % Jacobian.
+        %--Previous unprobed field based on model:
+        if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom-mp.dm1.dV;  end
+        if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom-mp.dm2.dV;  end
+        Eprev = model_compact(mp, modvar);
+        EprevVec = Eprev(mp.Fend.corr.maskBool);
+        dE = E0vec-EprevVec; % Change in unprobed E-field between correction iterations
+    end
 
-    %--Construct Gamma matrix from Matrices already constructed for least-squares
-    % For Xminus, use nonlinear dynamics instead of Gamma. This means
-    % difference the output of model_compact rather than using the
-    % Jacobian. Can switch back to the Jacobian for an adaptive model.
-    %--Previous unprobed field based on model:
-    if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom-mp.dm1.dV;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom-mp.dm2.dV;  end
-    Eprev = model_compact(mp, modvar);
-    EprevVec = Eprev(mp.Fend.corr.maskBool);
-    dE = E0vec-EprevVec; % Change in unprobed E-field between correction iterations
-
-    %--Construct dX, the change in state since last correction iteration
+    %--Construct dX, the change in state, from dE
     dX = zeros(size(xOld));
     for ii=1:mp.Fend.corr.Npix
        dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
@@ -338,7 +354,7 @@ if(strcmpi(mp.estimator,'pwp-kf') )
     % ncounts_shot = sqrt(ev.IprobedMean*mp.peakCountsPerPixPerSec);
     % Dark current not included here (yet).
     ncounts_std = sqrt( (sqrt(2)*ev.IprobedMean*mp.peakCountsPerPixPerSec*mp.est.tExp + mp.readNoiseStd^2)/mp.est.num_im);
-    Rvar = (ncounts_std/(mp.peakCountsPerPixPerSec*mp.tExp))^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
+    Rvar = (ncounts_std/(mp.peakCountsPerPixPerSec*mp.est.tExp))^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
     Rmat = mp.est.Rcoef*Rvar*eye(Npairs); % A.J.'s way, used in v2
     fprintf('Sensor noise coefficient: %.3e\n',Rmat(1,1));
 

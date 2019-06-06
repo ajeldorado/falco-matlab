@@ -4,8 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an HLC design run.
-%  1) Load the default model parameters for an HLC.
+%--Script to perform an LC design run.
+%  1) Load the default model parameters for an LC.
 %  2) Specify the values to overwrite.
 %  3) Run a single trial of WFC using FALCO.
 %

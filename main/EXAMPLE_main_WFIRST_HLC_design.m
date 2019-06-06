@@ -30,8 +30,6 @@ mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws/'; % (Mostly
 %%--Add to the MATLAB Path
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
-% addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
-% rmpath([mp.path.cvx 'lib/narginchk_:']) %--Legend plotting issue if CVX's narginchk function is used instead of Matlab's default function.
 
 
 %% Step 2: Load default model parameters
