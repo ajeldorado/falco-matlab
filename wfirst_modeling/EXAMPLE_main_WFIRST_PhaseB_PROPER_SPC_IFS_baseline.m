@@ -58,12 +58,11 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% %--DEBUGGING:
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-
+% % %--DEBUGGING:
+% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 
 mp.controller = 'plannedEFC';
@@ -78,7 +77,7 @@ mp.ctrl.sched_mat = [...
 
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
 optval = mp.full;
 optval.source_x_offset =0;
 optval.zindex = 4;
@@ -167,7 +166,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
+mp.path.frn_coro = '/home/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters

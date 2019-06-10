@@ -79,7 +79,7 @@ mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compu
 
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
 
 optval.data_dir = mp.full.data_dir;
 

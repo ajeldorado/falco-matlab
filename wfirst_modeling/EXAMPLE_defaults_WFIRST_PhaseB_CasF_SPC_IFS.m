@@ -341,7 +341,7 @@ end
 
 %% Optical Layout: Full Model 
 
-mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
+mp.full.data_dir = '/home/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
 mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
 % %--Pupil Plane Resolutions
