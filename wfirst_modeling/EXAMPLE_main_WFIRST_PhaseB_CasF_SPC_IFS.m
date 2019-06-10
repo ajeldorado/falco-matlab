@@ -101,8 +101,8 @@ optval.dm1_m = fitsread ([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 =1;
 
 optval.end_at_fpm_exit_pupil =1;
-optval.output_field_rootname = 'fld_at_xtPup';
-optval.use_fpm=0;
+optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
+optval.use_fpm = 0;
 optval.use_hlc_dm_patterns=0;
 nout = 1024;%512; 			% nout > pupil_daim_pix
 % if testcase >2; nout =1024; end % >= pupil_daim_pix; 
@@ -119,8 +119,7 @@ figure(605); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv; d
 figure(606); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
 lams = num2str(lambda_um, '%6.4f');
-polaxis = 0;
-pols = ['polaxis'  num2str(polaxis,2)];
+pols = ['polaxis'  num2str(optval.polaxis,2)];
 fitswrite(real(fld), [mp.full.input_field_rootname '_' lams 'um_' pols '_real.fits' ]);
 fitswrite(imag(fld), [mp.full.input_field_rootname '_' lams 'um_' pols '_imag.fits' ]);
 

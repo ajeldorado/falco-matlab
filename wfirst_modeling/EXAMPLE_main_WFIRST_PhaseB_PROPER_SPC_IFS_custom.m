@@ -54,15 +54,15 @@ mp.TrialNum = 2;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% %--DEBUGGING:
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+%--DEBUGGING:
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3;%1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
 optval = mp.full;
 optval.source_x_offset =0;
 optval.zindex = 4;
@@ -70,7 +70,7 @@ optval.zval_m = 0.19e-9;
 optval.dm1_m = mp.full.dm1.flatmap;
 optval.use_dm1 = 1;
 optval.end_at_fpm_exit_pupil = 1;
-optval.output_field_rootname = ['fld_at_xtPup'];
+optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
 optval.use_fpm = 0;
 optval.use_hlc_dm_patterns = 0;
 nout = 1024; %512; 			% nout > pupil_daim_pix
@@ -149,7 +149,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/home/ajriggs/Downloads/s44t23/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
+mp.path.frn_coro = '/Users/ajriggs/Downloads/s44t23/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS_custom %--Load default model parameters

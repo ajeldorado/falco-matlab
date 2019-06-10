@@ -43,7 +43,7 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLCcustom
 %% Step 3: Overwrite default values as desired
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t1/'; %--Location of coronagraph performance data tables. Needs slash at end.
+mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t02/'; %--Location of coronagraph performance data tables. Needs slash at end.
 
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -52,7 +52,7 @@ mp.flagPlot = true;
 
 %--Record Keeping
 mp.SeriesNum = 45;
-mp.TrialNum = 1;
+mp.TrialNum = 2;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -203,7 +203,7 @@ optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 =1 ;
 
 optval.end_at_fpm_exit_pupil = 1;
-optval.output_field_rootname = ['fld_at_xtPup'];
+optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
 optval.use_fpm=0;
 optval.use_hlc_dm_patterns=0;
 nout = 1024; %512; 			% nout > pupil_daim_pix
@@ -220,8 +220,7 @@ for si=1:mp.Nsbp
     figure(606); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
     lams = num2str(lambda_um, '%6.4f');
-    polaxis = 0;
-    pols = ['polaxis'  num2str(polaxis,2)];
+    pols = ['polaxis'  num2str(optval.polaxis,2)];
     fitswrite(real(fld), [mp.full.input_field_rootname '_' lams 'um_' pols '_real.fits' ]);
     fitswrite(imag(fld), [mp.full.input_field_rootname '_' lams 'um_' pols '_imag.fits' ]);
 

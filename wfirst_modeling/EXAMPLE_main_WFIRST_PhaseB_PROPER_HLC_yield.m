@@ -150,7 +150,7 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+prefix = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/hlc_20190210/run461_';
 fpm_axis = 'p';
 
 for si=1:mp.Nsbp
@@ -191,7 +191,7 @@ optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 =1;
 
 optval.end_at_fpm_exit_pupil = 1;
-optval.output_field_rootname = ['fld_at_xtPup'];
+optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
 optval.use_fpm=0;
 optval.use_hlc_dm_patterns=0;
 nout = 1024;%512; 			% nout > pupil_daim_pix
@@ -208,8 +208,7 @@ for si=1:mp.Nsbp
     figure(606); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
     lams = num2str(lambda_um, '%6.4f');
-    polaxis = 0;
-    pols = ['polaxis'  num2str(polaxis,2)];
+    pols = ['polaxis'  num2str(optval.polaxis,2)];
     fitswrite(real(fld), [mp.full.input_field_rootname '_' lams 'um_' pols '_real.fits' ]);
     fitswrite(imag(fld), [mp.full.input_field_rootname '_' lams 'um_' pols '_imag.fits' ]);
 
@@ -227,19 +226,12 @@ for si=1:mp.Nsbp
     [Xc,Yc] = meshgrid(xC);
 
     fldC = interp2(Xf,Yf,fld,Xc,Yc,'cubic',0); %--Downsample by interpolation
+    fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
 
     figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv; drawnow;
     figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
-%     %--Subtract out the tip/tilt
-%     Nbeam = 309;
-%     Narray = ceil_even(mp.P1.compact.Nbeam+1);
-% 
-%     x = (-Narray/2:Narray/2-1)/Nbeam; 
-%     [tip,tilt] = meshgrid(x);
     
-    fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
-%     fldC = fldC.*exp(1i*tilt*1.24*(1/lambdaFacs(si)));
     
     temp = 0*fldC;
     temp(2:end,2:end) = rot90(fldC(2:end,2:end),2);
@@ -324,7 +316,6 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-% prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_';
 prefix = [mp.full.data_dir 'hlc_20190210/run461_'];
 
 fpm_axis = 'p';
