@@ -34,7 +34,7 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 7;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nsbp = 1;%7;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
@@ -46,14 +46,15 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 % - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
 mp.estimator = 'perfect';
 
-%--New variables for pairwise probing estimation:
-mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
-mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
-mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
-mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
-mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
-mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
+% %--New variables for pairwise probing estimation:
+% mp.estimator = 'pwp-bp';
+% mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
+% mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
+% mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
+% mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
+% mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
+% mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
+% mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
 
 %--New variables for pairwise probing with a Kalman filter
 %  mp.est.ItrStartKF =  %Which correction iteration to start recursive estimate
@@ -340,23 +341,20 @@ end
 
 %% Optical Layout: Full Model 
 
-mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
+mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
 % %--Pupil Plane Resolutions
 mp.P1.full.Nbeam = 1000;
 mp.P1.full.Narr = 1002;
 
-% mp.path.PhaseB = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/';
-
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
-
-mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
+mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
 mp.full.lambda0_m = mp.lambda0;
-mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
 mp.full.input_field_rootname = '';	%   rootname of files containing aberrated pupil
 mp.full.polaxis = 0;                %   polarization condition (only used with input_field_rootname)
 % mp.full.use_hlc_dm_patterns = 1;	%   use Dwight-generated HLC default DM wavefront patterns? 1 or 0
@@ -438,10 +436,14 @@ mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
 mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
 mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
 
-%--FPM size
-mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
-mp.F3.ang = 65;    % on each side, opening angle [degrees]
+mp.compact.flagGenPupil = true;
+mp.compact.flagGenFPM = false;
+mp.compact.flagGenLS= true;
+
+% %--FPM size
+% mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+% mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
+% mp.F3.ang = 65;    % on each side, opening angle [degrees]
 
 
 %% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

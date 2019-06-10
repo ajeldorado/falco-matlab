@@ -19,6 +19,9 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
+%--Functions for when the full model uses PROPER
+addpath('~/Repos/proper-models/wfirst_phaseb/matlab');
+
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
@@ -34,13 +37,13 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_s383
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC
 
 
 %% Step 3: Overwrite default values as desired
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/home/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
+mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
 
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -147,7 +150,7 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-prefix = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
 fpm_axis = 'p';
 
 for si=1:mp.Nsbp
@@ -170,11 +173,11 @@ end
 % return
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
 
 
 
-optval.phaseb_dir = mp.full.phaseb_dir;
+optval.data_dir = mp.full.data_dir;
 
 optval.cor_type = mp.full.cor_type;
 
@@ -184,7 +187,7 @@ optval.zval_m = 0.19e-9;
 optval.use_errors = mp.full.use_errors;
 optval.polaxis = mp.full.polaxis; 
 
-optval.dm1_m = fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_575nm.fits']);
+optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 =1;
 
 optval.end_at_fpm_exit_pupil = 1;
@@ -201,8 +204,8 @@ for si=1:mp.Nsbp
 
     % figure(601); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv;
     % figure(602); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula;
-    figure(605); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv;
-    figure(606); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula;
+    figure(605); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+    figure(606); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
     lams = num2str(lambda_um, '%6.4f');
     polaxis = 0;
@@ -225,8 +228,8 @@ for si=1:mp.Nsbp
 
     fldC = interp2(Xf,Yf,fld,Xc,Yc,'cubic',0); %--Downsample by interpolation
 
-    figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv;
-    figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula;
+    figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+    figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
 %     %--Subtract out the tip/tilt
 %     Nbeam = 309;
@@ -277,7 +280,7 @@ load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10
 
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/home/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
+mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
 
 
 
@@ -321,7 +324,9 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-prefix = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+% prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_';
+prefix = [mp.full.data_dir 'hlc_20190210/run461_'];
+
 fpm_axis = 'p';
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);

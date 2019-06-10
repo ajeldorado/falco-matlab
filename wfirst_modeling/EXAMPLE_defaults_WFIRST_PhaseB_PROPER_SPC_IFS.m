@@ -4,8 +4,8 @@
 %% Misc
 
 %--Record Keeping
-mp.SeriesNum = 44;
-mp.TrialNum = 0;
+mp.SeriesNum = 45;
+mp.TrialNum = 1;
 
 %--Special Computational Settings
 mp.flagParfor = true;
@@ -336,8 +336,8 @@ end
 
 %% Optical Layout: Full Model 
 
-mp.compact.flagGenFPM = false;
-
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
+mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
 mp.full.flagGenFPM = false;
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
@@ -349,12 +349,9 @@ mp.P1.full.Narr = 1002;
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
-mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
-
 mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
 mp.full.use_errors = true;
-mp.full.phaseb_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
@@ -378,7 +375,8 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_730nm.fits']);
+% mp.full.dm1.flatmap = fitsread([mp.full.data_dir 'dm1_flatten_pol10_730nm.fits']);
+mp.full.dm1.flatmap = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 mp.full.dm2.flatmap = 0;
 
 
@@ -432,6 +430,8 @@ mp.full.dm2.flatmap = 0;
 
 %% Mask Definitions
 
+mp.compact.flagGenFPM = false;
+
 %--Pupil definition
 mp.whichPupil = 'WFIRST180718';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
@@ -445,10 +445,10 @@ mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
 mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
 mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
 
-%--FPM size
-mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
-mp.F3.ang = 65;    % on each side, opening angle [degrees]
+% %--FPM size
+% mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+% mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
+% mp.F3.ang = 65;    % on each side, opening angle [degrees]
 
 
 %% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,18 +1,23 @@
 
 clear all;
 
-mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+mp.full.phaseb_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/'; % mask design data path
+% mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
 
 
-cd([mp.full.phaseb_dir 'hlc_20190210'])
+cd([mp.full.phaseb_dir 'hlc_custom/hlc_20190411/'])
 
 
-prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+% prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+prefix = [mp.full.phaseb_dir 'hlc_custom/hlc_20190411/run563_nro_'];
 
+mp.lambda0 = 730e-9;
+mp.fracBW = 0.15;
+mp.Nsbp = 9;
 
-mp.lambda0 = 575e-9;
-mp.fracBW = 0.10;
-mp.Nsbp = 19;
+% mp.lambda0 = 575e-9;
+% mp.fracBW = 0.10;
+% mp.Nsbp = 19;
 
 lam_occ = linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp)*mp.lambda0
 
@@ -25,19 +30,26 @@ transVec = zeros(mp.Nsbp,1);
 
 for wlam = 1:mp.Nsbp
 
-    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
-    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
+    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
+    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
 
-    fn_p_r_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated.fits'];
-    fn_p_i_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated.fits'];
+    fn_p_r_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real_rotated.fits'];
+    fn_p_i_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag_rotated.fits'];
+
+    
+%     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
+%     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
+% 
+%     fn_p_r_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated.fits'];
+%     fn_p_i_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated.fits'];
 
 
     Ncrop = 40;
 
     a = fitsread(fn_p_r);
     b = fitsread(fn_p_i);
-    c = fitsread(fn_p_r_rot);
-    d = fitsread(fn_p_i_rot);
+%     c = fitsread(fn_p_r_rot);
+%     d = fitsread(fn_p_i_rot);
     
     transVec(wlam) = a(1,1) + 1j*b(1,1);
     
@@ -45,22 +57,22 @@ for wlam = 1:mp.Nsbp
     ab = exp(-1j*angle(transVec(wlam)))*(a+1j*b);
     a = real(ab);
     b = imag(ab);
-    cd = exp(-1j*angle(transVec(wlam)))*(c+1j*d);
-    c = real(cd);
-    d = imag(cd);
+%     cd = exp(-1j*angle(transVec(wlam)))*(c+1j*d);
+%     c = real(cd);
+%     d = imag(cd);
     
     %--Crop
     acrop = padOrCropEven(a,Ncrop);
     bcrop = padOrCropEven(b,Ncrop);
-    ccrop = padOrCropEven(c,Ncrop);
-    dcrop = padOrCropEven(d,Ncrop);
+%     ccrop = padOrCropEven(c,Ncrop);
+%     dcrop = padOrCropEven(d,Ncrop);
 
     fprintf('Phase = %.4g\n',angle(acrop(1,1)+1i*bcrop(1,1)));
     
     fitswrite(acrop,[fn_p_r(1:end-5),'_crop.fits']);
     fitswrite(bcrop,[fn_p_i(1:end-5),'_crop.fits']);
-    fitswrite(ccrop,[fn_p_r_rot(1:end-5),'_crop.fits']);
-    fitswrite(dcrop,[fn_p_i_rot(1:end-5),'_crop.fits']);
+%     fitswrite(ccrop,[fn_p_r_rot(1:end-5),'_crop.fits']);
+%     fitswrite(dcrop,[fn_p_i_rot(1:end-5),'_crop.fits']);
 
     figure(1); imagesc(a); axis xy equal tight; colorbar; drawnow;
     figure(2); imagesc(angle(acrop+1i*bcrop)); axis xy equal tight; colorbar;drawnow;
@@ -81,7 +93,8 @@ xlim([min(1e9*lam_occ),max(1e9*lam_occ)])
 drawnow;
 % export_fig('/Users/ajriggs/Downloads/fig_HLC_occ_phase.png','-dpng','-r200');
 
-
+%%
+return
 %% Compare the HLC's pupil and LS compared to the ones generated in FALCO
 
 clear all;

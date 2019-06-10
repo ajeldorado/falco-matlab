@@ -19,6 +19,9 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
+%--Functions for when the full model uses PROPER
+addpath('~/Repos/proper-models/wfirst_phaseb/matlab');
+
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
@@ -56,10 +59,10 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-%--DEBUGGING:
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% %--DEBUGGING:
+% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 % mp.controller = 'plannedEFC';
 % mp.ctrl.sched_mat = [...
@@ -78,9 +81,7 @@ mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compu
 
 mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
 
-
-
-optval.phaseb_dir = mp.full.phaseb_dir;
+optval.data_dir = mp.full.data_dir;
 
 optval.cor_type = mp.full.cor_type;
 
@@ -88,7 +89,7 @@ optval.source_x_offset = 0;
 optval.zindex = 4;
 optval.zval_m = 0.19e-9;
 optval.use_errors = true;
-optval.polaxis =-2; 
+optval.polaxis = 10; 
 % 
 % % 2. full model, for regular psf 
 % % EE = prop_run_multi(['wfirst_phaseb_v2'], lam_array, npsf, 'quiet', 'passvalue',optval );
@@ -96,7 +97,7 @@ optval.polaxis =-2;
 
 % 3. full model, for field
 
-optval.dm1_m = fitsread ([mp.full.phaseb_dir 'dm1_flatten.fits']);
+optval.dm1_m = fitsread ([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 =1;
 
 optval.end_at_fpm_exit_pupil =1;
@@ -109,13 +110,13 @@ nout = 1024;%512; 			% nout > pupil_daim_pix
 
 lambda_um = 1e6*mp.lambda0;
 
-fld = prop_run(['wfirst_phaseb_v2b'], lambda_um, nout, 'quiet', 'passvalue',optval );
+fld = prop_run(['model_full_wfirst_phaseb'], lambda_um, nout, 'quiet', 'passvalue',optval );
 % % % fld(2:end,2:end) = rot90(fld(2:end,2:end),2);
 
 % figure(601); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv;
 % figure(602); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula;
-figure(605); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv;
-figure(606); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula;
+figure(605); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+figure(606); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
 lams = num2str(lambda_um, '%6.4f');
 polaxis = 0;
@@ -138,23 +139,15 @@ xC = (-Nc/2:Nc/2-1)*dxC;
 
 fldC = interp2(Xf,Yf,fld,Xc,Yc,'cubic',0); %--Downsample by interpolation
 
-figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv;
-figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula;
+figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
 % fldC = padOrCropEven(fldC,mp.P1.compact.Nbeam+2);
 % temp = 0*fldC;
 % temp(2:end,2:end) = rot90(fldC(2:end,2:end),2);
 % mp.P1.compact.E = temp;
 
-%--Divide out the tip/tilt
-    Narray = ceil_even(mp.P1.compact.Nbeam+1);
-
-    x = (-Narray/2:Narray/2-1)/mp.P1.compact.Nbeam; 
-    [tip,tilt] = meshgrid(x);
-    
     fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
-    fldC = fldC.*exp(1i*tilt*0.87);%*(1/lambdaFacs(si)));
-    
     temp = 0*fldC;
     temp(2:end,2:end) = rot90(fldC(2:end,2:end),2);
     mp.P1.compact.E = temp; %mp.P1.compact.E(:,:,si) = temp;

@@ -21,6 +21,7 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
+mp.est.dummy = 1;
 mp.compact.dummy = 1;
 mp.full.dummy = 1;
 

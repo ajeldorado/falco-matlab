@@ -19,6 +19,9 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
+%--Functions for when the full model uses PROPER
+addpath('~/Repos/proper-models/wfirst_phaseb/matlab');
+
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
@@ -45,7 +48,7 @@ mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 44;
+mp.SeriesNum = 45;
 mp.TrialNum = 1;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
@@ -56,14 +59,11 @@ mp.TrialNum = 1;
 % clear temp
 
 % %--DEBUGGING:
-% mp.fracBW = 0.08;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
-
-%--DEBUGGING:
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+
 
 
 mp.controller = 'plannedEFC';
@@ -78,16 +78,16 @@ mp.ctrl.sched_mat = [...
 
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
 optval = mp.full;
 optval.source_x_offset =0;
 optval.zindex = 4;
 optval.zval_m = 0.19e-9;
-optval.dm1_m = fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_730nm.fits']);
+optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 = 1;
 
 optval.end_at_fpm_exit_pupil = 1;
-optval.output_field_rootname = ['fld_at_xtPup'];
+optval.output_field_rootname = [mp.full.input_field_rootname filesep 'fld_at_xtPup'];
 optval.use_fpm = 0;
 optval.use_hlc_dm_patterns = 0;
 nout = 1024; %512; 			% nout > pupil_daim_pix
@@ -106,8 +106,8 @@ for si=1:mp.Nsbp
 
     fldFull = prop_run('model_full_wfirst_phaseb', lambda_um, nout, 'quiet', 'passvalue',optval );
     if(mp.flagPlot)
-        figure(605); imagesc(angle(fldFull)); axis xy equal tight; colorbar; colormap hsv;
-        figure(606); imagesc(abs(fldFull)); axis xy equal tight; colorbar; colormap parula;
+        figure(605); imagesc(angle(fldFull)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+        figure(606); imagesc(abs(fldFull)); axis xy equal tight; colorbar; colormap parula; drawnow;
     end
 
     lams = num2str(lambda_um, '%6.4f');
@@ -128,8 +128,8 @@ for si=1:mp.Nsbp
     fldC = interp2(Xf,Yf,fldFull,Xc,Yc,'cubic',0); %--Downsample by interpolation
     fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
     if(mp.flagPlot)
-        figure(607+si-1); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv;
-        figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula;
+        figure(607+si-1); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+        figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula; drawnow;
     end
 
     %--Assign to initial E-field in compact model.
@@ -167,7 +167,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/home/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
+mp.path.frn_coro = '/Users/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
