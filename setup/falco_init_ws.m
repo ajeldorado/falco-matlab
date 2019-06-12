@@ -200,11 +200,11 @@ mp = falco_config_gen_chosen_apodizer(mp); %--apodizer mask
 mp = falco_config_gen_chosen_LS(mp); %--Lyot stop
 
 %--Compare apodizer and pupil mask overlap
-if(mp.flagApod)
-    if(mp.flagPlot)
-    figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
-    end
-end
+% if(mp.flagApod)
+%     if(mp.flagPlot)
+%     figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
+%     end
+% end
 
 %% Plot the pupil and Lyot stop on top of each other to make sure they are aligned correctly
 %--Only for coronagraphs using Babinet's principle, for which the input

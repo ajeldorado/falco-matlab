@@ -450,9 +450,11 @@ if(mp.flagSaveEachItr)
 end
 
 % Save cmds for each iteration
-datacmds = hcst_DM_2Dto1D(bench,mp.dm1.V');
-cmds = datacmds+bench.DM.flatvec;
-save([bench.info.outDir,'cdms',datestr(now,'yyyymmddTHHMMSS'),'.mat'],'cmds');
+if(~mp.flagSim)
+    datacmds = hcst_DM_2Dto1D(bench,mp.dm1.V');
+    cmds = datacmds+bench.DM.flatvec;
+    save([bench.info.outDir,'cdms',datestr(now,'yyyymmddTHHMMSS'),'.mat'],'cmds');
+end
 %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
 if(mp.flagTrainModel)
     ev.Itr = Itr;

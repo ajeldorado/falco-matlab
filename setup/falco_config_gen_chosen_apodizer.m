@@ -85,7 +85,13 @@ switch lower(mp.coro)
                 mp.P3.compact.Narr = mp.P3.full.Narr;
                 mp.P3.compact.mask = mp.P3.full.mask;
             end
-
+            
+        elseif (nnz(strcmp(mp.P3.apodType,'HCST_AVC'))>0 && mp.flagApod) 
+            avc_mask = fitsread([mp.path.mask,'ApodizedPupil_HCST.fits']);
+            mp.P3.full.mask = imresize(avc_mask,[mp.P3.full.Nbeam mp.P3.full.Nbeam]);
+            mp.P3.full.Narr = mp.P3.full.Nbeam;
+            mp.P3.compact.Narr = mp.P3.full.Narr;
+            mp.P3.compact.mask = mp.P3.full.mask;
         else
             disp('Using vortex without apodizer or aperture stop.')
         end
