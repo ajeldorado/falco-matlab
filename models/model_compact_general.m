@@ -158,7 +158,7 @@ switch upper(mp.coro)
         %--MFT from SP to FPM (i.e., P3 to F3)
         EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
         %--Apply (1-FPM) for Babinet's principle later
-        if(strcmp(mp.coro,'Roddier'))
+        if(strcmpi(mp.coro,'Roddier'))
             FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
             EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
         else
