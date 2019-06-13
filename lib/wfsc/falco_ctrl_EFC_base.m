@@ -57,7 +57,7 @@ cvar = falco_ctrl_setup(mp,cvar);
 %     if(any(mp.dm_ind==9)); dm_weight = dm9regfac*dm_weight; end
 %     EyeGstarGdiag = [EyeGstarGdiag; maxDiagGstarG*dm_weight*ones(cvar.NeleVec(idm),1)];
 % end
-%% Difine the regularization for DM9 differently
+%% Define the regularization for DM9 differently
 reg_diag = cvar.EyeGstarGdiag;
 maxDiagGstarG = max(diag(cvar.GstarG_wsum));
 reg_diag = reg_diag*10^(log10reg);
