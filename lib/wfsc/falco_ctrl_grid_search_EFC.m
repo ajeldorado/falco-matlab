@@ -37,6 +37,13 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     else
         vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
     end
+    if mp.aux.flagRegDM9
+        NvalsRegdm9 = 5;
+        vals_list_dm9 = linspace(mp.aux.betadm9Min,mp.aux.betadm9Max,NvalsRegdm9);
+    else
+        NvalsRegdm9 = 1;
+        vals_list_dm9 = vals_list;
+    end
     Nvals = max(size(vals_list,2));
     if mp.aux.flagOmega==1
         NvalsOmega = 5;
@@ -45,15 +52,15 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         valsOmega_list = [-inf];
     end
     NvalsOmega = numel(valsOmega_list);
-    Inorm_list = zeros(Nvals,NvalsOmega);
-    thput_list = zeros(Nvals,NvalsOmega);
+    Inorm_list = zeros(Nvals,NvalsOmega,NvalsRegdm9);
+    thput_list = zeros(Nvals,NvalsOmega,NvalsRegdm9);
 
     % Temporarily store computed DM commands so that the best one does not have to be re-computed
-    if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals,NvalsOmega); end
-    if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals,NvalsOmega); end
-    if(any(mp.dm_ind==5)); dDM5V_store = zeros(mp.dm5.Nact,mp.dm5.Nact,Nvals,NvalsOmega); end
-    if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals,NvalsOmega); end
-    if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals,NvalsOmega); end
+    if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals,NvalsOmega,NvalsRegdm9); end
+    if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals,NvalsOmega,NvalsRegdm9); end
+    if(any(mp.dm_ind==5)); dDM5V_store = zeros(mp.dm5.Nact,mp.dm5.Nact,Nvals,NvalsOmega,NvalsRegdm9); end
+    if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals,NvalsOmega,NvalsRegdm9); end
+    if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals,NvalsOmega,NvalsRegdm9); end
 
     %% Empirically find the regularization value giving the best contrast
     
@@ -61,23 +68,37 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if(mp.flagParfor) %--Parallelized
         parfor ni = 1:Nvals
             for nj = 1:NvalsOmega
-            [Inorm_list(ni,nj),thput_list(ni,nj),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,mp,cvar);
-            if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj) = dDM_temp.dDM1V; end
-            if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj) = dDM_temp.dDM2V; end
-            if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj) = dDM_temp.dDM5V; end
-            if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj) = dDM_temp.dDM8V; end
-            if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj) = dDM_temp.dDM9V; end
+            for nk = 1:NvalsRegdm9
+            if mp.aux.flagRegDM9 
+                IInk=nk;
+            else
+                IInk=nj;
+            end
+            [Inorm_list(ni,nj,nk),thput_list(ni,nj,nk),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,IInk,vals_list_dm9,mp,cvar);
+            if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj,nk) = dDM_temp.dDM1V; end
+            if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj,nk) = dDM_temp.dDM2V; end
+            if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj,nk) = dDM_temp.dDM5V; end
+            if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj,nk) = dDM_temp.dDM8V; end
+            if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj,nk) = dDM_temp.dDM9V; end
+            end
             end
         end
     else %--Not Parallelized
         for ni = 1:Nvals
             for nj = 1:NvalsOmega
-                [Inorm_list(ni,nj),thput_list(ni,nj),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,mp,cvar);
-                if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj) = dDM_temp.dDM1V; end
-                if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj) = dDM_temp.dDM2V; end
-                if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj) = dDM_temp.dDM5V; end
-                if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj) = dDM_temp.dDM8V; end
-                if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj) = dDM_temp.dDM9V; end
+                for nk = 1:NvalsRegdm9
+                if mp.aux.flagRegDM9 
+                    IInk=nk;
+                else
+                    IInk=nj;
+                end
+                [Inorm_list(ni,nj,nk),thput_list(ni,nj,nk),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,IInk,vals_list_dm9,mp,cvar);
+                if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj,nk) = dDM_temp.dDM1V; end
+                if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj,nk) = dDM_temp.dDM2V; end
+                if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj,nk) = dDM_temp.dDM5V; end
+                if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj,nk) = dDM_temp.dDM8V; end
+                if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj,nk) = dDM_temp.dDM9V; end
+                end
             end
         end
     end
@@ -96,7 +117,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin,indBest] = min(Inorm_list(:)./(thput_list(:).^2));
 %     [cvarOut.cMin,indBest] = min(Inorm_list(:));
-    [indBest,indBestOmega] = ind2sub(size(Inorm_list),indBest);
+    [indBest,indBestOmega,indBestRegDM9] = ind2sub(size(Inorm_list),indBest);
     mp.aux.omega = valsOmega_list(indBestOmega);
 %     indBest = indBest - 1; %JLlop
 %     cvarOut.cMin = Inorm_list(indBest);
@@ -113,14 +134,16 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         indBest=find(vals_list(1,:)==val);
     	cvarOut.log10regUsed = vals_list(1,indBest);
     	cvarOut.omegaUsed = mp.aux.omega;
+    	cvarOut.regDM9Used = vals_list_dm9(indBestRegDM9);
         cvarOut.cMin = Inorm_list(indBest);
         dmfacBest = vals_list(2,indBest);
-        if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest,indBestOmega); end
-        if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest,indBestOmega); end
-        if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest,indBestOmega); end
-        if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest,indBestOmega); end
-        if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest,indBestOmega); end
+        if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest,indBestOmega,indBestRegDM9); end
+        if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest,indBestOmega,indBestRegDM9); end
+        if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest,indBestOmega,indBestRegDM9); end
+        if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest,indBestOmega,indBestRegDM9); end
+        if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest,indBestOmega,indBestRegDM9); end
     else
+        % OUT OF DATE
         vals_listaux = [val;vals_list(2,indBest)];
         [Inorm,thput,dDM_temp] = falco_ctrl_EFC_base(1,vals_listaux,mp,cvar);
         cvarOut.log10regUsed = val;
@@ -136,12 +159,28 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     if(mp.flagPlot)
         if(length(mp.ctrl.dmfacVec)==1)
-            figure(499); semilogy(mp.ctrl.log10regVec,Inorm_list,'-bd','Linewidth',3)
+            figure(499); semilogy(mp.ctrl.log10regVec,Inorm_list(:,indBestOmega,indBestRegDM9),'-bd','Linewidth',3)
             title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
             set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
             drawnow;
+            if mp.aux.flagOmega
+            figure(498); semilogy(valsOmega_list,Inorm_list(indBest,:,indBestRegDM9),'-bd','Linewidth',3)
+            title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
+            xlabel('vals_list_omega','Fontsize',20,'Interpreter','Latex');
+            ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
+            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
+            drawnow;
+            end
+            if mp.aux.flagRegDM9
+            figure(497); semilogy(vals_list_dm9,squeeze(Inorm_list(indBest,indBestOmega,:)),'-bd','Linewidth',3)
+            title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
+            xlabel('vals_list_dm9','Fontsize',20,'Interpreter','Latex');
+            ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
+            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
+            drawnow;
+            end
         elseif(length(mp.ctrl.dmfacVec)>1)
             figure(499); imagesc(mp.ctrl.log10regVec,mp.ctrl.dmfacVec,reshape(log10(Inorm_list),[length(mp.ctrl.dmfacVec),length(mp.ctrl.log10regVec)])); 
             ch = colorbar; axis xy tight;

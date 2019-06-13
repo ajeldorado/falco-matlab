@@ -107,11 +107,11 @@ mp.dm2.dVnbr = 150; %--absolute value of max delta voltage between neighbors [vo
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';
+mp.controller = 'gridsearchEFC';
 
 % % % % GRID SEARCH EFC DEFAULTS     
 % %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 300; %--Number of estimation+control iterations to perform
+mp.Nitr = 20; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2 9]; %--Which DMs to use
 

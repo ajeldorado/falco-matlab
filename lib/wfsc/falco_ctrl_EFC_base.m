@@ -34,28 +34,35 @@
 %  Measured average normalized intensity
 %  DM commands
 
-function [InormAvg,thput,dDM] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,mp,cvar)
+function [InormAvg,thput,dDM] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,nk,vals_list_dm9,mp,cvar)
 
 
 %% Initializations
 % Itr = cvar.Itr ;
 log10reg = vals_list(1,ni); %--Lagrange multiplier
 dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
+log10regdm9 = vals_list_dm9(nk);
 mp.aux.omega = valsOmega_list(nj);
 %--Save starting point for each delta command to be added to.
 %--Get the indices of each DM's command vector within the single concatenated command vector
 cvar = falco_ctrl_setup(mp,cvar);
 
 %% Define the diagonal of the regularization matrix differently
-% % %--Diagonal of the Weighted Regularization Matrix
-% % EyeGstarGdiag = [];
-% % maxDiagGstarG = max(diag(cvar.GstarG_wsum));
-% % for idm=1:numel(mp.dm_ind)
-% %     dm_index = mp.dm_ind(idm);
-% %     dm_weight = 1; %mp.dm_weights(dm_index);
-% %     if(any(mp.dm_ind==9)); dm_weight = dm9regfac*dm_weight; end
-% %     EyeGstarGdiag = [EyeGstarGdiag; maxDiagGstarG*dm_weight*ones(cvar.NeleVec(idm),1)];
-% % end
+%--Diagonal of the Weighted Regularization Matrix
+% EyeGstarGdiag = [];
+% maxDiagGstarG = max(diag(cvar.GstarG_wsum));
+% for idm=1:numel(mp.dm_ind)
+%     dm_index = mp.dm_ind(idm);
+%     dm_weight = 1; %mp.dm_weights(dm_index);
+%     if(any(mp.dm_ind==9)); dm_weight = dm9regfac*dm_weight; end
+%     EyeGstarGdiag = [EyeGstarGdiag; maxDiagGstarG*dm_weight*ones(cvar.NeleVec(idm),1)];
+% end
+%% Difine the regularization for DM9 differently
+reg_diag = cvar.EyeGstarGdiag;
+maxDiagGstarG = max(diag(cvar.GstarG_wsum));
+reg_diag = reg_diag*10^(log10reg);
+ind_dm9 = find(cvar.uLegend==9);
+reg_diag(ind_dm9) = 10^(log10regdm9); 
 
 %% Least-squares solution:
 % duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum;
@@ -67,12 +74,12 @@ else
     vec_dm_ele = [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele)];
 end
 if mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr
-    duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum - 10^mp.aux.omega * cvar.GcptransGcp_wsum)...
+    duVec = -dmfac*(diag(reg_diag) + cvar.GstarG_wsum - 10^mp.aux.omega * cvar.GcptransGcp_wsum)...
         \(cvar.RealGstarEab_wsum...
         +mp.aux.gamma*10^(log10reg)*cvar.EyeGstarGdiag.*...
         vec_dm_ele);
 else
-    duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)...
+    duVec = -dmfac*(diag(reg_diag) + cvar.GstarG_wsum)...
         \(cvar.RealGstarEab_wsum+mp.aux.gamma*10^(log10reg)*cvar.EyeGstarGdiag.*...
         vec_dm_ele);
 end
