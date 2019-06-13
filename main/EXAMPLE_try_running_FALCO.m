@@ -34,7 +34,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_LUVOIRB_VC_design
+EXAMPLE_defaults_try_running_FALCO
 
 
 %% Step 3: Overwrite default values as desired
@@ -50,6 +50,7 @@ mp.TrialNum = 1;
 %--Use just 1 wavelength for initial debugging of code
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 mp.Nitr = 3; %--Number of wavefront control iterations
 
