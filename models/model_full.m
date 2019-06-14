@@ -191,6 +191,14 @@ switch lower(mp.layout)
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
+        
+%     %--In development
+%     case{'lc_load_scale'}
+%         switch upper(mp.coro)
+%             case{'HLC'}
+%                 Eout = model_full_scale(mp, lambda, Ein, normFac);
+%         end    
+
 end
 
 %% Undo GPU variables if they exist
