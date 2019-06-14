@@ -58,7 +58,8 @@ switch lower(mp.coro)
 
     case{'vortex','vc','avc'}
         
-        if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
+        %if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
+        if(mp.flagApod)
             % Full aperture stop 
             mp.P3.full.Narr = 2^(nextpow2(mp.P1.full.Nbeam));
 
@@ -80,10 +81,20 @@ switch lower(mp.coro)
                 mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
                 mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
             else
-                load(mp.P3.apodType)
-                mp.P3.full.mask = padOrCropEven(APOD,mp.P3.full.Narr);
-                mp.P3.compact.Narr = mp.P3.full.Narr;
-                mp.P3.compact.mask = mp.P3.full.mask;
+                if(exist(mp.P3.apodType,'file')~=2)
+                    disp('Specified apodizer not supported.');
+                else
+                    [~,~,ext] = fileparts(mp.P3.apodType);
+                    if(strcmpi(ext,'.fits'))
+                        APOD = fitsread(mp.P3.apodType);
+                    else
+                        % Assumes mp.P3.apodType is a .mat file and the variable name is APOD
+                        load(mp.P3.apodType)
+                    end
+                    mp.P3.full.mask = padOrCropEven(APOD,mp.P3.full.Narr);
+                    mp.P3.compact.Narr = mp.P3.full.Narr;
+                    mp.P3.compact.mask = mp.P3.full.mask;
+                end
             end
             
         elseif (nnz(strcmp(mp.P3.apodType,'HCST_AVC'))>0 && mp.flagApod) 
