@@ -102,13 +102,13 @@ mp.si_ref = ceil(mp.Nsbp/2);
 
 %--Wavelengths used for Compact Model (and Jacobian Model)
 mp.sbp_weights = ones(mp.Nsbp,1);
-if(strcmpi(mp.estimator,'perfect') && mp.Nwpsbp==1) %--Set ctrl wvls evenly between endpoints (inclusive) of the total bandpass. For design or modeling.
+if(mp.Nwpsbp==1) %--Set ctrl wavelengths evenly between endpoints (inclusive) of the total bandpass.
     if(mp.Nsbp==1)
         mp.sbp_centers = mp.lambda0;
     else
         mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
     end
-else %--For cases with estimation: Choose est/ctrl wavelengths to be at subbandpass centers.
+else %--For cases with multiple sub-bands: Choose wavelengths to be at subbandpass centers since the wavelength samples will span to the full extent of the sub-bands.
     mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
     mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBWcent2cent/2,1+mp.fracBWcent2cent/2,mp.Nsbp); %--Space evenly at the centers of the subbandpasses.
 end

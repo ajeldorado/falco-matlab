@@ -147,8 +147,8 @@ if  strcmp(cor_type,'hlc')
     lambda0_m = 0.575e-6;
     nlams = 19 ;              % number of occ trans lambda provided
     bw = 0.1;
-    lam_occ = [(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
-    wlam = find( round(1e11*lambda_m) == round(1e11*lam_occ) ); 	% find exactly matching FPM wavelength
+    lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m; %[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
+    wlam = find( round(1e13*lambda_m) == round(1e13*lam_occ) ); 	% find exactly matching FPM wavelength
     occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
     occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
     n_default = 1024;	% gridsize in non-critical areas
