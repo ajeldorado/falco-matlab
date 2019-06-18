@@ -15,6 +15,8 @@
 % - Isum: sub-bandpass image
 %
 % REVISION HISTORY
+% - Modified on 2019-06-14 by A.J. Riggs to use parfor over the wavelengths
+% and polarization states.
 % - Created on 2019-02-06 by A.J. Riggs.
 
 function Isbp = falco_get_sim_sbp_image(mp,si)
@@ -26,12 +28,13 @@ if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); e
 
 
 %--Number of polarization states used
-mp.full.dummy = 1; %--Initialize if this doesn't exist
-if(isfield(mp.full,'pol_conds'))  
-    Npol = length(mp.full.pol_conds);  
-else
-    Npol = 1;
-end
+Npol = length(mp.full.pol_conds);  
+% mp.full.dummy = 1; %--Initialize if this doesn't exist
+% if(isfield(mp.full,'pol_conds'))  
+%     Npol = length(mp.full.pol_conds);  
+% else
+%     Npol = 1;
+% end
     
 % %--Get the starlight image
 % modvar.whichSource = 'star';
@@ -93,7 +96,7 @@ function Iout = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp)
         Iout = Iout + abs(Eplanet).^2; %--Apply spectral weighting outside this function
     end
 
-    %--Apply weight within the sub-bandpass
-    Iout = mp.full.lambda_weights(wi)*Iout;
+    %--Apply weight within the sub-bandpass. Assume polarizations are evenly weigted.
+    Iout = mp.full.lambda_weights(wi)/length(mp.full.pol_conds)*Iout;
     
 end %--END OF FUNCTION
