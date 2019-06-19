@@ -233,9 +233,11 @@ mp.P1.wGap = 6e-3/mp.P1.D; % Fractional width of segment gaps
         
 %--Aperture stop definition
 mp.flagApod = true;    %--Whether to use an apodizer or not. Can be a simple aperture stop
-mp.P3.apodType = 'Simple';
+mp.apodType = 'Simple';
 mp.P3.IDnorm = 0;
 mp.P3.ODnorm = 0.84;
+mp.full.flagGenApod = true;
+mp.compact.flagGenApod = true;
 
 %--Lyot stop padding
 mp.P4.IDnorm = 0; %--Lyot stop ID [Dtelescope]
