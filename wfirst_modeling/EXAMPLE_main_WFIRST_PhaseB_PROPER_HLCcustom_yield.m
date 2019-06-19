@@ -37,13 +37,13 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLCcustom
 
 
 %% Step 3: Overwrite default values as desired
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
+mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t02/'; %--Location of coronagraph performance data tables. Needs slash at end.
 
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -51,8 +51,8 @@ mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 42;
-mp.TrialNum = 10;
+mp.SeriesNum = 45;
+mp.TrialNum = 2;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -68,45 +68,56 @@ mp.TrialNum = 10;
 
 mp.controller = 'plannedEFC';
 
-if(mp.TrialNum==5 || mp.TrialNum==10)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
-        repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
-        repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
-        repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
-        repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+mp.ctrl.sched_mat = [...
+    [0,0,0,1,0];...
+    repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
+    repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
+    repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
+    repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
+    repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
+    ];
+[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
-elseif(mp.TrialNum==0)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
-        repmat([1,1j-2,12,0,1],[5,1]);...   %--small Beta kicks
-        repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
-        repmat([1,1j-2,12,0,1],[5,1]);...   %--small Beta kicks
-        repmat([1,1j,12,0,1],[10,1]);...    %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
-elseif(mp.TrialNum==3)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[30,1]);...     %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);    
-
-elseif(mp.TrialNum==4)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
-        repmat([1,1j-1,12,0,1],[20,1]);...   %--small Beta kicks
-        repmat([1,1j,12,0,1],[5,1]);...    %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-
-end
+% if(mp.TrialNum==5 || mp.TrialNum==10)
+%     mp.ctrl.sched_mat = [...
+%         [0,0,0,1,0];...
+%         repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
+%         repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
+%         repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
+%         repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
+%         repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
+%         ];
+%     [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+% 
+% elseif(mp.TrialNum==0)
+%     mp.ctrl.sched_mat = [...
+%         [0,0,0,1,0];...
+%         repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
+%         repmat([1,1j-2,12,0,1],[5,1]);...   %--small Beta kicks
+%         repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
+%         repmat([1,1j-2,12,0,1],[5,1]);...   %--small Beta kicks
+%         repmat([1,1j,12,0,1],[10,1]);...    %--Optimal beta
+%         ];
+%     [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+% 
+% elseif(mp.TrialNum==3)
+%     mp.ctrl.sched_mat = [...
+%         [0,0,0,1,0];...
+%         repmat([1,1j,12,0,1],[30,1]);...     %--Optimal beta
+%         ];
+%     [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);    
+% 
+% elseif(mp.TrialNum==4)
+%     mp.ctrl.sched_mat = [...
+%         [0,0,0,1,0];...
+%         repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
+%         repmat([1,1j-1,12,0,1],[20,1]);...   %--small Beta kicks
+%         repmat([1,1j,12,0,1],[5,1]);...    %--Optimal beta
+%         ];
+%     [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+% 
+% end
     
     
 %--GRID SEARCH EFC    
@@ -150,22 +161,23 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-prefix = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/hlc_20190210/run461_';
+% prefix = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/hlc_custom/hlc_20190411/run563_nro_';
+prefix = [mp.full.data_dir 'hlc_custom/hlc_20190411/run563_nro_'];
 fpm_axis = 'p';
 
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
     
     %--Unclear which is the correct orientation yet
-    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_crop.fits'];
-    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_crop.fits'];
+    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta5.0pol'   fpm_axis   '_' 'real_crop.fits'];
+    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta5.0pol'   fpm_axis   '_' 'imag_crop.fits'];
 %     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated_crop.fits'];
 %     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated_crop.fits'];
    
     mp.compact.FPMcube(:,:,si) = complex(fitsread(fn_p_r),fitsread(fn_p_i));
-
-
 end
+
+
 %%
 for si=1:mp.Nsbp
    figure(100); imagesc(abs(mp.compact.FPMcube(:,:,si))); axis xy equal tight; colorbar; drawnow; pause(0.1); 
@@ -175,26 +187,26 @@ end
 
 mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
 
+optval = mp.full;
+optval.output_dim = 1024;
 
+% optval.data_dir = mp.full.data_dir;
+% optval.cor_type = mp.full.cor_type;
 
-optval.data_dir = mp.full.data_dir;
-
-optval.cor_type = mp.full.cor_type;
-
-optval.source_x_offset =0;
-optval.zindex = 4;
-optval.zval_m = 0.19e-9;
-optval.use_errors = mp.full.use_errors;
-optval.polaxis = mp.full.polaxis; 
+% optval.source_x_offset =0;
+% optval.zindex = 4;
+% optval.zval_m = 0.19e-9;
+% optval.use_errors = mp.full.use_errors;
+% optval.polaxis = mp.full.polaxis; 
 
 optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
-optval.use_dm1 =1;
+optval.use_dm1 =1 ;
 
 optval.end_at_fpm_exit_pupil = 1;
 optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
 optval.use_fpm=0;
 optval.use_hlc_dm_patterns=0;
-nout = 1024;%512; 			% nout > pupil_daim_pix
+nout = 1024; %512; 			% nout > pupil_daim_pix
 
 mp.P1.compact.E = ones(ceil_even(mp.P1.compact.Nbeam+1),ceil_even(mp.P1.compact.Nbeam+1),mp.Nsbp); %--Initialize
 for si=1:mp.Nsbp
@@ -226,12 +238,12 @@ for si=1:mp.Nsbp
     [Xc,Yc] = meshgrid(xC);
 
     fldC = interp2(Xf,Yf,fld,Xc,Yc,'cubic',0); %--Downsample by interpolation
-    fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
 
     figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv; drawnow;
     figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula; drawnow;
 
     
+    fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
     
     temp = 0*fldC;
     temp(2:end,2:end) = rot90(fldC(2:end,2:end),2);
@@ -264,15 +276,15 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 %%
 %%
 %%
-return
-%%
-
-load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_config.mat;
-load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
-
-
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
+% return
+% %%
+% 
+% load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_config.mat;
+% load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
+% 
+% 
+% %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+% mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t1/'; %--Location of coronagraph performance data tables. Needs slash at end.
 
 
 
@@ -291,7 +303,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_s383 %--Load default model parameters
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLCcustom %--Load default model parameters
 
 mp.Fend.res = 5; %--Change the image resolution [pixels per lambda0/D]
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
@@ -316,15 +328,16 @@ lam_occ = lambdaFacs*mp.lambda0;
 mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 
-prefix = [mp.full.data_dir 'hlc_20190210/run461_'];
+% prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
+prefix = [mp.full.data_dir 'hlc_custom/hlc_20190411/run563_nro_'];
 
 fpm_axis = 'p';
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
     
     %--Unclear which is the correct orientation yet
-    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_crop.fits'];
-    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_crop.fits'];
+    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta5.0pol'   fpm_axis   '_' 'real_crop.fits'];
+    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta5.0pol'   fpm_axis   '_' 'imag_crop.fits'];
 %     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated_crop.fits'];
 %     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated_crop.fits'];
    

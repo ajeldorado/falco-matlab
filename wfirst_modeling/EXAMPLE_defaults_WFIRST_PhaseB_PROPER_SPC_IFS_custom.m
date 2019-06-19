@@ -220,12 +220,12 @@ mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right'
 %% Define custom SPC values.
 
 %--Full model mask files and resolutions
-file_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/spc_ifs_custom/';
+file_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/spc_ifs_custom/';
 
-mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];        mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
+% mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];        mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
 % mp.full.pupil_mask_file = [file_dir, 'minpadSPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];  mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
 % mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW2Nlam6.fits'];         mp.fracBW = 0.02; mp.Nsbp = 1;%--SPM file name
-% mp.full.pupil_mask_file = [file_dir, 'minpadSPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW2Nlam6.fits'];   mp.fracBW = 0.02; mp.Nsbp = 1;%--SPM file name
+mp.full.pupil_mask_file = [file_dir, 'minpadSPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW2Nlam6.fits'];   mp.fracBW = 0.02; mp.Nsbp = 1;%--SPM file name
 
 % mp.full.pupil_file = [file_dir, 'pupil_SPC-20190130_rotated.fits'];
 mp.full.pupil_file = [file_dir, 'unpaddedpupil_full_symm_N1000_rotated.fits'];
@@ -455,10 +455,10 @@ mp.P1.full.Narr = 1002;
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
-mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
-mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
-mp.full.use_errors = 1;
-mp.full.phaseb_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+mp.full.pol_conds = 0;%[-2,-1,1,2]; %--Which polarization states to use when creating an image.
+mp.full.polaxis = 0;%10;                %   polarization condition (only used with input_field_rootname)
+mp.full.use_errors = 0;%1;
+mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
@@ -482,7 +482,7 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_730nm.fits']);
+mp.full.dm1.flatmap = 0;%fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_730nm.fits']);
 mp.full.dm2.flatmap = 0;
 
 

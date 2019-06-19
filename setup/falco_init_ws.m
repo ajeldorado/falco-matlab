@@ -21,6 +21,7 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
+mp.est.dummy = 1;
 mp.compact.dummy = 1;
 mp.full.dummy = 1;
 
@@ -43,16 +44,19 @@ if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary fo
 
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
+if(isfield(mp.compact,'flagGenApod')==false);  mp.compact.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
 if(isfield(mp.compact,'flagGenFPM')==false);  mp.compact.flagGenFPM = true;  end
 if(isfield(mp.compact,'flagGenLS')==false);  mp.compact.flagGenLS = true;  end
 %--Whether to generate or load various masks: full model
 if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
 if(mp.full.flagPROPER)
     mp.full.flagGenPupil = false;
+    mp.full.flagGenApod = false;
     mp.full.flagGenFPM = false;
     mp.full.flagGenLS = false;
 end
 if(isfield(mp.full,'flagGenPupil')==false);  mp.full.flagGenPupil = true;  end
+if(isfield(mp.full,'flagGenApod')==false);  mp.full.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
 if(isfield(mp.full,'flagGenFPM')==false);  mp.full.flagGenFPM = true;  end
 if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 
@@ -60,7 +64,7 @@ if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
-if(isfield(mp,'SPname')==false);  mp.SPname = 'none';  end %--Apodizer name default
+if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
 %--Tied actuator pair definitions: See Section with variables mp.dmX.tied for X=1:9
@@ -101,13 +105,13 @@ mp.si_ref = ceil(mp.Nsbp/2);
 
 %--Wavelengths used for Compact Model (and Jacobian Model)
 mp.sbp_weights = ones(mp.Nsbp,1);
-if(strcmpi(mp.estimator,'perfect') && mp.Nwpsbp==1) %--Set ctrl wvls evenly between endpoints (inclusive) of the total bandpass. For design or modeling.
+if(mp.Nwpsbp==1) %--Set ctrl wavelengths evenly between endpoints (inclusive) of the total bandpass.
     if(mp.Nsbp==1)
         mp.sbp_centers = mp.lambda0;
     else
         mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
     end
-else %--For cases with estimation: Choose est/ctrl wavelengths to be at subbandpass centers.
+else %--For cases with multiple sub-bands: Choose wavelengths to be at subbandpass centers since the wavelength samples will span to the full extent of the sub-bands.
     mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
     mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBWcent2cent/2,1+mp.fracBWcent2cent/2,mp.Nsbp); %--Space evenly at the centers of the subbandpasses.
 end

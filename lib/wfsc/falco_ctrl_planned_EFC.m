@@ -120,8 +120,11 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         vals_list = [log10regSchedOut; cvar.latestBestDMfac];
         
         [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
-        fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
-
+        if(mp.ctrl.flagUseModel)
+            fprintf('Model says scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
+        else
+            fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
+        end
     end
     
     cvar.log10regUsed = log10regSchedOut;

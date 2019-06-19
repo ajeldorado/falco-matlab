@@ -1,23 +1,21 @@
 
 clear all;
 
-mp.full.phaseb_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/'; % mask design data path
-% mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
+
+cd([mp.full.data_dir 'hlc_20190210/'])
 
 
-cd([mp.full.phaseb_dir 'hlc_custom/hlc_20190411/'])
+% prefix = [mp.full.data_dir 'hlc_custom/hlc_20190411/run563_nro_'];
+prefix = [mp.full.data_dir 'hlc_20190210/run461_'];
 
+% mp.lambda0 = 730e-9;
+% mp.fracBW = 0.15;
+% mp.Nsbp = 9;
 
-% prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
-prefix = [mp.full.phaseb_dir 'hlc_custom/hlc_20190411/run563_nro_'];
-
-mp.lambda0 = 730e-9;
-mp.fracBW = 0.15;
-mp.Nsbp = 9;
-
-% mp.lambda0 = 575e-9;
-% mp.fracBW = 0.10;
-% mp.Nsbp = 19;
+mp.lambda0 = 575e-9;
+mp.fracBW = 0.10;
+mp.Nsbp = 19; 9;%
 
 lam_occ = linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp)*mp.lambda0
 
@@ -30,18 +28,18 @@ transVec = zeros(mp.Nsbp,1);
 
 for wlam = 1:mp.Nsbp
 
-    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
-    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
-
-    fn_p_r_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real_rotated.fits'];
-    fn_p_i_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag_rotated.fits'];
+%     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
+%     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
+% 
+%     fn_p_r_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real_rotated.fits'];
+%     fn_p_i_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag_rotated.fits'];
 
     
-%     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
-%     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
-% 
-%     fn_p_r_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated.fits'];
-%     fn_p_i_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated.fits'];
+    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
+    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
+
+    fn_p_r_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated.fits'];
+    fn_p_i_rot = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated.fits'];
 
 
     Ncrop = 40;
@@ -95,6 +93,14 @@ drawnow;
 
 %%
 return
+%%
+
+
+
+
+
+
+
 %% Compare the HLC's pupil and LS compared to the ones generated in FALCO
 
 clear all;
@@ -107,9 +113,9 @@ addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 
-mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+mp.full.data_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
 
-cd([mp.full.phaseb_dir 'hlc_20190210'])
+cd([mp.full.data_dir 'hlc_20190210'])
 
 prefix = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/hlc_20190210/run461_nro_';
 

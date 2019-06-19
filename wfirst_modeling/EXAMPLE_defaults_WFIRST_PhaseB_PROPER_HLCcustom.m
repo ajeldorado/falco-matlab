@@ -32,10 +32,16 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 575e-9;   %--Central wavelength of the whole spectral bandpass [meters]
-mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 3;%7;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.lambda0 = 730e-9;    %--Central wavelength of the whole spectral bandpass [meters]
+mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 9;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% mp.full.nlams = 9 ;              % number of occ trans lambda provided
+
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.full.nlams = 1 ;              % number of occ trans lambda provided
+
 
 %% Wavefront Estimation
 
@@ -259,6 +265,12 @@ mp.F3.compact.res = 2048./309.;    % sampling of FPM for compact model [pixels p
 
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
+mp.full.hlc_name = 'hlc_20190411';
+mp.full.prefix = 'run563_nro_';
+mp.full.lambda0_m = mp.lambda0;
+% mp.full.nlams = 9 ;              % number of occ trans lambda provided
+mp.full.bw = mp.fracBW;
+
 % %--Pupil Plane Resolutions
 mp.P1.full.Nbeam = 309;
 mp.P1.full.Narr = 310;
@@ -269,9 +281,10 @@ mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
 mp.full.use_errors = true;
-mp.full.phaseb_dir = '/home/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+% mp.full.data_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
 
-mp.full.cor_type = 'hlc'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
+mp.full.cor_type = 'hlc_custom'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
@@ -295,9 +308,8 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_575nm.fits']);
+mp.full.dm1.flatmap = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 mp.full.dm2.flatmap = 0;
-
 
 
 % %--Pupil Plane Resolutions
@@ -355,26 +367,30 @@ mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
 
-%--Lyot stop shape
-mp.P4.IDnorm = 0.50; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.80; %--Lyot stop OD [Dtelescope]
-% mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
-mp.P4.wStrut = 0.036;    %--Lyot stop strut width [pupil diameters]
+% %--Lyot stop shape
+% mp.P4.IDnorm = 0.45;%0.50; %--Lyot stop ID [Dtelescope]
+% mp.P4.ODnorm = 0.78;%0.80; %--Lyot stop OD [Dtelescope]
+% % mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
+% mp.P4.wStrut = 0.036;    %--Lyot stop strut width [pupil diameters]
 
-%--FPM size
-mp.F3.Rin = 2.8;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
-mp.F3.ang = 180;    % on each side, opening angle [degrees]
+% %--FPM size
+% mp.F3.Rin = 2.8;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+% mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
+% mp.F3.ang = 180;    % on each side, opening angle [degrees]
 
+%--Whether to generate or load various masks: compact model
+mp.compact.flagGenPupil = false;  
+mp.compact.flagGenFPM = false;  
+mp.compact.flagGenLS = false;
 
-mp.P1.compact.mask = fitsread([mp.full.phaseb_dir 'hlc_20190210/' 'run461_nro_pupil.fits']);
+mp.P1.compact.mask = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_pupil.fits']);
 mp.P1.compact.mask = padOrCropEven(mp.P1.compact.mask,310);
 
-mp.P4.compact.mask = fitsread([mp.full.phaseb_dir 'hlc_20190210/' 'run461_nro_lyot.fits']);
+mp.P4.compact.mask = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_lyot.fits']);
 mp.P4.compact.mask = padOrCropEven(mp.P4.compact.mask,310);
 
-mp.dm1.wfe = fitsread([mp.full.phaseb_dir 'hlc_20190210/' 'run461_nro_dm1wfe.fits']);
-mp.dm2.wfe = fitsread([mp.full.phaseb_dir 'hlc_20190210/' 'run461_nro_dm2wfe.fits']);
+mp.dm1.wfe = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_dm1wfe.fits']);
+mp.dm2.wfe = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_dm2wfe.fits']);
 
 
 
