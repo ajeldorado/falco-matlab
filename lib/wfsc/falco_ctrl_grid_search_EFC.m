@@ -37,7 +37,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     else
         vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
     end
-    if mp.aux.flagRegDM9
+    if mp.aux.flagRegDM9 && cvar.Itr>=mp.aux.firstRegDM9Itr
         NvalsRegdm9 = 5;
         vals_list_dm9 = linspace(mp.aux.betadm9Min,mp.aux.betadm9Max,NvalsRegdm9);
     else
@@ -69,7 +69,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         parfor ni = 1:Nvals
             for nj = 1:NvalsOmega
             for nk = 1:NvalsRegdm9
-            if mp.aux.flagRegDM9 
+            if mp.aux.flagRegDM9 && cvar.Itr>=mp.aux.firstRegDM9Itr
                 IInk=nk;
             else
                 IInk=nj;
@@ -87,7 +87,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         for ni = 1:Nvals
             for nj = 1:NvalsOmega
                 for nk = 1:NvalsRegdm9
-                if mp.aux.flagRegDM9 
+                if mp.aux.flagRegDM9 && cvar.Itr>=mp.aux.firstRegDM9Itr
                     IInk=nk;
                 else
                     IInk=nj;
@@ -173,7 +173,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
             drawnow;
             end
-            if mp.aux.flagRegDM9
+            if mp.aux.flagRegDM9 && cvar.Itr>=mp.aux.firstRegDM9Itr
             figure(497); semilogy(vals_list_dm9,squeeze(Inorm_list(indBest,indBestOmega,:)),'-bd','Linewidth',3)
             title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
             xlabel('vals_list_dm9','Fontsize',20,'Interpreter','Latex');
