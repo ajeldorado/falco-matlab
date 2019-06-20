@@ -11,7 +11,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 %%   ***   THE ONLY VARIABLES YOU NEED TO CHANGE ARE IN THIS CELL    ***
 
 %--Specify zernike modes and their RMS values to use.
-indsZnoll = 2:6; %--Noll indices of Zernikes to compute values for
+indsZnoll = [4]; %--Noll indices of Zernikes to compute values for
 
 %--Annuli to compute Zernike sensitivities over. 
 % Columns are [inner radius, outer radius]. One row per annulus.

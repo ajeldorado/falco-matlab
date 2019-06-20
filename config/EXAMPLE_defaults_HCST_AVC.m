@@ -151,7 +151,7 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = true;  %--Whether to apply an iris or not
+mp.flagDM2stop = false;  %--Whether to apply an iris or not
 mp.dm2.Dstop = 0.4*34e-3;   %--Diameter of iris [meters]
 
 %--DM separations
@@ -167,7 +167,7 @@ mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'vortex';
 
 %--Final Focal Plane Properties
-mp.Fend.res = 2.5; %--Sampling [ pixels per lambda0/D]
+mp.Fend.res = 4.5; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 11; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
@@ -185,18 +185,14 @@ mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right',
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
 %--Focal Lengths
-mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
+mp.fl = 779e-3; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
-%--Pupil Plane Diameters
-mp.P2.D = 0.4*32e-3;
-mp.P3.D = 0.4*32e-3;
-mp.P4.D = 0.4*32e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 250;
-mp.P2.compact.Nbeam = 250;
-mp.P3.compact.Nbeam = 250;
-mp.P4.compact.Nbeam = 250;  % P4 must be the same as P1 for Vortex. 
+mp.P1.compact.Nbeam = 512;
+mp.P2.compact.Nbeam = 512;
+mp.P3.compact.Nbeam = 512;
+mp.P4.compact.Nbeam = 512;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -215,23 +211,23 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 350;
-mp.P2.full.Nbeam = 350;
-mp.P3.full.Nbeam = 350;
-mp.P4.full.Nbeam = 350;  % P4 must be the same as P1 for Vortex. 
+mp.P1.full.Nbeam = 512;
+mp.P2.full.Nbeam = 512;
+mp.P3.full.Nbeam = 512;
+mp.P4.full.Nbeam = 512;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
 %% Mask Definitions
 
-mp.P3.apodType = 'HCST_AVC';
+mp.P3.apodType = 'HCST_AVC_unevenIllu';%[mp.path.mask,'ApodizedPupil_500.fits'];
+% mp.P3.apodType = 'HCST_AVC';%[mp.path.mask,'ApodizedPupil_500.fits'];
 
 %--Pupil definition
 mp.whichPupil = 'Simple';
 mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
 mp.P1.stretch = 1.00; % factor that stretches the horizontal axis to create elliptical beam 
-mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
 mp.P1.Nstrut = 0;% Number of struts 
 mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
@@ -242,13 +238,55 @@ mp.flagApod = true;    %--Whether to use an apodizer or not. Can be a simple ape
 
 %--Lyot stop padding
 mp.P4.IDnorm = 0; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.90; %--Lyot stop OD [Dtelescope]
+mp.P4.ODnorm = 0.95; %--Lyot stop OD [Dtelescope]
 mp.P4.padFacPct = 0;
 mp.P4.Nstrut = 0;% Number of struts 
 mp.P4.angStrut = [];%Array of angles of the radial struts (deg)
 mp.P4.wStrut = []; % Width of the struts (fraction of pupil diam.)
 
+%--Pupil Plane Diameters
+mp.P1.D = 15.2e-3/mp.P4.ODnorm; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+mp.P2.D = mp.P1.D;
+mp.P3.D = mp.P1.D;
+mp.P4.D = 15.2e-3;
 
 %% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-mp.F3.VortexCharge = 6; %--Charge of the vortex mask
+mp.F3.VortexCharge = -8; %--Charge of the vortex mask
+%--Pupil definition
+mp.whichPupil = 'Simple';
+mp.P1.IDnorm = 0; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
+mp.P1.ODnorm = 1;% Outer diameter of the telescope [diameter]
+mp.P1.Nstrut = 0;% Number of struts 
+mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
+mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
+mp.P1.stretch = 1;
+
+%%-- DM parameters 
+mp.dm1.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
+mp.dm1.dm_spacing = 3e-4 * 2;  %--User defined actuator pitch
+mp.dm1.inf_sign = '+';
+
+xc_best = 16.0335;
+yc_best = 16.2271;
+xrot_best = 0;
+yrot_best = 0;
+zrot_best = 179.8671;
+
+mp.dm1.centering = 'pixel';
+mp.dm1.Nact = 34;               % # of actuators across DM array
+mp.dm1.xtilt = xrot_best;               % for foreshortening. angle of rotation about x-axis [degrees] 
+mp.dm1.ytilt = yrot_best;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm1.zrot = zrot_best;           % clocking of DM surface [degrees]
+mp.dm1.xc = xc_best;              % x-center location of DM surface [actuator widths]
+mp.dm1.yc = yc_best;               % y-center location of DM surface [actuator widths]
+Nactbeam = 18.7e-3/mp.dm1.dm_spacing;                % Nactact across the "beam"
+
+% mp.dm1.tied = [441,474];
+%mp.dm1.tied = [];
+
+% gains of all actuators [nm/V of free stroke]
+% load('/media/hcst/edc9d85f-b1f5-4499-97aa-197291d84a05/HCST_data/efc_results/data/G/gainmap2.mat')
+% gainmap = hcst_DM_1Dto2D(bench,gain1tot);
+% mp.dm1.VtoH = (4e-7*ones(mp.dm1.Nact) * 2*sqrt(2)).*gainmap';
+% mp.aux.VtoH = gainmap;

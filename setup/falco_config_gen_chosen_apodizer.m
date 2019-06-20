@@ -80,6 +80,19 @@ switch lower(mp.coro)
 
                 mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
                 mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
+            elseif (nnz(strcmp(mp.P3.apodType,'HCST_AVC'))>0 && mp.flagApod) 
+                avc_mask = fitsread([mp.path.mask,'ApodizedPupil_HCST.fits']);
+                mp.P3.full.mask = imresize(avc_mask,[mp.P3.full.Nbeam mp.P3.full.Nbeam]);
+                mp.P3.full.Narr = mp.P3.full.Nbeam;
+                mp.P3.compact.Narr = mp.P3.full.Narr;
+                mp.P3.compact.mask = mp.P3.full.mask;
+            elseif (nnz(strcmp(mp.P3.apodType,'HCST_AVC_unevenIllu'))>0 && mp.flagApod) 
+                avc_mask = fitsread([mp.path.mask,'ApodizedPupil_unevenIllu_500.fits']);
+                mp.P3.full.mask = imresize(avc_mask,[mp.P3.full.Nbeam mp.P3.full.Nbeam]);
+                mp.P3.full.Narr = mp.P3.full.Nbeam;
+                mp.P3.compact.Narr = mp.P3.full.Narr;
+                mp.P3.compact.mask = mp.P3.full.mask;
+                
             else
                 if(exist(mp.P3.apodType,'file')~=2)
                     disp('Specified apodizer not supported.');
@@ -97,12 +110,7 @@ switch lower(mp.coro)
                 end
             end
             
-        elseif (nnz(strcmp(mp.P3.apodType,'HCST_AVC'))>0 && mp.flagApod) 
-            avc_mask = fitsread([mp.path.mask,'ApodizedPupil_HCST.fits']);
-            mp.P3.full.mask = imresize(avc_mask,[mp.P3.full.Nbeam mp.P3.full.Nbeam]);
-            mp.P3.full.Narr = mp.P3.full.Nbeam;
-            mp.P3.compact.Narr = mp.P3.full.Narr;
-            mp.P3.compact.mask = mp.P3.full.mask;
+        
         else
             disp('Using vortex without apodizer or aperture stop.')
         end
