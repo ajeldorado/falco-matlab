@@ -20,7 +20,8 @@ clear all;
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Functions for when the full model uses PROPER
-addpath('~/Repos/proper-models/wfirst_phaseb/matlab');
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
@@ -52,7 +53,7 @@ mp.flagPlot = true;
 
 %--Record Keeping
 mp.SeriesNum = 42;
-mp.TrialNum = 10;
+mp.TrialNum = 1;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -64,49 +65,20 @@ mp.TrialNum = 10;
 % %--DEBUGGING:
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 mp.controller = 'plannedEFC';
 
-if(mp.TrialNum==5 || mp.TrialNum==10)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
-        repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
-        repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
-        repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
-        repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+mp.ctrl.sched_mat = [...
+    [0,0,0,1,0];...
+    repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
+    repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
+    repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
+    repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
+    repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
+    ];
+[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
-elseif(mp.TrialNum==0)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
-        repmat([1,1j-2,12,0,1],[5,1]);...   %--small Beta kicks
-        repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
-        repmat([1,1j-2,12,0,1],[5,1]);...   %--small Beta kicks
-        repmat([1,1j,12,0,1],[10,1]);...    %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-
-elseif(mp.TrialNum==3)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[30,1]);...     %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);    
-
-elseif(mp.TrialNum==4)
-    mp.ctrl.sched_mat = [...
-        [0,0,0,1,0];...
-        repmat([1,1j,12,0,1],[5,1]);...     %--Optimal beta
-        repmat([1,1j-1,12,0,1],[20,1]);...   %--small Beta kicks
-        repmat([1,1j,12,0,1],[5,1]);...    %--Optimal beta
-        ];
-    [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-
-end
     
     
 %--GRID SEARCH EFC    
@@ -118,27 +90,6 @@ end
 
 %%
 
-% mp.layout = 'wfirst_phaseb_simple';  %--Which optical layout to use. 'wfirst_phaseb_proper' or 'wfirst_phaseb_simple'
-
-% %--Performance trials
-% mp.full.pol_conds = [-2,-1,1,2]; 
-% mp.Nsbp = 3;
-% mp.Nwpsbp = 3;%7;
-% mp.fracBW = 0.10;
-% mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
-
-% % %--DEBUGGING ONLY
-% mp.Nsbp = 1;
-% mp.fracBW = 0.01;
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-
-% %--DEBUGGING ONLY
-% mp.full.pol_conds = 10; 
-% mp.Nsbp = 3;
-% mp.Nwpsbp = 3;%7;
-% mp.fracBW = 0.10;
-% mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
-
 if(mp.Nsbp==1)
     lambdaFacs = 1;
 else
@@ -147,47 +98,36 @@ end
 
 lam_occ = lambdaFacs*mp.lambda0;
 
-mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
+mp.F3.compact.Nxi = 40; %--Crop down to minimum size of the spot
+mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
-
-prefix = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/hlc_20190210/run461_';
 fpm_axis = 'p';
 
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
-    
-    %--Unclear which is the correct orientation yet
-    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_crop.fits'];
-    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_crop.fits'];
-%     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated_crop.fits'];
-%     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated_crop.fits'];
-   
-    mp.compact.FPMcube(:,:,si) = complex(fitsread(fn_p_r),fitsread(fn_p_i));
-
-
+    fn_p_r = [mp.full.data_dir 'hlc_20190210/run461_occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
+    fn_p_i = [mp.full.data_dir 'hlc_20190210/run461_occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];   
+    mp.compact.FPMcube(:,:,si) = padOrCropEven(complex(fitsread(fn_p_r),fitsread(fn_p_i)),mp.F3.compact.Nxi);
 end
-%%
+
+%% Visually check the FPM cropping
 for si=1:mp.Nsbp
    figure(100); imagesc(abs(mp.compact.FPMcube(:,:,si))); axis xy equal tight; colorbar; drawnow; pause(0.1); 
 end
 % return
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
-
-
+mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full'; %--Full rootname of the input E-field files that will be saved
 
 optval.data_dir = mp.full.data_dir;
-
 optval.cor_type = mp.full.cor_type;
-
 optval.source_x_offset =0;
 optval.zindex = 4;
 optval.zval_m = 0.19e-9;
 optval.use_errors = mp.full.use_errors;
 optval.polaxis = mp.full.polaxis; 
 
-optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
+optval.dm1_m = fitsread('errors_polaxis10_dm.fits');
 optval.use_dm1 =1;
 
 optval.end_at_fpm_exit_pupil = 1;

@@ -20,7 +20,8 @@ clear all;
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Functions for when the full model uses PROPER
-addpath('~/Repos/proper-models/wfirst_phaseb/matlab');
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
@@ -48,7 +49,7 @@ mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 45;
+mp.SeriesNum = 1;
 mp.TrialNum = 1;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
@@ -61,7 +62,7 @@ mp.TrialNum = 1;
 % % %--DEBUGGING:
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 % % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 
@@ -77,12 +78,12 @@ mp.ctrl.sched_mat = [...
 
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
 optval = mp.full;
 optval.source_x_offset =0;
 optval.zindex = 4;
 optval.zval_m = 0.19e-9;
-optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
+optval.dm1_m = fitsread('errors_polaxis10_dm.fits');
 optval.use_dm1 = 1;
 
 optval.end_at_fpm_exit_pupil = 1;
@@ -165,7 +166,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/home/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
+mp.path.frn_coro = '/Users/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters

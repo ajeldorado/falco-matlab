@@ -19,6 +19,10 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
+%--Functions for when the full model uses PROPER
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
+
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
 mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
@@ -44,8 +48,8 @@ mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 44;
-mp.TrialNum = 2;
+mp.SeriesNum = 1;
+mp.TrialNum = 1;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'Series...snippet.mat';
@@ -54,11 +58,12 @@ mp.TrialNum = 2;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-%--DEBUGGING:
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 3;%1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% %--DEBUGGING:
+% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% mp.full.pol_conds = 10;
 
 %% Step 3b: Obtain the phase retrieval phase.
 

@@ -215,7 +215,6 @@ mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
-% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
 %--Focal Lengths
 mp.fl = 1.; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
@@ -226,19 +225,13 @@ mp.P3.D = 46.3e-3; %46.2987e-3;
 mp.P4.D = 46.3e-3; %46.2987e-3;
 
 %--Pupil Plane Resolutions
-% mp.P1.compact.Nbeam = 1000;%386;
-% mp.P2.compact.Nbeam = 1000;%386;
-% mp.P3.compact.Nbeam = 1000;%386;
 mp.P1.compact.Nbeam = 386;
 mp.P2.compact.Nbeam = 386;
 mp.P3.compact.Nbeam = 386;
-% mp.P1.compact.Nbeam = 637;
-% mp.P2.compact.Nbeam = 637;
-% mp.P3.compact.Nbeam = 637;
 mp.P4.compact.Nbeam = 60;
 
 %--Shaped Pupil Mask: Load and downsample.
-mp.SPname = 'SPC-20190130';
+% mp.SPname = 'SPC-20190130';
 SP0 = fitsread('SPM_SPC-20190130.fits');
 % % SP0(2:end,2:end) = rot90(SP0(2:end,2:end),2);
 
@@ -336,7 +329,7 @@ end
 
 %% Optical Layout: Full Model 
 
-mp.full.data_dir = '/home/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
 mp.full.cor_type = 'spc-ifs_long'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
 mp.full.flagGenFPM = false;
@@ -358,7 +351,6 @@ mp.full.zval_m = 0.19e-9;
 mp.full.use_hlc_dm_patterns = false; % whether to use design WFE maps for HLC
 mp.full.lambda0_m = mp.lambda0;
 mp.full.input_field_rootname = '';	%   rootname of files containing aberrated pupil
-% mp.full.use_hlc_dm_patterns = 1;	%   use Dwight-generated HLC default DM wavefront patterns? 1 or 0
 mp.full.use_dm1 = 0;                %   use DM1? 1 or 0
 mp.full.use_dm2 = 0;                %   use DM2? 1 or 0
 mp.full.dm_sampling_m = 0.9906e-3;     %   actuator spacing in meters; default is 1 mm
@@ -375,8 +367,7 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-% mp.full.dm1.flatmap = fitsread([mp.full.data_dir 'dm1_flatten_pol10_730nm.fits']);
-mp.full.dm1.flatmap = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
+mp.full.dm1.flatmap = fitsread('errors_polaxis10_dm.fits');
 mp.full.dm2.flatmap = 0;
 
 
@@ -449,7 +440,4 @@ mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
 % mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 % mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
 % mp.F3.ang = 65;    % on each side, opening angle [degrees]
-
-
-%% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -285,9 +285,6 @@ mp.P3.D = 46.3e-3; %46.2987e-3;
 mp.P4.D = 46.3e-3; %46.2987e-3;
 
 %--Pupil Plane Resolutions
-% mp.P1.compact.Nbeam = 1000;
-% mp.P2.compact.Nbeam = 1000;
-% mp.P3.compact.Nbeam = 1000;
 mp.P1.compact.Nbeam = 386;
 mp.P2.compact.Nbeam = 386;
 mp.P3.compact.Nbeam = 386;
@@ -444,7 +441,9 @@ mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda
 
 %% Optical Layout: Full Model 
 
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
 mp.full.cor_type = 'spc_ifs_custom'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
+
 mp.full.flagGenFPM = false;
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
@@ -455,10 +454,9 @@ mp.P1.full.Narr = 1002;
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
-mp.full.pol_conds = 0;%[-2,-1,1,2]; %--Which polarization states to use when creating an image.
-mp.full.polaxis = 0;%10;                %   polarization condition (only used with input_field_rootname)
-mp.full.use_errors = 0;%1;
-mp.full.phaseb_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
+mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
+mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
+mp.full.use_errors = 1;
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
@@ -482,7 +480,7 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = 0;%fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_730nm.fits']);
+mp.full.dm1.flatmap = fitsread('errors_polaxis10_dm.fits');
 mp.full.dm2.flatmap = 0;
 
 

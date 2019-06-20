@@ -85,26 +85,27 @@ if(mp.flagApod)
             
             
         otherwise
-            disp('*** NO APODIZER TYPE SPECIFIED FOR GENERATION.')
+            disp('No apodizer type specified for generation.')
     end
 
-    mp.P3.full.dummy = 1; mp.P3.compact.dummy = 1;
-    if(isfield(mp.P3.full,'mask')==false || isfield(mp.P3.compact,'mask')==false)
-        error('*** If not generated, the apodizer must be loaded in main script or config file into the variables mp.P3.full.mask and mp.P3.compact.mask ***')
+    mp.P3.full.dummy = 1; 
+    if(isfield(mp.P3.full,'mask'))%    ==false || isfield(mp.P3.compact,'mask')==false)
+        mp.P3.full.Narr = length(mp.P3.full.mask);
+    else
+        fprintf('*** If not generated or loaded in a PROPER model, the apodizer must be loaded \n    in the main script or config file into the variable mp.P3.full.mask ***\n')
     end
     
-    %--Set the apodizer's array size to what was generated or loaded 
-    mp.P3.full.Narr = length(mp.P3.full.mask);
-    mp.P3.compact.Narr = length(mp.P3.compact.mask);
-
+    mp.P3.compact.dummy = 1;
+    if(isfield(mp.P3.compact,'mask'))%    ==false || isfield(mp.P3.compact,'mask')==false)
+        mp.P3.compact.Narr = length(mp.P3.compact.mask);
+    else
+        fprintf('*** If not generated, the apodizer must be loaded in the main script or config \n    file into the variable mp.P3.compact.mask ***\n')
+    end
+    
 end
 
-%--Set the pixel width [meters]
-switch lower(mp.layout)
-    case{'fourier'}
-        mp.P3.full.dx = mp.P2.full.dx; %--P3 exists only in the Fourier full model
-end
-mp.P3.compact.dx = mp.P2.compact.dx;
-        
+% %--Set the pixel width [meters]
+mp.P3.full.dx = mp.P2.full.dx; 
+mp.P3.compact.dx = mp.P2.compact.dx;        
         
 end %--END OF FUNCTION
