@@ -268,9 +268,9 @@ mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions o
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
-mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
-mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
-mp.full.use_errors = true;
+mp.full.pol_conds = 0;%[-2,-1,1,2]; %--Which polarization states to use when creating an image.
+mp.full.polaxis = 0;%10;                %   polarization condition (only used with input_field_rootname)
+mp.full.use_errors = false;%true;
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
@@ -294,8 +294,15 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = fitsread('errors_polaxis10_dm.fits'); %fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
+mp.full.dm1.flatmap = 0;%fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 mp.full.dm2.flatmap = 0;
+
+% %--Pupil Plane Resolutions
+% mp.P1.full.Nbeam = 1000;
+% mp.P2.full.Nbeam = 1000;
+% mp.P3.full.Nbeam = 1000;
+% mp.P4.full.Nbeam = 200;
+
 
 
 %% Mask Definitions

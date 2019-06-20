@@ -281,8 +281,7 @@ mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
 mp.full.use_errors = true;
-% mp.full.data_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/'; % mask design data path
-mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_phaseb/data/'; % mask design data path
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
 
 mp.full.cor_type = 'hlc_custom'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
@@ -308,7 +307,7 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
+mp.full.dm1.flatmap = fitsread('errors_polaxis10_dm.fits');
 mp.full.dm2.flatmap = 0;
 
 
