@@ -24,7 +24,7 @@ mp.dm9.compact = mp.dm9;
 
 %% DM9 as Cosine Rings
 
-%--HARD-CODED VALUES FOR TESTING
+% <<< DEBUGGING: HARD-CODED VALUES FOR TESTING
 mp.dm9.actres = 5;
 mp.F3.Rin = 2.8;
 mp.F3.compact.res = 100;
@@ -34,6 +34,7 @@ mp.dm9.VtoHavg = 1e-9;
 mp.fl = 1;
 mp.lambda0 = 1;
 mp.P2.D = 1;
+% >>>DEBUGGING
 
 
 %--Pixel size [meters]
@@ -106,22 +107,22 @@ figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tig
 %%
 
 
-%--Full Model
-NbeamFull = mp.F3.full.res*mp.F3.Rin*2;
-% mp.dm9.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamFull,mp.dm9.maxRadialOrder,mp.centering,'SymmAxis','y');
-mp.dm9.NdmPad = ceil_even(1+2*mp.F3.Rin*mp.F3.res);%size(mp.dm9.inf_datacube,1);
-mp.dm9.Nbox = mp.dm9.NdmPad; %--the modes take up the full array.
-%--Normalized coordinates: Full model
-if(strcmpi(mp.centering,'pixel')  ) 
-    xf = (-mp.dm9.NdmPad/2:(mp.dm9.NdmPad/2-1))/mp.F3.res;    
-else
-    xf = (-(mp.dm9.NdmPad-1)/2:(mp.dm9.NdmPad-1)/2-1)/mp.F3.res;    
-end
-[Xf,Yf] = meshgrid(xf);
-Rf = sqrt(Xf.^2 + Yf.^2);
-
-
-mp.dm9.inf_datacube = zeros(mp.dm9.NdmPad,mp.dm9.NdmPad,mp.dm9.NactTotal);
+% %--Full Model
+% NbeamFull = mp.F3.full.res*mp.F3.Rin*2;
+% % mp.dm9.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamFull,mp.dm9.maxRadialOrder,mp.centering,'SymmAxis','y');
+% mp.dm9.NdmPad = ceil_even(1+2*mp.F3.Rin*mp.F3.res);%size(mp.dm9.inf_datacube,1);
+% mp.dm9.Nbox = mp.dm9.NdmPad; %--the modes take up the full array.
+% %--Normalized coordinates: Full model
+% if(strcmpi(mp.centering,'pixel')  ) 
+%     xf = (-mp.dm9.NdmPad/2:(mp.dm9.NdmPad/2-1))/mp.F3.res;    
+% else
+%     xf = (-(mp.dm9.NdmPad-1)/2:(mp.dm9.NdmPad-1)/2-1)/mp.F3.res;    
+% end
+% [Xf,Yf] = meshgrid(xf);
+% Rf = sqrt(Xf.^2 + Yf.^2);
+% 
+% 
+% mp.dm9.inf_datacube = zeros(mp.dm9.NdmPad,mp.dm9.NdmPad,mp.dm9.NactTotal);
 
 mp.dm9.NactTotal = size(mp.dm9.inf_datacube,3);
 mp.dm9.VtoH = mp.dm9.VtoHavg*ones(mp.dm9.NactTotal,1);
@@ -153,46 +154,46 @@ mp.dm9.Vmin = min(mp.t_diel_nm_vec); % minimum thickness of FPM dielectric layer
 mp.dm9.Vmax = max(mp.t_diel_nm_vec); % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
 
 %% Apply window to DM9 influence functions
-
-hg_expon = 44; %--Found empirically
-apRad = mp.F3.Rin/(mp.F3.Rin+0.1); %--Found empirically
-OD = 1;
-
-%--Full Model
-Narray = mp.dm9.NdmPad;
-Nbeam = NbeamFull;
-%--Coordinates normalized to the beam radius (not diameter)
-switch mp.centering
-    case 'interpixel'
-        xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
-    case 'pixel'
-        xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
-end
-[XS,YS] = meshgrid(xs);
-RS = sqrt(XS.^2+YS.^2); 
-mask = RS<=1;
-windowFull = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
-
-%--Compact Model
-Narray = mp.dm9.compact.NdmPad;
-Nbeam = NbeamCompact;
-%--Coordinates normalized to the beam radius (not diameter)
-switch mp.centering
-    case 'interpixel'
-        xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
-    case 'pixel'
-        xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
-end
-[XS,YS] = meshgrid(xs);
-RS = sqrt(XS.^2+YS.^2); 
-mask = RS<=1;
-windowCompact = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
-
-
-for di = 1:mp.dm9.NactTotal
-    mp.dm9.inf_datacube(:,:,di) = windowFull.*mp.dm9.inf_datacube(:,:,di);
-    mp.dm9.compact.inf_datacube(:,:,di) = windowCompact.*mp.dm9.compact.inf_datacube(:,:,di);
-end
+% 
+% hg_expon = 44; %--Found empirically
+% apRad = mp.F3.Rin/(mp.F3.Rin+0.1); %--Found empirically
+% OD = 1;
+% 
+% %--Full Model
+% Narray = mp.dm9.NdmPad;
+% Nbeam = NbeamFull;
+% %--Coordinates normalized to the beam radius (not diameter)
+% switch mp.centering
+%     case 'interpixel'
+%         xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
+%     case 'pixel'
+%         xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
+% end
+% [XS,YS] = meshgrid(xs);
+% RS = sqrt(XS.^2+YS.^2); 
+% mask = RS<=1;
+% windowFull = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
+% 
+% %--Compact Model
+% Narray = mp.dm9.compact.NdmPad;
+% Nbeam = NbeamCompact;
+% %--Coordinates normalized to the beam radius (not diameter)
+% switch mp.centering
+%     case 'interpixel'
+%         xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
+%     case 'pixel'
+%         xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
+% end
+% [XS,YS] = meshgrid(xs);
+% RS = sqrt(XS.^2+YS.^2); 
+% mask = RS<=1;
+% windowCompact = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
+% 
+% 
+% for di = 1:mp.dm9.NactTotal
+%     mp.dm9.inf_datacube(:,:,di) = windowFull.*mp.dm9.inf_datacube(:,:,di);
+%     mp.dm9.compact.inf_datacube(:,:,di) = windowCompact.*mp.dm9.compact.inf_datacube(:,:,di);
+% end
 
 %% DM8 as a disk (piston as only influence function)
 
