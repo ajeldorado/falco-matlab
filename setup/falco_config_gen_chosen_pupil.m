@@ -72,6 +72,24 @@ switch upper(mp.whichPupil)
         inputs.Nbeam = mp.P1.compact.Nbeam; % number of points across usable pupil    
         inputs.Dbeam = mp.P2.D;
         mp.P1.compact.mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs);
+
+    case{'KECK'}
+        inputs.centering = mp.centering; 
+        
+        %--Clocking angle, if defined [degrees]
+        if(isfield(mp.P1,'clock_deg'))
+            angRot = mp.P1.clock_deg;
+        else
+            angRot = 0;
+        end
+        
+        %--Generate high-res input pupil for the 'full' model
+        inputs.Nbeam = mp.P1.full.Nbeam; 
+        mp.P1.full.mask = falco_gen_pupil_Keck(inputs,'ROTATION',angRot);
+        
+        %--Generate low-res input pupil for the 'compact' model
+        inputs.Nbeam = mp.P1.compact.Nbeam; 
+        mp.P1.compact.mask = falco_gen_pupil_Keck(inputs,'ROTATION',angRot); 
         
     case{'LUVOIRAFINAL'}
         inputs.centering = mp.centering;
