@@ -49,6 +49,10 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if(mp.flagParfor) %--Parallelized
         parfor ni = 1:Nvals
             [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            %--Tied actuators
+            if(any(mp.dm_ind==1)); dm1tied{ni} = dDM_temp.dm1tied; end
+            if(any(mp.dm_ind==2)); dm2tied{ni} = dDM_temp.dm2tied; end
+            %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
@@ -56,8 +60,12 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
         end
     else %--Not Parallelized
-        for ni = 1:Nvals
+        for ni = Nvals:-1:1
             [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            %--Tied actuators
+            if(any(mp.dm_ind==1)); dm1tied{ni} = dDM_temp.dm1tied; end
+            if(any(mp.dm_ind==2)); dm2tied{ni} = dDM_temp.dm2tied; end
+            %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni) = dDM_temp.dDM5V; end
@@ -79,7 +87,10 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin,indBest] = min(Inorm_list(:));
-
+    %--Tied actuators
+    if(any(mp.dm_ind==1)); dDM.dm1tied = dm1tied{indBest}; end
+    if(any(mp.dm_ind==2)); dDM.dm2tied = dm2tied{indBest}; end
+    %--delta voltage commands
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
     if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
     if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest); end

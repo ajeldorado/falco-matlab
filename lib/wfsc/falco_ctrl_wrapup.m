@@ -80,18 +80,22 @@ if(any(mp.dm_ind==8));  mp.dm8.V = cvar.DM8Vnom + dDM.dDM8V;  end
 if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
 
 %--Enforce the DM neighbor rule. (This restricts the maximum voltage
-%between an actuator and each of its 8 neighbors.
+%  between an actuator and each of its 8 neighbors.
 if(any(mp.dm_ind==1))
     if(isfield(mp.dm1,'flagNbrRule'))
         if(mp.dm1.flagNbrRule)
-            [mp.dm1.V, ~, ~] = falco_dm_neighbor_rule(mp.dm1.V, mp.dm1.dVnbr, mp.dm1.Nact);
+            [mp.dm1.V, indPair1] = falco_dm_neighbor_rule(mp.dm1.V, mp.dm1.dVnbr, mp.dm1.Nact);
+            mp.dm1.tied = [mp.dm1.tied; indPair1]; %--Tie together actuators violating the neighbor rule
+            dDM.dm1tied = mp.dm1.tied; %--This is what gets passed out to falco_wfsc_loop
         end
     end
 end
 if(any(mp.dm_ind==2))
     if(isfield(mp.dm2,'flagNbrRule'))
         if(mp.dm2.flagNbrRule)
-            [mp.dm2.V, ~, ~] = falco_dm_neighbor_rule(mp.dm2.V, mp.dm2.dVnbr, mp.dm2.Nact);
+            [mp.dm2.V,indPair2] = falco_dm_neighbor_rule(mp.dm2.V, mp.dm2.dVnbr, mp.dm2.Nact);
+            mp.dm2.tied = [mp.dm2.tied; indPair2]; %--Tie together actuators violating the neighbor rule. This is used only within the controller.
+            dDM.dm2tied = mp.dm2.tied; %--This is what gets passed out to falco_wfsc_loop
         end
     end
 end
@@ -100,14 +104,14 @@ end
 % [to be added later]
 
 %--Save the delta from the previous command
-if(any(mp.dm_ind==1));  mp.dm1.dV = mp.dm1.V - cvar.DM1Vnom;  end
-if(any(mp.dm_ind==2));  mp.dm2.dV = mp.dm2.V - cvar.DM2Vnom;  end
-if(any(mp.dm_ind==3));  mp.dm3.dV = mp.dm3.V - cvar.DM3Vnom;  end
-if(any(mp.dm_ind==4));  mp.dm4.dV = mp.dm4.V - cvar.DM4Vnom;  end
-if(any(mp.dm_ind==5));  mp.dm5.dV = mp.dm5.V - cvar.DM5Vnom;  end
-if(any(mp.dm_ind==6));  mp.dm6.dV = mp.dm6.V - cvar.DM6Vnom;  end
-if(any(mp.dm_ind==7));  mp.dm7.dV = mp.dm7.V - cvar.DM7Vnom;  end
-if(any(mp.dm_ind==8));  mp.dm8.dV = mp.dm8.V - cvar.DM8Vnom;  end
-if(any(mp.dm_ind==9));  mp.dm9.dV = mp.dm9.V - cvar.DM9Vnom;  end
+if(any(mp.dm_ind==1));  dDM.dDM1V = mp.dm1.V - cvar.DM1Vnom;  end
+if(any(mp.dm_ind==2));  dDM.dDM2V = mp.dm2.V - cvar.DM2Vnom;  end
+if(any(mp.dm_ind==3));  dDM.dDM3V = mp.dm3.V - cvar.DM3Vnom;  end
+if(any(mp.dm_ind==4));  dDM.dDM4V = mp.dm4.V - cvar.DM4Vnom;  end
+if(any(mp.dm_ind==5));  dDM.dDM5V = mp.dm5.V - cvar.DM5Vnom;  end
+if(any(mp.dm_ind==6));  dDM.dDM6V = mp.dm6.V - cvar.DM6Vnom;  end
+if(any(mp.dm_ind==7));  dDM.dDM7V = mp.dm7.V - cvar.DM7Vnom;  end
+if(any(mp.dm_ind==8));  dDM.dDM8V = mp.dm8.V - cvar.DM8Vnom;  end
+if(any(mp.dm_ind==9));  dDM.dDM9V = mp.dm9.V - cvar.DM9Vnom;  end
 
 end %--END OF FUNCTION
