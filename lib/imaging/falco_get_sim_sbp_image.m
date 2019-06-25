@@ -29,30 +29,6 @@ if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); e
 
 %--Number of polarization states used
 Npol = length(mp.full.pol_conds);  
-% mp.full.dummy = 1; %--Initialize if this doesn't exist
-% if(isfield(mp.full,'pol_conds'))  
-%     Npol = length(mp.full.pol_conds);  
-% else
-%     Npol = 1;
-% end
-    
-% %--Get the starlight image
-% modvar.whichSource = 'star';
-% for wi=1:mp.Nwpsbp
-%     modvar.wpsbpIndex = wi;
-%     Etemp = model_full(mp, modvar);
-%     Isum = Isum + (abs(Etemp).^2)*mp.full.lambda_weights(wi); %--Do not apply sbp_weight unless full bandpass image is being created.
-% end 
-% 
-% %--Include the planet image if flagged
-% if(mp.planetFlag)
-%     modvar.whichSource = 'exoplanet';
-%     for wi=1:mp.Nwpsbp
-%         modvar.wpsbpIndex = wi;
-%         Eplanet = model_full(mp,modvar);
-%         Isum = Isum + abs(Eplanet).^2*mp.full.lambda_weights(wi); %--Do not apply sbp_weight unless full bandpass image is being created.
-%     end
-% end
 
 %--Loop over all wavelengths and polarizations        
 inds_list = allcomb(1:mp.Nwpsbp,1:Npol).'; %--dimensions: [2 x mp.Nwpsbp*Npol ]

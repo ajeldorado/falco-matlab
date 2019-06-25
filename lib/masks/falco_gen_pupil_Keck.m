@@ -5,6 +5,10 @@
 % -------------------------------------------------------------------------
 % Function to generate the Keck telescope pupil using PROPER functions.
 %
+% Pupil and Lyot stop using the normalized distances (in telescope pupil diameters)
+%  -Refer to Huby et al. 2017 (1701.06397.pdf) for list of pupil parameters 
+%   in normalized pupil units.
+%
 % INPUT:
 % - inputs = a structure with required field 'Nbeam' to set the number of
 % points across the pupil diameter (flat-to-flat). Optional field
@@ -54,10 +58,6 @@ end
 % % inputs.magfacD = 1;
 % centering = 'pixel';
 % %-----------------------------------
-
-% Pupil and Lyot stop using the normalized distances (in telescope pupil diameters)
-%  -Refer to Huby et al. 2017 (1701.06397.pdf) for list of pupil parameters 
-%   in normalized pupil units.
 
 Dtel = 10.911920; % diameter of the primary used for sizing based on actual info (m)
 diam = 1;  %--Diameter used for PROPER               
