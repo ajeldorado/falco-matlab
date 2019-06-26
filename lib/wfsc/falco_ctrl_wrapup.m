@@ -14,12 +14,14 @@
 %
 % OUTPUTS
 % - mp = structure of model parameters
-% - dDM = structure of the delta control commands separated by DM number
+% - dDM = structure of the delta control commands separated by DM number.
+%         Also contains the updated array of tied actuator pairs
 %
 % REVISION HISTORY
 % - Created on 2019-02-13 by A.J. Riggs.
 % - Modified on 2019-02-25 by A.J. Riggs to save the delta steps.
 % - Modified on 2019-03-26 by A.J. Riggs to include tied actuators.
+% - Modified on 2019-06-25 by A.J. Riggs to tie actuators that violate the neighbor rule.
 
 function [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec)
 

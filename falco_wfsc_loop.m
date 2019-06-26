@@ -370,11 +370,13 @@ if(any(mp.dm_ind==1))
     out.dm1.Vpv(Itr) = (max(max(mp.dm1.V))-min(min(mp.dm1.V)));
     Nrail1 = length(find( (mp.dm1.V <= -mp.dm1.maxAbsV) | (mp.dm1.V >= mp.dm1.maxAbsV) ));
     fprintf(' DM1 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm1.Vpv(Itr), Nrail1, mp.dm1.NactTotal, 100*Nrail1/mp.dm1.NactTotal); 
+    if(size(mp.dm1.tied,1)>0);  fprintf(' DM1 has %d pairs of tied actuators.\n',size(mp.dm1.tied,1));  end  
 end
 if(any(mp.dm_ind==2))
     out.dm2.Vpv(Itr) = (max(max(mp.dm2.V))-min(min(mp.dm2.V)));
     Nrail2 = length(find( (mp.dm2.V <= -mp.dm2.maxAbsV) | (mp.dm2.V >= mp.dm2.maxAbsV) ));
     fprintf(' DM2 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm2.Vpv(Itr), Nrail2, mp.dm2.NactTotal, 100*Nrail2/mp.dm2.NactTotal); 
+    if(size(mp.dm2.tied,1)>0);  fprintf(' DM2 has %d pairs of tied actuators.\n',size(mp.dm2.tied,1));  end 
 end
 if(any(mp.dm_ind==8))
     out.dm8.Vpv(Itr) = (max(max(mp.dm8.V))-min(min(mp.dm8.V)));
@@ -837,33 +839,8 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     if(any(mp.dm_ind==7));  mp.dm7.V = mp.dm7.V + dDM.dDM7V;  end
     if(any(mp.dm_ind==8));  mp.dm8.V = mp.dm8.V + dDM.dDM8V;  end
     if(any(mp.dm_ind==9));  mp.dm9.V = mp.dm9.V + dDM.dDM9V;  end
-    
-%     %--Enforce the DM neighbor rule. (This restricts the maximum voltage
-%     %  between an actuator and each of its 8 neighbors.
-%     if(any(mp.dm_ind==1))
-%         if(isfield(mp.dm1,'flagNbrRule'))
-%             if(mp.dm1.flagNbrRule)
-%                 DM1V0 = mp.dm1.V;
-%                 [mp.dm1.V, indPair1] = falco_dm_neighbor_rule(mp.dm1.V, mp.dm1.dVnbr, mp.dm1.Nact);
-%                 mp.dm1.tied = [mp.dm1.tied; indPair1]; %--Tie together actuators violating the neighbor rule
-%                 fprintf('Number of tied actuator pairs for DM1:  %d\n',size(mp.dm1.tied,1));
-%             end
-%         end
-%     end
-%     if(any(mp.dm_ind==2))
-%         if(isfield(mp.dm2,'flagNbrRule'))
-%             if(mp.dm2.flagNbrRule)
-%                 DM2V0 = mp.dm2.V;
-%                 [mp.dm2.V,indPair2] = falco_dm_neighbor_rule(mp.dm2.V, mp.dm2.dVnbr, mp.dm2.Nact);
-%                 mp.dm2.tied = [mp.dm2.tied; indPair2]; %--Tie together actuators violating the neighbor rule
-%                 fprintf('Number of tied actuator pairs for DM2:  %d\n',size(mp.dm2.tied,1));
-%             end
-%         end
-%     end
 
     %%--Save the delta from the previous command
-%     if(any(mp.dm_ind==1));  dDM.dDM1V = mp.dm1.V - DM1V0;  end %--Different for DM1 because of (possible) tied actuators
-%     if(any(mp.dm_ind==2));  dDM.dDM2V = mp.dm2.V - DM2V0;  end %--Different for DM2 because of (possible) tied actuators
     if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end
     if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end
     if(any(mp.dm_ind==3));  mp.dm3.dV = dDM.dDM3V;  end

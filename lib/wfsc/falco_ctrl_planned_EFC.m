@@ -14,14 +14,15 @@
 %
 %
 % REVISION HISTORY:
-% -Modified on 2018-07-24 to use Erkin's latest controller strategy.
-% -Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
+% - Modified on 2019-06-25 by A.J. Riggs to pass out tied actuator pairs. 
+% - Modified on 2018-07-24 to use Erkin's latest controller strategy.
+% - Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
 %   Required calling a new function. 
-% -Modified by A.J. Riggs on October 11, 2017 to allow easier mixing of
+% - Modified by A.J. Riggs on October 11, 2017 to allow easier mixing of
 %   which DMs are used and to also do a grid search over the gain of the 
 %   overall DM command. 
-% -Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
-% -Created at Princeton on 19 Feb 2015 by A.J. Riggs
+% - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
+% - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
 function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
 
