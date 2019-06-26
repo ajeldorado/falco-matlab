@@ -203,22 +203,19 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 %%
 %%
 %%
+
 %%
 return
 %%
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
+%%%
 load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_config.mat;
 load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
 
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
 mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
-
-
-
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Change the resolution
 

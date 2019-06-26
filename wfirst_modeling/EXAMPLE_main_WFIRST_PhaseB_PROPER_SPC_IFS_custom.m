@@ -138,6 +138,9 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 out = falco_wfsc_loop(mp);
 
+
+%%
+return
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
