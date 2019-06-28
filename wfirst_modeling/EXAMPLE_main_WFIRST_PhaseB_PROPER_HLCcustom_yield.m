@@ -49,8 +49,8 @@ mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 45;
-mp.TrialNum = 2;
+mp.SeriesNum = 49;
+mp.TrialNum = 3;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -197,7 +197,8 @@ return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables. Needs slash at end.
+mp.path.frn_coro = '~/Downloads/CGdata/'; %--Location of coronagraph performance data tables. Needs slash at end.
+fn_prefix = sprintf('s%04dt%04d_',mp.SeriesNum,mp.TrialNum);
 
 %% Change the resolution
 
@@ -261,15 +262,15 @@ mp.eval.Rsens = ...
                 7., 8.]; 
             
 tableAnn = falco_FRN_AnnularZone_table(mp);
-writetable(tableAnn,[mp.path.frn_coro 'AnnZoneList.csv']); %--Save to CSV file
+writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save to CSV file
 tableAnn  
 
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
 [tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
-writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
-writetable(tableCtoNI,[mp.path.frn_coro 'NItoContrast.csv']); %--Save to CSV file
+writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
 tableCtoNI
 
@@ -285,7 +286,7 @@ mp.yield.R1 = 9.1;
 
 %--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);
-writetable(tableKrist,[mp.path.frn_coro 'KristTable.csv']); %--Save to CSV file
+writetable(tableKrist,[mp.path.frn_coro, fn_prefix, 'KristTable.csv']); %--Save to CSV file
 
 %--Plot the table data
 matKrist = tableKrist{:,:};
@@ -304,6 +305,6 @@ figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,
 %--Row 21: DM Thermal
 
 tableSens = falco_FRN_Sens_table(mp);
-writetable(tableSens,[mp.path.frn_coro 'Sensitivities.csv']); %--Save to CSV file
+writetable(tableSens,[mp.path.frn_coro, fn_prefix, 'Sensitivities.csv']); %--Save to CSV file
 tableSens
 
