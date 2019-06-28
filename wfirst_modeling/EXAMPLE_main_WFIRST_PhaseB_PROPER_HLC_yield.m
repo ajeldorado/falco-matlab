@@ -200,16 +200,12 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 
 %%
-%%
-%%
-%%
-
-%%
 return
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
-%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_config.mat;
 load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
 
@@ -228,7 +224,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_s383 %--Load default model parameters
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC %--Load default model parameters
 
 mp.Fend.res = 5; %--Change the image resolution [pixels per lambda0/D]
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
@@ -250,34 +246,26 @@ else
     lambdaFacs = linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
 end
 lam_occ = lambdaFacs*mp.lambda0;
-mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
+
+mp.F3.compact.Nxi = 40; %--Crop down to minimum size of the spot
+mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
-
-prefix = [mp.full.data_dir 'hlc_20190210/run461_'];
-
 fpm_axis = 'p';
+
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
-    
-    %--Unclear which is the correct orientation yet
-    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_crop.fits'];
-    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_crop.fits'];
-%     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated_crop.fits'];
-%     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated_crop.fits'];
-   
-    mp.compact.FPMcube(:,:,si) = complex(fitsread(fn_p_r),fitsread(fn_p_i));
-
+    fn_p_r = [mp.full.data_dir 'hlc_20190210/run461_occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
+    fn_p_i = [mp.full.data_dir 'hlc_20190210/run461_occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];   
+    mp.compact.FPMcube(:,:,si) = padOrCropEven(complex(fitsread(fn_p_r),fitsread(fn_p_i)),mp.F3.compact.Nxi);
 end
-
-
-
 
 %--Save the config file
 fn_config = [mp.path.config mp.runLabel,'_configHD.mat'];
 save(fn_config)
 fprintf('Saved the config file: \t%s\n',fn_config)
 %--Get configuration data from a function file
-[mp,out] = falco_init_ws(fn_config);
+% [mp,out] = falco_init_ws(fn_config);
+mp = falco_init_ws(fn_config);
 
 
 %% Compute the table of annular zones
@@ -296,9 +284,11 @@ tableAnn
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
+tableCtoNI
 
 
 %% Compute the Krist table

@@ -194,9 +194,11 @@ tableAnn
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
+tableCtoNI
 
 
 %% Compute the Krist table

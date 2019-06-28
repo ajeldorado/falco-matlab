@@ -43,9 +43,6 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLCcustom
 
 %% Step 3: Overwrite default values as desired
 
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t02/'; %--Location of coronagraph performance data tables. Needs slash at end.
-
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
@@ -178,9 +175,6 @@ for si=1:mp.Nsbp
 
 end
 
-%%
-% return
-
 %% Step 4: Generate the label associated with this trial
 
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
@@ -196,25 +190,14 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 
 %%
-%%
-%%
-%%
-%%
-% return
-% %%
-% 
-% load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_config.mat;
-% load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
-% 
-% 
-% %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-% mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t1/'; %--Location of coronagraph performance data tables. Needs slash at end.
-
-
-
-
+return
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables. Needs slash at end.
 
 %% Change the resolution
 
@@ -284,9 +267,11 @@ tableAnn
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
+tableCtoNI
 
 
 %% Compute the Krist table

@@ -151,6 +151,8 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 out = falco_wfsc_loop(mp);
 
 %%
+return
+%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -166,7 +168,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
+mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
@@ -209,10 +211,11 @@ tableAnn
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
-
+tableCtoNI
 
 %% Compute the Krist table
 
