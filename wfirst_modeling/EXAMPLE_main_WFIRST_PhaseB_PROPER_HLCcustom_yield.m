@@ -71,7 +71,7 @@ mp.ctrl.sched_mat = [...
     repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
     repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
     repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
+    repmat([1,1j,12,0,0],[10,1]);...  %--Optimal beta
     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
     

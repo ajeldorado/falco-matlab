@@ -19,7 +19,7 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Functions for when the full model uses PROPER
+%--Functions for when the WFIRST CGI full model uses PROPER
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
@@ -65,14 +65,14 @@ mp.TrialNum = 2;
 % mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 % % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
-
 mp.controller = 'plannedEFC';
-mp.ctrl.sched_mat = [...
-    [0,0,0,1,0];
-    repmat([1,1j,12,0,1],[5,1]);...
-    [1,-5,12,0,0];...
-    repmat([1,1j,12,0,1],[9,1]);...
-    ];
+mp.ctrl.sched_mat = repmat([1,1j,12,0,1],[5,1]);
+% mp.ctrl.sched_mat = [...
+%     [0,0,0,1,0];
+%     repmat([1,1j,12,0,1],[5,1]);...
+%     [1,-5,12,0,0];...
+%     repmat([1,1j,12,0,1],[9,1]);...
+%     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 

@@ -43,9 +43,6 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC
 
 %% Step 3: Overwrite default values as desired
 
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
-
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
@@ -65,22 +62,21 @@ mp.TrialNum = 1;
 % %--DEBUGGING:
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
+%--PLANNED (i.e., SCHEDULED) EFC
 mp.controller = 'plannedEFC';
-
 mp.ctrl.sched_mat = [...
     [0,0,0,1,0];...
     repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
     repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
     repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
     repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
+    repmat([1,1j,12,0,0],[10,1]);...  %--Optimal beta
     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
-    
-    
 %--GRID SEARCH EFC    
 %mp.controller = 'gridsearchEFC';
 %mp.Nitr = 5; %--Number of estimation+control iterations to perform
@@ -127,8 +123,10 @@ optval.zval_m = 0.19e-9;
 optval.use_errors = mp.full.use_errors;
 optval.polaxis = mp.full.polaxis; 
 
-optval.dm1_m = fitsread('errors_polaxis10_dm.fits');
+optval.dm1_m = 0.5*fitsread('errors_polaxis10_dm.fits');
+optval.dm2_m = 0.5*fitsread('errors_polaxis10_dm.fits');
 optval.use_dm1 =1;
+optval.use_dm2 =1;
 
 optval.end_at_fpm_exit_pupil = 1;
 optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
@@ -181,6 +179,9 @@ for si=1:mp.Nsbp
 
 
 end
+%% After getting input E-field, add back HLC DM shapes
+mp.dm1.V = fitsread('hlc_dm1.fits')./mp.dm1.VtoH;
+mp.dm2.V = fitsread('hlc_dm2.fits')./mp.dm2.VtoH;
 
 %%
 % return
