@@ -14,8 +14,8 @@
 % Dtel:     diameter of the telescope, in meters (used for conversion from mas to lambda0/D)
 % lambda:    center wavelength, in meters (used for conversion from mas to lambda0/D)
 % 'Nacross',value:  (optional, needs keyword) Number of points across the 2-D weight array (want as odd number)
-% 'Rfac',value:     Zero out weights outside this cutoff radius
-% 'upsampFac',value: Upsampling factor for computing the resolution at
+% 'Rfac',value:     (optional, needs keyword) Zero out weights outside this cutoff radius
+% 'upsampFac',value: (optional, needs keyword) Upsampling factor for computing the resolution at
 %     which to convolve the stellar disk and the Gaussian tip/tilt jitter profile.
 %
 %--OUTPUTS:
@@ -77,8 +77,12 @@ else
         else
             dx = Dstar/Nacross;
         end
-    else
-        dx = TTrms; % Case 2: RMS pointing jitter dominates
+    else % Case 2: RMS pointing jitter dominates
+        if(Nacross<=7)
+            dx = TTrms; 
+        else
+            dx = TTrms*(7/Nacross); %--Extend to the same radius as with fewer points
+        end
     end
 
     xs = (-(Nacross-1)/2:1:(Nacross-1)/2)*dx;
@@ -133,7 +137,7 @@ else
 
     jw_mat = jw_mat.*mask;
     jw_mat = jw_mat/sum(sum(jw_mat));
-    if(flagDebug);  figure(153); imagesc(jw_mat); axis xy equal tight; colorbar; drawnow; end
+    if(flagDebug);  figure(153); imagesc(xs,xs,jw_mat); axis xy equal tight; colorbar; drawnow; end
 
     wsTT = jw_mat(j_ele).'; %--Vector of jitter weights
     xsTT = mas2lam0D*JXS(j_ele).'; %--Vector of x-coordinates for the jitter weights, in lambda0/D

@@ -20,8 +20,7 @@ clear all;
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Functions for when the full model uses PROPER
-addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
-addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
+addpath('~/Repos/proper-models/wfirst_phaseb/matlab');
 
 %--Library locations. FALCO and PROPER are required. CVX is optional.
 mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
@@ -46,44 +45,79 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
-% mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 1;
+mp.SeriesNum = 45;
 mp.TrialNum = 1;
 
-%%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'Series...snippet.mat';
-% temp = load(fn_prev,'out');
-% mp.dm1.V = temp.out.DM1V;
-% mp.dm2.V = temp.out.DM2V;
-% clear temp
 
-% % %--DEBUGGING:
+%% Change the wavelength and resolution
+
+%--Testing
+mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters]
+mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 7;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+
+% %--Band 1
+% mp.lambda0 = 575e-9;   %--Central wavelength of the whole spectral bandpass [meters]
+% mp.fracBW = 0.033;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 5;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% 
+% %--H-alpha
+% mp.lambda0 = 656e-9;   %--Central wavelength of the whole spectral bandpass [meters]
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% 
+% %--Band 4
+% mp.lambda0 = 825e-9;   %--Central wavelength of the whole spectral bandpass [meters]
+% mp.fracBW = 0.033;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 5;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 
-mp.controller = 'plannedEFC';
-mp.ctrl.sched_mat = [...
-    [0,0,0,1,0];
-    repmat([1,1j,12,0,1],[5,1]);...
-    [1,-5,12,0,0];...
-    repmat([1,1j,12,0,1],[9,1]);...
-    ];
-[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+
+mp.full.lambda0_m = mp.lambda0;
+mas2lam0D = 1/(mp.lambda0/2.3631*180/pi*3600*1000);
+mp.Fend.res = 1/(21*mas2lam0D); %--Change the image resolution [pixels per lambda0/D]. Detector resolution is 21 mas/pixel.
+mp.Fend.FOV = 15.; %--half-width of the field of view in both dimensions [lambda0/D]
+
+mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
+mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
+
+%--Set DM commands back to the dark hole settings
+load('Series0045_Trial0001_SPLC_WFIRST180718_2DM48_z1_IWA2.6_OWA9_5lams730nm_BW15_plannedEFC_snippet.mat','out');
+mp.dm1.V = out.dm1.Vall(:,:,end);
+mp.dm2.V = out.dm2.Vall(:,:,end);
+
+%% Add a sinusoid to DM1
+% 
+% xs = (1:48)/(46.3);
+% [XS,YS] = meshgrid(xs);
+% 
+% w = 6; %--offset
+% 
+% sinusoid = sin(2*pi*XS*w*cosd(mp.dm1.ytilt));
+% 
+% figure(250); imagesc(sinusoid); axis xy equal tight; colorbar;
+% 
+% c = 1e-7;
+% dV = sqrt(c)*(4*pi*mp.lambda0)./mp.dm1.VtoH.*sinusoid;
+% mp.dm1.V = mp.dm1.V + dV;
+% 
+% figure(251); imagesc(dV); axis xy equal tight; colorbar; set(gca,'Fontsize',20);
 
 
 %% Step 3b: Obtain the phase retrieval phase.
 
-mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
+mp.full.input_field_rootname = '/home/ajriggs/Repos/falco-matlab/data/maps/input_full';
 optval = mp.full;
 optval.source_x_offset =0;
 optval.zindex = 4;
 optval.zval_m = 0.19e-9;
-optval.dm1_m = fitsread('errors_polaxis10_dm.fits');
+optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 = 1;
 
 optval.end_at_fpm_exit_pupil = 1;
@@ -146,103 +180,33 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
     '_',mp.controller];
 
-%% Step 5: Perform the Wavefront Sensing and Control
-
-out = falco_wfsc_loop(mp);
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% Change the resolution
-
-E0 = mp.P1.compact.E; %--Don't erase the starting settings.
-paths = mp.path;
-runLabel = mp.runLabel;
-clear mp
-mp.runLabel = runLabel;
-mp.P1.compact.E = E0; 
-mp.path = paths;
-
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
-
-%--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
-
-mp.Fend.res = 5; %--Change the image resolution [pixels per lambda0/D]
-mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
-mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
-
-%--Set DM commands back to final
-mp.dm1.V = out.dm1.Vall(:,:,end);
-mp.dm2.V = out.dm2.Vall(:,:,end);
-
-%--DEBUGGING:
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
-
+%% Set up the rest of the workspace
 
 %--Save the config file
-fn_config = [mp.path.config mp.runLabel,'_configHD.mat'];
+fn_config = [mp.path.config mp.runLabel,'_config_' num2str(round(mp.lambda0*1e9)) 'nm_BW' num2str(round(100*mp.fracBW)) '.mat'];
 save(fn_config)
 fprintf('Saved the config file: \t%s\n',fn_config)
 %--Get configuration data from a function file
-[mp,out] = falco_init_ws(fn_config);
+[mp,~] = falco_init_ws(fn_config);
 
 
-%% Compute the table of annular zones
+%% Take broadband image 
 
-mp.eval.Rsens = ...
-                [3., 4.;...
-                4., 5.;...
-                5., 6.;...
-                6., 7.;...
-                7., 8.]; 
-            
-tableAnn = falco_FRN_AnnularZone_table(mp);
-writetable(tableAnn,[mp.path.frn_coro 'AnnZoneList.csv']); %--Save to CSV file
-tableAnn  
+Im = falco_get_summed_image(mp);
 
+%%
 
-%% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
+figure(900)
+imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-9 -6]); 
+axis xy equal tight; ch_psf=colorbar; colormap parula;
+xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',24,'Interpreter','LaTex');
+title(sprintf('PSF for %d%% BW at %d nm',round(100*mp.fracBW),round(1e9*mp.lambda0)),'Fontsize',20,'Fontweight','Bold');
+set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+set(gcf,'Color','w')
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
-writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
-tableContrast
-
-
-%% Compute the Krist table
-
-%--Other constants
-mp.yield.Dtel = 2.3631; % meters
-
-%--Define radial sampling and range
-mp.yield.R0 = 2.5;
-mp.yield.R1 = 9.1;
-
-%--Compute and save the table
-tableKrist = falco_FRN_Krist_table(mp);
-writetable(tableKrist,[mp.path.frn_coro 'KristTable.csv']); %--Save to CSV file
-
-%--Plot the table data
-matKrist = tableKrist{:,:};
-figure(200); imagesc(matKrist); axis tight;
-figure(201); imagesc(log10(matKrist)); axis tight;
-figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,4),'-r','Linewidth',3); %--Compare intensity and contrast plots
+fn = sprintf('/home/ajriggs/Downloads/s45t01/PSF_SPC-IFS_BW%02dat%dnm.fits',round(100*mp.fracBW),round(1e9*mp.lambda0));
+fitswrite(Im,fn);
 
 
-%% Calculate Sensitivities.csv 
-
-%--Rows 1 to 10: Z2 to Z11 sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
-%--Rows 11 to 17: Gain Z5 to Z11 sensitivities
-%--Row 18: Pupil X shear
-%--Row 19: Pupil Y shear
-%--Row 20: DM Settling
-%--Row 21: DM Thermal
-
-tableSens = falco_FRN_Sens_table(mp);
-writetable(tableSens,[mp.path.frn_coro 'Sensitivities.csv']); %--Save to CSV file
-tableSens

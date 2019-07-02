@@ -13,20 +13,19 @@
 %
 % OUTPUTS
 % - Vout = 2-D map of adjusted DM voltage commands
-% - indn = 
-% - delv = 
+% - indn = indices (act numbers) of the above
+% - delv = values of differential voltages of the actuators violating the neighboring rule
 %
 % REVISION HISTORY
 % - Created on 2015-11-23 by Erkin Sidick.
 % - Modified on 2019-03-06 by A.J. Riggs from fun_neighbor_fix.m.
 % -----------------------------------------------------------------------
 
-function [Vout, indn, delv] = falco_dm_neighbor_rule(Vin, Vlim, Nact)
+% function [Vout, indn, delv] = falco_dm_neighbor_rule(Vin, Vlim, Nact)
+function [Vout, indPair] = falco_dm_neighbor_rule(Vin, Vlim, Nact)
 
-    indn = [];
-    Vout   = Vin;
-    
-    delv = [];
+    Vout   = Vin; %--Initialize output voltage map
+    indPair  = []; %--Initialize the paired indices list. [Npairs x 2]
     
     kx1 = [0 1; 1 1; 1 0];              % R1-C1
     kx2 = [0 1; 1 1; 1 0; 1 -1];        % R1, C2 - C47
@@ -39,7 +38,7 @@ function [Vout, indn, delv] = falco_dm_neighbor_rule(Vin, Vlim, Nact)
     
 for jj = 1:Nact           % Row
     for ii = 1:Nact       % Col
-        
+                
         if jj ==1 
             if ii == 1
                 kx = kx1;
@@ -66,22 +65,24 @@ for jj = 1:Nact           % Row
 
         kr = jj + kx(:,1);
         kc = ii + kx(:,2);
-        ns = length(kr);
+        nNbr = length(kr); %--Number of neighbors
                 
-        if ns >= 1
-        for j1 = 1:ns
-            
-            a1 = Vout(jj,ii) - Vout(kr(j1),kc(j1));
-            
-            indn = [indn; jj ii kr(j1) kc(j1)];
-            delv = [delv a1];
+        if nNbr >= 1
+            for iNbr = 1:nNbr
+                
+                a1 = Vout(jj,ii) - Vout(kr(iNbr),kc(iNbr)); %--Compute the delta voltage
+                
+                if abs(a1) > Vlim %--If neighbor rule is violated
+                    
+                    indLinCtr = (ii-1)*Nact + jj; %--linear index of center actuator
+                    indLinNbr = (kc(iNbr)-1)*Nact + kr(iNbr); %--linear index of neigboring actuator
+                    indPair = [indPair; indLinCtr,indLinNbr];
 
-            if abs(a1) > Vlim
-                fx = (abs(a1) - Vlim) / 2;
-                Vout(jj,ii) = Vout(jj,ii) - sign(a1)*fx;
-                Vout(kr(j1),kc(j1)) = Vout(kr(j1),kc(j1)) + sign(a1)*fx;
+                    fx = (abs(a1) - Vlim) / 2;
+                    Vout(jj,ii) = Vout(jj,ii) - sign(a1)*fx;
+                    Vout(kr(iNbr),kc(iNbr)) = Vout(kr(iNbr),kc(iNbr)) + sign(a1)*fx;
+                end
             end
-        end
         end
     end
 end

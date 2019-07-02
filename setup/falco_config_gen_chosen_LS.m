@@ -50,18 +50,22 @@ switch upper(mp.whichPupil)
     case{'WFIRST180718'}
 
         %--Define Lyot stop generator function inputs for the 'full' optical model
-        changes.ID = mp.P4.IDnorm;
-        changes.OD = mp.P4.ODnorm;
-        changes.wStrut = mp.P4.wStrut;
-        changes.flagRot180 = true;
-
-        if(mp.full.flagPROPER==false)
+        if(mp.compact.flagGenLS || mp.full.flagGenLS)
+            changes.ID = mp.P4.IDnorm;
+            changes.OD = mp.P4.ODnorm;
+            changes.wStrut = mp.P4.wStrut;
+            changes.flagRot180 = true;
+        end
+        
+        if(mp.full.flagGenLS)
             mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes);
         end
 
         %--Make or read in Lyot stop (LS) for the 'compact' model
-        mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam,mp.centering,changes);
-
+        if(mp.compact.flagGenLS)
+            mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam,mp.centering,changes);
+        end
+        
         if(isfield(mp,'LSshape'))
             switch lower(mp.LSshape)
                 case 'bowtie'
@@ -72,14 +76,16 @@ switch upper(mp.whichPupil)
                     inputs.ang = mp.P4.ang; % (degrees)
                     inputs.centering = mp.centering; % 'interpixel' or 'pixel'
 
-                    if(mp.full.flagPROPER==false)
+                    if(mp.full.flagGenLS)
                         inputs.Nbeam = mp.P4.full.Nbeam; 
                         mp.P4.full.mask = falco_gen_bowtie_LS(inputs);
                     end
                     
                     %--Make bowtie Lyot stop (LS) for the 'compact' model
-                    inputs.Nbeam = mp.P4.compact.Nbeam; 
-                    mp.P4.compact.mask = falco_gen_bowtie_LS(inputs);    
+                    if(mp.compact.flagGenLS)
+                        inputs.Nbeam = mp.P4.compact.Nbeam; 
+                        mp.P4.compact.mask = falco_gen_bowtie_LS(inputs);  
+                    end
             end
         end
         
