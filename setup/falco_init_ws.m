@@ -21,6 +21,7 @@ disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_d
 
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
+mp.est.dummy = 1;
 mp.compact.dummy = 1;
 mp.full.dummy = 1;
 
@@ -35,24 +36,27 @@ if(isfield(mp,'flagUseLearnedJac')==false);  mp.flagUseLearnedJac = false;  end 
 if(isfield(mp.est,'flagUseJac')==false);  mp.est.flagUseJac = false;  end   %--Whether to use the Jacobian or not for estimation. (If not using Jacobian, model is called and differenced.)
 if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end %--Whether to perform a model-based (instead of empirical) grid search for the controller
 %--Neighbor rule
-if(isfield(mp.dm1,'flagNbrRule'));  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
-if(isfield(mp.dm2,'flagNbrRule'));  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 %--Model options
 if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
 
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
+if(isfield(mp.compact,'flagGenApod')==false);  mp.compact.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
 if(isfield(mp.compact,'flagGenFPM')==false);  mp.compact.flagGenFPM = true;  end
 if(isfield(mp.compact,'flagGenLS')==false);  mp.compact.flagGenLS = true;  end
 %--Whether to generate or load various masks: full model
 if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
 if(mp.full.flagPROPER)
     mp.full.flagGenPupil = false;
+    mp.full.flagGenApod = false;
     mp.full.flagGenFPM = false;
     mp.full.flagGenLS = false;
 end
 if(isfield(mp.full,'flagGenPupil')==false);  mp.full.flagGenPupil = true;  end
+if(isfield(mp.full,'flagGenApod')==false);  mp.full.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
 if(isfield(mp.full,'flagGenFPM')==false);  mp.full.flagGenFPM = true;  end
 if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 
@@ -60,7 +64,7 @@ if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
-if(isfield(mp,'SPname')==false);  mp.SPname = 'none';  end %--Apodizer name default
+if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
 %--Tied actuator pair definitions: See Section with variables mp.dmX.tied for X=1:9
@@ -101,13 +105,13 @@ mp.si_ref = ceil(mp.Nsbp/2);
 
 %--Wavelengths used for Compact Model (and Jacobian Model)
 mp.sbp_weights = ones(mp.Nsbp,1);
-if(strcmpi(mp.estimator,'perfect') && mp.Nwpsbp==1) %--Set ctrl wvls evenly between endpoints (inclusive) of the total bandpass. For design or modeling.
+if(mp.Nwpsbp==1) %--Set ctrl wavelengths evenly between endpoints (inclusive) of the total bandpass.
     if(mp.Nsbp==1)
         mp.sbp_centers = mp.lambda0;
     else
         mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
     end
-else %--For cases with estimation: Choose est/ctrl wavelengths to be at subbandpass centers.
+else %--For cases with multiple sub-bands: Choose wavelengths to be at subbandpass centers since the wavelength samples will span to the full extent of the sub-bands.
     mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
     mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBWcent2cent/2,1+mp.fracBWcent2cent/2,mp.Nsbp); %--Space evenly at the centers of the subbandpasses.
 end
@@ -200,11 +204,11 @@ mp = falco_config_gen_chosen_apodizer(mp); %--apodizer mask
 mp = falco_config_gen_chosen_LS(mp); %--Lyot stop
 
 %--Compare apodizer and pupil mask overlap
-% if(mp.flagApod)
-%     if(mp.flagPlot)
-%     figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
-%     end
-% end
+if(mp.flagApod)
+    if(mp.flagPlot)
+        figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
+    end
+end
 
 %% Plot the pupil and Lyot stop on top of each other to make sure they are aligned correctly
 %--Only for coronagraphs using Babinet's principle, for which the input

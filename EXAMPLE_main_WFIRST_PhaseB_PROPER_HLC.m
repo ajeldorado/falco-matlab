@@ -145,7 +145,7 @@ mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/inpu
 
 
 
-optval.phaseb_dir = mp.full.phaseb_dir;
+optval.data_dir = mp.full.data_dir;
 
 optval.cor_type = mp.full.cor_type;
 
@@ -163,7 +163,7 @@ optval.polaxis = mp.full.polaxis;
 
 % 3. full model, for field
 
-optval.dm1_m = fitsread([mp.full.phaseb_dir 'dm1_flatten_pol10_575nm.fits']);
+optval.dm1_m = fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
 optval.use_dm1 =1;
 
 optval.end_at_fpm_exit_pupil = 1;
@@ -181,7 +181,7 @@ mp.P1.compact.E = ones(ceil_even(mp.P1.compact.Nbeam+1),ceil_even(mp.P1.compact.
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
 
-    fld = prop_run(['wfirst_phaseb_v2b'], lambda_um, nout, 'quiet', 'passvalue',optval );
+    fld = prop_run(['wfirst_phaseb'], lambda_um, nout, 'quiet', 'passvalue',optval );
     % % % fld(2:end,2:end) = rot90(fld(2:end,2:end),2);
 
     % figure(601); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv;

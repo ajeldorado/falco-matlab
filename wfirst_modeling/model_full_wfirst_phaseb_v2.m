@@ -1,6 +1,3 @@
-%   Copyright 2019 California Institute of Technology
-% ------------------------------------------------------------------
-
 %function [ wavefront, sampling_m ] =  wfirst_phaseb(lambda_m, output_dim0, optval)
 
 % Version 1.0, 3 January 2019, JEK
@@ -40,8 +37,6 @@
 % at different wavelengths.
 % Modified on 2019-05-07 by A.J. Riggs to include the case 'spc_ifs_custom'
 % for custom SPC-IFS designs.
-% Modified on 2019-06-06 by J. Krist to take out the code that subtracts the
-% phase offset; the FPM files have instead been phase adjusted
 
 function [wavefront,  sampling_m]= model_full_wfirst_phaseb(lambda_m, output_dim0, optval)
 
@@ -61,6 +56,7 @@ end
 
 map_dir = [data_dir '/maps/'];            % directory for surface maps
 polfile = [data_dir '/pol/new_toma_'];		% polarization aberration table rootname
+% polfile = [data_dir '/new_toma_'];		% polarization aberration table rootname
 
 cor_type = 'hlc';           % 'hlc', 'spc-ifs', 'spc-wide', || 'none' (none = clear aperture, no coronagraph)
 source_x_offset_mas = 0;	% source offset in milliarcsec (tilt applied at primary)
@@ -138,17 +134,18 @@ if exist('optval','var')==1 %if  exist('optval')
     if ( isfield(optval,'fpm_axis') );   fpm_axis = optval.fpm_axis; end
 end
 
+
 if  strcmp(cor_type,'hlc')
     file_directory = [data_dir '/hlc_20190210/'];         % must have trailing "/"
-    prefix = [file_directory  'run461_'];
+    prefix = [file_directory  'run461_nro_'];
     pupil_diam_pix = 309.0;
     pupil_file = [prefix  'pupil_rotated.fits'];
     lyot_stop_file = [prefix  'lyot.fits'];
     lambda0_m = 0.575e-6;
     nlams = 19 ;              % number of occ trans lambda provided
     bw = 0.1;
-    lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m; %[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
-    wlam = find( round(1e13*lambda_m) == round(1e13*lam_occ) ); 	% find exactly matching FPM wavelength
+    lam_occ = [(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
+    wlam = find( round(1e11*lambda_m) == round(1e11*lam_occ) ); 	% find exactly matching FPM wavelength
     occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
     occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
     n_default = 1024;	% gridsize in non-critical areas
@@ -204,7 +201,7 @@ elseif  strcmp(cor_type,'hlc_custom')
     n_default = 1024;	% gridsize in non-critical areas
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
-    field_stop_radius_lam0 = 9.0; 
+    field_stop_radius_lam0 = 9.0;    
 elseif(strcmpi(cor_type, 'spc_ifs_custom')) 
     pupil_file = optval.pupil_file;
     pupil_diam_pix = optval.pupil_diam_pix; %1000;
@@ -248,7 +245,7 @@ elseif  strcmp(cor_type, 'spc-wide' )
     n_from_lyotstop = 4096;
 elseif strcmp(cor_type, 'none' )
     file_directory = './hlc_20190210/';         % must have trailing "/"
-    prefix = file_directory + 'run461_';
+    prefix = file_directory + 'run461_nro_';
     pupil_file = prefix + 'pupil_rotated.fits';
     use_fpm = 0;
     use_lyot_stop = 0;
@@ -596,12 +593,9 @@ if ( use_fpm )
     
     if ( contains(cor_type,'hlc')  )
         occ = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
-        
-        %--DEBUGGING
         if angle(occ(1,1)) ~= 0
             occ = occ.*exp(-1j*angle(occ(1,1))); %--Standardize the phase of the masks to be 0 for the outer glass part.
         end
-        
         wavefront = prop_multiply(wavefront, custom_pad(occ,n));
         clear occ
     elseif ( contains(cor_type,'spc')  )
