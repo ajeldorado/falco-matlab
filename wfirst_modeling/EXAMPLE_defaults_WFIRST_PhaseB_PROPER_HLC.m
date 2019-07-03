@@ -32,10 +32,10 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 575e-9;   %--Central wavelength of the whole spectral bandpass [meters]
+mp.lambda0 = 575e-9;    %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;%3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;%3;%7;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3;% 3 or 7  %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -76,12 +76,13 @@ mp.jac.zerns = 1;  %--Which Zernike modes to include in Jacobian. Given as the m
 mp.jac.Zcoef = 1e-9*[1]; %1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is not used; it is a placeholder for correct indexing of other modes.)
     
 %--Zernikes to compute sensitivities for
-mp.eval.indsZnoll = [];%2:3;%2:6; %--Noll indices of Zernikes to compute values for
+mp.eval.indsZnoll = [2,3]; %--Noll indices of Zernikes to compute values for
 %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
-mp.eval.Rsens = [];%...
-%                 [3., 4.;...
-%                 4., 8.;
-%                 8., 9.];  
+mp.eval.Rsens = ...
+                [3., 4.;
+                4.,5.;    
+                5., 8.;
+                8., 9.];  
 
 %--Grid- or Line-Search Settings
 mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
@@ -105,7 +106,6 @@ mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';
 
 % % % % GRID SEARCH EFC DEFAULTS     
 % %--WFSC Iterations and Control Matrix Relinearization
@@ -141,6 +141,7 @@ mp.ctrl.dmfacVec = 1;
 %     ];
 % [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
+mp.controller = 'plannedEFC';
 mp.ctrl.sched_mat = [...
     [0,0,0,1,0];...
     repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
@@ -183,7 +184,7 @@ mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 mp.dm2.Nact = 48;               % # of actuators across DM array
 mp.dm2.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm2.ytilt = 5.7;%               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.ytilt = 5.7;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm2.zrot = 0;              % clocking of DM surface [degrees]
 mp.dm2.xc = 23.5;%(48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm2.yc = 23.5;%(48/2 - 1/2);       % y-center location of DM surface [actuator widths]
@@ -274,10 +275,9 @@ mp.full.use_errors = true;
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
-mp.full.use_hlc_dm_patterns = true; % whether to use design WFE maps for HLC
+mp.full.use_hlc_dm_patterns = false; % whether to use design WFE maps for HLC.
 mp.full.lambda0_m = mp.lambda0;
 mp.full.input_field_rootname = '';	%   rootname of files containing aberrated pupil
-% mp.full.use_hlc_dm_patterns = 1;	%   use Dwight-generated HLC default DM wavefront patterns? 1 or 0
 mp.full.use_dm1 = 0;                %   use DM1? 1 or 0
 mp.full.use_dm2 = 0;                %   use DM2? 1 or 0
 mp.full.dm_sampling_m = 0.9906e-3;     %   actuator spacing in meters; default is 1 mm
@@ -294,8 +294,8 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = fitsread('errors_polaxis10_dm.fits'); %fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
-mp.full.dm2.flatmap = 0;
+mp.full.dm1.flatmap = 0.5*fitsread('errors_polaxis10_dm.fits');
+mp.full.dm2.flatmap = 0.5*fitsread('errors_polaxis10_dm.fits');
 
 
 %% Mask Definitions

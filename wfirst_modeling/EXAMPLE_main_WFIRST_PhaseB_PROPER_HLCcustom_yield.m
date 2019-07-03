@@ -43,17 +43,14 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLCcustom
 
 %% Step 3: Overwrite default values as desired
 
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t02/'; %--Location of coronagraph performance data tables. Needs slash at end.
-
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 45;
-mp.TrialNum = 2;
+mp.SeriesNum = 49;
+mp.TrialNum = 3;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -74,7 +71,7 @@ mp.ctrl.sched_mat = [...
     repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
     repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
     repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
+    repmat([1,1j,12,0,0],[10,1]);...  %--Optimal beta
     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
     
@@ -178,9 +175,6 @@ for si=1:mp.Nsbp
 
 end
 
-%%
-% return
-
 %% Step 4: Generate the label associated with this trial
 
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
@@ -196,25 +190,15 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 
 %%
-%%
-%%
-%%
-%%
-% return
-% %%
-% 
-% load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_config.mat;
-% load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
-% 
-% 
-% %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-% mp.path.frn_coro = '/Users/ajriggs/Downloads/s45t1/'; %--Location of coronagraph performance data tables. Needs slash at end.
-
-
-
-
+return
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+mp.path.frn_coro = '~/Downloads/CGdata/'; %--Location of coronagraph performance data tables. Needs slash at end.
+fn_prefix = sprintf('s%04dt%04d_',mp.SeriesNum,mp.TrialNum);
 
 %% Change the resolution
 
@@ -278,15 +262,17 @@ mp.eval.Rsens = ...
                 7., 8.]; 
             
 tableAnn = falco_FRN_AnnularZone_table(mp);
-writetable(tableAnn,[mp.path.frn_coro 'AnnZoneList.csv']); %--Save to CSV file
+writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save to CSV file
 tableAnn  
 
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
-writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
+writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
+tableCtoNI
 
 
 %% Compute the Krist table
@@ -300,7 +286,7 @@ mp.yield.R1 = 9.1;
 
 %--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);
-writetable(tableKrist,[mp.path.frn_coro 'KristTable.csv']); %--Save to CSV file
+writetable(tableKrist,[mp.path.frn_coro, fn_prefix, 'KristTable.csv']); %--Save to CSV file
 
 %--Plot the table data
 matKrist = tableKrist{:,:};
@@ -319,6 +305,6 @@ figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,
 %--Row 21: DM Thermal
 
 tableSens = falco_FRN_Sens_table(mp);
-writetable(tableSens,[mp.path.frn_coro 'Sensitivities.csv']); %--Save to CSV file
+writetable(tableSens,[mp.path.frn_coro, fn_prefix, 'Sensitivities.csv']); %--Save to CSV file
 tableSens
 

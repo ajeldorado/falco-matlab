@@ -19,7 +19,7 @@ clear all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Functions for when the full model uses PROPER
+%--Functions for when the WFIRST CGI full model uses PROPER
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
@@ -49,8 +49,8 @@ mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 1;
-mp.TrialNum = 1;
+mp.SeriesNum = 49;
+mp.TrialNum = 2;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'Series...snippet.mat';
@@ -65,14 +65,14 @@ mp.TrialNum = 1;
 % mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 % % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
-
 mp.controller = 'plannedEFC';
-mp.ctrl.sched_mat = [...
-    [0,0,0,1,0];
-    repmat([1,1j,12,0,1],[5,1]);...
-    [1,-5,12,0,0];...
-    repmat([1,1j,12,0,1],[9,1]);...
-    ];
+mp.ctrl.sched_mat = repmat([1,1j,12,0,1],[5,1]);
+% mp.ctrl.sched_mat = [...
+%     [0,0,0,1,0];
+%     repmat([1,1j,12,0,1],[5,1]);...
+%     [1,-5,12,0,0];...
+%     repmat([1,1j,12,0,1],[9,1]);...
+%     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 
@@ -151,9 +151,15 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 out = falco_wfsc_loop(mp);
 
 %%
+return
+%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
+mp.path.frn_coro = '~/Downloads/CGdata/'; %--Location of coronagraph performance data tables. Needs slash at end.
+fn_prefix = sprintf('s%04dt%04d_',mp.SeriesNum,mp.TrialNum);
 
 %% Change the resolution
 
@@ -164,9 +170,6 @@ clear mp
 mp.runLabel = runLabel;
 mp.P1.compact.E = E0; 
 mp.path = paths;
-
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/s44t01/'; %--Location of coronagraph performance data tables. Make sure to end with a '/'
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
@@ -203,16 +206,17 @@ mp.eval.Rsens = ...
                 7., 8.]; 
             
 tableAnn = falco_FRN_AnnularZone_table(mp);
-writetable(tableAnn,[mp.path.frn_coro 'AnnZoneList.csv']); %--Save to CSV file
+writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save to CSV file
 tableAnn  
 
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
-writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
+writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
-
+tableCtoNI
 
 %% Compute the Krist table
 
@@ -225,7 +229,7 @@ mp.yield.R1 = 9.1;
 
 %--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);
-writetable(tableKrist,[mp.path.frn_coro 'KristTable.csv']); %--Save to CSV file
+writetable(tableKrist,[mp.path.frn_coro, fn_prefix, 'KristTable.csv']); %--Save to CSV file
 
 %--Plot the table data
 matKrist = tableKrist{:,:};
@@ -244,5 +248,5 @@ figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,
 %--Row 21: DM Thermal
 
 tableSens = falco_FRN_Sens_table(mp);
-writetable(tableSens,[mp.path.frn_coro 'Sensitivities.csv']); %--Save to CSV file
+writetable(tableSens,[mp.path.frn_coro, fn_prefix, 'Sensitivities.csv']); %--Save to CSV file
 tableSens

@@ -43,16 +43,13 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC
 
 %% Step 3: Overwrite default values as desired
 
-%--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
-
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 42;
+mp.SeriesNum = 49;
 mp.TrialNum = 1;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
@@ -65,22 +62,21 @@ mp.TrialNum = 1;
 % %--DEBUGGING:
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
+%--PLANNED (i.e., SCHEDULED) EFC
 mp.controller = 'plannedEFC';
-
 mp.ctrl.sched_mat = [...
     [0,0,0,1,0];...
     repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
     repmat([1,-5,12,0,0],[1,1]);... %--Beta kick
     repmat([1,-3,12,0,0],[9,1]);...   %--Optimal beta
     repmat([1,-5,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,0],[15,1]);...  %--Optimal beta
+    repmat([1,1j,12,0,0],[10,1]);...  %--Optimal beta
     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
-    
-    
 %--GRID SEARCH EFC    
 %mp.controller = 'gridsearchEFC';
 %mp.Nitr = 5; %--Number of estimation+control iterations to perform
@@ -127,8 +123,10 @@ optval.zval_m = 0.19e-9;
 optval.use_errors = mp.full.use_errors;
 optval.polaxis = mp.full.polaxis; 
 
-optval.dm1_m = fitsread('errors_polaxis10_dm.fits');
+optval.dm1_m = 0.5*fitsread('errors_polaxis10_dm.fits');
+optval.dm2_m = 0.5*fitsread('errors_polaxis10_dm.fits');
 optval.use_dm1 =1;
+optval.use_dm2 =1;
 
 optval.end_at_fpm_exit_pupil = 1;
 optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
@@ -181,6 +179,9 @@ for si=1:mp.Nsbp
 
 
 end
+%% After getting input E-field, add back HLC DM shapes
+mp.dm1.V = fitsread('hlc_dm1.fits')./mp.dm1.VtoH;
+mp.dm2.V = fitsread('hlc_dm2.fits')./mp.dm2.VtoH;
 
 %%
 % return
@@ -200,22 +201,15 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 
 %%
-%%
-%%
-%%
-
-%%
 return
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS
-%%%
-load Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_config.mat;
-load('Series0042_Trial0010_HLC_WFIRST180718_2DM48_z1_IWA2.7_OWA9_3lams575nm_BW10_plannedEFC_snippet.mat','out');
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Data locations for WFIRST CGI calculations of flux ratio noise (FRN)
-mp.path.frn_coro = '/Users/ajriggs/Downloads/'; %--Location of coronagraph performance data tables
+mp.path.frn_coro = '~/Downloads/CGdata/'; %--Location of coronagraph performance data tables. Needs slash at end.
+fn_prefix = sprintf('s%04dt%04d_',mp.SeriesNum,mp.TrialNum);
 
 %% Change the resolution
 
@@ -228,7 +222,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_s383 %--Load default model parameters
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC %--Load default model parameters
 
 mp.Fend.res = 5; %--Change the image resolution [pixels per lambda0/D]
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
@@ -250,34 +244,26 @@ else
     lambdaFacs = linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
 end
 lam_occ = lambdaFacs*mp.lambda0;
-mp.F3.compact.Nxi = 40; mp.F3.compact.Neta = mp.F3.compact.Nxi;
+
+mp.F3.compact.Nxi = 40; %--Crop down to minimum size of the spot
+mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
-
-prefix = [mp.full.data_dir 'hlc_20190210/run461_'];
-
 fpm_axis = 'p';
+
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
-    
-    %--Unclear which is the correct orientation yet
-    fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_crop.fits'];
-    fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_crop.fits'];
-%     fn_p_r = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated_crop.fits'];
-%     fn_p_i = [prefix  'occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated_crop.fits'];
-   
-    mp.compact.FPMcube(:,:,si) = complex(fitsread(fn_p_r),fitsread(fn_p_i));
-
+    fn_p_r = [mp.full.data_dir 'hlc_20190210/run461_occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
+    fn_p_i = [mp.full.data_dir 'hlc_20190210/run461_occ_lam' num2str(lam_occ(si),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];   
+    mp.compact.FPMcube(:,:,si) = padOrCropEven(complex(fitsread(fn_p_r),fitsread(fn_p_i)),mp.F3.compact.Nxi);
 end
-
-
-
 
 %--Save the config file
 fn_config = [mp.path.config mp.runLabel,'_configHD.mat'];
 save(fn_config)
 fprintf('Saved the config file: \t%s\n',fn_config)
 %--Get configuration data from a function file
-[mp,out] = falco_init_ws(fn_config);
+% [mp,out] = falco_init_ws(fn_config);
+mp = falco_init_ws(fn_config);
 
 
 %% Compute the table of annular zones
@@ -290,15 +276,17 @@ mp.eval.Rsens = ...
                 7., 8.]; 
             
 tableAnn = falco_FRN_AnnularZone_table(mp);
-writetable(tableAnn,[mp.path.frn_coro 'AnnZoneList.csv']); %--Save to CSV file
+writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save to CSV file
 tableAnn  
 
 
 %% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
 
-tableContrast = falco_FRN_InitialRawContrast(mp);
-writetable(tableContrast,[mp.path.frn_coro 'InitialRawContrast.csv']); %--Save to CSV file
+[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
+writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
+writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
 tableContrast
+tableCtoNI
 
 
 %% Compute the Krist table
@@ -312,7 +300,7 @@ mp.yield.R1 = 9.1;
 
 %--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);
-writetable(tableKrist,[mp.path.frn_coro 'KristTable.csv']); %--Save to CSV file
+writetable(tableKrist,[mp.path.frn_coro, fn_prefix, 'KristTable.csv']); %--Save to CSV file
 
 %--Plot the table data
 matKrist = tableKrist{:,:};
@@ -331,6 +319,6 @@ figure(202); semilogy(matKrist(:,1),matKrist(:,3),'-b',matKrist(:,1),matKrist(:,
 %--Row 21: DM Thermal
 
 tableSens = falco_FRN_Sens_table(mp);
-writetable(tableSens,[mp.path.frn_coro 'Sensitivities.csv']); %--Save to CSV file
+writetable(tableSens,[mp.path.frn_coro, fn_prefix, 'Sensitivities.csv']); %--Save to CSV file
 tableSens
 

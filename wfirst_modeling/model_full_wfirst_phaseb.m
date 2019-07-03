@@ -185,20 +185,17 @@ elseif  strcmp(cor_type,'hlc_custom')
     pupil_file = [prefix  'pupil_rotated.fits'];
     lyot_stop_file = [prefix  'lyot.fits'];
     
-%     lambda0_m = 0.575e-6;
-%     nlams = 19 ;              % number of occ trans lambda provided
-%     bw = 0.1;
-%     if ( isfield(optval,'lambda0_m') );      lambda0_m = optval.lambda0_m;end
-    lambda0_m = 0.730e-6;
-    nlams = 1;%9 ;              % number of occ trans lambda provided
-    bw = 0.15;
+    %--For CUSTOM HLC ONLY: Defined again because model_full_wfirst_phaseb.m has too many hard-coded values
+    lambda0_m = optval.lambda0_m;
+    nlams = optval.nlams;             % number of occ trans lambda provided
+    bw = optval.bw;
 
     if(nlams==1)
         lam_occ = lambda0_m;
     else
-        lam_occ = [(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
+        lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m;%[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
     end
-    wlam = find( round(1e11*lambda_m) == round(1e11*lam_occ) ); 	% find exactly matching FPM wavelength
+    wlam = find( round(1e14*lambda_m) == round(1e14*lam_occ) ); 	% find exactly matching FPM wavelength
     occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
     occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
     n_default = 1024;	% gridsize in non-critical areas

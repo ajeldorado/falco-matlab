@@ -11,7 +11,7 @@
 % - Created by A.J. Riggs on 2019-05-15.
 % -------------------------------------------------------------------------
 
-function tableContrast = falco_FRN_InitialRawContrast(mp)
+function [tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp)
     
 %--First 4 columns (the easy, bookkeeping parts of the table)
 Nann = size(mp.eval.Rsens,1); %--Number of annuli
@@ -108,6 +108,7 @@ end
 %% Compute the average contrast in each annulus (or annular segment)
 CcohVec = zeros(Nann,1);
 CincoVec = zeros(Nann,1);
+CtoNIvec = zeros(Nann,1);
 rVec = zeros(Nann,1);
 
 for ia=1:Nann        
@@ -129,11 +130,13 @@ for ia=1:Nann
     %--Compute the average intensity over the selected region
     CcohVec(ia) = sum(sum(maskPartial.*Ccoh))/sum(sum(maskPartial));
     CincoVec(ia) = sum(sum(maskPartial.*Cinco))/sum(sum(maskPartial));
+    CtoNIvec(ia) = sum(sum(maskPartial.*CtoNI))/sum(sum(maskPartial));
     % figure(401); imagesc(maskPartial.*Ccoh); axis xy equal tight; colorbar; drawnow; pause(1);
 end
 
 if(mp.flagPlot)
     figure(411); semilogy(rVec,CcohVec,'-ko',rVec,CincoVec,':ko','Linewidth',3,'Markersize',8); 
+    figure(412); semilogy(rVec,CtoNIvec,'-bo','Linewidth',3,'Markersize',8); 
     set(gca,'Fontsize',20); set(gcf,'Color','w');
     drawnow;
 end
@@ -154,6 +157,14 @@ matContrast(2*Nann+2:2:end,5) = CincoVec; %--Incoherent, no MUF
 
 tableContrast = table(matContrast(:,1),matContrast(:,2),matContrast(:,3),matContrast(:,4),matContrast(:,5));
 tableContrast.Properties.VariableNames = {'index','coh_vs_incoh','annzone','NoMUF_vs_MUF','contrast'};
+
+%% Make table for CtoNI
+matCtoNI = zeros(Nann,2);
+matCtoNI(:,1) = (0:(Nann-1)).';
+matCtoNI(:,2) = CtoNIvec;
+
+tableCtoNI = table(matCtoNI(:,1),matCtoNI(:,2));
+tableCtoNI.Properties.VariableNames = {'annzone','CtoNI'};
 
 
 end %--END OF FUNCTION

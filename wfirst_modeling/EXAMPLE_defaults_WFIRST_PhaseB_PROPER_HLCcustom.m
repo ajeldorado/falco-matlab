@@ -34,14 +34,8 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 mp.lambda0 = 730e-9;    %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 9;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% mp.full.nlams = 9 ;              % number of occ trans lambda provided
-
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nsbp = 9;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-mp.full.nlams = 1 ;              % number of occ trans lambda provided
-
 
 %% Wavefront Estimation
 
@@ -263,13 +257,19 @@ mp.F3.compact.res = 2048./309.;    % sampling of FPM for compact model [pixels p
 
 %% Optical Layout: Full Model 
 
+%--For CUSTOM HLC ONLY: Defined again because model_full_wfirst_phaseb.m has too many hard-coded values
+mp.full.lambda0_m = mp.lambda0;
+mp.full.bw = mp.fracBW;
+if(mp.Nwpsbp==1)
+    mp.full.nlams = mp.Nsbp; % number of occ trans lambda provided. %--Used in model_full_wfirst_phaseb
+else
+    mp.full.nlams = mp.Nsbp*mp.Nwpsbp - (mp.Nsbp-1);     % number of occ trans lambda provided. %--Used in model_full_wfirst_phaseb
+end
+
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
 mp.full.hlc_name = 'hlc_20190411';
 mp.full.prefix = 'run563_nro_';
-mp.full.lambda0_m = mp.lambda0;
-% mp.full.nlams = 9 ;              % number of occ trans lambda provided
-mp.full.bw = mp.fracBW;
 
 % %--Pupil Plane Resolutions
 mp.P1.full.Nbeam = 309;
