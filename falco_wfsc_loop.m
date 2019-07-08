@@ -800,18 +800,24 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     
     %--Make the regularization matrix. (Define only the diagonal here to save RAM.)
     cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
+    cvar.EyeNorm = max(diag(cvar.GstarG_wsum ));
     fprintf(' done. Time: %.3f\n',toc);
 
     %--Call the Controller Function
     fprintf('Control beginning ...\n'); tic
     switch lower(mp.controller)
 
+        %--Established, conventional controllers
         case{'plannedefc'} %--EFC regularization is scheduled ahead of time
             [dDM,cvar] = falco_ctrl_planned_EFC(mp,cvar);
 
         case{'gridsearchefc'}  %--Empirical grid search of EFC. Scaling factor for DM commands too.
             [dDM,cvar] = falco_ctrl_grid_search_EFC(mp,cvar);
             
+        
+        %--Experimental controllers
+        case{'plannedefcts'} %--EFC regularization is scheduled ahead of time. total stroke also minimized
+            [dDM,cvar] = falco_ctrl_planned_EFC_TS(mp,cvar);
             
         case{'plannedefccon'} %--Constrained-EFC regularization is scheduled ahead of time
             [dDM,cvar] = falco_ctrl_planned_EFCcon(mp,cvar);
