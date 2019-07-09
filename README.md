@@ -6,23 +6,19 @@ Refer to the SPIE conference paper "Fast Linearized Coronagraph Optimizer (FALCO
 DOI: 10.1117/12.2313812
 
 Developed by A.J. Riggs at the Jet Propulsion Laboratory, California Institute of Technology.
-Significant contributions and testing were done by Garreth Ruane, Erkin Sidick, and Carl Coker.
+Major contributions and testing were done by Garreth Ruane, Erkin Sidick, Carl Coker, Navtej Saini, and Jorge Llop-Sayson.
 
  
 # What is FALCO?
 
 The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source toolbox of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at github.com/ajeldorado/falco-matlab and is in development in Python 3.
 
-
 # Documentation and Support
 
 FALCO is provided as-is and has no guarantee of performance. Nevertheless, reasonable attempts have been made to debug and troubleshoot the code, and the developers are still using and improving the software.
 
 #### DOCUMENTATION:  
-We will experiment with the best way to document the code. For now we will try the Github Wiki at [https://github.com/ajeldorado/falco-matlab/wiki](https://github.com/ajeldorado/falco-matlab/wiki). 
-
-#### FORUM:  
-There is now a forum at [www.tapatalk.com/groups/falco/](www.tapatalk.com/groups/falco/) for you to ask us questions about FALCO such as, "Why can't I find any documentation?" If there is anything especially confusing about FALCO, please ask for documentation on that topic and we will prioritize it.
+For now, the documentation is available at the Github Wiki at https://github.com/ajeldorado/falco-matlab/wiki.
 
 
 # Matlab Versions and Libraries
@@ -41,14 +37,14 @@ FALCO was written primarily on the MacOS operating system and used to a lesser e
 1) You need a MATLAB license and an install of MATLAB. Multi-wavelength simulations may need a desktop computer or server instead of a laptop to run. Monochromatic and/or lower-resolution trials usually run quickly on a laptop with a few GB of RAM.
 
 2) Linking to PROPER (in MATLAB): Download the latest MATLAB version of the PROPER optical propagation library from SourceForge at [https://sourceforge.net/projects/proper-library/](https://sourceforge.net/projects/proper-library/). Wherever you decide to unzip and place the PROPER library on your machine, add the path to the PROPER folder to the MATLAB path. 
-  A) You can temporarily do that by defining the variable *mp.path.proper* in each main script of config file you use, or 
+  A) You can temporarily do that by defining the variable `mp.path.proper` in each main script of config file you use, or 
   B) (better, but may not work on servers with restricted write permissions) Permanently adding PROPER to the MATLAB path with the commands 
-       addpath(path/to/proper); savepath;
-     where "path/to/proper" is the absolute file path on your computer for the PROPER directory. The command *savepath* will keep the directory you included in the "pathdef.m" file that MATLAB uses to look for the functions is expects. The *pathdef.m* file might not be writeable on a server without admin privileges. 
+       `addpath(path/to/proper); savepath;`
+     where _path/to/proper_ is the absolute file path on your computer for the PROPER directory. The command `savepath` will keep the directory you included in the *pathdef.m* file that MATLAB uses to look for the functions is expects. The *pathdef.m* file might not be writeable on a server without admin privileges. 
 
-3) Try to run one the example script file _EXAMPLE_try_running_FALCO.m_ in the sub-folder *falco-matlab/main*. The only needed modifications are the FALCO and PROPER file path definitions listed near the very top of the script to be for your computer. FALCO must know where the FALCO library resides (given by "mp.path.falco") and where the PROPER library resides (given by *mp.path.proper* if it is not in MATLAB's path already). If the example script runs through with no errors, then all the file paths are set correctly.
+3) Try to run one the example script file _EXAMPLE_try_running_FALCO.m_ in the sub-folder *falco-matlab/main*. The only needed modifications are the FALCO and PROPER file path definitions listed near the very top of the script to be for your computer. FALCO must know where the FALCO library resides (given by `mp.path.falco`) and where the PROPER library resides (given by `mp.path.proper` if it is not in MATLAB's path already). If the example script runs through with no errors, then all the file paths are set correctly.
 
-4) Now go ahead and try some of the other example scripts in *falco-matlab/main*, which start with "EXAMPLE_", again adjusting the path definitions for the FALCO and PROPER libraries. For this initial functionality test, in the main script you should set the number of wavelengths to 1 (mp.Nsbp = 1;) and turn off the parallel computing  flag (mp.flagParfor = false;) for it to run quickly. I recommend finding the script closest to your intended purpose and starting to make changes from a copy of that.
+4) Now go ahead and try some of the other example scripts in _falco-matlab/main_, which start with "EXAMPLE_", again adjusting the path definitions for the FALCO and PROPER libraries. For this initial functionality test, in the main script you should set the number of wavelengths to 1 (`mp.Nsbp = 1;`) and turn off the parallel computing  flag (`mp.flagParfor = false;`) for it to run quickly. I recommend finding the script closest to your intended purpose and starting to make changes from a copy of that.
 
 5) (Optional--not used for regular functionality.) Download CVX from [cvxr.com](cvxr.com). Wherever you decide to unzip and place the PROPER library on your machine, add the path to the CVX directory to the MATLAB path (similar to how it was done for PROPER). Then, perform the CVX installation instructions listed on the CVX website.
 

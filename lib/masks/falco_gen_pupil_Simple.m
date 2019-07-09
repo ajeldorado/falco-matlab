@@ -12,7 +12,7 @@
 % inputs.angStrut - Array of struct angles (deg)
 % inputs.wStrut - Strut widths (fraction of Nbeam)
 % inputs.stretch - Create an elliptical aperture by changing Nbeam along
-%                   the horizontal direction by a factor of strech (PROPER
+%                   the horizontal direction by a factor of stretch (PROPER
 %                   version isn't implemented as of March 2019).
 
 function PUPIL = falco_gen_pupil_Simple( input )

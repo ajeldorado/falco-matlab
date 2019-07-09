@@ -467,11 +467,13 @@ if(any(mp.dm_ind==1))
     out.dm1.Vpv(Itr) = (max(max(mp.dm1.V))-min(min(mp.dm1.V)));
     Nrail1 = length(find( (mp.dm1.V <= -mp.dm1.maxAbsV) | (mp.dm1.V >= mp.dm1.maxAbsV) ));
     fprintf(' DM1 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm1.Vpv(Itr), Nrail1, mp.dm1.NactTotal, 100*Nrail1/mp.dm1.NactTotal); 
+    if(size(mp.dm1.tied,1)>0);  fprintf(' DM1 has %d pairs of tied actuators.\n',size(mp.dm1.tied,1));  end  
 end
 if(any(mp.dm_ind==2))
     out.dm2.Vpv(Itr) = (max(max(mp.dm2.V))-min(min(mp.dm2.V)));
     Nrail2 = length(find( (mp.dm2.V <= -mp.dm2.maxAbsV) | (mp.dm2.V >= mp.dm2.maxAbsV) ));
     fprintf(' DM2 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm2.Vpv(Itr), Nrail2, mp.dm2.NactTotal, 100*Nrail2/mp.dm2.NactTotal); 
+    if(size(mp.dm2.tied,1)>0);  fprintf(' DM2 has %d pairs of tied actuators.\n',size(mp.dm2.tied,1));  end 
 end
 if(any(mp.dm_ind==8))
     out.dm8.Vpv(Itr) = (max(max(mp.dm8.V))-min(min(mp.dm8.V)));
@@ -1018,7 +1020,11 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end
     if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end
     if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end
+    
+    %--Update the tied actuator pairs
+    if(any(mp.dm_ind==1));  mp.dm1.tied = dDM.dm1tied;  end
+    if(any(mp.dm_ind==2));  mp.dm2.tied = dDM.dm2tied;  end
 
-end %--END OF FUNCTION
+end %--END OF NESTED FUNCTION
 
 end %--END OF main FUNCTION

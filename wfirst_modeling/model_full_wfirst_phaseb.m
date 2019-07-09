@@ -1,3 +1,6 @@
+%   Copyright 2019 California Institute of Technology
+% ------------------------------------------------------------------
+
 %function [ wavefront, sampling_m ] =  wfirst_phaseb(lambda_m, output_dim0, optval)
 
 % Version 1.0, 3 January 2019, JEK
@@ -15,7 +18,7 @@
 %		  option to 'cor_type' to 'spc-ifs' and changed default SPC to SPC-20190130 and
 %		  updated associated parameters; added 'spc-wide' option to 'cor_type' to use
 %		  SPC-20181220. Changed DM tilt to rotation around Y axis.
-% Version 2.0, 13 March 2019, JEK
+% Version 1.2, 13 March 2019, JEK
 %    Changes: Added new parameters: cgi & mask & lyot stop & FPM shifts in meters; final
 %		  sampling in meters; simplified how some masks are shifted; changed option
 %		  of cor_type='spc-ifs' to 'spc-ifs_short' for 660 nm FPM, 'spc-ifs_long' for
@@ -31,12 +34,14 @@
 % Modified on 2019-05-01 by A.J. Riggs to include bug fixes in some of the 
 % if statements from Hanying Zhou.
 % Modified on 2019-05-06 by A.J. Riggs to remove the "/" or "\" at the end
-% of the phaseb_dir path if the slash exists.
+% of the data_dir path if the slash exists.
 % Modified on 2019-05-07 by A.J. Riggs to zero out the phase in the outer
 % part of the HLC occulters get rid of arbitrary phase differences between
 % at different wavelengths.
 % Modified on 2019-05-07 by A.J. Riggs to include the case 'spc_ifs_custom'
 % for custom SPC-IFS designs.
+% Modified on 2019-06-06 by J. Krist to take out the code that subtracts the
+% phase offset; the FPM files have instead been phase adjusted
 
 function [wavefront,  sampling_m]= model_full_wfirst_phaseb(lambda_m, output_dim0, optval)
 
@@ -44,17 +49,18 @@ function [wavefront,  sampling_m]= model_full_wfirst_phaseb(lambda_m, output_dim
 % The computational grid sizes are hardcoded for each coronagraph.
 
 %--mask design data path
-if ( isfield(optval,'phaseb_dir') )
-    phaseb_dir = optval.phaseb_dir;
-    if(strcmp(phaseb_dir(end),'/') || strcmp(phaseb_dir(end),'\'))
-        phaseb_dir = phaseb_dir(1:end-1); %--Remove the trailing slash for this function.
+
+data_dir = '/home/krist/afta/phaseb/phaseb_data';  % no trailing '/'
+
+if ( isfield(optval,'data_dir') )
+    data_dir = optval.data_dir;
+    if(strcmp(data_dir(end),'/') || strcmp(data_dir(end),'\'))
+        data_dir = data_dir(1:end-1); %--Remove the trailing slash for this function.
     end
-else
-    phaseb_dir = '.'; 		
 end
 
-map_dir = [phaseb_dir '/maps/'];            % directory for surface maps
-polfile = [phaseb_dir '/new_toma_'];		% polarization aberration table rootname
+map_dir = [data_dir '/maps/'];            % directory for surface maps
+polfile = [data_dir '/pol/new_toma_'];		% polarization aberration table rootname
 
 cor_type = 'hlc';           % 'hlc', 'spc-ifs', 'spc-wide', || 'none' (none = clear aperture, no coronagraph)
 source_x_offset_mas = 0;	% source offset in milliarcsec (tilt applied at primary)
@@ -83,7 +89,7 @@ fsm_y_offset_mas = 0;
 fsm_x_offset = 0;           % offset source using FSM (lambda0/D radians)
 fsm_y_offset = 0;
 focm_z_shift_m = 0;         % offset (meters) of focus correction mirror (+ increases path length)
-use_hlc_dm_patterns = 1;	% use Dwight-generated HLC default DM wavefront patterns? 1 or 0
+use_hlc_dm_patterns = 0;	% use Dwight-generated HLC default DM wavefront patterns? 1 or 0
 use_dm1 = 0;                % use DM1? 1 or 0
 use_dm2 = 0;                % use DM2? 1 or 0
 dm_sampling_m = 0.9906e-3;  % actuator spacing in meters;
@@ -133,28 +139,24 @@ if exist('optval','var')==1 %if  exist('optval')
 end
 
 if  strcmp(cor_type,'hlc')
-    file_directory = [phaseb_dir '/hlc_20190210/'];         % must have trailing "/"
-    prefix = [file_directory  'run461_nro_'];
+    file_directory = [data_dir '/hlc_20190210/'];         % must have trailing "/"
+    prefix = [file_directory  'run461_'];
     pupil_diam_pix = 309.0;
     pupil_file = [prefix  'pupil_rotated.fits'];
     lyot_stop_file = [prefix  'lyot.fits'];
     lambda0_m = 0.575e-6;
     nlams = 19 ;              % number of occ trans lambda provided
     bw = 0.1;
-    lam_occ = [(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; % wavelengths at which occ trans provideed
-    
-    wlam = find(round(1e11*lambda_m)==round(1e11*lam_occ)); % find exactly matching FPM wavelength
-%     [~,wlam] = min(abs(lambda_m-lam_occ)); % find nearest matching FPM wavelength
-    occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real_rotated.fits'];
-    occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag_rotated.fits'];
-    %fprintf('occulter_file_r = %s\nocculter_file_i = %s\n',occulter_file_r,occulter_file_i);
-    
+    lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m; %[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
+    wlam = find( round(1e13*lambda_m) == round(1e13*lam_occ) ); 	% find exactly matching FPM wavelength
+    occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
+    occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
     n_default = 1024;	% gridsize in non-critical areas
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
     field_stop_radius_lam0 = 9.0;
 elseif  strcmp(cor_type,'hlc_erkin')
-    file_directory = [phaseb_dir '/hlc_20190206_v2/'];         % must have trailing "/"
+    file_directory = [data_dir '/hlc_20190206_v3/'];         % must have trailing "/"
     prefix = [file_directory  'dsn17d_run2_pup310_fpm2048_'];
     pupil_diam_pix = 310.0;
     pupil_file = [prefix  'pupil.fits'];
@@ -163,16 +165,43 @@ elseif  strcmp(cor_type,'hlc_erkin')
     lambda0_m = 0.575e-6;
     nlams = 19 ;              % number of occ trans lambda provided
     bw = 0.1;
-    lam_occ = [(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; % wavelengths at which occ trans provideed
-    
+    lam_occ = [(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; % wavelengths at which occ trans provided
     [~,wlam] = min(abs(lambda_m-lam_occ)); % find nearest matching FPM wavelength
     occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),5) 'theta6.69pol'   fpm_axis  '_real_rotated.fits'];
+    fprintf('occulter_file_r = %s\n',occulter_file_r);
     occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),5) 'theta6.69pol'   fpm_axis  '_imag_rotated.fits'];
-
     n_default = 1024;	% gridsize in non-critical areas
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
     field_stop_radius_lam0 = 9.0;
+elseif  strcmp(cor_type,'hlc_custom')
+    
+    if(isfield(optval,'hlc_name')==false || isfield(optval,'prefix')==false)
+        error('You must define the variables hlc_name and prefix when using hlc_custom as the coronagraph.')
+    end
+    file_directory = [data_dir filesep 'hlc_custom' filesep optval.hlc_name filesep];         % must have trailing "/"
+    prefix = [file_directory  optval.prefix];
+    pupil_diam_pix = 309.0;
+    pupil_file = [prefix  'pupil_rotated.fits'];
+    lyot_stop_file = [prefix  'lyot.fits'];
+    
+    %--For CUSTOM HLC ONLY: Defined again because model_full_wfirst_phaseb.m has too many hard-coded values
+    lambda0_m = optval.lambda0_m;
+    nlams = optval.nlams;             % number of occ trans lambda provided
+    bw = optval.bw;
+
+    if(nlams==1)
+        lam_occ = lambda0_m;
+    else
+        lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m;%[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
+    end
+    wlam = find( round(1e14*lambda_m) == round(1e14*lam_occ) ); 	% find exactly matching FPM wavelength
+    occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
+    occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
+    n_default = 1024;	% gridsize in non-critical areas
+    if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
+    n_from_lyotstop = 1024;
+    field_stop_radius_lam0 = 9.0; 
 elseif(strcmpi(cor_type, 'spc_ifs_custom')) 
     pupil_file = optval.pupil_file;
     pupil_diam_pix = optval.pupil_diam_pix; %1000;
@@ -188,7 +217,7 @@ elseif(strcmpi(cor_type, 'spc_ifs_custom'))
     n_from_lyotstop = 4096;
     
 elseif  sum(strfind(cor_type, 'spc-ifs' ))
-    file_dir = [phaseb_dir '/spc_20190130/'];       % must have trailing "/"
+    file_dir = [data_dir '/spc_20190130/'];       % must have trailing "/"
     pupil_diam_pix = 1000;
     pupil_file = [file_dir  'pupil_SPC-20190130_rotated.fits'];
     pupil_mask_file = [file_dir  'SPM_SPC-20190130.fits'];
@@ -202,7 +231,7 @@ elseif  sum(strfind(cor_type, 'spc-ifs' ))
     n_mft = 1400;
     n_from_lyotstop = 4096;
 elseif  strcmp(cor_type, 'spc-wide' )
-    file_dir = [phaseb_dir '/spc_20181220/'];       % must have trailing "/"
+    file_dir = [data_dir '/spc_20181220/'];       % must have trailing "/"
     pupil_diam_pix = 1000;
     pupil_file = [file_dir  'pupil_SPC-20181220_1k_rotated.fits'];
     pupil_mask_file = [file_dir  'SPM_SPC-20181220_1000_rounded9_gray.fits'];
@@ -214,10 +243,9 @@ elseif  strcmp(cor_type, 'spc-wide' )
     n_to_fpm = 2048;            % gridsize to/from FPM
     n_mft = 1400;
     n_from_lyotstop = 4096;
-    field_stop_radius_lam0 = 20.0;
 elseif strcmp(cor_type, 'none' )
     file_directory = './hlc_20190210/';         % must have trailing "/"
-    prefix = file_directory + 'run461_nro_';
+    prefix = file_directory + 'run461_';
     pupil_file = prefix + 'pupil_rotated.fits';
     use_fpm = 0;
     use_lyot_stop = 0;
@@ -231,7 +259,7 @@ else
     return
 end
 
-mas_per_lamD = lambda0_m * 360.0 * 3600.0 / (2 * pi * 2.363e6) * 1000;	% mas per lambda0/D
+mas_per_lamD = lambda0_m * 360.0 * 3600.0 / (2 * pi * 2.363) * 1000;	% mas per lambda0/D
 
 if(exist('optval','var')==1) %if exist('optval')
     if ( isfield(optval,'lam0') );           lambda0_m = optval.lam0 * 1.0e-6;end
@@ -302,31 +330,31 @@ fl_pri = 2.83459423440 * 1.0013;
 d_pri_sec = 2.285150515460035;
 d_focus_sec = d_pri_sec - fl_pri;
 fl_sec = -0.653933011 * 1.0004095;
-d_sec_focus = 3.580188916677103; 	% 1 / (1/fl_sec - 1/(d_pri_sec-fl_pri))
+d_sec_focus = 3.580188916677103; 	
 diam_sec = 0.58166;
 d_sec_fold1 = 2.993753476654728;
-d_fold1_focus = 0.586435440022375;	% d_sec_focus - d_sec_fold1
+d_fold1_focus = 0.586435440022375;	
 diam_fold1 = 0.09;
 d_fold1_m3 = 1.680935841598811;
 fl_m3 = 0.430216463069001;
-d_focus_m3 = 1.094500401576436;	% d_fold1_m3 - d_fold1_focus
-d_m3_pupil = 0.469156807701977;	% double_lens(d_pri_sec,fl_sec,d_sec_fold1+d_fold1_m3,fl_m3)
-d_m3_focus = 0.708841602661368;	% 1 / (1/fl_m3 - 1/d_focus_m3)
+d_focus_m3 = 1.094500401576436;	
+d_m3_pupil = 0.469156807701977;	
+d_m3_focus = 0.708841602661368;	
 diam_m3 = 0.2;
 d_m3_m4 = 0.943514749358944;
 fl_m4 = 0.116239114833590;
-d_focus_m4 = 0.234673014520402;	% d_m3_m4 - d_m3_focus
-d_pupil_m4 = 0.474357941656967;	% d_m3_m4 - d_m3_pupil
-d_m4_focus = 0.230324117970585;	% 1 / (1/fl_m4 - 1/d_focus_m4)
+d_focus_m4 = 0.234673014520402;	
+d_pupil_m4 = 0.474357941656967;	
+d_m4_focus = 0.230324117970585;	
 diam_m4 = 0.07;
 d_m4_m5 = 0.429145636743193;
-d_m5_focus = 0.198821518772608;	% d_m4_m5 - d_m4_focus
-fl_m5 = 0.198821518772608;		% d_m5_focus
-d_m5_pupil = 0.716529242882632;	% double_lens(d_pupil_m4,fl_m4,d_m4_m5,fl_m5)
+d_m5_focus = 0.198821518772608;	
+fl_m5 = 0.198821518772608;		
+d_m5_pupil = 0.716529242882632;	
 diam_m5 = 0.07;
 d_m5_fold2 = 0.351125431220770;
 diam_fold2 = 0.06;
-d_fold2_fsm = 0.365403811661862;	% d_m5_pupil - d_m5_fold2 ;0.390956443540524;
+d_fold2_fsm = 0.365403811661862;	
 d_fsm_oap1 = 0.354826767220001;
 fl_oap1 = 0.503331895563883;
 diam_oap1 = 0.06;
@@ -334,7 +362,7 @@ d_oap1_focm = 0.768005607094041;
 d_focm_oap2 = 0.314483210543378;
 fl_oap2 = 0.579156922073536;
 diam_oap2 = 0.06;
-d_oap2_dm1 = 0.775775726154228;		% double_lens(d_fsm_oap1,fl_oap1,d_oap1_focm+d_focm_oap2,fl_oap2)
+d_oap2_dm1 = 0.775775726154228;		
 d_dm1_dm2 = 1.0;
 d_dm2_oap3 = 0.394833855161549;
 fl_oap3 = 1.217276467668519;
@@ -344,23 +372,23 @@ diam_fold3 = 0.06;
 d_fold3_oap4 = 1.158897671642761;
 fl_oap4 = 0.446951159052363;
 diam_oap4 = 0.06;
-d_oap4_pupilmask = 0.423013568764728;	% double_lens(d_dm1_dm2+d_dm2_oap3,fl_oap3,d_oap3_fold3+d_fold3_oap4,fl_oap4)
-d_pupilmask_oap5 = 0.408810648253099; 	% 0.548189351937178;
+d_oap4_pupilmask = 0.423013568764728;	
+d_pupilmask_oap5 = 0.408810648253099; 	
 fl_oap5 =  0.548189351937178;
 diam_oap5 = 0.06;
 d_oap5_fpm = 0.548189083164429;
-d_fpm_oap6 = 0.548189083164429;		% d_oap5_fpm
-fl_oap6 = 0.548189083164429;		% d_fpm_oap6
+d_fpm_oap6 = 0.548189083164429;		
+fl_oap6 = 0.548189083164429;		
 diam_oap6 = 0.06;
-d_oap6_lyotstop = 0.687567667550736;	% double_lens(d_pupilmask_oap5,fl_oap5,d_oap5_fpm+d_fpm_oap6,fl_oap6)
+d_oap6_lyotstop = 0.687567667550736;	
 d_lyotstop_oap7 = 0.401748843470518;
 fl_oap7 = 0.708251083480054;
 diam_oap7 = 0.06;
-d_oap7_fieldstop = 0.708251083480054;	% fl_oap7
+d_oap7_fieldstop = 0.708251083480054;	
 d_fieldstop_oap8 = 0.210985967281651;
-fl_oap8 = 0.210985967281651;		% d_fieldstop_oap8
+fl_oap8 = 0.210985967281651;		
 diam_oap8 = 0.06;
-d_oap8_pupil = 0.238185804200797;	% double_lens( d_lyotstop_oap7, fl_oap7, d_oap7_fieldstop+d_fieldstop_oap8, fl_oap8 )
+d_oap8_pupil = 0.238185804200797;	
 d_oap8_filter = 0.368452268225530;
 diam_filter = 0.01;
 d_filter_lens = 0.170799548215162;
@@ -370,19 +398,18 @@ d_lens_fold4 = 0.246017378417573;
 diam_fold4 = 0.02;
 d_fold4_image = 0.050001578514650;
 
-%s1 = d_oap8_filter + d_filter_lens - d_oap8_pupil
-%s2 = d_lens_fold4 + d_fold4_image
-fl_pupillens = 0.149260576823040;	% 1 / (1/s1 + 1/s2)
+
+fl_pupillens = 0.149260576823040;	
 
 n = n_default;	% start off with less padding
 
 wavefront = prop_begin(diam,lambda_m, n,'beam_diam_fraction', pupil_diam_pix/n);%
 
 pupil =fitsread( pupil_file);
-wavefront = prop_multiply(wavefront, falco_pad(pupil,n));
-clear pupil; %pupil = 0;
+wavefront = prop_multiply(wavefront, custom_pad(pupil,n));
+clear pupil
 
-if ( polaxis ~= 0 );  wavefront =  wfirst_polmap(wavefront, polfile, pupil_diam_pix, polaxis,lambda_m); end
+if ( polaxis ~= 0 );  wavefront =  polmap(wavefront, polfile, pupil_diam_pix, polaxis,lambda_m); end
 
 wavefront = prop_define_entrance(wavefront);
 
@@ -393,7 +420,7 @@ if ( source_x_offset ~= 0 || source_y_offset ~= 0)
     x  = repmat( ((1:n)-n/2-1)/(pupil_diam_pix/2),n,1);
     tilt = - 1i*pi*(x*source_x_offset+x'*source_y_offset) * lambda0_m / lambda_m;%
     wavefront = prop_multiply(wavefront, exp(tilt));
-    clear x tilt %x =0; tilt =0;
+    clear x tilt
 end
 
 if ( sum(zindex) ~= 0 );   wavefront = prop_zernikes(wavefront, zindex, zval_m); end
@@ -444,7 +471,7 @@ if ( cgi_x_shift_pupdiam ~= 0 || cgi_y_shift_pupdiam ~= 0 || cgi_x_shift_m ~= 0 
     if (cgi_x_shift_pupdiam ~= 0 || cgi_y_shift_pupdiam ~= 0)   % input pup beam shear in % of D
         tilt =  - 1i*pi*(x*cgi_x_shift_pupdiam + x'*cgi_y_shift_pupdiam)*pupil_diam_pix*pupil_diam_pix/n;
     elseif  (cgi_x_shift_m ~= 0 || cgi_y_shift_m ~= 0)          % input pup beam shear in abs value
-        tilt =  - 1i*pi*(x*cgi_x_shift_m + x'*cgi_y_shift_m)*prop_get_sampling(wavefront)*pupil_diam_pix/n;
+        tilt =  - 1i*pi*(x*cgi_x_shift_m + x'*cgi_y_shift_m)/prop_get_sampling(wavefront)*pupil_diam_pix/n;
     end
     wavefront.wf = fft2( ifft2(wavefront.wf).*ifftshift(exp(tilt)) ); % fft the field, apply tilt, fft back
     clear x tilt %x =0; tilt =0;
@@ -456,9 +483,9 @@ if ( use_aperture );   wavefront = prop_circular_aperture(wavefront, diam_fsm/2)
 if ( fsm_x_offset ~= 0 || fsm_y_offset ~= 0)
     % compute tilted wavefront to offset source by fsm_x_offset,fsm_y_offset lambda0_m/D
     x  = repmat( ((1:n)-n/2-1)/(pupil_diam_pix/2),n,1);
-    tilt =  - 1i*pi*(x*fsm_x_offset + x'*fsm_y_offset)* lambda0_m / lambda_m;
+    tilt =  1i*pi*(x*fsm_x_offset + x'*fsm_y_offset)* lambda0_m / lambda_m;
     wavefront = prop_multiply(wavefront, exp(tilt));
-    clear x tilt %x = 0; tilt =0;
+    clear x tilt 
 end
 
 wavefront =prop_propagate(wavefront, d_fsm_oap1, 'surface_name','OAP1');
@@ -476,12 +503,12 @@ if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb
 if ( use_aperture );   wavefront = prop_circular_aperture(wavefront, diam_oap2/2 );end
 
 wavefront = prop_propagate(wavefront, d_oap2_dm1, 'surface_name','DM1');
-if ( use_dm1 );   wavefront = prop_dm(wavefront, dm1_m, dm1_xc_act, dm1_yc_act, dm_sampling_m, 'xtilt',dm1_xtilt_deg, 'ytilt',dm1_ytilt_deg, 'ztilt',dm1_ztilt_deg);end
+if ( use_dm1 ); wavefront = prop_dm(wavefront, dm1_m, dm1_xc_act, dm1_yc_act, dm_sampling_m, 'xtilt',dm1_xtilt_deg, 'ytilt',dm1_ytilt_deg, 'ztilt',dm1_ztilt_deg); end
 if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb_DM1_phase_error_V1.0.fits'], 'wavefront');end
 if ( contains(cor_type,'hlc')  && use_hlc_dm_patterns ) %if ( ~isempty(strfind(cor_type,'hlc'))  && use_hlc_dm_patterns ),
     dm1wfe = fitsread( [prefix 'dm1wfe.fits']);
-    wavefront = prop_add_phase(wavefront, falco_pad(dm1wfe, n));
-    clear dm1wfe %dm1wfe = 0;
+    wavefront = prop_add_phase(wavefront, custom_pad(dm1wfe, n));
+    clear dm1wfe 
 end
 
 wavefront = prop_propagate(wavefront, d_dm1_dm2, 'surface_name','DM2');
@@ -490,12 +517,12 @@ if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb
 if ( contains(cor_type,'hlc')  ) %if ( strfind(cor_type,'hlc')  )
     if ( use_hlc_dm_patterns )
         dm2wfe =fitsread( [prefix 'dm2wfe.fits']);
-        wavefront = prop_add_phase(wavefront, falco_pad(dm2wfe, n));
-        clear dm2wfe %dm2wfe = 0;
+        wavefront = prop_add_phase(wavefront, custom_pad(dm2wfe, n));
+        clear dm2wfe 
     end
     dm2mask=fitsread( [prefix 'dm2mask.fits']);
-    wavefront = prop_multiply(wavefront, falco_pad(dm2mask, n));
-    clear dm2mask %dm2mask = 0;
+    wavefront = prop_multiply(wavefront, custom_pad(dm2mask, n));
+    clear dm2mask 
 end
 
 wavefront = prop_propagate(wavefront, d_dm2_oap3, 'surface_name','OAP3');
@@ -514,23 +541,23 @@ if ( use_aperture );   wavefront = prop_circular_aperture(wavefront, diam_oap4/2
 
 wavefront = prop_propagate(wavefront, d_oap4_pupilmask,'surface_name', 'PUPIL_MASK');	% flat/reflective shaped pupil
 if ( contains(cor_type,'spc') && ~end_at_fpm_exit_pupil ) %if ( ~isempty(strfind(cor_type,'spc') ) && ~end_at_fpm_exit_pupil )
-    pupil_mask = falco_pad(fitsread( pupil_mask_file),n);
+    pupil_mask = custom_pad(fitsread( pupil_mask_file),n);
     
     if ( mask_x_shift_pupdiam ~=0 || mask_y_shift_pupdiam ~=0  || mask_x_shift_m ~=0 || mask_y_shift_m ~=0)
         %shift SP mask by FFTing it, applying tilt, and FFTing back
-        x  = repmat( ([1:n]-n/2-1)/(pupil_diam_pix/2),n,1);
+        x = repmat( ([1:n]-n/2-1) / (pupil_diam_pix/2), n, 1 );
         if ( mask_x_shift_pupdiam ~=0 || mask_y_shift_pupdiam ~=0) % shifts are in % of D
-            tilt =  1i*pi*(x*mask_x_shift_pupdiam +x'*mask_y_shift_pupdiam)*pupil_diam_pix*pupil_diam_pix/n;
+            tilt =  -1i*pi*(x*mask_x_shift_pupdiam +x'*mask_y_shift_pupdiam) * pupil_diam_pix * pupil_diam_pix/n;
         elseif (mask_x_shift_m ~=0 || mask_y_shift_m ~=0)
-            tilt =  1i*pi*(x*mask_x_shift_m +x'*mask_y_shift_m)*prop_get_sampling(wavefront)*pupil_diam_pix/n;
+            tilt =  -1i*pi*(x*mask_x_shift_m +x'*mask_y_shift_m) / prop_get_sampling(wavefront) * pupil_diam_pix/n;
         end
-        pupil_mask =  fft2( ifft2(ifftshift(pupil_mask)).*ifftshift(exp(tilt)) );
-        clear x tilt %x=0; tilt =0;
+        pupil_mask = ifft2( ifftshift(pupil_mask) ) .* ifftshift( exp(tilt) );
+        pupil_mask = fftshift( fft2(pupil_mask) );
+        clear x tilt 
     end
     
-    wavefront = prop_multiply(wavefront, falco_pad(pupil_mask,n));
-    clear pupil_mask %pupil_mask = 0;
-    
+    wavefront = prop_multiply(wavefront, pupil_mask);
+    clear pupil_mask 
 end
 
 if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb_PUPILMASK_phase_error_V1.0.fits'], 'wavefront'); end
@@ -538,10 +565,10 @@ if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb
 diam = 2 * prop_get_beamradius(wavefront);
 wavefront = prop_end(wavefront, 'noabs');
 n = n_to_fpm;
-wavefront0 = falco_pad(wavefront,n);
+wavefront0 = custom_pad(wavefront,n);
 wavefront = prop_begin(diam, lambda_m, n, 'beam_diam_fraction', pupil_diam_pix/n);
 wavefront.wf = prop_shift_center(wavefront0);
-clear wavefront0 %wavefront0 = 0;
+clear wavefront0 
 
 wavefront = prop_propagate(wavefront, d_pupilmask_oap5, 'surface_name','OAP5');
 wavefront = prop_lens(wavefront, fl_oap5);
@@ -554,41 +581,44 @@ if ( use_fpm )
     if ( fpm_x_offset ~=0 || fpm_y_offset ~=0 || fpm_x_offset_m ~=0 || fpm_y_offset_m ~=0 )
         %To shift FPM, FFT field to pupil, apply tilt, FFT back to focus,
         %apply FPM, FFT to pupil, take out tilt, FFT back to focus
-        x  = repmat( ((1:n)-n/2-1)/(pupil_diam_pix/2),n,1);
+        x  = repmat( ((1:n)-n/2-1) / (pupil_diam_pix/2),n,1);
         if fpm_x_offset ~=0 || fpm_y_offset ~=0         % shifts are specified in lambda0/D
             tilt =  1i*pi*(x*fpm_x_offset +x'*fpm_y_offset)* lambda0_m / lambda_m;
-        elseif fpm_x_offset_m ~=0 || fpm_y_offset_m ~=0 %
-            tilt =  1i*pi*(x*fpm_x_offset +x'*fpm_y_offset)* pupil_diam_pix/n ;
+        elseif fpm_x_offset_m ~=0 || fpm_y_offset_m ~=0 
+            tilt =  1i*pi*(x*fpm_x_offset_m+x'*fpm_y_offset_m) / prop_get_sampling(wavefront) * pupil_diam_pix/n ;
         end
         wavefront.wf =  fft2(ifft2(wavefront.wf).*ifftshift(exp(tilt)) );
-        clear x %x= 0;
+        clear x 
     end
     
-    if ( contains(cor_type,'hlc')  )%if ( strfind(cor_type,'hlc')  )
+    if ( contains(cor_type,'hlc')  )
         occ = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
-        occ = occ.*exp(-1j*angle(occ(1,1))); %--Standardize the phase of the masks to be 0 for the outer glass part.
-        %if strcmp(cor_type,'hlc') occ = shift2d(imrotate(occ, 180),1,1); end
-        if strcmpi(cor_type,'hlc'); occ = circshift(rot90(occ, 2),[1,1]); end
-        wavefront = prop_multiply(wavefront, falco_pad(occ,n));
-        clear occ %occ = 0;
-    elseif ( contains(cor_type,'spc')  )%elseif ( strfind(cor_type,'spc')  )
+        
+        %--DEBUGGING
+        if angle(occ(1,1)) ~= 0
+            occ = occ.*exp(-1j*angle(occ(1,1))); %--Standardize the phase of the masks to be 0 for the outer glass part.
+        end
+        
+        wavefront = prop_multiply(wavefront, custom_pad(occ,n));
+        clear occ
+    elseif ( contains(cor_type,'spc')  )
         % super-sample FPM
-        wavefront0 = falco_pad(ifftshift(fft2(wavefront.wf)), n_mft);  % to virtual pupil
+        wavefront0 = custom_pad(ifftshift(fft2(wavefront.wf)), n_mft);  % to virtual pupil
         fpm = fitsread( fpm_file);
-        fpm = falco_pad(fpm, size(fpm,1)+mod(size(fpm,1),2)); % make it even; otherwise the phase part is incorrect
+        fpm = custom_pad(fpm, size(fpm,1)+mod(size(fpm,1),2)); % make it even; otherwise the phase part is incorrect
         nfpm = size(fpm,1);
         fpm_sampling_lam = fpm_sampling_lam0 * lambda0_m / lambda_m;
         wavefront0 = mft2(wavefront0, fpm_sampling_lam, pupil_diam_pix, nfpm, -1); % MFT to highly-sampled focal plane
         wavefront0 = wavefront0.*fpm;
-        clear fpm %fpm = 0;
+        clear fpm
         wavefront0 = mft2(wavefront0, fpm_sampling_lam, pupil_diam_pix, n, +1);  % MFT to virtual pupil
         wavefront.wf = ifft2(ifftshift(wavefront0));% back to normally-sampled focal plane
-        clear wavefront0 %wavefront0 = 0;
+        clear wavefront0 
     end
     
     if ( fpm_x_offset ~=0 || fpm_y_offset ~=0 || fpm_x_offset_m ~= 0 || fpm_y_offset_m ~= 0)
         wavefront.wf = fft2( ifft2(wavefront.wf).*ifftshift(exp(-tilt)) );
-        tilt = 0;
+        clear tilt
     end
 end
 
@@ -601,13 +631,14 @@ if ( pinhole_diam_m ~=0 )
     m_per_lamD = dx_m * n / pupil_diam_pix;         % current focal plane sampling in lambda_m/D
     dx_pinhole_lamD = dx_pinhole_diam_m /m_per_lamD;% pinhole sampling in lambda_m/D
     n_in = round(pupil_diam_pix * 1.2);
-    wavefront0 = falco_pad( fftshift(fft2(ifftshift(wavefront.wf))),n_in);
+    wavefront0 = fftshift(fft2( wavefront.wf ));   % to virtual pupil
+    wavefront0 = custom_pad( wavefront0, n_in );
     wavefront0 = mft2( wavefront0, dx_pinhole_lamD, pupil_diam_pix, n_out, -1 );		% MFT to highly-sampled focal plane
-    p = (radius(n_out,n_out) .* dx_pinhole_diam_m) <= pinhole_diam_m/2.0;
+    p = (radpix(n_out,n_out) .* dx_pinhole_diam_m) <= pinhole_diam_m/2.0;
     wavefront0 = wavefront0 .* p;
     wavefront0 = mft2( wavefront0, dx_pinhole_lamD, pupil_diam_pix, n, +1 );	% MFT back to virtual pupil
     wavefront.wf = ifft2(ifftshift(wavefront0)); % back to normally-sampled focal plane
-    clear wavefront0 %wavefront0 = 0;
+    clear wavefront0 
 end
 
 wavefront = prop_propagate(wavefront, d_fpm_oap6-fpm_z_shift_m, 'surface_name','OAP6');
@@ -621,13 +652,13 @@ diam = 2 * prop_get_beamradius(wavefront);
 [wavefront, sampling_m ]= prop_end(wavefront,  'noabs');
 
 n = n_from_lyotstop;
-wavefront = falco_pad(wavefront,n);
+wavefront = custom_pad(wavefront,n);
 wavefront0 = wavefront;
 
 if  ~isempty(output_field_rootname)
     lams = num2str(lambda_m*1e6, '%6.4f');
     pols = ['polaxis'   num2str(polaxis,2)];
-    wavefront = falco_pad(wavefront, output_dim); %
+    wavefront = custom_pad(wavefront, output_dim); %
     fitswrite(real(wavefront), [output_field_rootname '_' lams 'um_' pols '_real.fits']);
     fitswrite(imag(wavefront), [output_field_rootname '_' lams 'um_' pols '_imag.fits']);
 end
@@ -635,34 +666,32 @@ end
 if ( end_at_fpm_exit_pupil )
     if getWFE
         pupil = fitsread( pupil_file);
-        wavefront = falco_pad(wavefront.*falco_pad(pupil,n), pupil_diam_pix); % if to get wfe
+        wavefront = custom_pad(wavefront.*custom_pad(pupil,n), pupil_diam_pix); % if to get wfe
     end
     return
 end
 
 wavefront = prop_begin (diam, lambda_m, n, 'beam_diam_fraction', pupil_diam_pix/n);
 wavefront.wf = prop_shift_center(wavefront0);
-clear wavefront0 %wavefront0 = 0;
+clear wavefront0 
 
 if ( use_lyot_stop )
+    lyot = fitsread( lyot_stop_file );
+    lyot = custom_pad( lyot, n );    
     if ( lyot_x_shift_pupdiam ~=0 || lyot_y_shift_pupdiam ~=0 || lyot_x_shift_m ~=0 || lyot_y_shift_m ~=0 )
         % apply shift to lyot stop by FFTing the stop, applying a tilt, and FFTing back
         x  = repmat( ((1:n)-n/2-1)/(pupil_diam_pix/2),n,1);
         if lyot_x_shift_pupdiam ~=0 || lyot_y_shift_pupdiam ~=0 %offsets are normalized to pupil diameter
-            tilt = -1i*pi*(x*lyot_x_shift_pupdiam +x'*lyot_x_shift_pupdiam)* pupil_diam_pix * pupil_diam_pix/n;
+            tilt = -1i*pi*(x*lyot_x_shift_pupdiam +x'*lyot_y_shift_pupdiam)* pupil_diam_pix * pupil_diam_pix/n;
         elseif lyot_x_shift_m ~=0 || lyot_y_shift_m ~=0
-            tilt = -1i*pi*(x*lyot_x_shift_m +x'*lyot_x_shift_m)/prop_get_sampling(wavefront) * pupil_diam_pix/n;
+            tilt = -1i*pi*(x*lyot_x_shift_m +x'*lyot_y_shift_m)/prop_get_sampling(wavefront) * pupil_diam_pix/n;
         end
-        
-        wavefront.wf = fft2( ifft2(wavefront.wf).*ifftshift(exp(tilt)) );
+        lyot = ifft2( ifftshift(lyot) ) .* ifftshift( exp(tilt) );
+        lyot = fftshift( fft2(lyot) );
+        clear x tilt
     end
-    lyot =fitsread( lyot_stop_file);
-    wavefront = prop_multiply(wavefront, falco_pad(lyot,n));
-    clear lyot %lyot = 0;
-    if ( lyot_x_shift_pupdiam ~=0 || lyot_y_shift_pupdiam ~=0 )
-        wavefront.wf = fft2( ifft2(wavefront.wf).*ifftshift(exp(-tilt)) );
-        clear tilt %tilt = 0;
-    end
+    wavefront = prop_multiply( wavefront, lyot );
+    clear lyot
 end
 
 if ( use_pupil_lens  || pinhole_diam_m ~=0 ); wavefront =prop_circular_aperture(wavefront, 1.1, 'norm'); end
@@ -674,8 +703,7 @@ if ( use_aperture );   wavefront = prop_circular_aperture(wavefront, diam_oap7/2
 
 wavefront = prop_propagate(wavefront, d_oap7_fieldstop, 'surface_name','FIELD_STOP');
 
-% if ( use_field_stop && (~isempty(strfind(cor_type,'hlc'))  || strcmp(cor_type,'spc-wide') ) ),
-if ( use_field_stop && contains(cor_type,'hlc')  || strcmp(cor_type,'spc-wide') )
+if ( use_field_stop && contains(cor_type,'hlc') )
     sampling_lamD = pupil_diam_pix / n;      % sampling at focus in lambda_m/D
     stop_radius = field_stop_radius_lam0 / sampling_lamD * (lambda0_m/lambda_m) * prop_get_sampling(wavefront);
     wavefront = prop_circular_aperture(wavefront, stop_radius);
@@ -705,15 +733,15 @@ else
         z6_rms_waves = [    0.000,  0.030,  0.030,  0.029,  0.027,  0.026,  0.023,  0.020,  0.017,  0.013,  0.008, -0.002, -0.013, -0.038, -0.076, -0.107, -0.160, -0.206 ];
         if ( use_defocus_lens ~=0 )    	% defocus lens (1-4)
             % use one of 4 defocusing lenses
-            defocus = [ 18.0, 9.66, -4.88, -8.86 ];	% waves P-V @ 550
-            lens_fl = interp1( fl_defocus_lens, z4_pv_waves, defocus, 'spline' );
+            defocus = [ 18.0, 9.0, -4.0, -8.0 ];	% waves P-V @ 550
+            lens_fl = interp1( z4_pv_waves, fl_defocus_lens, defocus, 'spline' );
             wavefront =prop_lens(wavefront, lens_fl(use_defocus_lens));
             if ( use_errors );   wavefront =prop_errormap(wavefront,[map_dir 'wfirst_phaseb_DEFOCUSLENS' ...
                     num2str(use_defocus_lens,2)  '_phase_error_V1.0.fits'], 'wavefront');
             end
         else
             % specify amount of defocus (P-V waves @ 575 nm)
-            lens_fl = interp1( fl_defocus_lens, z4_pv_waves, defocus, 'spline' );
+            lens_fl = interp1( z4_pv_waves, fl_defocus_lens, defocus, 'spline' );
             wavefront =prop_lens(wavefront, lens_fl);
             if ( use_errors );   wavefront =prop_errormap(wavefront,[map_dir 'wfirst_phaseb_DEFOCUSLENS1_phase_error_V1.0.fits'], 'wavefront');end
         end
@@ -722,7 +750,7 @@ end
 if ( use_aperture );   wavefront = prop_circular_aperture(wavefront, diam_lens/2); end
 
 wavefront = prop_propagate(wavefront, d_lens_fold4, 'surface_name','FOLD_4');
-if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb_FOLD4_phase_error_V1.0.fits'], 'wavefront');end
+if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb_FOLD4_phase_error_V1.1.fits'], 'wavefront');end
 if ( use_aperture );   wavefront = prop_circular_aperture(wavefront, diam_fold4/2);end
 
 wavefront = prop_propagate(wavefront, d_fold4_image, 'surface_name','IMAGE');
@@ -739,7 +767,7 @@ if ( final_sampling_lam0 ~=0 || final_sampling_m ~=0)
     end
     wavefront = prop_magnify( wavefront, mag, 'size_out',output_dim,'amp_conserve');
 else
-    wavefront = falco_pad(wavefront, output_dim);
+    wavefront = custom_pad(wavefront, output_dim);
 end
 
 return

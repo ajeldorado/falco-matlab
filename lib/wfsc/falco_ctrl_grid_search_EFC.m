@@ -14,14 +14,15 @@
 %
 %
 % REVISION HISTORY:
-% -Modified on 2018-07-24 to use Erkin's latest controller strategy.
-% -Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
+% - Modified on 2019-06-25 by A.J. Riggs to pass out tied actuator pairs. 
+% - Modified on 2018-07-24 to use Erkin's latest controller strategy.
+% - Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
 %   Required calling a new function. 
-% -Modified by A.J. Riggs on October 11, 2017 to allow easier mixing of
+% - Modified by A.J. Riggs on October 11, 2017 to allow easier mixing of
 %   which DMs are used and to also do a grid search over the gain of the 
 %   overall DM command. 
-% -Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
-% -Created at Princeton on 19 Feb 2015 by A.J. Riggs
+% - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
+% - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
 function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
@@ -82,6 +83,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj,nk) = dDM_temp.dDM9V; end
             end
             end
+            %--Tied actuators
+            if(any(mp.dm_ind==1)); dm1tied{ni} = dDM_temp.dm1tied; end
+            if(any(mp.dm_ind==2)); dm2tied{ni} = dDM_temp.dm2tied; end
         end
     else %--Not Parallelized
         for ni = 1:Nvals
@@ -100,6 +104,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj,nk) = dDM_temp.dDM9V; end
                 end
             end
+            %--Tied actuators
+            if(any(mp.dm_ind==1)); dm1tied{ni} = dDM_temp.dm1tied; end
+            if(any(mp.dm_ind==2)); dm2tied{ni} = dDM_temp.dm2tied; end
         end
     end
 
@@ -142,6 +149,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         if(any(mp.dm_ind==5)); dDM.dDM5V = dDM5V_store(:,:,indBest,indBestOmega,indBestRegDM9); end
         if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest,indBestOmega,indBestRegDM9); end
         if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest,indBestOmega,indBestRegDM9); end
+    %--Tied actuators
+    if(any(mp.dm_ind==1)); dDM.dm1tied = dm1tied{indBest}; end
+    if(any(mp.dm_ind==2)); dDM.dm2tied = dm2tied{indBest}; end
     else
         % OUT OF DATE
         vals_listaux = [val;vals_list(2,indBest)];
