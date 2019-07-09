@@ -99,7 +99,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
 %         [cvar.cMin,indBest] = min(Inorm_list(:));
         [cvar.cMin,indBest] = min(Inorm_list(:)./(thput_list(:).^2));
         
-        [indBest,indBestOmega] = ind2sub(size(Inorm_list),indBest);
+        [indBest,indBestOmega,indBestRegDM9] = ind2sub(size(Inorm_list),indBest);
         mp.aux.omega = valsOmega_list(indBestOmega);
         
         val = vals_list(1,indBest)-mp.aux.betaMinusOne;
@@ -107,6 +107,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
             indBest=find(vals_list(1,:)==val);
             cvar.latestBestlog10reg = vals_list(1,indBest);
             cvar.omegaUsed = mp.aux.omega;
+            cvarOut.regDM9Used = vals_list_dm9(indBestRegDM9);
             cvar.cMin = Inorm_list(indBest);
             dmfacBest = vals_list(2,indBest);
             cvar.latestBestDMfac = vals_list(2,indBest);
@@ -167,11 +168,21 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
             cvar.latestBestDMfac = 1;
         end
         vals_list = [log10regSchedOut; cvar.latestBestDMfac];
+<<<<<<< Updated upstream
         
         [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
         fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
 %         fprintf('Scheduled values of: \tlog10reg = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',log10regSchedOut,cvar.latestBestDMfac,cvar.cMin)
 
+=======
+        [cvar.cMin,thput,dDM] = falco_ctrl_EFC_base(ni,vals_list,indBestOmega,valsOmega_list,indBestRegDM9,vals_list_dm9,mp,cvar);
+%         [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+        if(mp.ctrl.flagUseModel)
+            fprintf('Model says scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
+        else
+            fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
+        end
+>>>>>>> Stashed changes
     end
     
     cvar.log10regUsed = log10regSchedOut;
