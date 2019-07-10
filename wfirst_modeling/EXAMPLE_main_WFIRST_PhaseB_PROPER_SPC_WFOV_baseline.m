@@ -38,7 +38,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_WFOV
 
 
 %% Step 3: Overwrite default values as desired
@@ -50,7 +50,7 @@ mp.flagPlot = true;
 
 %--Record Keeping
 mp.SeriesNum = 49;
-mp.TrialNum = 2;
+mp.TrialNum = 4;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'Series...snippet.mat';
@@ -60,6 +60,7 @@ mp.TrialNum = 2;
 % clear temp
 
 % % %--DEBUGGING:
+% mp.full.pol_conds = 10;
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
@@ -187,6 +188,7 @@ mp.dm2.V = out.dm2.Vall(:,:,end);
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 
+
 %--Save the config file
 fn_config = [mp.path.config mp.runLabel,'_configHD.mat'];
 save(fn_config)
@@ -197,12 +199,12 @@ fprintf('Saved the config file: \t%s\n',fn_config)
 
 %% Compute the table of annular zones
 
+%--Rsens needs to be revised once better inputs are available
 mp.eval.Rsens = ...
-                [3., 4.;...
-                4., 5.;...
-                5., 6.;...
-                6., 7.;...
-                7., 8.]; 
+                [6.5, 7.5;...
+                7.5, 8.5;...
+                8.5, 19;...
+                19, 20]; 
             
 tableAnn = falco_FRN_AnnularZone_table(mp);
 writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save to CSV file
@@ -223,8 +225,8 @@ tableCtoNI
 mp.yield.Dtel = 2.3631; % meters
 
 %--Define radial sampling and range
-mp.yield.R0 = 2.5;
-mp.yield.R1 = 9.1;
+mp.yield.R0 = 5.3;
+mp.yield.R1 = 20.1;
 
 %--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);
