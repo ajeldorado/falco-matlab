@@ -38,7 +38,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLCcustom
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC_custom
 
 
 %% Step 3: Overwrite default values as desired
