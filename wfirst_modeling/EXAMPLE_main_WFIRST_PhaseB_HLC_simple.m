@@ -63,31 +63,27 @@ mp.dm2.V = fitsread('hlc_dm2.fits')./mp.dm2.VtoH;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-%--DEBUGGING:
-mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 3;%1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 3;% 3 or 7  %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% %--DEBUGGING:
+% mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1; % 1, 3, or 7  %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
-%--PLANNED EFC
-mp.controller = 'plannedEFC';
-mp.ctrl.sched_mat = [...
-    [0,0,0,1,0];...
-    repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
-    repmat([1,1j-2,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,1],[9,1]);...   %--Optimal beta
-    repmat([1,1j-2,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,1],[15,1]);...  %--Optimal beta
-    ];
-[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-
+% %--PLANNED EFC
+% mp.controller = 'plannedEFC';
+% mp.ctrl.sched_mat = [...
+%     repmat([1,1j,12,1,1],[5,1]);...
+%     repmat([1,1j-1,12,1,1],[25,1]);...
+%     repmat([1,1j,12,1,1],[1,1]);...
+%     ];
+% [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 %--GRID SEARCH EFC    
-%mp.controller = 'gridsearchEFC';
-%mp.Nitr = 5; %--Number of estimation+control iterations to perform
-%mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-%mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
-%mp.ctrl.log10regVec = -5:1:-2; %--log10 of the regularization exponents (often called Beta values)
+mp.controller = 'gridsearchEFC';
+mp.Nitr = 10; %--Number of estimation+control iterations to perform
+mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
+mp.ctrl.flagUseModel = false; %--Whether to perform a model-based (vs empirical) grid search for the controller
+mp.ctrl.log10regVec = -6:1/2:-1; %--log10 of the regularization exponents (often called Beta values)
 
 %% FPM representation vs wavelength: compact model
 
