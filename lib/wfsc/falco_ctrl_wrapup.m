@@ -89,6 +89,8 @@ if(any(mp.dm_ind==1))
             [mp.dm1.V, indPair1] = falco_dm_neighbor_rule(mp.dm1.V, mp.dm1.dVnbr, mp.dm1.Nact);
             mp.dm1.tied = [mp.dm1.tied; indPair1]; %--Tie together actuators violating the neighbor rule
             dDM.dm1tied = mp.dm1.tied; %--This is what gets passed out to falco_wfsc_loop
+        else
+            dDM.dm1tied = [];
         end
     end
 end
@@ -98,6 +100,8 @@ if(any(mp.dm_ind==2))
             [mp.dm2.V,indPair2] = falco_dm_neighbor_rule(mp.dm2.V, mp.dm2.dVnbr, mp.dm2.Nact);
             mp.dm2.tied = [mp.dm2.tied; indPair2]; %--Tie together actuators violating the neighbor rule. This is used only within the controller.
             dDM.dm2tied = mp.dm2.tied; %--This is what gets passed out to falco_wfsc_loop
+        else
+            dDM.dm2tied = [];
         end
     end
 end
