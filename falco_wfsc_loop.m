@@ -4,10 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% High-level function to run design simulations of various types of Lyot coronagraphs.
+% Function to run wavefront estimation and control simulations of various 
+% types of coronagraphs.
+% - Data are mostly passed in structures.
+% - Nested functions are used in some places to prevent large structures 
+%   such as mp from being copied when passed to those functions.
 %
-% Data are mostly passed in structures.
-%
+% Modified on 2019-05-08 by A.J. Riggs to have mp be an optional output.
 % Modified on 2019-03-26 by A.J. Riggs to include tied actuators and to
 %   make nested functions actually nested.
 % Modified again by A.J. Riggs on May 23, 2017 to eliminate a lot of unnecessary
@@ -22,7 +25,7 @@
 %   in April 2016.
 % Adapted by A.J. Riggs from A.J.'s Princeton HCIL code on August 31, 2016.
 
-function [out] = falco_wfsc_loop(mp)
+function [out,varargout] = falco_wfsc_loop(mp)
 
 %% Sort out file paths and save the config file    
 
@@ -236,7 +239,6 @@ for Itr=1:mp.Nitr
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
         case{'pwp-bp','pwp-kf'}
-
 			if(mp.flagFiber)
 				if(mp.est.flagUseJac) %--Send in the Jacobian if true
 					ev = falco_est_pairwise_probing_fiber(mp,jacStruct);
@@ -249,7 +251,7 @@ for Itr=1:mp.Nitr
 				else %--Otherwise don't pass the Jacobian
 					ev = falco_est_pairwise_probing(mp);
 				end
-			end
+            end
             
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
@@ -375,11 +377,13 @@ if(any(mp.dm_ind==1))
     out.dm1.Vpv(Itr) = (max(max(mp.dm1.V))-min(min(mp.dm1.V)));
     Nrail1 = length(find( (mp.dm1.V <= -mp.dm1.maxAbsV) | (mp.dm1.V >= mp.dm1.maxAbsV) ));
     fprintf(' DM1 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm1.Vpv(Itr), Nrail1, mp.dm1.NactTotal, 100*Nrail1/mp.dm1.NactTotal); 
+    if(size(mp.dm1.tied,1)>0);  fprintf(' DM1 has %d pairs of tied actuators.\n',size(mp.dm1.tied,1));  end  
 end
 if(any(mp.dm_ind==2))
     out.dm2.Vpv(Itr) = (max(max(mp.dm2.V))-min(min(mp.dm2.V)));
     Nrail2 = length(find( (mp.dm2.V <= -mp.dm2.maxAbsV) | (mp.dm2.V >= mp.dm2.maxAbsV) ));
     fprintf(' DM2 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm2.Vpv(Itr), Nrail2, mp.dm2.NactTotal, 100*Nrail2/mp.dm2.NactTotal); 
+    if(size(mp.dm2.tied,1)>0);  fprintf(' DM2 has %d pairs of tied actuators.\n',size(mp.dm2.tied,1));  end 
 end
 if(any(mp.dm_ind==8))
     out.dm8.Vpv(Itr) = (max(max(mp.dm8.V))-min(min(mp.dm8.V)));
@@ -410,18 +414,15 @@ if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
 end
 
 % Take the next image to check the contrast level (in simulation only)
+tic; fprintf('Getting updated summed image... ');
 Im = falco_get_summed_image(mp);
+fprintf('done. Time = %.1f s\n',toc);
 
 %--REPORTING NORMALIZED INTENSITY
-if( (Itr==mp.Nitr) || (strcmpi(mp.controller,'conEFC') && (numel(mp.ctrl.muVec)==1)  ) ) 
-    InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
+InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
+fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+    InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
 
-    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-        InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
-else
-    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-        InormHist(Itr), cvar.cMin, InormHist(Itr)/cvar.cMin ); 
-end
 fprintf('\n\n');
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
@@ -488,6 +489,8 @@ if(isfield(mp,'testbed'))
 else
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
 end
+%% Optional output variable: mp
+varargout{1} = mp;
 
 %% Save the final DM commands separately for faster reference
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V')); out.DM1V = mp.dm1.V; end; end
@@ -854,7 +857,11 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end
     if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end
     if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end
+    
+    %--Update the tied actuator pairs
+    if(any(mp.dm_ind==1));  mp.dm1.tied = dDM.dm1tied;  end
+    if(any(mp.dm_ind==2));  mp.dm2.tied = dDM.dm2tied;  end
 
-end %--END OF FUNCTION
+end %--END OF NESTED FUNCTION
 
 end %--END OF main FUNCTION

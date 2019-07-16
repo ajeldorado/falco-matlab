@@ -11,6 +11,8 @@
 %
 % REVISION HISTORY:
 % --------------
+% Modified on 2019-05-06 to have mp.Fend.full.I00 be a matrix that includes
+% an index for the wavelength per sub-bandpass index.
 % Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
 % of having Efiber as a required output. 
 % Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
@@ -37,7 +39,7 @@ function [Eout, varargout] = model_full(mp,modvar,varargin)
 
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
-    normFac = mp.Fend.full.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
+    normFac = mp.Fend.full.I00(modvar.sbpIndex,modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
 %--Enable different arguments values by using varargin
@@ -45,10 +47,12 @@ icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
-      case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
-        normFac = 0; 
-      otherwise
-        error('model_full: Unknown keyword: %s\n', varargin{icav});
+        case{'getnorm'} % Set to 0 when finding the normalization factor
+            normFac = 0; 
+        case {'normoff','unnorm','nonorm'} 
+            normFac = 1;
+        otherwise
+            error('model_full: Unknown keyword: %s\n', varargin{icav});
     end
 end
 
@@ -59,10 +63,12 @@ if(any(mp.dm_ind==8)); mp.dm8 = rmfield(mp.dm8,'compact'); end
 if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9,'compact'); end
 
 %--Set the wavelength
-if(isfield(modvar,'lambda'))
+if(isfield(modvar,'lambda')) %--For FALCO or for evaluation without WFSC
     lambda = modvar.lambda;
-elseif(isfield(modvar,'sbpIndex'))
-    lambda = mp.sbp_centers(modvar.sbpIndex)*mp.full.sbp_facs(modvar.wpsbpIndex);
+elseif(isfield(modvar,'sbpIndex')) %--For use in FALCO
+    lambda = mp.full.lambdasMat(modvar.sbpIndex,modvar.wpsbpIndex);
+else
+    error('model_full: Need to specify a value or indices for a wavelength.')
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,7 +133,8 @@ switch lower(mp.layout)
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
                 if(isfield(mp,'FPMcubeFull')) %--Load it if stored
-                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam); 
+                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
+                else
                     mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
                 end
 
@@ -163,13 +170,12 @@ switch lower(mp.layout)
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
 
-        Eout = prop_run('wfirst_phaseb_v2b_compact', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
-        %Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        Eout = prop_run('model_compact_wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
 
-    case{'wfirst_phaseb_proper'} %--Use the true full model as the full model
+    case{'wfirst_phaseb_proper'} %--Use the true full model in PROPER as the full model
 
         optval = mp.full;
         optval.use_dm1 = true;
@@ -181,11 +187,18 @@ switch lower(mp.layout)
             optval.source_y_offset = -mp.source_y_offset_norm;
         end
 
-        Eout = prop_run('wfirst_phaseb_v2b', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
-        %Eout = circshift(rot90(Eout,2),[1,1]);	%   rotate to same orientation as FALCO
+        Eout = prop_run('model_full_wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
+        
+%     %--In development
+%     case{'lc_load_scale'}
+%         switch upper(mp.coro)
+%             case{'HLC'}
+%                 Eout = model_full_scale(mp, lambda, Ein, normFac);
+%         end    
+
 end
 
 %% Undo GPU variables if they exist

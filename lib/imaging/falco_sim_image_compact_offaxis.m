@@ -12,7 +12,7 @@
 %    Erkin's code.
 %--Created on 2018-01-24 by A.J. Riggs.
 
-function [Iout, Ifiber] = falco_sim_image_compact_offaxis(mp,x_offset,y_offset,varargin)
+function [Iout, varargout] = falco_sim_image_compact_offaxis(mp,x_offset,y_offset,varargin)
     
 flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 modvar.whichSource = 'offaxis';
@@ -40,11 +40,7 @@ if(mp.flagFiber)
     end
 end
   
-if(flagEval)
-    Iout = zeros(mp.Fend.eval.Neta, mp.Fend.eval.Nxi);
-else
-    Iout = zeros(mp.Fend.Neta, mp.Fend.Nxi);            
-end
+Iout = 0; %--Initialize
     
 for si=1:mp.Nsbp
     modvar.sbpIndex = si; 
@@ -62,6 +58,7 @@ for si=1:mp.Nsbp
     Iout = Iout + (abs(E2D).^2)*mp.jac.weightMat(si,1);
     if(mp.flagFiber)
         Ifiber = Ifiber + (abs(Efiber).^2)*mp.jac.weightMat(si,1);
+        varargout{1} = Ifiber;
     end
 end
 

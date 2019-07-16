@@ -43,6 +43,7 @@ data/ws/**
 data/ws_inprogress/**
 data/brief/**
 data/material/**
+data/frn/**
 
 !data/brief/placeholder.txt
 !data/material/placeholder.txt
@@ -55,6 +56,25 @@ data/material/**
 !data/maps/placeholder.txt
 !data/ws/placeholder.txt
 !data/ws_inprogress/placeholder.txt
+!data/frn/placeholder.txt
+
+FRN/**
+#wfirst_modeling/FRN/calculateFRN/*
+#wfirst_modeling/FRN/**
+#!wfirst_modeling/FRN/placeholder.txt
+
+#wfirst_modeling/FRN/*.m
+#!wfirst_modeling/FRN/EXAMPLE*
+#!data/frn/s_EB_IMG_NF_Band1/*
+
+eval/**
+!eval/placeholder.txt
+!eval/EXAMPLE_*
+!eval/falco_*
+
+
+
+
 #--Don't sync large-size mask image formats
 lib/masks/**/*.fits
 **/*.bmp
@@ -150,3 +170,4 @@ docs/**
 HLCLSplotter.m
 PMGIplotter.m
 *.mat
+*.pyc

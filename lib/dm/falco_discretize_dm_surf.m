@@ -1,10 +1,26 @@
-function dm = falco_discretize_dm_surf(dm,flagMethod)
+function dm = falco_discretize_dm_surf(dm,flagMethod,varargin)
+
+% optional flag to use testbed instead of simulation  
+if(nargin>0)
+    flag_tb = varargin{1}; % The first variable argument defines which testbed type
+
+    switch flag_tb
+        case 'tb'
+            HminStep = dm.HminStep_tb;
+        otherwise
+            HminStep = dm.HminStep;
+            disp('Silent error: HminStep_tb not defined. Using HminStep for testbed.');
+    end
+else
+    % Use HminStep for dm model 
+    HminStep = dm.HminStep;
+end
 
 % Calculate surface heights to maximum precision
 h_cont = dm.VtoH.*dm.V;
 
 % Calculate number of (fractional) steps required to represent the surface
-nsteps = h_cont./dm.HminStep;
+nsteps = h_cont./HminStep;
 
 % Discretize by removing fractional step
 switch flagMethod
@@ -21,6 +37,6 @@ switch flagMethod
 end
 
 % Calculate discretized surface
-dm.Vquantized = nsteps.*dm.HminStep./dm.VtoH;
+dm.Vquantized = nsteps.*HminStep./dm.VtoH;
 
 end %--END OF FUNCTION
