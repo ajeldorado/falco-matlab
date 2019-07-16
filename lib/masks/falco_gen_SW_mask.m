@@ -54,6 +54,17 @@ else
     DHshape = 'circle'; %--Default to a circular outer edge
 end
 
+xi_cen = 0;
+eta_cen = 0;
+
+if(isfield(inputs,'xi_cen'))
+    xi_cen = inputs.xi_cen;
+end
+
+if(isfield(inputs,'eta_cen'))
+    eta_cen = inputs.eta_cen;
+end
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--Convert opening angle to radians
@@ -84,7 +95,9 @@ else %--pixel centering
     etas = (-Neta/2:(Neta/2-1))*deta;
 end
 [XIS,ETAS] = meshgrid(xis,etas);
-[THETA,RHO] = cart2pol(XIS,ETAS);
+% [THETA,RHO] = cart2pol(XIS,ETAS);
+THETA = atan2((XIS-xi_cen), (ETAS-eta_cen));
+RHO = sqrt((XIS - xi_cen).^2 + (ETAS - eta_cen).^2);
 
 %--Generate the Outer Mask
 switch lower(DHshape)

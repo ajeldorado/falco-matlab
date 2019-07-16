@@ -13,11 +13,14 @@
 function [mp,thput] = falco_compute_thput(mp)
 
 if(mp.flagFiber)
-
-	[~, ImTemp] = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y);
-	thput = sum(sum(ImTemp))/mp.sumPupil;
-	fprintf('Fiber throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', 100*thput, mp.thput_eval_x, mp.thput_eval_y);
-
+    
+    [~, ImTemp] = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y);
+    thput = sum(sum(ImTemp))/mp.sumPupil;
+    if(~mp.flagLenslet)
+        thput = thput/mp.Fend.Nfiber;
+    end
+    fprintf('Fiber throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', 100*thput, mp.thput_eval_x, mp.thput_eval_y);
+    
 else
 
     ImTemp = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y,'eval');
