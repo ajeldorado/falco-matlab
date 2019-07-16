@@ -30,10 +30,10 @@ ImCoh = falco_get_summed_image(mp);
 fprintf('done. Time = %.2f s\n',toc)
 
 %--Compute coherent+incoherent light image
-tic; fprintf('Generating the PSF with polarization aberrations and stellar size... ')
+tic; fprintf('Generating the PSF with polarization aberrations ') %and stellar size... ')
 mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.TTrms = 0; % [mas]
-mp.full.Dstar = 1; % [mas]
+mp.full.Dstar = 0;%1; % [mas]
 mp.full.Dtel = 2.3631; % [meters]
 mp.full.TipTiltNacross = 5; 
 ImBoth = falco_get_summed_image_TipTiltPol(mp);

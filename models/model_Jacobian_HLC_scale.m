@@ -51,6 +51,11 @@ lambda = mp.sbp_centers(modvar.sbpIndex);
 mirrorFac = 2; % Phase change is twice the DM surface height.f
 NdmPad = mp.compact.NdmPad;
 
+%--Modify the FPM resolutions to scale linearly with wavelength
+scaleFac = lambda/mp.lambda0;
+mp.F3.compact.dxi = scaleFac*mp.F3.compact.dxi;
+mp.F3.compact.deta = scaleFac*mp.F3.compact.deta;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-fields
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
