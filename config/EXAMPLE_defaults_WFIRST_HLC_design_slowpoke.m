@@ -350,9 +350,9 @@ mp.dm9.V0coef = 390; % Nominal PMGI layer thickness [nm]
 % - 'Xinetics'
 % - '3foldZern'
 %--DM9 parameters for 3x3 influence function
-mp.dm9.actres = 7; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
+mp.dm9.actres = 4; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
 mp.dm9.FPMbuffer = -0.5; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
-mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
+mp.dm9.inf0name = 'cosine';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
 
 % %%--DM9 parameters for Lanczos3 influence function
 % mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
@@ -374,3 +374,4 @@ mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];
 mp.dm9.Vmin = 0;  % minimum thickness of FPM dielectric layer (nm)
 mp.dm9.Vmax = 400+mp.dm9.V0coef; % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
 
+mp.aux.wDM9_arr = ones(mp.Nitr,1)*mp.dm9.weight;

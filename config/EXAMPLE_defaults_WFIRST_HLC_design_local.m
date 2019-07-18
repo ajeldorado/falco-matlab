@@ -107,12 +107,12 @@ mp.controller = 'gridsearchEFC';
 
 % % % % GRID SEARCH EFC DEFAULTS     
 % %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 230; %--Number of estimation+control iterations to perform
+mp.Nitr = 5; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-mp.dm_ind = [1 2]; %--Which DMs to use
+mp.dm_ind = [1 2 9]; %--Which DMs to use
 
 % % PLANNED SEARCH EFC DEFAULTS     
-mp.dm_ind = [1 2 ]; % vector of DMs used in controller at ANY time (not necessarily all at once or all the time). 
+% mp.dm_ind = [1 2 ]; % vector of DMs used in controller at ANY time (not necessarily all at once or all the time). 
 mp.ctrl.dmfacVec = 1;
 %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
     % Column 1: # of iterations, 
@@ -347,7 +347,8 @@ mp.dm9.V0coef = 390; % Nominal PMGI layer thickness [nm]
 %--DM9 parameters for 3x3 influence function
 mp.dm9.actres = 7; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
 mp.dm9.FPMbuffer = -0.5; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
-mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
+% mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
+mp.dm9.inf0name = 'cosine';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
 
 % %%--DM9 parameters for Lanczos3 influence function
 % mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
