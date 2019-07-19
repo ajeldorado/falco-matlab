@@ -541,6 +541,8 @@ else
     disp('Entire workspace NOT saved because mp.flagSaveWS==false')
 end
 
+end %--END OF main FUNCTION
+
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -862,5 +864,3 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     if(any(mp.dm_ind==2));  mp.dm2.tied = dDM.dm2tied;  end
 
 end %--END OF NESTED FUNCTION
-
-end %--END OF main FUNCTION
