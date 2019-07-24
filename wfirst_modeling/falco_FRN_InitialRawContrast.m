@@ -156,7 +156,7 @@ matContrast(2*Nann+2:2:end,5) = CincoVec; %--Incoherent, no MUF
 %% Make into a table for printing as a CSV file
 
 tableContrast = table(matContrast(:,1),matContrast(:,2),matContrast(:,3),matContrast(:,4),matContrast(:,5));
-tableContrast.Properties.VariableNames = {'index','coh_vs_incoh','annzone','NoMUF_vs_MUF','contrast'};
+tableContrast.Properties.VariableNames = {'index','coh_vs_incoh','annzone','MUF_vs_NoMUF','contrast'};
 
 %% Make table for CtoNI
 matCtoNI = zeros(Nann,2);

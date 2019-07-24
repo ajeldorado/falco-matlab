@@ -47,6 +47,23 @@ mp.eval.indsZnoll = 2:11; %--Use tip/tilt through spherical modes
 Zsens = falco_get_Zernike_sensitivities(mp); %--dimensions of [Nzern x Nann]
 for ii=1:Nann;  matSens((ii-1)*Nmode+1:(ii-1)*Nmode+10,4) = 1e9*Zsens(:,ii);  end %--Multiply by 1e9 for the FRN calculator. Re-organize into column 4 of Sensitivities table
 
+%% Compute sensitivities to sigma=10% DM gain error when applying 1nm RMS of Zernikes Z2 to Z11
+
+% mp.full.ZrmsVal = 1e-9; %--RMS values for each Zernike specified in vector indsZnoll [meters] 
+% mp.eval.indsZnoll = 5:11; %--Use astig through spherical modes
+
+dE2mat = falco_get_DMgainZ5to11_sensitivities(mp); %--dimensions of [Nzern x Nann]
+for ii=1:Nann;  matSens((ii-1)*Nmode+11:(ii-1)*Nmode+17,4) = 1e9*dE2mat(:,ii);  end %--Multiply by 1e9 for the FRN calculator. Re-organize into column 4 of Sensitivities table
+
+%% Compute sensitivities to DM thermal
+% This is the squared change in E-field from the DM actuators moving from a 1 mK drift. 
+% We use a thermal response value of 2.6% of strain (strain = actuator heights) per Kelvin. 
+% This is the same for all actuators because we do not know otherwise. 
+
+dE2vec = falco_get_DMthermal_sensitivities(mp); %--dimensions of [Nzern x Nann]
+for ii=1:Nann;  matSens((ii-1)*Nmode+21,4) = 1e9*dE2vec(ii);  end %--Multiply by 1e9 for the FRN calculator. Re-organize into column 4 of Sensitivities table
+
+
 %% Make into a table for printing as a CSV file
 
 tableSens = table(matSens(:,1),matSens(:,2),matSens(:,3),matSens(:,4));
