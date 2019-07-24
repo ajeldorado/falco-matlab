@@ -55,6 +55,15 @@ mp.aux.flagRegDM9 = false;
 mp.aux.betadm9Min = -8;
 mp.aux.betadm9Max = -5;
 mp.aux.firstRegDM9Itr = 111110;
+SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
+SetB2 = [1, 1j, 129, 1, 1];
+
+mp.ctrl.sched_mat = [...
+     repmat(SetA2,[min([mp.Nitr,mp.aux.firstDM9It]),1]);...
+     repmat(SetB2,[mp.Nitr-mp.aux.firstDM9It,1])...
+     ];
+
+[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 %% Step 3: Overwrite default values as desired
 

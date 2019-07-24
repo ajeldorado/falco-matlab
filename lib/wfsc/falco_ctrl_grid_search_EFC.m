@@ -69,19 +69,19 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if(mp.flagParfor) %--Parallelized
         parfor ni = 1:Nvals
             for nj = 1:NvalsOmega
-            for nk = 1:NvalsRegdm9
-            if mp.aux.flagRegDM9 && cvar.Itr>=mp.aux.firstRegDM9Itr
-                IInk=nk;
-            else
-                IInk=nj;
-            end
-            [Inorm_list(ni,nj,nk),thput_list(ni,nj,nk),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,IInk,vals_list_dm9,mp,cvar);
-            if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj,nk) = dDM_temp.dDM1V; end
-            if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj,nk) = dDM_temp.dDM2V; end
-            if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj,nk) = dDM_temp.dDM5V; end
-            if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj,nk) = dDM_temp.dDM8V; end
-            if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj,nk) = dDM_temp.dDM9V; end
-            end
+                for nk = 1:NvalsRegdm9
+                if mp.aux.flagRegDM9 && cvar.Itr>=mp.aux.firstRegDM9Itr
+                    IInk=nk;
+                else
+                    IInk=nj;
+                end
+                [Inorm_list(ni,nj,nk),thput_list(ni,nj,nk),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,nj,valsOmega_list,IInk,vals_list_dm9,mp,cvar);
+                if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni,nj,nk) = dDM_temp.dDM1V; end
+                if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni,nj,nk) = dDM_temp.dDM2V; end
+                if(any(mp.dm_ind==5)); dDM5V_store(:,:,ni,nj,nk) = dDM_temp.dDM5V; end
+                if(any(mp.dm_ind==8)); dDM8V_store(:,ni,nj,nk) = dDM_temp.dDM8V; end
+                if(any(mp.dm_ind==9)); dDM9V_store(:,ni,nj,nk) = dDM_temp.dDM9V; end
+                end
             end
             %--Tied actuators
             if(any(mp.dm_ind==1)); dm1tied{ni} = dDM_temp.dm1tied; end
