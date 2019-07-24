@@ -53,11 +53,11 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_HCST_AVC
-
+mp.flagSaveWS = true;
 %% Step 3: Overwrite default values as desired
 
 %--Record Keeping
-mp.SeriesNum = 2;
+mp.SeriesNum = 4;
 mp.TrialNum = 1;
 
 %--WFSC Iterations and Control Matrix Relinearization

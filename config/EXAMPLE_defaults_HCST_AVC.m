@@ -191,7 +191,7 @@ mp.fl = 779e-3; %--[meters] Focal length value used for all FTs in the compact m
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 512;
 mp.P2.compact.Nbeam = 512;
-mp.P3.compact.Nbeam = 512;
+mp.P3.compact.Nbeam = 2048;
 mp.P4.compact.Nbeam = 512;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
@@ -213,14 +213,17 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 %--Pupil Plane Resolutions
 mp.P1.full.Nbeam = 512;
 mp.P2.full.Nbeam = 512;
-mp.P3.full.Nbeam = 512;
+mp.P3.full.Nbeam = 2048;
 mp.P4.full.Nbeam = 512;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
 %% Mask Definitions
 
-mp.P3.apodType = 'HCST_AVC_unevenIllu';%[mp.path.mask,'ApodizedPupil_500.fits'];
+mp.apodType = 'grayscale';%[mp.path.mask,'ApodizedPupil_500.fits'];
+maskaux = fitsread('/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/segmentedPupil_noApod.fits');%ApodizedPupil_HCST
+mp.P3.full.mask = imresize(maskaux,[mp.P1.full.Nbeam mp.P1.full.Nbeam]);
+mp.P3.compact.mask = mp.P3.full.mask;
 % mp.P3.apodType = 'HCST_AVC';%[mp.path.mask,'ApodizedPupil_500.fits'];
 
 %--Pupil definition
@@ -238,7 +241,7 @@ mp.flagApod = true;    %--Whether to use an apodizer or not. Can be a simple ape
 
 %--Lyot stop padding
 mp.P4.IDnorm = 0; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.95; %--Lyot stop OD [Dtelescope]
+mp.P4.ODnorm = 0.99; %--Lyot stop OD [Dtelescope]
 mp.P4.padFacPct = 0;
 mp.P4.Nstrut = 0;% Number of struts 
 mp.P4.angStrut = [];%Array of angles of the radial struts (deg)
