@@ -104,8 +104,8 @@ for ri = 1:Nrad
     end
     modeTemp(Rc>rMax) = 0;
     mp.dm9.compact.inf_datacube(:,:,ri) = modeTemp;
-    figure(10); imagesc(xc,xc,mp.dm9.compact.inf_datacube(:,:,ri)); axis xy equal tight; colorbar; drawnow;
-    figure(11); plot(xc,mp.dm9.compact.inf_datacube(:,mp.dm9.compact.NdmPad/2+1,ri)); xlim([0,mp.F3.Rin]); drawnow;
+%     figure(10); imagesc(xc,xc,mp.dm9.compact.inf_datacube(:,:,ri)); axis xy equal tight; colorbar; drawnow;
+%     figure(11); plot(xc,mp.dm9.compact.inf_datacube(:,mp.dm9.compact.NdmPad/2+1,ri)); xlim([0,mp.F3.Rin]); drawnow;
 %     pause(0.1);
 end
 % figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
@@ -164,8 +164,8 @@ for ri=start_rad:Nrad
         indTot = or(indTot,ind3_rev);
     %     cosII = zeros(N);
         cosII = cosFull.*indTot.*modeTemp;
-        figure(102);imagesc(cosII);axis image; set(gca,'YDir', 'normal')
-        pause(0.1)
+%         figure(102);imagesc(cosII);axis image; set(gca,'YDir', 'normal')
+%         pause(0.1)
         mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
         count = count+1;
     end
@@ -212,8 +212,8 @@ for ri=start_rad:Nrad
         indTot_rev = or(indTot_rev,ind3_rev);
     %     cosII = zeros(N);
         sinII = sinFull.*indTot0.*modeTemp + sinFull_rev.*indTot_rev.*modeTemp;
-        figure(102);imagesc(sinII);axis image; set(gca,'YDir', 'normal')
-        pause(0.1)
+%         figure(102);imagesc(sinII);axis image; set(gca,'YDir', 'normal')
+%         pause(0.1)
         mp.dm9.compact.inf_datacube(:,:,Nrad+count) = sinII;
         count = count+1;
     end
