@@ -77,9 +77,9 @@ E0array = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol); %--initialize
 tic; fprintf('Computing unaberrated E-fields...\t');
 %--Obtain all the images in parallel
 if(mp.flagParfor)
-    parfor ni=1:Nvals;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,dVzernCube,gainErrorCube,mp);  end
+    parfor ni=1:Nvals;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,mp);  end
 else
-    for ni=Nvals:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,dVzernCube,gainErrorCube,mp);  end
+    for ni=Nvals:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPol(ni,inds_list,mp);  end
 end
 fprintf('done. Time = %.2f s\n',toc);
 
@@ -102,9 +102,9 @@ dEZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol,Nzern,Nrand); 
 %--Obtain all the images in parallel
 tic; fprintf('Computing aberrated E-fields for DM gain sensitivities...\t');
 if(mp.flagParfor)
-    parfor ni=1:NvalsAb;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZernGain(ni,inds_list_zern,mp);  end
+    parfor ni=1:NvalsAb;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZernGain(ni,inds_list_zern,dVzernCube,gainErrorCube,mp);  end
 else
-    for ni=NvalsAb:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZernGain(ni,inds_list_zern,mp);  end
+    for ni=NvalsAb:-1:1;  Estruct{ni} = falco_get_single_sim_Efield_LamPolZernGain(ni,inds_list_zern,dVzernCube,gainErrorCube,mp);  end
 end
 fprintf('done. Time = %.2f s\n',toc);
     

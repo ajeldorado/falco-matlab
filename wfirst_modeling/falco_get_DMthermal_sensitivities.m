@@ -72,12 +72,13 @@ clear Estruct
 %% Get E-fields with DM thermal drift applied
 
 %--Add in the bias voltage (50V assuming 5nm/V, so 250V assuming 1nm/V)
-mp.dm1.V = 250 + mp.dm1.V;
-mp.dm2.V = 250 + mp.dm2.V;
+bias = 250;
+mp.dm1.V = bias + mp.dm1.V;
+mp.dm2.V = bias + mp.dm2.V;
 
 %--Add the dV from 1mK temperature drift assuming a rate of 2.6 percent/Kelvin.
-mp.dm1.V = (1+2.6/100/1000)*mp.dm1.V;
-mp.dm2.V = (1+2.6/100/1000)*mp.dm2.V;
+mp.dm1.V = (1+2.6/100/1000)*mp.dm1.V - bias; %--Subtract bias to avoid numerical issues
+mp.dm2.V = (1+2.6/100/1000)*mp.dm2.V - bias; %--Subtract bias to avoid numerical issues
 
 %--Loop over all wavelengths and polarizations        
 inds_list = allcomb(1:mp.full.NlamUnique,1:Npol).'; %--dimensions: [2 x mp.full.NlamUnique*Npol ]
