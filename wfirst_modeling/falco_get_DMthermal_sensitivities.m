@@ -103,8 +103,7 @@ for ni=1:Nvals
     E1array(:,:,ilam,ipol) = Estruct{ni};
 end 
 clear Estruct
-%%
-% dEZarray = zeros(mp.Fend.Neta,mp.Fend.Nxi,mp.full.NlamUnique,Npol); %--initialize 
+
 dEZarray = E1array - E0array;
 
 %% Compute DM thermal sensitivity values averaged across each annulus (or annular sector) in the dark hole
@@ -117,7 +116,6 @@ for ia = 1:Nannuli;  dE2vec(ia) = mean(dE2mat( logical(maskCube(:,:,ia))) );  en
 %--Print sensitivity results to command line
 fprintf('|dE|^2 from 1 mK thermal drift =')
 for ia = 1:Nannuli
-   mean(dEtemp( logical(maskCube(:,:,ia))) );
    fprintf('\t%.2e (%.1f-%.1f l/D)',dE2vec(ia), Rsens(ia,1), Rsens(ia,2) )
 end
 fprintf('\n')

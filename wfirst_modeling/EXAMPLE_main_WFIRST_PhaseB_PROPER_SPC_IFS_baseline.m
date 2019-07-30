@@ -166,6 +166,8 @@ fn_prefix = sprintf('s%04dt%04d_',mp.SeriesNum,mp.TrialNum);
 E0 = mp.P1.compact.E; %--Don't erase the starting settings.
 paths = mp.path;
 runLabel = mp.runLabel;
+sn = mp.SeriesNum;
+tn = mp.TrialNum;
 clear mp
 mp.runLabel = runLabel;
 mp.P1.compact.E = E0; 
@@ -173,6 +175,9 @@ mp.path = paths;
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
+
+mp.SeriesNum = sn;
+mp.TrialNum = tn;
 
 mp.Fend.res = 5; %--Change the image resolution [pixels per lambda0/D]
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)

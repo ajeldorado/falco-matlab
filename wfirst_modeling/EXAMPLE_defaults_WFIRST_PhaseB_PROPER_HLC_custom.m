@@ -278,7 +278,7 @@ mp.P1.full.Narr = 310;
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
-mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
+mp.full.pol_conds = 10;% [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
 mp.full.use_errors = true;
 mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
