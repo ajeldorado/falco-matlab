@@ -11,7 +11,7 @@
 % - Created by A.J. Riggs on 2019-05-15.
 % -------------------------------------------------------------------------
 
-function [tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp)
+function [tableContrast, tableCtoNI, data] = falco_FRN_InitialRawContrast(mp)
     
 %--First 4 columns (the easy, bookkeeping parts of the table)
 Nann = size(mp.eval.Rsens,1); %--Number of annuli
@@ -105,6 +105,11 @@ if(mp.flagPlot)
     figure(183); imagesc(log10(Cinco),[-10 -8]); axis xy equal tight; colorbar; drawnow;
 end
 
+%--Extra outputs for computing custom contrast curves outside this function
+data.CtoNI = CtoNI;
+data.Ccoh = Ccoh;
+data.Cinco = Cinco;
+
 %% Compute the average contrast in each annulus (or annular segment)
 CcohVec = zeros(Nann,1);
 CincoVec = zeros(Nann,1);
@@ -140,7 +145,13 @@ if(mp.flagPlot)
     set(gca,'Fontsize',20); set(gcf,'Color','w');
     drawnow;
 end
-    
+
+%--Extra outputs for computing custom contrast curves outside this function
+data.rVec = rVec;
+data.CcohVec = CcohVec;
+data.CincoVec = CincoVec;
+data.CtoNIvec = CtoNIvec;
+
 %% Fill in Column 5 of the table
 
 %--Coherent component

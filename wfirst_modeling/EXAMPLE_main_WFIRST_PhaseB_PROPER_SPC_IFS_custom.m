@@ -198,11 +198,12 @@ writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save t
 tableAnn  
 
 
-%% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
+%% Compute the table InitialRawContrast.csv
 
-[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI,data] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
 writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
+save([mp.path.frn_coro, fn_prefix, 'c_data.mat'],'data') %--Save 2-D and 1-D Contrast and CtoNI map for making plots later
 tableContrast
 tableCtoNI
 

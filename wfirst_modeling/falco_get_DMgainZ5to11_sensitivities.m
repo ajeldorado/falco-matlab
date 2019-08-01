@@ -54,9 +54,12 @@ if(size(dVzernCube,1)~=mp.dm1.Nact)
 end    
 dVzernCube = scaleFac*dVzernCube; %--Adjust voltage to get 1nm RMS of each Zernike.   
 
-%%--Gain error maps: normal distribution, sigma=0.1, mean = 0;
+%%--Gain error maps: normal distribution, sigma=0.06, mean = 0;
 Nrand = 10; %--Number of random 2-D maps
-gainErrorCube = 0.1*randn(mp.dm1.Nact,mp.dm1.Nact,Nrand);
+sigmaVal = 0.06;
+gainErrorCube = sigmaVal*randn(mp.dm1.Nact,mp.dm1.Nact,Nrand);
+gainErrorCube(gainErrorCube<-sigmaVal) = -sigmaVal; %--Clip the distribution
+gainErrorCube(gainErrorCube>sigmaVal) = sigmaVal; %--Clip the distribution
 
 %--Number of polarization states used
 mp.full.dummy = 1; %--Initialize if this doesn't exist

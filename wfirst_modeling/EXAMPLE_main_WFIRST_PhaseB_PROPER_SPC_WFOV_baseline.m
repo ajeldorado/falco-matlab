@@ -59,12 +59,12 @@ mp.TrialNum = 4;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% % %--DEBUGGING:
-% mp.full.pol_conds = 10;
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% %--DEBUGGING:
+mp.full.pol_conds = 10;
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 mp.controller = 'plannedEFC';
 mp.ctrl.sched_mat = repmat([1,1j,12,0,1],[5,1]);
@@ -175,7 +175,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_WFOV %--Load default model parameters
 
 mp.SeriesNum = sn;
 mp.TrialNum = tn;
@@ -216,11 +216,12 @@ writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save t
 tableAnn  
 
 
-%% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
+%% Compute the table InitialRawContrast.csv
 
-[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI,data] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
 writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
+save([mp.path.frn_coro, fn_prefix, 'c_data.mat'],'data') %--Save 2-D and 1-D Contrast and CtoNI map for making plots later
 tableContrast
 tableCtoNI
 

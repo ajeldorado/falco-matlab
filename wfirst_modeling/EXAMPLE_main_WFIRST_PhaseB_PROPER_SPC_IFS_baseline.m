@@ -214,13 +214,59 @@ writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save t
 tableAnn  
 
 
-%% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
+%% Compute the table InitialRawContrast.csv
 
-[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI, data] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
 writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
+save([mp.path.frn_coro, fn_prefix, 'c_data.mat'],'data') %--Save 2-D and 1-D Contrast and CtoNI map for making plots later
 tableContrast
 tableCtoNI
+
+%% Compute the average contrast in each annulus (or annular segment)
+
+Rann = ...
+    [3., 4.;...
+    4., 5.;...
+    5., 8.;...
+    8., 9.]; 
+
+Nann = size(Rann,1);
+
+CcohVec = zeros(Nann,1);
+CincoVec = zeros(Nann,1);
+CtoNIvec = zeros(Nann,1);
+rVec = zeros(Nann,1);
+
+for ia=1:Nann        
+    min_r = Rann(ia,1);
+    max_r = Rann(ia,2);
+    rVec(ia) = (min_r+max_r)/2;
+
+    %--Compute the software mask for the scoring region
+    maskScore.pixresFP = mp.Fend.res;
+    maskScore.rhoInner = min_r; %--lambda0/D
+    maskScore.rhoOuter = max_r; %--lambda0/D
+    maskScore.angDeg = mp.Fend.score.ang; %--degrees
+    maskScore.centering = mp.centering;
+    maskScore.FOV = mp.Fend.FOV;
+    maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+    if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
+    [maskPartial,xis,etas] = falco_gen_SW_mask(maskScore);
+
+    %--Compute the average intensity over the selected region
+    CcohVec(ia) = sum(sum(maskPartial.*data.Ccoh))/sum(sum(maskPartial));
+    CincoVec(ia) = sum(sum(maskPartial.*data.Cinco))/sum(sum(maskPartial));
+    CtoNIvec(ia) = sum(sum(maskPartial.*data.CtoNI))/sum(sum(maskPartial));
+    % figure(401); imagesc(maskPartial.*Ccoh); axis xy equal tight; colorbar; drawnow; pause(1);
+end
+
+%--Outputs for requirements
+dataReq.rVec = rVec;
+dataReq.CcohVec = CcohVec;
+dataReq.CincoVec = CincoVec;
+dataReq.CtoNIvec = CtoNIvec;
+save([mp.path.frn_coro, fn_prefix, 'c_dataReq.mat'],'dataReq') %--Save 1-D Contrast and CtoNI map for comparing against requirements
 
 %% Compute the Krist table
 
