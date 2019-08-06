@@ -129,7 +129,7 @@ function jacStruct = model_Jacobian(mp)
     fprintf('...done.  Time = %.2f\n',toc);
 
     %--TIED ACTUATORS
-    %--Handle tied actuators by adding the 2nd actuators Jacobian column to
+    %--Handle tied actuators by adding the 2nd actuator's Jacobian column to
     %the first actuator's column, and then zeroing out the 2nd actuator's column.
     if(any(mp.dm_ind==1))
         for ti=1:size(mp.dm1.tied,1)
