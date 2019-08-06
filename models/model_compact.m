@@ -125,7 +125,7 @@ switch lower(mp.layout)
                 mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
         end
         
-    case{'wfirst_phaseb_simple','wfirst_phaseb_proper','lc_load_scale'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
+    case{'wfirst_phaseb_simple','wfirst_phaseb_proper','fpm_scale'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
         switch upper(mp.coro)     
             case{'HLC'}
                 mp.FPM.mask = mp.compact.FPMcube(:,:,modvar.sbpIndex);
@@ -150,7 +150,7 @@ switch lower(mp.layout)
                 Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
         end
         
-    case{'lc_load_scale'}
+    case{'fpm_scale'}
         switch upper(mp.coro)
             case{'HLC'}
                 Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);

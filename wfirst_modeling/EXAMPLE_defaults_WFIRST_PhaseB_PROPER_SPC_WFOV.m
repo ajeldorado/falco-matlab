@@ -4,7 +4,7 @@
 %% Misc
 
 %--Record Keeping
-mp.SeriesNum = 1;
+mp.SeriesNum = 45;
 mp.TrialNum = 1;
 
 %--Special Computational Settings
@@ -23,19 +23,19 @@ mp.planetFlag = false;
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
 mp.thput_metric = 'HMI'; 
 mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY for 'EE' method.
-mp.thput_eval_x = 7; % x location [lambda_c/D] in dark hole at which to evaluate throughput
+mp.thput_eval_x = 12;%7; % x location [lambda_c/D] in dark hole at which to evaluate throughput
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 12;%7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
 mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 730e-9;    %--Central wavelength of the whole spectral bandpass [meters]
-mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 9;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.lambda0 = 825e-9;   %--Central wavelength of the whole spectral bandpass [meters]
+mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -105,11 +105,11 @@ mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';
 
-% % % % GRID SEARCH EFC DEFAULTS     
+% % % % GRID SEARCH EFC DEFAULTS
 % %--WFSC Iterations and Control Matrix Relinearization
-% mp.Nitr = 30; %--Number of estimation+control iterations to perform
+% mp.controller = 'gridsearchEFC';
+% mp.Nitr = 5; %--Number of estimation+control iterations to perform
 % mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 % mp.dm_ind = [1 2]; %--Which DMs to use
 
@@ -129,26 +129,17 @@ mp.ctrl.dmfacVec = 1;
     %  replaced for that iteration with the optimal log10(regularization)
     % A row starting with [0, 0, 0, 1...] is for relinearizing only at that time
 
-% mp.ctrl.sched_mat = [...
-%     repmat([1,-2.5,12,1,0],[4,1]);...
-%     ];
-
-% mp.ctrl.sched_mat = [...
-%     [0,0,0,1,0];...
-%     repmat([1,1j,12,0,1],[4,1]);...
-%     repmat([1,1j-1,12,0,1],[25,1]);...
-%     repmat([1,1j,12,0,1],[1,1]);...
-%     ];
-% [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-
+mp.controller = 'plannedEFC';
 mp.ctrl.sched_mat = [...
-    [0,0,0,1,0];...
-    repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
-    repmat([1,1j-2,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,1],[9,1]);...   %--Optimal beta
-    repmat([1,1j-2,12,0,1],[1,1]);... %--Beta kick
-    repmat([1,1j,12,0,1],[15,1]);...  %--Optimal beta
+    [0,0,0,1,0];
+    repmat([1,1j,12,0,1],[10,1]);...
     ];
+
+% mp.ctrl.sched_mat = [...
+%     repmat([1,1j,12,1,1],[4,1]);...
+%     repmat([1,1j-1,12,1,1],[25,1]);...
+%     repmat([1,1j,12,1,1],[1,1]);...
+%     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 
@@ -204,28 +195,27 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
-mp.layout = 'wfirst_phaseb_proper';  %--Which optical layout to use. 'wfirst_phaseb_proper' or 'wfirst_phaseb_simple'
-mp.coro = 'HLC';
-mp.flagApod = false;    %--Whether to use an apodizer or not
+mp.layout = 'wfirst_phaseb_proper';  %--Which optical layout to use
+mp.coro = 'SPLC';
+mp.flagApod = true;    %--Whether to use an apodizer or not
 mp.flagDMwfe = false;  %--Whether to use BMC DM quilting maps
 
 %--Final Focal Plane Properties
-mp.Fend.res = 3;%(730/660)*2.; %--Sampling [ pixels per lambda0/D]
-mp.Fend.FOV = 10.; %--half-width of the field of view in both dimensions [lambda0/D]
+mp.Fend.res = (825/575)*2.; %--Sampling [ pixels per lambda0/D]
+mp.Fend.FOV = 21.; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
-mp.Fend.corr.Rin = 2.7;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 9.0;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rin = 5.4;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 20;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = 3;  % inner radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rin = 5.7;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = 19.7;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
-% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
 %--Focal Lengths
 mp.fl = 1.; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
@@ -236,10 +226,59 @@ mp.P3.D = 46.3e-3; %46.2987e-3;
 mp.P4.D = 46.3e-3; %46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 309;
-mp.P2.compact.Nbeam = 309;
-mp.P3.compact.Nbeam = 309;
-mp.P4.compact.Nbeam = 309;
+mp.P1.compact.Nbeam = 386;
+mp.P2.compact.Nbeam = 386;
+mp.P3.compact.Nbeam = 386;
+mp.P4.compact.Nbeam = 120;
+
+%--Lyot Stop:
+mp.P4.compact.mask = fitsread('LS_symm_CGI180718_Str3.20pct_38D91_N120_pixel.fits');
+
+%--Shaped Pupil Mask: Load and downsample.
+SP0 = fitsread('SPM_SPC-20181220_1000_rounded9_gray.fits');
+% % SP0(2:end,2:end) = rot90(SP0(2:end,2:end),2);
+
+if(mp.P1.compact.Nbeam==1000)
+    mp.P3.compact.mask = SP0;
+else
+    SP0 = SP0(2:end,2:end);
+    % figure(1); imagesc(SP0); axis xy equal tight; colormap jet; colorbar;
+    % figure(11); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
+    dx0 = 1/1000;
+    dx1 = 1/mp.P3.compact.Nbeam;
+    N0 = size(SP0,1);
+    switch lower(mp.centering)
+        case{'pixel'}
+            N1 = ceil_odd(N0*dx0/dx1);
+        case{'interpixel'}
+            N1 = ceil_even(N0*dx0/dx1);
+    end
+    x0 = (-(N0-1)/2:(N0-1)/2)*dx0;
+    [X0,Y0] = meshgrid(x0);
+    R0 = sqrt(X0.^2+Y0.^2);
+    Window = 0*R0;
+    Window(R0<=dx1) = 1; Window = Window/sum(sum(Window));
+    % figure(10); imagesc(Window); axis xy equal tight; colormap jet; colorbar;
+    SP0 = ifftshift(  ifft2( fft2(fftshift(Window)).*fft2(fftshift(SP0)) )); %--To get good grayscale edges, convolve with the correct window before downsampling.
+    SP0 = circshift(SP0,[1 1]); %--Undo a centering shift
+    x1 = (-(N1-1)/2:(N1-1)/2)*dx1;
+    [X1,Y1] = meshgrid(x1);
+    SP1 = interp2(X0,Y0,SP0,X1,Y1,'cubic',0); %--Downsample by interpolation
+
+    switch lower(mp.centering)
+        case{'pixel'}
+            mp.P3.compact.mask = zeros(N1+1,N1+1);
+            mp.P3.compact.mask(2:end,2:end) = SP1;
+        otherwise
+            mp.P3.compact.mask = SP1;
+    end
+    
+    figure(2); imagesc(SP0); axis xy equal tight; colormap jet; colorbar; drawnow;
+    figure(3); imagesc(SP1); axis xy equal tight; colormap jet; colorbar; drawnow;
+    % figure(12); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
+    % figure(13); imagesc(SP1-fliplr(SP1)); axis xy equal tight; colormap jet; colorbar;
+
+end
 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
@@ -252,45 +291,32 @@ mp.Nrelay3to4 = 1;
 mp.NrelayFend = 1; %--How many times to rotate the final image by 180 degrees
 
 %--FPM resolution
-mp.F3.compact.res = 2048./309.;    % sampling of FPM for compact model [pixels per lambda0/D]
-
+mp.F3.compact.res = 3;    % sampling of FPM for compact model [pixels per lambda0/D]
 
 %% Optical Layout: Full Model 
 
-%--For CUSTOM HLC ONLY: Defined again because model_full_wfirst_phaseb.m has too many hard-coded values
-mp.full.lambda0_m = mp.lambda0;
-mp.full.bw = mp.fracBW;
-if(mp.Nwpsbp==1)
-    mp.full.nlams = mp.Nsbp; % number of occ trans lambda provided. %--Used in model_full_wfirst_phaseb
-else
-    mp.full.nlams = mp.Nsbp*mp.Nwpsbp - (mp.Nsbp-1);     % number of occ trans lambda provided. %--Used in model_full_wfirst_phaseb
-end
+mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
+mp.full.cor_type = 'spc-wide'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
+mp.full.flagGenFPM = false;
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
-mp.full.hlc_name = 'hlc_20190411';
-mp.full.prefix = 'run563_nro_';
-
 % %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 309;
-mp.P1.full.Narr = 310;
+mp.P1.full.Nbeam = 1000;
+mp.P1.full.Narr = 1002;
 
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
-mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
+mp.full.pol_conds = 10;%[-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
 mp.full.use_errors = true;
-mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
-
-mp.full.cor_type = 'hlc_custom'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
 mp.full.zindex = 4;
 mp.full.zval_m = 0.19e-9;
-mp.full.use_hlc_dm_patterns = true; % whether to use design WFE maps for HLC
+mp.full.use_hlc_dm_patterns = false; % whether to use design WFE maps for HLC
 mp.full.lambda0_m = mp.lambda0;
 mp.full.input_field_rootname = '';	%   rootname of files containing aberrated pupil
-% mp.full.use_hlc_dm_patterns = 1;	%   use Dwight-generated HLC default DM wavefront patterns? 1 or 0
 mp.full.use_dm1 = 0;                %   use DM1? 1 or 0
 mp.full.use_dm2 = 0;                %   use DM2? 1 or 0
 mp.full.dm_sampling_m = 0.9906e-3;     %   actuator spacing in meters; default is 1 mm
@@ -360,6 +386,9 @@ mp.full.dm2.flatmap = 0;
 
 %% Mask Definitions
 
+mp.compact.flagGenLS = false;
+mp.compact.flagGenFPM = true;
+
 %--Pupil definition
 mp.whichPupil = 'WFIRST180718';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
@@ -367,31 +396,14 @@ mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milli
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
 
 % %--Lyot stop shape
-% mp.P4.IDnorm = 0.45;%0.50; %--Lyot stop ID [Dtelescope]
-% mp.P4.ODnorm = 0.78;%0.80; %--Lyot stop OD [Dtelescope]
-% % mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
-% mp.P4.wStrut = 0.036;    %--Lyot stop strut width [pupil diameters]
+% mp.LSshape = 'bowtie';
+% mp.P4.IDnorm = 0.38; %--Lyot stop ID [Dtelescope]
+% mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
+% mp.P4.ang = 180;      %--Lyot stop opening angle [degrees]
+% mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
 
-% %--FPM size
-% mp.F3.Rin = 2.8;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-% mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
-% mp.F3.ang = 180;    % on each side, opening angle [degrees]
-
-%--Whether to generate or load various masks: compact model
-mp.compact.flagGenPupil = false;  
-mp.compact.flagGenFPM = false;  
-mp.compact.flagGenLS = false;
-
-mp.P1.compact.mask = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_pupil.fits']);
-mp.P1.compact.mask = padOrCropEven(mp.P1.compact.mask,310);
-
-mp.P4.compact.mask = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_lyot.fits']);
-mp.P4.compact.mask = padOrCropEven(mp.P4.compact.mask,310);
-
-mp.dm1.wfe = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_dm1wfe.fits']);
-mp.dm2.wfe = fitsread([mp.full.data_dir 'hlc_custom' filesep mp.full.hlc_name filesep 'run563_nro_dm2wfe.fits']);
-
-
-
-%% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%--FPM size
+mp.F3.Rin = 5.4;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+mp.F3.Rout = 20;   % radius of outer opaque edge of FPM [lambda0/D]
+mp.F3.ang = 180;    % on each side, opening angle [degrees]
 

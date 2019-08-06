@@ -97,6 +97,11 @@ end
 %     Edm2WFE = ones(NdmPad);
 % end
 
+%--Initialize as false if it doesn't exist
+if(isfield(mp.full,'use_hlc_dm_patterns')==false)
+    mp.full.use_hlc_dm_patterns = false;
+end
+%--Apply WFE to DMs 1 and 2
 if(mp.full.use_hlc_dm_patterns)
     if(any(mp.dm_ind==1));  Edm1WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm1.wfe,NdmPad,'extrapval',0)); else; Edm1WFE = ones(NdmPad); end
     if(any(mp.dm_ind==2));  Edm2WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm2.wfe,NdmPad,'extrapval',0)); else; Edm2WFE = ones(NdmPad); end

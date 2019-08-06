@@ -174,8 +174,7 @@ elseif  strcmp(cor_type,'hlc_erkin')
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
     field_stop_radius_lam0 = 9.0;
-elseif  strcmp(cor_type,'hlc_custom')
-    
+elseif  strcmp(cor_type,'hlc_custom')    
     if(isfield(optval,'hlc_name')==false || isfield(optval,'prefix')==false)
         error('You must define the variables hlc_name and prefix when using hlc_custom as the coronagraph.')
     end
@@ -184,20 +183,23 @@ elseif  strcmp(cor_type,'hlc_custom')
     pupil_diam_pix = 309.0;
     pupil_file = [prefix  'pupil_rotated.fits'];
     lyot_stop_file = [prefix  'lyot.fits'];
-    
     %--For CUSTOM HLC ONLY: Defined again because model_full_wfirst_phaseb.m has too many hard-coded values
     lambda0_m = optval.lambda0_m;
     nlams = optval.nlams;             % number of occ trans lambda provided
     bw = optval.bw;
-
     if(nlams==1)
         lam_occ = lambda0_m;
     else
         lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m;%[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
     end
     wlam = find( round(1e14*lambda_m) == round(1e14*lam_occ) ); 	% find exactly matching FPM wavelength
-    occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
-    occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
+    if(bw==0.10)
+        occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
+        occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
+    else
+        occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
+        occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
+    end
     n_default = 1024;	% gridsize in non-critical areas
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
