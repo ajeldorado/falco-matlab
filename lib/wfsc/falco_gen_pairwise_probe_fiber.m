@@ -64,23 +64,20 @@ end
 magn = 4*pi*mp.lambda0*sqrt(InormDes);   % surface height to get desired intensity [meters]
 switch lower(badAxis)
     case 'y'
-        mX = mp.est.probe.radius;
-        mY = 2*mp.est.probe.radius;
-        omegaX = mp.est.probe.radius/2;        
-        probeCmd = magn*sinc(mX*XS).*sinc(mY*YS).*cos(2*pi*omegaX*XS + psi);
+        omegaX = mp.est.probe.Xloc(1)/2;
+        probeCmd = magn*sin(2*pi*omegaX*XS + psi);
 
     case 'x'
-        mX = 2*mp.est.probe.radius;
-        mY = mp.est.probe.radius;
-        omegaY = mp.est.probe.radius/2;
-        probeCmd = magn*sinc(mX*XS).*sinc(mY*YS).*cos(2*pi*omegaY*YS + psi);
-end
-
-%--Option to use just the sincs for a zero phase shift. This avoids the
-% phase discontinuity along one axis (for this probe only!).
-if(psi==0)
-    m = 2*mp.est.probe.radius;
-    probeCmd = magn*sinc(m*XS).*sinc(m*YS);
+        omegaY = mp.est.probe.Yloc(1)/2;
+        probeCmd = magn*sin(2*pi*omegaY*YS + psi);
+        
+    case 'm'
+        omegaX = mp.est.probe.Xloc/2;
+        omegaY = mp.est.probe.Yloc/2;
+        probeCmd = zeros(size(XS));
+        for i = 1:mp.Fend.Nfiber
+            probeCmd = probeCmd + magn*sin(2*pi*omegaX(i)*XS + psi).*sin(2*pi*omegaY(i)*YS + psi);
+        end
 end
 
 probeCmd = falco_fit_dm_surf(dm,probeCmd);

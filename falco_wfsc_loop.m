@@ -239,7 +239,7 @@ for Itr=1:mp.Nitr
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
         case{'pwp-bp','pwp-kf'}
-			if(mp.flagFiber)
+			if(mp.flagFiber && mp.flagLenslet)
 				if(mp.est.flagUseJac) %--Send in the Jacobian if true
 					ev = falco_est_pairwise_probing_fiber(mp,jacStruct);
 				else %--Otherwise don't pass the Jacobian

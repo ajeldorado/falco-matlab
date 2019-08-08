@@ -92,6 +92,8 @@ switch lower(mp.est.probe.axis)
         badAxisVec = repmat('x',[2*Npairs,1]);
         badAxisVec(3:4:end) = 'y';
         badAxisVec(4:4:end) = 'y';
+    case 'multi'
+        badAxisVec = repmat('m',[2*Npairs,1]);
 end
 
 %% Initialize output arrays
@@ -154,8 +156,8 @@ for si=1:mp.Nsbp
     fprintf('Measured unprobed Ifiber : %.2e \n',ev.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
-    ev.InormProbeMax = 1e-4;
-    InormProbe = min([sqrt(max(I0)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
+    ev.InormProbeMax = 1e-6;
+    InormProbe = min([sqrt(max(I0)*1e-12), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);
     
     %--Perform the probing
@@ -165,6 +167,9 @@ for si=1:mp.Nsbp
         %--Generate the command map for the probe
         probeCmd = falco_gen_pairwise_probe_fiber(mp,InormProbe,probePhaseVec(iProbe),badAxisVec(iProbe));
 
+        figure(901);
+        imagesc(probeCmd); axis equal tight;
+        
         %--Select which DM to use for probing. Allocate probe to that DM
         if(mp.est.probe.whichDM == 1)
             dDM1Vprobe = probeCmd./mp.dm1.VtoH; % Now in volts
@@ -321,6 +326,7 @@ end
 
 %% Save out the estimates
 ev.Eest(:,si) = Eest;
+
 ev.IincoEst(:,si) =  I0-abs(Eest).^2; %--Compute the incoherent light
 
 end %--End of loop over the wavelengths

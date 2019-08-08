@@ -49,13 +49,16 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 mp.estimator = 'perfect';
 
 %--New variables for pairwise probing estimation:
-mp.est.probe.Npairs = 2;     % Number of pair-wise probe PAIRS to use.
+mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.est.probe.radius = 16;    % Max x/y extent of probed region [actuators].
+mp.est.probe.radius = 8;    % Max x/y extent of probed region [actuators].
 mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
-mp.est.probe.offsetY = 9;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
-mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
+mp.est.probe.offsetY = 0;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
+mp.est.probe.axis = 'multi';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
+
+mp.est.probe.Xloc = [8 -4 -4];
+mp.est.probe.Yloc = [0 -7 7];
 
 %--New variables for pairwise probing with a Kalman filter
 % mp.est.ItrStartKF = 2 %Which correction iteration to start recursive estimate
@@ -82,7 +85,7 @@ mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
 mp.eval.Rsens = []; 
 
 %--Grid- or Line-Search Settings
-mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -8:1/2:0; %--log10 of the regularization exponents (often called Beta values)
 mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
    

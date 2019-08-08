@@ -22,7 +22,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 fn_prefix = 'C:\CoronagraphSims\falco-matlab\data\brief\';
 
 %% Define file names to load
-runLabel = 'C:\CoronagraphSims\falco-matlab\data\brief\Series12192_Trial0005_vortex_LUVOIR_B_offaxis_2DM48_z1_IWA2_OWA15_22lams550nm_BW50_gridsearchEFC';
+runLabel = 'C:\CoronagraphSims\falco-matlab\data\brief\Series0010_Trial0002_vortex_LUVOIR_B_offaxis_1DM32_z1_IWA2_OWA15_12lams690nm_BW40_gridsearchEFC';
 
 fn_init_ws = [runLabel, '_config.mat']; %--configuration file
 fn_snippet_ws = [runLabel, '_snippet.mat']; %--post-trial data in structure named 'out'
@@ -89,39 +89,63 @@ end
 %% Calculate and plot contrast in the lenslets
 
 rawcontrast = [];
+thput = [];
 
-for xlens = 4:5:24
+for fiberloc = [[6.1888; 0], [-3.0944; 5.3597], [-3.0944; -5.3597]]%[[5.3405; 0], [-2.6702; 4.625], [-2.6702; -4.625]]%[[6; 0], [-3; 5.1962], [-3; -5.1962]]
     for wi = 1:mp.Nsbp
         modvar.wpsbpIndex = 1;
         modvar.whichSource = 'star';
         modvar.sbpIndex = wi;
         modvar.ttIndex = 1;
         [Eout, Efiber] = model_full(mp, modvar);
-        Istarmax = max(max(abs(Efiber).^2));
-
-        modvar.x_offset = -xlens;
-        modvar.y_offset = -0;
+        Istarmax = abs(Efiber(int8(fiberloc(2)*mp.Fend.res+length(Efiber)/2+1), int8(fiberloc(1)*mp.Fend.res+length(Efiber)/2+1))).^2;%max(max(abs(Efiber).^2));
+        
+        modvar.x_offset = fiberloc(1);
+        modvar.y_offset = fiberloc(2);
         modvar.whichSource = 'offaxis';
         [Eout, Efiber] = model_full(mp, modvar);
         Iplanetmax = max(max(abs(Efiber).^2));
         rawcontrast = [rawcontrast Istarmax./Iplanetmax];
+        thput = [thput sum(sum(abs(Efiber).^2))/mp.sumPupil];
     end
 end
 
 rawcontrast = squeeze(rawcontrast);
+thput = squeeze(thput);
 
+%% Plot raw contrast in each fiber
 figure;
 hold on;
-
-for i=1:mp.Fend.Nlens
-    plot(mp.sbp_centers*1e9, log10(rawcontrast(1+(i-1)*mp.Nsbp:i*mp.Nsbp,i)));
+% plot(mp.sbp_centers*1e9, log10(rawcontrast));
+for i=1:mp.Fend.Nfiber
+    plot(mp.sbp_centers*1e9, log10(rawcontrast(1+(i-1)*mp.Nsbp:i*mp.Nsbp)));
 end
+plot(586.5*ones(7), -12:-6, '--k');
+plot(793.5*ones(7), -12:-6, '--k');
+plot([550:830], -8*ones(281), '--k');
 
 hold off;
 set(gca, 'FontSize', 14);
 set(gcf, 'color', 'white');
 xlabel('$\lambda$ (nm)', 'FontSize', 18, 'Interpreter', 'Latex');
 ylabel('Contrast', 'FontSize', 18, 'Interpreter', 'Latex');
-xlim([200 800]);
+xlim([550 830]);
 ylim([-12 -6]);
 yticks(-12:1:-6);
+legend({'(6.2, 0) $\lambda_0/D$', '(-3.0, 5.4) $\lambda_0/D$', '(-3.0, -5.4) $\lambda_0/D$'}, 'Location', 'South', 'Interpreter', 'Latex');
+legend('boxoff');
+
+%% Plot throughput in each fiber
+figure;
+hold on;
+for i=1:mp.Fend.Nfiber
+    plot(mp.sbp_centers*1e9, thput(1+(i-1)*mp.Nsbp:i*mp.Nsbp));
+end
+
+hold off;
+set(gca, 'FontSize', 14);
+set(gcf, 'color', 'white');
+xlabel('$\lambda$ (nm)', 'FontSize', 18, 'Interpreter', 'Latex');
+ylabel('Throughput', 'FontSize', 18, 'Interpreter', 'Latex');
+xlim([550 830]);
+ylim([0 0.6]);

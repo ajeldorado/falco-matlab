@@ -219,8 +219,13 @@ if(whichDM==1)
                     end
                 else
                     EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-                    FMtemp = mp.Fend.fiberMode(:,:,modvar.sbpIndex);
-                    Gzdl(:,Gindex) = FMtemp(mp.Fend.corr.inds).*sum(sum(FMtemp(mp.Fend.corr.inds).*conj(EFend(mp.Fend.corr.inds))));
+
+                    Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        Gzdltemp = Gzdltemp + Eonefiber;
+                    end
+                    Gzdl(:,Gindex) = Gzdltemp(mp.Fend.corr.inds);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
@@ -331,8 +336,12 @@ if(whichDM==2)
                     end
                 else
                     EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-                    FMtemp = mp.Fend.fiberMode(:,:,modvar.sbpIndex);
-                    Gzdl(:,Gindex) = FMtemp(mp.Fend.corr.inds).*sum(sum(FMtemp(mp.Fend.corr.inds).*conj(EFend(mp.Fend.corr.inds))));
+                    Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        Gzdltemp = Gzdltemp + Eonefiber;
+                    end
+                    Gzdl(:,Gindex) = Gzdltemp(mp.Fend.corr.inds);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);

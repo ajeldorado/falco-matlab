@@ -370,7 +370,7 @@ mp.Fend.RHOS = sqrt(XIS.^2 + ETAS.^2);
 
 if(mp.flagFiber)
     
-    V(1,1,:) = 1.68349*mp.lambda0./mp.sbp_centers;
+    V(1,1,:) = 1.912274*mp.lambda0./mp.sbp_centers;%1.649336%1.68349
     W = 1.1428*V - 0.996;
     U = sqrt(V.^2 - W.^2);
     
@@ -380,7 +380,7 @@ if(mp.flagFiber)
     maskFiberCore.whichSide = mp.Fend.sides;
     
     maskFiberCladding.rhoInner = mp.fiber.a;
-    maskFiberCladding.rhoOuter = 10;
+    maskFiberCladding.rhoOuter = 20;
     maskFiberCladding.angDeg = 180;
     maskFiberCladding.whichSide = mp.Fend.sides;
     
@@ -433,9 +433,7 @@ if(mp.flagFiber)
         fiberModeNorm = sqrt(sum(sum(abs(mp.F5.fiberMode).^2)));
         mp.F5.fiberMode = mp.F5.fiberMode./fiberModeNorm;
     else
-        
-        mp.Fend.fiberMode = zeros(mp.Fend.Nxi, mp.Fend.Neta);
-        
+                
         for nfib = 1:mp.Fend.Nfiber    
             maskFiberCore.pixresFP = mp.Fend.res;
             maskFiberCore.FOV = mp.Fend.FOV;
@@ -457,7 +455,7 @@ if(mp.flagFiber)
             mp.Fend.fiberCladding.mode(isnan(mp.Fend.fiberCladding.mode)) = 0;
             fiberModeTemp = mp.Fend.fiberCore.mode + mp.Fend.fiberCladding.mode;
             fiberModeNorm = sqrt(sum(sum(abs(fiberModeTemp).^2)));
-            mp.Fend.fiberMode = mp.Fend.fiberMode + fiberModeTemp./fiberModeNorm;
+            mp.Fend.fiberMode(:,:,:,nfib) = fiberModeTemp./fiberModeNorm;
         end
         
     end
