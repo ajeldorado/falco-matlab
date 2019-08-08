@@ -58,7 +58,7 @@ mp.flagSaveWS = true;
 
 %--Record Keeping
 mp.SeriesNum = 4;
-mp.TrialNum = 1;
+mp.TrialNum = 4;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
@@ -88,11 +88,12 @@ mp.fineAlignment_it = [];
 
 %% Step 4: Generate the label associated with this trial
 
+label = 'AVC_apodizedSimu';
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
     '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller];
+    '_',mp.controller,'_',label];
 
 
 %% Step 5: Perform the Wavefront Sensing and Control
