@@ -31,18 +31,35 @@ matSens = zeros(Nann*Nmode,4); %--Initialize
 matSens(:,1) = 0:(Nann*Nmode-1); %--overall index
 matSens(:,2) = repmat((0:(Nmode-1)).',[Nann,1]); %--sensmode
 for ii=1:Nann;  matSens((ii-1)*Nmode+1:ii*Nmode,3) = ii-1;  end %--annzone
-% tableSens
+
+%% Compute sensitivities to 1 micron of X- and Y- Pupil Shear
+
+mp.full.pupilShearVal = 1e-6; %--Amount of shear in each direction [meters]
+
+shearSens = falco_get_pupil_shear_sensitivities(mp); %--dimensions [2 x Nann]
+for ii=1:Nann;  matSens((ii-1)*Nmode+18:(ii-1)*Nmode+19,4) = 1e9*shearSens(:,ii);  end %--Multiply by 1e9 for the FRN calculator. Re-organize into column 4 of Sensitivities table
 
 %% Compute sensitivities to 1nm RMS of Zernikes Z2 to Z11
-%     dE2mat = zeros;
 
 mp.full.ZrmsVal = 1e-9; %--RMS values for each Zernike specified in vector indsZnoll [meters] 
 mp.eval.indsZnoll = 2:11; %--Use tip/tilt through spherical modes
 
-Zsens = falco_get_Zernike_sensitivities(mp); %--dimensions of [Nzern,Nann]
-for ii=1:Nann;  matSens((ii-1)*Nmode+1:(ii-1)*Nmode+10,4) = 1e9*Zsens(:,ii);  end %--Multiply by 1e9 to go from m to nm. Re-organize into column 4 of Sensitivities table
+Zsens = falco_get_Zernike_sensitivities(mp); %--dimensions of [Nzern x Nann]
+for ii=1:Nann;  matSens((ii-1)*Nmode+1:(ii-1)*Nmode+10,4) = 1e9*Zsens(:,ii);  end %--Multiply by 1e9 for the FRN calculator. Re-organize into column 4 of Sensitivities table
 
-%% Compute sensitivities to 1 micron of X- and Y- Pupil Shear
+%% Compute sensitivities to sigma=10% DM gain error when applying 1nm RMS of Zernikes Z2 to Z11
+
+% %--DO NOT USE YET. NOT GIVING EXPECTED RESULTS
+% dE2mat = falco_get_DMgainZ5to11_sensitivities(mp); %--dimensions of [Nzern x Nann]
+% for ii=1:Nann;  matSens((ii-1)*Nmode+11:(ii-1)*Nmode+17,4) = 1e9*dE2mat(:,ii);  end %--Multiply by 1e9 for the FRN calculator. Re-organize into column 4 of Sensitivities table
+
+%% Compute sensitivities to DM thermal
+% This is the squared change in E-field from the DM actuators moving from a 1 mK drift. 
+% We use a thermal response value of 2.6% of strain (strain = actuator heights) per Kelvin. 
+% This is the same for all actuators because we do not know otherwise. 
+
+dE2vec = falco_get_DMthermal_sensitivities(mp); %--dimensions of [Nzern x Nann]
+for ii=1:Nann;  matSens((ii-1)*Nmode+21,4) = 1e9*dE2vec(ii);  end %--Multiply by 1e9 for the FRN calculator. Re-organize into column 4 of Sensitivities table
 
 
 %% Make into a table for printing as a CSV file

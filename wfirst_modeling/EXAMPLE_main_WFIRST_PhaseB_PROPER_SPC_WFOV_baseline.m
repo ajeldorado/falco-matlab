@@ -38,7 +38,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_WFOV
 
 
 %% Step 3: Overwrite default values as desired
@@ -50,7 +50,7 @@ mp.flagPlot = true;
 
 %--Record Keeping
 mp.SeriesNum = 49;
-mp.TrialNum = 2;
+mp.TrialNum = 4;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'Series...snippet.mat';
@@ -59,11 +59,12 @@ mp.TrialNum = 2;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% % %--DEBUGGING:
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% %--DEBUGGING:
+mp.full.pol_conds = 10;
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 mp.controller = 'plannedEFC';
 mp.ctrl.sched_mat = repmat([1,1j,12,0,1],[5,1]);
@@ -174,7 +175,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS %--Load default model parameters
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_WFOV %--Load default model parameters
 
 mp.SeriesNum = sn;
 mp.TrialNum = tn;
@@ -192,6 +193,7 @@ mp.dm2.V = out.dm2.Vall(:,:,end);
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 
+
 %--Save the config file
 fn_config = [mp.path.config mp.runLabel,'_configHD.mat'];
 save(fn_config)
@@ -202,12 +204,12 @@ fprintf('Saved the config file: \t%s\n',fn_config)
 
 %% Compute the table of annular zones
 
+%--Rsens needs to be revised once better inputs are available
 mp.eval.Rsens = ...
-                [3., 4.;...
-                4., 5.;...
-                5., 6.;...
-                6., 7.;...
-                7., 8.]; 
+                [6.5, 7.5;...
+                7.5, 8.5;...
+                8.5, 19;...
+                19, 20]; 
             
 tableAnn = falco_FRN_AnnularZone_table(mp);
 writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save to CSV file
@@ -216,57 +218,12 @@ tableAnn
 
 %% Compute the table InitialRawContrast.csv
 
-[tableContrast, tableCtoNI, data] = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI,data] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
 writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
 save([mp.path.frn_coro, fn_prefix, 'c_data.mat'],'data') %--Save 2-D and 1-D Contrast and CtoNI map for making plots later
 tableContrast
 tableCtoNI
-
-%% Compute the average contrast in each annulus (or annular segment)
-
-Rann = ...
-    [3., 4.;...
-    4., 5.;...
-    5., 8.;...
-    8., 9.]; 
-
-Nann = size(Rann,1);
-
-CcohVec = zeros(Nann,1);
-CincoVec = zeros(Nann,1);
-CtoNIvec = zeros(Nann,1);
-rVec = zeros(Nann,1);
-
-for ia=1:Nann        
-    min_r = Rann(ia,1);
-    max_r = Rann(ia,2);
-    rVec(ia) = (min_r+max_r)/2;
-
-    %--Compute the software mask for the scoring region
-    maskScore.pixresFP = mp.Fend.res;
-    maskScore.rhoInner = min_r; %--lambda0/D
-    maskScore.rhoOuter = max_r; %--lambda0/D
-    maskScore.angDeg = mp.Fend.score.ang; %--degrees
-    maskScore.centering = mp.centering;
-    maskScore.FOV = mp.Fend.FOV;
-    maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
-    if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
-    [maskPartial,xis,etas] = falco_gen_SW_mask(maskScore);
-
-    %--Compute the average intensity over the selected region
-    CcohVec(ia) = sum(sum(maskPartial.*data.Ccoh))/sum(sum(maskPartial));
-    CincoVec(ia) = sum(sum(maskPartial.*data.Cinco))/sum(sum(maskPartial));
-    CtoNIvec(ia) = sum(sum(maskPartial.*data.CtoNI))/sum(sum(maskPartial));
-    % figure(401); imagesc(maskPartial.*Ccoh); axis xy equal tight; colorbar; drawnow; pause(1);
-end
-
-%--Outputs for requirements
-dataReq.rVec = rVec;
-dataReq.CcohVec = CcohVec;
-dataReq.CincoVec = CincoVec;
-dataReq.CtoNIvec = CtoNIvec;
-save([mp.path.frn_coro, fn_prefix, 'c_dataReq.mat'],'dataReq') %--Save 1-D Contrast and CtoNI map for comparing against requirements
 
 %% Compute the Krist table
 
@@ -274,8 +231,8 @@ save([mp.path.frn_coro, fn_prefix, 'c_dataReq.mat'],'dataReq') %--Save 1-D Contr
 mp.yield.Dtel = 2.3631; % meters
 
 %--Define radial sampling and range
-mp.yield.R0 = 2.5;
-mp.yield.R1 = 9.1;
+mp.yield.R0 = 5.3;
+mp.yield.R1 = 20.1;
 
 %--Compute and save the table
 tableKrist = falco_FRN_Krist_table(mp);

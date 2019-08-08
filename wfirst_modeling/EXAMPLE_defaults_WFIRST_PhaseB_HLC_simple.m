@@ -32,10 +32,10 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 575e-9;   %--Central wavelength of the whole spectral bandpass [meters]
+mp.lambda0 = 575e-9;    %--Central wavelength of the whole spectral bandpass [meters]
 mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;%3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;%3;%7;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3;% 3 or 7  %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -76,12 +76,13 @@ mp.jac.zerns = 1;  %--Which Zernike modes to include in Jacobian. Given as the m
 mp.jac.Zcoef = 1e-9*[1]; %1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is not used; it is a placeholder for correct indexing of other modes.)
     
 %--Zernikes to compute sensitivities for
-mp.eval.indsZnoll = [];%2:3;%2:6; %--Noll indices of Zernikes to compute values for
+mp.eval.indsZnoll = [2,3]; %--Noll indices of Zernikes to compute values for
 %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
-mp.eval.Rsens = [];%...
-%                 [3., 4.;...
-%                 4., 8.;
-%                 8., 9.];  
+mp.eval.Rsens = ...
+                [3., 4.;
+                4.,5.;    
+                5., 8.;
+                8., 9.];  
 
 %--Grid- or Line-Search Settings
 mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
@@ -105,7 +106,6 @@ mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';
 
 % % % % GRID SEARCH EFC DEFAULTS     
 % %--WFSC Iterations and Control Matrix Relinearization
@@ -141,6 +141,7 @@ mp.ctrl.dmfacVec = 1;
 %     ];
 % [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
+mp.controller = 'plannedEFC';
 mp.ctrl.sched_mat = [...
     [0,0,0,1,0];...
     repmat([1,1j,12,0,1],[4,1]);...   %--Optimal beta
@@ -183,7 +184,7 @@ mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 mp.dm2.Nact = 48;               % # of actuators across DM array
 mp.dm2.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm2.ytilt = 5.7;%               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.ytilt = 5.7;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm2.zrot = 0;              % clocking of DM surface [degrees]
 mp.dm2.xc = 23.5;%(48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm2.yc = 23.5;%(48/2 - 1/2);       % y-center location of DM surface [actuator widths]
@@ -199,12 +200,11 @@ mp.dm2.Dstop = 50e-3;   %--Diameter of iris [meters]
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
 mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 
-
 %% Optical Layout: All models
 
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
-mp.layout = 'wfirst_phaseb_proper';  %--Which optical layout to use. 'wfirst_phaseb_proper' or 'wfirst_phaseb_simple'
+mp.layout = 'fpm_scale'; %'wfirst_phaseb_proper';  %--Which optical layout to use. 'wfirst_phaseb_proper' or 'wfirst_phaseb_simple' for PROPER models
 mp.coro = 'HLC';
 mp.flagApod = false;    %--Whether to use an apodizer or not
 mp.flagDMwfe = false;  %--Whether to use BMC DM quilting maps
@@ -260,49 +260,48 @@ mp.F3.compact.res = 2048./309.;    % sampling of FPM for compact model [pixels p
 mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
 mp.full.cor_type = 'hlc'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
-% %--Pupil Plane Resolutions
+%--Pupil Plane Resolutions
 mp.P1.full.Nbeam = 309;
-mp.P1.full.Narr = 310;
+mp.P2.full.Nbeam = 309;
+mp.P3.full.Nbeam = 309;
+mp.P4.full.Nbeam = 309;
+% mp.P1.full.Narr = 310;
 
-mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
-mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
-mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
+%--FPM resolution
+mp.F3.full.res = 2048./309.;    % sampling of FPM for full model [pixels per lambda0/D]
 
-mp.full.pol_conds = 0;%[-2,-1,1,2]; %--Which polarization states to use when creating an image.
-mp.full.polaxis = 0;%10;                %   polarization condition (only used with input_field_rootname)
-mp.full.use_errors = false;%true;
 
-mp.full.zindex = 4;
-mp.full.zval_m = 0.19e-9;
-mp.full.use_hlc_dm_patterns = true; % whether to use design WFE maps for HLC
-mp.full.lambda0_m = mp.lambda0;
-mp.full.input_field_rootname = '';	%   rootname of files containing aberrated pupil
-% mp.full.use_hlc_dm_patterns = 1;	%   use Dwight-generated HLC default DM wavefront patterns? 1 or 0
-mp.full.use_dm1 = 0;                %   use DM1? 1 or 0
-mp.full.use_dm2 = 0;                %   use DM2? 1 or 0
-mp.full.dm_sampling_m = 0.9906e-3;     %   actuator spacing in meters; default is 1 mm
-mp.full.dm1_xc_act = 23.5;          %   for 48x48 DM, wavefront centered at actuator intersections: (0,0) = 1st actuator center
-mp.full.dm1_yc_act = 23.5;
-mp.full.dm1_xtilt_deg = 0;   		%   tilt around X axis
-mp.full.dm1_ytilt_deg = 5.7;		%   effective DM tilt in deg including 9.65 deg actual tilt and pupil ellipticity
-mp.full.dm1_ztilt_deg = 0;
-mp.full.dm2_xc_act = 23.5;		
-mp.full.dm2_yc_act = 23.5;
-mp.full.dm2_xtilt_deg = 0;   
-mp.full.dm2_ytilt_deg = 5.7;
-mp.full.dm2_ztilt_deg = 0;
-mp.full.use_fpm  = 1;
-mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
+% mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
+% mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
+% mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
+% 
+% mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
+% mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
+% mp.full.use_errors = true;
 
-mp.full.dm1.flatmap = 0;%fitsread([mp.full.data_dir 'errors_polaxis10_dm.fits']);
-mp.full.dm2.flatmap = 0;
-
-% %--Pupil Plane Resolutions
-% mp.P1.full.Nbeam = 1000;
-% mp.P2.full.Nbeam = 1000;
-% mp.P3.full.Nbeam = 1000;
-% mp.P4.full.Nbeam = 200;
-
+% mp.full.zindex = 4;
+% mp.full.zval_m = 0.19e-9;
+% mp.full.use_hlc_dm_patterns = false; % whether to use design WFE maps for HLC.
+% mp.full.lambda0_m = mp.lambda0;
+% mp.full.input_field_rootname = '';	%   rootname of files containing aberrated pupil
+% mp.full.use_dm1 = 0;                %   use DM1? 1 or 0
+% mp.full.use_dm2 = 0;                %   use DM2? 1 or 0
+% mp.full.dm_sampling_m = 0.9906e-3;     %   actuator spacing in meters; default is 1 mm
+% mp.full.dm1_xc_act = 23.5;          %   for 48x48 DM, wavefront centered at actuator intersections: (0,0) = 1st actuator center
+% mp.full.dm1_yc_act = 23.5;
+% mp.full.dm1_xtilt_deg = 0;   		%   tilt around X axis
+% mp.full.dm1_ytilt_deg = 5.7;		%   effective DM tilt in deg including 9.65 deg actual tilt and pupil ellipticity
+% mp.full.dm1_ztilt_deg = 0;
+% mp.full.dm2_xc_act = 23.5;		
+% mp.full.dm2_yc_act = 23.5;
+% mp.full.dm2_xtilt_deg = 0;   
+% mp.full.dm2_ytilt_deg = 5.7;
+% mp.full.dm2_ztilt_deg = 0;
+% mp.full.use_fpm  = 1;
+% mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
+% 
+% mp.full.dm1.flatmap = 0.5*fitsread('errors_polaxis10_dm.fits');
+% mp.full.dm2.flatmap = 0.5*fitsread('errors_polaxis10_dm.fits');
 
 
 %% Mask Definitions
@@ -329,11 +328,21 @@ mp.compact.flagGenPupil = false;
 mp.compact.flagGenFPM = false;  
 mp.compact.flagGenLS = false;
 
+%--Compact model
 mp.P1.compact.mask = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_pupil.fits']);
 mp.P1.compact.mask = padOrCropEven(mp.P1.compact.mask,310);
 
 mp.P4.compact.mask = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_lyot.fits']);
 mp.P4.compact.mask = padOrCropEven(mp.P4.compact.mask,310);
 
-mp.dm1.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm1wfe.fits']);
-mp.dm2.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm2wfe.fits']);
+%--Whether to generate or load various masks: full model
+mp.full.flagGenPupil = false;  
+mp.full.flagGenFPM = false;  
+mp.full.flagGenLS = false;
+
+%--Full model (same as compact)
+mp.P1.full.mask = mp.P1.compact.mask;
+mp.P4.full.mask = mp.P4.compact.mask;
+
+% mp.dm1.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm1wfe.fits']);
+% mp.dm2.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm2wfe.fits']);
