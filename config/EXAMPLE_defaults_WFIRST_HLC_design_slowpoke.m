@@ -111,7 +111,7 @@ mp.controller = 'plannedEFC';
 
 % % % % GRID SEARCH EFC DEFAULTS     
 % %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 20; %--Number of estimation+control iterations to perform
+mp.Nitr = 777; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2 9]; %--Which DMs to use
 
@@ -297,8 +297,8 @@ mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the teles
 
 %--Lyot stop padding
 mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
-mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
+mp.P4.IDnorm = 0.5;%0.45; %--Lyot stop ID [Dtelescope]
+mp.P4.ODnorm = 0.8;%0.78; %--Lyot stop OD [Dtelescope]
 
 %--FPM size
 mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
@@ -350,7 +350,7 @@ mp.dm9.V0coef = 390; % Nominal PMGI layer thickness [nm]
 % - 'Xinetics'
 % - '3foldZern'
 %--DM9 parameters for 3x3 influence function
-mp.dm9.actres = 4; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
+mp.dm9.actres = 5; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
 mp.dm9.FPMbuffer = -0.5; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
 mp.dm9.inf0name = 'cosine';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
 
