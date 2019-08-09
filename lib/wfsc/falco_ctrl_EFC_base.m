@@ -69,7 +69,18 @@ reg_diag(ind_dm9) = 10^(log10regdm9);
 % duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\(cvar.RealGstarEab_wsum+0.0*10^(log10reg)*cvar.EyeGstarGdiag.*...
 %     [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele)]);
 if(any(mp.dm_ind==9))
-    vec_dm_ele = [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele);mp.dm9.V(mp.dm9.act_ele)];
+    
+    if(any(mp.aux.dm9OnlyItr_arr==cvar.Itr))
+        aux_ind_mat = zeros(size(cvar.GstarG_wsum));
+        sz_dm9 = numel(mp.dm9.act_ele);
+        cvar.EyeGstarGdiag = cvar.EyeGstarGdiag(end-sz_dm9+1:end);
+        cvar.GstarG_wsum = cvar.GstarG_wsum(end-sz_dm9+1:end,end-sz_dm9+1:end);
+        cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum(end-sz_dm9+1:end);
+        reg_diag = reg_diag(end-sz_dm9+1:end);
+        vec_dm_ele = [mp.dm9.V(mp.dm9.act_ele)];
+    else
+        vec_dm_ele = [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele);mp.dm9.V(mp.dm9.act_ele)];
+    end
 else
     vec_dm_ele = [mp.dm1.V(mp.dm1.act_ele);mp.dm2.V(mp.dm2.act_ele)];
 end
@@ -82,6 +93,10 @@ else
     duVec = -dmfac*(diag(reg_diag) + mp.aux.gamma*cvar.EyeGstarGdiag + cvar.GstarG_wsum)...
         \(cvar.RealGstarEab_wsum+mp.aux.gamma*cvar.EyeGstarGdiag.*...
         vec_dm_ele);
+end
+
+if(any(mp.aux.dm9OnlyItr_arr==cvar.Itr) && any(mp.dm_ind==9)) 
+    duVec = [zeros(numel(mp.dm1.act_ele)+numel(mp.dm2.act_ele),1);duVec];
 end
 
 % dDMvec = -dmfac*(diag(EyeGstarGdiag)/mu + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum;

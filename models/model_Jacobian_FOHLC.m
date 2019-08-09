@@ -8,7 +8,7 @@
 %--Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
-%  This function is for the DMLC, HLC, APLC, and APHLC coronagraphs.
+%  This function is for the first-order-approximation HLC coronagraph.
 %
 % REVISION HISTORY:
 % --------------
@@ -30,13 +30,11 @@
 %
 % INPUTS:
 % -mp = structure of model parameters
-% -DM = structure of DM settings
-% -tsi = index of the pair of sub-bandpass index and tip/tilt offset index
+% -im = index of the pair of sub-bandpass index and Zernike mode index
 % -whichDM = which DM number
 %
 % OUTPUTS:
-% -Gttlam = Jacobian for the specified DM and specified T/T-wavelength pair
-%
+% -Gzdl = Jacobian for the specified Zernike mode (z), DM (d), and sub-bandpass (l).
 
 function Gzdl = model_Jacobian_FOHLC(mp, im, whichDM)
 
@@ -63,7 +61,7 @@ if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
+    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

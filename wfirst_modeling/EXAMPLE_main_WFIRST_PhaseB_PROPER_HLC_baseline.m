@@ -216,6 +216,8 @@ fn_prefix = sprintf('s%04dt%04d_',mp.SeriesNum,mp.TrialNum);
 E0 = mp.P1.compact.E; %--Don't erase the starting settings.
 paths = mp.path;
 runLabel = mp.runLabel;
+sn = mp.SeriesNum;
+tn = mp.TrialNum;
 clear mp
 mp.runLabel = runLabel;
 mp.P1.compact.E = E0; 
@@ -223,6 +225,9 @@ mp.path = paths;
 
 %--Re-initialize mp structure
 EXAMPLE_defaults_WFIRST_PhaseB_PROPER_HLC %--Load default model parameters
+
+mp.SeriesNum = sn;
+mp.TrialNum = tn;
 
 mp.Fend.res = 5; %--Change the image resolution [pixels per lambda0/D]
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
@@ -280,11 +285,12 @@ writetable(tableAnn,[mp.path.frn_coro, fn_prefix, 'AnnZoneList.csv']); %--Save t
 tableAnn  
 
 
-%% Compute the table InitialRawContrast.csv --> DO THIS INSIDE OF THE FRN CALCULATOR TO RE-USE THE CONTRAST MAPS
+%% Compute the table InitialRawContrast.csv
 
-[tableContrast, tableCtoNI] = falco_FRN_InitialRawContrast(mp);
+[tableContrast, tableCtoNI, data] = falco_FRN_InitialRawContrast(mp);
 writetable(tableContrast,[mp.path.frn_coro, fn_prefix, 'InitialRawContrast.csv']); %--Save to CSV file
 writetable(tableCtoNI,[mp.path.frn_coro, fn_prefix, 'NItoContrast.csv']); %--Save to CSV file
+save([mp.path.frn_coro, fn_prefix, 'c_data.mat'],'data') %--Save 2-D and 1-D Contrast and CtoNI map for making plots later
 tableContrast
 tableCtoNI
 
