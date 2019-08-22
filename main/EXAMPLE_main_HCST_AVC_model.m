@@ -53,6 +53,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_HCST_AVC
+
 mp.flagSaveWS = true;
 %% Step 3: Overwrite default values as desired
 
@@ -62,9 +63,9 @@ mp.TrialNum = 4;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 20; %--Number of estimation+control iterations to perform
+mp.Nitr = 100; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-mp.dm_ind = [1]; %--Which DMs to use
+mp.dm_ind = [1 2]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
 
 %%--Special Computational Settings
@@ -88,7 +89,9 @@ mp.fineAlignment_it = [];
 
 %% Step 4: Generate the label associated with this trial
 
-label = 'AVC_apodizedSimu';
+mp.flagSaveEachItr = true;
+
+label = '360DH_segmented';
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
     '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...

@@ -107,9 +107,9 @@ mp.controller = 'gridsearchEFC';
 
 % % % GRID SEARCH EFC DEFAULTS     
 %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 5; %--Number of estimation+control iterations to perform
+mp.Nitr = 20; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-mp.dm_ind = [1]; %--Which DMs to use
+mp.dm_ind = [1 2]; %--Which DMs to use
 
 
 %% Deformable Mirrors: Influence Functions
@@ -167,19 +167,19 @@ mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'vortex';
 
 %--Final Focal Plane Properties
-mp.Fend.res = 4.5; %--Sampling [ pixels per lambda0/D]
-mp.Fend.FOV = 11; %--half-width of the field of view in both dimensions [lambda0/D]
+mp.Fend.res = 5.1; %--Sampling [ pixels per lambda0/D]
+mp.Fend.FOV = 12; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 3.0;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.ang  = 120;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
 mp.Fend.score.Rin = mp.Fend.corr.Rin;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = mp.Fend.corr.Rout;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = mp.Fend.corr.ang;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -221,8 +221,8 @@ mp.P4.full.Nbeam = 512;  % P4 must be the same as P1 for Vortex.
 %% Mask Definitions
 
 mp.apodType = 'grayscale';%[mp.path.mask,'ApodizedPupil_500.fits'];
-maskaux = fitsread('/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/segmentedPupil_noApod.fits');%ApodizedPupil_HCST
-mp.P3.full.mask = imresize(maskaux,[mp.P1.full.Nbeam mp.P1.full.Nbeam]);
+maskaux = fitsread('/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/segmentedPupil_noApod.fits');%   ApodizedPupil_HCST
+mp.P3.full.mask = imresize(maskaux,[mp.P1.full.Nbeam mp.P1.full.Nbeam]); 
 mp.P3.compact.mask = mp.P3.full.mask;
 % mp.P3.apodType = 'HCST_AVC';%[mp.path.mask,'ApodizedPupil_500.fits'];
 
@@ -293,3 +293,21 @@ Nactbeam = 18.7e-3/mp.dm1.dm_spacing;                % Nactact across the "beam"
 % gainmap = hcst_DM_1Dto2D(bench,gain1tot);
 % mp.dm1.VtoH = (4e-7*ones(mp.dm1.Nact) * 2*sqrt(2)).*gainmap';
 % mp.aux.VtoH = gainmap;
+mp.dm2.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
+mp.dm2.dm_spacing = 3e-4 * 2;  %--User defined actuator pitch
+mp.dm2.inf_sign = '+';
+
+xc_best = 16.0335;
+yc_best = 16.2271;
+xrot_best = 0;
+yrot_best = 0;
+zrot_best = 179.8671;
+
+mp.dm2.centering = 'pixel';
+mp.dm2.Nact = 34;               % # of actuators across DM array
+mp.dm2.xtilt = xrot_best;               % for foreshortening. angle of rotation about x-axis [degrees] 
+mp.dm2.ytilt = yrot_best;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.zrot = zrot_best;           % clocking of DM surface [degrees]
+mp.dm2.xc = xc_best;              % x-center location of DM surface [actuator widths]
+mp.dm2.yc = yc_best;               % y-center location of DM surface [actuator widths]
+Nactbeam = 18.7e-3/mp.dm1.dm_spacing;                % Nactact across the "beam"
