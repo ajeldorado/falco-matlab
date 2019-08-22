@@ -22,7 +22,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 fn_prefix = 'C:\CoronagraphSims\falco-matlab\data\brief\';
 
 %% Define file names to load
-runLabel = 'C:\CoronagraphSims\falco-matlab\data\brief\Series0010_Trial0002_vortex_LUVOIR_B_offaxis_1DM32_z1_IWA2_OWA15_12lams690nm_BW40_gridsearchEFC';
+runLabel = 'C:\CoronagraphSims\falco-matlab\data\brief\Series0010_Trial0003_vortex_LUVOIR_B_offaxis_1DM32_z1_IWA2_OWA15_12lams690nm_BW40_gridsearchEFC';
 
 fn_init_ws = [runLabel, '_config.mat']; %--configuration file
 fn_snippet_ws = [runLabel, '_snippet.mat']; %--post-trial data in structure named 'out'
@@ -132,7 +132,7 @@ ylabel('Contrast', 'FontSize', 18, 'Interpreter', 'Latex');
 xlim([550 830]);
 ylim([-12 -6]);
 yticks(-12:1:-6);
-legend({'(6.2, 0) $\lambda_0/D$', '(-3.0, 5.4) $\lambda_0/D$', '(-3.0, -5.4) $\lambda_0/D$'}, 'Location', 'South', 'Interpreter', 'Latex');
+legend({'(6.2, 0) $\lambda_0/D$', '(-3.0, 5.4) $\lambda_0/D$', '(-3.0, -5.4) $\lambda_0/D$'}, 'Location', 'North', 'Interpreter', 'Latex');
 legend('boxoff');
 
 %% Plot throughput in each fiber
