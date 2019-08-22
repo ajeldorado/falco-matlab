@@ -133,7 +133,7 @@ switch lower(mp.layout)
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
                 if(isfield(mp,'FPMcubeFull')) %--Load it if stored
-                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
+                    %mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
                 else
                     mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
                 end
@@ -142,10 +142,27 @@ switch lower(mp.layout)
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
                 if(isfield(mp,'FPMcubeFull')) %--Load it if stored
-                    mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
+                   %mp.FPM.mask = mp.FPMcubeFull(:,:,ilam);
                 else %--Otherwise generate it
                     mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp,modvar.sbpIndex,modvar.wpsbpIndex,'full');
                 end
+        end
+        
+    case{'fpm_scale'} %--FPM scales with wavelength
+        switch upper(mp.coro)     
+            case{'HLC'}
+                if(mp.Nsbp>1 && mp.Nwpsbp>1)
+                    %--Weird indexing is because interior wavelengths at
+                    %edges of sub-bands are the same, and the FPMcube
+                    %contains only the minimal set of masks.
+                    ilam = (modvar.sbpIndex-2)*mp.Nwpsbp + modvar.wpsbpIndex + (mp.Nsbp-modvar.sbpIndex+1);  
+                elseif(mp.Nsbp==1 && mp.Nwpsbp>1)
+                    ilam = modvar.wpsbpIndex;
+                elseif(mp.Nwpsbp==1)
+                    ilam = modvar.sbpIndex;
+                end
+                %fprintf('si=%d, wi=%d, ilam=%d\n',modvar.sbpIndex,modvar.wpsbpIndex,ilam);
+                mp.FPM.mask = mp.full.FPMcube(:,:,ilam);%modvar.sbpIndex,modvar.wpsbpIndex);
         end
 end
 %% Select which optical layout's full model to use.
@@ -157,6 +174,9 @@ switch lower(mp.layout)
         else
             Eout = model_full_Fourier(mp, lambda, Ein, normFac);
         end
+        
+    case{'fpm_scale'} %--FPM scales with wavelength
+        Eout = model_full_scale(mp, lambda, Ein, normFac);
         
     case{'wfirst_phaseb_simple'} %--Use compact model as the full model.
                 

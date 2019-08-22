@@ -4,11 +4,12 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian_HLC(mp, DM, tsi, whichDM)
+% function jac = model_Jacobian_HLC_scale(mp, im, whichDM)
 %--Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
-%  This function is for the DMLC, HLC, APLC, and APHLC coronagraphs.
+%  This function is for DMLC, HLC, or APLC coronagraphs with a FPM that 
+%  scales inversely in size with wavelength.
 %
 % REVISION HISTORY:
 % --------------
@@ -29,13 +30,11 @@
 %
 % INPUTS:
 % -mp = structure of model parameters
-% -DM = structure of DM settings
-% -tsi = index of the pair of sub-bandpass index and tip/tilt offset index
+% -im = index of the pair of sub-bandpass index and Zernike mode index
 % -whichDM = which DM number
 %
 % OUTPUTS:
-% -Gttlam = Jacobian for the specified DM and specified T/T-wavelength pair
-%
+% -Gzdl = Jacobian for the specified Zernike mode (z), DM (d), and sub-bandpass (l).
 
 function Gzdl = model_Jacobian_HLC_scale(mp, im, whichDM)
 
@@ -45,11 +44,15 @@ function Gzdl = model_Jacobian_HLC_scale(mp, im, whichDM)
 
 modvar.sbpIndex = mp.jac.sbp_inds(im);
 modvar.zernIndex = mp.jac.zern_inds(im);
-indZernVec = find(mp.jac.zerns==modvar.zernIndex);
 
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 mirrorFac = 2; % Phase change is twice the DM surface height.f
 NdmPad = mp.compact.NdmPad;
+
+%--Modify the FPM resolutions to scale linearly with wavelength
+scaleFac = lambda/mp.lambda0;
+mp.F3.compact.dxi = scaleFac*mp.F3.compact.dxi;
+mp.F3.compact.deta = scaleFac*mp.F3.compact.deta;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-fields
@@ -62,7 +65,7 @@ if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(indZernVec);
+    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,6 +107,11 @@ end
 %     Edm2WFE = ones(NdmPad);
 % end
 
+%--Initialize as false if it doesn't exist
+if(isfield(mp.full,'use_hlc_dm_patterns')==false)
+    mp.full.use_hlc_dm_patterns = false;
+end
+%--Apply WFE to DMs 1 and 2
 if(mp.full.use_hlc_dm_patterns)
     if(any(mp.dm_ind==1));  Edm1WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm1.wfe,NdmPad,'extrapval',0)); else; Edm1WFE = ones(NdmPad); end
     if(any(mp.dm_ind==2));  Edm2WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm2.wfe,NdmPad,'extrapval',0)); else; Edm2WFE = ones(NdmPad); end

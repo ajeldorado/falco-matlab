@@ -548,6 +548,8 @@ else
     disp('Entire workspace NOT saved because mp.flagSaveWS==false')
 end
 
+end %--END OF main FUNCTION
+
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -671,14 +673,14 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
             fprintf('Weeding out weak actuators from the control Jacobian...\n'); 
             if(any(mp.dm_ind==1))
                 %--Crop out very weak-effect actuators
-                G1intNorm = zeros(mp.dm1.Nact);
+                G1intNorm = zeros(mp.dm1.Nele,1);
                 G1intNorm(1:end) = sum( mean(abs(jacStruct.G1).^2,3), 1);
                 G1intNorm = G1intNorm/max(max(G1intNorm));
                 mp.dm1.act_ele = find(G1intNorm>=10^(mp.logGmin));
                 clear G1intNorm
             end
             if(any(mp.dm_ind==2))
-                G2intNorm = zeros(mp.dm2.Nact);
+                G2intNorm = zeros(mp.dm2.Nele,1);
                 G2intNorm(1:end) = sum( mean(abs(jacStruct.G2).^2,3),1);
                 G2intNorm = G2intNorm/max(max(G2intNorm));
                 mp.dm2.act_ele = find(G2intNorm>=10^(mp.logGmin));
@@ -686,7 +688,7 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
             end
             
             if(any(mp.dm_ind==5))
-                G5intNorm = zeros(mp.dm5.Nact);
+                G5intNorm = zeros(mp.dm5.Nele,1);
                 G5intNorm(1:end) = sum( mean(abs(jacStruct.G5).^2,3),1);
                 G5intNorm = G5intNorm/max(max(G5intNorm));
                 mp.dm5.act_ele = find(G5intNorm>=10^(mp.logGmin));
@@ -694,14 +696,14 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
             end
 
             if(any(mp.dm_ind==8))
-                G8intNorm = zeros(mp.dm8.NactTotal,1);
+                G8intNorm = zeros(mp.dm8.Nele,1);
                 G8intNorm(1:end) = sum( mean(abs(jacStruct.G8).^2,3),1);
                 G8intNorm = G8intNorm/max(max(G8intNorm));
                 mp.dm8.act_ele = find(G8intNorm>=10^(mp.logGmin));
                 clear G8intNorm
             end    
             if(any(mp.dm_ind==9))
-                G9intNorm = zeros(mp.dm9.NactTotal,1);
+                G9intNorm = zeros(mp.dm9.Nele,1);
                 G9intNorm(1:end) = sum( mean(abs(jacStruct.G9).^2,3),1);
                 G9intNorm = G9intNorm/max(max(G9intNorm));
                 mp.dm9.act_ele = find(G9intNorm>=10^(mp.logGmin));
@@ -807,18 +809,24 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     
     %--Make the regularization matrix. (Define only the diagonal here to save RAM.)
     cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
+    cvar.EyeNorm = max(diag(cvar.GstarG_wsum ));
     fprintf(' done. Time: %.3f\n',toc);
 
     %--Call the Controller Function
     fprintf('Control beginning ...\n'); tic
     switch lower(mp.controller)
 
+        %--Established, conventional controllers
         case{'plannedefc'} %--EFC regularization is scheduled ahead of time
             [dDM,cvar] = falco_ctrl_planned_EFC(mp,cvar);
 
         case{'gridsearchefc'}  %--Empirical grid search of EFC. Scaling factor for DM commands too.
             [dDM,cvar] = falco_ctrl_grid_search_EFC(mp,cvar);
             
+        
+        %--Experimental controllers
+        case{'plannedefcts'} %--EFC regularization is scheduled ahead of time. total stroke also minimized
+            [dDM,cvar] = falco_ctrl_planned_EFC_TS(mp,cvar);
             
         case{'plannedefccon'} %--Constrained-EFC regularization is scheduled ahead of time
             [dDM,cvar] = falco_ctrl_planned_EFCcon(mp,cvar);
@@ -863,5 +871,3 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     if(any(mp.dm_ind==2));  mp.dm2.tied = dDM.dm2tied;  end
 
 end %--END OF NESTED FUNCTION
-
-end %--END OF main FUNCTION
