@@ -86,10 +86,10 @@ end
 
 %--Option to use just the sincs for a zero phase shift. This avoids the
 % phase discontinuity along one axis (for this probe only!).
-% if(psi==0)
-%     m = 2*mp.est.probe.radius;
-%     probeCmd = magn*sinc(m*XS).*sinc(m*YS);
-% end
+if(psi==0 && ~mp.flagFiber)
+    m = 2*mp.est.probe.radius;
+    probeCmd = magn*sinc(m*XS).*sinc(m*YS);
+end
 
 probeCmd = falco_fit_dm_surf(dm,probeCmd);
 
