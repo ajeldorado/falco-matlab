@@ -370,7 +370,7 @@ mp.Fend.RHOS = sqrt(XIS.^2 + ETAS.^2);
 
 if(mp.flagFiber)
     
-    V(1,1,:) = 1.912274*mp.lambda0./mp.sbp_centers;%1.649336%1.68349
+    V(1,1,:) = 2*pi*mp.fiber.a_phys*mp.fiber.NA./mp.sbp_centers;
     W = 1.1428*V - 0.996;
     U = sqrt(V.^2 - W.^2);
     

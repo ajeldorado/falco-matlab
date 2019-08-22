@@ -15,7 +15,7 @@
 % ---------------
 
 clear all;
-close all;
+% close all;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -36,32 +36,33 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_LUVOIRB_VC_design
+EXAMPLE_defaults_LUVOIRB_VC_design_fibers
 
 %% Step 3: Overwrite default values as desired
 
 %--Special Computational Settings
-mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
-mp.flagFiber = true;
+mp.flagFiber = true;  %--whether to go place single-mode fibers in the focal plane
+mp.flagLenslet = false;  %--whether to go through a lenslet array before using the fibers
 
 %--Record Keeping
-mp.SeriesNum = 6482648;
-mp.TrialNum = 1;
+mp.SeriesNum = 10;
+mp.TrialNum = 4;
 
-mp.fracBW = 0.5;
-mp.Nsbp = 22;
-mp.Nitr = 10;
+mp.lambda0 = 690e-9;
+mp.fracBW = 0.40;
+mp.Nsbp = 12;
+mp.Nitr = 6;
+mp.estimator = 'pwp-bp';
+mp.est.flagUseJac = false;
 
-%--LSB settings
-mp.dm1.HminStep = 5e-11;
-mp.dm2.HminStep = 5e-11;
+mp.fineAlignment_it = 0;
 
-%--Grid- or Line-Search Settings
-% mp.ctrl.log10regVec = -5:1/2:0; %--log10 of the regularization exponents (often called Beta values)
+mp.F3.VortexCharge = 8; %--Charge of the vortex mask
 
 %--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
+% fn_prev = 'Series0009_Trial0004_vortex_LUVOIR_B_offaxis_1DM32_z1_IWA2_OWA15_15lams550nm_BW50_gridsearchEFC_snippet.mat';
 % temp = load(fn_prev,'out');
 % mp.dm1.V = temp.out.DM1V;
 % mp.dm2.V = temp.out.DM2V;
@@ -72,39 +73,85 @@ mp.dm2.HminStep = 5e-11;
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
+%--DM settings
+
+mp.dm_ind = [1];
+
+mp.dm1.Nact = 32;
+mp.dm1.VtoH = 1*1e-9*ones(mp.dm1.Nact);  % gains of all actuators [nm/V of free stroke]
+mp.dm1.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
+mp.dm1.ytilt = 0;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
+mp.dm1.xc = (mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
+mp.dm1.yc = (mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
+mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
+% mp.dm1.HminStep = 300e-12; %Expected HCST LSB floor is 300 pm min step size.
+
+mp.dm2.Nact = 32;               % # of actuators across DM array
+mp.dm2.VtoH = 1*1e-9*ones(mp.dm2.Nact);  % gains of all actuators [nm/V of free stroke]
+mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
+mp.dm2.ytilt = 0;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.zrot = 0;                % clocking of DM surface [degrees]
+mp.dm2.xc = (mp.dm2.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
+mp.dm2.yc = (mp.dm2.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
+mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
+% mp.dm2.HminStep = mp.dm1.HminStep;
+
+%--Aperture stops at DMs
+mp.flagDM1stop = false; %--Whether to apply an iris or not
+mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
+mp.flagDM2stop = true;  %--Whether to apply an iris or not
+mp.dm2.Dstop = 0.4*50e-3;   %--Diameter of iris [meters]
+
 %--Special settings for fibers
 
 if(mp.flagFiber)
-    mp.Fend.FOV = 1.5;
-    mp.Fend.res = 15; %Has to be much higher than normal to avoid checkerboarding/ringing when going to F5.
-
+    if(mp.flagLenslet)
+        mp.Fend.FOV = 2;
+        mp.Fend.res = 15; %Has to be much higher than normal to avoid checkerboarding/ringing when going to F5.
+        
+        %--Fiber tip plane properties (i.e., focal plane of lenslet(s)
+        mp.F5.res = 4;
+        mp.F5.FOV = 10;
+        mp.F5.fiberPos = [0 0]; %Position of the fiber center in F5 in lambda/D.  
+                                %Should be zero unless testing fiber/lenslet misalignments.
+        
+        %--Lenslet properties
+        mp.Fend.lensletWavRad = 1.6; %Radius of the lenslet(s) in lambda_0/D
+        mp.Fend.Nlens = 1; %Number of lenslets in Fend
+        mp.Fend.x_lenslet = [6];% -3 -3];%[4 9 14 19]; %Lenslet positions in Fend in lambda_0/D
+        mp.Fend.y_lenslet = [0];% 5.196 -5.196];%[0 0 0 0];
+        mp.lensletFL = 150e-6; %Lenslet focal length in meters
+        
+        %--Off-axis, incoherent point source (exoplanet)
+        mp.x_planet = -mp.Fend.x_lenslet(1); %Position of the exoplanet in lambda_0/D
+        mp.y_planet = -mp.Fend.y_lenslet(1);
+        %Note that the above coordinates are flipped from the lenslet positions
+        %for some damn reason, so input the NEGATIVE of where you want the
+        %planet to be.
+    else
+        mp.Fend.FOV = 20;
+        mp.Fend.res = 5;
+        
+        %--Fiber locations and number
+        mp.Fend.Nfiber = 3;
+        mp.Fend.x_fiber = [6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+        mp.Fend.y_fiber = [0 5.3597 -5.3597];%[0 4.625 -4.625];
+        
+        %--Off-axis, incoherent point source (exoplanet)
+        mp.x_planet = mp.Fend.x_fiber(1); %Position of the exoplanet in lambda_0/D
+        mp.y_planet = mp.Fend.y_fiber(1);
+    end
+    
     %--Fiber properties
-    mp.fiber.a = 1.22; %Radius of the fiber core in lambda_0/D
-    mp.fiber.NA = 2.5e-7; %Numerical aperture of the fiber in bizarro units
+    mp.fiber.a = 0.507;%0.875;%0.66; %Radius of the fiber core in lambda_0/D
+    mp.fiber.a_phys = 1.75e-6; %Physical radius of the fiber core in meters
+    mp.fiber.NA = 0.12; %Numerical aperture of the fiber
     
-    %--Fiber tip plane properties (i.e., focal plane of lenslet(s)
-    mp.F5.res = 4;
-    mp.F5.FOV = 10;
-    mp.F5.fiberPos = [0 0]; %Position of the fiber center in F5 in lambda/D.  
-                            %Should be zero unless testing fiber/lenslet misalignments.
-    
-    %--Lenslet properties
-    mp.Fend.lensletWavRad = 1.22; %Radius of the lenslet(s) in lambda_0/D
-    mp.Fend.Nlens = 5; %Number of lenslets in Fend
-    mp.Fend.x_lenslet = [4 9 14 19 24]; %Lenslet positions in Fend in lambda_0/D
-    mp.Fend.y_lenslet = [0 0 0 0 0];
-    mp.lensletFL = 150e-6; %Lenslet focal length in meters
-    
-    %--Off-axis, incoherent point source (exoplanet)
     mp.c_planet = 1e-10; %contrast of exoplanet
-    mp.x_planet = -mp.Fend.x_lenslet(1); %Position of the exoplanet in lambda_0/D
-    mp.y_planet = -mp.Fend.y_lenslet(1);
-    %Note that the above coordinates are flipped from the lenslet positions
-    %for some damn reason, so input the NEGATIVE of where you want the
-    %planet to be.
-    
     mp.thput_eval_x = mp.x_planet;
     mp.thput_eval_y = mp.y_planet;
+
 end
 
 %% Step 4: Generate the label associated with this trial
