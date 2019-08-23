@@ -139,6 +139,7 @@ else
                  0.0,                    0.0,                    0.0, 1.0];
 end
 
+%--Compute the actuator center coordinates in units of actuator spacings
 for iact=1:dm.NactTotal
     xyzVals = [x_vec(iact); y_vec(iact); 0; 1];
     xyzValsRot = Mrot*xyzVals;
@@ -182,7 +183,7 @@ while( abs(infDiff) <= 1e-7)
 end
 counter = counter - 2;
 Ninf0pad = length(dm.infMaster)-counter;
-infMaster2 = dm.infMaster(1+counter/2:end-counter/2,1+counter/2:end-counter/2); %--The cropped-down Lyot stop for the compact model       
+infMaster2 = dm.infMaster(1+counter/2:end-counter/2,1+counter/2:end-counter/2); %--The cropped-down influence function       
 
 dm.infMaster = infMaster2;
 Npad = Ninf0pad;
