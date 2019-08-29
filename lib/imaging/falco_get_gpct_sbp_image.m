@@ -26,6 +26,23 @@ function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
     sbp_width = bench.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
     PSFpeak   = bench.info.PSFpeaks(si);% counts per second 
+
+    
+    %--Quantization of DM actuation steps based on least significant bit of the
+    % DAC (digital-analog converter). In height, so called HminStep_tb
+    % If HminStep_tb (minimum step in H) is defined, then quantize the DM voltages
+    % This is for simulating the LSB effect (Dan's experiment) 
+    if(isfield(mp.dm1,'HminStep_tb') && ~any(isnan(mp.dm1.HminStep_tb(:))))
+
+        % If desired method is not defined, set it to the default. 
+        if(~isfield(mp.dm1,'HminStepMethod')); mp.dm1.HminStepMethod = 'round'; end
+
+        % Discretize/Quantize the DM voltages (creates dm.Vquantized)
+        mp.dm1 = falco_discretize_dm_surf(mp.dm1, mp.dm1.HminStepMethod, 'tb');
+        mp.dm1.V = mp.dm1.Vquantized;
+
+    end
+    
     
     %----- Send commands to the DM -----
     %disp('Sending current DM voltages to testbed') 
