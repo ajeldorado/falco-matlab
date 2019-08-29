@@ -26,9 +26,6 @@ switch lower(mp.coro)
     case{'splc','sphlc'}
         
         switch upper(mp.SPname)
-            case{'SPC20181220','SPC-20181220','20181220'}
-            
-            case{'SPC20190130','SPC-20190130','20190130'}
                 
             case{'SPC20170714','SPC-20170714','20170714'}
                 load('WFIRST_CGI_apod_SPC_20170714.mat','SP'); %--Contains the 1001x1001 matrix named "SP"
@@ -39,7 +36,7 @@ switch lower(mp.coro)
                 %--NOTE: ADD A PART HERE TO DOWNSAMPLE THE APODIZER
                 mp.P3.compact.mask = temp;
                 
-            otherwise
+            case{'SPC-RING','RING','1D'}
         
                 mp.P3.full.mask = falco_gen_multi_ring_SP(mp.rEdgesLeft,mp.rEdgesRight,mp.P2.full.dx,mp.P2.D,mp.centering);
                 
@@ -51,12 +48,9 @@ switch lower(mp.coro)
                 end
         end
         
-        switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
-                
-            otherwise
-                mp.P3.full.Narr= length(mp.P3.full.mask);
-                mp.P3.full.dx = mp.P2.full.dx;
+        if(mp.full.flagPROPER==false)
+            mp.P3.full.Narr= length(mp.P3.full.mask);
+            mp.P3.full.dx = mp.P2.full.dx;
         end
         
         mp.P3.compact.dx = mp.P2.compact.dx;
@@ -64,7 +58,8 @@ switch lower(mp.coro)
 
     case{'vortex','vc','avc'}
         
-        if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
+        %if(nnz(strcmp(mp.whichPupil,{'LUVOIRA5','LUVOIR_B_offaxis','HabEx_B_offaxis'}))>0 && mp.flagApod)
+        if(mp.flagApod)
             % Full aperture stop 
             mp.P3.full.Narr = 2^(nextpow2(mp.P1.full.Nbeam));
 
@@ -86,10 +81,20 @@ switch lower(mp.coro)
                 mp.P3.compact.Narr = 2^(nextpow2(mp.P1.compact.Nbeam));
                 mp.P3.compact.mask = falco_gen_pupil_Simple( inputs );
             else
-                load(mp.P3.apodType)
-                mp.P3.full.mask = padOrCropEven(APOD,mp.P3.full.Narr);
-                mp.P3.compact.Narr = mp.P3.full.Narr;
-                mp.P3.compact.mask = mp.P3.full.mask;
+                if(exist(mp.P3.apodType,'file')~=2)
+                    disp('Specified apodizer not supported.');
+                else
+                    [~,~,ext] = fileparts(mp.P3.apodType);
+                    if(strcmpi(ext,'.fits'))
+                        APOD = fitsread(mp.P3.apodType);
+                    else
+                        % Assumes mp.P3.apodType is a .mat file and the variable name is APOD
+                        load(mp.P3.apodType)
+                    end
+                    mp.P3.full.mask = padOrCropEven(APOD,mp.P3.full.Narr);
+                    mp.P3.compact.Narr = mp.P3.full.Narr;
+                    mp.P3.compact.mask = mp.P3.full.mask;
+                end
             end
 
         else

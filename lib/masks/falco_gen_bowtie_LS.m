@@ -57,7 +57,7 @@ end
 % inputs.OD = 0.82; % (pupil diameters)
 % inputs.ang = 115; % (degrees)
 % inputs.centering = 'pixel'; % 'interpixel' or 'pixel'
-% addpath(genpath('~/Repos/FALCO/'))
+% addpath(genpath('~/Repos/falco-matlab/'))
 % flagRot180deg = false;
 
 Dbeam = inputs.Dbeam; %--diameter of the beam at the mask (meters)
