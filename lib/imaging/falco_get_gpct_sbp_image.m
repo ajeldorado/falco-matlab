@@ -30,10 +30,17 @@ function [normI,newV] = falco_get_gpct_sbp_image(mp,si)
     %----- Send commands to the DM -----
     %disp('Sending current DM voltages to testbed') 
     
-    [newV,message] = tb_DM_dmsmooth( bench, mp.dm1.V );
+    if(mp.dm1.run_dmsmooth)
+        [newV,message] = tb_DM_dmsmooth( bench, mp.dm1.V );
+    else
+        newV = mp.dm1.V;
+    end
 
-
-    map = newV'; % There's a transpose between Matlab and DM indexing
+    if(mp.dm1.transp)
+        map = newV'; % There's a transpose between Matlab and DM indexing
+    else
+        map = newV;
+    end
 
     % Send the commands to the DM. 
     % Notes: bench.DM.flatmap contains the commands to flatten the DM. 

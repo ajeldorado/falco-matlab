@@ -15,8 +15,8 @@
 %   in the config function, in the EFC controller, and in
 %   the image generating function.
 % Modified by A.J. Riggs on May 10, 2017 to eliminate a lot of unnecessary
-%   variables for full-knowledge design work in the main script, falco_3DM_main.m .
-% Modified by A.J. Riggs in April 2016 to include Babinet's principle for a 3DMLC
+%   variables for full-knowledge esign work in the main script, falco_3DM_main.m .
+% Modified by A.J. Riggs in Aprfil 2016 to include Babinet's principle for a 3DMLC
 %   propagation option.
 % Modified by A.J. Riggs from A.J.'s general coronagraphic WFSC code for design only 
 %   in April 2016.
@@ -139,11 +139,15 @@ for Itr=1:mp.Nitr
     if(isfield(mp,'testbed') )
         InormHist_tb.total = InormHist; 
         Im_tb.Im = Im;
-        Im_tb.E = zeros(size(Im));
+        Im_tb.E = zeros([size(Im),mp.Nsbp]);
         if(Itr>1)
             InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
             InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
-            Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
+            Etmp = zeros(size(Im));
+            for si = 1:mp.Nsbp
+                Etmp(mp.Fend.corr.mask) = EfieldVec(:,si);
+                Im_tb.E(:,:,si) = Etmp;
+            end
         else
             InormHist_tb.mod = NaN;
             InormHist_tb.unmod = NaN;
@@ -200,6 +204,7 @@ for Itr=1:mp.Nitr
         if(any(mp.dm_ind==5)); mp.dm5.act_ele = 1:mp.dm5.NactTotal; end
         if(any(mp.dm_ind==8)); mp.dm8.act_ele = 1:mp.dm8.NactTotal; end
         if(any(mp.dm_ind==9)); mp.dm9.act_ele = 1:mp.dm9.NactTotal; end
+        
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
@@ -473,8 +478,12 @@ if(isfield(mp,'testbed'))
     InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
     InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
     Im_tb.Im = Im;
-    Im_tb.E = zeros(size(Im));
-    Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
+    Im_tb.E = zeros([size(Im),mp.Nsbp]);
+    Etmp = zeros(size(Im));
+    for si = 1:mp.Nsbp
+        Etmp(mp.Fend.corr.mask) = EfieldVec(:,si);
+        Im_tb.E(:,:,si) = Etmp;
+    end
     hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);

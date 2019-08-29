@@ -8,8 +8,8 @@ function handles = falco_plot_progress_gpct(handles,mp,Itr,Inorm,Im_tb,DM1surf,D
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
-Icbmin = -8;
-Icbmax = -4;
+Icbmin = -9;
+Icbmax = -5;
 Im = Im_tb.Im;
 if(Itr>1)
     Imod = Inorm.mod(Itr-1);
@@ -85,22 +85,22 @@ if(mp.flagPlot)
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
     
 	subplot(2,3,5); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E).^2),[Icbmin Icbmax]); 
+    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,ceil(mp.Nsbp/2))).^2),[Icbmin Icbmax]); 
     axis xy equal tight;
     colorbar;
     colormap(gca,parula)
 %     xlabel('\lambda_0/D'); 
 %     ylabel('\lambda_0/D');
-    title('Modulated (previous)');
+    title('Modulated (previous @ \lambda0)');
     
 	subplot(2,3,6); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E),[-pi pi]); 
+    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,ceil(mp.Nsbp/2))),[-pi pi]); 
     axis xy equal tight; 
     colorbar; 
     colormap(gca,hsv);
 %     xlabel('\lambda_0/D'); 
 %     ylabel('\lambda_0/D');
-    title('Phase (previous)');
+    title('Phase (previous @ \lambda0)');
     
    drawnow;
    
