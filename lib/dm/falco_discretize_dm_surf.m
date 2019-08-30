@@ -1,7 +1,7 @@
 function dm = falco_discretize_dm_surf(dm,flagMethod,varargin)
 
 % optional flag to use testbed instead of simulation  
-if(nargin>0)
+if(nargin>2)
     flag_tb = varargin{1}; % The first variable argument defines which testbed type
 
     switch flag_tb
