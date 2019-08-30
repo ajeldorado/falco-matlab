@@ -111,7 +111,7 @@ mp.controller = 'plannedEFC';
 
 % % % % GRID SEARCH EFC DEFAULTS     
 % %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 777; %--Number of estimation+control iterations to perform
+mp.Nitr = 333; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2 9]; %--Which DMs to use
 
@@ -306,7 +306,7 @@ mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 
-
+mp.min_azimSize_dm9 = 5; %um
 
 
 %% HLC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

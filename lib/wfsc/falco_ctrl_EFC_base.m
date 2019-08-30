@@ -75,6 +75,7 @@ if(any(mp.dm_ind==9))
         sz_dm9 = numel(mp.dm9.act_ele);
         cvar.EyeGstarGdiag = cvar.EyeGstarGdiag(end-sz_dm9+1:end);
         cvar.GstarG_wsum = cvar.GstarG_wsum(end-sz_dm9+1:end,end-sz_dm9+1:end);
+        cvar.GcptransGcp_wsum = cvar.GcptransGcp_wsum(end-sz_dm9+1:end,end-sz_dm9+1:end);
         cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum(end-sz_dm9+1:end);
         reg_diag = reg_diag(end-sz_dm9+1:end);
         vec_dm_ele = [mp.dm9.V(mp.dm9.act_ele)];

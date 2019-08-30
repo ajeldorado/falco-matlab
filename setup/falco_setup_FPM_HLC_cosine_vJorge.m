@@ -68,7 +68,7 @@ mask = Rc<=mp.F3.Rin;
 windowFull = mask.*exp(-(Rc/mp.F3.Rin/(apRad*OD)).^hg_expon);
 
 drSep = drCos/2;
-min_azimSize = 5;%um
+min_azimSize = mp.min_azimSize_dm9;%um (5)
 pow_arr = (2:2:60)*6;
 numdiv = 2;
 count = 1;

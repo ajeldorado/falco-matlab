@@ -67,6 +67,11 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of
 % if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
 % if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis image; colorbar; title('Lyot stop');drawnow; end
 % if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end
+if isfield(mp.aux,'DM9surf0')
+    DM9surf0 = mp.aux.DM9surf0;
+else
+    DM9surf0 = 0;
+end
 
 %% Take initial broadband image 
 
@@ -123,7 +128,7 @@ for Itr=1:mp.Nitr
             switch lower(mp.layout)
                 case 'fourier'
                     mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
-                    mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
+                    mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact')+DM9surf0; %--Dielectric layer profile [m]
             end
         case{'FOHLC'}
             mp.DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'compact'); %--FPM amplitude transmission [amplitude]
@@ -590,6 +595,7 @@ Itr = Itr + 1;
 %--Compute the DM surfaces
 if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  end
 if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  end
+if(any(mp.dm_ind==9)); DM9surf =  falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact')+DM9surf0;  end
 
 %--Data to store
 if(any(mp.dm_ind==1)); out.dm1.Vall(:,:,Itr) = mp.dm1.V; end
@@ -668,7 +674,9 @@ if(mp.flagSaveWS)
     mp.dm9.compact.inf_datacube = 0;
     mp.dm8.inf_datacube = 0;
     mp.dm9.inf_datacube = 0;
-
+    
+    mp.DM9surf = DM9surf;
+    
     fnAll = [mp.path.ws mp.runLabel,'_all.mat'];
     disp(['Saving entire workspace to file ' fnAll '...'])
     save(fnAll);
@@ -943,7 +951,7 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
     cvar.EyeNorm = max(diag(cvar.GstarG_wsum ));
     fprintf(' done. Time: %.3f\n',toc);
-    if mp.aux.flagOmega==1 && Itr>=mp.aux.firstOmegaItr
+    if mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr
         fprintf('Computing linearized control matrices from the JacobianCP...'); tic;
 
         %--Compute matrices for linear control with regular EFC

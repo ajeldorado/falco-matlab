@@ -25,7 +25,12 @@ t_diel_bias = mp.t_diel_bias_nm*1e-9; % bias thickness of dielectric [m]
 
 %--Generate thickness profiles of each layer
 DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,modelType); %--Metal layer profile [m]
-DM9surf = t_diel_bias + falco_gen_HLC_FPM_surf_from_cube(mp.dm9,modelType); %--Dielectric layer profile [m]
+if isfield(mp.aux,'DM9surf0')
+    DM9surf0 = mp.aux.DM9surf0;
+else
+    DM9surf0 = 0;
+end
+DM9surf = t_diel_bias + falco_gen_HLC_FPM_surf_from_cube(mp.dm9,modelType)+DM9surf0; %--Dielectric layer profile [m]
 Nxi = size(DM8surf,2);
 Neta = size(DM8surf,1);
     
