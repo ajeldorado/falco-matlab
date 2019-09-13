@@ -306,7 +306,7 @@ mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 
-mp.min_azimSize_dm9 = 5; %um
+mp.min_azimSize_dm9 = 25; %um
 
 
 %% HLC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
