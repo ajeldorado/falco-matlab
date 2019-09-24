@@ -169,4 +169,10 @@ docs/**
 
 HLCLSplotter.m
 PMGIplotter.m
+*.mat
 *.pyc
+*.asv
+*.emf
+*.fig
+*.pdf
+*.png
