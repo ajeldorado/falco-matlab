@@ -197,12 +197,12 @@ for Itr=1:mp.Nitr
 
     %--Before performing new cull, include all actuators again
     if(cvar.flagCullAct)
-        %--Re-include all actuators in the basis set.
-        if(any(mp.dm_ind==1)); mp.dm1.act_ele = 1:mp.dm1.NactTotal; end
-        if(any(mp.dm_ind==2)); mp.dm2.act_ele = 1:mp.dm2.NactTotal; end
-        if(any(mp.dm_ind==5)); mp.dm5.act_ele = 1:mp.dm5.NactTotal; end
-        if(any(mp.dm_ind==8)); mp.dm8.act_ele = 1:mp.dm8.NactTotal; end
-        if(any(mp.dm_ind==9)); mp.dm9.act_ele = 1:mp.dm9.NactTotal; end
+        %--Re-include all actuators in the basis set. Need act_ele to be a column vector.
+        if(any(mp.dm_ind==1)); mp.dm1.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==2)); mp.dm2.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==5)); mp.dm5.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==8)); mp.dm8.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==9)); mp.dm9.act_ele = (1:mp.dm1.NactTotal).'; end
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
@@ -665,41 +665,24 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
         if(cvar.flagCullAct && cvar.flagRelin)
             fprintf('Weeding out weak actuators from the control Jacobian...\n'); 
             if(any(mp.dm_ind==1))
-                %--Crop out very weak-effect actuators
-                G1intNorm = zeros(mp.dm1.Nele,1);
-                G1intNorm(1:end) = sum( mean(abs(jacStruct.G1).^2,3), 1);
-                G1intNorm = G1intNorm/max(max(G1intNorm));
-                mp.dm1.act_ele = find(G1intNorm>=10^(mp.logGmin));
+                %--Crop out very weak-effect actuators. Need mp.dm1.act_ele to be a column vector
+                G1intNorm = sum( mean(abs(jacStruct.G1).^2,3), 1).';
+                mp.dm1.act_ele = find(G1intNorm/max(G1intNorm(:))>=10^(mp.logGmin));
                 clear G1intNorm
             end
             if(any(mp.dm_ind==2))
-                G2intNorm = zeros(mp.dm2.Nele,1);
-                G2intNorm(1:end) = sum( mean(abs(jacStruct.G2).^2,3),1);
-                G2intNorm = G2intNorm/max(max(G2intNorm));
-                mp.dm2.act_ele = find(G2intNorm>=10^(mp.logGmin));
+                G2intNorm = sum( mean(abs(jacStruct.G2).^2,3),1).';
+                mp.dm2.act_ele = find(G2intNorm/max(G2intNorm(:))>=10^(mp.logGmin));
                 clear G2intNorm
             end
-            
-            if(any(mp.dm_ind==5))
-                G5intNorm = zeros(mp.dm5.Nele,1);
-                G5intNorm(1:end) = sum( mean(abs(jacStruct.G5).^2,3),1);
-                G5intNorm = G5intNorm/max(max(G5intNorm));
-                mp.dm5.act_ele = find(G5intNorm>=10^(mp.logGmin));
-                clear G5intNorm
-            end
-
             if(any(mp.dm_ind==8))
-                G8intNorm = zeros(mp.dm8.Nele,1);
-                G8intNorm(1:end) = sum( mean(abs(jacStruct.G8).^2,3),1);
-                G8intNorm = G8intNorm/max(max(G8intNorm));
-                mp.dm8.act_ele = find(G8intNorm>=10^(mp.logGmin));
+                G8intNorm(1:end) = sum(mean(abs(jacStruct.G8).^2,3),1).';
+                mp.dm8.act_ele = find(G8intNorm/max(G8intNorm(:))>=10^(mp.logGmin));
                 clear G8intNorm
             end    
             if(any(mp.dm_ind==9))
-                G9intNorm = zeros(mp.dm9.Nele,1);
-                G9intNorm(1:end) = sum( mean(abs(jacStruct.G9).^2,3),1);
-                G9intNorm = G9intNorm/max(max(G9intNorm));
-                mp.dm9.act_ele = find(G9intNorm>=10^(mp.logGmin));
+                G9intNorm = sum(mean(abs(jacStruct.G9).^2,3),1).';
+                mp.dm9.act_ele = find(G9intNorm/max(G9intNorm(:))>=10^(mp.logGmin));
                 clear G9intNorm
             end
 
@@ -736,21 +719,18 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
             %--Update the number of elements used per DM
             if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); end
             if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); end
-            if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); end
             if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); end
             if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); end
             %mp.NelePerDMvec = [length(mp.dm1.Nele), length(mp.dm2.Nele), length(mp.dm3.Nele), length(mp.dm4.Nele), length(mp.dm5.Nele), length(mp.dm6.Nele), length(mp.dm7.Nele), length(mp.dm8.Nele), length(mp.dm9.Nele) ];
 
             if(any(mp.dm_ind==1)); fprintf('  DM1: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm1.Nele, mp.dm1.NactTotal,100*mp.dm1.Nele/mp.dm1.NactTotal); end
             if(any(mp.dm_ind==2)); fprintf('  DM2: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm2.Nele, mp.dm2.NactTotal,100*mp.dm2.Nele/mp.dm2.NactTotal); end
-            if(any(mp.dm_ind==5)); fprintf('  DM5: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm5.Nele, mp.dm5.NactTotal,100*mp.dm5.Nele/mp.dm5.NactTotal); end
             if(any(mp.dm_ind==8)); fprintf('  DM8: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm8.Nele, mp.dm8.NactTotal,100*mp.dm8.Nele/mp.dm8.NactTotal); end
             if(any(mp.dm_ind==9)); fprintf('  DM9: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm9.Nele, mp.dm9.NactTotal,100*mp.dm9.Nele/mp.dm9.NactTotal); end
             
             %--Crop out unused actuators from the control Jacobian
             if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1(:,mp.dm1.act_ele,:); end
             if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2(:,mp.dm2.act_ele,:); end
-            if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5(:,mp.dm5.act_ele,:); end
             if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8(:,mp.dm8.act_ele,:); end
             if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9(:,mp.dm9.act_ele,:); end
         end  
