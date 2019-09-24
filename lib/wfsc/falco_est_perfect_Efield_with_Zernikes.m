@@ -31,21 +31,30 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
             mp.full.polaxis = 6; %--Use the average polarization state for the perfect estimation.    
         end
     end
-    
-    %--Compute the E-field
-    if(mp.flagFiber) %--Case with single-mode fibers.
-        Emat = zeros(mp.Fend.Nlens, mp.jac.Nmode);
+
+    if(mp.flagFiber)
+        if(mp.flagLenslet)
+            Emat = zeros(mp.Fend.Nlens, mp.jac.Nmode);
+        else
+            Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+        end
+        
         for im=1:mp.jac.Nmode
             modvar.sbpIndex = mp.jac.sbp_inds(im);
             modvar.zernIndex = mp.jac.zern_inds(im);
             modvar.wpsbpIndex = mp.wi_ref;
             modvar.whichSource = 'star';
 
-            [~, EfibCompact] = model_full(mp, modvar);
-            [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
-            Emat(:,im) = EfibCompact(I,J,:);
-        end        
-    
+            [E2D, EfibCompact] = model_full(mp, modvar);
+            
+            if(mp.flagLenslet)
+                [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
+                Emat(:,im) = EfibCompact(I,J,:);
+            else
+                Emat(:,im) = EfibCompact(mp.Fend.corr.inds);
+            end
+        end
+
     else %--Regular, non-fiber simulations
         Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
         
@@ -90,12 +99,10 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
                 end
                 Emat(:,im) = sum(EmatSbp,2);
             end
-        end
-        
+        end        
     end
     
 end %--END OF FUNCTION
-
 
 %--Extra function needed to use parfor (because parfor can have only a
 %  single changing input argument).

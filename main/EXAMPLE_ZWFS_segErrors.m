@@ -13,8 +13,8 @@ clear;
 
 
 %--Library locations
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+mp.path.falco = 'C:\CoronagraphSims\falco-matlab\';  %--Location of FALCO
+mp.path.proper = 'C:\CoronagraphSims\FALCO\lib\PROPER\'; %--Location of the MATLAB PROPER library
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
 mp.path.config = [mp.path.falco,'data/brief/']; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
