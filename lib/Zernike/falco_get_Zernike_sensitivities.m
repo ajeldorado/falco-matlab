@@ -31,7 +31,7 @@ for ni = 1:Nannuli
     maskStruct.angDeg = mp.Fend.corr.ang; %--degrees
     maskStruct.centering = mp.centering;
     maskStruct.FOV = mp.Fend.FOV;
-    maskStruct.whichSide = 'both'; %--which (sides) of the dark hole have open
+    maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
     %--Generate Software Mask for Correction 
     [maskCube(:,:,ni), ~, ~] = falco_gen_SW_mask(maskStruct);
 end

@@ -169,9 +169,9 @@ duplicate_values = lambda_weights_all(duplicate_inds);
 mp.full.lambdas = lambdas(inds_unique);
 mp.full.lambda_weights_all = lambda_weights_all(inds_unique);
 for idup=1:length(duplicate_inds)
-    lambda = lambdas(idup); 
-    weight = lambda_weights_all(idup);
-    ind = find(mp.full.lambdas==lambda);
+    lambda = lambdas(duplicate_inds(idup));
+    weight = lambda_weights_all(duplicate_inds(idup));
+    ind = find(abs(mp.full.lambdas-lambda)<=1e-11);
     mp.full.lambda_weights_all(ind) = mp.full.lambda_weights_all(ind) + weight;
 end
 mp.full.NlamUnique = length(inds_unique);
