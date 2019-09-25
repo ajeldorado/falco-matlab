@@ -13,9 +13,9 @@ if(mp.flagPlot)
     %--Figure is nominally a square. Need extra column when mp.coro='HLC'
     switch upper(mp.coro)
         case{'HLC'}
-            fh = 1000;
-            fw = 700;
-            fig_size = [10 10 fh fw];
+            fw = 1000;
+            fh = 700;
+            fig_size = [10 10 fw fh];
         otherwise
             fig_size = [10 10 800 800];
     end
@@ -36,12 +36,12 @@ if(mp.flagPlot)
     switch upper(mp.coro)
         case{'HLC'}
             
-            subplotbox = [1, fh/fw]*0.32;
+            subplotbox = [1, fw/fh]*0.32;
             fst = 20; %--Font size for titles in the subplots
 
             %--Top label
             handles.textbox1 = annotation('textbox', [0.25 0.89 0.5 0.1], ...
-                'String', sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',40,...
+                'String', sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',32,...
                 'HorizontalAlignment','center','LineStyle','none','Interpreter','latex');
 
             %--Stellar PSF
@@ -140,7 +140,7 @@ if(mp.flagPlot)
         otherwise
             
             handles.textbox1 = annotation('textbox', [0.25 0.86 0.5 0.1], ...
-                'String', sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',40,...
+                'String', sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',32,...
                 'HorizontalAlignment','center','LineStyle','none','Interpreter','latex');
 
             fst = 24; %--Font size for titles in the subplots
