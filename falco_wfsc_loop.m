@@ -127,7 +127,7 @@ for Itr=1:mp.Nitr
 
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
-    [mp,thput] = falco_compute_thput(mp);
+    [mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
     if(mp.flagFiber)
         mp.thput_vec(Itr) = max(thput);
     else
@@ -153,7 +153,7 @@ for Itr=1:mp.Nitr
         end
         hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
     else
-        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
     end
 
 %     %--Plot the intermediate E-fields
@@ -471,7 +471,7 @@ if(any(mp.dm_ind==8)); out.dm8.Vall(:,Itr) = mp.dm8.V; end
 if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
 %--Calculate the core throughput (at higher resolution to be more accurate)
-[mp,thput] = falco_compute_thput(mp);
+[mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
 if(mp.flagFiber)
     mp.thput_vec(Itr) = max(thput);
 else
@@ -487,7 +487,7 @@ if(isfield(mp,'testbed'))
     Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
     hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
 end
 %% Optional output variable: mp
 varargout{1} = mp;
