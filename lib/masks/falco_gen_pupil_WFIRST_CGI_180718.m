@@ -21,6 +21,9 @@
 %
 % NOTE: All pupil features have normalized length units of pupil diameters.
 %
+% REVISION HISTORY: 
+% Corrected on 2019-09-26 by A.J. Riggs to double the strut padding so that it is applied 
+%   fully to each edge.
 % Corrected on 2018-08-16 by A.J. Riggs to compute 'beam_diam_fraction' correctly.
 % Created on 2018-08-07 by A.J. Riggs, Jet Propulsion Laboratory, California Institute of Technology.
 
@@ -192,7 +195,7 @@ bm = prop_circular_obscuration(bm, ra_ID,'XC',cx_ID+cshift,'YC',cy_ID+cshift);
 
 for istrut=1:6
     angDeg = angStrutVec(istrut) + clock_deg; % degrees
-    wStrut = magFac*(wStrutVec(istrut)+pad_strut);
+    wStrut = magFac*(wStrutVec(istrut)+2*pad_strut);
     lStrutIn = magFac*lStrut;
     xc = magFac*(xcStrutVec(istrut)); 
     yc = magFac*(ycStrutVec(istrut)); 

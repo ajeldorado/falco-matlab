@@ -22,6 +22,8 @@
 % - Modified on 2019-02-25 by A.J. Riggs to save the delta steps.
 % - Modified on 2019-03-26 by A.J. Riggs to include tied actuators.
 % - Modified on 2019-06-25 by A.J. Riggs to tie actuators that violate the neighbor rule.
+% - Modified on 2019-09-26 by A.J. Riggs to handle DM1 and DM2 actuator 
+% constraints outside this function in a more user-robust way.
 
 function [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec)
 
@@ -36,7 +38,7 @@ if(any(mp.dm_ind==7)); dDM.dDM7V = zeros(mp.dm7.NactTotal,1); end
 if(any(mp.dm_ind==8)); dDM.dDM8V = zeros(mp.dm8.NactTotal,1); end
 if(any(mp.dm_ind==9)); dDM.dDM9V = zeros(mp.dm9.NactTotal,1); end
 
-%--Parse the command vector by DM
+%--Parse the delta command vector by DM
 if(any(mp.dm_ind==1));  dDM.dDM1V(mp.dm1.act_ele) = mp.dm1.weight*duVec(cvar.uLegend==1);  end % Parse the command vector to get component for DM and apply the DM's weight
 if(any(mp.dm_ind==2));  dDM.dDM2V(mp.dm2.act_ele) = mp.dm2.weight*duVec(cvar.uLegend==2);  end % Parse the command vector to get component for DM and apply the DM's weight
 if(any(mp.dm_ind==3));  dDM.dDM3V(mp.dm3.act_ele) = mp.dm3.weight*duVec(cvar.uLegend==3);  end % Parse the command vector to get component for DM and apply the DM's weight
@@ -47,18 +49,8 @@ if(any(mp.dm_ind==7));  dDM.dDM7V(mp.dm7.act_ele) = mp.dm7.weight*duVec(cvar.uLe
 if(any(mp.dm_ind==8));  dDM.dDM8V(mp.dm8.act_ele) = mp.dm8.weight*duVec(cvar.uLegend==8);  end % Parse the command vector to get component for DM and apply the DM's weight
 if(any(mp.dm_ind==9));  dDM.dDM9V(mp.dm9.act_ele) = mp.dm9.weight*duVec(cvar.uLegend==9);  end % Parse the command vector to get component for DM and apply the DM's weight
 
-%--Enforce tied actuator pair commands. Assign command of first actuator to
-%the second as well.
-if(any(mp.dm_ind==1))
-    for ti=1:size(mp.dm1.tied,1)
-        dDM.dDM1V(mp.dm1.tied(ti,2)) = dDM.dDM1V(mp.dm1.tied(ti,1));
-    end
-end
-if(any(mp.dm_ind==2))
-    for ti=1:size(mp.dm2.tied,1)
-        dDM.dDM2V(mp.dm2.tied(ti,2)) = dDM.dDM2V(mp.dm2.tied(ti,1));
-    end
-end
+%--Enforce tied actuator pair commands. 
+% Assign command of first actuator to the second as well.
 if(any(mp.dm_ind==8))
     for ti=1:size(mp.dm8.tied,1)
         dDM.dDM8V(mp.dm8.tied(ti,2)) = dDM.dDM8V(mp.dm8.tied(ti,1));
@@ -80,48 +72,5 @@ if(any(mp.dm_ind==6));  mp.dm6.V = cvar.DM6Vnom + dDM.dDM6V;  end
 if(any(mp.dm_ind==7));  mp.dm7.V = cvar.DM7Vnom + dDM.dDM7V;  end
 if(any(mp.dm_ind==8));  mp.dm8.V = cvar.DM8Vnom + dDM.dDM8V;  end
 if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
-
-%--Enforce the DM neighbor rule. (This restricts the maximum voltage
-%  between an actuator and each of its 8 neighbors.
-if(any(mp.dm_ind==1))
-    if(isfield(mp.dm1,'flagNbrRule'))
-        if(mp.dm1.flagNbrRule)
-            [mp.dm1.V, indPair1] = falco_dm_neighbor_rule(mp.dm1.V, mp.dm1.dVnbr, mp.dm1.Nact);
-            mp.dm1.tied = [mp.dm1.tied; indPair1]; %--Tie together actuators violating the neighbor rule
-            dDM.dm1tied = mp.dm1.tied; %--This is what gets passed out to falco_wfsc_loop
-        else
-            dDM.dm1tied = mp.dm1.tied; %--Leave the same. This is what gets passed out to falco_wfsc_loop
-        end
-    else
-        dDM.dm1tied = mp.dm1.tied; %--Leave the same. This is what gets passed out to falco_wfsc_loop
-    end
-end
-if(any(mp.dm_ind==2))
-    if(isfield(mp.dm2,'flagNbrRule'))
-        if(mp.dm2.flagNbrRule)
-            [mp.dm2.V,indPair2] = falco_dm_neighbor_rule(mp.dm2.V, mp.dm2.dVnbr, mp.dm2.Nact);
-            mp.dm2.tied = [mp.dm2.tied; indPair2]; %--Tie together actuators violating the neighbor rule. This is used only within the controller.
-            dDM.dm2tied = mp.dm2.tied; %--Leave the same. This is what gets passed out to falco_wfsc_loop
-        else
-            dDM.dm2tied = mp.dm2.tied; %--Leave the same. This is what gets passed out to falco_wfsc_loop
-        end
-    else
-        dDM.dm2tied = mp.dm2.tied; %--Leave the same. This is what gets passed out to falco_wfsc_loop
-    end
-end
-    
-%--Re-enforce tied actuator pairs after applying the neighbor rule
-% [to be added later]
-
-%--Save the delta from the previous command
-if(any(mp.dm_ind==1));  dDM.dDM1V = mp.dm1.V - cvar.DM1Vnom;  mp.dm1.dV = dDM.dDM1V;  end
-if(any(mp.dm_ind==2));  dDM.dDM2V = mp.dm2.V - cvar.DM2Vnom;  mp.dm2.dV = dDM.dDM2V;  end
-if(any(mp.dm_ind==3));  dDM.dDM3V = mp.dm3.V - cvar.DM3Vnom;  mp.dm3.dV = dDM.dDM3V;  end
-if(any(mp.dm_ind==4));  dDM.dDM4V = mp.dm4.V - cvar.DM4Vnom;  mp.dm4.dV = dDM.dDM4V;  end
-if(any(mp.dm_ind==5));  dDM.dDM5V = mp.dm5.V - cvar.DM5Vnom;  mp.dm5.dV = dDM.dDM5V;  end
-if(any(mp.dm_ind==6));  dDM.dDM6V = mp.dm6.V - cvar.DM6Vnom;  mp.dm6.dV = dDM.dDM6V;  end
-if(any(mp.dm_ind==7));  dDM.dDM7V = mp.dm7.V - cvar.DM7Vnom;  mp.dm7.dV = dDM.dDM7V;  end
-if(any(mp.dm_ind==8));  dDM.dDM8V = mp.dm8.V - cvar.DM8Vnom;  mp.dm8.dV = dDM.dDM8V;  end
-if(any(mp.dm_ind==9));  dDM.dDM9V = mp.dm9.V - cvar.DM9Vnom;  mp.dm9.dV = dDM.dDM9V;  end
 
 end %--END OF FUNCTION

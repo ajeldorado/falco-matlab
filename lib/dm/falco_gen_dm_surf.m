@@ -72,6 +72,10 @@ else
     H = dm.VtoH.*dm.V;
 end
 
+%--Apply various constraints to DM commands
+dm = falco_enforce_dm_constraints(dm);
+
+%--Generate the DM surface
 [~,DMsurf] = propcustom_dm(bm, H, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps,...
     'inf_sign',dm.inf_sign, 'inf_fn', dm.inf_fn);
 
