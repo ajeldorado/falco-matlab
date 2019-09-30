@@ -24,6 +24,8 @@ mp.jac.dummy = 1;
 mp.est.dummy = 1;
 mp.compact.dummy = 1;
 mp.full.dummy = 1;
+mp.dm1.dummy = 1;
+mp.dm2.dummy = 1;
 
 %% Optional/Hidden flags
 %--Saving data
@@ -35,9 +37,20 @@ if(isfield(mp,'flagTrainModel')==false);  mp.flagTrainModel = false;  end  %--Wh
 if(isfield(mp,'flagUseLearnedJac')==false);  mp.flagUseLearnedJac = false;  end  %--Whether to load and use an improved Jacobian from the Expectation-Maximization (E-M) algorithm 
 if(isfield(mp.est,'flagUseJac')==false);  mp.est.flagUseJac = false;  end   %--Whether to use the Jacobian or not for estimation. (If not using Jacobian, model is called and differenced.)
 if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end %--Whether to perform a model-based (instead of empirical) grid search for the controller
-%--Neighbor rule for deformable mirror actuators
+%--Deformable mirror actuator constraints or bounds
+if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = -1000;  end %--Min allowed voltage command
+if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed voltage command
+if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned actuators
+if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = [];  end %--(Fixed) voltage commands of pinned actuators
+if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
 if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = -1000;  end %--Min allowed voltage command
+if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed voltage command
+if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned actuators
+if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = [];  end %--(Fixed) voltage commands of pinned actuators
+if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
 if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+
 %--Model options (Very specialized cases--not for the average user)
 if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
 if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to propagate through a lenslet array placed in Fend before coupling light into fibers
@@ -66,6 +79,7 @@ if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount o
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
 if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
+
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
 %--Tied actuator pair definitions: See Section with variables mp.dmX.tied for X=1:9
@@ -93,9 +107,6 @@ end
 %% Useful factor
 mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %--Conversion factor: milliarcseconds (mas) to lambda0/D
 
-%% Estimator
-if(isfield(mp,'estimator')==false); mp.estimator = 'perfect'; end
-
 %% Bandwidth and Wavelength Specs: Compact Model
 
 if(isfield(mp,'Nwpsbp')==false);  mp.Nwpsbp = 1;  end
@@ -106,11 +117,13 @@ mp.si_ref = ceil(mp.Nsbp/2);
 
 %--Wavelengths used for Compact Model (and Jacobian Model)
 mp.sbp_weights = ones(mp.Nsbp,1);
-if(mp.Nwpsbp==1) %--Set ctrl wavelengths evenly between endpoints (inclusive) of the total bandpass.
+if(mp.Nwpsbp==1 && mp.flagSim) %--Set ctrl wavelengths evenly between endpoints (inclusive) of the total bandpass.
     if(mp.Nsbp==1)
         mp.sbp_centers = mp.lambda0;
     else
         mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
+        mp.sbp_weights(1) = 1/2; %--Give end sub-bands half weighting
+        mp.sbp_weights(end) = 1/2; %--Give end sub-bands half weighting
     end
 else %--For cases with multiple sub-bands: Choose wavelengths to be at subbandpass centers since the wavelength samples will span to the full extent of the sub-bands.
     mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
@@ -128,12 +141,12 @@ mp.wi_ref = ceil(mp.Nwpsbp/2);
 
 %--Wavelength factors/weights within each sub-bandpass. For full model only
 mp.full.lambda_weights = ones(mp.Nwpsbp,1); %--Initialize as all ones. Weights within a single sub-bandpass
-if(mp.Nwpsbp==1)
+if(mp.Nwpsbp==1) %--Give equal weighting to all wavelengths
     mp.full.dlam = 0; %--Delta lambda between every wavelength in the sub-band in the full model
-else
+else %--Give half weighting to the end wavelengths
     %--Spectral weighting in image
-    mp.full.lambda_weights(1) = 1/2; %--Include end wavelengths with half weights
-    mp.full.lambda_weights(end) = 1/2; %--Include end wavelengths with half weights
+    mp.full.lambda_weights(1) = 1/2; %--Give end wavelengths half weighting
+    mp.full.lambda_weights(end) = 1/2; %--Give end wavelengths half weighting
     mp.fracBWsbp = mp.fracBW/mp.Nsbp; %--Bandwidth per sub-bandpass
     %--Indexing of wavelengths in each sub-bandpass
     sbp_facs = linspace(1-mp.fracBWsbp/2,1+mp.fracBWsbp/2,mp.Nwpsbp); %--Factor applied to lambda0 only

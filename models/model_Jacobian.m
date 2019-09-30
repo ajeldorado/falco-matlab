@@ -89,7 +89,7 @@ function jacStruct = model_Jacobian(mp)
         if(any(mp.dm_ind==9)); jacStruct.G9 = zeros(mp.Fend.corr.Npix,mp.dm9.Nele,mp.jac.Nmode);  else;  jacStruct.G9 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM9
     end
         
-    %--Loop over the possible combinations of 1) tip/tilt-offsets, 2) sub-bandpasses, and 3) DM number 
+    %--Loop over the possible combinations of 1) Zernike modes, 2) sub-bandpasses, and 3) DM number 
     %   (either with parfor or for)
     fprintf('Computing control Jacobian matrices ... \n'); tic
     vals_list = allcomb(1:mp.jac.Nmode,mp.dm_ind).'; %--dimensions: [2 x length(mp.jac.Nmode)*length(mp.dm_ind) ]
@@ -140,10 +140,17 @@ function jacStruct = model_Jacobian(mp)
 
     fprintf('...done.  Time = %.2f\n',toc);
 
-    %--TIED ACTUATORS
+    
+    %% TIED ACTUATORS
+    
+    %--Enforce constraints on DM commands to update the tied actuator list.
+    if(any(mp.dm_ind==1)); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
+    if(any(mp.dm_ind==2)); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
+    
     %--Handle tied actuators by adding the 2nd actuator's Jacobian column to
     %the first actuator's column, and then zeroing out the 2nd actuator's column.
     if(any(mp.dm_ind==1))
+        mp.dm1 = falco_enforce_dm_constraints(mp.dm1); %-Update the sets of tied actuators
         for ti=1:size(mp.dm1.tied,1)
             Index1all = mp.dm1.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
             Index2all = mp.dm1.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
@@ -154,6 +161,7 @@ function jacStruct = model_Jacobian(mp)
         end
     end
     if(any(mp.dm_ind==2))
+        mp.dm2 = falco_enforce_dm_constraints(mp.dm2); %-Update the sets of tied actuators
         for ti=1:size(mp.dm2.tied,1)
             Index1all = mp.dm2.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
             Index2all = mp.dm2.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
@@ -187,12 +195,6 @@ function jacStruct = model_Jacobian(mp)
 end %--END OF FUNCTION model_Jacobian.m
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The function model_Jacobian_middle_layer.m exists at all so that parfor
-% can use a linear indexing scheme from 1 to Nmodes. 
-% This is a nested function to try to reduce RAM overhead in MATLAB.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % INPUTS:
 % -mp = structure of model parameters
