@@ -143,10 +143,6 @@ function jacStruct = model_Jacobian(mp)
     
     %% TIED ACTUATORS
     
-    %--Enforce constraints on DM commands to update the tied actuator list.
-    if(any(mp.dm_ind==1)); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
-    if(any(mp.dm_ind==2)); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
-    
     %--Handle tied actuators by adding the 2nd actuator's Jacobian column to
     %the first actuator's column, and then zeroing out the 2nd actuator's column.
     if(any(mp.dm_ind==1))

@@ -740,8 +740,6 @@ if(any(mp.dm_ind==9));  mp.dm9.dV = 0;  end
 %% Intialize tied actuator pairs if not already defined. 
 % Dimensions of the pair list is [Npairs x 2]
 %%--Save the delta from the previous command
-if(any(mp.dm_ind==1)); if(isfield(mp.dm1,'tied')==false); mp.dm1.tied = []; end; end
-if(any(mp.dm_ind==2)); if(isfield(mp.dm2,'tied')==false); mp.dm2.tied = []; end; end
 if(any(mp.dm_ind==3)); if(isfield(mp.dm3,'tied')==false); mp.dm3.tied = []; end; end
 if(any(mp.dm_ind==4)); if(isfield(mp.dm4,'tied')==false); mp.dm4.tied = []; end; end
 if(any(mp.dm_ind==5)); if(isfield(mp.dm5,'tied')==false); mp.dm5.tied = []; end; end
