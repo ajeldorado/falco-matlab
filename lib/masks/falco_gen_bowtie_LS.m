@@ -57,9 +57,9 @@ if(isfield(inputs,'clocking')); clocking = inputs.clocking; end
 if(isfield(inputs,'magfac')); magfac = inputs.magfac; end
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(magfac*Nbeam+1 + 2*max(Nbeam*[xShear,yShear])); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even(magfac*Nbeam+1 + 2*max(Nbeam*abs([xShear,yShear]))); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
-    Narray = ceil_even(magfac*Nbeam + 2*max(Nbeam*[xShear,yShear])); %--number of points across output array. Same size as width when interpixel centered.
+    Narray = ceil_even(magfac*Nbeam + 2*max(Nbeam*abs([xShear,yShear]))); %--number of points across output array. Same size as width when interpixel centered.
 end
 
 Darray = Narray*dx; %--width of the output array (meters)
