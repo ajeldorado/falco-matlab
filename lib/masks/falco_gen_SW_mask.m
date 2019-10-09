@@ -118,8 +118,10 @@ elseif( strcmpi(whichSide,'T') || strcmpi(whichSide,'top') )
     clockAng = 0;
 elseif( strcmpi(whichSide,'B') || strcmpi(whichSide,'bottom') )
     clockAng = pi;   
+elseif( strcmpi(whichSide,'both') )
+    clockAng = 0;
 else
-    error('falco_gen_SW_mask.m: Unknown value specified for inputs.clockAng')
+    error('falco_gen_SW_mask.m: Unknown value specified for inputs.whichSide')
 end
 
 clockAng = clockAng + inputs.clockAngDeg*pi/180; %--Add extra clocking specified by inputs.clockAngDeg
