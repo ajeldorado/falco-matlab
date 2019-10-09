@@ -368,6 +368,7 @@ maskCorr.centering = mp.centering;
 maskCorr.FOV = mp.Fend.FOV;
 maskCorr.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
 if(isfield(mp.Fend,'shape'));  maskCorr.shape = mp.Fend.shape;  end
+if(isfield(mp.Fend,'clockAngDeg'));  maskCorr.clockAngDeg = mp.Fend.clockAngDeg;  end
 
 %--Compact Model: Generate Software Mask for Correction 
 [mp.Fend.corr.mask, mp.Fend.xisDL, mp.Fend.etasDL] = falco_gen_SW_mask(maskCorr); 
@@ -379,7 +380,6 @@ mp.Fend.Neta = size(mp.Fend.corr.mask,1);
 
 [XIS,ETAS] = meshgrid(mp.Fend.xisDL, mp.Fend.etasDL);
 mp.Fend.RHOS = sqrt(XIS.^2 + ETAS.^2);
-
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 if(mp.flagFiber)
@@ -507,6 +507,8 @@ maskScore.centering = mp.centering;
 maskScore.FOV = mp.Fend.FOV; %--Determines max dimension length
 maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
 if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
+if(isfield(mp.Fend,'clockAngDeg'));  maskScore.clockAngDeg = mp.Fend.clockAngDeg;  end
+
 %--Compact Model: Generate Software Mask for Scoring Contrast 
 maskScore.Nxi = mp.Fend.Nxi; %--Set min dimension length to be same as for corr 
 maskScore.pixresFP = mp.Fend.res;

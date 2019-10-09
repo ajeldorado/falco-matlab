@@ -54,6 +54,9 @@ else
     DHshape = 'circle'; %--Default to a circular outer edge
 end
 
+if(~isfield(inputs,'clockAngDeg'));  inputs.clockAngDeg = 0;  end %--Amount extra to clock the dark hole
+
+
 xi_cen = 0;
 eta_cen = 0;
 
@@ -107,28 +110,26 @@ switch lower(DHshape)
         maskSW0 = (RHO>=rhoInner & RHO<=rhoOuter);
 end
 
-%--If the use doesn't pass the clocking angle 
-if(~isfield(inputs,'clockAngDeg'))
-    if( strcmpi(whichSide,'L') || strcmpi(whichSide,'left') )
-        clockAng = pi;
-    elseif( strcmpi(whichSide,'R') || strcmpi(whichSide,'right') )
-        clockAng = 0;
-    elseif( strcmpi(whichSide,'T') || strcmpi(whichSide,'top') )
-        clockAng = pi/2;
-    elseif( strcmpi(whichSide,'B') || strcmpi(whichSide,'bottom') )
-        clockAng = 3*pi/2;   
-    else
-        clockAng = 0;
-    end
+if( strcmpi(whichSide,'L') || strcmpi(whichSide,'left') )
+    clockAng = 3*pi/2;
+elseif( strcmpi(whichSide,'R') || strcmpi(whichSide,'right') )
+    clockAng = pi/2;
+elseif( strcmpi(whichSide,'T') || strcmpi(whichSide,'top') )
+    clockAng = 0;
+elseif( strcmpi(whichSide,'B') || strcmpi(whichSide,'bottom') )
+    clockAng = pi;   
+elseif( strcmpi(whichSide,'both') )
+    clockAng = 0;
 else
-    clockAng = inputs.clockAngDeg*pi/180;
+    error('falco_gen_SW_mask.m: Unknown value specified for inputs.whichSide')
 end
+
+clockAng = clockAng + inputs.clockAngDeg*pi/180; %--Add extra clocking specified by inputs.clockAngDeg
 
 maskSW = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<=angRad/2;
 
 if(strcmpi(whichSide,'both'))
-    clockAng = clockAng + pi;
-    maskSW2 = maskSW0 & abs(angle(exp(1i*(THETA-clockAng))))<=angRad/2;
+    maskSW2 = maskSW0 & abs(angle(exp(1i*(THETA-(clockAng+pi)))))<=angRad/2;
     maskSW = or(maskSW,maskSW2);
 end
 

@@ -216,11 +216,12 @@ mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.clockAngDeg = 90; %--Amount to rotate the dark hole location
 
 %% Define custom SPC values.
 
 %--Full model mask files and resolutions
-file_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/spc_ifs_custom/';
+file_dir = '/Users/ajriggs/Documents/Sim/cgi/wfirst_phaseb/spc_spec_custom/';
 
 % mp.full.pupil_mask_file = [file_dir, 'SPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];        mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
 % mp.full.pupil_mask_file = [file_dir, 'minpadSPM_jg36_79c81_PH40_65deg_26WA90_20LS96_RoC1_LS95deg_BW15Nlam6.fits'];  mp.fracBW = 0.15; mp.Nsbp = 5;%--SPM file name
@@ -442,7 +443,7 @@ mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda
 %% Optical Layout: Full Model 
 
 mp.full.data_dir = '/Users/ajriggs/Repos/proper-models/wfirst_cgi/data_phaseb/'; % mask design data path
-mp.full.cor_type = 'spc_ifs_custom'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
+mp.full.cor_type = 'spc_spec_custom'; %   'hlc', 'spc', or 'none' (none = clear aperture, no coronagraph)
 
 mp.full.flagGenFPM = false;
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
