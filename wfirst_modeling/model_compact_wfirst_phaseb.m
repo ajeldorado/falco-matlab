@@ -105,7 +105,7 @@ elseif  strcmp(cor_type,'hlc_erkin')
     n_small = 1024;	% gridsize in non-critical areas
     n_big =2048;    % gridsize to/from FPM
 
-elseif  contains(cor_type, 'spc-ifs' ) %~isempty(strfind(cor_type,  'spc-ifs' ))
+elseif  contains(cor_type, 'spc-spec' )
     file_dir = [data_dir '/spc_20190130/'];        %   must have trailing "/"
     pupil_diam_pix  = 1000.0;
     pupil_file      = [file_dir  'pupil_SPC-20190130_rotated.fits'];
@@ -114,7 +114,7 @@ elseif  contains(cor_type, 'spc-ifs' ) %~isempty(strfind(cor_type,  'spc-ifs' ))
     lyot_stop_file  = [file_dir  'lyotstop_0.5mag.fits'];
     fpm_sampling_lam0 = 0.05;	%   sampling in lambda0/D of FPM mask
     lambda0_m = 0.73e-6;        %   FPM scaled for this central wavelength
-    if ( contains(cor_type,'spc-ifs_short' ));  lambda0_m = 0.66e-6; end 
+    if ( contains(cor_type,'spc-spec_short' ));  lambda0_m = 0.66e-6; end 
     n_small = 2048;             %   gridsize in non-critical areas
     n_big = 1400;               %   gridsize to FPM (propagation to/from FPM handled by MFT)
 elseif  strcmp(cor_type, 'spc-wide' )

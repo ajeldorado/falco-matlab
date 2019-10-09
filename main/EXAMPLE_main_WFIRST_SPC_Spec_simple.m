@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform wavefront control with the WFIRST CGI Phase B SP(L)C-IFS design.
+%--Script to perform wavefront control with the WFIRST CGI Phase B SP(L)C-Spectroscopy design.
 %  1) Load the default model parameters for an SPLC.
 %  2) Specify the values to overwrite.
 %  3) Run a single trial of WFC using FALCO.
@@ -34,7 +34,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_SPC_IFS_simple
+EXAMPLE_defaults_WFIRST_PhaseB_SPC_Spec_simple
 
 %% Step 3: Overwrite default values as desired
 
@@ -54,11 +54,11 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% %--DEBUGGING:
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+%--DEBUGGING:
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 % % % GRID-SEARCH EFC     
 mp.Nitr = 5; %--Number of estimation+control iterations to perform

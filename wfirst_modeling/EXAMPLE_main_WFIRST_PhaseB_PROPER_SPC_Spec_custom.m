@@ -38,7 +38,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS_custom
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_Spec_custom
 
 %% Step 3a: Overwrite default values as desired
 
@@ -163,7 +163,7 @@ mp.P1.compact.E = E0;
 mp.path = paths;
 
 %--Re-initialize mp structure
-EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_IFS_custom %--Load default model parameters
+EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_Spec_custom %--Load default model parameters
 
 mp.SeriesNum = sn;
 mp.TrialNum = tn;
