@@ -62,6 +62,16 @@ if(any(mp.dm_ind==9))
     end
 end
 
+if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end % Store the delta DM command
+if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end % Store the delta DM command
+if(any(mp.dm_ind==3));  mp.dm3.dV = dDM.dDM3V;  end % Store the delta DM command
+if(any(mp.dm_ind==4));  mp.dm4.dV = dDM.dDM4V;  end % Store the delta DM command
+if(any(mp.dm_ind==5));  mp.dm5.dV = dDM.dDM5V;  end % Store the delta DM command
+if(any(mp.dm_ind==6));  mp.dm6.dV = dDM.dDM6V;  end % Store the delta DM command
+if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end % Store the delta DM command
+if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end % Store the delta DM command
+if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end % Store the delta DM command
+
 %--Combine the delta command with the previous command
 if(any(mp.dm_ind==1));  mp.dm1.V = cvar.DM1Vnom + dDM.dDM1V;  end
 if(any(mp.dm_ind==2));  mp.dm2.V = cvar.DM2Vnom + dDM.dDM2V;  end
