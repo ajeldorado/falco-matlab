@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-function handles = falco_plot_progress(handles,mp,Itr,contrast_bandavg,Im,DM1surf,DM2surf,ImSimOffaxis)
+function handles = falco_plot_progress(handles,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis)
 
 Im(Im<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
 
@@ -53,7 +53,7 @@ if(mp.flagPlot)
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
             %ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',24,'Interpreter','LaTex');
-            title(sprintf('Stellar PSF: NI = %.2e',contrast_bandavg(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            title(sprintf('Stellar PSF: NI = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
 
             %--Off-axis PSF
             h_offaxis = subplot(2,3,4); % Save the handle of the subplot
@@ -153,7 +153,7 @@ if(mp.flagPlot)
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
             %ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',24,'Interpreter','LaTex');
-            title(sprintf('Stellar PSF: NI = %.2e',contrast_bandavg(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            title(sprintf('Stellar PSF: NI = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
 
             h_offaxis = subplot(2,2,3); % Save the handle of the subplot
             set(h_offaxis, 'OuterPosition', [0.05, 0.02, [1 1]*0.45])
