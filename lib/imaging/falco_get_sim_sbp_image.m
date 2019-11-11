@@ -26,7 +26,6 @@ if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.
 if(any(mp.dm_ind==2)); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.NdmPad); end
 if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
 
-
 %--Number of polarization states used
 Npol = length(mp.full.pol_conds);  
 
@@ -46,9 +45,7 @@ for ic=1:Nvals
     Isbp = Isbp + Iall{ic};  
 end
 
-
 end %--END OF FUNCTION
-
 
 %--Function to return the weighted, normalized intensity image at a given
 % wavelength in the specified sub-bandpass.
@@ -74,5 +71,5 @@ function Iout = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp)
 
     %--Apply weight within the sub-bandpass. Assume polarizations are evenly weigted.
     Iout = mp.full.lambda_weights(wi)/length(mp.full.pol_conds)*Iout;
-    
+   
 end %--END OF FUNCTION

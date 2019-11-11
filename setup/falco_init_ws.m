@@ -39,8 +39,11 @@ if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end 
 if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 %--Model options
-if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
+if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image into single mode fibers.
+if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to propagate through a lenslet array placed in Fend before coupling light into fibers.
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
+if(isfield(mp,'flagZWFS')==false);  mp.flagZWFS = false; end %--Flag to use Zernike wavefront sensing against a known good reference point
+if(isfield(mp,'flagZWFSEFC')==false);  mp.flagZWFSEFC = false; end %--Flag for whether to take an image of the ZWFS output or a normal image of Fend
 
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
@@ -273,10 +276,10 @@ end
 
 switch upper(mp.coro)
     case {'LC','APLC'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
-        mp = falco_config_gen_FPM_LC(mp);
+        mp = falco_config_gen_FPM_LC(mp); 
     case{'SPLC','FLC'}
         mp = falco_config_gen_FPM_SPLC(mp);
-    case{'RODDIER'}
+    case{'RODDIER'}%,'VORTEX','VC','AVC'} %Added Vortex cases to enable ZWFS
         mp = falco_config_gen_FPM_Roddier(mp);  
 end
 
@@ -284,6 +287,7 @@ end
 
 switch upper(mp.coro)
     case{'VORTEX','VC','AVC'}   %--Nothing needed to run the vortex model
+    %...Except when doing ZWFS...
     case 'SPHLC' %--Moved to separate function
     otherwise
         
@@ -533,6 +537,8 @@ if(mp.flagFiber)
         %--Extract the vector of weights at the pixel locations of the dark hole pixels.
         mp.WspatialVec = mp.Wspatial(mp.Fend.corr.inds);
     end
+elseif(mp.flagZWFS)
+    mp.WspatialVec = ones(mp.P4.full.Narr^2, 1);
 else
     mp = falco_config_spatial_weights(mp);
     %--Extract the vector of weights at the pixel locations of the dark hole pixels.

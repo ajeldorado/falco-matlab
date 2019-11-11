@@ -55,7 +55,27 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
             end
         end
 
-    else %--Regular, non-fiber simulations
+    elseif(mp.flagZWFS)%--ZWFS pathway
+        mp.flagZWFSEFC = true;
+        Emat = zeros(mp.P4.full.Narr^2, mp.jac.Nmode);
+        
+        for im=1:mp.jac.Nmode
+            modvar.sbpIndex = mp.jac.sbp_inds(im);
+            modvar.zernIndex = mp.jac.zern_inds(im);
+            modvar.whichSource = 'star';
+                
+            %--Take the mean over the wavelengths within the sub-bandpass
+            EmatSbp = zeros(mp.P4.full.Narr^2, mp.Nwpsbp);
+            for wi=1:mp.Nwpsbp
+                modvar.wpsbpIndex = wi;
+                E2D = model_full(mp, modvar);
+                EmatSbp(:,wi) = mp.full.lambda_weights(wi)*reshape(E2D, [], 1); %--Actual field in estimation area. Apply spectral weight within the sub-bandpass
+            end
+            Emat(:,im) = sum(EmatSbp,2);
+        end
+        mp.flagZWFSEFC = false;
+
+    else%--Regular, non-fiber, non-ZWFS simulations
         Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
         
         if(mp.flagParfor) %--Perform all cases in parallel

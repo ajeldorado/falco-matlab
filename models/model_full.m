@@ -57,10 +57,17 @@ while icav < size(varargin, 2)
 end
 
 %--Save a lot of RAM (remove compact model data from full model inputs)
-if(any(mp.dm_ind==1)); mp.dm1 = rmfield(mp.dm1,'compact'); end
-if(any(mp.dm_ind==2)); mp.dm2 = rmfield(mp.dm2,'compact'); end
+% if(any(mp.dm_ind==1)); mp.dm1 = rmfield(mp.dm1,'compact'); end
+% if(any(mp.dm_ind==2)); mp.dm2 = rmfield(mp.dm2,'compact'); end
 if(any(mp.dm_ind==8)); mp.dm8 = rmfield(mp.dm8,'compact'); end
 if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9,'compact'); end
+
+% If on the EFC step of ZWFS, go through model_ZWFS.  Otherwise, produce an
+% image of the final E-field like normal.
+if(mp.flagZWFSEFC)
+    Eout = model_ZWFS(mp, modvar);
+    return
+end
 
 %--Set the wavelength
 if(isfield(modvar,'lambda')) %--For FALCO or for evaluation without WFSC

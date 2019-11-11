@@ -67,6 +67,11 @@ else %--Perform an empirical grid search with actual images from the testbed or 
         else
             InormAvg = mean(IfiberTotal(mp.Fend.corr.maskBool));
         end
+    elseif(mp.flagZWFS)
+        mp.flagZWFSEFC = true;
+        Itotal = falco_get_summed_image(mp) - mp.ZWFSreferenceimage;
+        InormAvg = mean(Itotal, 'all');
+        mp.flagZWFSEFC = false;
     else
         Itotal = falco_get_summed_image(mp);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));

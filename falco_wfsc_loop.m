@@ -60,7 +60,7 @@ if(~mp.flagSim);  mp.bench = bench;  end
 
 %--Raw contrast (broadband)
 
-InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of dark hole.
+InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
 
 %% Plot the pupil masks
 
@@ -69,6 +69,28 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of
 % if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end
 
 %% Take initial broadband image 
+
+if(mp.flagZWFS) %Get a reference image and wave for the ZWFS to drive the system back to
+    mp.flagZWFSEFC = true;
+    mp.ZWFSreferenceimage = falco_get_summed_image(mp);
+    
+    for si=1:mp.Nsbp
+        modvar.wpsbpIndex = 1;
+        modvar.sbpIndex = si;
+        modvar.whichSource = 'star';
+        mp.ZWFSreferencewave(:,:,si) = model_ZWFS(mp, modvar);
+    end
+    mp.flagZWFSEFC = false;
+    
+    %%-- segmented mirror errors
+    numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
+    % LUVOIR B has four rings, but ignores some corner segmentes 
+    disp('Applying WFE to primary mirror...');
+    mp.P1.pistons = randn(1,numSegments)/10000;% Segment piston in waves 
+    mp.P1.tiltxs  = randn(1,numSegments)/5000;% %Tilts on segments in horiz direction (waves/apDia)
+    mp.P1.tiltys  = randn(1,numSegments)/5000;% %Tilts on segments in vert direction (waves/apDia)
+    mp = falco_config_gen_chosen_pupil(mp);
+end
 
 Im = falco_get_summed_image(mp);
 
@@ -443,9 +465,6 @@ if(mp.flagSaveEachItr)
     save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM4V','DM5V','DM6V','DM7V','DM8V','DM9V','InormHist','thput_vec')
     fprintf('done.\n\n')
 end
-
-
-
 
 %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
 if(mp.flagTrainModel)
