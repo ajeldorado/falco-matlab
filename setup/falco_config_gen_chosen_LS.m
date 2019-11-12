@@ -233,36 +233,36 @@ switch upper(mp.whichPupil)
         end
 end
 
-%% Crop down the Lyot stop(s) to get rid of extra zero padding for the full model
-switch upper(mp.coro)
-    case{'VORTEX','VC','AVC'}
-        mp.P4.full.Narr = length(mp.P4.full.mask);
-        mp.P4.full.croppedMask = mp.P4.full.mask;
-        mp.P4.compact.Narr = length(mp.P4.compact.mask);
-        mp.P4.compact.croppedMask = mp.P4.compact.mask;
-    otherwise
-        if(mp.full.flagPROPER==false)
-            %--Crop down the high-resolution Lyot stop to get rid of extra zero padding
-            LSsum = sum(mp.P4.full.mask(:));
-            LSdiff = 0; counter = 2;
-            while(abs(LSdiff) <= 1e-7)
-                mp.P4.full.Narr = length(mp.P4.full.mask)-counter;
-                LSdiff = LSsum - sum(sum(padOrCropEven(mp.P4.full.mask, mp.P4.full.Narr-2))); %--Subtract an extra 2 to negate the extra step that overshoots.
-                counter = counter + 2;
-            end
-            mp.P4.full.croppedMask = padOrCropEven(mp.P4.full.mask,mp.P4.full.Narr); %--The cropped-down Lyot stop for the full model. 
-        end
-
-        % --Crop down the low-resolution Lyot stop to get rid of extra zero padding. Speeds up the compact model.
-        LSsum = sum(mp.P4.compact.mask(:));
-        LSdiff = 0; counter = 2;
-        while(abs(LSdiff) <= 1e-7)
-            mp.P4.compact.Narr = length(mp.P4.compact.mask)-counter; %--Number of points across the cropped-down Lyot stop
-            LSdiff = LSsum - sum(sum(padOrCropEven(mp.P4.compact.mask, mp.P4.compact.Narr-2))); %--Subtract an extra 2 to negate the extra step that overshoots.
-            counter = counter + 2;
-        end
-        mp.P4.compact.croppedMask = padOrCropEven(mp.P4.compact.mask,mp.P4.compact.Narr); %--The cropped-down Lyot stop for the compact model
+%% Crop down the Lyot stop(s) to get rid of extra zero padding
+% switch upper(mp.coro)
+%     case{'VORTEX','VC','AVC'}
+%         mp.P4.full.Narr = length(mp.P4.full.mask);
+%         mp.P4.full.croppedMask = mp.P4.full.mask;
+%         mp.P4.compact.Narr = length(mp.P4.compact.mask);
+%         mp.P4.compact.croppedMask = mp.P4.compact.mask;
+%     otherwise
+if(mp.full.flagPROPER==false)
+    %--Crop down the high-resolution Lyot stop to get rid of extra zero padding
+    LSsum = sum(mp.P4.full.mask(:));
+    LSdiff = 0; counter = 2;
+    while(abs(LSdiff) <= 1e-7)
+        mp.P4.full.Narr = length(mp.P4.full.mask)-counter;
+        LSdiff = LSsum - sum(sum(padOrCropEven(mp.P4.full.mask, mp.P4.full.Narr-2))); %--Subtract an extra 2 to negate the extra step that overshoots.
+        counter = counter + 2;
+    end
+    mp.P4.full.croppedMask = padOrCropEven(mp.P4.full.mask,mp.P4.full.Narr); %--The cropped-down Lyot stop for the full model. 
 end
+
+% --Crop down the low-resolution Lyot stop to get rid of extra zero padding. Speeds up the compact model.
+LSsum = sum(mp.P4.compact.mask(:));
+LSdiff = 0; counter = 2;
+while(abs(LSdiff) <= 1e-7)
+    mp.P4.compact.Narr = length(mp.P4.compact.mask)-counter; %--Number of points across the cropped-down Lyot stop
+    LSdiff = LSsum - sum(sum(padOrCropEven(mp.P4.compact.mask, mp.P4.compact.Narr-2))); %--Subtract an extra 2 to negate the extra step that overshoots.
+    counter = counter + 2;
+end
+mp.P4.compact.croppedMask = padOrCropEven(mp.P4.compact.mask,mp.P4.compact.Narr); %--The cropped-down Lyot stop for the compact model
+% end
 
 %--(METERS) Lyot plane coordinates (over the cropped down to Lyot stop mask) for MFTs in the compact model from the FPM to the LS.
 if(strcmpi(mp.centering,'interpixel') )
