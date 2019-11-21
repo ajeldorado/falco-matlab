@@ -85,7 +85,7 @@ dm.Ndm = ceil_even( max(abs([sqrt(2)*cosd(45-dm.zrot),sqrt(2)*sind(45-dm.zrot)])
 
 [Xinf0,Yinf0] = meshgrid(x_inf0);
 
-%--Compute list of initial actuator center coordinates (in actutor widths).
+%--Compute list of initial actuator center coordinates (in actuator widths).
 if(dm.flag_hex_array) %--Hexagonal, hex-packed grid
     Nrings = dm.Nrings;
     x_vec = [];
