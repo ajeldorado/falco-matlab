@@ -48,23 +48,24 @@ xNew = (-(nPixAcrossNewInfFunc-1)/2:(nPixAcrossNewInfFunc-1)/2)/newPixPerAct;
 [Xnew,Ynew] = meshgrid(xNew);
 infFuncAtActRes = interp2(Xorig,Yorig,infFuncAtOrigRes,Xnew,Ynew,'cubic',0);
 
-%--Adjust the centering of the output DM surface. The shift needs to be in
-%units of actuators, not meters, for prop_dm.m.
-wArray = nSurface*dm.dx;
-switch dm.centering % 0 shift for pixel-centered pupil, or -Darray/2/Narray shift for inter-pixel centering
-    case {'interpixel'}
-        cshift = -wArray/2/nSurface/dm.dm_spacing; 
-    case {'pixel'}
-        cshift = 0;
-    otherwise
-        error('falco_gen_dm_surf: centering variable must be either pixel or interpixel')
-end
 
 %--Perform the fit
 if(nSurface == dm.Nact)
     gridDerotAtActRes = surfaceToFit;
     
 elseif(nSurface > dm.Nact)
+    %--Adjust the centering of the output DM surface. The shift needs to be in
+    %units of actuators, not meters, for prop_dm.m.
+    wArray = nSurface*dm.dx;
+    switch dm.centering % 0 shift for pixel-centered pupil, or -Darray/2/Narray shift for inter-pixel centering
+        case {'interpixel'}
+            cshift = -wArray/2/nSurface/dm.dm_spacing; 
+        case {'pixel'}
+            cshift = 0;
+        otherwise
+            error('falco_gen_dm_surf: centering variable must be either pixel or interpixel')
+    end
+
     gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit, ...
         dm.dx, dm.Nact, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,...
         'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps,...

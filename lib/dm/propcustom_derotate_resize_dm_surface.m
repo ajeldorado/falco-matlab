@@ -5,15 +5,11 @@
 %   PROPER developed at Jet Propulsion Laboratory/California Inst. Technology
 %   Original IDL version by John Krist
 %   Matlab translation by Gary Gutt
-%   Modified to take accept influence function by G. Ruane 
+%   Modified from prop_dm by A.J. Riggs to fit the actuator commands to a given surface. 
 
-% surfaceToFit, dx, Nact, rotation angles, centering.
 function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit, dx, Nact, dmcx, dmcy, spcg, varargin)
 
-% function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(bm, dmz0, dmcx, dmcy, spcg, varargin)
-
-% Simulate a deformable mirror of specified actuator spacing,
-% including the effects of the DM influence function.
+% Derotate and resize a surface to the size and alignment of the actuator grid.
 %
 % Outputs:
 % bm   = beam structure
@@ -32,24 +28,6 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
 %        must not be used when n_act_acroos_pupil is specified.
 %
 % Optional inputs:
-% 'fit'               : switch that tells routine that the values in dmz0
-%                       are the desired surface heights rather than the
-%                       commanded actuator heights, and so the routine
-%                       should fit this map, accounting for actuator
-%                       influence functions, to determine the necessary
-%                       actuator heights.  An iterative error-minimizing
-%                       loop is used for the fit.
-% 'no_apply'          : if set, the DM pattern is not added to the
-%                       wavefront.  Useful if the DM surface map is
-%                       needed but should not be applied to the wavefront.
-% 'n_act_across_pupil'= specifies the number of actuators that span the
-%                       x-axis beam diameter.  If it is a whole number,
-%                       the left edge of the left pixel is aligned with
-%                       the left edge of the beam, and the right edge of
-%                       the right pixel with the right edge of the beam.
-%                       This determines the spacing and size of the
-%                       actuators.  Should not be used when spcg value
-%                       is specified.
 % 'xtilt'             = specify the rotation of the DM surface with
 % 'ytilt'               respect to the wavefront plane, with the origin
 % 'ztilt'               at the center of the wavefront.  The DM surface
@@ -90,8 +68,11 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
 % 2019 Feb 15  a r  Added two new keyword/value pairs as optional inputs:
 %                   -Accept any influence function from a FITS file
 %                   -Allow the sign of the influence function to be + or -
+% 2019 Nov 20  a r  Changed to de-rotate and resize a surface to the size 
+%                   of the DM command array. To get the voltages, call 
+%                   falco_fit_dm using the result of this function.
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  dmz = eye(Nact);
+  dmz = eye(Nact); %--Only used for its size. The actual values are thrown away.
 %   if ischar(dmz0)               % then open 2D FITS image file
 %     dmz  = fitsread(dmz0);
 %   else
@@ -333,8 +314,8 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
 %  The result will be fed to falco_fit_dm_surf() for deconvolution with the
 %  influence function.
 
-xOffsetInAct = ((Nact/2 - 1/2) - dmcx);
-yOffsetInAct = ((Nact/2 - 1/2) - dmcy);
+  xOffsetInAct = ((Nact/2 - 1/2) - dmcx);
+  yOffsetInAct = ((Nact/2 - 1/2) - dmcy);
 
   multipleOfCommandGrid = ceil_odd(spcg/dx);
   N1 = Nact*multipleOfCommandGrid;
@@ -351,17 +332,13 @@ yOffsetInAct = ((Nact/2 - 1/2) - dmcy);
   gridDerotResize = interp2(XS2,YS2,gridDerot,XS1+xOffsetInAct/Nact,YS1+yOffsetInAct/Nact,'cubic', 0.0);
   
   gridDerotAtActRes = gridDerotResize(ceil(multipleOfCommandGrid/2):multipleOfCommandGrid:end,ceil(multipleOfCommandGrid/2):multipleOfCommandGrid:end); % decimate
-%   gridDerotAtActRes = falco_bin_downsample(gridDerotResize,multipleOfCommandGrid);
 
-
-% keyboard
 %   dm.dm_spacing = spcg;
 %   dm.dx_inf0 = 1e-4;%dx;%1e-4;
 %   dm.inf0 = inf;
 %   dm.Nact = Nact;
 %   Vout = falco_fit_dm_surf(dm,gridDerotAtActRes);
 %   
-% 
 %   figure(19); imagesc(gridDerotResize); axis xy equal tight; colorbar;
 %   figure(20); imagesc(dmz); axis xy equal tight; colorbar;
 %   figure(21); imagesc(gridDerotAtActRes); axis xy equal tight; colorbar;

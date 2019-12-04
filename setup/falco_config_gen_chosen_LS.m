@@ -127,21 +127,27 @@ switch upper(mp.whichPupil)
         end
         
     case{'LUVOIRAFINAL'}
-    
-        %--Define Lyot stop generator function inputs for the 'full' optical model
-        inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam  
-        inputs.Dbeam = mp.P1.D;
-        inputs.ID = mp.P4.IDnorm;
-        inputs.OD = mp.P4.ODnorm;
-        inputs.wStrut = mp.P4.wStrut;
-        inputs.centering = mp.centering;
-        %--Make or read in Lyot stop (LS) for the 'full' model
-        mp.P4.full.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
+        if(mp.compact.flagGenLS || mp.full.flagGenLS)
+            %--Define Lyot stop generator function inputs
+            inputs.Dbeam = mp.P1.D;
+            inputs.ID = mp.P4.IDnorm;
+            inputs.OD = mp.P4.ODnorm;
+            inputs.wStrut = mp.P4.wStrut;
+            inputs.centering = mp.centering;
+        end
         
-        %--Make or read in Lyot stop (LS) for the 'compact' model
-        inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
-        mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
-    
+        if(mp.full.flagGenLS)
+            %--Make or read in Lyot stop (LS) for the 'full' model
+            inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam  
+            mp.P4.full.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
+        end
+        
+        if(mp.compact.flagGenLS)
+            %--Make or read in Lyot stop (LS) for the 'compact' model
+            inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
+            mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
+        end
+        
 	case{'LUVOIRA5','LUVOIRA0'}
         
         %--Define Lyot stop generator function inputs for the 'full' optical model

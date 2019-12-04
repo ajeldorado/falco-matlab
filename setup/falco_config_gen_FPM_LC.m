@@ -13,17 +13,23 @@
 
 function [mp] = falco_config_gen_FPM_LC(mp)
 
+    if(mp.compact.flagGenFPM || mp.full.flagGenFPM)
         %--Make or read in focal plane mask (FPM) amplitude for the full model
-        FPMgenInputs.pixresFPM = mp.F3.full.res; %--pixels per lambda_c/D
         FPMgenInputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
         FPMgenInputs.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
         FPMgenInputs.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
         FPMgenInputs.centering = mp.centering;
-        mp.F3.full.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
-
-        mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
-        mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);   
+    end
         
+    if(mp.full.flagGenFPM)
+        FPMgenInputs.pixresFPM = mp.F3.full.res; %--pixels per lambda_c/D
+        mp.F3.full.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
+    end
+    mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
+    mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);   
+
+    
+    if(mp.compact.flagGenFPM)
         %--Number of points across the FPM in the compact model
         if(mp.F3.Rout==inf)
             switch mp.centering
@@ -45,5 +51,9 @@ function [mp] = falco_config_gen_FPM_LC(mp)
         %--Make or read in focal plane mask (FPM) amplitude for the compact model
         FPMgenInputs.pixresFPM = mp.F3.compact.res; %--pixels per lambda_c/D
         mp.F3.compact.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
+    else
+        mp.F3.compact.Nxi = size(mp.F3.compact.mask.amp,2);
+        mp.F3.compact.Neta= size(mp.F3.compact.mask.amp,1); 
+    end
 
 end %--END OF FUNCTION
