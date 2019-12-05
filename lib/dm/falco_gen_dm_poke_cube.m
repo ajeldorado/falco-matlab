@@ -239,7 +239,9 @@ if(flagGenCube)
 
     %--Find the locations of the postage stamps arrays in the larger pupilPad array
     dm.xy_cent_act_inPix = dm.xy_cent_act*(dm.dm_spacing/dx_dm); % Convert units to pupil-file pixels
-    dm.xy_cent_act_inPix = dm.xy_cent_act_inPix + 0.5; %--For the half-pixel offset if pixel centered. 
+    if(strcmpi(dm.centering,'pixel'))
+        dm.xy_cent_act_inPix = dm.xy_cent_act_inPix + 0.5; %--For the half-pixel offset if pixel centered. 
+    end
     dm.xy_cent_act_box = round(dm.xy_cent_act_inPix); % Center locations of the postage stamps (in between pixels), in actuator widths
     dm.xy_cent_act_box_inM = dm.xy_cent_act_box*dx_dm; % now in meters 
     dm.xy_box_lowerLeft = dm.xy_cent_act_box + (dm.NdmPad-Nbox)/2 + 1; % indices of pixel in lower left of the postage stamp within the whole pupilPad array

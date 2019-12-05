@@ -31,7 +31,7 @@ function [mp] = falco_config_gen_FPM_LC(mp)
     
     if(mp.compact.flagGenFPM)
         %--Number of points across the FPM in the compact model
-        if(mp.F3.Rout==inf)
+        if(isinf(mp.F3.Rout))
             switch mp.centering
             case 'pixel'
                 mp.F3.compact.Nxi = ceil_even((2*(mp.F3.Rin*mp.F3.compact.res + 1/2)));
