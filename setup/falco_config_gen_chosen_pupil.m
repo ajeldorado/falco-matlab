@@ -92,20 +92,25 @@ switch upper(mp.whichPupil)
         mp.P1.compact.mask = falco_gen_pupil_Keck(inputs,'ROTATION',angRot); 
         
     case{'LUVOIRAFINAL'}
-        inputs.centering = mp.centering;
-        if(isfield(mp.P1,'wGap_m')) %--Option to overwrite the default
-            inputs.wGap_m = mp.P1.wGap_m; % spider width (fraction of the pupil diameter)
+        if(mp.compact.flagGenLS || mp.full.flagGenLS)
+            inputs.centering = mp.centering;
+            if(isfield(mp.P1,'wGap_m')) %--Option to overwrite the default
+                inputs.wGap_m = mp.P1.wGap_m;
+            end
         end
         
-        %--Generate high-res input pupil for the 'full' model
-        inputs.Nbeam = mp.P1.full.Nbeam; 
-        mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
+        if(mp.full.flagGenLS)
+            %--Generate high-res input pupil for the 'full' model
+            inputs.Nbeam = mp.P1.full.Nbeam; 
+            mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
+        end
         
-        %--Generate low-res input pupil for the 'compact' model
-        inputs.Nbeam = mp.P1.compact.Nbeam; 
-        mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
-        clear inputs
-
+        if(mp.compact.flagGenLS)
+            %--Generate low-res input pupil for the 'compact' model
+            inputs.Nbeam = mp.P1.compact.Nbeam; 
+            mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
+        end
+        
     case{'LUVOIRA5'}
         inputs.centering = mp.centering;
         if(isfield(mp.P1,'wStrut'))  %--Option to overwrite the default

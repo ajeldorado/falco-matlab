@@ -65,7 +65,7 @@ ang = inputs.ang; %--Opening angle on each side of the bowtie (degrees)
 
 dx = 1/pixresFPM; %--lambda_c/D per pixel. "UL" for unitless
 
-if(rhoOuter==inf)
+if(isinf(rhoOuter))
     if(strcmpi(centering,'interpixel'))
         Narray = ceil_even((2*rhoInner/dx)); % number of points across the inner diameter of the FPM.
     else

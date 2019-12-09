@@ -286,7 +286,7 @@ end
 %% Generate FPM
 
 switch upper(mp.coro)
-    case {'LC','APLC'} %--Occulting spot FPM (can be HLC-style and partially transmissive)
+    case {'LC','APLC'} %--Occulting spot FPM (can be partially transmissive)
         mp = falco_config_gen_FPM_LC(mp);
     case{'SPLC','FLC'}
         mp = falco_config_gen_FPM_SPLC(mp);
