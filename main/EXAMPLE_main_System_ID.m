@@ -16,11 +16,18 @@
 % Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
 % ---------------
 
+% ----------------------------------  WARNING  ----------------------------------------- %
+% SYSTEM IDENTIFICATION IS AN EXTRA FEATURE AND REQUIRES CAREFUL TUNING. UNLESS YOU ARE
+% SPECIFICALLY TRYING TO USE SYSTEM ID, USE A DIFFERENT SCRIPT AS YOUR STARTING POINT.
+% The paper describing how system identification is used for focal-plane wavefront
+% sensing and control is found here: https://arxiv.org/pdf/1806.10992.pdf 
+% -------------------------------------------------------------------------------------- %
+
 clear all;
 
 %% Tell Matlab which Python to use from where. Needed for the E-M algorithm.
-% setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin') %--Put the parent directory of the python version you want Matlab to use.
-% pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the python version you want Matlab to use.
+setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin') %--Put the parent directory of the python version you want Matlab to use.
+pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the python version you want Matlab to use.
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
