@@ -176,3 +176,9 @@ PMGIplotter.m
 *.fig
 *.pdf
 *.png
+
+
+!lib/masks/**/*.png
+
+
+
