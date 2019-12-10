@@ -14,7 +14,7 @@
 % Created by A.J. Riggs on 2018-10-01 by extracting material from falco_init_ws.m.
 % ---------------
 
-function mp = falco_config_spatial_weights(mp)
+function mp = falco_set_spatial_weights(mp)
 
 [XISLAMD,ETASLAMD] = meshgrid(mp.Fend.xisDL, mp.Fend.etasDL);
 RHOScompact = sqrt(XISLAMD.^2+ETASLAMD.^2);

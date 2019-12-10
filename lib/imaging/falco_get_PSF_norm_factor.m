@@ -76,6 +76,25 @@ if(mp.flagSim)
     
 end
 
+%--Visually verify the normalized coronagraphic PSF
+modvar.ttIndex = 1;
+modvar.sbpIndex = mp.si_ref;
+modvar.wpsbpIndex = mp.wi_ref;
+modvar.whichSource = 'star';     
+E0c = model_compact(mp, modvar);
+I0c = abs(E0c).^2;
+if(mp.flagPlot)
+    figure(501); imagesc(log10(I0c)); axis xy equal tight; colorbar;
+    title('(Compact Model: Normalization Check Using Starting PSF)'); 
+    drawnow;
+end
+E0f = model_full(mp, modvar);
+I0f = abs(E0f).^2;
+if(mp.flagPlot)
+    figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
+    title('(Full Model: Normalization Check Using Starting PSF)'); drawnow;
+end
+
 end %--END OF FUNCTION
 
 
