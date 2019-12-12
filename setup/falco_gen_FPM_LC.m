@@ -11,7 +11,7 @@
 % falco_init_ws.m.
 % ---------------
 
-function [mp] = falco_config_gen_FPM_LC(mp)
+function [mp] = falco_gen_FPM_LC(mp)
 
     if(mp.compact.flagGenFPM || mp.full.flagGenFPM)
         %--Make or read in focal plane mask (FPM) amplitude for the full model

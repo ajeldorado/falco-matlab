@@ -40,13 +40,11 @@ end
 %--Evaluation Model for Computing Throughput (same as Compact Model but
 % with different Fend.resolution)
 mp.Fend.eval.dummy = 1; %--Initialize the structure if it doesn't exist.
-if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end 
 maskCorr.pixresFP = mp.Fend.eval.res; %--Assign the resolution
 [mp.Fend.eval.mask, mp.Fend.eval.xisDL, mp.Fend.eval.etasDL] = falco_gen_SW_mask(maskCorr);  %--Generate the mask
 mp.Fend.eval.Nxi  = size(mp.Fend.eval.mask,2);
 mp.Fend.eval.Neta = size(mp.Fend.eval.mask,1);
-mp.Fend.eval.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.Fend.eval.res; % higher sampling at Fend.for evaulation [meters]
-mp.Fend.eval.deta = mp.Fend.eval.dxi; % higher sampling at Fend.for evaulation [meters]   
+
 
 % (x,y) location [lambda_c/D] in dark hole at which to evaluate throughput
 [XIS,ETAS] = meshgrid(mp.Fend.eval.xisDL - mp.thput_eval_x, mp.Fend.eval.etasDL - mp.thput_eval_y);

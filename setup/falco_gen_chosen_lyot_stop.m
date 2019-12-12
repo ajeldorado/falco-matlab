@@ -4,8 +4,6 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% mp = falco_config_gen_chosen_LS(mp)
-%
 % Function to generate the Lyot stop representation based on configuration settings.
 %
 % REVISION HISTORY:

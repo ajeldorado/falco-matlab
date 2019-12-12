@@ -19,13 +19,11 @@
 %
 % OUTPUTS
 % - mp = structure of model parameters
-%
-% REVISION HISTORY: 
-% Modified on 2019-05-06 to have mp.Fend.full.I00 be a matrix instead of a
-% vector.
-% -Created on 2018-01-24 by A.J. Riggs.
 
 function mp = falco_get_PSF_norm_factor(mp)
+
+%--Different normalization factor used when comparing to PROPER model:
+mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2));
 
 %--Initialize Model Normalizations
 mp.Fend.compact.I00 = ones(1,mp.Nsbp); % Initial input before computing

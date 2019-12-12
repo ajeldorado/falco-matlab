@@ -4,8 +4,6 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% mp = falco_config_gen_chosen_apodizer(mp)
-%
 % Function to generate the apodizer representation based on configuration settings.
 %
 % 

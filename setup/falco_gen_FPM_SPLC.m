@@ -12,7 +12,7 @@
 % falco_init_ws.m.
 % ---------------
 
-function mp = falco_config_gen_FPM_SPLC(mp)
+function mp = falco_gen_FPM_SPLC(mp)
 
 mp.F3.dummy = 1; %--Make sure mp.F3 exists
 if(isfield(mp.F3,'ang')==false);  mp.F3.ang = 180;  end  % [degrees]

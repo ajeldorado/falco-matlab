@@ -112,7 +112,7 @@ mp.P1.pistons = randn(1,numSegments)/100;% Segment piston in waves
 mp.P1.tiltxs  = randn(1,numSegments)/50;% %Tilts on segments in horiz direction (waves/apDia)
 mp.P1.tiltys  = randn(1,numSegments)/50;% %Tilts on segments in vert direction (waves/apDia)
 
-mp = falco_config_gen_chosen_pupil(mp);
+mp = falco_gen_chosen_pupil(mp);
 
 actual_phz1 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 
@@ -126,7 +126,7 @@ mp.P1.pistons = mp.P1.pistons + randn(1,numSegments)/2000;% Segment piston in wa
 mp.P1.tiltxs  = mp.P1.tiltxs + randn(1,numSegments)/1000;% %Tilts on segments in horiz direction (waves/apDia)
 mp.P1.tiltys  = mp.P1.tiltys + randn(1,numSegments)/1000;% %Tilts on segments in vert direction (waves/apDia)
 
-mp = falco_config_gen_chosen_pupil(mp);
+mp = falco_gen_chosen_pupil(mp);
 
 actual_phz2 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 

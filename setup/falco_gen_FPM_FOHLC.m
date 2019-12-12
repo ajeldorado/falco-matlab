@@ -10,7 +10,7 @@
 % falco_init_ws.m.
 % ---------------
 
-function [mp] = falco_config_gen_FPM_FOHLC(mp)
+function [mp] = falco_gen_FPM_FOHLC(mp)
 
     %% Coordinates
 

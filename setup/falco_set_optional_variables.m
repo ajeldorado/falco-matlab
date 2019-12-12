@@ -14,6 +14,15 @@ mp.compact.dummy = 1;
 mp.full.dummy = 1;
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
+mp.Fend.eval.dummy = 1;
+
+%% File Paths for Data Storage (excluded from git)
+if(isfield(mp.path,'ws')==false); mp.path.ws = [mp.path.falco 'data' filesep 'ws' filesep]; end % Store final workspace data here
+if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco 'maps' filesep]; end % Maps go here
+if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
+if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco 'data' filesep 'images' filesep]; end % Store all full, reduced images here
+if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco 'data' filesep 'DM' filesep]; end % Store DM command maps here
+if(isfield(mp.path,'ws_inprogress')==false); mp.path.ws_inprogress = [mp.path.falco 'data' filesep 'ws_inprogress' filesep]; end % Store in progress workspace data here
 
 %% Optional/hidden boolean flags
 %--Saving data
@@ -54,7 +63,7 @@ if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector 
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
 if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
 
-%--Sensitivities Zernike-Mode Perturbations
+%--Sensitivities to Zernike-Mode Perturbations
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
 if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
 if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
@@ -78,11 +87,43 @@ if(isfield(mp,'c_planet')==false);  mp.c_planet = 1e-10;  end % flux ratio of of
 if(isfield(mp,'x_planet')==false);  mp.x_planet = 5;  end % xi position of exoplanet in lambda0/D
 if(isfield(mp,'y_planet')==false);  mp.y_planet = 1;  end % eta position of exoplanet in lambda0/D
 
+%--Control
+if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
+
+%--Performance Evaluation
+if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
+mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %% Conversion factor: milliarcseconds (mas) to lambda0/D
+
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
 %--Tied actuator pair definitions: See Section with variables mp.dmX.tied for X=1:9
 %--Quantization of DM actuation steps based on least significant bit of the
 % DAC (digital-analog converter). In height, so called HminStep. If HminStep (minimum step in H) is defined, then quantize the DM voltages
 % Variables to define if wanted: mp.dm1.HminStep, mp.dm2.HminStep
+
+%% Initialize some basic attributes for all DMs (which include hybrid FPMs).
+mp.dm1.NactTotal=0; mp.dm2.NactTotal=0; mp.dm3.NactTotal=0; mp.dm4.NactTotal=0; mp.dm5.NactTotal=0; mp.dm6.NactTotal=0; mp.dm7.NactTotal=0; mp.dm8.NactTotal=0; mp.dm9.NactTotal=0; 
+mp.dm1.Nele=0; mp.dm2.Nele=0; mp.dm3.Nele=0; mp.dm4.Nele=0; mp.dm5.Nele=0; mp.dm6.Nele=0; mp.dm7.Nele=0; mp.dm8.Nele=0; mp.dm9.Nele=0; %--Initialize for Jacobian calculations later. 
+
+%--Intialize delta DM voltages. Needed for Kalman filters.
+if(any(mp.dm_ind==1));  mp.dm1.dV = 0;  end
+if(any(mp.dm_ind==2));  mp.dm2.dV = 0;  end
+if(any(mp.dm_ind==3));  mp.dm3.dV = 0;  end
+if(any(mp.dm_ind==4));  mp.dm4.dV = 0;  end
+if(any(mp.dm_ind==5));  mp.dm5.dV = 0;  end
+if(any(mp.dm_ind==6));  mp.dm6.dV = 0;  end
+if(any(mp.dm_ind==7));  mp.dm7.dV = 0;  end
+if(any(mp.dm_ind==8));  mp.dm8.dV = 0;  end
+if(any(mp.dm_ind==9));  mp.dm9.dV = 0;  end
+
+%%--Intialize tied actuator pairs if not already defined. 
+% Dimensions of the pair list is [Npairs x 2]
+if(any(mp.dm_ind==3)); if(isfield(mp.dm3,'tied')==false); mp.dm3.tied = zeros(0,2); end; end
+if(any(mp.dm_ind==4)); if(isfield(mp.dm4,'tied')==false); mp.dm4.tied = zeros(0,2); end; end
+if(any(mp.dm_ind==5)); if(isfield(mp.dm5,'tied')==false); mp.dm5.tied = zeros(0,2); end; end
+if(any(mp.dm_ind==6)); if(isfield(mp.dm6,'tied')==false); mp.dm6.tied = zeros(0,2); end; end
+if(any(mp.dm_ind==7)); if(isfield(mp.dm7,'tied')==false); mp.dm7.tied = zeros(0,2); end; end
+if(any(mp.dm_ind==8)); if(isfield(mp.dm8,'tied')==false); mp.dm8.tied = zeros(0,2); end; end
+if(any(mp.dm_ind==9)); if(isfield(mp.dm9,'tied')==false); mp.dm9.tied = zeros(0,2); end; end
 
 end

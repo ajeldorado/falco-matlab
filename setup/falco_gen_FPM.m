@@ -7,17 +7,14 @@
 
 function [mp] = falco_gen_FPM(mp)
 
-
-
     switch upper(mp.coro)
         case {'LC','APLC'} %--Occulting spot FPM (can be partially transmissive)
-            mp = falco_config_gen_FPM_LC(mp);
+            mp = falco_gen_FPM_LC(mp);
         case{'SPLC','FLC'}
-            mp = falco_config_gen_FPM_SPLC(mp);
+            mp = falco_gen_FPM_SPLC(mp);
         case{'RODDIER'}
-            mp = falco_config_gen_FPM_Roddier(mp);  
+            mp = falco_gen_FPM_Roddier(mp);  
     end
-
     
     %% Hybrid FPMs only:
     %--Stash DM8 and DM9 starting commands if they are given in the main script
@@ -35,15 +32,15 @@ function [mp] = falco_gen_FPM(mp)
                         otherwise
                             mp = falco_setup_FPM_HLC(mp);
                     end
-                    mp = falco_config_gen_FPM_HLC(mp);
+                    mp = falco_gen_FPM_HLC(mp);
                 case{'FOHLC'}
                     mp = falco_setup_FPM_FOHLC(mp);
-                    mp = falco_config_gen_FPM_FOHLC(mp);
+                    mp = falco_gen_FPM_FOHLC(mp);
                     mp.compact.Nfpm = max([mp.dm8.compact.NdmPad,mp.dm9.compact.NdmPad]); %--Width of the FPM array in the compact model.
                     mp.full.Nfpm = max([mp.dm8.NdmPad,mp.dm9.NdmPad]); %--Width of the FPM array in the full model.
                 case{'EHLC'}
                     mp = falco_setup_FPM_EHLC(mp);
-                    mp = falco_config_gen_FPM_EHLC(mp);
+                    mp = falco_gen_FPM_EHLC(mp);
             end
 
             %%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.

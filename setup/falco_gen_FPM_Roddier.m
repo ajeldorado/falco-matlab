@@ -11,7 +11,7 @@
 % Modifed from falco_config_gen_FPM_LC by G. Ruane on 2018-11-20.
 % ---------------
 
-function [mp] = falco_config_gen_FPM_Roddier(mp)
+function [mp] = falco_gen_FPM_Roddier(mp)
 
         %--Make or read in focal plane mask (FPM) amplitude for the full model
         FPMgenInputs.pixresFPM = mp.F3.full.res; %--pixels per lambda_c/D
