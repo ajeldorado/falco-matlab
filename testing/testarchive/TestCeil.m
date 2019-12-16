@@ -2,7 +2,10 @@
 %
 % Test applies known simple tests to ceil_even.m and ceil_odd.m to test
 % results as we assign odd and even inputs to each function. Then the tests
-% verify that the actual solution is equal to the expected known solution.
+% verify that the actual solution is equal to the expected known
+% solution.This function does not enforce number type so there is not good
+% reason to supply a test to verify the actual solution is of interger
+% type.
 %
 classdef TestCeil < matlab.unittest.TestCase
 %% Properties
@@ -18,17 +21,17 @@ classdef TestCeil < matlab.unittest.TestCase
 %
 %  Add and remove path to utils functions to be tested.
 %
-    methods(TestMethodSetup)
+    methods (TestClassSetup)
         function addPath(testCase)
             addpath(genpath([testCase.param.mp.path.falco 'lib/utils']));
         end
     end
-    methods(TestMethodTeardown)
+    methods (TestClassTeardown)
         function removePath(testCase)
             rmpath(genpath([testCase.param.mp.path.falco 'lib/utils']))
         end
     end
-
+    
 %% Tests
 %
 %  Creates four tests:

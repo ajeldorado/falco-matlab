@@ -18,12 +18,12 @@ classdef TestSinc < matlab.unittest.TestCase
 %
 %  Add and remove path to utils functions to be tested.
 %
-    methods(TestMethodSetup)
+    methods (TestClassSetup)
         function addPath(testCase)
             addpath(genpath([testCase.param.mp.path.falco 'lib/utils']));
         end
     end
-    methods(TestMethodTeardown)
+    methods (TestClassTeardown)
         function removePath(testCase)
             rmpath(genpath([testCase.param.mp.path.falco 'lib/utils']))
         end
@@ -44,6 +44,7 @@ classdef TestSinc < matlab.unittest.TestCase
             actSolution = sinc(xx);
             expSolution = 1;
             testCase.verifyEqual(actSolution,expSolution);  
+            testCase.verifyInstanceOf(actSolution, 'double');
         end
         function testSincPiosix(testCase)
             xx=pi/6;
@@ -68,6 +69,13 @@ classdef TestSinc < matlab.unittest.TestCase
             actSolution = sinc(xx);
             expSolution = sin(pi*xx)./(pi*xx);
             testCase.verifyEqual(actSolution,expSolution);  
+        end
+        function testSincSize(testCase)
+            xx=[pi/6 pi/4 pi/2 pi];
+            actSolution = sinc(xx);
+            expSolution = sin(pi*xx)./(pi*xx);
+            testCase.verifyEqual(actSolution,expSolution);  
+            testCase.verifySize(actSolution,size(xx));
         end
     end    
 end

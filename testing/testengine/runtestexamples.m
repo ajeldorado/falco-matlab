@@ -6,7 +6,7 @@ clc
 %% Add Path to Utils
 %
 %
-addpath /Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/utils
+%addpath /Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/utils
 
 %--------------------------------------------------------------------------
 % Define test or tests in form of cell array, this is an input to the
@@ -17,7 +17,7 @@ addpath /Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tes
 % tests={'/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests/SolverTest.m'...
 %      ; '/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests'};
  
-tests={'/Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/testarchive'};
+tests={'/Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/testarchive/TestSinc.m'};
 
 %% Example 1
 % 

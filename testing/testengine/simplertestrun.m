@@ -17,7 +17,7 @@ clc
 % tests={'/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests/SolverTest.m'...
 %      ; '/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests'};
  
-tests={'/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestGetSummedImage.m'};
+tests={'/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestSinc.m'};
 
 %% Example 1
 % 
