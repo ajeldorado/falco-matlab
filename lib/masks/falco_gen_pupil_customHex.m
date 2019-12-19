@@ -27,7 +27,8 @@ function PUPIL = falco_gen_pupil_customHex( input )
     [THETA,RHO] = cart2pol(X,Y); 
    
     input.apDia = input.Nbeam;
-    if(isfield(input,'pistons'))
+    if(isfield(input,'pistons') || isfield(input,'tiltxs') || ...
+                isfield(input,'tiltys') || isfield(input,'loworder_struct'))
         PUPIL0 = hexSegMirror_getField( input );
     else
         PUPIL0 = hexSegMirror_getSupport( input );
