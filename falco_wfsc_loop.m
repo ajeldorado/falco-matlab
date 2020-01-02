@@ -172,14 +172,11 @@ for Itr=1:mp.Nitr
     
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
-    if(Itr==1)
-        mp.jac.zerns0 = mp.jac.zerns;
-    end
-
+    if(Itr==1); mp.jac.zerns0 = mp.jac.zerns; end
     fprintf('Zernike modes used in this Jacobian:\t'); fprintf('%d ',mp.jac.zerns); fprintf('\n');
     
     %--Re-compute the Jacobian weights
-    mp = falco_config_jac_weights(mp); 
+    mp = falco_set_jacobian_weights(mp); 
 
     %% Actuator Culling: Initialization of Flag and Which Actuators
 

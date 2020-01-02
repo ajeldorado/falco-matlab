@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% mp = falco_config_jac_weights(mp)
+% mp = falco_set_jac_weights(mp)
 %
 % Function to set the weights for the Jacobian modes.
 %
@@ -12,16 +12,12 @@
 % ----------------
 % Created on 2018-09-17 by A.J. Riggs.
 
-function mp = falco_config_jac_weights(mp)
+function mp = falco_set_jacobian_weights(mp)
     
     %--Which Zernike modes to include in Jacobian. Given as a vector of Noll indices. 1 is the on-axis piston mode.
-    if(isfield(mp.jac,'zerns')==false)
-        mp.jac.zerns = 1;
-    end
+    if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1;  mp.jac.Zcoef = 1; end
     mp.jac.Nzern = numel(mp.jac.zerns);
-
     mp.jac.Zcoef(mp.jac.zerns==1) = 1; % [meters] reset coefficient for piston to 1
-
     mp.jac.weightMat = zeros(mp.Nsbp, mp.jac.Nzern); %--Initialize weighting matrix of each Zernike-wavelength mode for the controller
 
     for izern = 1:mp.jac.Nzern

@@ -4,15 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% mp = falco_config_gen_chosen_pupil(mp)
-%
 % Function to generate the apodizer representation based on configuration settings.
 % 
 % REVISION HISTORY:
 % ----------------
 % Created on 2018-05-29 by A.J. Riggs.
 
-function mp = falco_config_gen_chosen_pupil(mp)
+function mp = falco_gen_chosen_pupil(mp)
 
 %% Input pupil plane resolution, masks, and coordinates
 %--Resolution at input pupil and DM1 and DM2

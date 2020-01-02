@@ -4,15 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% mp = falco_config_gen_chosen_LS(mp)
-%
 % Function to generate the Lyot stop representation based on configuration settings.
 %
 % REVISION HISTORY:
 % ----------------
 % Created on 2018-05-29 by A.J. Riggs.
 
-function mp = falco_config_gen_chosen_LS(mp)
+function mp = falco_gen_chosen_lyot_stop(mp)
 
 %% Lyot plane resolution, coordinates, and cropped-down mask for compact model
 

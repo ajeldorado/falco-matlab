@@ -4,8 +4,6 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% mp = falco_config_gen_chosen_apodizer(mp)
-%
 % Function to generate the apodizer representation based on configuration settings.
 %
 % 
@@ -17,7 +15,7 @@
 % is called.
 % Created on 2018-05-29 by A.J. Riggs.
 
-function mp = falco_config_gen_chosen_apodizer(mp)
+function mp = falco_gen_chosen_apodizer(mp)
 
 
 if(mp.flagApod)
