@@ -156,7 +156,12 @@ switch upper(mp.whichPupil)
         end
         if(isfield(mp.P1,'tiltxs'))
             input.tiltxs = mp.P1.tiltxs; % Tilts on segments (waves/apDia)
+        end
+        if(isfield(mp.P1,'tiltys'))
             input.tiltys = mp.P1.tiltys; % Tilts on segments (waves/apDia)
+        end
+        if(isfield(mp.P1,'loworder_struct'))
+            input.loworder_struct = mp.P1.loworder_struct; % Segment-level low order aberration structure
         end
 
         missingSegments = ones(1,hexSegMirror_numSegments(input.numRings));
@@ -172,7 +177,7 @@ switch upper(mp.whichPupil)
         input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
         mp.P1.compact.mask = falco_gen_pupil_customHex(input);
         
-        if(isfield(mp.P1,'pistons') || isfield(mp.P1,'tiltxs') || isfield(mp.P1,'tiltys'))
+        if(isfield(mp.P1,'pistons') || isfield(mp.P1,'tiltxs') || isfield(mp.P1,'tiltys') || isfield(mp.P1,'loworder_struct'))
             
             % Compact model has one field per sub-bandpass 
             for sbpIndex = 1:mp.Nsbp
