@@ -15,7 +15,9 @@ function [ OUT ] = hexSegMirror_getField( hexMirror_struct )
 %   pistons - Segment pistons in waves
 %   tiltxs - Tilts on segment in horizontal direction (waves/apDia)
 %   tiltys - Tilts on segment in vertical direction (waves/apDia)
-
+%   loworder_struct - Structure that defines segment-level low order aberrations. 
+%                      loworder_struct(i).noll_indices - list of noll indices for the ith segment. 
+%                      loworder_struct(i).waves_rms - Zernike coefficients for the ith segment in units of waves rms. 
 
 apDia = hexMirror_struct.apDia; % flat to flat aperture diameter (samples)
 wGap = hexMirror_struct.wGap; % samples
@@ -24,6 +26,11 @@ N = hexMirror_struct.Npad;
 pistons = hexMirror_struct.pistons;
 tiltxs = hexMirror_struct.tiltxs; 
 tiltys = hexMirror_struct.tiltys; 
+if(isfield(hexMirror_struct,'loworder_struct'))
+    loworder_struct = hexMirror_struct.loworder_struct;
+else
+    loworder_struct = nan(1,hexSegMirror_numSegments( numRings ));
+end
 
 if(isfield(hexMirror_struct,'missingSegments'))
     missingSegments = hexMirror_struct.missingSegments;
@@ -45,7 +52,7 @@ for ringNum = 0:numRings
     
     if(missingSegments(segNum)==1)
         [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
-                    wGap, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+                    wGap, pistons(segNum), tiltxs(segNum), tiltys(segNum), loworder_struct(segNum), OUT);
     end
     segNum = segNum + 1;
     
@@ -65,7 +72,7 @@ for ringNum = 0:numRings
             else
                 if(missingSegments(segNum)==1)
                     [ OUT ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, ...
-                                wGap, pistons(segNum), tiltxs(segNum), tiltys(segNum), OUT);
+                                wGap, pistons(segNum), tiltxs(segNum), tiltys(segNum), loworder_struct(segNum), OUT);
                 end
                 segNum = segNum + 1;
             end
