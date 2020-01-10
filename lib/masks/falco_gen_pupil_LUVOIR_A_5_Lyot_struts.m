@@ -4,17 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Function to generate the LUVOIR Design A, Aperture 5, telescope pupil in
+% Function to generate the LUVOIR Design A, Aperture 5, telescope pupil in
 %   Matlab using PROPER
 % Coordinates and dimensions of the primary, secondary, and hex segments
 %   are from Matthew Bolcar (NASA GSFC).
 % Coordinates and dimensions of the secondary mirror support struts were a
 %   best-fit match by A.J. Riggs by matching PROPER-made rectangles to the 
 %   pupil file from Matthew Bolcar (NASA GSFC).
-%
-% Modified on 2018-02-25 by A.J. Riggs to be for LUVOIR A aperture 5. 
-% Written on  2017-09-07 by A.J. Riggs to generate the first proposed LUVOIR pupil. 
-%   Values for the geometry were provided by Matthew Bolcar at NASA GSFC.
 %
 %--Coordinates of hex segments to skip:
 % 1 13 114 115 126 127
@@ -37,22 +33,6 @@ while icav < size(varargin, 2)
             varargin{icav});
     end
 end
-
-%-----------------------------------------------------
-% %--FOR DEBUGGING ONLY
-% clear all
-% addpath ~/Repos/FALCO/lib/PROPER
-% inputs.Nbeam = 1000;
-% inputs.magfacD = 1;
-% inputs.centering = 'pixel';
-% inputs.Dbeam = 14.9760; % (m)
-% inputs.ID = 0.10;
-% inputs.OD = 0.90;
-% inputs.wStrut = 1.4/100;
-% flagRot180deg = true;
-% % inputs.xshift = 0;
-% % inputs.yshift = 0;
-%-----------------------------------------------------
 
 %--Centering of array: 'pixel' or 'interpixel'
 if(isfield(inputs,'centering'))
@@ -156,17 +136,3 @@ if(flagRot180deg)
 end
 
 end %--END OF FUNCTION
-
-% %--DEBUGGING: Visually verify that mask is centered correctly
-% figure(11); imagesc(mask); axis xy equal tight; colorbar; drawnow;
-% switch centering 
-%     case {'pixel'}
-%         maskTemp = mask(2:end,2:end);
-%     otherwise
-%         maskTemp = mask;
-% end
-% figure(12); imagesc(maskTemp-fliplr(maskTemp)); axis xy equal tight; colorbar; 
-% title('Centering Check','Fontsize',20); set(gca,'Fontsize',20);
-% drawnow;
-% 
-% sum(sum(mask))

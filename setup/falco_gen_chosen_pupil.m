@@ -1,14 +1,11 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
 % Function to generate the apodizer representation based on configuration settings.
-% 
-% REVISION HISTORY:
-% ----------------
-% Created on 2018-05-29 by A.J. Riggs.
+%
 
 function mp = falco_gen_chosen_pupil(mp)
 
@@ -41,35 +38,13 @@ switch upper(mp.whichPupil)
         inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); % number of points across usable pupil 
         mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
+    case{'WFIRST20191009'}
+            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.full.Nbeam, mp.centering);  end
+            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.compact.Nbeam, mp.centering);  end
+    
     case{'WFIRST180718'}
             if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);  end
             if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);  end
-
-        
-    case{'WFIRST20180103'}
-        %--Generate high-res input pupil for the 'full' model
-        mp.P1.full.mask = falco_gen_pupil_WFIRST_20180103(mp.P1.full.Nbeam, mp.centering);
-        
-        %--Generate low-res input pupil for the 'compact' model
-        mp.P1.compact.mask = falco_gen_pupil_WFIRST_20180103(mp.P1.compact.Nbeam, mp.centering);
-        
-    case{'WFIRST_ONAXIS'}
-        inputs.wStrut = mp.pup_wStrut; %--0.0261  is nominal from 2014 on-axis (in pupil diameters)
-        %--Generate input pupil
-        inputs.Nbeam = mp.P1.full.Nbeam; % number of points across usable pupil  
-        inputs.Dbeam = mp.P2.D;
-        inputs.centering = mp.centering;
-        inputs.clock_deg = 0; % clocking angle of the pupil (in degrees)
-        inputs.magfacD = 1; %magnification factor of the pupil diameter
-        inputs.xshift = 0; % translation in x of pupil (in diameters)
-        inputs.yshift = 0; % translation in y of pupil (in diameters)
-        %--Generate high-res input pupil for the 'full' model
-        mp.P1.full.mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs);
-        
-        %--Generate low-res input pupil for the 'compact' model
-        inputs.Nbeam = mp.P1.compact.Nbeam; % number of points across usable pupil    
-        inputs.Dbeam = mp.P2.D;
-        mp.P1.compact.mask = falco_gen_pupil_WFIRSTcycle6_mag_rot_trans(inputs);
 
     case{'KECK'}
         inputs.centering = mp.centering; 
@@ -90,20 +65,20 @@ switch upper(mp.whichPupil)
         mp.P1.compact.mask = falco_gen_pupil_Keck(inputs,'ROTATION',angRot); 
         
     case{'LUVOIRAFINAL'}
-        if(mp.compact.flagGenLS || mp.full.flagGenLS)
+        if(mp.compact.flagGenPupil || mp.full.flagGenPupil)
             inputs.centering = mp.centering;
             if(isfield(mp.P1,'wGap_m')) %--Option to overwrite the default
                 inputs.wGap_m = mp.P1.wGap_m;
             end
         end
         
-        if(mp.full.flagGenLS)
+        if(mp.full.flagGenPupil)
             %--Generate high-res input pupil for the 'full' model
             inputs.Nbeam = mp.P1.full.Nbeam; 
             mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
         end
         
-        if(mp.compact.flagGenLS)
+        if(mp.compact.flagGenPupil)
             %--Generate low-res input pupil for the 'compact' model
             inputs.Nbeam = mp.P1.compact.Nbeam; 
             mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
@@ -120,11 +95,11 @@ switch upper(mp.whichPupil)
         
         %--Generate high-res input pupil for the 'full' model
         inputs.Nbeam = mp.P1.full.Nbeam; 
-        mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
+        if(mp.full.flagGenPupil); mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs); end
         
         %--Generate low-res input pupil for the 'compact' model
         inputs.Nbeam = mp.P1.compact.Nbeam; 
-        mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs);
+        if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_5_mag_trans(inputs); end
         clear inputs
 
     case{'LUVOIRA0'}
@@ -132,11 +107,11 @@ switch upper(mp.whichPupil)
         
         %--Generate high-res input pupil for the 'full' model
         inputs.Nbeam = mp.P1.full.Nbeam; 
-        mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_0(inputs);
+        if(mp.full.flagGenPupil); mp.P1.full.mask = falco_gen_pupil_LUVOIR_A_0(inputs); end
         
         %--Generate low-res input pupil for the 'compact' model
         inputs.Nbeam = mp.P1.compact.Nbeam; 
-        mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_0(inputs);
+        if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_0(inputs); end
         
     case{'LUVOIR_B_OFFAXIS'}
         input.Nbeam = mp.P1.full.Nbeam/0.925; % number of points across the pupil diameter
@@ -168,12 +143,12 @@ switch upper(mp.whichPupil)
         end
         input.missingSegments = missingSegments;
 
-        mp.P1.full.mask = falco_gen_pupil_customHex(input);
+        if(mp.full.flagGenPupil); mp.P1.full.mask = falco_gen_pupil_customHex(input); end
         
         input.Nbeam = mp.P1.compact.Nbeam/0.925; % number of points across the pupil diameter
         input.wGap = mp.P1.wGap*mp.P1.compact.Nbeam; % samples
         input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
-        mp.P1.compact.mask = falco_gen_pupil_customHex(input);
+        if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_customHex(input); end
         
         if(isfield(mp.P1,'pistons') || isfield(mp.P1,'tiltxs') || isfield(mp.P1,'tiltys') || isfield(mp.P1,'loworder_struct'))
             
@@ -205,8 +180,8 @@ switch upper(mp.whichPupil)
     
     case 'DST_LUVOIRB'
         
-        mp.P1.full.mask = falco_gen_pupil_dst_LUVOIR_B(mp.P1.full.Nbeam, 2^(nextpow2(mp.P1.full.Nbeam)));
-        mp.P1.compact.mask = falco_gen_pupil_dst_LUVOIR_B(mp.P1.compact.Nbeam, 2^(nextpow2(mp.P1.compact.Nbeam)));
+        if(mp.full.flagGenPupil); mp.P1.full.mask = falco_gen_pupil_dst_LUVOIR_B(mp.P1.full.Nbeam, 2^(nextpow2(mp.P1.full.Nbeam))); end
+        if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_dst_LUVOIR_B(mp.P1.compact.Nbeam, 2^(nextpow2(mp.P1.compact.Nbeam))); end
     
     case 'HABEX_B_OFFAXIS'
         input.Nbeam = mp.P1.full.Nbeam;
@@ -215,11 +190,11 @@ switch upper(mp.whichPupil)
         input.gap_size = mp.P1.gap_size;
         input.fivemmRadii = mp.P1.fivemmRadii;
         
-        mp.P1.full.mask = falco_gen_pupil_HabEx_B(input);
+        if(mp.full.flagGenPupil); mp.P1.full.mask = falco_gen_pupil_HabEx_B(input); end
         
         input.Nbeam = mp.P1.compact.Nbeam; % number of points across the pupil diameter
         input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
-        mp.P1.compact.mask = falco_gen_pupil_HabEx_B(input);
+        if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_HabEx_B(input); end
         
     case 'ISAT'
         input.numRaftRings = 3;
@@ -232,7 +207,7 @@ switch upper(mp.whichPupil)
         if(isfield(mp.P1,'raftOffsets'))
             input.raftOffsets = mp.P1.raftOffsets*input.Nbeam;% samples 
         end
-        mp.P1.full.mask = falco_gen_pupil_iSAT(input);
+        if(mp.full.flagGenPupil); mp.P1.full.mask = falco_gen_pupil_iSAT(input); end
         
         input.Nbeam = mp.P1.compact.Nbeam;
         input.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
@@ -242,7 +217,7 @@ switch upper(mp.whichPupil)
         if(isfield(mp.P1,'raftOffsets'))
             input.raftOffsets = mp.P1.raftOffsets*input.Nbeam;% samples 
         end
-        mp.P1.compact.mask = falco_gen_pupil_iSAT(input);
+        if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_iSAT(input); end
 end
 mp.P1.compact.Narr = length(mp.P1.compact.mask); %--Number of pixels across the array containing the input pupil in the compact model
 

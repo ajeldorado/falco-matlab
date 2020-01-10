@@ -13,9 +13,6 @@
 % inputs.wStrut - strut width (fraction of Nbeam)
 
 function PUPIL = falco_gen_pupil_customHex( input )
-%gen_pupil_SCDA Generates a simple pupil.
-%   Function may be used to generate circular, annular, and simple on-axis 
-%   telescopes with radial struts. 
 
     hg_expon = 1000; % hyper-gaussian exponent for anti-aliasing 
     hg_expon_spider = 100; % hyper-gaussian exponent for anti-aliasing 
@@ -30,7 +27,8 @@ function PUPIL = falco_gen_pupil_customHex( input )
     [THETA,RHO] = cart2pol(X,Y); 
    
     input.apDia = input.Nbeam;
-    if(isfield(input,'pistons'))
+    if(isfield(input,'pistons') || isfield(input,'tiltxs') || ...
+                isfield(input,'tiltys') || isfield(input,'loworder_struct'))
         PUPIL0 = hexSegMirror_getField( input );
     else
         PUPIL0 = hexSegMirror_getSupport( input );

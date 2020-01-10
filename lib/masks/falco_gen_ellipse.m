@@ -1,4 +1,4 @@
-% Copyright 2018-2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -16,7 +16,6 @@
 % inputs.radiusX % x-radius of ellipse [pupil diameters]
 % inputs.radiusY % y-radius of ellipse [pupil diameters]
 % inputs.clockingDegrees % clocking of the pupil [degrees]
-%
 %
 %--Optional Inputs
 % inputs.centering
@@ -62,7 +61,7 @@ function pupil = falco_gen_ellipse(inputs)
         1/(radiusY)^2*(sind(clockingDegrees)*X - cosd(clockingDegrees)*Y).^2 ...
         );
 
-    halfWindowWidth = dx;
+    halfWindowWidth = max(abs([RHO(2,1)-RHO(1,1), RHO(1,2) - RHO(1,1)]));
     pupil = -1*ones(size(RHO));
     pupil(abs(RHO) < radius - halfWindowWidth) = 1;
     pupil(abs(RHO) > radius + halfWindowWidth) = 0;
@@ -94,9 +93,9 @@ function pupil = falco_gen_ellipse(inputs)
         subpixel((RHOup) <= radius) = 1;
         pixelValue = sum(subpixel(:))/upsampleFactor^2;
         pupil(grayInds(iInterior)) = pixelValue;
-    %     figure(8); imagesc(xUp+xCenter, xUp+yCenter, subpixel); axis xy equal tight; colorbar; drawnow;
+    %     figure(1); imagesc(xUp+xCenter, xUp+yCenter, subpixel); axis xy equal tight; colorbar; drawnow;
 
     end
-    % figure(6); imagesc(x, x, pupil); axis xy equal tight; colorbar; drawnow;
+    % figure(2); imagesc(x, x, pupil); axis xy equal tight; colorbar; drawnow;
     
 end % END OF FUNCTION
