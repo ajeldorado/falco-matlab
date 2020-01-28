@@ -61,7 +61,7 @@ function pupil = falco_gen_ellipse(inputs)
         1/(radiusY)^2*(sind(clockingDegrees)*X - cosd(clockingDegrees)*Y).^2 ...
         );
 
-    halfWindowWidth = max(abs([RHO(2,1)-RHO(1,1), RHO(1,2) - RHO(1,1)]));
+    halfWindowWidth = max([rx/ry, ry/rx])*max(abs([RHO(2,1)-RHO(1,1), RHO(1,2) - RHO(1,1)]));
     pupil = -1*ones(size(RHO));
     pupil(abs(RHO) < radius - halfWindowWidth) = 1;
     pupil(abs(RHO) > radius + halfWindowWidth) = 0;

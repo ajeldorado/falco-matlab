@@ -138,9 +138,9 @@ rotMat = [cosd(clock_deg), -sind(clock_deg); sind(clock_deg), cosd(clock_deg)];
 %% Coordinates
 
 if(strcmpi(centering,'pixel') || strcmpi(centering,'odd'))
-    Narray = ceil_even(Nbeam + 1); %--number of points across output array. Requires two more pixels when pixel centered.
+    Narray = ceil_even(Nbeam*max(2*abs([xShear, yShear])) + magFac*(Nbeam+1)) %--number of points across output array. Requires two more pixels when pixel centered.
 else
-    Narray = ceil_even(Nbeam); %--No zero-padding needed if beam is centered between pixels
+    Narray = ceil_even(Nbeam*max(2*abs([xShear, yShear])) + magFac*Nbeam); %--No zero-padding needed if beam is centered between pixels
 end
 
 if(strcmpi(centering,'interpixel'))
