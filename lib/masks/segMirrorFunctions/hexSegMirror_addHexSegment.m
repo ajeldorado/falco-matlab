@@ -4,7 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, apDia, wGap, piston, tiltx, tilty, arrayIn)
+function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, ...
+    apDia, wGap, piston, tiltx, tilty, loworder_struct, arrayIn)
 %hexSegMirror_addHexSegment Adds hexagonal mirror segment to arrayIn, 
 % centered at (cenrow, cencol). The full mirror have numRings rings of 
 % hexagonal segments, flat-to-flat diameter (in samples) of apDia, 
@@ -21,6 +22,10 @@ function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, ap
 %   piston - Segment piston in waves
 %   tiltx - Tilt on segment in horizontal direction (waves/apDia)
 %   tilty - Tilt on segment in vertical direction (waves/apDia)
+%   loworder_struct - Structure that defines segment-level low order aberrations. 
+%                      loworder_struct.noll_indices - list of noll indices
+%                      loworder_struct.waves_rms - Zernike coefficients in
+%                                                   units of waves rms. 
 %   arrayIn - Input array
 %   
 %   Coordinate system origin: (rows/2+1, cols/2+1)
@@ -46,6 +51,28 @@ function [ arrayOut ] = hexSegMirror_addHexSegment( cenrow, cencol, numRings, ap
             .*exp(1i*2*pi*piston)...
             .*exp(1i*2*pi*tiltx/apDia*(X-cencol))...
             .*exp(1i*2*pi*tilty/apDia*(Y-cenrow));
+    
+    % Add Zernike polynomials according to loworder_struct
+    if(isfield(loworder_struct,'noll_indices') && numel(loworder_struct.noll_indices) > 0)
+        
+        Zcount = 1;
+        for noll_index = loworder_struct.noll_indices 
+            
+            hexCircumRad = hexFlatDiam/sqrt(3); % Circumscribed radius of the hex.
+            Zcoeff = loworder_struct.waves_rms(Zcount); % Zernike coefficient in waves RMS. 
+            mask = logical(HEXamp); % Logical mask over which the RMS is calculated (a hex segment).
+            
+            Z = propcustom_gen_zernike( noll_index, hexCircumRad, RHOprime, THETA);
+            
+            Znorm = Z./sqrt(mean((Z(mask)).^2));% normalize by RMS across hex 
+            Zwaves = Zcoeff*Znorm;% Convert to waves RMS
+            HEXphz = HEXphz.*exp(1i*2*pi*Zwaves); % Apply wavefront 
+            
+            Zcount = Zcount + 1; 
+        end
+    end
+        
     arrayOut = arrayIn + HEXamp.*HEXphz;
+    
 end
 

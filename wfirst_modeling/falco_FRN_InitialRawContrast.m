@@ -109,6 +109,9 @@ end
 data.CtoNI = CtoNI;
 data.Ccoh = Ccoh;
 data.Cinco = Cinco;
+data.peakVals = peakVals;
+data.peak2D = peak2D;
+data.maskBoolQuad1 = maskBoolQuad1;
 
 %% Compute the average contrast in each annulus (or annular segment)
 CcohVec = zeros(Nann,1);

@@ -85,7 +85,7 @@ dm.Ndm = ceil_even( max(abs([sqrt(2)*cosd(45-dm.zrot),sqrt(2)*sind(45-dm.zrot)])
 
 [Xinf0,Yinf0] = meshgrid(x_inf0);
 
-%--Compute list of initial actuator center coordinates (in actutor widths).
+%--Compute list of initial actuator center coordinates (in actuator widths).
 if(dm.flag_hex_array) %--Hexagonal, hex-packed grid
     Nrings = dm.Nrings;
     x_vec = [];
@@ -139,6 +139,7 @@ else
                  0.0,                    0.0,                    0.0, 1.0];
 end
 
+%--Compute the actuator center coordinates in units of actuator spacings
 for iact=1:dm.NactTotal
     xyzVals = [x_vec(iact); y_vec(iact); 0; 1];
     xyzValsRot = Mrot*xyzVals;
@@ -182,7 +183,7 @@ while( abs(infDiff) <= 1e-7)
 end
 counter = counter - 2;
 Ninf0pad = length(dm.infMaster)-counter;
-infMaster2 = dm.infMaster(1+counter/2:end-counter/2,1+counter/2:end-counter/2); %--The cropped-down Lyot stop for the compact model       
+infMaster2 = dm.infMaster(1+counter/2:end-counter/2,1+counter/2:end-counter/2); %--The cropped-down influence function       
 
 dm.infMaster = infMaster2;
 Npad = Ninf0pad;
@@ -238,7 +239,9 @@ if(flagGenCube)
 
     %--Find the locations of the postage stamps arrays in the larger pupilPad array
     dm.xy_cent_act_inPix = dm.xy_cent_act*(dm.dm_spacing/dx_dm); % Convert units to pupil-file pixels
-    dm.xy_cent_act_inPix = dm.xy_cent_act_inPix + 0.5; %--For the half-pixel offset if pixel centered. 
+    if(strcmpi(dm.centering,'pixel'))
+        dm.xy_cent_act_inPix = dm.xy_cent_act_inPix + 0.5; %--For the half-pixel offset if pixel centered. 
+    end
     dm.xy_cent_act_box = round(dm.xy_cent_act_inPix); % Center locations of the postage stamps (in between pixels), in actuator widths
     dm.xy_cent_act_box_inM = dm.xy_cent_act_box*dx_dm; % now in meters 
     dm.xy_box_lowerLeft = dm.xy_cent_act_box + (dm.NdmPad-Nbox)/2 + 1; % indices of pixel in lower left of the postage stamp within the whole pupilPad array

@@ -156,7 +156,7 @@ for Itr=1:mp.Nitr
 
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
-    [mp,thput] = falco_compute_thput(mp);
+    [mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
     if(mp.flagFiber)
         mp.thput_vec(Itr) = max(thput);
     else
@@ -182,7 +182,7 @@ for Itr=1:mp.Nitr
         end
         hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
     else
-        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
     end
 
 %     %--Plot the intermediate E-fields
@@ -201,14 +201,11 @@ for Itr=1:mp.Nitr
     
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
-    if(Itr==1)
-        mp.jac.zerns0 = mp.jac.zerns;
-    end
-
+    if(Itr==1); mp.jac.zerns0 = mp.jac.zerns; end
     fprintf('Zernike modes used in this Jacobian:\t'); fprintf('%d ',mp.jac.zerns); fprintf('\n');
     
     %--Re-compute the Jacobian weights
-    mp = falco_config_jac_weights(mp); 
+    mp = falco_set_jacobian_weights(mp); 
 
     %% Actuator Culling: Initialization of Flag and Which Actuators
 
@@ -226,12 +223,12 @@ for Itr=1:mp.Nitr
 
     %--Before performing new cull, include all actuators again
     if(cvar.flagCullAct)
-        %--Re-include all actuators in the basis set.
-        if(any(mp.dm_ind==1)); mp.dm1.act_ele = 1:mp.dm1.NactTotal; end
-        if(any(mp.dm_ind==2)); mp.dm2.act_ele = 1:mp.dm2.NactTotal; end
-        if(any(mp.dm_ind==5)); mp.dm5.act_ele = 1:mp.dm5.NactTotal; end
-        if(any(mp.dm_ind==8)); mp.dm8.act_ele = 1:mp.dm8.NactTotal; end
-        if(any(mp.dm_ind==9)); mp.dm9.act_ele = 1:mp.dm9.NactTotal; end
+        %--Re-include all actuators in the basis set. Need act_ele to be a column vector.
+        if(any(mp.dm_ind==1)); mp.dm1.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==2)); mp.dm2.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==5)); mp.dm5.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==8)); mp.dm8.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==9)); mp.dm9.act_ele = (1:mp.dm1.NactTotal).'; end
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
@@ -363,6 +360,11 @@ for Itr=1:mp.Nitr
     cvar.EfieldVec = EfieldVec;
     cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
+    
+    %--Enforce constraints on DM commands 
+    % (not needed here--just done here for stats and plotting)
+    if(any(mp.dm_ind==1)); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
+    if(any(mp.dm_ind==2)); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
     
     %--Save out regularization used.
     out.log10regHist(Itr) = cvar.log10regUsed; 
@@ -497,7 +499,7 @@ if(any(mp.dm_ind==8)); out.dm8.Vall(:,Itr) = mp.dm8.V; end
 if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
 %--Calculate the core throughput (at higher resolution to be more accurate)
-[mp,thput] = falco_compute_thput(mp);
+[mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
 if(mp.flagFiber)
     mp.thput_vec(Itr) = max(thput);
 else
@@ -513,7 +515,7 @@ if(isfield(mp,'testbed'))
     Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
     hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
 end
 %% Optional output variable: mp
 varargout{1} = mp;
@@ -575,325 +577,3 @@ else
 end
 
 end %--END OF main FUNCTION
-
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% falco_train_model.m is a nested function in order to save RAM since the 
-% output of the Jacobian structure is large and I do not want it copied.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% INPUTS:
-% -mp = structure of model parameters
-% -cvar = structure containing variables for the controller
-% -jacStruct = structure containing the Jacobians
-%
-% OUTPUTS:
-% -mp = structure of model parameters
-function mp = falco_train_model(mp,ev)
-    Itr = ev.Itr;
-    n_batch = mp.NitrTrain;
-    % n_batch = 5; %% INITIALIZE THE DATA STRUCTURE THAT SAVES THE TRAINING DATA
-
-    if(Itr==1)
-        data_train.u1 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
-        data_train.u2 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
-        data_train.u1p = zeros(mp.dm1.Nact, mp.dm1.Nact, 2*mp.est.probe.Npairs+1, n_batch);
-        data_train.u2p = zeros(mp.dm1.Nact, mp.dm1.Nact, 2*mp.est.probe.Npairs+1, n_batch);
-        data_train.I = zeros(size(mp.Fend.corr.mask, 1), size(mp.Fend.corr.mask, 2), 2*mp.est.probe.Npairs+1, n_batch);
-    else
-        data_train = mp.data_train;
-    end
-
-    data_train.u1(:, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = mp.dm1.dV;
-    data_train.u2(:, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = mp.dm2.dV;
-    data_train.u1p(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = ev.Vcube.dm1;
-    data_train.u2p(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = ev.Vcube.dm2;
-    data_train.I(:, :, :, Itr - n_batch*floor(Itr/n_batch-1e-3)) = ev.Icube;
-
-    if rem(Itr, n_batch) == 0
-        % convert the WFSC data to standard input to the system ID function
-        n_activeAct1 = length(mp.dm1.act_ele);
-        n_activeAct2 = length(mp.dm2.act_ele);
-        n_pairs = mp.est.probe.Npairs;
-        n_pix = sum(sum(mp.Fend.corr.mask));
-
-        uAll = zeros(n_activeAct1+n_activeAct2, n_batch); % control commands of all the iterations, including both DM1 and DM2
-        uProbeAll = zeros(n_activeAct1+n_activeAct2, 2*n_pairs, n_batch); % probe commands of all the iterations, including both DM1 and DM2
-        IAll = zeros(n_pix, 2*n_pairs+1, n_batch); % difference image of all the iterations
-
-
-        for kc = 1 : n_batch % convert the 2D images and DM commands to vectors
-            u1_2D = data_train.u1(:, :, kc);
-            u2_2D = data_train.u2(:, :, kc);
-            uAll(1:n_activeAct1, kc) = u1_2D(mp.dm1.act_ele);
-            uAll(n_activeAct1+1:end, kc) = u2_2D(mp.dm2.act_ele);
-            I_2D = data_train.I(:, :,1, kc);
-            IAll(:, 1, kc) = I_2D(mp.Fend.corr.mask);
-            for kp = 1 : 2*mp.est.probe.Npairs
-                u1p_2D = data_train.u1p(:, :, kp+1, kc) - data_train.u1p(:, :, 1, kc);
-                u2p_2D = data_train.u2p(:, :, kp+1, kc) - data_train.u2p(:, :, 1, kc);
-                I_2D = data_train.I(:, :,kp+1, kc);
-
-                uProbeAll(1:n_activeAct1, kp, kc) = u1p_2D(mp.dm1.act_ele);
-                uProbeAll(n_activeAct1+1:end, kp, kc) = u2p_2D(mp.dm2.act_ele);
-                IAll(:, kp+1, kc) = I_2D(mp.Fend.corr.mask);
-            end
-        end
-
-        data_train.u1 = uAll(1:n_activeAct1, :);
-        data_train.u2 = uAll(n_activeAct1+1:end, :);
-        data_train.u1p = uProbeAll(1:n_activeAct1, :, :);
-        data_train.u2p = uProbeAll(n_activeAct1+1:end, :, :);
-        data_train.I = IAll;
-
-        save([mp.path.jac, 'data_train.mat'],'data_train') %    save data_train data_train
-        save([mp.path.jac, 'jacStruct.mat'], 'jacStruct'); %save jacStruct jacStruct
-
-        if Itr == n_batch %--Call System ID after final iteration of training
-            py.falco_systemID.linear_vl() %--First training
-        else %--All later trainings
-            Q0 = exp(jacStructLearned.noise_coef(1));
-            Q1 = exp(jacStructLearned.noise_coef(2));
-            R0 = exp(jacStructLearned.noise_coef(3));
-            R1 = exp(jacStructLearned.noise_coef(4));
-            R2 = exp(jacStructLearned.noise_coef(5));
-            print_flag = false;
-            path2data = mp.path.jac;
-            lr = mp.est.lr;
-            lr2 = mp.est.lr2;
-            epoch = mp.est.epoch;
-            py.falco_systemID.linear_vl(Q0, Q1, R0, R1, R2, lr, lr2, epoch, print_flag,path2data);
-        end
-        mp.flagUseLearnedJac = 1;
-        data_train.u1 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
-        data_train.u2 = zeros(mp.dm1.Nact, mp.dm1.Nact, n_batch);
-        data_train.u1p = zeros(mp.dm1.Nact, mp.dm1.Nact, 2*mp.est.probe.Npairs+1, n_batch);
-        data_train.u2p = zeros(mp.dm1.Nact, mp.dm1.Nact, 2*mp.est.probe.Npairs+1, n_batch);
-        data_train.I = zeros(size(mp.Fend.corr.mask, 1), size(mp.Fend.corr.mask, 2), 2*mp.est.probe.Npairs+1, n_batch);
-
-    end 
-    
-    mp.data_train = data_train;
-
-end %--END OF FUNCTION
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% falco_ctrl_cull.m is a nested function in order to save RAM since the 
-% output of the Jacobian structure is large and I do not want it copied.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% INPUTS:
-% -mp = structure of model parameters
-% -cvar = structure containing variables for the controller
-% -jacStruct = structure containing the Jacobians
-%
-% OUTPUTS:
-% -mp = structure of model parameters
-
-function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
-
-        %% Cull Weak Actuators
-        %--MOVE TO A FUNCTION
-        %--Reduce the number of actuators used based on their relative strength in the Jacobian
-        if(cvar.flagCullAct && cvar.flagRelin)
-            fprintf('Weeding out weak actuators from the control Jacobian...\n'); 
-            if(any(mp.dm_ind==1))
-                %--Crop out very weak-effect actuators
-                G1intNorm = zeros(mp.dm1.Nele,1);
-                G1intNorm(1:end) = sum( mean(abs(jacStruct.G1).^2,3), 1);
-                G1intNorm = G1intNorm/max(max(G1intNorm));
-                mp.dm1.act_ele = find(G1intNorm>=10^(mp.logGmin));
-                clear G1intNorm
-            end
-            if(any(mp.dm_ind==2))
-                G2intNorm = zeros(mp.dm2.Nele,1);
-                G2intNorm(1:end) = sum( mean(abs(jacStruct.G2).^2,3),1);
-                G2intNorm = G2intNorm/max(max(G2intNorm));
-                mp.dm2.act_ele = find(G2intNorm>=10^(mp.logGmin));
-                clear G2intNorm
-            end
-            
-            if(any(mp.dm_ind==5))
-                G5intNorm = zeros(mp.dm5.Nele,1);
-                G5intNorm(1:end) = sum( mean(abs(jacStruct.G5).^2,3),1);
-                G5intNorm = G5intNorm/max(max(G5intNorm));
-                mp.dm5.act_ele = find(G5intNorm>=10^(mp.logGmin));
-                clear G5intNorm
-            end
-
-            if(any(mp.dm_ind==8))
-                G8intNorm = zeros(mp.dm8.Nele,1);
-                G8intNorm(1:end) = sum( mean(abs(jacStruct.G8).^2,3),1);
-                G8intNorm = G8intNorm/max(max(G8intNorm));
-                mp.dm8.act_ele = find(G8intNorm>=10^(mp.logGmin));
-                clear G8intNorm
-            end    
-            if(any(mp.dm_ind==9))
-                G9intNorm = zeros(mp.dm9.Nele,1);
-                G9intNorm(1:end) = sum( mean(abs(jacStruct.G9).^2,3),1);
-                G9intNorm = G9intNorm/max(max(G9intNorm));
-                mp.dm9.act_ele = find(G9intNorm>=10^(mp.logGmin));
-                clear G9intNorm
-            end
-
-            %--Add back in all actuators that are tied (to make the tied actuator logic easier)
-            if(any(mp.dm_ind==1))
-                for ti=1:size(mp.dm1.tied,1)
-                    if(any(mp.dm1.act_ele==mp.dm1.tied(ti,1))==false);  mp.dm1.act_ele = [mp.dm1.act_ele; mp.dm1.tied(ti,1)];  end
-                    if(any(mp.dm1.act_ele==mp.dm1.tied(ti,2))==false);  mp.dm1.act_ele = [mp.dm1.act_ele; mp.dm1.tied(ti,2)];  end
-                end
-                mp.dm1.act_ele = sort(mp.dm1.act_ele); %--Need to sort for the logic in model_Jacobian.m
-            end
-            if(any(mp.dm_ind==2))
-                for ti=1:size(mp.dm2.tied,1)
-                    if(any(mp.dm2.act_ele==mp.dm2.tied(ti,1))==false);  mp.dm2.act_ele = [mp.dm2.act_ele; mp.dm2.tied(ti,1)];  end
-                    if(any(mp.dm2.act_ele==mp.dm2.tied(ti,2))==false);  mp.dm2.act_ele = [mp.dm2.act_ele; mp.dm2.tied(ti,2)];  end
-                end
-                mp.dm2.act_ele = sort(mp.dm2.act_ele);
-            end
-            if(any(mp.dm_ind==8))
-                for ti=1:size(mp.dm8.tied,1)
-                    if(any(mp.dm8.act_ele==mp.dm8.tied(ti,1))==false);  mp.dm8.act_ele = [mp.dm8.act_ele; mp.dm8.tied(ti,1)];  end
-                    if(any(mp.dm8.act_ele==mp.dm8.tied(ti,2))==false);  mp.dm8.act_ele = [mp.dm8.act_ele; mp.dm8.tied(ti,2)];  end
-                end
-                mp.dm8.act_ele = sort(mp.dm8.act_ele);
-            end
-            if(any(mp.dm_ind==9))
-                for ti=1:size(mp.dm9.tied,1)
-                    if(any(mp.dm9.act_ele==mp.dm9.tied(ti,1))==false);  mp.dm9.act_ele = [mp.dm9.act_ele; mp.dm9.tied(ti,1)];  end
-                    if(any(mp.dm9.act_ele==mp.dm9.tied(ti,2))==false);  mp.dm9.act_ele = [mp.dm9.act_ele; mp.dm9.tied(ti,2)];  end
-                end
-                mp.dm9.act_ele = sort(mp.dm9.act_ele);
-            end
-            
-            %--Update the number of elements used per DM
-            if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); end
-            if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); end
-            if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); end
-            if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); end
-            if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); end
-            %mp.NelePerDMvec = [length(mp.dm1.Nele), length(mp.dm2.Nele), length(mp.dm3.Nele), length(mp.dm4.Nele), length(mp.dm5.Nele), length(mp.dm6.Nele), length(mp.dm7.Nele), length(mp.dm8.Nele), length(mp.dm9.Nele) ];
-
-            if(any(mp.dm_ind==1)); fprintf('  DM1: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm1.Nele, mp.dm1.NactTotal,100*mp.dm1.Nele/mp.dm1.NactTotal); end
-            if(any(mp.dm_ind==2)); fprintf('  DM2: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm2.Nele, mp.dm2.NactTotal,100*mp.dm2.Nele/mp.dm2.NactTotal); end
-            if(any(mp.dm_ind==5)); fprintf('  DM5: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm5.Nele, mp.dm5.NactTotal,100*mp.dm5.Nele/mp.dm5.NactTotal); end
-            if(any(mp.dm_ind==8)); fprintf('  DM8: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm8.Nele, mp.dm8.NactTotal,100*mp.dm8.Nele/mp.dm8.NactTotal); end
-            if(any(mp.dm_ind==9)); fprintf('  DM9: %d/%d (%.2f%%) actuators kept for Jacobian\n', mp.dm9.Nele, mp.dm9.NactTotal,100*mp.dm9.Nele/mp.dm9.NactTotal); end
-            
-            %--Crop out unused actuators from the control Jacobian
-            if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1(:,mp.dm1.act_ele,:); end
-            if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2(:,mp.dm2.act_ele,:); end
-            if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5(:,mp.dm5.act_ele,:); end
-            if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8(:,mp.dm8.act_ele,:); end
-            if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9(:,mp.dm9.act_ele,:); end
-        end  
-
-end %--END OF FUNCTION falco_ctrl_cull.m
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% I placed the function falco_ctrl.m here as a nested
-% function in order to save RAM since the Jacobian structure
-% is large and I do not want it copied.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% INPUTS:
-% -mp = structure of model parameters
-% -cvar = structure containing variables for the controller
-% -jacStruct = structure containing the Jacobians
-%
-% OUTPUTS:
-% -mp = structure of model parameters
-% REVISION HISTORY:
-% --------------
-% Created by A.J. Riggs on 2018-10-04 by extracting material from falco_wfsc_loop.m.
-% ---------------
-
-function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Control Algorithm
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
-
-    fprintf('Using the Jacobian to make other matrices...'); tic;
-
-    %--Compute matrices for linear control with regular EFC
-    cvar.GstarG_wsum  = zeros(cvar.NeleAll,cvar.NeleAll); 
-    cvar.RealGstarEab_wsum = zeros(cvar.NeleAll, 1);
-
-    for im=1:mp.jac.Nmode
-
-        Gstack = [jacStruct.G1(:,:,im), jacStruct.G2(:,:,im), jacStruct.G3(:,:,im), jacStruct.G4(:,:,im), jacStruct.G5(:,:,im), jacStruct.G6(:,:,im), jacStruct.G7(:,:,im), jacStruct.G8(:,:,im), jacStruct.G9(:,:,im)];
-
-        %--Square matrix part stays the same if no re-linearization has occurrred. 
-        cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(im)*real(Gstack'*Gstack); 
-
-        %--The G^*E part changes each iteration because the E-field changes.
-        Eweighted = mp.WspatialVec.*cvar.EfieldVec(:,im); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
-        cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(im)*real(Gstack'*Eweighted); %--Apply the Jacobian weights and add to the total.
-
-    end
-    clear GallCell Gstack Eweighted % save RAM
-    
-    %--Make the regularization matrix. (Define only the diagonal here to save RAM.)
-    cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
-    cvar.EyeNorm = max(diag(cvar.GstarG_wsum ));
-    fprintf(' done. Time: %.3f\n',toc);
-
-    %--Call the Controller Function
-    fprintf('Control beginning ...\n'); tic
-    switch lower(mp.controller)
-
-        %--Established, conventional controllers
-        case{'plannedefc'} %--EFC regularization is scheduled ahead of time
-            [dDM,cvar] = falco_ctrl_planned_EFC(mp,cvar);
-
-        case{'gridsearchefc'}  %--Empirical grid search of EFC. Scaling factor for DM commands too.
-            [dDM,cvar] = falco_ctrl_grid_search_EFC(mp,cvar);
-            
-        
-        %--Experimental controllers
-        case{'plannedefcts'} %--EFC regularization is scheduled ahead of time. total stroke also minimized
-            [dDM,cvar] = falco_ctrl_planned_EFC_TS(mp,cvar);
-            
-        case{'plannedefccon'} %--Constrained-EFC regularization is scheduled ahead of time
-            [dDM,cvar] = falco_ctrl_planned_EFCcon(mp,cvar);
-            
-        case{'sm-cvx'} %--Constrained & bounded stroke minimization using CVX. The quadratic cost function is solved directly CVX.
-            cvar.dummy = 1;
-            [dDM,cvar] = falco_ctrl_SM_CVX(mp,cvar);
-            
-        case{'tsm'}
-            cvar.dummy = 1;
-            [dDM,cvar] = falco_ctrl_total_stroke_minimization(mp,cvar); 
-            
-    end
-    fprintf(' done. Time: %.3f sec\n',toc);
-    
-    %% Updates to DM commands
-
-    %--Update the DM commands by adding the delta control signal
-    if(any(mp.dm_ind==1));  mp.dm1.V = mp.dm1.V + dDM.dDM1V;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = mp.dm2.V + dDM.dDM2V;  end
-    if(any(mp.dm_ind==3));  mp.dm3.V = mp.dm3.V + dDM.dDM3V;  end
-    if(any(mp.dm_ind==4));  mp.dm4.V = mp.dm4.V + dDM.dDM4V;  end
-    if(any(mp.dm_ind==5));  mp.dm5.V = mp.dm5.V + dDM.dDM5V;  end
-    if(any(mp.dm_ind==6));  mp.dm6.V = mp.dm6.V + dDM.dDM6V;  end
-    if(any(mp.dm_ind==7));  mp.dm7.V = mp.dm7.V + dDM.dDM7V;  end
-    if(any(mp.dm_ind==8));  mp.dm8.V = mp.dm8.V + dDM.dDM8V;  end
-    if(any(mp.dm_ind==9));  mp.dm9.V = mp.dm9.V + dDM.dDM9V;  end
-
-    %%--Save the delta from the previous command
-    if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end
-    if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end
-    if(any(mp.dm_ind==3));  mp.dm3.dV = dDM.dDM3V;  end
-    if(any(mp.dm_ind==4));  mp.dm4.dV = dDM.dDM4V;  end
-    if(any(mp.dm_ind==5));  mp.dm5.dV = dDM.dDM5V;  end
-    if(any(mp.dm_ind==6));  mp.dm6.dV = dDM.dDM6V;  end
-    if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end
-    if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end
-    if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end
-    
-    %--Update the tied actuator pairs
-    if(any(mp.dm_ind==1));  mp.dm1.tied = dDM.dm1tied;  end
-    if(any(mp.dm_ind==2));  mp.dm2.tied = dDM.dm2tied;  end
-
-end %--END OF NESTED FUNCTION

@@ -48,16 +48,18 @@ switch dm.centering % 0 shift for pixel-centered pupil, or -Darray/2/Narray shif
         error('falco_gen_dm_surf: centering variable must be either pixel or interpixel')
 end
 
+%--PROPER initialization
 pupil_ratio = 1; % beam diameter fraction
 wl_dummy = 1e-6; %--dummy value needed to initialize wavelength in PROPER (meters)
-
 bm  = prop_begin(N*dx, wl_dummy, N, pupil_ratio);
+
+%--Apply various constraints to DM commands
+dm = falco_enforce_dm_constraints(dm);
 
 %--Quantization of DM actuation steps based on least significant bit of the
 % DAC (digital-analog converter). In height, so called HminStep
 % If HminStep (minimum step in H) is defined, then quantize the DM voltages
 if(isfield(dm,'HminStep') && ~any(isnan(dm.HminStep(:))))
-
     % If desired method is not defined, set it to the default. 
     if(~isfield(dm,'HminStepMethod'))
         dm.HminStepMethod = 'round';
@@ -67,11 +69,11 @@ if(isfield(dm,'HminStep') && ~any(isnan(dm.HminStep(:))))
 	dm = falco_discretize_dm_surf(dm, dm.HminStepMethod);
     H = dm.VtoH.*dm.Vquantized;
 else
-
     % Quantization not desired; send raw, continuous voltages
     H = dm.VtoH.*dm.V;
 end
 
+%--Generate the DM surface
 [~,DMsurf] = propcustom_dm(bm, H, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps,...
     'inf_sign',dm.inf_sign, 'inf_fn', dm.inf_fn);
 

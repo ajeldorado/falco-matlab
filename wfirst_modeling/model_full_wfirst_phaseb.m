@@ -50,7 +50,7 @@ function [wavefront,  sampling_m]= model_full_wfirst_phaseb(lambda_m, output_dim
 
 %--mask design data path
 
-data_dir = '/home/krist/afta/phaseb/phaseb_data';  % no trailing '/'
+data_dir = '/home/krist/cgi/phaseb/phaseb_data';  % no trailing '/'
 
 if ( isfield(optval,'data_dir') )
     data_dir = optval.data_dir;
@@ -187,24 +187,21 @@ elseif  strcmp(cor_type,'hlc_custom')
     lambda0_m = optval.lambda0_m;
     nlams = optval.nlams;             % number of occ trans lambda provided
     bw = optval.bw;
+    thetaString = optval.thetaString;
     if(nlams==1)
         lam_occ = lambda0_m;
     else
         lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m;%[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
     end
     wlam = find( round(1e14*lambda_m) == round(1e14*lam_occ) ); 	% find exactly matching FPM wavelength
-    if(bw==0.10)
-        occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
-        occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
-    else
-        occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'real.fits'];
-        occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta5.0pol'   fpm_axis   '_' 'imag.fits'];
-    end
+    occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol'   fpm_axis   '_' 'real.fits'];
+    occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol'   fpm_axis   '_' 'imag.fits'];
+
     n_default = 1024;	% gridsize in non-critical areas
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
     field_stop_radius_lam0 = 9.0; 
-elseif(strcmpi(cor_type, 'spc_ifs_custom')) 
+elseif(strcmpi(cor_type, 'spc_spec_custom')) 
     pupil_file = optval.pupil_file;
     pupil_diam_pix = optval.pupil_diam_pix; %1000;
     pupil_mask_file = optval.pupil_mask_file;% [file_dir  'SPM_SPC-20190130.fits']; %--SPM file name
@@ -218,7 +215,7 @@ elseif(strcmpi(cor_type, 'spc_ifs_custom'))
     n_mft = 1400;
     n_from_lyotstop = 4096;
     
-elseif  sum(strfind(cor_type, 'spc-ifs' ))
+elseif  sum(strfind(cor_type, 'spc-spec' ))
     file_dir = [data_dir '/spc_20190130/'];       % must have trailing "/"
     pupil_diam_pix = 1000;
     pupil_file = [file_dir  'pupil_SPC-20190130_rotated.fits'];
@@ -227,7 +224,7 @@ elseif  sum(strfind(cor_type, 'spc-ifs' ))
     fpm_sampling_lam0 = 0.05; 	% sampling in lambda0/D of FPM mask
     lyot_stop_file = [file_dir  'LS_SPC-20190130.fits'];
     lambda0_m = 0.73e-6;        % FPM scaled for this central wavelength
-    if strcmp(cor_type, 'spc-ifs_short'); lambda0_m = 0.66e-6;  end      
+    if strcmp(cor_type, 'spc-spec_short'); lambda0_m = 0.66e-6;  end      
     n_default = 2048;           % gridsize in non-critical areas
     n_to_fpm = 2048;            % gridsize to/from FPM
     n_mft = 1400;

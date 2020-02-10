@@ -14,6 +14,8 @@
 %
 %
 % REVISION HISTORY:
+% - Modified on 2019-09-26 by A.J. Riggs to handle DM actuator constraints
+% outside this function in a more user-robust way.
 % - Modified on 2019-06-25 by A.J. Riggs to pass out tied actuator pairs. 
 % - Modified on 2018-07-24 to use Erkin's latest controller strategy.
 % - Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
@@ -50,9 +52,6 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if(mp.flagParfor) %--Parallelized
         parfor ni = 1:Nvals
             [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
-            %--Tied actuators
-            if(any(mp.dm_ind==1)); dm1tied{ni} = dDM_temp.dm1tied; end
-            if(any(mp.dm_ind==2)); dm2tied{ni} = dDM_temp.dm2tied; end
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
@@ -63,9 +62,6 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     else %--Not Parallelized
         for ni = Nvals:-1:1
             [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
-            %--Tied actuators
-            if(any(mp.dm_ind==1)); dm1tied{ni} = dDM_temp.dm1tied; end
-            if(any(mp.dm_ind==2)); dm2tied{ni} = dDM_temp.dm2tied; end
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
@@ -88,9 +84,6 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin,indBest] = min(Inorm_list(:));
-    %--Tied actuators
-    if(any(mp.dm_ind==1)); dDM.dm1tied = dm1tied{indBest}; end
-    if(any(mp.dm_ind==2)); dDM.dm2tied = dm2tied{indBest}; end
     %--delta voltage commands
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
     if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
@@ -106,6 +99,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
     end
     
+    %% Plot the grid search results
     if(mp.flagPlot)
         if(length(mp.ctrl.dmfacVec)==1)
             figure(499); semilogy(mp.ctrl.log10regVec,Inorm_list,'-bd','Linewidth',3)
@@ -125,5 +119,5 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             drawnow;
         end
     end
-%%
+
 end %--END OF FUNCTION
