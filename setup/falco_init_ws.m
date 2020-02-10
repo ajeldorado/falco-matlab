@@ -44,6 +44,7 @@ if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to pro
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
 if(isfield(mp,'flagZWFS')==false);  mp.flagZWFS = false; end %--Flag to use Zernike wavefront sensing against a known good reference point
 if(isfield(mp,'flagZWFSEFC')==false);  mp.flagZWFSEFC = false; end %--Flag for whether to take an image of the ZWFS output or a normal image of Fend
+if(isfield(mp,'flagabsZWFS')==false);  mp.flagabsZWFS = false; end %--Flag to use traditional absolute ZWFS
 
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
@@ -279,15 +280,20 @@ switch upper(mp.coro)
         mp = falco_config_gen_FPM_LC(mp); 
     case{'SPLC','FLC'}
         mp = falco_config_gen_FPM_SPLC(mp);
-    case{'RODDIER'}%,'VORTEX','VC','AVC'} %Added Vortex cases to enable ZWFS
-        mp = falco_config_gen_FPM_Roddier(mp);  
+    case{'RODDIER'}
+        mp = falco_config_gen_FPM_Roddier(mp);
+    case{'VORTEX','VC','AVC'} %Added Vortex cases to enable ZWFS
+        if(mp.flagZWFS || mp.flagabsZWFS)
+            mp = falco_config_gen_FPM_Roddier(mp);
+        end
 end
 
 %% FPM coordinates, [meters] and [dimensionless]
 
 switch upper(mp.coro)
-    case{'VORTEX','VC','AVC'}   %--Nothing needed to run the vortex model
-    %...Except when doing ZWFS...
+    if(~mp.flagZWFS || ~mp.flagabsZWFS)
+        case{'VORTEX','VC','AVC'}   %--Nothing needed to run the vortex model except when running ZWFS
+    end
     case 'SPHLC' %--Moved to separate function
     otherwise
         

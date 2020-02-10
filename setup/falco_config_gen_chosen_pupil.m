@@ -190,8 +190,8 @@ switch upper(mp.whichPupil)
             mp.P1.full.mask = abs(mp.P1.full.mask);
             mp.P1.compact.mask = abs(mp.P1.compact.mask);
             
-            if(mp.flagPlot)
-                figure;imagesc(angle(mp.P1.full.E(:,:,1,1))/2/pi);axis image;colorbar;title('Phase of telescope aperture (waves)');
+            if((mp.flagZWFS || mp.flagabsZWFS) && mp.flagPlot)
+                figure(2);imagesc(angle(mp.P1.full.E(:,:,1,1))/2/pi);axis image;colorbar;title('Phase of telescope aperture (waves)');
             end
         end
     

@@ -88,6 +88,15 @@ if(mp.useGPU)
     if(any(mp.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
 end
 
+%--For including DM surface errors (quilting, scalloping, etc.)
+if(mp.flagDMwfe) % && (mp.P1.full.Nbeam==mp.P1.compact.Nbeam))
+    if(any(mp.dm_ind==1)); Edm1WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm1.compact.wfe,NdmPad,'extrapval',0)); else; Edm1WFE = ones(NdmPad); end
+    if(any(mp.dm_ind==2)); Edm2WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm2.compact.wfe,NdmPad,'extrapval',0)); else; Edm2WFE = ones(NdmPad); end
+else
+    Edm1WFE = ones(NdmPad);
+    Edm2WFE = ones(NdmPad);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -98,7 +107,7 @@ EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to 
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if( abs(mp.d_P2_dm1)~=0 ); Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1); else; Edm1 = EP2; end  %--E-field arriving at DM1
-Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
+Edm1 = DM1stop.*Edm1WFE.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 %--DM1---------------------------------------------------------
 if(whichDM==1) 

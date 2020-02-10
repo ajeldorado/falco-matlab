@@ -92,6 +92,13 @@ if(mp.flagZWFS) %Get a reference image and wave for the ZWFS to drive the system
     mp = falco_config_gen_chosen_pupil(mp);
 end
 
+disp('Applying WFE to primary mirror...');
+mp.P1.pistons = randn(1,mp.numSegments)/1000;% Segment piston in waves 
+mp.P1.tiltxs  = randn(1,mp.numSegments)/500;% %Tilts on segments in horiz direction (waves/apDia)
+mp.P1.tiltys  = randn(1,mp.numSegments)/500;% %Tilts on segments in vert direction (waves/apDia)
+
+mp = falco_config_gen_chosen_pupil(mp);
+
 Im = falco_get_summed_image(mp);
 
 %%

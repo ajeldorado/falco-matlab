@@ -50,16 +50,34 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of
 
 Im = falco_get_summed_image(mp);
 
+%% Take reference wave for ZWFS
+
+ZWFSRefWave = abs(falco_zwfs_getReferenceWave(mp));
+ZWFSInitIm = falco_zwfs_sim_image(mp);
+
+ZWFSRefWave = padOrCropEven(ZWFSRefWave,length(mp.P1.full.mask));
+ZWFSInitIm = padOrCropEven(ZWFSInitIm,length(mp.P1.full.mask));
+ZWFSMask = imerode(logical(mp.P1.full.mask),strel('disk', 2));
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Begin the Correction Iterations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    %% Apply WFE to primary mirror
+
+    disp('Applying WFE to primary mirror...');
+    mp.P1.pistons = randn(1,mp.numSegments)/1000;% Segment piston in waves 
+    mp.P1.tiltxs  = randn(1,mp.numSegments)/500;% %Tilts on segments in horiz direction (waves/apDia)
+    mp.P1.tiltys  = randn(1,mp.numSegments)/500;% %Tilts on segments in vert direction (waves/apDia)
+
+    mp = falco_config_gen_chosen_pupil(mp);
+
 for Itr=1:mp.Nitr
 
     %--Start of new estimation+control iteration
     fprintf(['Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
-
+    
     %--Re-compute the starlight normalization factor for the compact and full models (to convert images to normalized intensity). No tip/tilt necessary.
     mp = falco_get_PSF_norm_factor(mp);
     
@@ -134,8 +152,76 @@ for Itr=1:mp.Nitr
         hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
     end
 
-%% WFSC goes here
-    
+
+%% Take new ZWFS image for reconstruction
+
+ZWFSErrIm = falco_zwfs_sim_image(mp);
+ZWFSErrIm = padOrCropEven(ZWFSErrIm,length(mp.P1.full.mask));
+
+%% Reconstruct pupil phases and turn that into a differential surface map
+
+disp('Reconstructing the wavefront...');
+ZWFSInitPhase = falco_zwfs_reconstructor(mp.P1.full.mask, ZWFSInitIm, ZWFSMask, ZWFSRefWave, 'w', mp);
+ZWFSInitPhase = circshift(rot90(ZWFSInitPhase,2),[1 1]);
+
+ZWFSRecPhase = falco_zwfs_reconstructor(mp.P1.full.mask, ZWFSErrIm, ZWFSMask, ZWFSRefWave, 'w', mp);
+ZWFSRecPhase = circshift(rot90(ZWFSRecPhase,2),[1 1]);
+
+ZWFSInitSurf = ZWFSInitPhase/(4*pi)*mp.lambda0;
+ZWFSInitSurf(~mp.P3.full.mask) = 0;
+
+ZWFSCorrPhase = ZWFSRecPhase - ZWFSInitPhase;
+ZWFSCorrSurf = ZWFSCorrPhase/(4*pi)*mp.lambda0;
+ZWFSCorrSurf(~mp.P3.full.mask) = 0;
+
+ZWFSRecSurf = ZWFSRecPhase/(4*pi)*mp.lambda0; %Need to change this for polychromatic and out-of-band cases!
+ZWFSRecSurf(~mp.P3.full.mask) = 0;
+
+Diff = ZWFSCorrPhase/(4*pi) - angle(mp.P1.full.E(:,:,1,1))/(4*pi);
+
+figure(301);
+imagesc(ZWFSInitSurf*1e9); axis equal tight; colorbar; caxis([-20 20]);
+title('Initial Pupil Reconstruction (DH solution)');
+figure(302);
+imagesc(ZWFSRecSurf*1e9); axis equal tight; colorbar; caxis([-20 20]);
+title('Pupil Reconstruction after WFE applied');
+figure(303);
+imagesc(ZWFSCorrSurf*1e9); axis equal tight; colorbar; caxis([-1 1]);
+title('Pupil Surface Difference - Send to DM?');
+figure(304);
+imagesc(Diff); axis equal tight; colorbar; caxis([-0.002 0.002]);
+title('Reconstructor Error (waves)');
+
+ZWFSCorr_dDMSurf = rot90(falco_fit_dm_surf(mp.dm1, ZWFSCorrSurf), 2);
+mp.dm1.V = mp.dm1.V - ZWFSCorr_dDMSurf./mp.dm1.VtoH;
+ZWFSCorr_testDMSurf = falco_gen_dm_surf(mp.dm1, mp.dm1.dx, mp.dm1.NdmPad);
+
+zp = mp;
+zp.dm1.V = ZWFSCorr_dDMSurf./zp.dm1.VtoH;
+dDMSurftest = falco_gen_dm_surf(zp.dm1, zp.dm1.dx, zp.dm1.NdmPad);
+
+figure(305);
+imagesc(ZWFSCorr_dDMSurf*1e9); axis equal tight; colorbar;
+title('Differential DM Surface');
+
+% figure(306);
+% imagesc(ZWFSCorr_testDMSurf*1e9); axis equal tight; colorbar;
+% title('ZWFS Corrected DM Surface');
+
+figure(307);
+imagesc(dDMSurftest*1e9); axis equal tight; colorbar;
+title("Differential command as DM surface");
+
+testsurf = padOrCropEven(ZWFSCorrSurf, mp.dm1.NdmPad);
+differror = testsurf - dDMSurftest;
+
+figure(308);
+imagesc(log10(abs(differror)*1e9)); axis equal tight; colorbar;
+title("Differential DM Command Reconstruction Error");
+
+% ZWFSRecDM1V = ZWFSRecSurf./mp.dm1.VtoH;
+% mp.dm1.V = falco_fit_dm_surf(mp.dm1, ZWFSRecDM1V);
+
 %-----------------------------------------------------------------------------------------
 %% DM Stats
 

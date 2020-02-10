@@ -27,13 +27,14 @@ EXAMPLE_defaults_LUVOIRB_VC_design
 %% Step 3: Overwrite default values as desired
 
 mp.SeriesNum = 1;
-mp.TrialNum = 99;
+mp.TrialNum = 101;%99;
 
 mp.flagParfor = false;
 mp.flagPlot = true;
 mp.flagFiber = false;
 mp.flagLenslet = false;
-mp.flagZWFS = true;
+mp.flagZWFS = false;
+mp.flagabsZWFS = true;
 
 %--[OPTIONAL] Start from a previous FALCO trial's DM settings
 fn_prev = 'Series0867_Trial5309_Vortex_LUVOIR_B_offaxis_2DM64_z0.8_IWA2_OWA26_1lams400nm_BW2.5_gridsearchEFC_snippet.mat';
@@ -48,13 +49,18 @@ mp.flagApod = true;
 mp.whichPupil = 'LUVOIR_B_offaxis';
 mp.F3.VortexCharge = 6;
 
+% mp.P1.full.Nbeam = 1500;
+% mp.P2.full.Nbeam = 1500;
+% mp.P3.full.Nbeam = 1500;
+% mp.P4.full.Nbeam = 1500;
+
 %%--Bandwidth and Wavelength Specs
 mp.lambda0 = 400e-9; % central wavelength of bandpass (meters)
 mp.fracBW = 10e-9/mp.lambda0;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
 mp.Nsbp = 1;  % number of wavelengths or sub-bandpasses (sbp) across entire spectral band
 
 %%-- segmented mirror errors
-numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
+mp.numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
 % LUVOIR B has four rings, but ignores some corner segmentes 
 
 %%-- Focal Plane Mask (F3) Properties
@@ -86,4 +92,8 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Perform wavefront sensing and control
 
-out = falco_wfsc_loop(mp);
+if(mp.flagabsZWFS)
+    out = falco_Zwfsc_loop(mp);
+else
+    out = falco_wfsc_loop(mp);
+end
