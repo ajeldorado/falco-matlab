@@ -64,14 +64,14 @@ ZWFSMask = imerode(logical(mp.P1.full.mask),strel('disk', 2));
 %Begin the Correction Iterations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %% Apply WFE to primary mirror
+%% Apply WFE to primary mirror
 
-    disp('Applying WFE to primary mirror...');
-    mp.P1.pistons = randn(1,mp.numSegments)/1000;% Segment piston in waves 
-    mp.P1.tiltxs  = randn(1,mp.numSegments)/500;% %Tilts on segments in horiz direction (waves/apDia)
-    mp.P1.tiltys  = randn(1,mp.numSegments)/500;% %Tilts on segments in vert direction (waves/apDia)
+disp('Applying WFE to primary mirror...');
+mp.P1.pistons = randn(1,mp.numSegments)/1000;% Segment piston in waves 
+mp.P1.tiltxs  = randn(1,mp.numSegments)/500;% %Tilts on segments in horiz direction (waves/apDia)
+mp.P1.tiltys  = randn(1,mp.numSegments)/500;% %Tilts on segments in vert direction (waves/apDia)
 
-    mp = falco_config_gen_chosen_pupil(mp);
+mp = falco_gen_chosen_pupil(mp);
 
 for Itr=1:mp.Nitr
 
@@ -123,7 +123,7 @@ for Itr=1:mp.Nitr
 
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
-    [mp,thput] = falco_compute_thput(mp);
+    [mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
     if(mp.flagFiber)
         mp.thput_vec(Itr) = max(thput);
     else
@@ -149,7 +149,7 @@ for Itr=1:mp.Nitr
         end
         hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
     else
-        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
     end
 
 

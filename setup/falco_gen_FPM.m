@@ -13,7 +13,11 @@ function [mp] = falco_gen_FPM(mp)
         case{'SPLC','FLC'}
             mp = falco_gen_FPM_SPLC(mp);
         case{'RODDIER'}
-            mp = falco_gen_FPM_Roddier(mp);  
+            mp = falco_gen_FPM_Roddier(mp);
+        case{'VORTEX','VC','AVC'} %Added Vortex cases to enable ZWFS
+            if(mp.flagZWFS)
+                mp = falco_gen_FPM_Roddier(mp);
+            end
     end
     
     %% Hybrid FPMs only:

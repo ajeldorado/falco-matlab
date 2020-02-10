@@ -62,13 +62,6 @@ end
 if(any(mp.dm_ind==8)); mp.dm8 = rmfield(mp.dm8,'compact'); end
 if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9,'compact'); end
 
-% If on the EFC step of ZWFS, go through model_ZWFS.  Otherwise, produce an
-% image of the final E-field like normal.
-if(mp.flagZWFSEFC)
-    Eout = model_ZWFS(mp, modvar);
-    return
-end
-
 %--Set the wavelength
 if(isfield(modvar,'lambda')) %--For FALCO or for evaluation without WFSC
     lambda = modvar.lambda;

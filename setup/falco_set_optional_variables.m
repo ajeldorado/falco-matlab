@@ -39,6 +39,7 @@ if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end 
 if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
 if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to propagate through a lenslet array placed in Fend before coupling light into fibers
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
+if(isfield(mp,'flagZWFS')==false);  mp.flagZWFS = false; end %--Flag to use Zernike wavefront sensing
 
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end

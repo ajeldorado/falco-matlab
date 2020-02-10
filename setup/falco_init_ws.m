@@ -9,6 +9,8 @@
 
 function [mp,out] = falco_init_ws(fn_config)
 
+load(fn_config,'mp'); %% Read inputs as structures from a .mat config file
+
 mp = falco_set_optional_variables(mp); % Optional/hidden boolean flags and variables
 
 mp = falco_set_spectral_properties(mp);

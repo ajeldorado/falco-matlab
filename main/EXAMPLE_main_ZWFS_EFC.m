@@ -33,8 +33,7 @@ mp.flagParfor = false;
 mp.flagPlot = true;
 mp.flagFiber = false;
 mp.flagLenslet = false;
-mp.flagZWFS = false;
-mp.flagabsZWFS = true;
+mp.flagZWFS = true;
 
 %--[OPTIONAL] Start from a previous FALCO trial's DM settings
 fn_prev = 'Series0867_Trial5309_Vortex_LUVOIR_B_offaxis_2DM64_z0.8_IWA2_OWA26_1lams400nm_BW2.5_gridsearchEFC_snippet.mat';
@@ -44,7 +43,7 @@ mp.dm2.V = temp.out.DM2V;
 clear temp
 
 %%--Coronagraph and Pupil Type
-mp.coro = 'Vortex';    %--Tested Options: 'LC','HLC','SPLC','Vortex'
+mp.coro = 'VORTEX';    %--Tested Options: 'LC','HLC','SPLC','VORTEX'
 mp.flagApod = true;
 mp.whichPupil = 'LUVOIR_B_offaxis';
 mp.F3.VortexCharge = 6;
@@ -92,7 +91,7 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Perform wavefront sensing and control
 
-if(mp.flagabsZWFS)
+if(mp.flagZWFS)
     out = falco_Zwfsc_loop(mp);
 else
     out = falco_wfsc_loop(mp);

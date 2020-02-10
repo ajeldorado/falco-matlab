@@ -70,35 +70,6 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of
 
 %% Take initial broadband image 
 
-if(mp.flagZWFS) %Get a reference image and wave for the ZWFS to drive the system back to
-    mp.flagZWFSEFC = true;
-    mp.ZWFSreferenceimage = falco_get_summed_image(mp);
-    
-    for si=1:mp.Nsbp
-        modvar.wpsbpIndex = 1;
-        modvar.sbpIndex = si;
-        modvar.whichSource = 'star';
-        mp.ZWFSreferencewave(:,:,si) = model_ZWFS(mp, modvar);
-    end
-    mp.flagZWFSEFC = false;
-    
-    %%-- segmented mirror errors
-    numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
-    % LUVOIR B has four rings, but ignores some corner segmentes 
-    disp('Applying WFE to primary mirror...');
-    mp.P1.pistons = randn(1,numSegments)/10000;% Segment piston in waves 
-    mp.P1.tiltxs  = randn(1,numSegments)/5000;% %Tilts on segments in horiz direction (waves/apDia)
-    mp.P1.tiltys  = randn(1,numSegments)/5000;% %Tilts on segments in vert direction (waves/apDia)
-    mp = falco_config_gen_chosen_pupil(mp);
-end
-
-disp('Applying WFE to primary mirror...');
-mp.P1.pistons = randn(1,mp.numSegments)/1000;% Segment piston in waves 
-mp.P1.tiltxs  = randn(1,mp.numSegments)/500;% %Tilts on segments in horiz direction (waves/apDia)
-mp.P1.tiltys  = randn(1,mp.numSegments)/500;% %Tilts on segments in vert direction (waves/apDia)
-
-mp = falco_config_gen_chosen_pupil(mp);
-
 Im = falco_get_summed_image(mp);
 
 %%

@@ -10,9 +10,15 @@ function mp = falco_get_FPM_coordinates(mp)
 
 
 switch upper(mp.coro)
-    case{'VORTEX','VC','AVC'}   %--Nothing needed to run the vortex model
+
     case 'SPHLC' %--Moved to separate function
     otherwise
+        
+        if(~mp.flagZWFS)
+            if strcmp(mp.coro, 'VORTEX') || strcmp(mp.coro, 'VC') || strcmp(mp.coro, 'AVC') %--Nothing needed to run the vortex model except when running ZWFS
+                return
+            end
+        end
         
         switch mp.layout
             case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
