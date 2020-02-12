@@ -248,6 +248,7 @@ end
 
 if(mp.useGPU); Eout = gather(Eout); end
 
+%--Single-mode fiber propagation
 if(mp.flagFiber)
     if(mp.flagLenslet)
         Efiber = cell(mp.Fend.Nlens,1);

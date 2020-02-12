@@ -15,7 +15,7 @@ switch upper(mp.coro)
     otherwise
         
         if(~mp.flagZWFS)
-            if strcmp(mp.coro, 'VORTEX') || strcmp(mp.coro, 'VC') || strcmp(mp.coro, 'AVC') %--Nothing needed to run the vortex model except when running ZWFS
+            if strcmpi(mp.coro, 'VORTEX') || strcmpi(mp.coro, 'VC') || strcmpi(mp.coro, 'AVC') %--Nothing needed to run the vortex model except when running ZWFS
                 return
             end
         end
