@@ -31,8 +31,8 @@ primaryCenterX = 0.0;
 primaryCenterY = 0.0;
 % primarradiusYYpixels = 0*primarradiusYY*ODpixels;
 
-secondarradiusYX = 1208.5/ODpixels;
-secondarradiusYY = 1219.0/ODpixels;
+secondaryRadiusX = 1208.5/ODpixels;
+secondaryRadiusY = 1219.0/ODpixels;
 secondaryCenterX = -0.0/ODpixels; % -0.5/ODpixels;
 secondaryCenterY = -1.8/ODpixels; % -1.3/ODpixels;
 
@@ -236,8 +236,8 @@ if(flagLyot == false)
     % primaryAperture = 1;
 
     %% SECONDARY MIRROR (INNER DIAMETER)
-    ra_ID_x = magFac*(secondarradiusYX + pad_COBS);
-    ra_ID_y = magFac*(secondarradiusYY + pad_COBS);
+    ra_ID_x = magFac*(secondaryRadiusX + pad_COBS);
+    ra_ID_y = magFac*(secondaryRadiusY + pad_COBS);
     cx_ID = magFac*secondaryCenterX;
     cy_ID = magFac*secondaryCenterY;
     cxy = rotMat*[cx_ID; cy_ID];

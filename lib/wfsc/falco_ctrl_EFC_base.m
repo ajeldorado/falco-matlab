@@ -53,23 +53,22 @@ duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.
 %% Take images and compute average intensity in dark hole
 
 if(mp.ctrl.flagUseModel) %--Perform a model-based grid search using the compact model
-    if(mp.flagFiber)
-        %--Not available yet
-    else
+    if(mp.flagFiber == false)
         Itotal = falco_get_expected_summed_image(mp,cvar);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
     end
 else %--Perform an empirical grid search with actual images from the testbed or full model
-    if(mp.flagFiber)
+    if(mp.flagFiber == false)
+        Itotal = falco_get_summed_image(mp);
+        InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+    else
         IfiberTotal = falco_get_summed_image_fiber(mp);
         if(mp.flagLenslet)
             InormAvg = mean(max(max(IfiberTotal)));
         else
             InormAvg = mean(IfiberTotal(mp.Fend.corr.maskBool));
         end
-    else
-        Itotal = falco_get_summed_image(mp);
-        InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+
     end
 end
         

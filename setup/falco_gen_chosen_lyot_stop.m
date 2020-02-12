@@ -26,21 +26,26 @@ mp.P4.compact.dx = mp.P4.D/mp.P4.compact.Nbeam;
 switch upper(mp.whichPupil)
     case{'SIMPLE','SIMPLEPROPER','DST_LUVOIRB','ISAT'}
         
-        if(strcmpi(mp.whichPupil,'SIMPLEPROPER'));  inputs.flagPROPER = true;  end
-        inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam 
-        inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
-        inputs.OD = mp.P4.ODnorm;
-        inputs.ID = mp.P4.IDnorm;
-        inputs.Nstrut = mp.P4.Nstrut;
-        inputs.angStrut = mp.P4.angStrut; % Angles of the struts 
-        inputs.wStrut = mp.P4.wStrut; % spider width (fraction of the pupil diameter)
+        if(mp.compact.flagGenLS || mp.full.flagGenLS)
+            if(strcmpi(mp.whichPupil,'SIMPLEPROPER'));  inputs.flagPROPER = true;  end
+            inputs.OD = mp.P4.ODnorm;
+            inputs.ID = mp.P4.IDnorm;
+            inputs.Nstrut = mp.P4.Nstrut;
+            inputs.angStrut = mp.P4.angStrut; % Angles of the struts 
+            inputs.wStrut = mp.P4.wStrut; % spider width (fraction of the pupil diameter)
+        end
 
-        if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_Simple(inputs); end
-        
-        inputs.Nbeam = mp.P4.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
-        inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
-        
-        if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); end
+        if(mp.full.flagGenLS)
+            inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam 
+            inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
+            mp.P4.full.mask = falco_gen_pupil_Simple(inputs); 
+        end
+
+        if(mp.compact.flagGenLS)
+            inputs.Nbeam = mp.P4.compact.Nbeam; %--Number of pixels across the aperture or beam (independent of beam centering)
+            inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
+            mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
+        end
  
     case{'WFIRST20191009', 'WFIRST180718'}
 
