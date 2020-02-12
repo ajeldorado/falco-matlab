@@ -11,7 +11,7 @@
 % - Created by A.J. Riggs on 2019-05-15.
 % -------------------------------------------------------------------------
 
-function tableContrast = falco_FRN_InitialRawContrast(mp)
+function [tableContrast, tableCtoNI, data] = falco_FRN_InitialRawContrast(mp)
     
 %--First 4 columns (the easy, bookkeeping parts of the table)
 Nann = size(mp.eval.Rsens,1); %--Number of annuli
@@ -30,10 +30,10 @@ ImCoh = falco_get_summed_image(mp);
 fprintf('done. Time = %.2f s\n',toc)
 
 %--Compute coherent+incoherent light image
-tic; fprintf('Generating the PSF with polarization aberrations and stellar size... ')
+tic; fprintf('Generating the PSF with polarization aberrations ') %and stellar size... ')
 mp.full.pol_conds = [-2,-1,1,2]; %--Which polarization states to use when creating an image.
 mp.full.TTrms = 0; % [mas]
-mp.full.Dstar = 1; % [mas]
+mp.full.Dstar = 0;%1; % [mas]
 mp.full.Dtel = 2.3631; % [meters]
 mp.full.TipTiltNacross = 5; 
 ImBoth = falco_get_summed_image_TipTiltPol(mp);
@@ -105,9 +105,18 @@ if(mp.flagPlot)
     figure(183); imagesc(log10(Cinco),[-10 -8]); axis xy equal tight; colorbar; drawnow;
 end
 
+%--Extra outputs for computing custom contrast curves outside this function
+data.CtoNI = CtoNI;
+data.Ccoh = Ccoh;
+data.Cinco = Cinco;
+data.peakVals = peakVals;
+data.peak2D = peak2D;
+data.maskBoolQuad1 = maskBoolQuad1;
+
 %% Compute the average contrast in each annulus (or annular segment)
 CcohVec = zeros(Nann,1);
 CincoVec = zeros(Nann,1);
+CtoNIvec = zeros(Nann,1);
 rVec = zeros(Nann,1);
 
 for ia=1:Nann        
@@ -129,15 +138,23 @@ for ia=1:Nann
     %--Compute the average intensity over the selected region
     CcohVec(ia) = sum(sum(maskPartial.*Ccoh))/sum(sum(maskPartial));
     CincoVec(ia) = sum(sum(maskPartial.*Cinco))/sum(sum(maskPartial));
+    CtoNIvec(ia) = sum(sum(maskPartial.*CtoNI))/sum(sum(maskPartial));
     % figure(401); imagesc(maskPartial.*Ccoh); axis xy equal tight; colorbar; drawnow; pause(1);
 end
 
 if(mp.flagPlot)
     figure(411); semilogy(rVec,CcohVec,'-ko',rVec,CincoVec,':ko','Linewidth',3,'Markersize',8); 
+    figure(412); semilogy(rVec,CtoNIvec,'-bo','Linewidth',3,'Markersize',8); 
     set(gca,'Fontsize',20); set(gcf,'Color','w');
     drawnow;
 end
-    
+
+%--Extra outputs for computing custom contrast curves outside this function
+data.rVec = rVec;
+data.CcohVec = CcohVec;
+data.CincoVec = CincoVec;
+data.CtoNIvec = CtoNIvec;
+
 %% Fill in Column 5 of the table
 
 %--Coherent component
@@ -153,7 +170,15 @@ matContrast(2*Nann+2:2:end,5) = CincoVec; %--Incoherent, no MUF
 %% Make into a table for printing as a CSV file
 
 tableContrast = table(matContrast(:,1),matContrast(:,2),matContrast(:,3),matContrast(:,4),matContrast(:,5));
-tableContrast.Properties.VariableNames = {'index','coh_vs_incoh','annzone','NoMUF_vs_MUF','contrast'};
+tableContrast.Properties.VariableNames = {'index','coh_vs_incoh','annzone','MUF_vs_NoMUF','contrast'};
+
+%% Make table for CtoNI
+matCtoNI = zeros(Nann,2);
+matCtoNI(:,1) = (0:(Nann-1)).';
+matCtoNI(:,2) = CtoNIvec;
+
+tableCtoNI = table(matCtoNI(:,1),matCtoNI(:,2));
+tableCtoNI.Properties.VariableNames = {'annzone','CtoNI'};
 
 
 end %--END OF FUNCTION

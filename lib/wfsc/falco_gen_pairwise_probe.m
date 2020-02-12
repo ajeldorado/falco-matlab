@@ -75,14 +75,20 @@ switch lower(badAxis)
         omegaY = mp.est.probe.radius/2;
         probeCmd = magn*sinc(mX*XS).*sinc(mY*YS).*cos(2*pi*omegaY*YS + psi);
 
+    case 'm'
+        omegaX = mp.est.probe.Xloc/2;
+        omegaY = mp.est.probe.Yloc/2;
+        probeCmd = zeros(size(XS));
+        for i = 1:mp.Fend.Nfiber
+            probeCmd = probeCmd + magn*sin(2*pi*omegaX(i)*XS + 2*pi*omegaY(i)*YS + psi);
+        end
 end
 
 %--Option to use just the sincs for a zero phase shift. This avoids the
 % phase discontinuity along one axis (for this probe only!).
-if(psi==0)
+if(psi==0 && ~mp.flagFiber)
     m = 2*mp.est.probe.radius;
     probeCmd = magn*sinc(m*XS).*sinc(m*YS);
-
 end
 
 probeCmd = falco_fit_dm_surf(dm,probeCmd);

@@ -237,7 +237,7 @@ EP4 = mp.P4.full.croppedMask.*EP4; %padOrCropEven(EP4,mp.P4.full.Narr);
 
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
 EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
-EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta);
+EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.full.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
@@ -248,26 +248,35 @@ end
 
 if(mp.useGPU); Eout = gather(Eout); end
 
+%--Single-mode fiber propagation
 if(mp.flagFiber)
-    Efiber = cell(mp.Fend.Nlens,1);
-    
-    for nlens = 1:mp.Fend.Nlens
-        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering,'xfc',mp.Fend.x_lenslet_phys(nlens),'yfc',mp.Fend.y_lenslet_phys(nlens));
-        Elenslet = EFend.*mp.Fend.lenslet.mask;
-        EF5 = propcustom_mft_PtoF(Elenslet,mp.lensletFL,lambda,mp.Fend.dxi,mp.F5.dxi,mp.F5.Nxi,mp.F5.deta,mp.F5.Neta,mp.centering);
-        Efiber{nlens} = mp.F5.fiberMode(:).*sum(sum(mp.F5.fiberMode.*conj(EF5)));
+    if(mp.flagLenslet)
+        Efiber = cell(mp.Fend.Nlens,1);
+        sbpIndex = find(mp.sbp_centers == lambda);
+        
+        for nlens = 1:mp.Fend.Nlens
+            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering,'xfc',mp.Fend.x_lenslet_phys(nlens),'yfc',mp.Fend.y_lenslet_phys(nlens));
+            Elenslet = EFend.*mp.Fend.lenslet.mask;
+            EF5 = propcustom_mft_PtoF(Elenslet,mp.lensletFL,lambda,mp.Fend.dxi,mp.F5.dxi,mp.F5.Nxi,mp.F5.deta,mp.F5.Neta,mp.centering);
+            Efiber{nlens} = mp.F5.fiberMode(:,:,sbpIndex).*sum(sum(mp.F5.fiberMode(:,:,sbpIndex).*conj(EF5)));
+        end
+        
+        Efiber = permute(reshape(cell2mat(Efiber)', mp.F5.Nxi, mp.F5.Neta, mp.Fend.Nlens), [2,1,3]);
+        varargout{1} = Efiber;
+        
+    else  %Fibers placed in the focal plane with no lenslets
+        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+
+        sbpIndex = find(mp.sbp_centers == lambda);
+        
+        Efiber = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+        for i=1:mp.Fend.Nfiber
+            Eonefiber = mp.Fend.fiberMode(:,:,sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,sbpIndex,i).*conj(EFend)));
+            Efiber = Efiber + Eonefiber;
+        end
+        
+        varargout{1} = Efiber;
     end
-
-    Efiber = permute(reshape(cell2mat(Efiber)', mp.F5.Nxi, mp.F5.Neta, mp.Fend.Nlens), [2,1,3]);
-    varargout{1} = Efiber;
 end
-
-% function [s,varargout] = returnVariableNumOutputs(x)
-%     nout = max(nargout,1) - 1;
-%     s = size(x);
-%     for k = 1:nout
-%         varargout{k} = s(k);
-%     end
-% end
 
 end %--END OF FUNCTION

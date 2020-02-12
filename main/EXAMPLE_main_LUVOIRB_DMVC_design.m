@@ -20,13 +20,13 @@ close all;
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+mp.path.falco = 'C:\CoronagraphSims\falco-matlab\';  %--Location of FALCO
+mp.path.proper = 'C:\CoronagraphSims\FALCO\lib\PROPER\'; %--Location of the MATLAB PROPER library
+% mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
+mp.path.config = 'C:\CoronagraphSims\falco-matlab\data\brief\'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = 'C:\CoronagraphSims\falco-matlab\data\ws\'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 %%--Add to the MATLAB Path
 addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
@@ -40,23 +40,28 @@ EXAMPLE_defaults_LUVOIRB_VC_design
 %% Step 3: Overwrite default values as desired
 
 %%--Special Computational Settings
-mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 
 %--Record Keeping
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
 
+%%-- segmented mirror errors
+mp.numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
+% LUVOIR B has four rings, but ignores some corner segmentes 
+
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
-% temp = load(fn_prev,'out');
-% mp.dm1.V = temp.out.DM1V;
-% mp.dm2.V = temp.out.DM2V;
-% clear temp
+fn_prev = 'Series0867_Trial5309_Vortex_LUVOIR_B_offaxis_2DM64_z0.8_IWA2_OWA26_1lams400nm_BW2.5_gridsearchEFC_snippet.mat';
+temp = load(fn_prev,'out');
+mp.dm1.V = temp.out.DM1V;
+mp.dm2.V = temp.out.DM2V;
+clear temp
 
 % %--DEBUGGING
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.lambda0 = 400e-9;
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 

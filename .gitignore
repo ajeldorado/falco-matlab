@@ -58,8 +58,13 @@ data/frn/**
 !data/ws_inprogress/placeholder.txt
 !data/frn/placeholder.txt
 
-wfirst_modeling/FRN/*.m
-!wfirst_modeling/FRN/EXAMPLE*
+FRN/**
+#wfirst_modeling/FRN/calculateFRN/*
+#wfirst_modeling/FRN/**
+#!wfirst_modeling/FRN/placeholder.txt
+
+#wfirst_modeling/FRN/*.m
+#!wfirst_modeling/FRN/EXAMPLE*
 #!data/frn/s_EB_IMG_NF_Band1/*
 
 eval/**
@@ -164,4 +169,16 @@ docs/**
 
 HLCLSplotter.m
 PMGIplotter.m
+*.mat
 *.pyc
+*.asv
+*.emf
+*.fig
+*.pdf
+*.png
+
+
+!lib/masks/**/*.png
+
+
+

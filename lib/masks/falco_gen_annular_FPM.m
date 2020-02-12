@@ -65,7 +65,7 @@ centering = inputs.centering; % Centering of array: 'pixel' or 'interpixel'
 
 dx = 1/pixresFPM; %--lambda_c/D per pixel.
 
-if(rhoOuter==inf)
+if(isinf(rhoOuter))
     if(strcmpi(centering,'interpixel'))
         Narray = ceil_even(2*rhoInner/dx); % number of points across the inner diameter of the FPM.
     else
@@ -102,6 +102,8 @@ switch centering % 0 for pixel-centered FPM, or -diam/Narray for inter-pixel cen
         if(flagRot180deg)
             cshift = -dx;
         end
+    otherwise
+        error('Invalid value %s for centering',centering)
 end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %

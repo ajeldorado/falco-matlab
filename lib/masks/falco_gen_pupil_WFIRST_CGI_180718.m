@@ -21,6 +21,9 @@
 %
 % NOTE: All pupil features have normalized length units of pupil diameters.
 %
+% REVISION HISTORY: 
+% Corrected on 2019-09-26 by A.J. Riggs to double the strut padding so that it is applied 
+%   fully to each edge.
 % Corrected on 2018-08-16 by A.J. Riggs to compute 'beam_diam_fraction' correctly.
 % Created on 2018-08-07 by A.J. Riggs, Jet Propulsion Laboratory, California Institute of Technology.
 
@@ -175,8 +178,8 @@ ra_OD = magFac*(OD/2-pad_OD);
 cx_OD = magFac*xcOD;
 cy_OD = magFac*ycOD;
 cxy = rotMat*[cx_OD; cy_OD];
-cx_OD = cxy(1)-xShear;
-cy_OD = cxy(2)-yShear;
+cx_OD = cxy(1)+xShear;
+cy_OD = cxy(2)+yShear;
 bm = prop_circular_aperture(bm, ra_OD,'XC',cx_OD+cshift,'YC',cy_OD+cshift);
 
 %% SECONDARY MIRROR (INNER DIAMETER)
@@ -184,21 +187,21 @@ ra_ID = magFac*(ID/2 + pad_COBS);
 cx_ID = magFac*(xcCOBS);
 cy_ID = magFac*(ycCOBS);
 cxy = rotMat*[cx_ID; cy_ID];
-cx_ID = cxy(1)-xShear;
-cy_ID = cxy(2)-yShear;
+cx_ID = cxy(1)+xShear;
+cy_ID = cxy(2)+yShear;
 bm = prop_circular_obscuration(bm, ra_ID,'XC',cx_ID+cshift,'YC',cy_ID+cshift);
 
 %% Struts
 
 for istrut=1:6
     angDeg = angStrutVec(istrut) + clock_deg; % degrees
-    wStrut = magFac*(wStrutVec(istrut)+pad_strut);
+    wStrut = magFac*(wStrutVec(istrut)+2*pad_strut);
     lStrutIn = magFac*lStrut;
     xc = magFac*(xcStrutVec(istrut)); 
     yc = magFac*(ycStrutVec(istrut)); 
     cxy = rotMat*[xc; yc];
-    xc = cxy(1)-xShear;
-    yc = cxy(2)-yShear;
+    xc = cxy(1)+xShear;
+    yc = cxy(2)+yShear;
     bm = prop_rectangular_obscuration(bm, lStrutIn, wStrut, 'XC',xc+cshift, 'YC',yc+cshift, 'ROTATION',angDeg);%, norm)
 end
 
@@ -207,8 +210,8 @@ end
 %the pupil.
 
 %--SOFTWARE MASK:
-XSnew = (1/1*XS+xcCOBStabs)+xShear;
-YSnew = (1/1*YS+ycCOBStabs)+yShear;
+XSnew = (1/1*XS+xcCOBStabs)-xShear;
+YSnew = (1/1*YS+ycCOBStabs)-yShear;
 
 overSizeFac = 1.3;
 cobsTabsMask = zeros(Narray);
@@ -238,8 +241,8 @@ ra_tabs = magFac*(IDtabs/2 + pad_COBStabs);
 cx_tabs = magFac*(xcCOBStabs);
 cy_tabs = magFac*(ycCOBStabs);
 cxy = rotMat*[cx_tabs; cy_tabs];
-cx_tabs = cxy(1)-xShear;
-cy_tabs = cxy(2)-yShear;
+cx_tabs = cxy(1)+xShear;
+cy_tabs = cxy(2)+yShear;
 bm2 = prop_circular_obscuration(bm2, ra_tabs,'XC',cx_tabs+cshift,'YC',cy_tabs+cshift);
 
 temp = 1-ifftshift(abs(bm2.wf));

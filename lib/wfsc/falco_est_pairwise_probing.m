@@ -54,7 +54,6 @@ switch lower(mp.estimator)
         clear ev
 end
 
-
 %--Select number of actuators across based on chosen DM for the probing
 if(mp.est.probe.whichDM==1)
     Nact = mp.dm1.Nact;
@@ -90,6 +89,8 @@ switch lower(mp.est.probe.axis)
         badAxisVec = repmat('x',[2*Npairs,1]);
         badAxisVec(3:4:end) = 'y';
         badAxisVec(4:4:end) = 'y';
+    case 'multi'
+        badAxisVec = repmat('m',[2*Npairs,1]);
 end
 
 %% Initialize output arrays
@@ -140,8 +141,13 @@ for si=1:mp.Nsbp
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
-    ev.InormProbeMax = 1e-4;% 2^16/(mp.peakPSF/mp.peakPSFtint*mp.bench.andor.tint*mp.NDfilter_cal) * 0.7;
-    InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
+    if(mp.flagFiber)
+        ev.InormProbeMax = 1e-5;
+        InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
+    else
+        ev.InormProbeMax = 1e-4;
+        InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
+    end
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 
     %--Perform the probing
@@ -163,7 +169,11 @@ for si=1:mp.Nsbp
         if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom+dDM2Vprobe;  end
 
         %--Take probed image
-        Im = falco_get_sbp_image(mp,si);
+        if(mp.flagFiber)
+            Im = falco_get_sbp_image_fiber(mp,si);
+        else
+            Im = falco_get_sbp_image(mp,si);
+        end
         ImNonneg = Im; ImNonneg(Im<0) = 0;
         whichImg = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
@@ -188,7 +198,7 @@ for si=1:mp.Nsbp
             if(any(mp.dm_ind==1));  DM1Vminus(:,:,iEven) = dDM1Vprobe + DM1Vnom;  end
             if(any(mp.dm_ind==2));  DM2Vminus(:,:,iEven) = dDM2Vprobe + DM2Vnom;  end 
             Iminus(:,iEven) = Im(mp.Fend.corr.maskBool);
-            iEven=iEven+1;      
+            iEven=iEven+1;
         end
     end
 
@@ -229,7 +239,11 @@ for si=1:mp.Nsbp
         % For unprobed field based on model:
         if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom;  end
         if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom;  end % Added July 9, 2014
-        E0 = model_compact(mp, modvar);
+        if(mp.flagFiber)
+            [~, E0] = model_compact(mp, modvar);
+        else
+            E0 = model_compact(mp, modvar);
+        end
         E0vec = E0(mp.Fend.corr.maskBool);
 
         %--For probed fields based on model:
@@ -239,12 +253,20 @@ for si=1:mp.Nsbp
             % For plus probes:
             if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
             if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
-            Etemp = model_compact(mp, modvar);
+            if(mp.flagFiber)
+                [~, Etemp] = model_compact(mp, modvar);
+            else
+                Etemp = model_compact(mp, modvar);
+            end
             Eplus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
             % For minus probes:
             if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
             if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
-            Etemp = model_compact(mp, modvar);
+            if(mp.flagFiber)
+                [~, Etemp] = model_compact(mp, modvar);
+            else
+                Etemp = model_compact(mp, modvar);
+            end
             Eminus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
         end
 
@@ -340,7 +362,11 @@ if(strcmpi(mp.estimator,'pwp-kf') && (ev.Itr>=mp.est.ItrStartKF) )
         %--Previous unprobed field based on model:
         if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom-mp.dm1.dV;  end
         if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom-mp.dm2.dV;  end
-        Eprev = model_compact(mp, modvar);
+        if(mp.flagFiber)
+            [~, Eprev] = model_compact(mp, modvar);
+        else
+            Eprev = model_compact(mp, modvar);
+        end
         EprevVec = Eprev(mp.Fend.corr.maskBool);
         dE = E0vec-EprevVec; % Change in unprobed E-field between correction iterations
     end

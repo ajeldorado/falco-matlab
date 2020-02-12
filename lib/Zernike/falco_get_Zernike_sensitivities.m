@@ -17,7 +17,7 @@
 function dE2mat = falco_get_Zernike_sensitivities(mp)
 
 indsZnoll = mp.eval.indsZnoll;
-Rsens = mp.eval.Rsens; %--Radii ranges for the zernike sensitivity calcuations. they are allowed to overlap
+Rsens = mp.eval.Rsens; %--Radii ranges for the zernike sensitivity calcuations. They are allowed to overlap
 Nannuli = size(Rsens,1);
 Nzern = length(indsZnoll);
 
@@ -31,7 +31,7 @@ for ni = 1:Nannuli
     maskStruct.angDeg = mp.Fend.corr.ang; %--degrees
     maskStruct.centering = mp.centering;
     maskStruct.FOV = mp.Fend.FOV;
-    maskStruct.whichSide = 'both'; %--which (sides) of the dark hole have open
+    maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
     %--Generate Software Mask for Correction 
     [maskCube(:,:,ni), ~, ~] = falco_gen_SW_mask(maskStruct);
 end

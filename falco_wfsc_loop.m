@@ -60,7 +60,7 @@ if(~mp.flagSim);  mp.bench = bench;  end
 
 %--Raw contrast (broadband)
 
-InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring regino of dark hole.
+InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
 
 %% Plot the pupil masks
 
@@ -133,7 +133,7 @@ for Itr=1:mp.Nitr
 
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
-    [mp,thput] = falco_compute_thput(mp);
+    [mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
     if(mp.flagFiber)
         mp.thput_vec(Itr) = max(thput);
     else
@@ -162,7 +162,7 @@ for Itr=1:mp.Nitr
         Im_tb.Im_prev = zeros(size(Im));
         Im_tb.Im_prev(mp.Fend.corr.mask) = Im(mp.Fend.corr.mask);
     else
-        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
     end
 
 %     %--Plot the intermediate E-fields
@@ -181,14 +181,11 @@ for Itr=1:mp.Nitr
     
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
-    if(Itr==1)
-        mp.jac.zerns0 = mp.jac.zerns;
-    end
-
+    if(Itr==1); mp.jac.zerns0 = mp.jac.zerns; end
     fprintf('Zernike modes used in this Jacobian:\t'); fprintf('%d ',mp.jac.zerns); fprintf('\n');
     
     %--Re-compute the Jacobian weights
-    mp = falco_config_jac_weights(mp); 
+    mp = falco_set_jacobian_weights(mp); 
 
     %% Actuator Culling: Initialization of Flag and Which Actuators
 
@@ -206,12 +203,12 @@ for Itr=1:mp.Nitr
 
     %--Before performing new cull, include all actuators again
     if(cvar.flagCullAct)
-        %--Re-include all actuators in the basis set.
-        if(any(mp.dm_ind==1)); mp.dm1.act_ele = 1:mp.dm1.NactTotal; end
-        if(any(mp.dm_ind==2)); mp.dm2.act_ele = 1:mp.dm2.NactTotal; end
-        if(any(mp.dm_ind==5)); mp.dm5.act_ele = 1:mp.dm5.NactTotal; end
-        if(any(mp.dm_ind==8)); mp.dm8.act_ele = 1:mp.dm8.NactTotal; end
-        if(any(mp.dm_ind==9)); mp.dm9.act_ele = 1:mp.dm9.NactTotal; end
+        %--Re-include all actuators in the basis set. Need act_ele to be a column vector.
+        if(any(mp.dm_ind==1)); mp.dm1.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==2)); mp.dm2.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==5)); mp.dm5.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==8)); mp.dm8.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==9)); mp.dm9.act_ele = (1:mp.dm1.NactTotal).'; end
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
@@ -253,11 +250,18 @@ for Itr=1:mp.Nitr
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
         case{'pwp-bp','pwp-kf'}
-            ev.Itr = Itr;
-            if(mp.est.flagUseJac) %--Send in the Jacobian if true
-                ev = falco_est_pairwise_probing(mp,ev,jacStruct);
-            else %--Otherwise don't pass the Jacobian
-                ev = falco_est_pairwise_probing(mp,ev);
+			if(mp.flagFiber && mp.flagLenslet)
+				if(mp.est.flagUseJac) %--Send in the Jacobian if true
+					ev = falco_est_pairwise_probing_fiber(mp,jacStruct);
+				else %--Otherwise don't pass the Jacobian
+					ev = falco_est_pairwise_probing_fiber(mp);
+				end
+			else
+				if(mp.est.flagUseJac) %--Send in the Jacobian if true
+					ev = falco_est_pairwise_probing(mp,jacStruct);
+				else %--Otherwise don't pass the Jacobian
+					ev = falco_est_pairwise_probing(mp);
+				end
             end
             
             EfieldVec = ev.Eest;
@@ -341,6 +345,11 @@ for Itr=1:mp.Nitr
     cvar.EfieldVec = EfieldVec;
     cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
+    
+    %--Enforce constraints on DM commands 
+    % (not needed here--just done here for stats and plotting)
+    if(any(mp.dm_ind==1)); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
+    if(any(mp.dm_ind==2)); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
     
     %--Save out regularization used.
     out.log10regHist(Itr) = cvar.log10regUsed; 
@@ -484,7 +493,7 @@ if(any(mp.dm_ind==8)); out.dm8.Vall(:,Itr) = mp.dm8.V; end
 if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
 %--Calculate the core throughput (at higher resolution to be more accurate)
-[mp,thput] = falco_compute_thput(mp);
+[mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
 if(mp.flagFiber)
     mp.thput_vec(Itr) = max(thput);
 else
@@ -501,7 +510,7 @@ if(isfield(mp,'testbed'))
     InormHist_tb.beta(Itr-1) = out.log10regHist(Itr-1);
     hProgress = falco_plot_progress_hcst(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf);
+    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
 end
 %% Optional output variable: mp
 varargout{1} = mp;

@@ -79,7 +79,7 @@ end
 %%
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
-NdmPad = mp.compact.NdmPad;
+NdmPad = mp.full.NdmPad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
@@ -87,14 +87,14 @@ NdmPad = mp.compact.NdmPad;
 
 %--Compute the DM surfaces for the current DM commands
 
-if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, NdmPad); else; DM1surf = 0; end %--Pre-compute the starting DM1 surface
-if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, NdmPad); else; DM2surf = 0; end %--Pre-compute the starting DM2 surface
+if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.dx, NdmPad); else; DM1surf = 0; end %--Pre-compute the starting DM1 surface
+if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.dx, NdmPad); else; DM2surf = 0; end %--Pre-compute the starting DM2 surface
 
-pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
-Ein = padOrCropEven(Ein,mp.compact.NdmPad);
+pupil = padOrCropEven(mp.P1.full.mask,NdmPad);
+Ein = padOrCropEven(Ein,mp.full.NdmPad);
 
-if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = 1; end
-if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = 1; end
+if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.full.mask, NdmPad); else; DM1stop = 1; end
+if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.full.mask, NdmPad); else; DM2stop = 1; end
 
 if(mp.useGPU)
     pupil = gpuArray(pupil);
@@ -112,21 +112,21 @@ EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil p
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
-    Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1);
+    Edm1 = propcustom_PTP(EP2,mp.P2.full.dx*NdmPad,lambda,mp.d_P2_dm1);
 else
     Edm1 = EP2;
 end
 Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
-Edm2 = propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); 
+Edm2 = propcustom_PTP(Edm1,mp.P2.full.dx*NdmPad,lambda,mp.d_dm1_dm2); 
 Edm2 = DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
 
 %--Back-propagate to pupil P2
 if(mp.d_P2_dm1 + mp.d_dm1_dm2 == 0)
     EP2eff = Edm2;
 else
-    EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
+    EP2eff = propcustom_PTP(Edm2,mp.P2.full.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
 end
 
 if(to_input) % if the user only wants to propagate to the input pupil (i.e. through primary and DMs)
@@ -138,26 +138,26 @@ else % otherwise, go through the mask and on to the next pupil.
 
     %--Apply apodizer mask.
     if(mp.flagApod)
-        EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P3.compact.Narr); 
+        EP3 = mp.P3.full.mask.*padOrCropEven(EP3, mp.P3.full.Narr); 
     end
 
     %--MFT from SP to FPM (i.e., P3 to F3)
-    EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
+    EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering); %--E-field incident upon the FPM
 
     if(refwave)
-        FPM = mp.F3.compact.mask.phzSupport;
+        FPM = mp.F3.full.mask.phzSupport;
         EF3 = FPM.*EF3inc; % Take only the part of the beam in the phase dimple
     else
-        FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
+        FPM = mp.F3.full.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.full.mask.phzSupport);
         EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
 
         %--Use Babinet's principle at the Lyot plane.
         EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
-        EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
+        EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.full.Narr); %--Crop down to the size of the Lyot stop opening
     end
 
     %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
-    EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+    EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
 
     if(refwave)
         Eout = EP4sub;

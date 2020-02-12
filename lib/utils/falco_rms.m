@@ -19,6 +19,6 @@
 
 function RMS = falco_rms(x)
 
-    RMS = sqrt( mean( abs(x).^2 ) );
+    RMS = sqrt( mean( abs(x(:)).^2 ) );
 
 end %--END OF FUNCTION

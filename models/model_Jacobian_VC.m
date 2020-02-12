@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian_VC(mp, DM, tsi, whichDM)
+% function jac = model_Jacobian_VC(mp, im, whichDM)
 %--Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
@@ -28,13 +28,11 @@
 %
 % INPUTS:
 % -mp = structure of model parameters
-% -DM = structure of DM settings
-% -tsi = index of the pair of sub-bandpass index and tip/tilt offset index
+% -im = index of the pair of sub-bandpass index and Zernike mode index
 % -whichDM = which DM number
 %
 % OUTPUTS:
-% -Gttlam = Jacobian for the specified DM and specified T/T-wavelength pair
-%
+% -Gzdl = Jacobian for the specified Zernike mode (z), DM (d), and sub-bandpass (l).
 
 function Gzdl = model_Jacobian_VC(mp, im, whichDM)
 
@@ -60,7 +58,8 @@ if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
+    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
+    keyboard
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -117,7 +116,11 @@ minPadFacVortex = 8;
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
     if (mp.flagFiber)
-        Gzdl = zeros(mp.Fend.Nlens,mp.dm1.Nele);
+        if(mp.flagLenslet)
+            Gzdl = zeros(mp.Fend.Nlens,mp.dm1.Nele);
+        else
+            Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
+        end
     else
         Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele); %--Initialize the Jacobian
     end
@@ -206,11 +209,22 @@ if(whichDM==1)
 
             %--MFT to detector
             if(mp.flagFiber)
-                for nlens = 1:mp.Fend.Nlens
-                    EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
-                    Elenslet = EFend.*mp.Fend.lenslet.mask;
-                    EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
-                    Gzdl(nlens,Gindex) = max(mp.F5.fiberMode(:)).*sum(sum(mp.F5.fiberMode.*EF5));
+                if(mp.flagLenslet)
+                    for nlens = 1:mp.Fend.Nlens
+                        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        Elenslet = EFend.*mp.Fend.lenslet.mask;
+                        EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                        Gzdl(nlens,Gindex) = max(max(mp.F5.fiberMode(:,:,modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:,:,modvar.sbpIndex).*EF5));
+                    end
+                else
+                    EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+
+                    Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        Gzdltemp = Gzdltemp + Eonefiber;
+                    end
+                    Gzdl(:,Gindex) = Gzdltemp(mp.Fend.corr.inds);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
@@ -228,8 +242,12 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    if (mp.flagFiber)
-        Gzdl = zeros(mp.Fend.Nlens,mp.dm2.Nele);
+    if(mp.flagFiber)
+        if(mp.flagLenslet)
+            Gzdl = zeros(mp.Fend.Nlens,mp.dm2.Nele);
+        else
+            Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
+        end
     else
         Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele); %--Initialize the Jacobian
     end
@@ -308,11 +326,21 @@ if(whichDM==2)
 
             %--MFT to detector
             if(mp.flagFiber)
-                for nlens = 1:mp.Fend.Nlens
-                    EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
-                    Elenslet = EFend.*mp.Fend.lenslet.mask;
-                    EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
-                    Gzdl(nlens,Gindex) = max(mp.F5.fiberMode(:)).*sum(sum(mp.F5.fiberMode.*EF5));
+                if(mp.flagLenslet)
+                    for nlens = 1:mp.Fend.Nlens
+                        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        Elenslet = EFend.*mp.Fend.lenslet.mask;
+                        EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                        Gzdl(nlens,Gindex) = max(max(mp.F5.fiberMode(:,:,modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:,:,modvar.sbpIndex).*EF5));
+                    end
+                else
+                    EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+                    Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        Gzdltemp = Gzdltemp + Eonefiber;
+                    end
+                    Gzdl(:,Gindex) = Gzdltemp(mp.Fend.corr.inds);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);

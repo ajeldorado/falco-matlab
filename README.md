@@ -6,23 +6,19 @@ Refer to the SPIE conference paper "Fast Linearized Coronagraph Optimizer (FALCO
 DOI: 10.1117/12.2313812
 
 Developed by A.J. Riggs at the Jet Propulsion Laboratory, California Institute of Technology.
-Significant contributions and testing were done by Garreth Ruane, Erkin Sidick, and Carl Coker.
+Major contributions and testing were done by Garreth Ruane, Erkin Sidick, Carl Coker, Navtej Saini, and Jorge Llop-Sayson.
 
  
 # What is FALCO?
 
 The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source toolbox of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at github.com/ajeldorado/falco-matlab and is in development in Python 3.
 
-
 # Documentation and Support
 
 FALCO is provided as-is and has no guarantee of performance. Nevertheless, reasonable attempts have been made to debug and troubleshoot the code, and the developers are still using and improving the software.
 
 #### DOCUMENTATION:  
-We will experiment with the best way to document the code. For now we will try the Github Wiki at [https://github.com/ajeldorado/falco-matlab/wiki](https://github.com/ajeldorado/falco-matlab/wiki). 
-
-#### FORUM:  
-There is now a forum at [www.tapatalk.com/groups/falco/](www.tapatalk.com/groups/falco/) for you to ask us questions about FALCO such as, "Why can't I find any documentation?" If there is anything especially confusing about FALCO, please ask for documentation on that topic and we will prioritize it.
+For now, the documentation is available at the Github Wiki at https://github.com/ajeldorado/falco-matlab/wiki.
 
 
 # Matlab Versions and Libraries
