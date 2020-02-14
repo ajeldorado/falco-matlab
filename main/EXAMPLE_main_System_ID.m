@@ -1,21 +1,11 @@
-% Copyright 2018, 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform a VC simple design run.
-%  1) Load the default model parameters for a vortex.
-%  2) Specify the values to overwrite.
-%  3) Run a single trial of WFC using FALCO.
+% Script to perform system identification on a system with knowledge errors in the WFSC.
 %
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-04-22 by A.J. Riggs to re-organize the system ID code.
-% Modified on 2019-04-12 by He Sun to add the system ID function.
-% Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
-% ---------------
-
 % ----------------------------------  WARNING  ----------------------------------------- %
 % SYSTEM IDENTIFICATION IS AN EXTRA FEATURE AND REQUIRES CAREFUL TUNING. UNLESS YOU ARE
 % SPECIFICALLY TRYING TO USE SYSTEM ID, USE A DIFFERENT SCRIPT AS YOUR STARTING POINT.
@@ -31,29 +21,14 @@ pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the py
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '/Users/ajriggs/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '/Users/ajriggs/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-% mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
+%--Required packages are FALCO and PROPER. 
+% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); savepath;
+% Add PROPER to the MATLAB path with the command:  addpath(full_path_to_proper); savepath;
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '/Users/ajriggs/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '/Users/ajriggs/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
-% %--Library locations. FALCO and PROPER are required. CVX is optional.
-% mp.path.falco = 'C:\Lab\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
-% mp.path.proper = 'C:\Lab\falco-matlab\proper';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-% % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
-% 
-% %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-% mp.path.config = 'C:\Lab\falco-matlab\data\configs';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-% mp.path.ws = 'C:\Lab\falco-matlab\data\ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
-%%--Add to the MATLAB Path
-addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
-% addpath(genpath(mp.path.cvx)) %--Add CVX to MATLAB path
-% rmpath([mp.path.cvx 'lib/narginchk_:']) %--Legend plotting issue if CVX's narginchk function is used instead of Matlab's default function.
+% mp.path.config = ; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = ; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
+% mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
 
 
 %% Step 2: Load default model parameters
@@ -133,7 +108,10 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 % [out, data_train] = falco_adaptive_wfsc_loop(mp);
-out = falco_wfsc_loop(mp);
+
+[mp, out] = falco_flesh_out_workspace(mp);
+
+[mp, out] = falco_wfsc_loop(mp, out);
 
 if(mp.flagPlot)
     figure; semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);

@@ -319,7 +319,7 @@ else % (Lyot stop mode)
     bm = prop_circular_aperture(bm, ra_OD, 'XC', cx_OD+cshift, 'YC', cy_OD+cshift);
 
     %--INNER DIAMETER
-    ra_ID = magFac*(ID/2 + pad_COBS);
+    ra_ID = magFac*(ID/2.);
     cx_ID = xShear;
     cy_ID = yShear;
     bm = prop_circular_obscuration(bm, ra_ID, 'XC', cx_ID+cshift, 'YC', cy_ID+cshift);
