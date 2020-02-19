@@ -39,7 +39,7 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
                 clear G2intNorm
             end
             if(any(mp.dm_ind==8))
-                G8intNorm(1:end) = sum(mean(abs(jacStruct.G8).^2,3),1).';
+                G8intNorm = sum(mean(abs(jacStruct.G8).^2,3),1).';
                 mp.dm8.act_ele = find(G8intNorm/max(G8intNorm(:))>=10^(mp.logGmin));
                 clear G8intNorm
             end    

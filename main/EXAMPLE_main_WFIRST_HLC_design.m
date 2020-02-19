@@ -48,6 +48,8 @@ for jj=1:NactTotal/2
     mp.dm9.tied(jj,2) = FlippedLinIndMat(jj);
 end
 
+mp.Nitr = 99; %--Stop the planned control scheme before it makes the contrast degrade rapidply.
+
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
 % temp = load(fn_prev,'out');
