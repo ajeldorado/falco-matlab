@@ -134,7 +134,7 @@ end
 
 %--Select which optical layout's compact model to use and get the output E-field
 switch lower(mp.layout)
-    case{'fourier'}
+    case{'fourier', 'proper'}
         if(mp.flagFiber)
             [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
             varargout{1} = Efiber;

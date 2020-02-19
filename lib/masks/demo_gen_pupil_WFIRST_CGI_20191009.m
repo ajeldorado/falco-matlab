@@ -17,3 +17,19 @@ changes.magFac = 0.5;
 pupil = falco_gen_pupil_WFIRST_CGI_20191009(Nbeam, centering, changes);
 
 figure(1); imagesc(pupil); axis xy equal tight; colorbar; drawnow;
+
+%% Lyot stop mode
+
+Nbeam = 309;
+centering = 'pixel';
+
+clear changes
+changes.flagLyot = true;
+changes.ID = 0.50;
+changes.OD = 0.80;
+LS = falco_gen_pupil_WFIRST_CGI_20191009(Nbeam, centering, changes);
+
+figure(2); imagesc(LS); axis xy equal tight; colorbar; drawnow;
+
+croppedLS = LS(2:end,2:end);
+figure(3); imagesc(croppedLS - fliplr(croppedLS)); axis xy equal tight; colorbar; drawnow;
