@@ -25,7 +25,7 @@ function falco_plot_superposed_pupil_masks(mp)
 %                 if(strcmpi(mp.centering,'pixel'))
 %                    P4mask = circshift(P4mask,[1 1]); 
 %                 end
-                P1andP4 = mp.P1.compact.mask + P4mask;
+                P1andP4 = abs(mp.P1.compact.mask) + P4mask;
                 figure(301); imagesc(P1andP4); axis xy equal tight; colorbar; 
                 set(gca,'Fontsize',20); title('Pupil and LS Superimposed','Fontsize',16');
 
