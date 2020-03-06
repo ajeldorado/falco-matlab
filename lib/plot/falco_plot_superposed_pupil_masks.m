@@ -19,7 +19,7 @@ function falco_plot_superposed_pupil_masks(mp)
     switch upper(mp.coro)
         case{'FOHLC','HLC','LC','APLC','VC','AVC'}
             if(mp.flagPlot)
-                P4mask = padOrCropEven(mp.P4.compact.mask,mp.P1.compact.Narr);
+                P4mask = pad_crop(mp.P4.compact.mask,mp.P1.compact.Narr);
                 P4mask = propcustom_relay(P4mask, mp.Nrelay1to2+mp.Nrelay2to3+mp.Nrelay3to4);
 %                 P4mask = rot90(P4mask,2);
 %                 if(strcmpi(mp.centering,'pixel'))
@@ -30,8 +30,8 @@ function falco_plot_superposed_pupil_masks(mp)
                 set(gca,'Fontsize',20); title('Pupil and LS Superimposed','Fontsize',16');
 
                 if(mp.flagApod)
-                    P1andP3 = mp.P1.compact.mask + ...
-                        padOrCropEven(mp.P3.compact.mask,length(mp.P1.compact.mask));
+                    P1andP3 = abs(mp.P1.compact.mask) + ...
+                        pad_crop(mp.P3.compact.mask,length(mp.P1.compact.mask));
                     figure(302); imagesc(P1andP3); axis xy equal tight; colorbar; 
                     set(gca,'Fontsize',20); title('Pupil and Apod Superimposed','Fontsize',16');
                 end
