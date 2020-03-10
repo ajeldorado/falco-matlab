@@ -215,6 +215,8 @@ function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
                     jacMode = model_Jacobian_VC(mp, imB, whichDMb); 
                 case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
                     jacMode = model_Jacobian_Roddier(mp, imB, whichDMb); 
+                case{'PIAACMC'} %--DMs, complex mask FPM, and LS
+                    jacMode = model_Jacobian_PIAACMC(mp, imB, whichDMb);
                 otherwise
                     error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
             end  

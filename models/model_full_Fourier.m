@@ -166,6 +166,19 @@ switch upper(mp.coro)
         %--Babinet's principle at P4
         EP4 = padOrCropEven(EP4noFPM,mp.P4.full.Narr) - EP4subtrahend;
 
+    case{'PIAACMC'}
+        %--MFT from apodizer plane to FPM (i.e., P3 to F3)
+        EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
+        % Apply reflective phase screen FPM
+        FPM = exp(1i*2*pi/lambda*2.*mp.F3.full.mask.sag);
+        EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
+        % Use Babinet's principle at the Lyot plane. This is the term without the FPM.
+        EP4noFPM = propcustom_relay(EP3,mp.Nrelay3to4,mp.centering); %--Propagate forward another pupil plane 
+        %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
+        EP4subtrahend = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+        %--Babinet's principle at P4
+        EP4 = padOrCropEven(EP4noFPM,mp.P4.full.Narr) - EP4subtrahend;
+
     case{'HLC'}
         %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
         t_Ti_base = 0;

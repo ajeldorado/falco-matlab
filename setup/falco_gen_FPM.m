@@ -18,6 +18,8 @@ function [mp] = falco_gen_FPM(mp)
             if(mp.flagZWFS)
                 mp = falco_gen_FPM_Roddier(mp);
             end
+        case{'PIAACMC'}
+            mp = falco_gen_FPM_PIAACMC(mp);
     end
     
     %% Hybrid FPMs only:

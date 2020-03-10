@@ -218,6 +218,14 @@ switch upper(mp.whichPupil)
             input.raftOffsets = mp.P1.raftOffsets*input.Nbeam;% samples 
         end
         if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_iSAT(input); end
+        
+    case 'PIAACMC'
+        % Using an array of ones for now since the pupil and PIAA mirror
+        % effects are accounted for in the input field.
+        mp.P1.full.mask = ones(mp.P1.full.Nbeam);
+        %mp.P1.full.mask = fitsread(strcat(mp.path.falco, 'lib\masks\PIAACMC\luvoirA-inscribedPupil.fits'));
+        mp.P1.compact.mask = mp.P1.full.mask;
+        
 end
 mp.P1.compact.Narr = length(mp.P1.compact.mask); %--Number of pixels across the array containing the input pupil in the compact model
 
