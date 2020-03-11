@@ -31,7 +31,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 inputs.Nbeam = 1000;
 inputs.magfacD = 1;
 inputs.wStrut = 1/100;
-
+% inputs.strutWidth_m = 0; % Optional input, strutwidth in meters 
 
 pupil = falco_gen_pupil_LUVOIR_A_final(inputs);
 
