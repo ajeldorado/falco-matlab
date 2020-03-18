@@ -98,7 +98,14 @@ switch centering % 0 for pixel-centered pupil, or -diam/np for inter-pixel cente
             cShift = -dx;
         end
 end
-strutWidth = 0.15*mag; % meters
+% strutWidth = 0.15*mag; % meters
+
+if(isfield(inputs,'strutWidth_m')) 
+    strutWidth = inputs.strutWidth_m;
+else
+    strutWidth = 0.15*mag; % meters
+end
+
 
 % Use PROPER to generate the hexagonal mirrors and rectangular struts.
 bm = prop_begin(Dap, wl_dummy, Narray,'beam_diam_fraction',bdf);
