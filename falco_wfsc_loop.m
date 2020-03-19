@@ -459,7 +459,7 @@ if(mp.flagSaveEachItr)
     Nitr = mp.Nitr;
     thput_vec = mp.thput_vec;
     fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.ws_inprogress,mp.runLabel,Itr,mp.Nitr);
-    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM4V','DM5V','DM6V','DM7V','DM8V','DM9V','InormHist','thput_vec')
+    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM4V','DM5V','DM6V','DM7V','DM8V','DM9V','InormHist','thput_vec','Im')
     fprintf('done.\n\n')
 end
 
