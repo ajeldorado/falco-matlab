@@ -40,7 +40,7 @@
 %  - mp.est.Qcoef
 %  - mp.est.Rcoef
 
-function [ev] = falco_est_pairwise_probing(mp,ev,varargin)
+function [ev] = falco_est_pairwise_probing(mp,varargin)
 
 %--If there is a third input, it is the Jacobian structure
 if( size(varargin, 2)==1 )

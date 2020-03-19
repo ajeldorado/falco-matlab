@@ -28,7 +28,7 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     bench = mp.bench;
     sbp_width = bench.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
-    PSFpeak   = bench.info.PSFpeaks(si);% counts per second 
+    SMFInt0   = bench.info.SMFInt0s(si);% counts per second 
     
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
@@ -60,7 +60,7 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     %        are handled outside of this function. 
     cmds = hcst_DM_apply2Dmap(bench,map,1);% Returns actual DM commands 
     
-    if(isfield(bench.info,'source') && srtcmpi(bench.info.source,'nkt'))
+    if(isfield(bench.info,'source') && strcmpi(bench.info.source,'nkt'))
         %----- Get image from the testbed -----
         disp(['Getting image from testbed in band ',num2str(si)])
     
@@ -73,8 +73,13 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
         disp('Getting image from testbed (using laser source)')
     end
 
-    FemtoV = GETFEMTOSTUFF;
-    normI = mp.Fend.fiberMode.*FemtoV./mp.peakPSF;
+    V = hcst_readFemtoOutput_adaptive(bench,bench.Femto.averageNumReads); % read voltage from Femto
+    gain_set = log10(bench.Femto.gain)-4; % index of gain setting
+    V = V-bench.Femto.V_offset(gain_set); % subtract bias for current gain setting
+    V = V/(bench.Femto.gainStep^gain_set);
+
+    FemtoV = V;
+    normI = FemtoV/SMFInt0;
     
 %     % Load the dark with the correct tint. It must exist in the dark
 %     % library. 

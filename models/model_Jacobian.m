@@ -55,7 +55,8 @@ function jacStruct = model_Jacobian(mp)
     end
 
     %--Initialize the Jacobian cubes for each DM.
-    if(mp.flagLenslet && mp.flagFiber)
+%     if(mp.flagLenslet && mp.flagFiber)
+    if(mp.flagFiber)
         if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.Nlens,mp.dm1.Nele,mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM1
         if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.Nlens,mp.dm2.Nele,mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM2
         if(any(mp.dm_ind==3)); jacStruct.G3 = zeros(mp.Fend.Nlens,mp.dm3.Nele,mp.jac.Nmode);  else;  jacStruct.G3 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM3

@@ -81,5 +81,6 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     
     % Get normalized intensity (dark subtracted and normalized by peakPSF)
     normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 
+%     normI = fliplr((hcst_andor_getImage(bench)-dark)/peakPSF); 
     
 end 

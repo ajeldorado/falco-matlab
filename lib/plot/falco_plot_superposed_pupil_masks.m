@@ -11,9 +11,9 @@
 function falco_plot_superposed_pupil_masks(mp)
 
     %--Plot superposed apodizer and telescope pupil
-    if(mp.flagApod && mp.flagPlot)
-        figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
-    end
+%     if(mp.flagApod && mp.flagPlot)
+%         figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
+%     end
     
     %--Plot superposed Lyot stop and telescope pupil
     switch upper(mp.coro)

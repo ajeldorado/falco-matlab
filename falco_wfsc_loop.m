@@ -226,13 +226,15 @@ for Itr=1:mp.Nitr
         cvar.flagRelin=false;
     end
     
-    if( (Itr==1) || cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
+%     if( (Itr==1) || cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
+    if(cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
     end
 
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
-    [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
-
+    if( (Itr==1) ||cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
+        [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
+    end
     %% Load the improved Jacobian if using the E-M technique
     if(mp.flagUseLearnedJac)
         if mp.est.flagUseTensorflow
@@ -250,7 +252,8 @@ for Itr=1:mp.Nitr
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
         case{'pwp-bp','pwp-kf'}
-			if(mp.flagFiber && mp.flagLenslet)
+% 			if(mp.flagFiber && mp.flagLenslet)
+			if(mp.flagFiber)
 				if(mp.est.flagUseJac) %--Send in the Jacobian if true
 					ev = falco_est_pairwise_probing_fiber(mp,jacStruct);
 				else %--Otherwise don't pass the Jacobian
@@ -462,7 +465,7 @@ end
 
 % Save cmds for each iteration
 if(~mp.flagSim)
-    datacmds = hcst_DM_2Dto1D(bench,mp.dm1.V');
+    datacmds = hcst_DM_2Dto1D(bench,fliplr(mp.dm1.V'));
     cmds = datacmds+bench.DM.flatvec;
     save([bench.info.outDir,'cdms',datestr(now,'yyyymmddTHHMMSS'),'.mat'],'cmds');
 end
@@ -535,6 +538,7 @@ end
 out.thput = mp.thput_vec;
 out.Nitr = mp.Nitr;
 out.InormHist = InormHist;
+out.InormMod = InormHist_tb.mod;
 
 fnOut = [mp.path.config mp.runLabel,'_snippet.mat'];
 
@@ -1012,9 +1016,9 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end
     if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end
     
-    %--Update the tied actuator pairs
-    if(any(mp.dm_ind==1));  mp.dm1.tied = dDM.dm1tied;  end
-    if(any(mp.dm_ind==2));  mp.dm2.tied = dDM.dm2tied;  end
+%     %--Update the tied actuator pairs
+%     if(any(mp.dm_ind==1));  mp.dm1.tied = dDM.dm1tied;  end
+%     if(any(mp.dm_ind==2));  mp.dm2.tied = dDM.dm2tied;  end
 
 end %--END OF NESTED FUNCTION
 
