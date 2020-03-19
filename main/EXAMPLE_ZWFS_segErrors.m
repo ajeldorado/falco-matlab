@@ -229,7 +229,7 @@ set(gca,'TickDir','out');set(gca,'YDir','normal');
 title('Reconstructed surf (nm)');
 
 subplot(3,3,9);
-imagesc(xvals/apRad,yvals/apRad,diffphz_actual/4/pi*mp.lambda0*1e9);
+imagesc(xvals/apRad,yvals/apRad,diffphz_meas/4/pi*mp.lambda0*1e9);
 colormap(parula(256));hcb=colorbar;
 axis image;%axis off; 
 axis([-1 1 -1 1]);caxis([cbmin_diff cbmax_diff]);

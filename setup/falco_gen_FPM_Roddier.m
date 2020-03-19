@@ -59,11 +59,15 @@ function [mp] = falco_gen_FPM_Roddier(mp)
         if(strcmp(mp.FPMmaterial,'FS'))
             nsquared = @(lam_um) 1 + (0.6961663*lam_um^2)/(lam_um^2-0.0684043^2)+ ...
                                   (0.4079426*lam_um^2)/(lam_um^2-0.1162414^2)+ ...
-                                  (0.8974794*lam_um^2)/(lam_um^2-9.896161^2);
+                                  (0.8974794*lam_um^2)/(lam_um^2-9.896161^2);          
+            n = @(lam) real(sqrt(nsquared(lam*1e6)));
+        elseif(strcmp(mp.FPMmaterial,'reflective'))
+            n = @(lam) -1;
+            mp.F3.full.mask.amp = -1*mp.F3.full.mask.amp;
+            mp.F3.compact.mask.amp = -1*mp.F3.compact.mask.amp;
         else
             error('Material not defined for Roddier(or Zernike) mask.');
         end
-        n = @(lam) real(sqrt(nsquared(lam*1e6)));
         
         mp.F3.n = n;
         
