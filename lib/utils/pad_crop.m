@@ -43,7 +43,7 @@ function arrayOut = pad_crop(arrayIn, nDes, varargin)
             icav = icav + 1;
             extrapval   = varargin{icav};  %--Value to use for extrapolated points
           otherwise
-            error('falco_pad: Unknown keyword: %s\n', ...
+            error('pad_crop: Unknown keyword: %s\n', ...
               varargin{icav});
         end
     end
