@@ -13,30 +13,30 @@ function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type)
 %   Output:
 %       phz - A 2D array with the estimated phase 
 
-    P = sqrt(I0);
-    b = mean(P(mask))*b; % Scale reference wave to match incident energy
+    A = sqrt(I0);
+    b = mean(A(mask))*b; % Scale reference wave to match incident energy
     
 	if( strcmpi(type,'linear') || strcmpi(type,'l') ) % Linear approximation 
         
-        denom = 2*b.*P.*sin(theta);
-        term2 = P.^2 + (2*b.^2 - 2*b.*P)*(1-cos(theta));
+        denom = 2*b.*A.*sin(theta);
+        term2 = A.^2 + (2*b.^2 - 2*b.*A)*(1-cos(theta));
         phz = (IZ - term2)./denom;
         
     elseif( strcmpi(type,'ndiaye') || strcmpi(type,'n') ) % Second order approximation
 
-        a1 = 2*b.*P.*(-2*b.^2+IZ+3*b.*P-P.^2+b.*(2*b-P)*cos(theta))*sin(theta/2)^2;
-        a2 = b.*P.*sin(theta);
+        a1 = 2*b.*A.*(-2*b.^2+IZ+3*b.*A-A.^2+b.*(2*b-A)*cos(theta))*sin(theta/2)^2;
+        a2 = b.*A.*sin(theta);
         numer = sqrt(a1) + a2;
-        denom = b.*P*(cos(theta)-1);
+        denom = b.*A*(cos(theta)-1);
         phz = -1*real(numer./(denom+1e-30)); 
         
     elseif( strcmpi(type,'full') || strcmpi(type,'f') ) % Full analytical solution 
         
-        a0 = 4*b.^2.*(IZ+P.^2)-6*b.^4-(IZ-P.^2).^2-4*b.^2.*(IZ+P.^2-2*b.^2)*cos(theta)-2*b.^4*cos(2*theta);
-        a1 = b.^2.*P.^2.*sin(theta)^2.*a0;
-        a2 = b.*P.*(P.^2-IZ).*(cos(theta)-1)-2*b.^3.*P.*(cos(theta)-1)^2;
+        a0 = 4*b.^2.*(IZ+A.^2)-6*b.^4-(IZ-A.^2).^2-4*b.^2.*(IZ+A.^2-2*b.^2)*cos(theta)-2*b.^4*cos(2*theta);
+        a1 = b.^2.*A.^2.*sin(theta)^2.*a0;
+        a2 = b.*A.*(A.^2-IZ).*(cos(theta)-1)-2*b.^3.*A.*(cos(theta)-1)^2;
         numer = a2 + sqrt(a1); % plus or minus are valid solutions 
-        denom = 4.*b.^2.*P.^2.*(cos(theta)-1);
+        denom = 4.*b.^2.*A.^2.*(cos(theta)-1);
         phz = real(acos(numer./(denom+1e-30))); % plus or minus are valid solutions 
         
     else
