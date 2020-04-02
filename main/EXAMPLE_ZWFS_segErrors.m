@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 
-clear all;
+clear;
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -93,7 +93,7 @@ IC0 = falco_zwfs_sim_image(mp);
 
 b = padOrCropEven(b,length(mp.P1.full.mask));
 IC0 = padOrCropEven(IC0,length(mp.P1.full.mask));
-mask = imerode(logical(mp.P1.full.mask),strel('disk', 2));
+mask = imerode(logical(mp.P1.full.mask),strel('disk', 1));
 
 %%-- Apply first set of errors
 disp('Applying WFE to primary mirror...');
@@ -123,19 +123,25 @@ disp('Generating ZWFS image...');
 IC2 = falco_zwfs_sim_image(mp);
 IC2 = padOrCropEven(IC2,length(mp.P1.full.mask));
 
-%%-- Reconstruct phases
+%% Reconstruct phases
 
 disp('Reconstructing the wavefront...');
-phz1 = falco_zwfs_reconstructor(mp.P1.full.mask,IC1, mask, b,'w');
-phz2 = falco_zwfs_reconstructor(mp.P1.full.mask,IC2, mask, b,'w');
+theta = 2*pi*mp.F3.t*(mp.F3.n(mp.lambda0)-1)/mp.lambda0;
+phz1 = falco_zwfs_reconstructor(100*mp.P1.full.mask,100*IC1, mask, b, theta, 'f');
+phz2 = falco_zwfs_reconstructor(100*mp.P1.full.mask,100*IC2, mask, b, theta, 'f');
 
 phz1 = circshift(rot90(phz1,2),[1 1]);
 phz2 = circshift(rot90(phz2,2),[1 1]);
+phz1(~mask) = 0;
+phz2(~mask) = 0;
+
 diffphz_meas = phz1 - phz2;
+diffphz_meas(~mask) = NaN;
 
 diffphz_actual = actual_phz1 - actual_phz2;
 diffphz_actual = padOrCropEven(diffphz_actual,length(diffphz_meas));
-
+diffphz_actual = diffphz_actual - mean(diffphz_actual(mask));
+diffphz_actual(~mask) = NaN;
 %% Plot results
 
 fontsize = 16;
@@ -150,8 +156,6 @@ xvals = -mp.P1.full.Narr/2:mp.P1.full.Narr/2-1;
 yvals = xvals';
 apRad = mp.P1.full.Nbeam/2;
 
-actual_phz1(actual_phz1==0) = NaN;
-actual_phz2(actual_phz2==0) = NaN;
 
 fig0 = figure(666);
 set(fig0,'units', 'inches', 'Position', [0 0 12 12])
@@ -237,3 +241,4 @@ set(gca,'XTick',-1:0.5:1,'YTick',-1:0.5:1,'FontSize', fontsize);
 set(gca,'TickDir','out');set(gca,'YDir','normal');
 title('Reconstructed difference (nm)');
 
+%disp(['RMS surface error = ',num2str(rms(diffphz_actual(mask)-diffphz_meas(mask))/4/pi*mp.lambda0*1e9),' nm']);
