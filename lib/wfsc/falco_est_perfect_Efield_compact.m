@@ -12,7 +12,7 @@
 %    Erkin's code.
 %--Created on 2018-01-24 by A.J. Riggs.
 
-function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp);
+function [Emat,Isum2D] = falco_est_perfect_Efield_compact(mp)
     
     if(isfield(mp,'lowfs')==false)
         mp.lowfs = false; %--Set LOWFS flag to false if it isn't included
