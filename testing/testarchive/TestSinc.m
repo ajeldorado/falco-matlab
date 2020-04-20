@@ -11,27 +11,31 @@ classdef TestSinc < matlab.unittest.TestCase
 % by methods. In this case we only use the mp.path.falco + lib/utils to
 % addpath to utils functions to be tested.
     properties
-        param=load('Parameters.mat');
+        mp=Parameters();
     end
 
+    properties (TestParameter)
+        
+    end
 %% Setup and Teardown Methods
 %
-%  Add and remove path to utils functions to be tested.
+%  Add and remove path to utils functions to be tested. If we don't do this
+%  the tests below will use Matlab's "sinc" function instead.
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.param.mp.path.falco 'lib/utils']));
+            addpath(genpath([testCase.mp.path.falco 'lib/utils']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.param.mp.path.falco 'lib/utils']))
+            rmpath(genpath([testCase.mp.path.falco 'lib/utils']))
         end
     end
     
 %% Tests
 %
-%  Creates four testrs:
+%  Creates four tests:
 %
 % # *test sinc* with zero input
 % # *test sinc* with pi/6 input
