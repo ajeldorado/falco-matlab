@@ -9,7 +9,7 @@ function [mp] = falco_gen_FPM_PIAACMC(mp)
         FPMgenInputs.centering = mp.centering;
         
 %         mp.F3.full.mask.sag = zeros(2056);
-        mp.F3.full.mask.sag = rot90(fitsread(strcat(mp.path.falco, 'lib\masks\PIAACMC\cmcMask.fits')), 0);
+        mp.F3.full.mask.sag = rot90(fitsread(strcat(mp.path.falco, 'lib/masks/PIAACMC/cmcMask.fits')), 0);
         mp.F3.full.mask.sag = falco_bin_downsample(mp.F3.full.mask.sag, mp.F3.downSampFac);
         mp.F3.compact.mask.sag = mp.F3.full.mask.sag;
         

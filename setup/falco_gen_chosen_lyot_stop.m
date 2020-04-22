@@ -201,7 +201,7 @@ switch upper(mp.whichPupil)
             end
         end
     case{'PIAACMC'}
-        mp.P4.full.mask = fitsread(strcat(mp.path.falco, 'lib\masks\PIAACMC\lyotMask.fits'));
+        mp.P4.full.mask = fitsread(strcat(mp.path.falco, 'lib/masks/PIAACMC/lyotMask.fits'));
         mp.P4.full.mask = falco_bin_downsample(mp.P4.full.mask, mp.P4.downSampFac);
         mp.P4.compact.mask = mp.P4.full.mask;
 end

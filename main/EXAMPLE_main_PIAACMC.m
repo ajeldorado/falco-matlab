@@ -57,8 +57,8 @@ mp.flagPlot = true;
 
 % For now, the starting fields are based off of pupil maps from testbed
 % phase retrieval.
-mp.P1.full.E = rot90(fitsread(strcat(mp.path.falco, 'lib\masks\PIAACMC\piaa_camzfoc_65.0_073amp.fits')) .* ...
-                exp(1j*fitsread(strcat(mp.path.falco, 'lib\masks\PIAACMC\piaa_camzfoc_65.0_073phwrap.fits'))), 1);
+mp.P1.full.E = rot90(fitsread(strcat(mp.path.falco, 'lib/masks/PIAACMC/piaa_camzfoc_65.0_073amp.fits')) .* ...
+                exp(1j*fitsread(strcat(mp.path.falco, 'lib/masks/PIAACMC/piaa_camzfoc_65.0_073phwrap.fits'))), 1);
             
 mp.P1.compact.E = mp.P1.full.E;
 

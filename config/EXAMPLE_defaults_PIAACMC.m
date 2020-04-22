@@ -23,12 +23,12 @@ mp.planetFlag = false;
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
 mp.thput_metric = 'EE'; 
 mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY for 'EE' method.
-mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate throughput
-mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
+mp.thput_eval_x = 0; % x location [lambda_c/D] in dark hole at which to evaluate throughput
+mp.thput_eval_y = 6; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
-mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 0;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_y_offset_norm = 6;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
 
@@ -196,13 +196,13 @@ mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 11; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
-mp.Fend.corr.Rin = 2;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rin = 3;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 8;  % outer radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.ang  = 90;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = 2;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rin = 3;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = 8;  % outer radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.ang = 90;  % angular opening of dark hole scoring region [degrees]
+mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
@@ -210,10 +210,10 @@ mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right',
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
 %--Focal Lengths
-mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
+mp.fl = 773.91e-3; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Pupil Plane Diameters
-mp.P1.D = 43e-3;
+mp.P1.D = 9e-3;
 mp.P2.D = 9e-3;
 mp.P3.D = 9e-3;
 mp.P4.D = 9e-3;
@@ -237,7 +237,7 @@ mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
-mp.F3.compact.res = mp.lambda0/mp.P2.D*773.91e-3/2e-7/mp.F3.downSampFac; % sampling of FPM for compact model [pixels per lambda0/D]
+mp.F3.compact.res = mp.lambda0/mp.P2.D*mp.fl/2e-7/mp.F3.downSampFac; % sampling of FPM for compact model [pixels per lambda0/D]
 % The magic numbers here are the EFL of the nearest focusing OAP (~774 mm)
 % and the physical resolution of the FPM map (0.2 um per pixel).
 
@@ -252,7 +252,7 @@ mp.P2.full.Nbeam = 512;
 mp.P3.full.Nbeam = 512;
 mp.P4.full.Nbeam = 512;
 
-mp.F3.full.res = mp.lambda0/mp.P2.D*773.91e-3/2e-7/mp.F3.downSampFac;    % sampling of FPM for full model [pixels per lambda0/D]
+mp.F3.full.res = mp.lambda0/mp.P2.D*mp.fl/2e-7/mp.F3.downSampFac;    % sampling of FPM for full model [pixels per lambda0/D]
 
 %% Mask Definitions
 
