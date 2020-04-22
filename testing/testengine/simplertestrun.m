@@ -14,19 +14,8 @@ clc
 % file that includes the directory or location. There is other ways of
 % defining tests but for the most part these are the two we will be using.
 %--------------------------------------------------------------------------
-% tests={'/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests/SolverTest.m'...
-%      ; '/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests'};
- 
-<<<<<<< HEAD
-%tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive/TestCeil.m'};%,...
-       %'/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestCeil.m'};
-tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive/TestJacWeights.m'};
-%tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive'};
-=======
-tests={'/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestSinc.m',...
-       '/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestCeil.m'};
+tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive'};
 
->>>>>>> 70c16f2fbf9bc9783ef75446204071067808d89c
 %% Example 1
 % 
 % Runs tests without specifying the output file. This will create a text
