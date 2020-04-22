@@ -7,20 +7,20 @@ function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type)
 %       IZ - image with Zernike mask aligned 
 %       mask - pupil support mask 
 %       b - Reference wave
-%       theta - mask phase shift, typically 2*pi*mp.F3.t*(mp.F3.n(mp.lambda0)-1)/mp.lambda0;
+%       theta - mask phase shift, typically 2*pi*depth*(n-1)/lambda;
 %       type - string - 'linear', 'ndiaye', or 'full' reconstructors 
 %
 %   Output:
 %       phz - A 2D array with the estimated phase 
 
     A = sqrt(I0);
-    b = mean(A(mask))*b; % Scale reference wave to match incident energy
+	b = mean(A(mask))*b; % Scale reference wave to match incident energy
     
 	if( strcmpi(type,'linear') || strcmpi(type,'l') ) % Linear approximation 
         
-        denom = 2*b.*A.*sin(theta);
-        term2 = A.^2 + (2*b.^2 - 2*b.*A)*(1-cos(theta));
-        phz = (IZ - term2)./denom;
+        denom = 2.*b.*A.*sin(theta);
+        term2 = A.^2 + 2*b.^2 - 2*b.*A + 2*b.*(A-b).*cos(theta);
+        phz = (IZ - term2)./(denom+1e-30);
         
     elseif( strcmpi(type,'ndiaye') || strcmpi(type,'n') ) % Second order approximation
 

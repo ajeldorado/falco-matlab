@@ -24,17 +24,13 @@ EXAMPLE_defaults_DST_LC_design
 
 %% Step 3: Overwrite default values as desired
 
-%%--Coronagraph and Pupil Type
-mp.coro = 'Roddier';    %--Tested Options: 'LC','HLC','SPLC','Vortex'
+mp.flagWFS = true; % Activate the WFS mode 
+mp.wfs.flagSim = true; % Simulates WFS images, if true 
+
+%%-- Pupil definitions
+
 mp.flagApod = false;
 mp.whichPupil = 'LUVOIR_B_offaxis';
-
-%%--Bandwidth and Wavelength Specs
-mp.lambda0 = 400e-9; % central wavelength of bandpass (meters)
-mp.fracBW = 10e-9/mp.lambda0 ;%0.01;  % fractional bandwidth of correction (Delta lambda / lambda)
-mp.Nsbp = 1;  % number of wavelengths or sub-bandpasses (sbp) across entire spectral band 
-
-%%--Pupil definitions
 
 mp.P1.D = 7.989; %--meters, circumscribed. The segment size is 0.955 m, flat-to-flat, and the gaps are 6 mm.
 
@@ -44,32 +40,36 @@ mp.P4.full.Nbeam = mp.P1.full.Nbeam; % P4 must be the same as P1 for Vortex.
 mp.P1.compact.Nbeam = 500;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam; % P4 must be the same as P1 for Vortex.
 
-mp.P4.IDnorm = 0;
-mp.P4.ODnorm = 1.1;%0.82;
-
 mp.P1.wGap = 0.01; % Fractional gap width
-
 mp.P4.padFacPct = 0; 
 
-
-%%-- segmented mirror errors
+%%- segmented mirror errors
 numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
-% LUVOIR B has four rings, but ignores some corner segmentes 
+% LUVOIR B has four rings, but ignores some corner segments 
 
-%%-- Focal Plane Mask (F3) Properties
 
-pupilDiam_m = mp.P2.D;%m
+%%--ZWFS Mask Properties
+mp.wfs.lambda0 = 425e-9;%--Central wavelength of the whole spectral bandpass [meters]
+mp.wfs.fracBW = 0.10; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.wfs.Nsbp = 3; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+
+%%- ZWFS mask properties 
+mp.wfs.mask.type = 'transmissive';
 maskDepth_m  = 213e-9;%m
 maskMaterial = 'FS';%Fused Silica 
 maskRadius_lamOverD = 1.06/2;%(maskDiam_m/2)/fNum/mp.lambda0;
 
-mp.F3.Rin = maskRadius_lamOverD;
-mp.F3.t = maskDepth_m; % Depth of the Roddier/Zernike spot
-mp.FPMampFac = 1.0;% Transmission of the Roddier/Zernike spot
-mp.FPMmaterial = maskMaterial;
+mp.wfs.mask.material = maskMaterial; % Required for transmissive mask 
+mp.wfs.mask.Rin  = maskRadius_lamOverD;% Radius of the ZWFS dimple 
+mp.wfs.mask.Rout = Inf;% Outer 
+mp.wfs.mask.depth = maskDepth_m; % Depth of the Zernike dimple
+mp.wfs.mask.FPMampFac = 1.0;% Transmission of the Zernike dimple
+mp.wfs.mask.res = 20;
 
-mp.F3.full.res = 100;
-mp.F3.compact.res = 100;
+%%- ZWFS camera properties 
+mp.wfs.cam.Nbeam = mp.P1.full.Nbeam;% beam size at WFS camera 
+mp.wfs.cam.Narr = 512; % array size at WFS camera 
+mp.wfs.cam.dx = mp.P4.D/mp.wfs.cam.Nbeam;
 
 
 %% Generate the label associated with this trial
@@ -85,15 +85,19 @@ mp.runLabel = [mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2
 
 
 %% Generate ZWFS images 
+rng(1)
+
 disp('***** ZWFS demo *****');
 disp('Generating ZWFS calib image...');
 
-b = abs(falco_zwfs_getReferenceWave(mp));
-IC0 = falco_zwfs_sim_image(mp);
+Ical = falco_zwfs_getCalibrationImage(mp);
+b = falco_zwfs_getReferenceWave(mp);
+IZ0 = falco_zwfs_sim_image(mp);
 
-b = padOrCropEven(b,length(mp.P1.full.mask));
-IC0 = padOrCropEven(IC0,length(mp.P1.full.mask));
+% IZ image mask 
 mask = imerode(logical(mp.P1.full.mask),strel('disk', 1));
+mask = padOrCropEven(mask,mp.wfs.cam.Narr);
+
 
 %%-- Apply first set of errors
 disp('Applying WFE to primary mirror...');
@@ -106,8 +110,7 @@ mp = falco_gen_chosen_pupil(mp);
 actual_phz1 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 
 disp('Generating ZWFS image...');
-IC1 = falco_zwfs_sim_image(mp);
-IC1 = padOrCropEven(IC1,length(mp.P1.full.mask));
+IZ1 = falco_zwfs_sim_image(mp);
 
 %%-- Apply second set of errors
 disp('Applying new WFE to primary mirror...');
@@ -120,15 +123,14 @@ mp = falco_gen_chosen_pupil(mp);
 actual_phz2 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 
 disp('Generating ZWFS image...');
-IC2 = falco_zwfs_sim_image(mp);
-IC2 = padOrCropEven(IC2,length(mp.P1.full.mask));
+IZ2 = falco_zwfs_sim_image(mp);
 
 %% Reconstruct phases
 
 disp('Reconstructing the wavefront...');
-theta = 2*pi*mp.F3.t*(mp.F3.n(mp.lambda0)-1)/mp.lambda0;
-phz1 = falco_zwfs_reconstructor(100*mp.P1.full.mask,100*IC1, mask, b, theta, 'f');
-phz2 = falco_zwfs_reconstructor(100*mp.P1.full.mask,100*IC2, mask, b, theta, 'f');
+theta = 2*pi*mp.wfs.mask.depth*(mp.wfs.mask.n(mp.wfs.lambda0)-1)/mp.wfs.lambda0;
+phz1 = falco_zwfs_reconstructor(Ical, IZ1, mask, b, theta, 'f');
+phz2 = falco_zwfs_reconstructor(Ical, IZ2, mask, b, theta, 'f');
 
 phz1 = circshift(rot90(phz1,2),[1 1]);
 phz2 = circshift(rot90(phz2,2),[1 1]);
@@ -142,6 +144,7 @@ diffphz_actual = actual_phz1 - actual_phz2;
 diffphz_actual = padOrCropEven(diffphz_actual,length(diffphz_meas));
 diffphz_actual = diffphz_actual - mean(diffphz_actual(mask));
 diffphz_actual(~mask) = NaN;
+
 %% Plot results
 
 fontsize = 16;
@@ -152,25 +155,25 @@ cbmax = 5;
 cbmin_diff = -0.2;
 cbmax_diff = 0.2;
 
-xvals = -mp.P1.full.Narr/2:mp.P1.full.Narr/2-1;
+xvals = -mp.wfs.cam.Narr/2:mp.wfs.cam.Narr/2-1;
 yvals = xvals';
-apRad = mp.P1.full.Nbeam/2;
+apRad = mp.wfs.cam.Nbeam/2;
 
 
 fig0 = figure(666);
 set(fig0,'units', 'inches', 'Position', [0 0 12 12])
 
 subplot(3,3,1);
-imagesc(xvals/apRad,yvals/apRad,IC0);
+imagesc(xvals/apRad,yvals/apRad,IZ0);
 colormap(parula(256));hcb=colorbar;
 axis image;%axis off; 
 axis([-1 1 -1 1]);
 set(gca,'XTick',-1:0.5:1,'YTick',-1:0.5:1,'FontSize', fontsize);
 set(gca,'TickDir','out');set(gca,'YDir','normal');
-title('Calibration image');
+title('Image w/o errors');
 
 subplot(3,3,2);
-imagesc(xvals/apRad,yvals/apRad,IC1);
+imagesc(xvals/apRad,yvals/apRad,IZ1);
 colormap(parula(256));hcb=colorbar;
 axis image;%axis off; 
 axis([-1 1 -1 1]);
@@ -179,7 +182,7 @@ set(gca,'TickDir','out');set(gca,'YDir','normal');
 title('WFS image 1');
 
 subplot(3,3,3);
-imagesc(xvals/apRad,yvals/apRad,IC2);
+imagesc(xvals/apRad,yvals/apRad,IZ2);
 colormap(parula(256));hcb=colorbar;
 axis image;%axis off; 
 axis([-1 1 -1 1]);
@@ -215,7 +218,7 @@ set(gca,'TickDir','out');set(gca,'YDir','normal');
 title('Actual difference (nm)');
 
 subplot(3,3,7);
-imagesc(xvals/apRad,yvals/apRad,phz1/4/pi*mp.lambda0*1e9);
+imagesc(xvals/apRad,yvals/apRad,phz1/4/pi*mp.wfs.lambda0*1e9);
 colormap(parula(256));hcb=colorbar;
 axis image;%axis off; 
 axis([-1 1 -1 1]);caxis([cbmin cbmax]);
@@ -224,7 +227,7 @@ set(gca,'TickDir','out');set(gca,'YDir','normal');
 title('Reconstructed surf (nm)');
 
 subplot(3,3,8);
-imagesc(xvals/apRad,yvals/apRad,phz2/4/pi*mp.lambda0*1e9);
+imagesc(xvals/apRad,yvals/apRad,phz2/4/pi*mp.wfs.lambda0*1e9);
 colormap(parula(256));hcb=colorbar;
 axis image;%axis off; 
 axis([-1 1 -1 1]);caxis([cbmin cbmax]);
@@ -233,7 +236,7 @@ set(gca,'TickDir','out');set(gca,'YDir','normal');
 title('Reconstructed surf (nm)');
 
 subplot(3,3,9);
-imagesc(xvals/apRad,yvals/apRad,diffphz_meas/4/pi*mp.lambda0*1e9);
+imagesc(xvals/apRad,yvals/apRad,diffphz_meas/4/pi*mp.wfs.lambda0*1e9);
 colormap(parula(256));hcb=colorbar;
 axis image;%axis off; 
 axis([-1 1 -1 1]);caxis([cbmin_diff cbmax_diff]);
@@ -241,4 +244,4 @@ set(gca,'XTick',-1:0.5:1,'YTick',-1:0.5:1,'FontSize', fontsize);
 set(gca,'TickDir','out');set(gca,'YDir','normal');
 title('Reconstructed difference (nm)');
 
-%disp(['RMS surface error = ',num2str(rms(diffphz_actual(mask)-diffphz_meas(mask))/4/pi*mp.lambda0*1e9),' nm']);
+disp(['RMS surface error of difference = ',num2str(rms(diffphz_actual(mask)*mp.lambda0-diffphz_meas(mask)*mp.wfs.lambda0)/4/pi*1e12),' pm']);
