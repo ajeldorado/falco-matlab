@@ -32,8 +32,8 @@ mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files
 mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 %%--Add to the MATLAB Path
-addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+% addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
+% addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 
 %% Step 2: Load default model parameters
@@ -63,7 +63,7 @@ mp.TrialNum = 1;
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 %--PLANNED (i.e., SCHEDULED) EFC
 mp.controller = 'plannedEFC';
@@ -117,16 +117,16 @@ mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/inpu
 
 optval.data_dir = mp.full.data_dir;
 optval.cor_type = mp.full.cor_type;
-optval.source_x_offset =0;
+optval.source_x_offset = 0;
 optval.zindex = 4;
 optval.zval_m = 0.19e-9;
 optval.use_errors = mp.full.use_errors;
 optval.polaxis = mp.full.polaxis; 
 
-optval.dm1_m = 0.5*fitsread('errors_polaxis10_dm.fits');
-optval.dm2_m = 0.5*fitsread('errors_polaxis10_dm.fits');
-optval.use_dm1 =1;
-optval.use_dm2 =1;
+optval.dm1_m = 0;%0.5*fitsread('errors_polaxis10_dm.fits');
+optval.dm2_m = 0;%0.5*fitsread('errors_polaxis10_dm.fits');
+optval.use_dm1 = 1;
+optval.use_dm2 = 1;
 
 optval.end_at_fpm_exit_pupil = 1;
 optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
@@ -138,7 +138,7 @@ mp.P1.compact.E = ones(ceil_even(mp.P1.compact.Nbeam+1),ceil_even(mp.P1.compact.
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
 
-    fld = prop_run(['model_full_wfirst_phaseb'], lambda_um, nout, 'quiet', 'passvalue',optval );
+    fld = prop_run(['model_full_wfirst_phaseb'], lambda_um, nout, 'quiet', 'passvalue', optval );
 
     % figure(601); imagesc(angle(fld)); axis xy equal tight; colorbar; colormap hsv;
     % figure(602); imagesc(abs(fld)); axis xy equal tight; colorbar; colormap parula;
@@ -172,7 +172,7 @@ for si=1:mp.Nsbp
     
     
     temp = 0*fldC;
-    temp(2:end,2:end) = rot90(fldC(2:end,2:end),2);
+    temp(2:end,2:end) = rot90(fldC(2:end,2:end), 2);
     mp.P1.compact.E(:,:,si) = temp;
     
     figure(617+si-1); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv;
@@ -180,8 +180,11 @@ for si=1:mp.Nsbp
 
 end
 %% After getting input E-field, add back HLC DM shapes
-mp.dm1.V = fitsread('hlc_dm1.fits')./mp.dm1.VtoH;
-mp.dm2.V = fitsread('hlc_dm2.fits')./mp.dm2.VtoH;
+% mp.dm1.V = fitsread('hlc_dm1.fits')./mp.dm1.VtoH;
+% mp.dm2.V = fitsread('hlc_dm2.fits')./mp.dm2.VtoH;
+
+mp.dm1.V = fitsread('hlc_with_aberrations_dm1.fits')./mp.dm1.VtoH;
+mp.dm2.V = fitsread('hlc_with_aberrations_dm2.fits')./mp.dm2.VtoH;
 
 %%
 % return

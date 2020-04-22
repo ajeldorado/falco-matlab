@@ -157,6 +157,7 @@ end
 
 is_hlc = 0;
 is_spc = 0;
+is_fpm_grid = 0;
 
 if  strcmp(cor_type,'hlc')
     is_hlc = 1;
@@ -168,7 +169,7 @@ if  strcmp(cor_type,'hlc')
     lambda0_m = 0.575e-6;
     nlams = 19 ;              % number of occ trans lambda provided
     bw = 0.1;
-    lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m; %[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
+    lam_occ = linspace(1-bw/2, 1+bw/2, nlams)*lambda0_m; %[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
     wlam = find( round(1e13*lambda_m) == round(1e13*lam_occ) ); 	% find exactly matching FPM wavelength
     occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'real.fits'];
     occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta6.69pol'   fpm_axis   '_' 'imag.fits'];
@@ -220,6 +221,31 @@ elseif  strcmp(cor_type,'hlc_custom')
     occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol'   fpm_axis   '_' 'real.fits'];
     occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol'   fpm_axis   '_' 'imag.fits'];
 
+    %--FOR TILED FPM STUDY ONLY
+    if(isfield(optval, 'fpm_grid_sep'))
+        fpm_grid_sep = optval.fpm_grid_sep;
+    else
+        fpm_grid_sep = 30; % lambda0/D
+    end
+    if(isfield(optval, 'is_fpm_grid'))
+        is_fpm_grid = optval.is_fpm_grid;
+    else
+        is_fpm_grid = false;
+    end
+    if(isfield(optval, 'is_fpm_grid_hex'))
+        is_fpm_grid_hex = optval.is_fpm_grid_hex;
+    else
+        is_fpm_grid_hex = false;
+    end
+    if(is_fpm_grid)
+        if(is_fpm_grid_hex)
+            fpm_grid = fitsread([prefix  'occ_grid_hexSep' num2str(fpm_grid_sep) '_lam' num2str(lambda_m,12) '_' 'abs.fits']);
+        else
+            fpm_grid = fitsread([prefix  'occ_grid_sep' num2str(fpm_grid_sep) '_lam' num2str(lambda_m,12) '_' 'abs.fits']);
+        end
+%         figure(221); imagesc(fpm_grid); axis xy equal tight; colorbar; drawnow;
+    end
+    
     n_default = 1024;	% gridsize in non-critical areas
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
@@ -622,6 +648,10 @@ if ( use_fpm )
     
     if ( is_hlc )
         occ = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
+        if(is_fpm_grid)
+            occ = occ.*fpm_grid;
+%             figure(123); imagesc(abs(occ)); axis xy equal tight; colorbar; drawnow;
+        end
         %--DEBUGGING
         if angle(occ(1,1)) ~= 0
             occ = occ.*exp(-1j*angle(occ(1,1))); %--Standardize the phase of the masks to be 0 for the outer glass part.
