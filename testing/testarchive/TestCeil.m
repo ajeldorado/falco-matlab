@@ -46,20 +46,20 @@ classdef TestCeil < matlab.unittest.TestCase
             expSolution = 57;
             testCase.verifyEqual(actSolution,expSolution);  
         end
-        function testCeilOdd2(testCase)
-            actSolution = ceil_odd(57);
-            expSolution = 57;
-            testCase.verifyEqual(actSolution,expSolution);  
-        end
-        function testCeilEven1(testCase)
-            actSolution = ceil_even(56);
-            expSolution = 56;
-            testCase.verifyEqual(actSolution,expSolution);  
-        end
-        function testCeilEven2(testCase)
-            actSolution = ceil_even(55);
-            expSolution = 56;
-            testCase.verifyEqual(actSolution,expSolution);  
-        end  
+%         function testCeilOdd2(testCase)
+%             actSolution = ceil_odd(57);
+%             expSolution = 57;
+%             testCase.verifyEqual(actSolution,expSolution);  
+%         end
+%         function testCeilEven1(testCase)
+%             actSolution = ceil_even(56);
+%             expSolution = 56;
+%             testCase.verifyEqual(actSolution,expSolution);  
+%         end
+%         function testCeilEven2(testCase)
+%             actSolution = ceil_even(55);
+%             expSolution = 56;
+%             testCase.verifyEqual(actSolution,expSolution);  
+%         end  
     end    
 end

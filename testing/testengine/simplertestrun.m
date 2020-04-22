@@ -17,9 +17,10 @@ clc
 % tests={'/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests/SolverTest.m'...
 %      ; '/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests'};
  
-tests={'/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestSinc.m',...
-       '/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestCeil.m'};
-
+%tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive/TestCeil.m'};%,...
+       %'/Users/lmarchen/Documents/FALCO/falco-matlab/testing/testarchive/TestCeil.m'};
+tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive/TestJacWeights.m'};
+%tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive'};
 %% Example 1
 % 
 % Runs tests without specifying the output file. This will create a text
