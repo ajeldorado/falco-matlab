@@ -12,7 +12,7 @@
 % Created by A.J. Riggs on 2019-12-10 by extracting material from falco_init_ws.m.
 % ---------------
 
-function mp = falco_set_spectral_weights(mp)
+function mp = falco_set_spectral_properties(mp)
 
 %% Compact Model
 
