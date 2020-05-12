@@ -294,8 +294,8 @@ mp.full.dm2_ztilt_deg = 0;
 mp.full.use_fpm  = 1;
 mp.full.fpm_axis = 'p';             %   HLC FPM axis: '', 's', 'p'
 
-mp.full.dm1.flatmap = 0.5*fitsread('errors_polaxis10_dm.fits');
-mp.full.dm2.flatmap = 0.5*fitsread('errors_polaxis10_dm.fits');
+mp.full.dm1.flatmap = 0;%0.5*fitsread('errors_polaxis10_dm.fits');
+mp.full.dm2.flatmap = 0;%0.5*fitsread('errors_polaxis10_dm.fits');
 
 
 %% Mask Definitions
@@ -328,5 +328,5 @@ mp.P1.compact.mask = padOrCropEven(mp.P1.compact.mask,310);
 mp.P4.compact.mask = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_lyot.fits']);
 mp.P4.compact.mask = padOrCropEven(mp.P4.compact.mask,310);
 
-mp.dm1.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm1wfe.fits']);
-mp.dm2.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm2wfe.fits']);
+% mp.dm1.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm1wfe.fits']);
+% mp.dm2.wfe = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_dm2wfe.fits']);

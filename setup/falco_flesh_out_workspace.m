@@ -27,6 +27,9 @@ mp = falco_configure_dark_hole_region(mp); %% Software Mask for Correction (corr
 mp = falco_set_spatial_weights(mp); %--Spatial weighting for control Jacobian. 
 % mp.Fend.mask = ones(mp.Fend.Neta,mp.Fend.Nxi); %% Field Stop at Fend (as a software mask) (NOT INCLUDED YET)
 
+%%--Wavefront sensor
+mp = falco_configure_WFS(mp);
+
 %--DM1 and DM2
 mp = falco_configure_dm1_and_dm2(mp); %% Flesh out the dm1 and dm2 structures
 mp = falco_gen_DM_stops(mp);

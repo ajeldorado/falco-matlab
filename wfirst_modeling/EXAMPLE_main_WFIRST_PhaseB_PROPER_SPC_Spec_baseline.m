@@ -93,6 +93,8 @@ optval.use_hlc_dm_patterns = 0;
 nout = 1024; %512; 			% nout > pupil_daim_pix
 optval.output_dim = 1024;%% Get the Input Pupil's E-field
 
+optval.use_pupil_mask = false;  % No SP for getting initial phase
+
 if(mp.Nsbp==1)
     lambdaFacs = 1;
 else

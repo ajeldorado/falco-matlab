@@ -231,7 +231,7 @@ mp.P3.compact.Nbeam = 386;
 mp.P4.compact.Nbeam = 120;
 
 %--Lyot Stop:
-mp.P4.compact.mask = fitsread('LS_symm_CGI180718_Str3.20pct_38D91_N120_interpixel.fits');
+mp.P4.compact.mask = fitsread('LS_symm_CGI180718_Str3.20pct_38D91_N120_pixel.fits');
 
 %--Shaped Pupil Mask: Load and downsample.
 SP0 = fitsread('SPM_SPC-20181220_1000_rounded9_gray.fits');

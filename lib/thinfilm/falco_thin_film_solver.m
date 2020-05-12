@@ -37,9 +37,9 @@ if nargin < 5, tetm = 0; end
 kx = 2*pi*n(1)*sin(theta)/lam;
 kz = -sqrt( (2*pi*n/lam).^2 - kx.^2 ); % sign agrees with measurement convention
 
-if tetm == 1,
+if tetm == 1
    kzz = kz./(n.^2);
-else,
+else
    kzz = kz;
 end
 
@@ -52,7 +52,7 @@ tin = 0.5*(kzz(i1) + kzz(i2))./kzz(i1);
 ri  = (kzz(i1) - kzz(i2))./(kzz(i1) + kzz(i2));
 
 A = eye(2);
-for i = 1:N-1,
+for i = 1:N-1
 	A = A * (tin(i)*[eep(i) ri(i)*eep(i); ri(i)*eem(i) eem(i)]);
 end
 
@@ -62,9 +62,9 @@ tt = 1/A(1,1);
 % transmitted power flux (Poynting vector . surface) depends on index of the
 % substrate and angle
 R = abs(rr).^2;
-if tetm == 1,
+if tetm == 1
 	Pn = real( (kz(N)/(n(N).^2)) ./ (kz(1)/(n(1).^2)) );
-else,
+else
 	Pn = real((kz(N)./kz(1)));
 end
 T = Pn.*abs(tt).^2;
@@ -74,7 +74,7 @@ return
 
 %%%%%%%%% Old method
 A = eye(2);
-for i = 1:N-1,
+for i = 1:N-1
    a = [ eem(i) eep(i); -kzz(i)*eem(i) kzz(i)*eep(i) ];
    A = A * inv(a) * ([ 1 1; -kzz(i+1) kzz(i+1)]);
 end

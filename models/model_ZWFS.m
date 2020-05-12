@@ -6,7 +6,7 @@ function Eout = model_ZWFS(mp, modvar, varargin)
 %   plane mask, and returns the output pupil field.
 %   - 'refwave' computes the reference wave, which only propagates the part
 %       of the beam that passes through the phase dimple.
-%   - '2input' only propagates to the input pupil. Overrides refwave. 
+%   - 'to_input' only propagates to the input pupil.
 
 % set default options 
 refwave = false;
@@ -29,14 +29,22 @@ end
 if(isfield(modvar,'lambda'))
     lambda = modvar.lambda;
 elseif(isfield(modvar,'ebpIndex'))
-    lambda = mp.full.lambdas(modvar.ebpIndex);
+    lambda = mp.wfs.lambdas(modvar.ebpIndex);
 elseif(isfield(modvar,'sbpIndex'))
-    lambda = mp.full.lambdasMat(modvar.sbpIndex,modvar.wpsbpIndex);
+    lambda = mp.wfs.lambdasMat(modvar.sbpIndex,modvar.wpsbpIndex);
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-fields
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% For the out-of-band case, scale the E-field defined for the coronagraph 
+% full model assuming the phase aberrations are caused by surface errors. 
+lam0_ref = mp.full.lambdasMat(mp.si_ref,mp.wi_ref);
+phz = angle(mp.P1.full.E(:,:,mp.wi_ref,mp.si_ref))*lam0_ref/lambda;
+mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex) = exp(1i*phz);
+
+
 %--Set the point source as the exoplanet or the star
 if strcmpi(modvar.whichSource, 'exoplanet') %--Don't include tip/tilt jitter for planet wavefront since the effect is minor
     %--The planet does not move in sky angle, so the actual tip/tilt angle needs to scale inversely with wavelength.
@@ -47,7 +55,7 @@ if strcmpi(modvar.whichSource, 'exoplanet') %--Don't include tip/tilt jitter for
 elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
+    Ein = Ett.*mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
         
 else % Default to using the starlight
     %--Include the tip/tilt in the input stellar wavefront
@@ -58,10 +66,10 @@ else % Default to using the starlight
 
         TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
         Ett = exp(1i*TTphase*mp.lambda0/lambda);
-        Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+        Ein = Ett.*mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
 
     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-        Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+        Ein = mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
     end
 end
 
@@ -142,22 +150,37 @@ else % otherwise, go through the mask and on to the next pupil.
     end
 
     %--MFT from SP to FPM (i.e., P3 to F3)
-    EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
+    EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda, ...
+        mp.P2.compact.dx, mp.wfs.mask.dxi, mp.wfs.mask.Nxi, ...
+        mp.wfs.mask.deta, mp.wfs.mask.Neta, mp.centering); %--E-field incident upon the FPM
 
+    %-- Propagate from FPM to WFS cam 
+    phzSupport = mp.wfs.mask.phzSupport; % support of the WFS phase dimple 
+    maskDepth_m = mp.wfs.mask.depth; % mask depth in meters 
+    maskAmp = mp.wfs.mask.amp; % dimple amplitude 
+    WFScam_Narr = mp.wfs.cam.Narr; % Array size at WFS camera 
+    WFScam_dx = mp.wfs.cam.dx;
+    
     if(refwave)
-        FPM = mp.F3.compact.mask.phzSupport;
-        EF3 = FPM.*EF3inc; % Take only the part of the beam in the phase dimple
+        EF3 = phzSupport.*EF3inc; % Take only the part of the beam in the phase dimple
     else
-        FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
+        if(strcmpi(mp.wfs.mask.type,'transmissive'))
+            n_mask = mp.wfs.mask.n(lambda);
+            FPM = maskAmp.*exp(1i*2*pi/lambda*(n_mask-1)*maskDepth_m.*phzSupport);
+        elseif(strcmpi(mp.wfs.mask.type,'reflective'))
+            FPM = maskAmp.*exp(1i*4*pi/lambda*maskDepth_m.*phzSupport);
+        else
+            disp('mp.wfs.mask.type must be transmissive or reflective');
+        end
         EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
 
         %--Use Babinet's principle at the Lyot plane.
         EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
-        EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
+        EP4noFPM = padOrCropEven(EP4noFPM,WFScam_Narr); %--Crop down to the size of the Lyot stop opening
     end
 
-    %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
-    EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % Subtrahend term for Babinet's principle     
+    %--MFT from WFS FPM to WFS camera
+    EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.wfs.mask.dxi,mp.wfs.mask.deta,WFScam_dx,WFScam_Narr,mp.centering); % Subtrahend term for Babinet's principle     
 
     if(refwave)
         Eout = EP4sub;
