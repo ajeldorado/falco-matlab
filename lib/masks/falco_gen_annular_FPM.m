@@ -30,22 +30,7 @@
 %--OUTPUT:
 % mask:    cropped-down, 2-D FPM representation. amplitude only 
 
-function mask = falco_gen_annular_FPM(inputs, varargin)
- 
-% Set default values of input parameters
-flagRot180deg = false;
-%--Look for Optional Keywords
-icav = 0;                     % index in cell array varargin
-while icav < size(varargin, 2)
-    icav = icav + 1;
-    switch lower(varargin{icav})
-        case {'rot180'}
-            flagRot180deg = true; % For even arrays, beam center is in between pixels.
-        otherwise
-            error('falco_gen_annular_FPM: Unknown keyword: %s\n', ...
-            varargin{icav});
-    end
-end
+function mask = falco_gen_annular_FPM(inputs)
 
 %--x-offset of mask in lambda0/D
 if(isfield(inputs, 'xOffset'))
@@ -69,7 +54,6 @@ end
 % inputs.rhoOuter = 10.1; % radius of outer opaque FPM ring (in lambda_c/D)
 % inputs.FPMampFac = 0.4; % amplitude transmission of inner FPM spot
 % inputs.centering = 'interpixel';
-% flagRot180deg = false;
 
 pixresFPM = inputs.pixresFPM; %--pixels per lambda_c/D
 rhoInner = inputs.rhoInner; % radius of inner FPM amplitude spot (in lambda_c/D)
@@ -82,7 +66,7 @@ maxAbsOffset = max([abs(xOffset), abs(yOffset)]);
 if(isinf(rhoOuter))
     if(strcmpi(centering, 'interpixel'))
         Narray = ceil_even(2*rhoInner/dx + 2*pixresFPM*maxAbsOffset); % number of points across the inner diameter of the FPM.
-    else
+    elseif(strcmpi(centering, 'pixel'))
         Narray = ceil_even(2*rhoInner/dx + 2*pixresFPM*maxAbsOffset + 1); % number of points across the inner diameter of the FPM. Another half pixel added for pixel-centered masks.
     end
     
@@ -91,7 +75,7 @@ if(isinf(rhoOuter))
 else
     if(strcmpi(centering, 'interpixel'))
         Narray = ceil_even(2*rhoOuter/dx + 2*pixresFPM*maxAbsOffset); % number of points across the outer diameter of the FPM. 
-    else
+    elseif(strcmpi(centering, 'pixel'))
         Narray = ceil_even(2*rhoOuter/dx + 2*pixresFPM*maxAbsOffset + 1); % number of points across the outer diameter of the FPM. Another half pixel added for pixel-centered masks.
     end
     
@@ -114,9 +98,6 @@ switch centering % 0 for pixel-centered FPM, or -diam/Narray for inter-pixel cen
         cshift = -dx/2; 
     case {'pixel'}
         cshift = 0;
-        if(flagRot180deg)
-            cshift = -dx;
-        end
     otherwise
         error('Invalid value %s for centering',centering)
 end
@@ -127,19 +108,19 @@ end
 bdf = Dmask/Darray; %--beam diameter factor in output array
 bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
 
-if(rhoOuter ~= inf)
+if(isinf(rhoOuter) == false)
     %--Outer opaque ring of FPM
     ra_OD = (rhoOuter);
     cx_OD = 0 + cshift + xOffset;
     cy_OD = 0 + cshift + yOffset;
-    bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);%, cx, cy, norm);
+    bm = prop_circular_aperture(bm, ra_OD, 'cx', cx_OD, 'cy', cy_OD);%, cx, cy, norm);
 end
 
 %--Inner spot of FPM (Amplitude transmission can be nonzero)
 ra_ID = (rhoInner); 
 cx_ID = 0 + cshift + xOffset;
 cy_ID = 0 + cshift + yOffset;
-innerSpot = prop_ellipse(bm, ra_ID,ra_ID,'cx',cx_ID,'cy',cy_ID,'DARK')*(1-FPMampFac) + FPMampFac;
+innerSpot = prop_ellipse(bm, ra_ID, ra_ID, 'cx', cx_ID, 'cy', cy_ID, 'DARK')*(1-FPMampFac) + FPMampFac;
 
 mask = ifftshift(abs(bm.wf)); %--undo PROPER's fftshift
 mask = mask.*innerSpot; %--Include the inner FPM spot

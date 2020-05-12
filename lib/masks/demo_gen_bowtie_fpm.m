@@ -7,9 +7,9 @@
 clear all; 
 
 inputs.pixresFPM = 6; %--pixels per lambda_c/D
-inputs.rhoInner = 3; % radius of inner FPM amplitude spot (in lambda_c/D)
-inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
-inputs.FPMampFac = 0; %0.4; % amplitude transmission of inner FPM spot
+inputs.rhoInner = 2.6; % radius of inner FPM amplitude spot (in lambda_c/D)
+inputs.rhoOuter = 9.4; % radius of outer opaque FPM ring (in lambda_c/D)
+inputs.ang = 60 ;
 inputs.centering = 'pixel';
 
 %--Optional Inputs
@@ -17,9 +17,7 @@ inputs.xOffset = 5.5;
 inputs.yOffset = -10;
 % inputs.Narray = 512;
 
-fpm = falco_gen_annular_FPM(inputs);
-figure(1); imagesc(fpm); axis xy equal tight; colorbar; drawnow;
+fpm = falco_gen_bowtie_FPM(inputs);
 
-inputs.rhoOuter = 10; % radius of outer opaque FPM ring (in lambda_c/D)
-fpm = falco_gen_annular_FPM(inputs);
-figure(2); imagesc(fpm); axis xy equal tight; colorbar; drawnow;
+
+figure(1); imagesc(fpm); axis xy equal tight; colorbar; drawnow;
