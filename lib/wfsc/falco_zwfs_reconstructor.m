@@ -9,6 +9,8 @@ function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type, varargin)
 %       b - Reference wave
 %       theta - mask phase shift, typically 2*pi*depth*(n-1)/lambda;
 %       type - string - 'linear', 'ndiaye', or 'full' reconstructors 
+%                       'full_pw' is a piecewise version, which extends the
+%                                 dynamic range, but is prone to artifacts. 
 %       varargin(1) - string - Subtraction method: 'subbias', 'submean','submedian'
 %                              'subbias' - subtracts phase reconstruction from "perfect" case 
 %                              'submean' - subtracts mean within pupil mask
@@ -39,10 +41,24 @@ function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type, varargin)
         a0 = 4*b.^2.*(IZ+A.^2)-6*b.^4-(IZ-A.^2).^2-4*b.^2.*(IZ+A.^2-2*b.^2)*cos(theta)-2*b.^4*cos(2*theta);
         a1 = b.^2.*A.^2.*sin(theta)^2.*a0;
         a2 = b.*A.*(A.^2-IZ).*(cos(theta)-1)-2*b.^3.*A.*(cos(theta)-1)^2;
-        numer = a2 + sqrt(a1); % plus or minus are valid solutions 
+        numer = a2 + sqrt(a1); % plus or minus are valid solutions (using plus sign puts discontinuity outside of the typical dynamic range)
         denom = 4.*b.^2.*A.^2.*(cos(theta)-1);
         phz = real(acos(numer./(denom+1e-30))); % plus or minus are valid solutions 
         
+    elseif( strcmpi(type,'full_pw') || strcmpi(type,'fpw') ) % Full analytical solution 
+
+        a0 = 4*b.^2.*(IZ+A.^2)-6*b.^4-(IZ-A.^2).^2-4*b.^2.*(IZ+A.^2-2*b.^2)*cos(theta)-2*b.^4*cos(2*theta);
+        a1 = b.^2.*A.^2.*sin(theta)^2.*a0;
+        a2 = b.*A.*(A.^2-IZ).*(cos(theta)-1)-2*b.^3.*A.*(cos(theta)-1)^2;
+
+        numer = a2 - sqrt(a1); % plus or minus are valid solutions 
+        denom = 4.*b.^2.*A.^2.*(cos(theta)-1);
+        phz = real(acos(numer./(denom+1e-30))); % plus or minus are valid solutions 
+
+        % Handling the negative phases seperately extends the dynamic range
+        IZ0 = A.^2 + 2*b.^2*(1 - cos(theta)) - 2*A.*b*(1-cos(theta));
+        phz(IZ<IZ0) = -1*phz(IZ<IZ0);
+
     else
         error('Reconstructor undefined');
     end
