@@ -1,4 +1,4 @@
-function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type)
+function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type, varargin)
 % phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type)
 %   Function to estimate the phase from Zernike WFS data
 %   
@@ -9,6 +9,10 @@ function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type)
 %       b - Reference wave
 %       theta - mask phase shift, typically 2*pi*depth*(n-1)/lambda;
 %       type - string - 'linear', 'ndiaye', or 'full' reconstructors 
+%       varargin(1) - string - Subtraction method: 'subbias', 'submean','submedian'
+%                              'subbias' - subtracts phase reconstruction from "perfect" case 
+%                              'submean' - subtracts mean within pupil mask
+%                              'submedian' - subtracts median within pupil mask
 %
 %   Output:
 %       phz - A 2D array with the estimated phase 
@@ -42,7 +46,21 @@ function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type)
     else
         error('Reconstructor undefined');
     end
-
-	phz = phz - mean(phz(mask));
+    
+    if(nargin > 6)
+        
+        if(strcmpi(varargin(1),'subbias'))
+            fZ = 1 + 2*(b.^2-b)*(1-cos(theta));
+            bias = falco_zwfs_reconstructor(1, fZ, true, b, theta, type);
+            phz = phz - bias;
+        elseif(strcmpi(varargin(1),'submean'))
+            phz = phz - mean(phz(mask));
+        elseif(strcmpi(varargin(1),'submedian'))
+            phz = phz - median(phz(mask));
+        else
+            disp('falco_zwfs_reconstructor: subtraction method undefined.')
+        end
+        
+    end
 
 end
