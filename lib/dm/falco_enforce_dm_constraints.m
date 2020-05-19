@@ -48,6 +48,8 @@ end
     
 %--4) Enforce tied actuator pairs
 %--In each pair of tied actuators, assign the command for the first actuator to that of the 2nd actuator
-dm.V(dm.tied(:,2)) = dm.V(dm.tied(:,1)); 
+if(~isempty(dm.tied))
+    dm.V(dm.tied(:,2)) = dm.V(dm.tied(:,1)); 
+end
 
 end %--END OF FUNCTION

@@ -1,75 +1,27 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to run wavefront estimation and control simulations of various 
+% Function to run wavefront a estimation and control loop for various 
 % types of coronagraphs.
-% - Data are mostly passed in structures.
-% - Nested functions are used in some places to prevent large structures 
-%   such as mp from being copied when passed to those functions.
-%
-% Modified on 2019-05-08 by A.J. Riggs to have mp be an optional output.
-% Modified on 2019-03-26 by A.J. Riggs to include tied actuators and to
-%   make nested functions actually nested.
-% Modified again by A.J. Riggs on May 23, 2017 to eliminate a lot of unnecessary
-%   variables for full-knowledge design work in the main script,
-%   in the config function, in the EFC controller, and in
-%   the image generating function.
-% Modified by A.J. Riggs on May 10, 2017 to eliminate a lot of unnecessary
-%   variables for full-knowledge design work in the main script, falco_3DM_main.m .
-% Modified by A.J. Riggs in April 2016 to include Babinet's principle for a 3DMLC
-%   propagation option.
-% Modified by A.J. Riggs from A.J.'s general coronagraphic WFSC code for design only 
-%   in April 2016.
-% Adapted by A.J. Riggs from A.J.'s Princeton HCIL code on August 31, 2016.
 
-function [out,varargout] = falco_wfsc_loop(mp)
-
-%% Sort out file paths and save the config file    
-
-%--Add the slash or backslash to the FALCO path if it isn't there.
-if( strcmp(mp.path.falco(end),'/')==false && strcmp(mp.path.falco(end),'\')==false )
-    mp.path.falco = [mp.path.falco filesep];
-end
-
-mp.path.dummy = 1; %--Initialize the folders structure in case it doesn't already exist
-
-%--Store minimal data to re-construct the data from the run: the config files and "out" structure after a trial go here
-if(isfield(mp.path,'config')==false)
-    mp.path.config = [mp.path.falco filesep 'data' filesep 'config' filesep];     
-end
-
-%--Entire final workspace from FALCO gets saved here.
-if(isfield(mp.path,'ws')==false)
-    mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];      
-end
-
-%--Save the config file
-fn_config = [mp.path.config mp.runLabel,'_config.mat'];
-save(fn_config)
-fprintf('Saved the config file: \t%s\n',fn_config)
-
-%% Get configuration data from a function file
-if(~mp.flagSim);  bench = mp.bench;  end %--Save the testbed structure "mp.bench" into "bench" so it isn't overwritten by falco_init_ws
-[mp,out] = falco_init_ws(fn_config);
-if(~mp.flagSim);  mp.bench = bench;  end
+function [mp, out] = falco_wfsc_loop(mp, out)
 
 %% Initializations of Arrays for Data Storage 
+InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
 
 %--Raw contrast (broadband)
 
 InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
 
 %% Plot the pupil masks
-
 % if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
 % if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis image; colorbar; title('Lyot stop');drawnow; end
 % if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end
 
 %% Take initial broadband image 
-
 Im = falco_get_summed_image(mp);
 
 %%
@@ -164,20 +116,6 @@ for Itr=1:mp.Nitr
     else
         hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
     end
-
-%     %--Plot the intermediate E-fields
-%     switch upper(mp.coro)
-%         case{'FOHLC'}
-% 
-%             %--Get E-fields at the intermediate planes
-%             modvar.sbpIndex = mp.si_ref;
-%             modvar.wpsbpIndex = 1; %--dummy
-%             modvar.whichSource = 'star';     
-%             Estruct = model_compact(mp, modvar,'all');
-%             
-%             if(Itr==1); hEfields.master = 1; end %--dummy value to intialize the handle variable
-%             hEfields = falco_plot_Efields(hEfields,mp,Itr,InormHist,Im,Estruct);
-%     end
     
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
@@ -205,10 +143,10 @@ for Itr=1:mp.Nitr
     if(cvar.flagCullAct)
         %--Re-include all actuators in the basis set. Need act_ele to be a column vector.
         if(any(mp.dm_ind==1)); mp.dm1.act_ele = (1:mp.dm1.NactTotal).'; end
-        if(any(mp.dm_ind==2)); mp.dm2.act_ele = (1:mp.dm1.NactTotal).'; end
-        if(any(mp.dm_ind==5)); mp.dm5.act_ele = (1:mp.dm1.NactTotal).'; end
-        if(any(mp.dm_ind==8)); mp.dm8.act_ele = (1:mp.dm1.NactTotal).'; end
-        if(any(mp.dm_ind==9)); mp.dm9.act_ele = (1:mp.dm1.NactTotal).'; end
+        if(any(mp.dm_ind==2)); mp.dm2.act_ele = (1:mp.dm2.NactTotal).'; end
+        if(any(mp.dm_ind==5)); mp.dm5.act_ele = (1:mp.dm5.NactTotal).'; end
+        if(any(mp.dm_ind==8)); mp.dm8.act_ele = (1:mp.dm8.NactTotal).'; end
+        if(any(mp.dm_ind==9)); mp.dm9.act_ele = (1:mp.dm9.NactTotal).'; end
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
@@ -515,8 +453,8 @@ if(isfield(mp,'testbed'))
 else
     hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
 end
-%% Optional output variable: mp
-varargout{1} = mp;
+% %% Optional output variable: mp
+% varargout{1} = mp;
 
 %% Save the final DM commands separately for faster reference
 if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V')); out.DM1V = mp.dm1.V; end; end

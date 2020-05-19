@@ -197,7 +197,7 @@ function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
     
     %--Select which optical layout's Jacobian model to use and get the output E-field
     switch lower(mp.layout)
-        case{'fourier'}
+        case{'fourier', 'proper'}
 
             switch upper(mp.coro) 
                 case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.

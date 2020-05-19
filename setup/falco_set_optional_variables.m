@@ -1,9 +1,8 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
-%
 
 function mp = falco_set_optional_variables(mp)
 
@@ -15,18 +14,30 @@ mp.full.dummy = 1;
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
 mp.Fend.eval.dummy = 1;
+mp.path.dummy = 1;
 
-%% File Paths for Data Storage (excluded from git)
+%% Default File Paths for Data Storage (all excluded from git)
+
+%--Get the falco path for making the other default paths
+[filepath, name, ext] = fileparts(mfilename('fullpath'));
+mp.path.falco = filepath(1:end-5); % remove "setup" from the end of the path
+
+%--Store minimal data to re-construct the data from the run: the config files and "out" structure after a trial go here
+if(isfield(mp.path,'config')==false);  mp.path.config = [mp.path.falco filesep 'data' filesep 'brief' filesep];  end
+
+%--Entire final workspace from FALCO gets saved here.
+if(isfield(mp.path,'ws')==false);  mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];  end
+
 if(isfield(mp.path,'ws')==false); mp.path.ws = [mp.path.falco 'data' filesep 'ws' filesep]; end % Store final workspace data here
 if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco 'maps' filesep]; end % Maps go here
 if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
 if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco 'data' filesep 'images' filesep]; end % Store all full, reduced images here
 if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco 'data' filesep 'DM' filesep]; end % Store DM command maps here
-if(isfield(mp.path,'ws_inprogress')==false); mp.path.ws_inprogress = [mp.path.falco 'data' filesep 'ws_inprogress' filesep]; end % Store in progress workspace data here
+if(isfield(mp.path,'wsInProgress')==false); mp.path.wsInProgress = [mp.path.falco 'data' filesep 'wsInProgress' filesep]; end % Store in progress workspace data here
 
 %% Optional/hidden boolean flags
 %--Saving data
-if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whehter to save otu the entire workspace at the end of the trial. Can take up lots of space.
+if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSaveEachItr')==false);  mp.flagSaveEachItr = false;  end  %--Whether to save out the performance at each iteration. Useful for long trials in case it crashes or is stopped early.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
 %--Jacobian or controller related
@@ -39,7 +50,7 @@ if(isfield(mp.ctrl,'flagUseModel')==false);  mp.ctrl.flagUseModel = false;  end 
 if(isfield(mp,'flagFiber')==false);  mp.flagFiber = false;  end  %--Whether to couple the final image through lenslets and a single mode fiber.
 if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to propagate through a lenslet array placed in Fend before coupling light into fibers
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
-if(isfield(mp,'flagZWFS')==false);  mp.flagZWFS = false; end %--Flag to use Zernike wavefront sensing
+if(isfield(mp,'flagWFS')==false);  mp.flagWFS = false;  end  %--Whether to activate the WFS mode 
 
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
@@ -89,6 +100,7 @@ if(isfield(mp,'x_planet')==false);  mp.x_planet = 5;  end % xi position of exopl
 if(isfield(mp,'y_planet')==false);  mp.y_planet = 1;  end % eta position of exoplanet in lambda0/D
 
 %--Control
+if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; else; mp.jac.Zcoef = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
 
 %--Performance Evaluation

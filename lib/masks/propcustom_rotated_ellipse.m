@@ -110,16 +110,21 @@ function apm = prop_rotated_ellipse(bm, rx, ry, varargin)
         1/(radiusY)^2*(sind(clockingDegrees)*X - cosd(clockingDegrees)*Y).^2 ...
         );
 
-    halfWindowWidth = max(abs([RHO(2,1)-RHO(1,1), RHO(1,2) - RHO(1,1)]));%dx;
+    halfWindowWidth = max([rx/ry, ry/rx])*max(abs([RHO(2,1)-RHO(1,1), RHO(1,2) - RHO(1,1)]));%dx;
     apm = -1*ones(size(RHO));
     apm(abs(RHO) < radius - halfWindowWidth) = 1;
     apm(abs(RHO) > radius + halfWindowWidth) = 0;
     grayInds = find(apm==-1);
+    figure(10); imagesc(apm); axis xy equal tight; colorbar; 
 %     fprintf('Number of grayscale points = %d\n', length(grayInds));
 
     upsampleFactor = 101;%100;
     dxUp = dx/upsampleFactor;
-    xUp = (-(upsampleFactor-1)/2:(upsampleFactor-1)/2)*dxUp;
+    if(mod(upsampleFactor,2)==0)
+        xUp = (-(upsampleFactor-1)/2:(upsampleFactor-1)/2)*dxUp;
+    else
+        xUp = (-floor(upsampleFactor/2.):floor(upsampleFactor/2.))*dxUp;
+    end
     [Xup, Yup] = meshgrid(xUp);
 
     subpixel = zeros(upsampleFactor,upsampleFactor);

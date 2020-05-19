@@ -59,11 +59,11 @@ mp.TrialNum = 2;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% % %--DEBUGGING:
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-% % % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% %--DEBUGGING:
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 mp.controller = 'plannedEFC';
 mp.ctrl.sched_mat = repmat([1,1j,12,0,1],[5,1]);
@@ -92,6 +92,8 @@ optval.use_fpm = 0;
 optval.use_hlc_dm_patterns = 0;
 nout = 1024; %512; 			% nout > pupil_daim_pix
 optval.output_dim = 1024;%% Get the Input Pupil's E-field
+
+optval.use_pupil_mask = false;  % No SP for getting initial phase
 
 if(mp.Nsbp==1)
     lambdaFacs = 1;
@@ -148,7 +150,10 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 
-out = falco_wfsc_loop(mp);
+[mp, out] = falco_flesh_out_workspace(mp);
+
+[mp, out] = falco_wfsc_loop(mp, out);
+
 
 %%
 return

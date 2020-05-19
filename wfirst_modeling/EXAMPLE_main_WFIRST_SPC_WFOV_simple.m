@@ -77,4 +77,6 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 
-out = falco_wfsc_loop(mp);
+[mp, out] = falco_flesh_out_workspace(mp);
+
+[mp, out] = falco_wfsc_loop(mp, out);

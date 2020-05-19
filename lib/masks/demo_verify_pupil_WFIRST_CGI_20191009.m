@@ -5,8 +5,8 @@
 % -------------------------------------------------------------------------
 clear all;
 
-addpath(genpath('~/Repos/falco-matlab/lib/')) %--Add FALCO library to MATLAB path
-addpath(genpath('~/Documents/MATLAB/PROPER/')) %--Add PROPER library to MATLAB path
+% addpath(genpath('~/Repos/falco-matlab/lib/')) %--Add FALCO library to MATLAB path
+% addpath(genpath('~/Documents/MATLAB/PROPER/')) %--Add PROPER library to MATLAB path
 
 %--Load true pupil
 pupil0 = imread('2019-10-09 CGI entrance pupil 8k binary.png');
@@ -20,7 +20,10 @@ changes.dummy = 1;
 changes.xShear = -0.5/Nbeam; 
 changes.yShear = -2/Nbeam;
 pupilFromFALCO = falco_gen_pupil_WFIRST_CGI_20191009(Nbeam, centering, changes);
-pupilFromFALCO = padOrCropEven(pupilFromFALCO, Narray);
+pupilFromFALCO = pad_crop(pupilFromFALCO, Narray);
+
+errorSum = sum(sum(abs(pupilFromFile - pupilFromFALCO)));
+fprintf('sum of mismatch = %.2f\n', errorSum)
 
 figure(1); imagesc(pupilFromFile); axis xy equal tight; colorbar; drawnow;
 figure(2); imagesc(pupilFromFALCO); axis xy equal tight; colorbar; drawnow;

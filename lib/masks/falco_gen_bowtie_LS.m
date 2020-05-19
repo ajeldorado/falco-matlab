@@ -53,7 +53,7 @@ magfac = 1; %--magnification factor of the pupil diameter
 if(isfield(inputs,'centering')); centering = inputs.centering; end
 if(isfield(inputs,'xShear')); xShear = inputs.xShear; end
 if(isfield(inputs,'yShear')); yShear = inputs.yShear; end
-if(isfield(inputs,'clocking')); clocking = inputs.clocking; end
+if(isfield(inputs,'clocking')); clocking = -inputs.clocking; end
 if(isfield(inputs,'magfac')); magfac = inputs.magfac; end
 
 if(strcmpi(centering,'pixel'))

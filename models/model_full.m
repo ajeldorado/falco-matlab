@@ -178,6 +178,35 @@ switch lower(mp.layout)
     case{'fpm_scale'} %--FPM scales with wavelength
         Eout = model_full_scale(mp, lambda, Ein, normFac);
         
+        
+    case{'proper'}
+        
+        optval = mp.full;
+        
+        if(any(mp.dm_ind==1))
+            optval.use_dm1 = true;
+            optval.dm1 = mp.dm1.V.*mp.dm1.VtoH + mp.full.dm1.flatmap; %--DM1 commands in meters
+        end
+        if(any(mp.dm_ind==2))
+            optval.use_dm2 = true;
+            optval.dm2 = mp.dm2.V.*mp.dm2.VtoH + mp.full.dm2.flatmap; %--DM2 commands in meters
+        end
+        
+        if(normFac==0)
+            optval.xoffset = -mp.source_x_offset_norm;
+            optval.yoffset = -mp.source_y_offset_norm;
+            switch upper(mp.coro)
+                case{'VORTEX','VC','AVC'}
+                    optval.use_fpm = false;
+            end
+        end
+
+        Eout = prop_run(mp.full.prescription, lambda*1e6, mp.P1.full.Narr, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
+        if(normFac~=0)
+            Eout = Eout/sqrt(normFac);
+        end
+        
+        
     case{'wfirst_phaseb_simple'} %--Use compact model as the full model.
                 
         optval = mp.full;
@@ -185,6 +214,7 @@ switch lower(mp.layout)
         optval.use_dm2 = true;
         optval.dm1_m = mp.dm1.V.*mp.dm1.VtoH; %--DM1 commands in meters
         optval.dm2_m = mp.dm2.V.*mp.dm2.VtoH; %--DM2 commands in meters
+        
         if(normFac==0)
             optval.source_x_offset = -mp.source_x_offset_norm;
             optval.source_y_offset = -mp.source_y_offset_norm;
