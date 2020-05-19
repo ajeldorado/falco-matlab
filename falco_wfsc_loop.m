@@ -9,6 +9,9 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
+if(isfield(mp,'testbed') )
+    bench = mp.bench
+end
 %% Initializations of Arrays for Data Storage 
 InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
 
