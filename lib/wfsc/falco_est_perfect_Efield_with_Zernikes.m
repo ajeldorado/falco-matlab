@@ -36,7 +36,8 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
         if(mp.flagLenslet)
             Emat = zeros(mp.Fend.Nlens, mp.jac.Nmode);
         else
-            Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+%             Emat = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+            Emat = zeros(mp.Fend.Nfibers, mp.jac.Nmode);
         end
         
         for im=1:mp.jac.Nmode
@@ -51,7 +52,8 @@ function Emat = falco_est_perfect_Efield_with_Zernikes(mp)
                 [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
                 Emat(:,im) = EfibCompact(I,J,:);
             else
-                Emat(:,im) = EfibCompact(mp.Fend.corr.inds);
+%                 Emat(:,im) = EfibCompact(mp.Fend.corr.inds);
+                Emat(:,im) = EfibCompact;
             end
         end
 

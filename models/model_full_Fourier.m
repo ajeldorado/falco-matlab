@@ -269,13 +269,19 @@ if(mp.flagFiber)
 
         sbpIndex = find(mp.sbp_centers == lambda);
         
-        Efiber = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+%         Efiber = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+        Efiber = zeros(mp.Fend.Nfiber, 1);
         for i=1:mp.Fend.Nfiber
-            Eonefiber = mp.Fend.fiberMode(:,:,sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,sbpIndex,i).*conj(EFend)));
-            Efiber = Efiber + Eonefiber;
+%             Eonefiber = mp.Fend.fiberMode(:,:,sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,sbpIndex,i).*conj(EFend)));
+            Eonefiber = sum(sum(mp.Fend.fiberMode(:,:,sbpIndex,i).*EFend));
+%             Efiber = Efiber + Eonefiber;
+            Efiber(i,1) = Eonefiber;
         end
         
         varargout{1} = Efiber;
+
+%         figure(901);
+%         imagesc(log10(abs(Efiber).^2)); axis equal tight; colorbar;
     end
 end
 
