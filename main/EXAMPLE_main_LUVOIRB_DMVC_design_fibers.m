@@ -29,8 +29,6 @@ EXAMPLE_defaults_LUVOIRB_VC_design_fibers
 %--Special Computational Settings
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
-mp.flagFiber = true;  %--whether to go place single-mode fibers in the focal plane
-mp.flagLenslet = false;  %--whether to go through a lenslet array before using the fibers
 
 %--Record Keeping
 mp.SeriesNum = 99;%10;

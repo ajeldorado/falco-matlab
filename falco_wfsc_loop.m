@@ -165,8 +165,13 @@ for Itr=1:mp.Nitr
     end
     
 %     if( (Itr==1) || cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
-    if(cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
-        jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
+    if((Itr==1) && mp.use_lastJacStruc)
+        load([mp.path.falco,'data/jac/lastJacStruc.mat']);
+    else
+        if(cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
+            jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
+            save([mp.path.falco,'data/jac/lastJacStruc.mat'],'jacStruct');
+        end
     end
 
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)

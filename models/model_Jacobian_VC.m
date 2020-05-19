@@ -116,11 +116,11 @@ minPadFacVortex = 8;
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
     if (mp.flagFiber)
-        if(mp.flagLenslet)
+%         if(mp.flagLenslet)
             Gzdl = zeros(mp.Fend.Nlens,mp.dm1.Nele);
-        else
-            Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
-        end
+%         else
+%             Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
+%         end
     else
         Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele); %--Initialize the Jacobian
     end
@@ -219,12 +219,15 @@ if(whichDM==1)
                 else
                     EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
 
-                    Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+%                     Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
                     for i=1:mp.Fend.Nfiber
-                        Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
-                        Gzdltemp = Gzdltemp + Eonefiber;
+%                         auxEonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        auxEonefiber = sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        Eonefiber = sum(auxEonefiber(:));
+%                         Gzdltemp = Gzdltemp + Eonefiber;
+                        Gzdl(i,Gindex) = Eonefiber;
                     end
-                    Gzdl(:,Gindex) = Gzdltemp(mp.Fend.corr.inds);
+%                     Gzdl(:,Gindex) = Gzdltemp(mp.Fend.corr.inds);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
