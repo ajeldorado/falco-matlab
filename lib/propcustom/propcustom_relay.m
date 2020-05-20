@@ -6,10 +6,9 @@
 %
 % function Eout = propcustom_relay(Ein,Nrelay,varargin)
 %
-%--This function relays the input electric field to the next conjugate plane. Each relay 
-% causes a 180-degree rotation. The centering has to be 
+%--This function relays the input electric field to the next conjugate plane.
+% Each relay causes a 180-degree rotation. The centering has to be 
 % corrected after rotation if the beam is pixel-centered on the array.
-%
 %
 %--INPUTS
 % Ein = electric field at at input (focal) plane
@@ -17,17 +16,12 @@
 %
 %--OPTIONAL INPUTS
 % 'INTERPIXEL' or 'PIXEL' = optional flag to set centering of beam in array
-%
-%--REVISION HISTORY
-% - Modified on 2019-04-05 by A.J. Riggs to remove the 1/1i term from each FT.
-% - Modified on 2019-02-27 by A.J. Riggs from propcustom_2FT.m to be for an arbitrary 
-%   number of re-imaging relays, not just 1.
 %--------------------------------------------------------------------------
 
-function Eout = propcustom_relay(Ein,Nrelay,varargin)
+function Eout = propcustom_relay(Ein, Nrelay, varargin)
 
-    if(Nrelay-round(Nrelay)~=0 || Nrelay<0)
-        error('propcustom_relay: The variable Nrelay must be a non-negative integer')
+    if(Nrelay - round(Nrelay) ~= 0)
+        error('propcustom_relay: The variable Nrelay must be an integer')
     end
 
     % Set default values of input parameters
@@ -48,10 +42,10 @@ function Eout = propcustom_relay(Ein,Nrelay,varargin)
         end
     end
 
-    Eout = rot90(Ein,2*Nrelay);  %--Forward propagate two Fourier transforms by rotating 180 degrees. The (1/1j)^2 is from the coefficients of the two FTs.
+    Eout = rot90(Ein,2*Nrelay);  %--Forward propagate two Fourier transforms by rotating 180 degrees.
 
-    if(strcmpi(centering,'pixel') && mod(Nrelay,2)==1)
-        Eout = circshift(Eout,[1 1]);   %--To undo center offset when beam is pixel centered and rotating by 180 degrees.
+    if(strcmpi(centering, 'pixel') && mod(Nrelay, 2)==1)
+        Eout = circshift(Eout, [1 1]);   %--To undo center offset when beam is pixel centered and rotating by 180 degrees.
     end
 
 end %--END OF FUNCTION

@@ -14,12 +14,6 @@
 %
 %--OUTPUTS
 % Ibandavg = band-averaged image in units of normalized intensity
-%
-%--REVISION HISTORY
-% - Modified on 2019-05-03 by A.J. Riggs from falco_get_summed_image.m to
-% falco_get_summed_image_TipTiltPol.m to include tip/tilt (stellar diameter
-% and pointing jitter) and differential polarization aberrations.
-% - Simplified on 2019-03-01 by A.J. Riggs to loop over falco_get_sbp_image.m 
 %--------------------------------------------------------------------------
 
 function Imean = falco_get_summed_image_TipTiltPol(mp)
@@ -45,19 +39,20 @@ function Imean = falco_get_summed_image_TipTiltPol(mp)
     fprintf('\n%d tip-tilt offset points used.\n',Ntt);
     %--Iterate over all combinations of sub-bandpass, wavelength, tip/tilt offset, and polarization state.
     
-    
-%     InormCube = zeros(Ncombos,1);
-
-    
-    if(mp.flagParfor && mp.flagSim) %(mp.flagSim && mp.full.flagPROPER) %--Save a lot of time by making all PROPER full model in parallel
+    if(mp.flagSim)
         %--Loop over all wavelengths, tip/tilt offsets, and polarizations        
         inds_list = allcomb(1:mp.full.NlamUnique,1:Ntt,1:Npol).'; %--dimensions: [3 x mp.full.NlamUnique*Ntt*Npol ]
         %inds_list = allcomb(1:mp.Nsbp,1:mp.Nwpsbp,1:Ntt,1:Npol).'; %--dimensions: [4 x mp.Nsbp*Nwpsbp*Ntt*Npol ]
         Nvals = size(inds_list,2);
         
-        %--Obtain all the images in parallel
-        parfor ic=1:Nvals
-            Iall{ic} = falco_get_single_sim_image_TipTiltPol(ic,inds_list,mp);  
+        if(mp.flagParfor) %--Save a lot of time by running PROPER full model in parallel
+            parfor ic=1:Nvals
+                Iall{ic} = falco_get_single_sim_image_TipTiltPol(ic,inds_list,mp);  
+            end
+        else
+            for ic=Nvals:-1:1
+                Iall{ic} = falco_get_single_sim_image_TipTiltPol(ic,inds_list,mp);  
+            end
         end
 
         %--Apply the spectral weights and add together
@@ -66,10 +61,6 @@ function Imean = falco_get_summed_image_TipTiltPol(mp)
             ilam = inds_list(1,ic);
             itt = inds_list(2,ic);
             Imean = Imean + mp.full.lambda_weights_all(ilam)*mp.full.wsTT(itt)/Npol*Iall{ic};  
-        end
-    else %--Not in parallel
-        for si = 1:mp.Nsbp    
-            Imean = Imean +  mp.sbp_weights(si)*falco_get_sbp_image(mp,si);
         end
     end
 

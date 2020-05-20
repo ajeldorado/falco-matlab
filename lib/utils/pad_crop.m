@@ -17,7 +17,9 @@
 % Originally written in Python by Brian Kern and Eric Cady.
 %
 %--INPUTS:
-% arrayIn: rectangular matrix to be padded or cropped. Can have even or odd side lengths
+% arrayIn: rectangular matrix to be padded or cropped. Can have even or odd
+% side lengths. Can be up to a 4-D array, but only the first two dimensions
+% are padded.
 % nDes: Number of points desired across the array. If an int, the output is an nDes x nDes array.
 %       If a vector, output is a nDes(2) x nDes(1) array. 
 %
@@ -43,7 +45,7 @@ function arrayOut = pad_crop(arrayIn, nDes, varargin)
             icav = icav + 1;
             extrapval   = varargin{icav};  %--Value to use for extrapolated points
           otherwise
-            error('falco_pad: Unknown keyword: %s\n', ...
+            error('pad_crop: Unknown keyword: %s\n', ...
               varargin{icav});
         end
     end
@@ -59,7 +61,7 @@ function arrayOut = pad_crop(arrayIn, nDes, varargin)
         nOutY = nDes(1);
     end
 
-    arrayOut = extrapval * ones(nOutY, nOutX);
+    arrayOut = extrapval * ones(nOutY, nOutX, size(arrayIn,3), size(arrayIn,4));
 
     xneg = min([floor(nInX/2), floor(nOutX/2)]);
     xpos = min([nInX - floor(nInX/2), nOutX - floor(nOutX/2)]);
@@ -72,6 +74,6 @@ function arrayOut = pad_crop(arrayIn, nDes, varargin)
     ySliceOut = floor(nOutY/2)-yneg+1 : floor(nOutY/2)+ypos;
     xSliceOut = floor(nOutX/2)-xneg+1 : floor(nOutX/2)+xpos;
 
-    arrayOut(ySliceOut, xSliceOut) = arrayIn(ySliceIn, xSliceIn);
+    arrayOut(ySliceOut, xSliceOut, :, :) = arrayIn(ySliceIn, xSliceIn, :, :);
     
 end %--END OF FUNCTION

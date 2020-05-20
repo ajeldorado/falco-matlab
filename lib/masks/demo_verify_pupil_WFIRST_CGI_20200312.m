@@ -9,17 +9,17 @@ clear all;
 % addpath(genpath('~/Documents/MATLAB/PROPER/')) %--Add PROPER library to MATLAB path
 
 %--Load true pupil
-pupil0 = imread('2019-10-09 CGI entrance pupil 8k binary.png');
+pupil0 = imread('WFIRST_CGI_pupil_20200312.png');
 pupilFromFile = double(pupil0)/double(max(pupil0(:)));
 Narray = size(pupilFromFile,1);
 
 %--Generate pupil representation in FALCO
-Nbeam = 2*4022.0;
+Nbeam = 2*4023.5;
 centering = 'pixel';
 changes.dummy = 1;
 changes.xShear = -0.5/Nbeam; 
-changes.yShear = -2/Nbeam;
-pupilFromFALCO = falco_gen_pupil_WFIRST_CGI_20191009(Nbeam, centering, changes);
+changes.yShear = -0.6/Nbeam;
+pupilFromFALCO = falco_gen_pupil_WFIRST_CGI_20200312(Nbeam, centering, changes);
 pupilFromFALCO = pad_crop(pupilFromFALCO, Narray);
 
 errorSum = sum(sum(abs(pupilFromFile - pupilFromFALCO)));
