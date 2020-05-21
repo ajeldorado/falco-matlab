@@ -34,7 +34,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-defaults_LUVOIRA_APLC_smallFPM
+EXAMPLE_defaults_LUVOIRA_APLC_smallFPM
 
 
 %% Step 3: Overwrite default values as desired
