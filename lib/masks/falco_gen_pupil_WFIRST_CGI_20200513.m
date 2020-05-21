@@ -4,12 +4,12 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%  Function to generate WFIRST CGI pupil 20200312 in Matlab using PROPER 
+%  Function to generate WFIRST CGI pupil 20200513 in Matlab using PROPER
 %  functions for rectangles and FALCO for ellipses.
 %
 %  Parameters were found originally found by Dwight Moody and then adjusted
 %  by A.J. Riggs by fitting ellipses and rectangles to the universally
-%  released file 'WFIRST_CGI_pupil_20200312.png'.
+%  released file 'pupil_CGI-20200513_8k_binary_noF.png'.
 %
 % %--Order of Operations:
 % 1) Pad
@@ -23,13 +23,13 @@ function pupil = falco_gen_pupil_WFIRST_CGI_20200513(Nbeam, centering, varargin)
 
 %% Define the best-fit values for ellipses and rectangles (DO NOT CHANGE)
 
-primaryRadiusYpixels = 4027; %4023.5;%4023.6; %4023.5; %4024; %4022;
+primaryRadiusYpixels = 4027.25; %4023.5;%4023.6; %4023.5; %4024; %4022;
 ODpixels = 2*primaryRadiusYpixels;
 
 DeltaY = (-1.4+0.25)/ODpixels; % Extra offset of primary compared to pupil CGI 20200513
 
 primaryRadiusX = 3990.0/ODpixels; %3987.0/ODpixels;
-primaryRadiusY = (primaryRadiusYpixels+0.25)/ODpixels;
+primaryRadiusY = (primaryRadiusYpixels+0*0.25)/ODpixels;
 primaryCenterX = 0.0/ODpixels;
 primaryCenterY = 0.0/ODpixels;
 
@@ -68,8 +68,8 @@ tabCenterVecY = [55.0, 55.0, 70.0-1.25]/ODpixels + DeltaY; % [60.0, 60.0, 60.0]/
 lStrut = 0.55;
 
 deltaAngle = 2.5*pi/16;
-angTabStart = [0.616 - deltaAngle/2.0; 2.54 - deltaAngle/2.0; -1.57 - deltaAngle/2.0]; 
-angTabEnd   = [0.616 + deltaAngle/2.0; 2.54 + deltaAngle/2.0; -1.57 + deltaAngle/2.0]; 
+angTabStart = [0.616 - deltaAngle/2.0; 2.54 - deltaAngle/2.0; -1.57 - deltaAngle/2.0];
+angTabEnd   = [0.616 + deltaAngle/2.0; 2.54 + deltaAngle/2.0; -1.57 + deltaAngle/2.0];
 
 xcStrutVec = strutCenterVecX;
 ycStrutVec = strutCenterVecY;
@@ -79,23 +79,23 @@ wStrutVec = strutWidthVec;
 %% Changes to the pupil
 
 if(size(varargin,2)>1)
-    error('falco_gen_pupil_WFIRST_CGI_202003.m: Too many inputs')
+    error('falco_gen_pupil_WFIRST_CGI_20200513.m: Too many inputs')
 elseif(size(varargin,2)==1)
     changes = varargin{1}; %--Structure containing which values to change;
 else
     changes.dummy = 1; %--Else initialize structure
 end
- 
+
 %%--(Optional) Lyot stop mode (concentric, circular ID and OD)
 if(~isfield(changes,'flagLyot')); flagLyot = false; else; flagLyot = changes.flagLyot; end
 if(flagLyot == true)
-    if(isfield(changes,'ID')) 
+    if(isfield(changes,'ID'))
         ID = changes.ID;
     else
         error('changes.ID must be defined for Lyot stop generation mode.')
     end
-    
-    if(isfield(changes,'OD')) 
+
+    if(isfield(changes,'OD'))
         OD = changes.OD;
     else
         error('changes.OD must be defined for Lyot stop generation mode.')
@@ -152,7 +152,7 @@ if(isfield(changes,'Narray')); Narray = changes.Narray; end
 if(strcmpi(centering,'interpixel'))
     xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam;
 else
-    xs = (-(Narray/2):Narray/2-1)/Nbeam; 
+    xs = (-(Narray/2):Narray/2-1)/Nbeam;
 end
 
 [XS,YS] = meshgrid(xs);
@@ -166,11 +166,11 @@ dx = Dbeam/Nbeam;
 
 switch centering % 0 for pixel-centered pupil, or -diam/np for inter-pixel centering
     case {'interpixel','even'}
-        cshift = -dx/2; % = -dx/2/bdf; 
+        cshift = -dx/2; % = -dx/2/bdf;
     case {'pixel','odd'}
         cshift = 0;
         if(flagRot180)
-            cshift = -dx; % = -dx/bdf; 
+            cshift = -dx; % = -dx/bdf;
         end
 end
 
@@ -182,8 +182,8 @@ for iStrut=1:6
     angDeg = angStrutVec(iStrut) + clock_deg; % degrees
     wStrut = magFac*(wStrutVec(iStrut) + 2*pad_strut);
     lStrutIn = magFac*lStrut;
-    xc = magFac*(xcStrutVec(iStrut)); 
-    yc = magFac*(ycStrutVec(iStrut)); 
+    xc = magFac*(xcStrutVec(iStrut));
+    yc = magFac*(ycStrutVec(iStrut));
     cxy = rotMat*[xc; yc];
     xc = cxy(1)+xShear;
     yc = cxy(2)+yShear;
@@ -206,7 +206,7 @@ if(flagLyot == false)
     inputs.radiusX = ra_OD_x;
     inputs.radiusY = ra_OD_y;
     inputs.clockingDegrees = clock_deg;
-    inputs.centering = centering; 
+    inputs.centering = centering;
     inputs.xShear = cx_OD;
     inputs.yShear = cy_OD;
     % inputs.magFac = magFac; %  not needed because falco_gen_ellipse takes magnification into account
@@ -244,7 +244,7 @@ if(flagLyot == false)
         XSnew = (XS + tabCenterVecX(iTab)) - xShear;
         YSnew = (YS + tabCenterVecY(iTab)) - yShear;
         THETAS = atan2(YSnew,XSnew);
-    
+
         if(angTabStart(iTab)>angTabEnd(iTab))
             cobsTabsMask( THETAS>=angTabEnd(iTab)+clock_rad & THETAS<=angTabStart(iTab)+clock_rad ) = 1.0;
         else
@@ -279,7 +279,7 @@ if(flagLyot == false)
 
         tabSector = cobsTabsMask.*tabEllipse;
 
-        tabCube(:,:,iTab) = 1-tabSector;   
+        tabCube(:,:,iTab) = 1-tabSector;
     %     figure(11); imagesc(cobsTabsMask); axis xy equal tight; colorbar; drawnow;
     %     figure(12); imagesc(tabEllipse); axis xy equal tight; colorbar; drawnow;
     %     figure(13); imagesc(tabCube(:,:,iTab)); axis xy equal tight; colorbar; drawnow;
@@ -307,7 +307,7 @@ else % (Lyot stop mode)
 end
 
 if(flagRot180)
-   pupil = rot90(pupil,2); 
+   pupil = rot90(pupil,2);
 end
 
 end % EOF

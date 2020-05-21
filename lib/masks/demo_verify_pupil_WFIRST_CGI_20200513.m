@@ -15,7 +15,7 @@ pupilFromFile = double(pupil0)/double(max(pupil0(:)));
 Narray = size(pupilFromFile,1);
 
 %--Generate pupil representation in FALCO
-Nbeam = 2*4027; %2*4023.5;
+Nbeam = 2*4027.25;
 centering = 'pixel';
 changes.dummy = 1;
 changes.xShear = -0.5/Nbeam; 
