@@ -13,6 +13,5 @@ function rw = falco_zwfs_getReferenceWave(mp)
     mp.dm2.V = zeros(mp.dm2.Nact);
     mp.P1.full.E = ones(size(mp.P1.full.E));
     rw = model_ZWFS(mp, modvar, 'refwave');
-    rw = abs(rw); 
 
 end
