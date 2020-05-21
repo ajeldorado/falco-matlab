@@ -1,3 +1,9 @@
+% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% RESERVED. United States Government Sponsorship acknowledged. Any
+% commercial use must be negotiated with the Office of Technology Transfer
+% at the California Institute of Technology.
+% -------------------------------------------------------------------------
+
 function mp = falco_set_Efields_primarySurfError(mp,surf,varargin)
 %mp = falco_set_Efields_primarySurfError(mp,surf,varargin)
 %   Converts a surface map into E-field at P1. Fills in the mp.P1.x.E cube
