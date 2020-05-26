@@ -461,7 +461,17 @@ n = n_default;	% start off with less padding
 
 wavefront = prop_begin(diam,lambda_m, n,'beam_diam_fraction', pupil_diam_pix/n);%
 
-pupil =fitsread( pupil_file);
+if(strcmpi(cor_type, 'spc_spec_custom') || strcmpi(cor_type, 'spc_ifs_custom'))
+%     temp = load('pupil_730.mat');
+%     temp = load('pupil_730_clkMinus6mrad.mat');
+    temp = load('pupil_730_clk6mrad.mat');
+    pupil = custom_pad(temp.pupil, n);
+    pupil = abs(pupil).*exp(1j*angle(pupil)*(730e-9/lambda0_m)); % Have phase scale with wavelength
+    clear temp;
+else
+    pupil =fitsread( pupil_file);
+end
+% pupil =fitsread( pupil_file);
 wavefront = prop_multiply(wavefront, custom_pad(pupil,n));
 clear pupil
 
