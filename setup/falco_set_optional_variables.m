@@ -19,8 +19,7 @@ mp.path.dummy = 1;
 %% Default File Paths for Data Storage (all excluded from git)
 
 %--Get the falco path for making the other default paths
-[filepath, name, ext] = fileparts(mfilename('fullpath'));
-mp.path.falco = filepath(1:end-5); % remove "setup" from the end of the path
+mp.path.falco = fileparts(fileparts(mfilename('fullpath')));
 
 %--Store minimal data to re-construct the data from the run: the config files and "out" structure after a trial go here
 if(isfield(mp.path,'config')==false);  mp.path.config = [mp.path.falco filesep 'data' filesep 'brief' filesep];  end
