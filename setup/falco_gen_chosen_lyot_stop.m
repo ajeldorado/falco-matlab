@@ -47,7 +47,7 @@ switch upper(mp.whichPupil)
             mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
         end
  
-    case{'WFIRST20191009', 'WFIRST180718'}
+    case{'WFIRST20200513','WFIRST20191009', 'WFIRST180718'}
 
         %--Define Lyot stop generator function inputs for the 'full' optical model
         if(mp.compact.flagGenLS || mp.full.flagGenLS)
@@ -59,6 +59,10 @@ switch upper(mp.whichPupil)
         end
         
         switch upper(mp.whichPupil)
+            case{'WFIRST20200513'}
+                if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_20200513(mp.P4.full.Nbeam, mp.centering, changes); end
+                if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_20200513(mp.P4.compact.Nbeam, mp.centering, changes); end
+            
             case{'WFIRST20191009'}
                 if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P4.full.Nbeam, mp.centering, changes); end
                 if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P4.compact.Nbeam, mp.centering, changes); end

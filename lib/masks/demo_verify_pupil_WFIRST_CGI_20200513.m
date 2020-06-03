@@ -15,11 +15,11 @@ pupilFromFile = double(pupil0)/double(max(pupil0(:)));
 Narray = size(pupilFromFile,1);
 
 %--Generate pupil representation in FALCO
-Nbeam = 2*4027; %2*4023.5;
+Nbeam = 2*4027.25;
 centering = 'pixel';
 changes.dummy = 1;
 changes.xShear = -0.5/Nbeam; 
-changes.yShear = -52.85/Nbeam; %(-0.6-55+3.5-0.5-0.25)/Nbeam;
+changes.yShear = -52.85/Nbeam;
 pupilFromFALCO = falco_gen_pupil_WFIRST_CGI_20200513(Nbeam, centering, changes);
 pupilFromFALCO = pad_crop(pupilFromFALCO, Narray);
 

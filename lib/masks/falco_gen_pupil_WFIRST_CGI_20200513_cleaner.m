@@ -19,42 +19,31 @@
 %
 % NOTE: All pupil features have normalized length units of pupil diameters.
 
-function pupil = falco_gen_pupil_WFIRST_CGI_20200513(Nbeam, centering, varargin)
+function pupil = falco_gen_pupil_WFIRST_CGI_20200513_cleaner(Nbeam, centering, varargin)
 
 %% Define the best-fit values for ellipses and rectangles (DO NOT CHANGE)
 
-primaryRadiusYpixels = 4027.25; %4023.5;%4023.6; %4023.5; %4024; %4022;
-ODpixels = 2*primaryRadiusYpixels;
+primaryRadiusYpixels = 4027.25;
+ODpixels = 2.*primaryRadiusYpixels;
 
-DeltaY = (-1.4+0.25)/ODpixels; % Extra offset of primary compared to pupil CGI 20200513
+primaryRadiusX = 3990.0/ODpixels;
+primaryRadiusY = primaryRadiusYpixels/ODpixels;
+primaryCenterX = 0.;
+primaryCenterY = 0.;
 
-primaryRadiusX = 3990.0/ODpixels; %3987.0/ODpixels;
-primaryRadiusY = (primaryRadiusYpixels)/ODpixels;
-primaryCenterX = 0.0/ODpixels;
-primaryCenterY = 0.0/ODpixels;
+secondaryRadiusX = 1209.65/ODpixels;
+secondaryRadiusY = 1220.0/ODpixels;
+secondaryCenterX = 0.0/ODpixels;
+secondaryCenterY = -2.95/ODpixels;
 
-secondaryRadiusX = (0.2 + 0.2 + 0.25 + 0.5 + 1208.5)/ODpixels;
-secondaryRadiusY = (1219.0 + 1.0)/ODpixels;
-secondaryCenterX = -0.0/ODpixels;
-secondaryCenterY = (-1.8 -0.5 + 0.25 + 0.25)/ODpixels + DeltaY;
+strutEndVecX1 = ([843.9, 728.0, 47.0+0.5, -192.0, -676.0, -816.65])/ODpixels;
+strutEndVecY1 = ([550.85, 580.35, -970.65, -1097.15, 605.55, 458.85])/ODpixels;
 
-strutEndVecX1 = ([843.0, 728.0, 47.0+0.5, -192.0, -676.0, -816.0])/ODpixels;
-strutEndVecY1 = ([552.0, 581.0, -968.0, -1095.0, (606.5-0.3), 460.0])/ODpixels + DeltaY;
-
-strutEndVecX2 = ([1579.0, 3988.0, 2430.0-0.3, -2484.0, -3988.0, -1572.0])/ODpixels;
-strutEndVecY2 = ([3868.0, -511.0, -3212.0, -3254.0, (-503.5-0.3), 3868.0])/ODpixels + DeltaY;
+strutEndVecX2 = ([1579.9, 3988.0, 2430.0-0.3, -2484.0, -3988.0, -1572.65])/ODpixels;
+strutEndVecY2 = ([3866.85, -511.65, -3214.65, -3256.15, -504.45, 3866.85])/ODpixels;
 
 strutCenterVecX = (strutEndVecX1 + strutEndVecX2)/2.0;
 strutCenterVecY = (strutEndVecY1 + strutEndVecY2)/2.0;
-
-strutCenterVecX(1) = strutCenterVecX(1) + 0.90/ODpixels;
-strutCenterVecX(6) = strutCenterVecX(6) - 0.65/ODpixels;
-
-strutCenterVecY(2) = strutCenterVecY(2) + 0.5/ODpixels;
-strutCenterVecY(3) = strutCenterVecY(3) - 1.5/ODpixels;
-strutCenterVecY(4) = strutCenterVecY(4) - 1.0/ODpixels;
-strutCenterVecY(5) = strutCenterVecY(5) + 0.50/ODpixels;
-
 
 strutWidthVec = [257.0, 259.0, 258.0, 258.0, 258.5+0.5, 257.0]/ODpixels;
 
@@ -63,7 +52,7 @@ strutAngleVec = atan2(strutEndVecY2-strutEndVecY1, strutEndVecX2-strutEndVecX1)*
 tabRadiusVecX = [1342.0+1.0, 1342.0+1.0, 1364.0]/ODpixels;
 tabRadiusVecY = [1352.0+1.0, 1352.0+1.0, 1374.0]/ODpixels;
 tabCenterVecX = [0.0, 0.0, 0.0]/ODpixels;
-tabCenterVecY = [55.0, 55.0, 70.0-1.25]/ODpixels + DeltaY; % [60.0, 60.0, 60.0]/ODpixels;
+tabCenterVecY = [53.85, 53.85, 67.6]/ODpixels;
 
 lStrut = 0.55;
 
@@ -197,21 +186,23 @@ if(flagLyot == false)
     cx_OD = magFac*primaryCenterX;
     cy_OD = magFac*primaryCenterY;
     cxy = rotMat*[cx_OD; cy_OD];
-    cx_OD = cxy(1) + xShear;% + cshift; --> cshift not needed because falco_gen_ellipse takes centering into account
-    cy_OD = cxy(2) + yShear;% + cshift; --> cshift not needed because falco_gen_ellipse takes centering into account
-    % bm = prop_elliptical_aperture( bm, ra_OD_x, ra_OD_y, 'XC', cx_OD, 'YC', cy_OD);
-
-    inputs.Narray = Narray;
-    inputs.Nbeam = Nbeam;
-    inputs.radiusX = ra_OD_x;
-    inputs.radiusY = ra_OD_y;
-    inputs.clockingDegrees = clock_deg;
-    inputs.centering = centering;
-    inputs.xShear = cx_OD;
-    inputs.yShear = cy_OD;
-    % inputs.magFac = magFac; %  not needed because falco_gen_ellipse takes magnification into account
-    primaryAperture = falco_gen_ellipse(inputs);
-    % primaryAperture = 1;
+    cx_OD = cxy(1) + xShear + cshift; %--> cshift not needed because falco_gen_ellipse takes centering into account
+    cy_OD = cxy(2) + yShear + cshift; %--> cshift not needed because falco_gen_ellipse takes centering into account
+    bm = prop_elliptical_aperture( bm, ra_OD_x, ra_OD_y, 'XC', cx_OD, 'YC', cy_OD, 'ROTATION', -clock_deg);
+    primaryAperture = 1;
+    
+%     cx_OD = cxy(1) + xShear;
+%     cy_OD = cxy(2) + yShear;
+%     inputs.Narray = Narray;
+%     inputs.Nbeam = Nbeam;
+%     inputs.radiusX = ra_OD_x;
+%     inputs.radiusY = ra_OD_y;
+%     inputs.clockingDegrees = clock_deg;
+%     inputs.centering = centering;
+%     inputs.xShear = cx_OD;
+%     inputs.yShear = cy_OD;
+%     % inputs.magFac = magFac; %  not needed because falco_gen_ellipse takes magnification into account
+%     primaryAperture = falco_gen_ellipse(inputs);
 
     %% SECONDARY MIRROR (INNER DIAMETER)
     ra_ID_x = magFac*(secondaryRadiusX + pad_COBS);
@@ -219,20 +210,23 @@ if(flagLyot == false)
     cx_ID = magFac*secondaryCenterX;
     cy_ID = magFac*secondaryCenterY;
     cxy = rotMat*[cx_ID; cy_ID];
-    cx_ID = cxy(1) + xShear;% + cshift; --> cshift not needed because falco_gen_ellipse takes centering into account
-    cy_ID = cxy(2) + yShear;% + cshift; --> cshift not needed because falco_gen_ellipse takes centering into account
-    % bm = prop_elliptical_obscuration(bm, ra_ID_x, ra_ID_y,'XC',cx_ID,'YC',cy_ID);
+    cx_ID = cxy(1) + xShear + cshift;% --> cshift not needed because falco_gen_ellipse takes centering into account
+    cy_ID = cxy(2) + yShear + cshift;% --> cshift not needed because falco_gen_ellipse takes centering into account
+    bm = prop_elliptical_obscuration(bm, ra_ID_x, ra_ID_y,'XC',cx_ID,'YC',cy_ID,'ROTATION',-clock_deg);
+    secondaryObscuration = 1;
 
-    inputsSec.Narray = Narray;
-    inputsSec.Nbeam = Nbeam;
-    inputsSec.radiusX = ra_ID_x;
-    inputsSec.radiusY = ra_ID_y;
-    inputsSec.clockingDegrees = clock_deg;
-    inputsSec.centering = centering;
-    inputsSec.xShear = cx_ID;
-    inputsSec.yShear = cy_ID;
-    % inputsSec.magFac = magFac; %  not needed because falco_gen_ellipse takes magnification into account
-    secondaryObscuration = 1 - falco_gen_ellipse(inputsSec);
+%     cx_ID = cxy(1) + xShear;
+%     cy_ID = cxy(2) + yShear;
+%     inputsSec.Narray = Narray;
+%     inputsSec.Nbeam = Nbeam;
+%     inputsSec.radiusX = ra_ID_x;
+%     inputsSec.radiusY = ra_ID_y;
+%     inputsSec.clockingDegrees = clock_deg;
+%     inputsSec.centering = centering;
+%     inputsSec.xShear = cx_ID;
+%     inputsSec.yShear = cy_ID;
+%     % inputsSec.magFac = magFac; %  not needed because falco_gen_ellipse takes magnification into account
+%     secondaryObscuration = 1 - falco_gen_ellipse(inputsSec);
 
     %--Tabs where Struts Meet Central Obscuration (aka COBS)
     nTabs = 3;
@@ -254,7 +248,7 @@ if(flagLyot == false)
         %--ELLIPSE:
 
         % Full ellipse to be multiplied by the mask to get just tabs
-    %     bm2 = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
+        bm2 = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
         cx_tab = magFac*tabCenterVecX(iTab);
         cy_tab = magFac*tabCenterVecY(iTab);
         cxy = rotMat*[cx_tab; cy_tab];
@@ -262,20 +256,21 @@ if(flagLyot == false)
         cy_tab = cxy(2)+yShear;
         tabRadiusX = magFac*(tabRadiusVecX(iTab) + pad_COBStabs);
         tabRadiusY = magFac*(tabRadiusVecY(iTab) + pad_COBStabs);
-    %     bm2 = prop_elliptical_obscuration(bm2, tabRadiusX, tabRadiusY,'XC',cx_tab+cshift,'YC',cy_tab+cshift);
-    %     tabEllipse = 1-ifftshift(abs(bm2.wf));
+        bm2 = prop_elliptical_obscuration(bm2, tabRadiusX, tabRadiusY,'XC',cx_tab+cshift,'YC',cy_tab+cshift,'ROTATION',-clock_deg);
+        tabEllipse = 1-ifftshift(abs(bm2.wf));
+        
 
-        clear inputs
-        inputs.Narray = Narray;
-        inputs.Nbeam = Nbeam;% = 1219.0/ODpixels %Nbeam;
-        inputs.radiusX = tabRadiusX;
-        inputs.radiusY = tabRadiusY;
-        inputs.clockingDegrees = clock_deg;
-        inputs.centering = centering;
-        inputs.xShear = cx_tab;
-        inputs.yShear = cy_tab;
-        % inputs.magFac = magFac;
-        tabEllipse = falco_gen_ellipse(inputs);
+%         clear inputs
+%         inputs.Narray = Narray;
+%         inputs.Nbeam = Nbeam;% = 1219.0/ODpixels %Nbeam;
+%         inputs.radiusX = tabRadiusX;
+%         inputs.radiusY = tabRadiusY;
+%         inputs.clockingDegrees = clock_deg;
+%         inputs.centering = centering;
+%         inputs.xShear = cx_tab;
+%         inputs.yShear = cy_tab;
+%         % inputs.magFac = magFac;
+%         tabEllipse = falco_gen_ellipse(inputs);
 
         tabSector = cobsTabsMask.*tabEllipse;
 

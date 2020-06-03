@@ -461,7 +461,7 @@ n = n_default;	% start off with less padding
 
 wavefront = prop_begin(diam,lambda_m, n,'beam_diam_fraction', pupil_diam_pix/n);%
 
-pupil =fitsread( pupil_file);
+pupil =fitsread(pupil_file);
 wavefront = prop_multiply(wavefront, custom_pad(pupil,n));
 clear pupil
 
