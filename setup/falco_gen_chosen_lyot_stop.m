@@ -59,9 +59,9 @@ switch upper(mp.whichPupil)
         end
         
         switch upper(mp.whichPupil)
-            case{'WFIRST20200513'}
-                if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_20200513(mp.P4.full.Nbeam, mp.centering, changes); end
-                if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_20200513(mp.P4.compact.Nbeam, mp.centering, changes); end
+            case{'WFIRST20200513', 'ROMAN20200513'}
+                if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.full.Nbeam, mp.centering, changes); end
+                if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.compact.Nbeam, mp.centering, changes); end
             
             case{'WFIRST20191009'}
                 if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P4.full.Nbeam, mp.centering, changes); end

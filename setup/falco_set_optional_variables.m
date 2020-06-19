@@ -99,7 +99,7 @@ if(isfield(mp,'x_planet')==false);  mp.x_planet = 5;  end % xi position of exopl
 if(isfield(mp,'y_planet')==false);  mp.y_planet = 1;  end % eta position of exoplanet in lambda0/D
 
 %--Control
-if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; else; mp.jac.Zcoef = 1; end %--Zernike modes in Jacobian
+if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; else; mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
 
 %--Performance Evaluation
