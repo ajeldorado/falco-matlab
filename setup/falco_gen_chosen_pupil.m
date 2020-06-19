@@ -38,9 +38,9 @@ switch upper(mp.whichPupil)
         inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); % number of points across usable pupil 
         mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
-    case{'WFIRST20200513'}
-            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_20200513(mp.P1.full.Nbeam, mp.centering);  end
-            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_20200513(mp.P1.compact.Nbeam, mp.centering);  end
+    case{'WFIRST20200513', 'ROMAN20200513'}
+            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.full.Nbeam, mp.centering);  end
+            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.centering);  end
     
     case{'WFIRST20191009'}
             if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.full.Nbeam, mp.centering);  end

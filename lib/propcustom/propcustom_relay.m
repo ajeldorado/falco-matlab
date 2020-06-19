@@ -20,9 +20,18 @@
 
 function Eout = propcustom_relay(Ein, Nrelay, varargin)
 
+    % Error checks on inputs
+    if length(size(Ein)) ~= 2
+        error('Ein must be a 2-D array.')
+    elseif size(Ein, 1) ~= size(Ein, 2)
+        error('Ein must be a square array.')
+    end
+    
     if(Nrelay - round(Nrelay) ~= 0)
         error('propcustom_relay: The variable Nrelay must be an integer')
     end
+    
+    
 
     % Set default values of input parameters
     centering = 'pixel';
@@ -42,10 +51,10 @@ function Eout = propcustom_relay(Ein, Nrelay, varargin)
         end
     end
 
-    Eout = rot90(Ein,2*Nrelay);  %--Forward propagate two Fourier transforms by rotating 180 degrees.
+    Eout = rot90(Ein, 2*Nrelay);  %--Forward propagate two Fourier transforms by rotating 180 degrees.
 
-    if(strcmpi(centering, 'pixel') && mod(Nrelay, 2)==1)
-        Eout = circshift(Eout, [1 1]);   %--To undo center offset when beam is pixel centered and rotating by 180 degrees.
+    if strcmpi(centering, 'pixel') && (mod(Nrelay, 2) == 1) && (mod(size(Ein, 1), 2) == 0)
+        Eout = circshift(Eout, [1 1]);   %--To undo center offset when beam is pixel centered in even-sized array 
     end
 
 end %--END OF FUNCTION
