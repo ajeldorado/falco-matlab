@@ -58,7 +58,10 @@ if(mp.ctrl.flagUseModel) %--Perform a model-based grid search using the compact 
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
     end
 else %--Perform an empirical grid search with actual images from the testbed or full model
-    if(mp.flagFiber)
+    if(mp.flagFiber == false)
+        Itotal = falco_get_summed_image(mp);
+        InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
+    else
         
         if(mp.flagLenslet)
             IfiberTotal = falco_get_summed_image_fiber(mp);

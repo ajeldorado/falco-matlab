@@ -23,7 +23,7 @@
 % - Created on 2019-02-22 by G. Ruane 
 
 function normI = falco_get_hcst_sbp_image(mp,si)
-
+    
     bench = mp.bench;
     sbp_width = bench.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
@@ -79,8 +79,25 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     % Scale the PSF photometry by the current integration time
     peakPSF = PSFpeak/mp.peakPSFtint*bench.andor.tint*mp.NDfilter_cal; 
     
-    % Get normalized intensity (dark subtracted and normalized by peakPSF)
-    normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 
-%     normI = fliplr((hcst_andor_getImage(bench)-dark)/peakPSF); 
+    % Take image
+    Im = hcst_andor_getImage(bench);
     
+    % Get normalized intensity (dark subtracted and normalized by peakPSF)
+    normI = (Im-dark)/peakPSF; 
+%     normI = fliplr((hcst_andor_getImage(bench)-dark)/peakPSF); 
+        
+    % Check exposure time
+    if si==1 && bench.andor.tint<3 && min(normI(:))<2e-8
+        dh = Im(mp.Fend.corr.maskBool);
+        if median(dark(:))>min(dh(:))
+            disp('Exposure time is too low; adding 0.5 sec')
+            hcst_andor_setExposureTime(bench,bench.andor.tint+0.5);
+            Im = hcst_andor_getImage(bench);
+            normI = (Im-dark)/peakPSF;
+            
+            % We have to change the mp.est.fudge:
+            mp.est.probe.gainFudge = interp1([0.5,3],[1,0.5],bench.andor.tint); % empirically found for the 780nm laser
+        end
+    end
+
 end 
