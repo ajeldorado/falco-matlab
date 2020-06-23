@@ -182,10 +182,9 @@ for Itr=1:mp.Nitr
         end
     end
 
-    %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
-    if( (Itr==1) ||cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
-        [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
-    end
+    %% Cull weak actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
+    [mp, jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct);
+
     %% Load the improved Jacobian if using the E-M technique
     if(mp.flagUseLearnedJac)
         if mp.est.flagUseTensorflow
@@ -415,11 +414,6 @@ if(mp.flagSaveEachItr)
     fprintf('Saving DM commands for this iteration...')
     if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
     if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
-    if(any(mp.dm_ind==3)); DM3V = mp.dm3.V; else; DM3V = 0; end
-    if(any(mp.dm_ind==4)); DM4V = mp.dm4.V; else; DM4V = 0; end
-    if(any(mp.dm_ind==5)); DM5V = mp.dm5.V; else; DM5V = 0; end
-    if(any(mp.dm_ind==6)); DM6V = mp.dm6.V; else; DM6V = 0; end
-    if(any(mp.dm_ind==7)); DM7V = mp.dm7.V; else; DM7V = 0; end
     if(any(mp.dm_ind==8)); DM8V = mp.dm8.V; else; DM8V = 0; end
     if(any(mp.dm_ind==9)); DM9V = mp.dm9.V; else; DM9V = 0; end
     Nitr = mp.Nitr;
@@ -506,7 +500,7 @@ out.Nitr = mp.Nitr;
 out.InormHist = InormHist;
 out.InormMod = InormHist_tb.mod;
 
-fnOut = [mp.path.config mp.runLabel,'_snippet.mat'];
+fnOut = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
 
 fprintf('\nSaving abridged workspace to file:\n\t%s\n',fnOut)
 save(fnOut,'out');
@@ -522,7 +516,7 @@ if(mp.flagSaveWS)
     mp.P4.full.mask=1; mp.P4.compact.mask=1;
     mp.F3.full.mask=1; mp.F3.compact.mask=1;
 
-    mp.P1.full.E = 1; mp.P1.compact.E=1; mp.Eplanet=1; 
+    mp.P1.full.E = 1; mp.P1.compact.E = 1; mp.Eplanet = 1; 
     mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
     mp.complexTransFull = 1; mp.complexTransCompact = 1;
 

@@ -19,8 +19,7 @@ mp.path.dummy = 1;
 %% Default File Paths for Data Storage (all excluded from git)
 
 %--Get the falco path for making the other default paths
-[filepath, name, ext] = fileparts(mfilename('fullpath'));
-mp.path.falco = filepath(1:end-5); % remove "setup" from the end of the path
+mp.path.falco = fileparts(fileparts(mfilename('fullpath')));
 
 %--Store minimal data to re-construct the data from the run: the config files and "out" structure after a trial go here
 if(isfield(mp.path,'config')==false);  mp.path.config = [mp.path.falco filesep 'data' filesep 'brief' filesep];  end
@@ -100,7 +99,7 @@ if(isfield(mp,'x_planet')==false);  mp.x_planet = 5;  end % xi position of exopl
 if(isfield(mp,'y_planet')==false);  mp.y_planet = 1;  end % eta position of exoplanet in lambda0/D
 
 %--Control
-if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; else; mp.jac.Zcoef = 1; end %--Zernike modes in Jacobian
+if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; else; mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
 
 %--Performance Evaluation
