@@ -10,14 +10,12 @@
 function [mp, out] = falco_wfsc_loop(mp, out)
 
 if(isfield(mp,'testbed') )
-    bench = mp.bench
+    bench = mp.bench;
 end
 %% Initializations of Arrays for Data Storage 
 InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
 
 %--Raw contrast (broadband)
-
-InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
 
 %% Plot the pupil masks
 % if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
@@ -25,7 +23,12 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of
 % if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end
 
 %% Take initial broadband image 
-Im = falco_get_summed_image(mp);
+if mp.flagFiber
+    InormSMFHist = zeros(mp.Nitr,1);
+    [Im, Ifiber] = falco_get_summed_image(mp);
+else
+    Im = falco_get_summed_image(mp);
+end
 
 %%
 sz = size(Im);
@@ -97,7 +100,9 @@ for Itr=1:mp.Nitr
     
     %--Compute the current contrast level
     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
-
+    if(mp.flagFiber)
+        InormSMFHist(Itr) = Ifiber/mp.Fend.full.I00Fiber(1);
+    end
     %--Plot the updates to the DMs and PSF
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
     if(isfield(mp,'testbed') )
@@ -293,6 +298,9 @@ for Itr=1:mp.Nitr
     cvar.Itr = Itr;
     cvar.EfieldVec = EfieldVec;
     cvar.InormHist = InormHist(Itr);
+    if mp.flagFiber
+        cvar.InormSMFHist = InormSMFHist(Itr)/mp.Fend.full.I00Fiber(1);
+    end
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
     
     %--Enforce constraints on DM commands 
@@ -380,7 +388,11 @@ end
 
 % Take the next image to check the contrast level (in simulation only)
 tic; fprintf('Getting updated summed image... ');
-Im = falco_get_summed_image(mp);
+if mp.flagFiber
+    [Im, Ifiber] = falco_get_summed_image(mp);
+else
+    Im = falco_get_summed_image(mp);
+end
 fprintf('done. Time = %.1f s\n',toc);
 
 %--REPORTING NORMALIZED INTENSITY
@@ -389,6 +401,14 @@ fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x sma
     InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
 
 fprintf('\n\n');
+
+if mp.flagFiber
+    InormSMFHist(Itr+1) = Ifiber/mp.Fend.full.I00Fiber(1);%mean(Im(mp.Fend.corr.maskBool));
+    fprintf('Prev and New Measured SMF Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+        InormSMFHist(Itr), InormSMFHist(Itr+1), InormSMFHist(Itr)/InormSMFHist(Itr+1) ); 
+
+    fprintf('\n\n');
+end
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
 if(mp.flagSaveEachItr)

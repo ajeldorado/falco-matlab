@@ -33,6 +33,7 @@ mp.path.proper = '/Users/jllopsay/Documents/MATLAB/PROPER/'; %--Location of the 
 mp.path.config = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
 mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 mp.path.mask = '/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.ws_inprogress = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws_inprogress/';
 
 % %--Library locations. FALCO and PROPER are required. CVX is optional.
 % mp.path.falco = 'C:\Lab\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
@@ -52,7 +53,7 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_HCST_AVC
+EXAMPLE_defaults_HCST_AVC_SMF
 
 mp.flagSaveWS = true;
 %% Step 3: Overwrite default values as desired
@@ -85,8 +86,8 @@ mp.flagLenslet = false;  %--whether to go through a lenslet array before using t
 % clear temp
 
 %--DEBUGGING IN MONOCHROMATIC LIGHT
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.30;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 7;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 %% Other stuff
@@ -95,42 +96,19 @@ mp.fineAlignment_it = [];
 %--Special settings for fibers
 
 if(mp.flagFiber)
-    if(mp.flagLenslet)
-        mp.Fend.FOV = 2;
-        mp.Fend.res = 15; %Has to be much higher than normal to avoid checkerboarding/ringing when going to F5.
-        
-        %--Fiber tip plane properties (i.e., focal plane of lenslet(s)
-        mp.F5.res = 4;
-        mp.F5.FOV = 10;
-        mp.F5.fiberPos = [0 0]; %Position of the fiber center in F5 in lambda/D.  
-                                %Should be zero unless testing fiber/lenslet misalignments.
-        
-        %--Lenslet properties
-        mp.Fend.lensletWavRad = 1.6; %Radius of the lenslet(s) in lambda_0/D
-        mp.Fend.Nlens = 1; %Number of lenslets in Fend
-        mp.Fend.x_lenslet = [6];% -3 -3];%[4 9 14 19]; %Lenslet positions in Fend in lambda_0/D
-        mp.Fend.y_lenslet = [0];% 5.196 -5.196];%[0 0 0 0];
-        mp.lensletFL = 150e-6; %Lenslet focal length in meters
-        
-        %--Off-axis, incoherent point source (exoplanet)
-        mp.x_planet = -mp.Fend.x_lenslet(1); %Position of the exoplanet in lambda_0/D
-        mp.y_planet = -mp.Fend.y_lenslet(1);
-        %Note that the above coordinates are flipped from the lenslet positions
-        %for some damn reason, so input the NEGATIVE of where you want the
-        %planet to be.
-    else
-        mp.Fend.FOV = 20;
-        mp.Fend.res = 5;
-        mp.Fend.Nlens = 1; %Number of lenslets in Fend
-        %--Fiber locations and number
-        mp.Fend.Nfiber = 1;
-        mp.Fend.x_fiber = [7];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
-        mp.Fend.y_fiber = [0];%[0 5.3597 -5.3597];%[0 4.625 -4.625];
-        
-        %--Off-axis, incoherent point source (exoplanet)
-        mp.x_planet = mp.Fend.x_fiber(1); %Position of the exoplanet in lambda_0/D
-        mp.y_planet = mp.Fend.y_fiber(1);
-    end
+    mp.Fend.FOV = 20;
+    mp.Fend.res = 5;
+    mp.Fend.Nlens = 1; %Number of lenslets in Fend
+    mp.Fend.Nfibers = mp.Fend.Nlens;
+    %--Fiber locations and number
+    mp.Fend.Nfiber = 1;
+    mp.Fend.x_fiber = [7];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+    mp.Fend.y_fiber = [0];%[0 5.3597 -5.3597];%[0 4.625 -4.625];
+
+    %--Off-axis, incoherent point source (exoplanet)
+    mp.x_planet = mp.Fend.x_fiber(1); %Position of the exoplanet in lambda_0/D
+    mp.y_planet = mp.Fend.y_fiber(1);
+ 
     
     %--Fiber properties
     mp.fiber.a = 0.507;%0.875;%0.66; %Radius of the fiber core in lambda_0/D
@@ -145,7 +123,7 @@ end
 
 %% Step 4: Generate the label associated with this trial
 
-mp.flagSaveEachItr = true;
+mp.flagSaveEachItr = false;
 
 label = 'SMF';
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
@@ -157,8 +135,9 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 % [out, data_train] = falco_adaptive_wfsc_loop(mp);
-out = falco_wfsc_loop(mp);
+[mp, out] = falco_flesh_out_workspace(mp);
 
+[mp, out] = falco_wfsc_loop(mp, out);
 if(mp.flagPlot)
     figure; semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
 end

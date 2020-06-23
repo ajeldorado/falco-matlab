@@ -222,7 +222,7 @@ if(whichDM==1)
 %                     Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
                     for i=1:mp.Fend.Nfiber
 %                         auxEonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
-                        auxEonefiber = sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        auxEonefiber = sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*(EFend)));
                         Eonefiber = sum(auxEonefiber(:));
 %                         Gzdltemp = Gzdltemp + Eonefiber;
                         Gzdl(i,Gindex) = Eonefiber;

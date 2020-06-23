@@ -21,7 +21,7 @@
 % - Simplified on 2019-03-01 by A.J. Riggs to loop over falco_get_sbp_image.m 
 %--------------------------------------------------------------------------
 
-function Imean = falco_get_summed_image(mp)
+function [Imean,varargout] = falco_get_summed_image(mp)
 
     %--Compute the DM surfaces outside the full model to save some time
     if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
@@ -35,22 +35,36 @@ function Imean = falco_get_summed_image(mp)
         
         %--Obtain all the images in parallel
         parfor ic=1:Nval
-            Iall{ic} = falco_get_single_sim_image(ic,ind_list,mp);  
+            if mp.flagFiber
+                [Iall{ic},Ifib{ic}] = falco_get_single_sim_image(ic,ind_list,mp);  
+            else
+                Iall{ic} = falco_get_single_sim_image(ic,ind_list,mp);  
+            end
         end
 
         %--Apply the spectral weights and add together
         Imean = 0;
+        if mp.flagFiber;Ifibmean = 0;end
         for ic=1:Nval  
             ilam = ind_list(1,ic);
             Imean = Imean + mp.full.lambda_weights_all(ilam)/length(mp.full.pol_conds)*Iall{ic};  
+            if mp.flagFiber; Ifibmean = Ifibmean + mp.full.lambda_weights_all(ilam)/length(mp.full.pol_conds)*Ifib{ic};  end
         end
-        
+        if mp.flagFiber; varargout{1} = Ifibmean; end
         
     else %--Otherwise, just loop over the function to get the sbp images. Need to do this for testbeds
         Imean = 0; % Initialize image
-        for si=1:mp.Nsbp    
-            Imean = Imean +  mp.sbp_weights(si)*falco_get_sbp_image(mp,si);
+        if mp.flagFiber;Ifibmean = 0;end
+        for si=1:mp.Nsbp   
+            if mp.flagFiber
+                [Imsbp,Ifiber] = falco_get_sbp_image(mp,si);
+                Ifibmean = Ifibmean + Ifiber;
+            else
+                Imsbp = falco_get_sbp_image(mp,si);
+            end
+            Imean = Imean +  mp.sbp_weights(si)*Imsbp;
         end
+        if mp.flagFiber; varargout{1} = Ifibmean; end
     end
 
 end %--END OF FUNCTION

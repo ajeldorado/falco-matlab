@@ -17,10 +17,15 @@
 % REVISION HISTORY
 % - Created on 2019-02-06 by A.J. Riggs.
 
-function ImNI = falco_get_sbp_image(mp,si)
+function [ImNI,varargout] = falco_get_sbp_image(mp,si)
 
     if(mp.flagSim) %--Generate simulated image
-        ImNI = falco_get_sim_sbp_image(mp,si);
+        if mp.flagFiber
+            [ImNI,Ifiber] = falco_get_sim_sbp_image(mp,si);
+            varargout{1} = Ifiber;
+        else
+            ImNI = falco_get_sim_sbp_image(mp,si);
+        end
     else %--Retrieve testbed image
         ImNI = falco_get_testbed_sbp_image(mp,si);
     end

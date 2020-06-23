@@ -19,7 +19,7 @@
 % and polarization states.
 % - Created on 2019-02-06 by A.J. Riggs.
 
-function Isbp = falco_get_sim_sbp_image(mp,si)
+function [Isbp,varargout] = falco_get_sim_sbp_image(mp,si)
 
 %--Compute the DM surfaces outside the full model to save lots of time
 if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
@@ -34,22 +34,38 @@ inds_list = allcomb(1:mp.Nwpsbp,1:Npol).'; %--dimensions: [2 x mp.Nwpsbp*Npol ]
 Nvals = size(inds_list,2);
     
 if(mp.flagParfor) %--Save a lot of time by running full model in parallel
-    parfor ic=1:Nvals;  Iall{ic} = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  end %--Obtain all the images in parallel
+    parfor ic=1:Nvals
+        if mp.flagFiber
+            [Iall{ic},Ifib{ic}] = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  
+        else
+            Iall{ic} = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  
+        end
+    end %--Obtain all the images in parallel
 else %--Run in serial
-    for ic=Nvals:-1:1;  Iall{ic} = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  end
+    for ic=Nvals:-1:1 
+        if mp.flagFiber
+            [Iall{ic},Ifib{ic}] = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  
+        else
+            Iall{ic} = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  
+        end
+    end
 end
 
 %--Apply the spectral weights and sum
 Isbp = 0; 
+Ifib_sbp = 0;
 for ic=1:Nvals  
     Isbp = Isbp + Iall{ic};  
+    if mp.flagFiber
+        Ifib_sbp = Ifib_sbp + Ifib{ic};
+    end
 end
-
+varargout{1} = Ifib_sbp;
 end %--END OF FUNCTION
 
 %--Function to return the weighted, normalized intensity image at a given
 % wavelength in the specified sub-bandpass.
-function Iout = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp)
+function [Iout,varargout] = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp)
 
     wi = inds_list(1,ic);
     ipol = inds_list(2,ic);
@@ -59,7 +75,12 @@ function Iout = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp)
     modvar.wpsbpIndex = wi;
     mp.full.polaxis = mp.full.pol_conds(ipol);
     modvar.whichSource = 'star';
-    Estar = model_full(mp, modvar);
+    if mp.flagFiber
+        [Estar,Efiber] = model_full(mp, modvar);
+        varargout{1} = (abs(Efiber).^2);
+    else
+        Estar = model_full(mp, modvar);
+    end
     Iout = (abs(Estar).^2); %--Apply spectral weighting outside this function
 
     %--Optionally include the planet PSF

@@ -36,7 +36,8 @@ if(mp.flagFiber)
     if(mp.flagLenslet)
         Ifiber = zeros(mp.F5.Neta, mp.F5.Nxi);
     else
-        Ifiber = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        Ifiber = 0;%zeros(mp.Fend.Neta, mp.Fend.Nxi);
+%         Ifiber = zeros(mp.Fend.Neta, mp.Fend.Nxi);
     end
 end
   

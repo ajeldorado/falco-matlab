@@ -19,14 +19,19 @@
 % REVISION HISTORY
 % - Created on 2019-05-06 by A.J. Riggs.
 
-function Iout = falco_get_single_sim_image(ic,inds_list,mp)
+function [Iout,varargout] = falco_get_single_sim_image(ic,inds_list,mp)
 
 %--Get the starlight image
 modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1,ic)),1);
 modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1,ic)),2);
 mp.full.polaxis = mp.full.pol_conds(inds_list(2,ic));
 modvar.whichSource = 'star';
-Estar = model_full(mp, modvar);
+if mp.fiber
+    [Estar,Efiber] = model_full(mp, modvar);
+    Ifiber = (abs(Efiber).^2);
+    varargout{1} = Ifiber;
+else
+    Estar = model_full(mp, modvar);
+end
 Iout = (abs(Estar).^2); %--Apply spectral weighting outside this function
-    
 end %--END OF FUNCTION

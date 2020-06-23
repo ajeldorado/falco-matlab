@@ -16,6 +16,7 @@ mp.flagPlot = false;
 mp.centering = 'pixel';
 mp.flagFiber = true;
 mp.flagLenslet = false;
+mp.flagZWFS = false;
 
 %--Whether to include planet in the images
 mp.planetFlag = false;
@@ -35,8 +36,8 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 775e-9;    %--Central wavelength of the whole spectral bandpass [meters]
-mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
@@ -114,7 +115,7 @@ mp.controller = 'gridsearchEFC';
 %--WFSC Iterations and Control Matrix Relinearization
 mp.Nitr = 20; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-mp.dm_ind = [1 2]; %--Which DMs to use
+mp.dm_ind = [1]; %--Which DMs to use
 
 
 %% Deformable Mirrors: Influence Functions
@@ -196,7 +197,7 @@ mp.fl = 779e-3; %--[meters] Focal length value used for all FTs in the compact m
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 256;
 mp.P2.compact.Nbeam = 256;
-mp.P3.compact.Nbeam = 512;
+mp.P3.compact.Nbeam = 256;
 mp.P4.compact.Nbeam = 256;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
@@ -218,7 +219,7 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 %--Pupil Plane Resolutions
 mp.P1.full.Nbeam = 256;
 mp.P2.full.Nbeam = 256;
-mp.P3.full.Nbeam = 512;
+mp.P3.full.Nbeam = 256;
 mp.P4.full.Nbeam = 256;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
