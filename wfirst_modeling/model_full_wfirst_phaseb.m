@@ -218,8 +218,8 @@ elseif  strcmp(cor_type,'hlc_custom')
         lam_occ = linspace(1-bw/2,1+bw/2,nlams)*lambda0_m;%[(1-bw/2):bw/(nlams-mod(nlams,2)):(1+bw/2)]*lambda0_m; 	% wavelengths at which occ trans provided
     end
     wlam = find( round(1e14*lambda_m) == round(1e14*lam_occ) ); 	% find exactly matching FPM wavelength
-    occulter_file_r = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol'   fpm_axis   '_' 'real.fits'];
-    occulter_file_i = [prefix  'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol'   fpm_axis   '_' 'imag.fits'];
+    occulter_file_r = [prefix 'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol' fpm_axis '_' 'real.fits'];
+    occulter_file_i = [prefix 'occ_lam' num2str(lam_occ(wlam),12) 'theta' thetaString 'pol' fpm_axis '_' 'imag.fits'];
 
     %--FOR TILED FPM STUDY ONLY
     if(isfield(optval, 'fpm_grid_sep'))
@@ -461,7 +461,7 @@ n = n_default;	% start off with less padding
 
 wavefront = prop_begin(diam,lambda_m, n,'beam_diam_fraction', pupil_diam_pix/n);%
 
-pupil =fitsread( pupil_file);
+pupil =fitsread(pupil_file);
 wavefront = prop_multiply(wavefront, custom_pad(pupil,n));
 clear pupil
 
@@ -648,6 +648,19 @@ if ( use_fpm )
     
     if ( is_hlc )
         occ = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
+
+%         % Fourier Downsample by Factor of 2
+%         occ0 = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
+%         nocc = size(occ0, 1);
+%         focc = fft2(ifftshift(occ0));
+%         focc = fftshift(focc);
+%         focc = custom_pad(focc, nocc/2);
+%         focc = fftshift(focc);
+%         occ = fftshift(ifft2(focc));
+%         occ = custom_pad(occ, nocc);
+%         figure(41); imagesc(abs(occ0)); axis xy equal tight; colorbar;
+%         figure(42); imagesc(abs(occ)); axis xy equal tight; colorbar;
+        
         if(is_fpm_grid)
             occ = occ.*fpm_grid;
 %             figure(123); imagesc(abs(occ)); axis xy equal tight; colorbar; drawnow;
