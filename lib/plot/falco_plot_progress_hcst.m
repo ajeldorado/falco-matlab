@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-function handles = falco_plot_progress_gpct(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf)
+function handles = falco_plot_progress_hcst(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf)
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
