@@ -10,8 +10,8 @@ tb = mp.tb;
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
-Icbmin = -6;
-Icbmax = -1;
+Icbmin = -8;
+Icbmax = -4;
 Im = Im_tb.Im;
 if(Itr>1 && ~strcmpi(mp.estimator,'perfect') )
     Imod = Inorm.mod(Itr-1);
