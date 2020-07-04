@@ -42,6 +42,8 @@
 
 function [ev] = falco_est_pairwise_probing(mp,ev,varargin)
 
+mp.isProbing = true;
+
 %--If there is a third input, it is the Jacobian structure
 if( size(varargin, 2)==1 )
     jacStruct = varargin{1};
@@ -163,7 +165,7 @@ for si=1:mp.Nsbp
             dDM2Vprobe = 0;
         elseif(mp.est.probe.whichDM == 2)
             dDM1Vprobe = 0;        
-            dDM2Vprobe = probeCmd./mp.dm1.VtoH; % Now in volts
+            dDM2Vprobe = probeCmd./mp.dm2.VtoH; % Now in volts
         end
         if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vnom+dDM1Vprobe;  end
         if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vnom+dDM2Vprobe;  end
@@ -451,6 +453,8 @@ ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
 % wavelengths.
 ev.Iest = abs(ev.Eest).^2;
 ev.InormEst = mean(ev.Iest(:));
+
+mp.isProbing = false;
 
 fprintf(' done. Time: %.3f\n',toc);
 

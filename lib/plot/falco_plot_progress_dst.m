@@ -10,7 +10,7 @@ tb = mp.tb;
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
-Icbmin = -8;
+Icbmin = -9;
 Icbmax = -4;
 Im = Im_tb.Im;
 if(Itr>1 && ~strcmpi(mp.estimator,'perfect') )
@@ -108,19 +108,28 @@ if(mp.flagPlot)
    
 end
 
+%%-- Save data
+
 out_dir = [tb.info.OUT_DATA_DIR,'efc_progress/',mp.runLabel,'/'];
 % Directory to save dat
 if(~exist(out_dir, 'dir'))
     mkdir(out_dir);
 end
 
-sciCam_fitswrite(tb,Im,[out_dir,'normI_it',num2str(Itr-1),'.fits']);
-sciCam_fitswrite(tb,mp.dm1.V,[out_dir,'dmV_it',num2str(Itr-1),'.fits']);
-sciCam_fitswrite(tb,DM1surf,[out_dir,'dmmodel_it',num2str(Itr-1),'.fits']);
+% Make it clear that the file is simulated if mp.flagSim = true
+if(mp.flagSim)
+    tag = '_SIM';
+else
+    tag = '';
+end
+
+sciCam_fitswrite(tb,Im,[out_dir,'normI_it',num2str(Itr-1),tag,'.fits']);
+sciCam_fitswrite(tb,mp.dm1.V,[out_dir,'dmV_it',num2str(Itr-1),tag,'.fits']);
+sciCam_fitswrite(tb,DM1surf,[out_dir,'dmmodel_it',num2str(Itr-1),tag,'.fits']);
 
 if(Itr>1)
-    sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-2),'.fits']);
-    sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-2),'.fits']);
+    sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-2),tag,'.fits']);
+    sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-2),tag,'.fits']);
 end
 
 end %--END OF FUNCTION
