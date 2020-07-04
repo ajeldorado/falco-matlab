@@ -233,7 +233,7 @@ for Itr=1:mp.Nitr
         out.alpha2{Itr} = alpha2;
         
         if(mp.flagPlot)
-            figure(401); 
+            figure(401); if(Itr==1);hold off; end
             loglog(out.sm{Itr}.^2/out.alpha2{Itr},smooth(out.smspectra{Itr},31),'Linewidth',3,'Color',[0.3, 1-(0.2+Itr/mp.Nitr)/(1.3),1 ]);
             set(gca,'Fontsize',20); grid on; 
             set(gcf,'Color',[1 1 1]);
