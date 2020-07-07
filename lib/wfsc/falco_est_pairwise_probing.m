@@ -64,8 +64,8 @@ elseif(mp.est.probe.whichDM==2)
 end
 
 %--Store the initial DM commands
-if(any(mp.dm_ind==1));  DM1Vnom = mp.dm1.V;  end
-if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm1.V)); end
+if(any(mp.dm_ind==1));  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
+if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
@@ -128,7 +128,9 @@ for si=1:mp.Nsbp
 
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImg = 1;
+    mp.isProbing = false;
     I0 = falco_get_sbp_image(mp,si);
+    mp.isProbing = true;
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     ev.I0mean = ev.I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
 

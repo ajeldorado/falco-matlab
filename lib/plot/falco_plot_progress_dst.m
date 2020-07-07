@@ -12,21 +12,27 @@ subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
 Icbmin = -9;
 Icbmax = -4;
+
 Im = Im_tb.Im;
-if(Itr>1 && ~strcmpi(mp.estimator,'perfect') )
-    Imod = Inorm.mod(Itr-1);
-else
-    Imod = NaN;
-end
-Im(Im<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
+Im4plot = Im;
+Im4plot(Im4plot<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
+
+% if(Itr>1 && ~strcmpi(mp.estimator,'perfect') )
+%     Imod = mean(Inorm.mod(Itr-1,:));
+% else
+%     Imod = NaN;
+% end
+
+ev = Im_tb.ev;
 
 if(mp.flagPlot)
 
     if(Itr>1)
-        delete(handles.tb1)
-        delete(handles.tb2)
-        delete(handles.tb3)
-        delete(handles.tb4)
+%         delete(handles.tb1)
+%         delete(handles.tb2)
+%         delete(handles.tb3)
+%         delete(handles.tb4)
+%         delete(handles.tb5)
         try
             figure(handles.master);
         catch
@@ -39,74 +45,139 @@ if(mp.flagPlot)
     end
 
     
-    subplot(2,3,1); % Save the handle of the subplot
-    axis off
-    handles.tb1 = text(0.1,0.8,sprintf('%s: Iteration %d',mp.coro,Itr-1));
-    handles.tb2 = text(0.1,0.7,sprintf('%.1f%% BW @ %dnm',(100*mp.fracBW),round(mp.lambda0*1e9)));
-    handles.tb3 = text(0.1,0.6,sprintf('I_{norm} = %.2e',Inorm.total(Itr)));
-    handles.tb4 = text(0.1,0.5,sprintf('I_{mod,prev} = %.2e',Imod));
-    switch lower(mp.thput_metric)
-        case{'hmi'} %--Absolute energy within half-max isophote(s)
-            handles.tb5 = text(0.1,0.4,sprintf('T_{half-max} =   %.2f%%',100*mp.thput_vec(Itr)));
-        case{'ee','e.e.'} %--Absolute energy encircled within a given radius
-            handles.tb5 = text(0.1,0.4,sprintf('T_{E.E.} =   %.2f%%',100*mp.thput_vec(Itr)));
-    end
+%     subplot(2,3,1); % Save the handle of the subplot
+%     axis off
+%     handles.tb1 = text(0.1,0.8,sprintf('%s: Iteration %d',mp.coro,Itr-1));
+%     handles.tb2 = text(0.1,0.7,sprintf('%.1f%% BW @ %dnm',(100*mp.fracBW),round(mp.lambda0*1e9)));
+%     handles.tb3 = text(0.1,0.6,sprintf('I_{norm} = %.2e',Inorm.total(Itr)));
+%     handles.tb4 = text(0.1,0.5,sprintf('I_{mod,prev} = %.2e',Imod));
+%     switch lower(mp.thput_metric)
+%         case{'hmi'} %--Absolute energy within half-max isophote(s)
+%             handles.tb5 = text(0.1,0.4,sprintf('T_{half-max} =   %.2f%%',100*mp.thput_vec(Itr)));
+%         case{'ee','e.e.'} %--Absolute energy encircled within a given radius
+%             handles.tb5 = text(0.1,0.4,sprintf('T_{E.E.} =   %.2f%%',100*mp.thput_vec(Itr)));
+%     end
 
-    subplot(2,3,2); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[Icbmin Icbmax]); 
+    subplot(2,3,1); 
+    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im4plot),[Icbmin Icbmax]); 
     axis xy equal tight; 
     colorbar; 
     colormap(gca,parula);
-%     xlabel('\lambda_0/D'); 
-%     ylabel('\lambda_0/D');
-%     ylabel(ch_psf,'log(NI)');
-    title('Stellar PSF');
-%     title(sprintf('PSF, NI=%.2e',contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
-%       title(sprintf('PSF at Iter=%03d,   NI=%.2e',Itr,contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
+    title(['it = ',num2str(Itr),', Inorm = ',num2str(Inorm.total(Itr),2)]);
 
-
-	subplot(2,3,3); % Save the handle of the subplot
+	subplot(2,3,2); 
     imagesc(1e9*DM1surf);  axis xy equal tight; axis off;
     colorbar;
     colormap(gca,gray);
     title('DM1 Surface (nm)');
 
+	subplot(2,3,3); 
+    imagesc(1e9*DM2surf);  axis xy equal tight; axis off;
+    colorbar;
+    colormap(gca,gray);
+    title('DM2 Surface (nm)');
+
     subplot(2,3,4);
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
     if(Itr>1)
-        semilogy(0:Itr-2,Inorm.mod,'-o');
-        semilogy(0:Itr-2,Inorm.unmod,'--o');
+        semilogy(0:Itr-2,mean(Inorm.mod,2),'-o');
+        semilogy(0:Itr-2,mean(Inorm.unmod,2),'--o');
     end
     hold off;
     xlim([0 length(Inorm.total)])
     xlabel('Iteration')
 %     ylabel('Norm. I');
     legend('Total','Modulated','Unmodulated');
-	title('Normalized Intensity')
+	title('Mean Normalized Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
     
-	subplot(2,3,5); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E).^2),[Icbmin Icbmax]); 
-    axis xy equal tight;
-    colorbar;
-    colormap(gca,parula)
-%     xlabel('\lambda_0/D'); 
-%     ylabel('\lambda_0/D');
-    title('Modulated (previous)');
-    
-	subplot(2,3,6); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E),[-pi pi]); 
-    axis xy equal tight; 
-    colorbar; 
-    colormap(gca,hsv);
-%     xlabel('\lambda_0/D'); 
-%     ylabel('\lambda_0/D');
-    title('Phase (previous)');
-    
+	subplot(2,3,5)
+    cmap = jet(mp.Nsbp);
+    if(Itr>1)
+        for si = 1:mp.Nsbp
+            if(si==mp.si_ref);linecolor=[0 0 0];else; linecolor=cmap(si,:); end
+            semilogy(0:Itr-2,Inorm.mod(:,si),'-o','Color',linecolor); hold on;
+            %hl2(si)=semilogy(0:Itr-2,Inorm.unmod(:,si),'--o','Color',linecolor);
+        end
+    end
+    hold off;
+    xlim([0 length(Inorm.total)])
+    xlabel('Iteration')
+%     ylabel('Norm. I');
+    %if(Itr>2); legend([hl1(mp.si_ref), hl2(mp.si_ref)],'Modulated','Unmodulated');end
+	title('Mean Probed Intensity')
+    grid on;axis square;
+% 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
+
+	subplot(2,3,6)
+    if(Itr>1)
+%         semilogy(mp.sbp_centers*1e9,Inorm.total*ones(1,mp.Nsbp),'-o'); hold on;
+        semilogy(mp.sbp_centers*1e9,mean(Inorm.mod),'-o');
+    end
+%     hold off;
+    xlabel('Wavelength (nm)')
+%     legend('Mean Total','Modulated','location','best');
+	title('Mean Probed Intensity')
+    grid on;axis square;
+% 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
+
+% 	subplot(2,3,5); % Save the handle of the subplot
+%     imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,si_ref)).^2),[Icbmin Icbmax]); 
+%     axis xy equal tight;
+%     colorbar;
+%     colormap(gca,parula)  
+% %     xlabel('\lambda_0/D'); 
+% %     ylabel('\lambda_0/D');
+%     title('Modulated (previous)');
+%     
+% 	subplot(2,3,6); % Save the handle of the subplot
+%     imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si_ref)),[-pi pi]); 
+%     axis xy equal tight; 
+%     colorbar; 
+%     colormap(gca,hsv);
+% %     xlabel('\lambda_0/D'); 
+% %     ylabel('\lambda_0/D');
+%     title('Phase (previous)');
+%     
    drawnow;
-   
+
+
+
+	%%-- Probed E-field plots
+    hEplot = figure(98);
+	set(hEplot,'units', 'inches', 'Position', [0 0 4 2*mp.Nsbp])
+    set(hEplot,'Color','w')
+
+    for si = 1:mp.Nsbp
+        
+    	subplot(mp.Nsbp,2,2*si-1); % Save the handle of the subplot
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,si)).^2),[Icbmin Icbmax]); 
+        axis xy equal tight;
+        colorbar;
+        colormap(gca,parula)  
+    %     xlabel('\lambda_0/D'); 
+    %     ylabel('\lambda_0/D');
+        title(['Modulated (band ',num2str(si),')']);
+        
+    	subplot(mp.Nsbp,2,2*si); % Save the handle of the subplot
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
+        axis xy equal tight; 
+        colorbar; 
+        colormap(gca,hsv);
+    %     xlabel('\lambda_0/D'); 
+    %     ylabel('\lambda_0/D');
+        title(['Phase (band ',num2str(si),')']);
+    end
+    drawnow;
+
+	%%-- TO DO: 
+    % - DM stroke usage (rms,ptv) plots 
+    % - Throughput plots 
+    % - 
+
 end
+
 
 %%-- Save data
 
@@ -124,12 +195,24 @@ else
 end
 
 sciCam_fitswrite(tb,Im,[out_dir,'normI_it',num2str(Itr-1),tag,'.fits']);
-sciCam_fitswrite(tb,mp.dm1.V,[out_dir,'dmV_it',num2str(Itr-1),tag,'.fits']);
-sciCam_fitswrite(tb,DM1surf,[out_dir,'dmmodel_it',num2str(Itr-1),tag,'.fits']);
+
+if(any(mp.dm_ind==1))
+    sciCam_fitswrite(tb,mp.dm1.V,[out_dir,'dm1_V_it',num2str(Itr-1),tag,'.fits']);
+    sciCam_fitswrite(tb,DM1surf,[out_dir,'dm1_model_it',num2str(Itr-1),tag,'.fits']);
+end
+if(any(mp.dm_ind==2))
+    sciCam_fitswrite(tb,mp.dm2.V,[out_dir,'dm2_V_it',num2str(Itr-1),tag,'.fits']);
+    sciCam_fitswrite(tb,DM2surf,[out_dir,'dm2_model_it',num2str(Itr-1),tag,'.fits']);
+end
 
 if(Itr>1)
     sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-2),tag,'.fits']);
     sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-2),tag,'.fits']);
+    sciCam_fitswrite(tb,Im_tb.Iinco,[out_dir,'normI_inco_it',num2str(Itr-2),tag,'.fits']);
+    save([out_dir,'probing_data_',num2str(Itr-2),tag,'.mat'],'ev');
 end
+
+% Update the diary 
+diary off; diary(mp.diaryfile)
 
 end %--END OF FUNCTION

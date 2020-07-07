@@ -26,9 +26,15 @@ function normI = falco_get_dst_sbp_image(mp,si)
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     
+    
     if(mp.isProbing)
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
     else
+        % TO DO: Add the capability to make the exposure time adaptive 
+        % if(tb.info.adaptive_texp)
+        %   query current Inorm (c = mean normI)
+        %   sbp_texp = sciCam_getAdaptiveExposureTime(c,1e-8,10)
+        % else
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
     end
     
@@ -47,12 +53,18 @@ function normI = falco_get_dst_sbp_image(mp,si)
     else
         dm2_map = mp.dm2.V;
     end
-%     if(mp.dm1.fliplr)
-%         dm1_map = fliplr(dm1_map); % There's a transpose between Matlab and DM indexing
-%     end
-%     if(mp.dm2.fliplr)
-%         dm2_map = fliplr(dm2_map); % There's a transpose between Matlab and DM indexing
-%     end
+    
+%     figure(700)
+%     subplot(1,2,1)
+%     imagesc(dm1_map+tb.DM1.flatmap);
+%     axis image; 
+%     colorbar;
+% 
+%     subplot(1,2,2)
+%     imagesc(dm1_map);
+%     axis image; 
+%     colorbar;
+%     drawnow; 
 
     % Send the commands to the DM. 
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
