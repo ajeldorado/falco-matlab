@@ -23,7 +23,7 @@ Im4plot(Im4plot<0) = 0; %--Prevent the log10(Im) plot from getting complex value
 %     Imod = NaN;
 % end
 
-ev = Im_tb.ev;
+
 
 if(mp.flagPlot)
 
@@ -146,28 +146,28 @@ if(mp.flagPlot)
 
 	%%-- Probed E-field plots
     hEplot = figure(98);
-	set(hEplot,'units', 'inches', 'Position', [0 0 4 2*mp.Nsbp])
+	set(hEplot,'units', 'inches', 'Position', [0 0 2*mp.Nsbp 4])
     set(hEplot,'Color','w')
 
     for si = 1:mp.Nsbp
         
-    	subplot(mp.Nsbp,2,2*si-1); % Save the handle of the subplot
+    	subplot(2,mp.Nsbp,si); % Save the handle of the subplot
         imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,si)).^2),[Icbmin Icbmax]); 
         axis xy equal tight;
         colorbar;
         colormap(gca,parula)  
     %     xlabel('\lambda_0/D'); 
     %     ylabel('\lambda_0/D');
-        title(['Modulated (band ',num2str(si),')']);
+%         title(['Modulated (band ',num2str(si),')']);
         
-    	subplot(mp.Nsbp,2,2*si); % Save the handle of the subplot
+    	subplot(2,mp.Nsbp,si+mp.Nsbp); % Save the handle of the subplot
         imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
         axis xy equal tight; 
         colorbar; 
         colormap(gca,hsv);
     %     xlabel('\lambda_0/D'); 
     %     ylabel('\lambda_0/D');
-        title(['Phase (band ',num2str(si),')']);
+%         title(['Phase (band ',num2str(si),')']);
     end
     drawnow;
 
@@ -209,6 +209,8 @@ if(Itr>1)
     sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-2),tag,'.fits']);
     sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-2),tag,'.fits']);
     sciCam_fitswrite(tb,Im_tb.Iinco,[out_dir,'normI_inco_it',num2str(Itr-2),tag,'.fits']);
+    
+    ev = Im_tb.ev;
     save([out_dir,'probing_data_',num2str(Itr-2),tag,'.mat'],'ev');
 end
 
