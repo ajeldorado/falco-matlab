@@ -479,6 +479,7 @@ fprintf('...done.\n\n')
 %% Save out the data from the workspace
 if(mp.flagSaveWS)
     clear cvar G* h* jacStruct; % Save a ton of space when storing the workspace
+    clear Gcomplex Gall Eall Eri Gri U S EriPrime IriPrime 
 
     % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
     mp.P1.full.mask=1; mp.P1.compact.mask=1;

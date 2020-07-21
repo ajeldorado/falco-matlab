@@ -10,7 +10,7 @@ tb = mp.tb;
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
-Icbmin = -9;
+Icbmin = -10;
 Icbmax = -4;
 
 Im = Im_tb.Im;
@@ -93,10 +93,17 @@ if(mp.flagPlot)
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
     
 	subplot(2,3,5)
-    cmap = jet(mp.Nsbp);
+    cmap = jet(mp.Nsbp+1);
+    cmap = cmap ./ sum(cmap,2);% make the jet cmap darker
     if(Itr>1)
         for si = 1:mp.Nsbp
-            if(si==mp.si_ref);linecolor=[0 0 0];else; linecolor=cmap(si,:); end
+            if(si==mp.si_ref)
+                linecolor=[0 0 0];
+            elseif(si==mp.Nsbp)
+                linecolor=cmap(end,:);% force last band to red
+            else
+                linecolor=cmap(si,:);
+            end
             semilogy(0:Itr-2,Inorm.mod(:,si),'-o','Color',linecolor); hold on;
             %hl2(si)=semilogy(0:Itr-2,Inorm.unmod(:,si),'--o','Color',linecolor);
         end
@@ -113,7 +120,11 @@ if(mp.flagPlot)
 	subplot(2,3,6)
     if(Itr>1)
 %         semilogy(mp.sbp_centers*1e9,Inorm.total*ones(1,mp.Nsbp),'-o'); hold on;
-        semilogy(mp.sbp_centers*1e9,mean(Inorm.mod),'-o');
+        if(mp.Nsbp>1)
+            semilogy(mp.sbp_centers*1e9,Inorm.mod(end,:),'-o');
+        else
+            semilogy(mp.sbp_centers*1e9,Inorm.mod(end),'-o');
+        end
     end
 %     hold off;
     xlabel('Wavelength (nm)')
@@ -143,33 +154,34 @@ if(mp.flagPlot)
    drawnow;
 
 
+    if(Itr>1)
+        %%-- Probed E-field plots
+        hEplot = figure(98);
+        set(hEplot,'units', 'inches', 'Position', [0 0 4*mp.Nsbp 6])
+        set(hEplot,'Color','w')
 
-	%%-- Probed E-field plots
-    hEplot = figure(98);
-	set(hEplot,'units', 'inches', 'Position', [0 0 2*mp.Nsbp 4])
-    set(hEplot,'Color','w')
+        for si = 1:mp.Nsbp
 
-    for si = 1:mp.Nsbp
-        
-    	subplot(2,mp.Nsbp,si); % Save the handle of the subplot
-        imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,si)).^2),[Icbmin Icbmax]); 
-        axis xy equal tight;
-        colorbar;
-        colormap(gca,parula)  
-    %     xlabel('\lambda_0/D'); 
-    %     ylabel('\lambda_0/D');
-%         title(['Modulated (band ',num2str(si),')']);
-        
-    	subplot(2,mp.Nsbp,si+mp.Nsbp); % Save the handle of the subplot
-        imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
-        axis xy equal tight; 
-        colorbar; 
-        colormap(gca,hsv);
-    %     xlabel('\lambda_0/D'); 
-    %     ylabel('\lambda_0/D');
-%         title(['Phase (band ',num2str(si),')']);
+            subplot(2,mp.Nsbp,si); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,si)).^2),[Icbmin Icbmax]); 
+            axis xy equal tight;
+            colorbar;
+            colormap(gca,parula)  
+        %     xlabel('\lambda_0/D'); 
+        %     ylabel('\lambda_0/D');
+    %         title(['Modulated (band ',num2str(si),')']);
+
+            subplot(2,mp.Nsbp,si+mp.Nsbp); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
+            axis xy equal tight; 
+            colorbar; 
+            colormap(gca,hsv);
+        %     xlabel('\lambda_0/D'); 
+        %     ylabel('\lambda_0/D');
+    %         title(['Phase (band ',num2str(si),')']);
+        end
+        drawnow;
     end
-    drawnow;
 
 	%%-- TO DO: 
     % - DM stroke usage (rms,ptv) plots 
