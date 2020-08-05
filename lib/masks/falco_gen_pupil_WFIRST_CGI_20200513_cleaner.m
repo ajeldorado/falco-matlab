@@ -45,12 +45,12 @@ strutEndVecY2 = ([3866.85, -511.65, -3214.65, -3256.15, -504.45, 3866.85])/ODpix
 strutCenterVecX = (strutEndVecX1 + strutEndVecX2)/2.0;
 strutCenterVecY = (strutEndVecY1 + strutEndVecY2)/2.0;
 
-strutWidthVec = [257.0, 259.0, 258.0, 258.0, 258.5+0.5, 257.0]/ODpixels;
+strutWidthVec = [257.0, 259.0, 258.0, 258.0, 259.0, 257.0]/ODpixels;
 
 strutAngleVec = atan2(strutEndVecY2-strutEndVecY1, strutEndVecX2-strutEndVecX1)*(180/pi);
 
-tabRadiusVecX = [1342.0+1.0, 1342.0+1.0, 1364.0]/ODpixels;
-tabRadiusVecY = [1352.0+1.0, 1352.0+1.0, 1374.0]/ODpixels;
+tabRadiusVecX = [1343.0, 1343.0, 1364.0]/ODpixels;
+tabRadiusVecY = [1353.0, 1353.0, 1374.0]/ODpixels;
 tabCenterVecX = [0.0, 0.0, 0.0]/ODpixels;
 tabCenterVecY = [53.85, 53.85, 67.6]/ODpixels;
 
@@ -234,16 +234,34 @@ if(flagLyot == false)
 
     for iTab = 1:nTabs
         cobsTabsMask = zeros(Narray);
+        
+        xyShear = rotMat*[tabCenterVecX(iTab); tabCenterVecY(iTab)];
 
-        XSnew = (XS + tabCenterVecX(iTab)) - xShear;
-        YSnew = (YS + tabCenterVecY(iTab)) - yShear;
-        THETAS = atan2(YSnew,XSnew);
+        XSnew = XS + magFac*xyShear(1) - xShear;
+        YSnew = YS + magFac*xyShear(2) - yShear;
+        THETAS = atan2(YSnew, XSnew);
 
-        if(angTabStart(iTab)>angTabEnd(iTab))
-            cobsTabsMask( THETAS>=angTabEnd(iTab)+clock_rad & THETAS<=angTabStart(iTab)+clock_rad ) = 1.0;
-        else
-            cobsTabsMask( THETAS<=angTabEnd(iTab)+clock_rad & THETAS>=angTabStart(iTab)+clock_rad ) = 1.0;
+        ang1 = angTabStart(iTab) + clock_rad;
+        ang2 = angTabEnd(iTab) + clock_rad;
+        while (ang2 > 2*pi) && (ang1 > 2*pi)
+            ang1 = ang1 - 2*pi;
+            ang2 = ang2 - 2*pi;
         end
+        while (ang2 < -2*pi) && (ang1 < -2*pi)
+            ang1 = ang1 + 2*pi;
+            ang2 = ang2 + 2*pi;
+        end
+        if ((ang2 < 2*pi) && (ang2 > pi)) && ((ang1 < pi) || ang1 > 0)
+            THETAS(THETAS<0) = THETAS(THETAS<0) + 2*pi;   
+        elseif (ang2 > 2*pi) && ((ang1 > pi) && (ang1 < 2*pi))
+            THETAS = THETAS + 2*pi; 
+            print('Case 2')
+        elseif (ang1 < -pi) && (ang2 > -pi)
+            THETAS(THETAS>0) = THETAS(THETAS>0) - 2*pi;
+        elseif (ang1 < -pi) && (ang2 < -pi)
+            THETAS = THETAS - 2*pi; 
+        end
+        cobsTabsMask( (THETAS <= ang2) & (THETAS >= ang1)) = 1.0;
 
         %--ELLIPSE:
 

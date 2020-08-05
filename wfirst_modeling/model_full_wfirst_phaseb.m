@@ -198,6 +198,9 @@ elseif  strcmp(cor_type,'hlc_erkin')
     n_from_lyotstop = 1024;
     field_stop_radius_lam0 = 9.0;
 elseif  strcmp(cor_type,'hlc_custom')  
+    
+    fpm_axis = 'Mean';
+    
     is_hlc = 1;  
     if(isfield(optval,'hlc_name')==false || isfield(optval,'prefix')==false)
         error('You must define the variables hlc_name and prefix when using hlc_custom as the coronagraph.')
@@ -249,7 +252,7 @@ elseif  strcmp(cor_type,'hlc_custom')
     n_default = 1024;	% gridsize in non-critical areas
     if  use_fpm;    n_to_fpm = 2048; else; n_to_fpm = 1024; end
     n_from_lyotstop = 1024;
-    field_stop_radius_lam0 = 9.0; 
+    field_stop_radius_lam0 = 9.7;%9.0; 
 elseif(strcmpi(cor_type, 'spc_spec_custom') || strcmpi(cor_type, 'spc_ifs_custom')) 
     is_spc = 1;
     pupil_file = optval.pupil_file;
@@ -289,6 +292,20 @@ elseif  strcmp(cor_type, 'spc-wide' )
     fpm_sampling_lam0 = 0.05;       % sampling in lambda0/D of FPM mask
     lyot_stop_file = [file_dir  'LS_SPC-20181220_1k.fits'];
     lambda0_m = 0.825e-6;       % FPM scaled for this central wavelength
+    n_default = 2048;           % gridsize in non-critical areas
+    n_to_fpm = 2048;            % gridsize to/from FPM
+    n_mft = 1400;
+    n_from_lyotstop = 4096;
+elseif(strcmpi(cor_type, 'spc_wfov_custom') || strcmpi(cor_type, 'spc_wide_custom')) 
+    is_spc = 1;
+    pupil_file = optval.pupil_file;
+    pupil_diam_pix = optval.pupil_diam_pix; %1000;
+    pupil_mask_file = optval.pupil_mask_file;% [file_dir  'SPM_SPC-20190130.fits']; %--SPM file name
+    fpm_file = optval.fpm_file; %[file_dir 'fpm_0.05lamdivD.fits'];
+    fpm_sampling_lam0 = optval.fpm_sampling_lam0;% 0.05; 	% sampling in lambda0/D of FPM mask
+    lyot_stop_file = optval.lyot_stop_file; %[file_dir  'LS_SPC-20190130.fits'];
+    lambda0_m = optval.lambda0_m; %0.73e-6;        % FPM scaled for this central wavelength
+    
     n_default = 2048;           % gridsize in non-critical areas
     n_to_fpm = 2048;            % gridsize to/from FPM
     n_mft = 1400;
@@ -626,6 +643,19 @@ wavefront.wf = prop_shift_center(wavefront0);
 clear wavefront0 
 
 wavefront = prop_propagate(wavefront, d_pupilmask_oap5, 'surface_name','OAP5');
+
+% E = fftshift(wavefront.wf);
+% E = pad_crop(E, 320);
+% figure(123); imagesc(abs(E).^2); axis xy equal tight;
+% set(gcf, 'Color', 'w');
+% drawnow;
+% 
+% occ = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
+% occ = pad_crop(occ, 42);
+% figure(124); imagesc(angle(occ)); axis xy equal tight; colormap parula;
+% set(gcf, 'Color', 'w');
+% drawnow;
+
 wavefront = prop_lens(wavefront, fl_oap5);
 if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb_OAP5_phase_error_V1.0.fits'], 'wavefront'); end
 if ( use_aperture );   wavefront = prop_circular_aperture(wavefront, diam_oap5/2); end
@@ -648,16 +678,19 @@ if ( use_fpm )
     
     if ( is_hlc )
         occ = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
-
+        
+        
 %         % Fourier Downsample by Factor of 2
+%         dsfac = 2;
 %         occ0 = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
 %         nocc = size(occ0, 1);
 %         focc = fft2(ifftshift(occ0));
 %         focc = fftshift(focc);
 %         focc = custom_pad(focc, nocc/2);
 %         focc = fftshift(focc);
-%         occ = fftshift(ifft2(focc));
+%         occ = fftshift(ifft2(focc))/dsfac^2;
 %         occ = custom_pad(occ, nocc);
+% %         occ = pad_crop(occ, nocc, 'extrapval', occ0(1,1));
 %         figure(41); imagesc(abs(occ0)); axis xy equal tight; colorbar;
 %         figure(42); imagesc(abs(occ)); axis xy equal tight; colorbar;
         

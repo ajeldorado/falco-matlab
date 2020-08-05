@@ -48,6 +48,8 @@ xShear = 0; %--x-axis shear of mask [pupil diameters]
 yShear = 0; %--y-axis shear of mask [pupil diameters]
 clocking = 0; %--Clocking of the mask [degrees]
 magfac = 1; %--magnification factor of the pupil diameter
+Rfillet = 0; %--fillet radius of curvature
+upsampleFactor = 101; %--upsample factor for grayscale edges of mask with fillets.
 
 %--Optional inputs
 if(isfield(inputs,'centering')); centering = inputs.centering; end
@@ -55,72 +57,83 @@ if(isfield(inputs,'xShear')); xShear = inputs.xShear; end
 if(isfield(inputs,'yShear')); yShear = inputs.yShear; end
 if(isfield(inputs,'clocking')); clocking = -inputs.clocking; end
 if(isfield(inputs,'magfac')); magfac = inputs.magfac; end
+if(isfield(inputs,'Rfillet')); Rfillet = inputs.Rfillet; end
+if(isfield(inputs,'upsampleFactor')); upsampleFactor = inputs.upsampleFactor; end
 
-if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(magfac*Nbeam+1 + 2*max(Nbeam*abs([xShear,yShear]))); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+
+if Rfillet > 0
+    
+    mask = falco_gen_rounded_bowtie_LS(Nbeam, ID, OD, Rfillet, upsampleFactor, ang, -clocking, centering, 'xc', xShear, 'yc', yShear);
+
 else
-    Narray = ceil_even(magfac*Nbeam + 2*max(Nbeam*abs([xShear,yShear]))); %--number of points across output array. Same size as width when interpixel centered.
-end
-
-Darray = Narray*dx; %--width of the output array (meters)
-bdf = Dmask/Darray; %--beam diameter factor in output array
-wl_dummy   = 1e-6;     % wavelength (m); Dummy value--no propagation here, so not used.
-
-switch centering % 0 shift for pixel-centered pupil, or -diam/Narray shift for inter-pixel centering
-    case {'interpixel'}
-        cshift = -dx/2; 
-    case {'pixel'}
-        cshift = 0;
-end
-
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-
-%--INITIALIZE PROPER
-bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
-
-%--PRIMARY MIRROR (OUTER DIAMETER)
-ra_OD = (Dbeam*OD/2)*magfac;
-cx_OD = 0 + cshift + xShear;
-cy_OD = 0 + cshift + yShear;
-bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);
-
-%--SECONDARY MIRROR (INNER DIAMETER)
-ra_ID = (Dbeam*ID/2)*magfac; %((2.46/2)*Dconv + pad_idod)*magfac;
-cx_ID = 0 + cshift + xShear;
-cy_ID = 0 + cshift + yShear;
-bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);
-
-mask = ifftshift(abs(bm.wf));
-
-%--Create the bowtie region
-if(ang<180)
-    ang2 = 90-ang/2;
     
-    %--Right part
-    Lside = 1.1*ra_OD;
-    xvert0 = [0, Lside*cosd(ang2), Lside,             Lside,             Lside*cosd(ang2), 0];
-    yvert0 = [0, Lside*sind(ang2), Lside*sind(ang2), -Lside*sind(ang2), -Lside*sind(ang2), 0];
-    xvert = xvert0;
-    yvert = yvert0;
-    for ii = 1:length(xvert0)
-        xy = [cosd(clocking),sind(clocking); -sind(clocking),cosd(clocking)]*[xvert0(ii); yvert0(ii)];
-        xvert(ii) = xy(1);
-        yvert(ii) = xy(2);
+    if(strcmpi(centering,'pixel'))
+        Narray = ceil_even(magfac*Nbeam+1 + 2*max(Nbeam*abs([xShear,yShear]))); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    else
+        Narray = ceil_even(magfac*Nbeam + 2*max(Nbeam*abs([xShear,yShear]))); %--number of points across output array. Same size as width when interpixel centered.
     end
-    bowtieRight = prop_irregular_polygon( bm, cshift+xShear+xvert, cshift+yShear+yvert,'DARK');
-    
-    %--Left part
-    xvert0 = -[0, Lside*cosd(ang2), Lside,             Lside,             Lside*cosd(ang2), 0];
-    xvert = xvert0;
-    yvert = yvert0;
-    for ii = 1:length(xvert0)
-        xy = [cosd(clocking),sind(clocking); -sind(clocking),cosd(clocking)]*[xvert0(ii); yvert0(ii)];
-        xvert(ii) = xy(1);
-        yvert(ii) = xy(2);
+
+    Darray = Narray*dx; %--width of the output array (meters)
+    bdf = Dmask/Darray; %--beam diameter factor in output array
+    wl_dummy   = 1e-6;     % wavelength (m); Dummy value--no propagation here, so not used.
+
+    switch centering % 0 shift for pixel-centered pupil, or -diam/Narray shift for inter-pixel centering
+        case {'interpixel'}
+            cshift = -dx/2; 
+        case {'pixel'}
+            cshift = 0;
     end
-    bowtieLeft = prop_irregular_polygon( bm, cshift+xShear+xvert, cshift+yShear+yvert,'DARK');
+
+    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+    %--INITIALIZE PROPER
+    bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
+
+    %--PRIMARY MIRROR (OUTER DIAMETER)
+    ra_OD = (Dbeam*OD/2)*magfac;
+    cx_OD = 0 + cshift + xShear;
+    cy_OD = 0 + cshift + yShear;
+    bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);
+
+    %--SECONDARY MIRROR (INNER DIAMETER)
+    ra_ID = (Dbeam*ID/2)*magfac; %((2.46/2)*Dconv + pad_idod)*magfac;
+    cx_ID = 0 + cshift + xShear;
+    cy_ID = 0 + cshift + yShear;
+    bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);
+
+    mask = ifftshift(abs(bm.wf));
+
+    %--Create the bowtie region
+    if(ang<180)
+        ang2 = 90-ang/2;
+
+        %--Right part
+        Lside = 1.1*ra_OD;
+        xvert0 = [0, Lside*cosd(ang2), Lside,             Lside,             Lside*cosd(ang2), 0];
+        yvert0 = [0, Lside*sind(ang2), Lside*sind(ang2), -Lside*sind(ang2), -Lside*sind(ang2), 0];
+        xvert = xvert0;
+        yvert = yvert0;
+        for ii = 1:length(xvert0)
+            xy = [cosd(clocking),sind(clocking); -sind(clocking),cosd(clocking)]*[xvert0(ii); yvert0(ii)];
+            xvert(ii) = xy(1);
+            yvert(ii) = xy(2);
+        end
+        bowtieRight = prop_irregular_polygon( bm, cshift+xShear+xvert, cshift+yShear+yvert,'DARK');
+
+        %--Left part
+        xvert0 = -[0, Lside*cosd(ang2), Lside,             Lside,             Lside*cosd(ang2), 0];
+        xvert = xvert0;
+        yvert = yvert0;
+        for ii = 1:length(xvert0)
+            xy = [cosd(clocking),sind(clocking); -sind(clocking),cosd(clocking)]*[xvert0(ii); yvert0(ii)];
+            xvert(ii) = xy(1);
+            yvert(ii) = xy(2);
+        end
+        bowtieLeft = prop_irregular_polygon( bm, cshift+xShear+xvert, cshift+yShear+yvert,'DARK');
+
+        mask = mask.*bowtieRight.*bowtieLeft;
+    end
     
-    mask = mask.*bowtieRight.*bowtieLeft;
 end
 
 end %--END OF FUNCTION

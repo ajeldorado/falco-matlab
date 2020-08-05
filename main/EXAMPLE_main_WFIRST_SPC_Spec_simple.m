@@ -42,6 +42,9 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
+mp.Nsbp = 6;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+
 %--DEBUGGING:
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
@@ -66,4 +69,14 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 [mp, out] = falco_flesh_out_workspace(mp);
 
-[mp, out] = falco_wfsc_loop(mp, out);
+
+%--For one-off check of starting design
+[mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
+
+% out.Zsens(:,:,1) = falco_get_Zernike_sensitivities(mp);
+
+%--Compute the current contrast level
+Im = falco_get_summed_image(mp);
+Inorm = mean(Im(mp.Fend.corr.maskBool))
+
+% [mp, out] = falco_wfsc_loop(mp, out);

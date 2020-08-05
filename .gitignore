@@ -31,6 +31,10 @@ lib/PROPER/**
 #--CVX license
 **/LICENSE.txt
 
+#
+wfirst_modeling/defaults_*.m
+wfirst_modeling/main_*.m
+
 #--Don't store saved data
 data/configs/**
 data/DM/**

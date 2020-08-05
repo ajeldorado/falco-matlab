@@ -47,7 +47,7 @@ switch upper(mp.whichPupil)
             mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
         end
  
-    case{'WFIRST20200513','WFIRST20191009', 'WFIRST180718'}
+    case{'ROMAN20200513', 'WFIRST20200513','WFIRST20191009', 'WFIRST180718'}
 
         %--Define Lyot stop generator function inputs for the 'full' optical model
         if(mp.compact.flagGenLS || mp.full.flagGenLS)
@@ -60,8 +60,15 @@ switch upper(mp.whichPupil)
         
         switch upper(mp.whichPupil)
             case{'WFIRST20200513', 'ROMAN20200513'}
-                if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.full.Nbeam, mp.centering, changes); end
-                if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.compact.Nbeam, mp.centering, changes); end
+                if mp.P4.flagSymm == false
+                    if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.full.Nbeam, mp.centering, changes); end
+                    if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.compact.Nbeam, mp.centering, changes); end
+                else
+                    rocFillet = 0.02;
+                    upsampleFactor = 100;
+                    if(mp.full.flagGenLS); mp.P4.full.mask = propcustom_relay(falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.full.Nbeam, changes.ID, changes.OD, changes.wStrut, rocFillet, upsampleFactor, mp.centering), 1, mp.centering); end
+                    if(mp.compact.flagGenLS); mp.P4.compact.mask = propcustom_relay(falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, changes.ID, changes.OD, changes.wStrut, rocFillet, upsampleFactor, mp.centering), 1, mp.centering); end
+                end
             
             case{'WFIRST20191009'}
                 if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P4.full.Nbeam, mp.centering, changes); end
