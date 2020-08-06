@@ -22,6 +22,6 @@ function mp = falco_set_spatial_weights(mp)
 
     %--Spatial weighting vector
     mp.WspatialVec = mp.Wspatial(mp.Fend.corr.maskBool); 
-    if(mp.flagFiber && mp.flagLenslet);  mp.WspatialVec = ones(mp.Fend.Nlens,1);  end
+    if(mp.flagFiber );  mp.WspatialVec = ones(mp.Fend.Nfibers,1);  end
 
 end
