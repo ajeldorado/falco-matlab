@@ -11,6 +11,8 @@ mp.TrialNum = 5309;
 mp.flagParfor = false;
 mp.useGPU = false;
 mp.flagPlot = false;
+mp.flagFiber = false;
+mp.flagZWFS = false;
 
 %--General
 mp.centering = 'pixel';
