@@ -22,12 +22,13 @@
 % REVISION HISTORY
 % - Created on 2019-02-22 by G. Ruane 
 
-function normI = falco_get_hcst_sbp_image(mp,si)
+function [normI,varargout] = falco_get_hcst_sbp_image(mp,si)
     
     bench = mp.bench;
     sbp_width = bench.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
     PSFpeak   = bench.info.PSFpeaks(si);% counts per second 
+    
     
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
@@ -49,8 +50,10 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     end
     
     
-    map = mp.dm1.V'; % There's a transpose between Matlab and BMC indexing
-    
+    map = (mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
+%     map = flipud(mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
+
+    if ~mp.flagFiber;map = fliplr(map);end
     % Send the commands to the DM. 
     % Notes: bench.DM.flatvec contains the commands to flatten the DM. 
     %        mp.dm1.V is added to the flat commands inside
@@ -80,6 +83,11 @@ function normI = falco_get_hcst_sbp_image(mp,si)
     peakPSF = PSFpeak/mp.peakPSFtint*bench.andor.tint*mp.NDfilter_cal; 
     
     % Take image
+    if mp.flagFiber && mp.flagUseCamera4EFCSMF
+        hcst_andor_setSubwindow(bench,bench.andor.FocusRow,...
+            bench.andor.FocusCol,bench.andor.AOIHeight);
+    end
+
     Im = hcst_andor_getImage(bench);
     
     % Get normalized intensity (dark subtracted and normalized by peakPSF)
@@ -87,7 +95,7 @@ function normI = falco_get_hcst_sbp_image(mp,si)
 %     normI = fliplr((hcst_andor_getImage(bench)-dark)/peakPSF); 
         
     % Check exposure time
-    if si==1 && bench.andor.tint<3 && min(normI(:))<2e-8
+    if si==1 && bench.andor.tint<3 && min(normI(:))<2e-8 && ~mp.flagFiber && ~mp.efc_imageSharpening
         dh = Im(mp.Fend.corr.maskBool);
         if median(dark(:))>min(dh(:))
             disp('Exposure time is too low; adding 0.5 sec')
@@ -99,5 +107,53 @@ function normI = falco_get_hcst_sbp_image(mp,si)
             mp.est.probe.gainFudge = interp1([0.5,3],[1,0.5],bench.andor.tint); % empirically found for the 780nm laser
         end
     end
+    
+    %% Fiber
+    if mp.flagFiber
+        SMFInt0   = bench.info.SMFInt0s(si);% 
+        
+        if ~mp.flagUseCamera4EFCSMF
+            pause(0.5)
+            Vsmf = hcst_readFemtoOutput_adaptive_inV(bench,bench.Femto.averageNumReads);
+            Ifiber = Vsmf/SMFInt0;
+            if Ifiber<0
+                while Ifiber<0
+                    disp('Negative reading out of the Femto')
+                    averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,1e-9);
+                    Vsmf = hcst_readFemtoOutput_adaptive_inV(bench,averageNumReads);
+                    Ifiber = Vsmf/SMFInt0;
+                end
+            elseif(Ifiber<1.3e-8 && bench.Femto.averageNumReads<1000)
+                averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,Ifiber);
+                Vsmf = hcst_readFemtoOutput_adaptive_inV(bench,averageNumReads);
+                Ifiber = Vsmf/SMFInt0;
+                while Ifiber<0
+                    disp('Negative reading out of the Femto')
+                    averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,1e-9);
+                    Vsmf = hcst_readFemtoOutput_adaptive_inV(bench,averageNumReads);
+                    Ifiber = Vsmf/SMFInt0;
+                end
+            end            
+        else
+            dark4EFCSMF = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
+            hcst_andor_setSubwindow(bench,bench.andor.FEURow,...
+                bench.andor.FEUCol,128);
+            im = hcst_andor_getImage(bench)-dark4EFCSMF;
+            Vsmf = hcst_fiu_aperturePhotometryOnAndor(bench,im);%max(im(:));
+            Ifiber = Vsmf/(SMFInt0/mp.peakPSFtint*bench.andor.tint);
+            
+            % plot image to see how it looks lik
+            figure(112)
+            imagesc(im)
+            axis image
+            colorbar
 
+        end
+
+        
+
+
+        varargout{1} = Ifiber;
+    end
+    
 end 

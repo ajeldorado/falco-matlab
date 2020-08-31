@@ -69,7 +69,7 @@ else %--Perform an empirical grid search with actual images from the testbed or 
         else
             IfiberTotal = falco_get_summed_image_fiber(mp);
             InormAvg = IfiberTotal;%mean(IfiberTotal(mp.Fend.corr.maskBool));
-            
+%             pause(3)
         end
 
     end

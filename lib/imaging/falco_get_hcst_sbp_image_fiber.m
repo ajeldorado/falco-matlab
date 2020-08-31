@@ -50,8 +50,9 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     end
     
     
-    map = mp.dm1.V'; % There's a transpose between Matlab and BMC indexing
-    
+    map = (mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
+%     map = fliplr(mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
+%     
     % Send the commands to the DM. 
     % Notes: bench.DM.flatvec contains the commands to flatten the DM. 
     %        mp.dm1.V is added to the flat commands inside
@@ -60,6 +61,7 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     %        are handled outside of this function. 
     cmds = hcst_DM_apply2Dmap(bench,map,1);% Returns actual DM commands 
     
+
     if(isfield(bench.info,'source') && strcmpi(bench.info.source,'nkt'))
         %----- Get image from the testbed -----
         disp(['Getting image from testbed in band ',num2str(si)])
@@ -72,14 +74,46 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     else
         disp('Getting image from testbed (using laser source)')
     end
+    
+    if ~mp.flagUseCamera4EFCSMF
+        pause(1)
+        FemtoV = hcst_readFemtoOutput_adaptive_inV(bench,bench.Femto.averageNumReads); % read voltage from Femto
+        normI = FemtoV/SMFInt0;
+        %     FemtoV = hcst_readFemtoOutput_inV(bench,bench.Femto.averageNumReads); % read voltage from Femto
+        if normI<0
+            while normI<0
+                disp('Negative reading out of the Femto')
+                averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,1e-9);
+                FemtoV = hcst_readFemtoOutput_adaptive_inV(bench,averageNumReads);
+                normI = FemtoV/SMFInt0;
+            end
+        elseif(normI<1.3e-8 && bench.Femto.averageNumReads<1000)
+            averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,normI);
+            FemtoV = hcst_readFemtoOutput_adaptive_inV(bench,averageNumReads);
+            normI = FemtoV/SMFInt0;
+            while normI<0
+                disp('Negative reading out of the Femto')
+                averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,1e-9);
+                FemtoV = hcst_readFemtoOutput_adaptive_inV(bench,averageNumReads);
+                normI = FemtoV/SMFInt0;
+            end
+        end
+    else
+        dark4EFCSMF = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
 
-    V = hcst_readFemtoOutput_adaptive(bench,bench.Femto.averageNumReads); % read voltage from Femto
-    gain_set = log10(bench.Femto.gain)-4; % index of gain setting
-    V = V-bench.Femto.V_offset(gain_set); % subtract bias for current gain setting
-    V = V/(bench.Femto.gainStep^gain_set);
+        hcst_andor_setSubwindow(bench,bench.andor.FEURow,...
+            bench.andor.FEUCol,128);
+        im = hcst_andor_getImage(bench)-dark4EFCSMF;
+        Vsmf = hcst_fiu_aperturePhotometryOnAndor(bench,im);%max(im(:));
+        normI = Vsmf/(SMFInt0/mp.peakPSFtint*bench.andor.tint);
 
-    FemtoV = V;
-    normI = FemtoV/SMFInt0;
+        % plot image to see how it looks lik
+        figure(111)
+        imagesc(im)
+        axis image
+        colorbar
+    end
+
     
 %     % Load the dark with the correct tint. It must exist in the dark
 %     % library. 
@@ -90,5 +124,5 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
 %     
 %     % Get normalized intensity (dark subtracted and normalized by peakPSF)
 %     normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 
-    
+%     disp(['***************',num2str(max(map(:)))])
 end 
