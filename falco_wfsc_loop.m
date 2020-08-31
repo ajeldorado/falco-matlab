@@ -45,7 +45,17 @@ for Itr=1:mp.Nitr
     if(any(mp.fineAlignment_it==Itr))
         bench = hcstr_realignFPMAndRecenter(bench,mp);
     end
-    
+    if(any(mp.search4OffaxisSMF_it==Itr))
+        [ x_smf_out, y_smf_out ] = hcst_fiu_findOffaxisSMFwProbe(bench, mp);
+        mp.est.probe.Xloc = x_smf_out;
+        mp.est.probe.Yloc = y_smf_out;
+        mp.Fend.x_fiber = mp.est.probe.Xloc;
+        mp.Fend.y_fiber = mp.est.probe.Yloc;
+        % We have to re-compute the Jacobian
+        mp = falco_configure_fiber_dark_hole(mp);
+        mp.relinItrVec = [mp.relinItrVec,Itr];
+    end
+
     %--Re-compute the starlight normalization factor for the compact and full models (to convert images to normalized intensity). No tip/tilt necessary.
     mp = falco_get_PSF_norm_factor(mp);
     
@@ -101,12 +111,16 @@ for Itr=1:mp.Nitr
     %--Compute the current contrast level
     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
     if(mp.flagFiber)
-        InormSMFHist(Itr) = Ifiber/mp.Fend.full.I00Fiber(1);
+        InormSMFHist(Itr) = Ifiber;
     end
     %--Plot the updates to the DMs and PSF
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
     if(isfield(mp,'testbed') )
-        InormHist_tb.total = InormHist; 
+        if(mp.flagFiber)
+            InormHist_tb.total = InormSMFHist; 
+        else
+            InormHist_tb.total = InormHist; 
+        end
         Im_tb.Im = Im;
         Im_tb.E = zeros(size(Im));
         if(Itr>1)
@@ -174,11 +188,11 @@ for Itr=1:mp.Nitr
     
 %     if( (Itr==1) || cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
     if((Itr==1) && mp.use_lastJacStruc)
-        load([mp.path.falco,'data/jac/lastJacStruc.mat']);
+        load([mp.path.falco,'/data/jac/lastJacStruc.mat']);
     else
         if(cvar.flagRelin ) %% && (~mp.flagUseLearnedJac)
             jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
-            save([mp.path.falco,'data/jac/lastJacStruc.mat'],'jacStruct');
+            save([mp.path.falco,'/data/jac/lastJacStruc.mat'],'jacStruct');
         end
     end
 
@@ -280,13 +294,12 @@ for Itr=1:mp.Nitr
     end
     
     %% Add spatially-dependent weighting to the control Jacobians
-
     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5.*repmat(mp.WspatialVec,[1,mp.dm5.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end
-
+    
     %fprintf('Total Jacobian Calcuation Time: %.2f\n',toc);
 
     %--Compute the number of total actuators for all DMs used. 
@@ -298,7 +311,7 @@ for Itr=1:mp.Nitr
     cvar.EfieldVec = EfieldVec;
     cvar.InormHist = InormHist(Itr);
     if mp.flagFiber
-        cvar.InormSMFHist = InormSMFHist(Itr)/mp.Fend.full.I00Fiber(1);
+        cvar.InormSMFHist = InormSMFHist(Itr);
     end
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
     
@@ -389,6 +402,7 @@ end
 tic; fprintf('Getting updated summed image... ');
 if mp.flagFiber
     [Im, Ifiber] = falco_get_summed_image(mp);
+    if(~mp.flagSim);bench.Femto.averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,Ifiber);end
 else
     Im = falco_get_summed_image(mp);
 end
@@ -402,7 +416,12 @@ fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x sma
 fprintf('\n\n');
 
 if mp.flagFiber
-    InormSMFHist(Itr+1) = Ifiber/mp.Fend.full.I00Fiber(1);%mean(Im(mp.Fend.corr.maskBool));
+    InormSMFHist(Itr+1) = Ifiber;%mean(Im(mp.Fend.corr.maskBool));
+    % Increase the exp time if needed
+    peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint*bench.andor.tint);
+    if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
+        hcst_andor_setExposureTime(bench,bench.andor.tint+1);
+    end
     fprintf('Prev and New Measured SMF Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
         InormSMFHist(Itr), InormSMFHist(Itr+1), InormSMFHist(Itr)/InormSMFHist(Itr+1) ); 
 
@@ -419,7 +438,7 @@ if(mp.flagSaveEachItr)
     Nitr = mp.Nitr;
     thput_vec = mp.thput_vec;
     fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.ws_inprogress,mp.runLabel,Itr,mp.Nitr);
-    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM4V','DM5V','DM6V','DM7V','DM8V','DM9V','InormHist','thput_vec','Im')
+    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','InormHist','thput_vec','Im')
     fprintf('done.\n\n')
 end
 
@@ -451,7 +470,6 @@ if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, m
 %--Data to store
 if(any(mp.dm_ind==1)); out.dm1.Vall(:,:,Itr) = mp.dm1.V; end
 if(any(mp.dm_ind==2)); out.dm2.Vall(:,:,Itr) = mp.dm2.V; end
-if(any(mp.dm_ind==5)); out.dm5.Vall(:,:,Itr) = mp.dm5.V; end
 if(any(mp.dm_ind==8)); out.dm8.Vall(:,Itr) = mp.dm8.V; end
 if(any(mp.dm_ind==9)); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
@@ -464,7 +482,11 @@ else
 end
 
 if(isfield(mp,'testbed'))
-    InormHist_tb.total = InormHist; 
+    if(mp.flagFiber)
+        InormHist_tb.total = InormSMFHist; 
+    else
+        InormHist_tb.total = InormHist; 
+    end
     InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
     InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
     Im_tb.Im = Im;

@@ -58,7 +58,7 @@ function [Imean,varargout] = falco_get_summed_image(mp)
         for si=1:mp.Nsbp   
             if mp.flagFiber
                 [Imsbp,Ifiber] = falco_get_sbp_image(mp,si);
-                Ifibmean = Ifibmean + Ifiber;
+                Ifibmean = Ifibmean + mp.sbp_weights(si)*Ifiber;
             else
                 Imsbp = falco_get_sbp_image(mp,si);
             end

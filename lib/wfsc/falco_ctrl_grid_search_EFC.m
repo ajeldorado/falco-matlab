@@ -28,7 +28,7 @@
 
 function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
-    %--STEPS:
+%--STEPS:
     % Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
     % Step 1: If re-linearizing this iteration, empirically find the best regularization value.
     % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization

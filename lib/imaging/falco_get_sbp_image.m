@@ -22,12 +22,17 @@ function [ImNI,varargout] = falco_get_sbp_image(mp,si)
     if(mp.flagSim) %--Generate simulated image
         if mp.flagFiber
             [ImNI,Ifiber] = falco_get_sim_sbp_image(mp,si);
-            varargout{1} = Ifiber;
+            varargout{1} = Ifiber/mp.Fend.full.I00Fiber(1);
         else
             ImNI = falco_get_sim_sbp_image(mp,si);
         end
     else %--Retrieve testbed image
-        ImNI = falco_get_testbed_sbp_image(mp,si);
+        if mp.flagFiber
+            [ImNI,Ifiber] = falco_get_testbed_sbp_image(mp,si);
+            varargout{1} = Ifiber;
+        else
+            ImNI = falco_get_testbed_sbp_image(mp,si);
+        end
     end
 
 end %--END OF FUNCTION

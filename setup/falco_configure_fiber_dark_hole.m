@@ -14,12 +14,12 @@ function mp = falco_configure_fiber_dark_hole(mp)
     
     maskFiberCore.rhoInner = 0;
     maskFiberCore.rhoOuter = mp.fiber.a;
-    maskFiberCore.angDeg = 180;
+    maskFiberCore.angDeg = 360;
     maskFiberCore.whichSide = mp.Fend.sides;
     
     maskFiberCladding.rhoInner = mp.fiber.a;
     maskFiberCladding.rhoOuter = 20;
-    maskFiberCladding.angDeg = 180;
+    maskFiberCladding.angDeg = 360;
     maskFiberCladding.whichSide = mp.Fend.sides;
     
     if(mp.flagLenslet)
