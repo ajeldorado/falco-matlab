@@ -112,7 +112,7 @@ function PUPIL = falco_gen_pupil_Simple( input )
     end
 
     % Create spiders 
-    if(input.wStrut > 0)
+    if(isfield(input,'wStrut') && input.wStrut > 0)
         
         numSpiders = input.Nstrut;
         angs = input.angStrut;
