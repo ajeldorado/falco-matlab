@@ -644,6 +644,7 @@ clear wavefront0
 
 wavefront = prop_propagate(wavefront, d_pupilmask_oap5, 'surface_name','OAP5');
 
+% % Check the orientation of the FPM and the pupil right before it.
 % E = fftshift(wavefront.wf);
 % E = pad_crop(E, 320);
 % figure(123); imagesc(abs(E).^2); axis xy equal tight;
@@ -655,6 +656,10 @@ wavefront = prop_propagate(wavefront, d_pupilmask_oap5, 'surface_name','OAP5');
 % figure(124); imagesc(angle(occ)); axis xy equal tight; colormap parula;
 % set(gcf, 'Color', 'w');
 % drawnow;
+% % figure(125); imagesc(unwrap(angle(occ))); axis xy equal tight; colormap parula;
+% % set(gcf, 'Color', 'w');
+% % drawnow;
+% keyboard
 
 wavefront = prop_lens(wavefront, fl_oap5);
 if ( use_errors );   wavefront = prop_errormap(wavefront,[map_dir 'wfirst_phaseb_OAP5_phase_error_V1.0.fits'], 'wavefront'); end
@@ -677,6 +682,8 @@ if ( use_fpm )
     end
     
     if ( is_hlc )
+%         fprintf('  %s\n  %s\n\n', occulter_file_r, occulter_file_i)
+%         keyboard
         occ = complex(fitsread(occulter_file_r),fitsread(occulter_file_i));
         
         

@@ -24,15 +24,24 @@ end
 mp.P4.compact.dx = mp.P4.D/mp.P4.compact.Nbeam;
 
 switch upper(mp.whichPupil)
-    case{'SIMPLE','SIMPLEPROPER','DST_LUVOIRB','ISAT'}
+    case{'SIMPLE','DST_LUVOIRB','ISAT'}
         
-        if(mp.compact.flagGenLS || mp.full.flagGenLS)
-            if(strcmpi(mp.whichPupil,'SIMPLEPROPER'));  inputs.flagPROPER = true;  end
+        if(mp.compact.flagGenLS || mp.full.flagGenLS)            
             inputs.OD = mp.P4.ODnorm;
-            inputs.ID = mp.P4.IDnorm;
-            inputs.Nstrut = mp.P4.Nstrut;
-            inputs.angStrut = mp.P4.angStrut; % Angles of the struts 
-            inputs.wStrut = mp.P4.wStrut; % spider width (fraction of the pupil diameter)
+            if(isfield(mp.P4, 'IDnorm')); inputs.ID = mp.P4.IDnorm; end %else; inputs.ID = 0; end
+            if(isfield(mp.P4, 'angStrut')); inputs.angStrut = mp.P4.angStrut; end
+            if(isfield(mp.P4, 'wStrut')); inputs.wStrut = mp.P4.wStrut; end % spider width (fraction of the pupil diameter)
+            if(isfield(mp.P4, 'stretch')); inputs.stretch = mp.P4.stretch; end % else; inputs.stretch = 1; end
+            if(isfield(inputs,'centering')); inputs.centering = mp.P4.centering; else; inputs.centering = mp.centering; end
+            if(isfield(inputs, 'clocking')); inputs.clocking = mp.P4.clocking; end % clocking [degrees]
+            if(isfield(inputs, 'xShear')); inputs.xShear = mp.P4.xShear; end % x-shear [pupil diameters]
+            if(isfield(inputs, 'yShear')); inputs.yShear = mp.P4.yShear;  end % y-shear [pupil diameters]
+            if(isfield(mp.P4, 'flagHG')); inputs.flagHG = mp.P4.flagHG; end % whether to use hyper-Gaussians to generate the pupil instead. (Old behavior)
+            
+%             inputs.ID = mp.P4.IDnorm;
+%             inputs.Nstrut = mp.P4.Nstrut;
+%             inputs.angStrut = mp.P4.angStrut; % Angles of the struts 
+%             inputs.wStrut = mp.P4.wStrut; % spider width (fraction of the pupil diameter)
         end
 
         if(mp.full.flagGenLS)

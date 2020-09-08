@@ -34,8 +34,8 @@ inputs.ang = 65 ;
 inputs.centering = 'pixel';
 
 
-inputs.xShear = 2;
-inputs.yShear = -5;
+inputs.xOffset = 2;
+inputs.yOffset = -5;
 
 maskA = falco_gen_bowtie_FPM(inputs);
 

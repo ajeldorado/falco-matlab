@@ -108,6 +108,7 @@ if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weig
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
 mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %% Conversion factor: milliarcseconds (mas) to lambda0/D
+if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Needed for computing RMS DM surface actuation
 
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 

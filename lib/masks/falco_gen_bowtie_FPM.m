@@ -111,6 +111,7 @@ else
     %--INITIALIZE PROPER
     bdf = Dmask/Darray; %--beam diameter factor in output array
     bm = prop_begin(Dmask, wl_dummy, Narray, 'beam_diam_fraction', bdf);
+    prop_set_antialiasing(ceil_odd(upsampleFactor));
 
     if(isinf(rhoOuter) == false)
         %--Outer opaque ring of FPM
