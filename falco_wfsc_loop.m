@@ -27,6 +27,11 @@ Im = falco_get_summed_image(mp);
 
 for Itr=1:mp.Nitr
 
+    %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
+    if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
+    if(any(mp.dm_ind==2));  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
+    
+    %%
     %--Start of new estimation+control iteration
     fprintf(['Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
 

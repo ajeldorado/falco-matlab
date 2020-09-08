@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Script to perform wavefront control with the WFIRST CGI Phase B SP(L)C-Spectroscopy design.
+% Script to perform a DMLC design run.
 
 clear all;
 
@@ -22,39 +22,39 @@ clear all;
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_WFIRST_PhaseB_SPC_Spec_simple
+EXAMPLE_defaults_WFIRST_LC_probing
+
 
 %% Step 3: Overwrite default values as desired
 
 % %%--Special Computational Settings
-mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
+
 % mp.propMethodPTP = 'mft';
 
 %--Record Keeping
-mp.SeriesNum = 1;
 mp.TrialNum = 1;
+mp.SeriesNum = 1;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'ws_SeriesX_TrialY.mat';
+% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
 % temp = load(fn_prev,'out');
 % mp.dm1.V = temp.out.DM1V;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-mp.Nsbp = 6;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-
-%--DEBUGGING:
+%--Use just 1 wavelength for initial debugging of code
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
-% % % GRID-SEARCH EFC     
-mp.Nitr = 5; %--Number of estimation+control iterations to perform
-mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-mp.ctrl.flagUseModel = true; %--Use the compact model for the grid search
+mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
+mp.F3.RinA = mp.F3.Rin;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+mp.Fend.corr.Rin = mp.F3.Rin;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.score.Rin = mp.F3.Rin;  % inner radius of dark hole scoring region [lambda0/D]
+
+mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
+mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
 
 %% Step 4: Generate the label associated with this trial
 
@@ -69,14 +69,6 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 [mp, out] = falco_flesh_out_workspace(mp);
 
+[mp, out] = falco_wfsc_loop(mp, out);
 
-%--For one-off check of starting design
-[mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
 
-% out.Zsens(:,:,1) = falco_get_Zernike_sensitivities(mp);
-
-%--Compute the current contrast level
-Im = falco_get_summed_image(mp);
-Inorm = mean(Im(mp.Fend.corr.maskBool))
-
-% [mp, out] = falco_wfsc_loop(mp, out);

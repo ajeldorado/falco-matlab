@@ -165,6 +165,11 @@ switch lower(mp.layout)
                 mp.FPM.mask = mp.full.FPMcube(:,:,ilam);%modvar.sbpIndex,modvar.wpsbpIndex);
         end
 end
+
+% %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
+% if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
+% if(any(mp.dm_ind==2));  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
+
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
     case{'fourier'}

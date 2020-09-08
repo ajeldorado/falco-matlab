@@ -1,599 +1,84 @@
 
 
-function out = falco_gen_rounded_bowtie_FPM(rhoInner, rhoOuter, rocFillet, pixresFPM, angDeg, clockDeg, upsampleFactor, centering)
+function mask = falco_gen_rounded_bowtie_FPM(rhoInner, rhoOuter, rocFillet, pixresFPM, angDeg, clockDeg, upsampleFactor, centering, varargin)
 
-% clear all;
-% rhoInner = 2.6;
-% rhoOuter = 9.4;
-% rocFillet = 0.25;
-% pixresFPM = 6;
-% angDeg = 65;
-% clockDeg = 0;
-% upsampleFactor = 100;
-% centering = 'pixel';
+    Nbeam = 2*rhoOuter*pixresFPM;
+    ID = 2*rhoInner/(2*rhoOuter);
+    OD = 1;%2*rhoOuter;
+    Rfillet = rocFillet/(2*rhoOuter); % [aperture diameters]
 
-% inputs.pixresFPM = 6; %--pixels per lambda_c/D
-% inputs.rhoInner = 2.6; % radius of inner FPM amplitude spot (in lambda_c/D)
-% inputs.rhoOuter = 9.4; % radius of outer opaque FPM ring (in lambda_c/D)
-% inputs.ang = 60 ;
-% inputs.centering = 'pixel';
-% clockDeg
+    xShear = 0.;
+    yShear = 0.;
 
-flagPlot = false;
-flagPlotFinal = false;
-
-Nbeam = rhoOuter*2*pixresFPM;
-switch centering
-    case 'pixel'
-        Narray = ceil_even(Nbeam + 1);
-    case 'interpixel'
-        Narray = ceil_even(Nbeam);
-    otherwise
-        error('centering must be pixel or interpixel')
-end
-
-%--Required Inputs
-% Nbeam = 250;%inputs.Nbeam; % max aperture radius in samples
-% Narray = 300;%inputs.Narray;% Number of samples across in square output array
-% clockDeg = 0;%inputs.clockingDegrees; % clocking of the pupil [degrees]
-% angDeg = 65; % opening angle [degrees]
-ID = 2*rhoInner;
-OD = 2*rhoOuter;
-% rocFillet = 0.025; % [pupil diameters]
-% upsampleFactor = 100;
-
-DbeamUM = 17.000e3; % pupil diameter (major axis) arriving at Lyot plane [microns]
-rocFilletUM = rocFillet*DbeamUM; %255;%170.; %--width of the dropout region [microns]
-
-stepSize = 1;%1.0; % Distance between polygon points. [microns]
-
-
-
-% %--Required Inputs
-% Nbeam = 250;%inputs.Nbeam; % max aperture radius in samples
-% Narray = 300;%inputs.Narray;% Number of samples across in square output array
-% clockDeg = 57;%inputs.clockingDegrees; % clocking of the pupil [degrees]
-% angDeg = 65; % opening angle [degrees]
-% ID = 0.26;
-% OD = 0.94;
-% rocFillet = 0.025;
-% upsampleFactor = 100;
-% 
-% DbeamUM = 17.000e3; % pupil diameter (major axis) arriving at Lyot plane [microns]
-% rocFilletUM = 170.; %--width of the dropout region [microns]
-% 
-% stepSize = 10;%1.0; % Distance between polygon points. [microns]
-% 
-% flagPlot = true;%false;
-
-% rocFillet = rocFilletUM/(DbeamUM); %--Normalized dropout width [pupil diameteters]
-nPointsCircle = round(2*pi*DbeamUM/2./stepSize); % Number of points to make a full circle at the OD
-nPointsFillet = round(2*pi*rocFilletUM/stepSize);
-
-
-pupilCube = zeros(Narray, Narray, 4);
-clockRad = pi/180*clockDeg;
-angRad = pi/180*angDeg;
-
-% Nbeam = inputs.Nbeam; % max aperture radius in samples
-% Narray = inputs.Narray;% Number of samples across in square output array
-% radiusX = inputs.radiusX; % x-radius of ellipse [pupil diameters]
-% radiusY = inputs.radiusY; % y-radius of ellipse [pupil diameters]
-% clockingDegrees = inputs.clockingDegrees; % clocking of the pupil [degrees]
-
-%--Optional inputs
-% centering = 'pixel';%'interpixel';
-xShear = 0.;
-yShear = 0.;
-magFac = 1.;
-
-switch centering
-    case 'interpixel'
-        x = (-(Narray-1)/2:(Narray-1)/2)/pixresFPM;
-    otherwise
-        x = (-Narray/2:(Narray/2-1))/pixresFPM;
-end
-y = x;
-x = x - xShear;
-y = y - yShear;
-[X, Y] = meshgrid(x,y);
-dx = x(2) - x(1);
-radius = 0.5;
-
-[THETAS, RHOS] = cart2pol(X, Y);
-% THETAS = atan2((X-xShear), (Y-yShear));
-% RHOS = sqrt((X-xShear).^2 + (Y-yShear).^2);
-
-slopeA = tan(angRad/2. - clockRad);
-slopeB = tan(angRad/2. + clockRad);
-%--Vertical openings
-% mask = (RHOS>=ID/2. & RHOS <= OD/2. & ((X <= slopeA*Y & X >= -slopeB*Y & Y > 0) | (X >= slopeA*Y & X <= -slopeB*Y & Y < 0)));
-% mask = double(mask);
-
-%--Sideways openings
-mask = (RHOS>=ID/2. & RHOS <= OD/2. & ((Y <= slopeB*X & Y >= -slopeA*X & X > 0) | (Y >= slopeB*X & Y <= -slopeA*X & X < 0)));
-mask = double(mask);
-
-if(flagPlot)
-    figure(11); imagesc(x, x, mask); axis xy equal tight; colorbar; drawnow;
-end
-
-kernel = ones(3);
-kernel = kernel/sum(kernel(:));
-mask2 = conv2(mask, kernel);
-mask2 = pad_crop(mask2, size(mask));
-grayInds = find(mask2 > 0 & mask2 < 1);
-
-
-dxUp = dx/upsampleFactor;
-xUp = (-(upsampleFactor-1)/2:(upsampleFactor-1)/2)*dxUp;
-[Xup0, Yup0] = meshgrid(xUp);
-
-subpixel = zeros(upsampleFactor, upsampleFactor);
-
-pupil = mask;%zeros(size(mask));
-
-for iInterior = 1:length(grayInds)
-
-    subpixel = 0*subpixel;
-
-    xCenter = X(grayInds(iInterior));
-    yCenter = Y(grayInds(iInterior));
-    Xup = Xup0 + xCenter;
-    Yup = Yup0 + yCenter;
-    RHOSup = sqrt((Xup).^2 + (Yup).^2);
-
-    subpixel(RHOSup>=ID/2. & RHOSup <= OD/2. & ((Yup <= slopeB*Xup & Yup >= -slopeA*Xup & Xup > 0) | (Yup >= slopeB*Xup & Yup <= -slopeA*Xup & Xup < 0))) = 1;
-
-%     subpixel(RHOSup>=ID/2. & RHOSup <= OD/2. & ((Xup <= slopeA*Yup & Xup >= -slopeB*Yup & Yup > 0) | (Xup >= slopeA*Yup & Xup <= -slopeB*Yup & Yup < 0))) = 1;
-%     subpixel(RHOSup>=ID/2. & RHOSup <= OD/2.) = 1;
-    pixelValue = sum(subpixel(:))/upsampleFactor^2;
-    pupil(grayInds(iInterior)) = pixelValue;
-
-end
-if(flagPlot)
-    hold off
-end
-
-grayMap = zeros(size(mask));
-grayMap(grayInds) = 1;
-
-if(flagPlot)
-    figure(1); imagesc(x, x, grayMap); axis xy equal tight; colorbar; drawnow;
-
-    figure(2); imagesc(x, x, mask); axis xy equal tight; colorbar; drawnow;
-    figure(3); imagesc(x, x, mask2); axis xy equal tight; colorbar; drawnow;
-
-    figure(4); imagesc(x, x, pupil); axis xy equal tight; colorbar; colormap parula; drawnow;
-    figure(5); imagesc(x, x, pupil-fliplr(pupil)); axis xy equal tight; colorbar; drawnow;
-end
-
-%% Generate normalized coordinates of the zone to etch including fillets
-% Coordinates are normalized to the unmasked pupil diameter along its major axis.
-
-nStrut = 4;
-
-strutWidthVec = zeros(1, nStrut); %wStrut*ones(1, nStrut);
-yOffsetVec = zeros(nStrut, 1);
-strutAngleVec = [angDeg/2.+clockDeg, -angDeg/2.+clockDeg, 180+angDeg/2.+clockDeg, 180-angDeg/2+clockDeg]; %--Easier to start -90 degrees off, then rotate later.
-strutSlopeVec = tand(strutAngleVec);
-
-Rin = ID/2.0;
-Rout = OD/2.0;
-
-RinBias = Rin + rocFillet;
-RoutBias = Rout - rocFillet;
-
-th = linspace(0, 360, 1000);%10000);
-
-
-
-thROC = linspace(0, 360, 361);
-xROC = rocFillet*cosd(thROC);
-yROC = rocFillet*sind(thROC);
-
-for istrut = [1, 3] %nStrut:-1:1 % 1:nStrut % 
-    
-    if(flagPlot)
-        figure(33); 
-        plot(ID/2*cosd(th), ID/2*sind(th), '--b', OD/2*cosd(th), OD/2*sind(th), '--b', 'Linewidth', 0.5);
-        axis xy equal tight;
-        xlim(0.55*[-1, 1]); ylim(0.55*[-1, 1])
-        hold on;
-    end
-    xs = -0.5:0.01:0.5; %--for plotting only
-    
-    %--Strut A, right edge (when going from ID to OD)
-    m1 = strutSlopeVec(istrut);
-    b1 = yOffsetVec(istrut) - strutWidthVec(istrut)/2.0/cosd(strutAngleVec(istrut));
-    %--Strut A, inner circle intersection
-    x1ia = (-b1*m1 - sqrt(Rin*Rin*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    x1ib = (-b1*m1 + sqrt(Rin*Rin*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    if istrut == 1
-        x1i = max([x1ia, x1ib]);
-    else
-        x1i = min([x1ia, x1ib]);
-    end
-    y1i = m1*x1i + b1;
-    %--Strut A, outer circle intersection
-    x1oa = (-b1*m1 - sqrt(Rout*Rout*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    x1ob = (-b1*m1 + sqrt(Rout*Rout*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    if istrut == 1
-        x1o = max([x1oa, x1ob]);
-    else
-        x1o = min([x1oa, x1ob]);
-    end
-    y1o = m1*x1o + b1;
-    if(flagPlot)
-        plot([x1i, x1o], [y1i, y1o], 'rx', 'MarkerSize', 8)
-    end
-    %--Strut B, left edge (when going from ID to OD)
-    if istrut == 2
-        istrutB = 1;
-    else
-        istrutB = istrut+1;
-    end
-    m2 = strutSlopeVec(istrutB);
-    bB = yOffsetVec(istrutB) + strutWidthVec(istrutB)/2.0/cosd(strutAngleVec(istrutB));
-    %--Strut B, inner circle intersection
-    xm = (-bB*m2 - sqrt(Rin*Rin*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    xp = (-bB*m2 + sqrt(Rin*Rin*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    if istrut == 1 || istrut == 2 || istrut == 6
-        x2i = max([xm, xp]);
-    else
-        x2i = min([xm, xp]);
-    end
-    y2i = m2*x2i + bB;
-    %--Strut B, outer circle intersection
-    xm = (-bB*m2 - sqrt(Rout*Rout*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    xp = (-bB*m2 + sqrt(Rout*Rout*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    if istrut == 1 || istrut == 2 || istrut == 6
-        x2o = max([xm, xp]);
-    else
-        x2o = min([xm, xp]);
-    end
-    y2o = m2*x2o + bB;
-    if(flagPlot)
-        plot([x2i, x2o], [y2i, y2o], 'rx', 'MarkerSize', 8)
-    end
-    %--Dropout biased from Strut B, left edge (when going from ID to OD)
-    if istrut == 2
-        istrutB = 1;
-    else
-        istrutB = istrut+1;
-    end
-    m2 = strutSlopeVec(istrutB);
-    bB = yOffsetVec(istrutB) + (strutWidthVec(istrutB)/2.0 + rocFillet)/cosd(strutAngleVec(istrutB));
-    %--Dropout biased from Strut B, inner circle intersection
-    xm = (-bB*m2 - sqrt(RinBias*RinBias*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    xp = (-bB*m2 + sqrt(RinBias*RinBias*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    if istrut == 1 || istrut == 2 || istrut == 6
-        xfBi = max([xm, xp]);
-    else
-        xfBi = min([xm, xp]);
-    end
-    yfBi = m2*xfBi + bB;
-    %--Dropout biased from Strut B, outer circle intersection
-    xm = (-bB*m2 - sqrt(RoutBias*RoutBias*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    xp = (-bB*m2 + sqrt(RoutBias*RoutBias*(m2*m2 + 1) -bB*bB))/(m2*m2+1);
-    if istrut == 1 || istrut == 2 || istrut == 6
-        xfBo = max([xm, xp]);
-    else
-        xfBo = min([xm, xp]);
-    end
-    yfBo = m2*xfBo + bB;
-    if(flagPlot)
-        plot([xfBi, xfBo], [yfBi, yfBo], 'gx', 'MarkerSize', 8);
-    end
-    
-    %--Fillet center biased from Strut A, right edge (when going from ID to OD)
-    b1 = yOffsetVec(istrut) - (strutWidthVec(istrut)/2.0 + rocFillet)/cosd(strutAngleVec(istrut));
-    %--Fillet center biased from Strut A, inner circle intersection
-    x1ia = (-b1*m1 - sqrt(RinBias*RinBias*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    x1ib = (-b1*m1 + sqrt(RinBias*RinBias*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    if istrut == 1 %|| istrut == 2 || istrut == 3
-        xfAi = max([x1ia, x1ib]);
-    else
-        xfAi = min([x1ia, x1ib]);
-    end
-    yfAi = m1*xfAi + b1; 
-    %--Fillet center biased from Strut A, outer circle intersection
-    x1oa = (-b1*m1 - sqrt(RoutBias*RoutBias*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    x1ob = (-b1*m1 + sqrt(RoutBias*RoutBias*(m1*m1 + 1) -b1*b1))/(m1*m1+1);
-    if istrut == 1 %|| istrut == 2 || istrut == 3
-        xfAo = max([x1oa, x1ob]);
-    else
-        xfAo = min([x1oa, x1ob]);
-    end
-    yfAo = m1*xfAo + b1;
-    if(flagPlot)
-        plot([xfAi, xfAo], [yfAi, yfAo], 'gx', 'MarkerSize', 8)
-    end
-%     plot(xROC+x1iBias, yROC+y1iBias, '--k')
-    
-    %  Intersection Points go clockwise with a before b.
-    
-    %--Strut A, Outer Fillet 1st Intersection Point (along circle)
-    xfAoa = Rout*cos(atan2(yfAo, xfAo));
-    yfAoa = Rout*sin(atan2(yfAo, xfAo));
-    %--Strut A, Outer Fillet 2nd Intersection Point (along strut)
-    b1 = yOffsetVec(istrut) - (strutWidthVec(istrut)/2.0)/cosd(strutAngleVec(istrut)); % along strut
-    bf1o = yfAo + xfAo/m1; % line perpendicular to strut and intersecting fillet center
-    xfAob = (bf1o-b1) / (m1 + 1/m1);
-    yfAob = m1*xfAob + b1;
-    [ang1, ang2] = dualatan2ccw(xfAoa-xfAo, yfAoa-yfAo, xfAob-xfAo, yfAob-yfAo); % [radians]
-    thfAo = linspace(ang1, ang2, round(nPointsFillet*abs(ang2-ang1)/(2*pi))); % [radians]
-    xFilletAo = rocFillet*cos(thfAo) + xfAo;
-    yFilletAo = rocFillet*sin(thfAo) + yfAo;
-    
-    if(flagPlot)
-        plot([xfAoa, xfAob], [yfAoa, yfAob], 'o','Color', rgb('Magenta'),'MarkerFaceColor', rgb('Gold'), 'MarkerSize', 8);
-        plot(xFilletAo, yFilletAo, '--k');
-    end
-    
-    %--Strut A, Inner Fillet 1st Intersection Point (along strut)
-    b1 = yOffsetVec(istrut) - (strutWidthVec(istrut)/2.0)/cosd(strutAngleVec(istrut)); % along strut
-    bf1i = yfAi + xfAi/m1; % line perpendicular to strut and intersecting fillet center
-    xfAia = (bf1i-b1) / (m1 + 1/m1);
-    yfAia = m1*xfAia + b1;
-    %--Strut A, Inner Fillet 2nd Intersection Point (along circle)
-    xfAib = Rin*cos(atan2(yfAi, xfAi));
-    yfAib = Rin*sin(atan2(yfAi, xfAi));
-    [ang1, ang2] = dualatan2ccw(xfAia-xfAi, yfAia-yfAi, xfAib-xfAi, yfAib-yfAi); % [radians]
-    thfAi = linspace(ang1, ang2, round(nPointsFillet*abs(ang2-ang1)/(2*pi))); % [radians]
-    xFilletAi = rocFillet*cos(thfAi) + xfAi;
-    yFilletAi = rocFillet*sin(thfAi) + yfAi;
-    
-    if(flagPlot)
-        plot([xfAia, xfAib], [yfAia, yfAib], 'o','Color', rgb('Magenta'),'MarkerFaceColor', rgb('Magenta'), 'MarkerSize', 8);
-        plot(xFilletAi, yFilletAi, '--k');
-    end
-    
-    %--Strut B, Inner Fillet 1st Intersection Point (along circle)
-    xfBia = Rin*cos(atan2(yfBi, xfBi));
-    yfBia = Rin*sin(atan2(yfBi, xfBi));
-    %--Strut B, Inner Fillet 2nd Intersection Point (along strut)
-    bB = yOffsetVec(istrutB) + (strutWidthVec(istrutB)/2.0)/cosd(strutAngleVec(istrutB)); % along strut
-    bfB = yfBi + xfBi/m2; % line perpendicular to strut and intersecting fillet center
-    xfBib = (bfB-bB) / (m2 + 1/m2);
-    yfBib = m2*xfBib + bB;
-
-    [ang1, ang2] = dualatan2ccw(xfBia-xfBi, yfBia-yfBi, xfBib-xfBi, yfBib-yfBi); % [radians]
-    thfBi = linspace(ang1, ang2, round(nPointsFillet*abs(ang2-ang1)/(2*pi))); % [radians]
-    xFilletBi = rocFillet*cos(thfBi) + xfBi;
-    yFilletBi = rocFillet*sin(thfBi) + yfBi;
-    
-    if(flagPlot)
-        plot([xfBia, xfBib], [yfBia, yfBib], 'o','Color', rgb('Magenta'),'MarkerFaceColor', rgb('Magenta'), 'MarkerSize', 8);
-        plot(xFilletBi, yFilletBi, '-k'); 
-    end
-   
-    %--Strut B, Outer Fillet 1st Intersection Point (along strut)
-    bB = yOffsetVec(istrutB) + (strutWidthVec(istrutB)/2.0)/cosd(strutAngleVec(istrutB)); % along strut
-    bfB = yfBo + xfBo/m2; % line perpendicular to strut and intersecting fillet center
-    xfBoa = (bfB-bB) / (m2 + 1/m2);
-    yfBoa = m2*xfBoa + bB;
-    %--Strut B, Outer Fillet 2nd Intersection Point (along circle)
-    xfBob = Rout*cos(atan2(yfBo, xfBo));
-    yfBob = Rout*sin(atan2(yfBo, xfBo));
-    
-    [ang1, ang2] = dualatan2ccw(xfBoa-xfBo, yfBoa-yfBo, xfBob-xfBo, yfBob-yfBo); % [radians]
-    thfBo = linspace(ang1, ang2, round(nPointsFillet*abs(ang2-ang1)/(2*pi))); % [radians]
-    xFilletBo = rocFillet*cos(thfBo) + xfBo;
-    yFilletBo = rocFillet*sin(thfBo) + yfBo;
-    
-    if(flagPlot)
-        plot([xfBoa, xfBob], [yfBoa, yfBob], 'o','Color', rgb('Magenta'),'MarkerFaceColor', rgb('Indigo'), 'MarkerSize', 8);
-        plot(xFilletBo, yFilletBo, '-k');     
-    end
-    
-    %--Inner circle angles (CW)
-    [thia, thib] = dualatan2cw(xfAib, yfAib, xfBia, yfBia); % [radians]
-    thi = linspace(thia, thib, round(nPointsCircle*abs(thib-thia)/(2*pi))); % [radians]
-
-    %--Outer circle angles (CCW)
-    [thoa, thob] = dualatan2ccw(xfBob, yfBob, xfAoa, yfAoa); % [radians]
-    tho = linspace(thoa, thob, round(nPointsCircle*abs(thob-thoa)/(2*pi))); % [radians]
-    
-    xArcInner = Rin*cos(thi);
-    yArcInner = Rin*sin(thi);
-    
-    xArcOuter = Rout*cos(tho);
-    yArcOuter = Rout*sin(tho);
-    
-    xAll = [xFilletAo, xFilletAi, xArcInner, xFilletBi, xFilletBo, xArcOuter];
-    yAll = [yFilletAo, yFilletAi, yArcInner, yFilletBi, yFilletBo, yArcOuter];
-    
-%     xyMask{istrut} = [xAll; yAll];
-    if(flagPlot)
-        plot(xAll, yAll, '-b','Linewidth', 1); drawnow;
-    end
-    
-
-    %% Define the fillet regions as binary masks
-    %--Sideways openings
-
-    xFilletCenterVec = [xfAo, xfAi, xfBi, xfBo];
-    yFilletCenterVec = [yfAo, yfAi, yfBi, yfBo];
-    mSecantVec = [(yfAoa-yfAob)/(xfAoa-xfAob), (yfAia-yfAib)/(xfAia-xfAib), (yfBib-yfBia)/(xfBib-xfBia), (yfBob-yfBoa)/(xfBob-xfBoa)];
-    bSecantVec = [yfAoa - xfAoa*mSecantVec(1), yfAia - xfAia*mSecantVec(2), yfBia - xfBia*mSecantVec(3), yfBoa - xfBoa*mSecantVec(4)]; 
-    xDeltaVec = [(xfAoa-xfAob), (xfAia-xfAib), (xfBia-xfBib), (xfBoa-xfBob)];
-    
-    nFillet = length(xFilletCenterVec);
-
-    maskFillet = zeros(size(X));
-    
-    for iFillet = 1:nFillet
-        Xf = X - xFilletCenterVec(iFillet);
-        Yf = Y - yFilletCenterVec(iFillet);
-        [THETASf, RHOSf] = cart2pol(Xf, Yf);
-
-        if xDeltaVec(iFillet) > 0
-            pmf = 1;
-        else
-            pmf = -1;
+    icav = 0;             % index in cell array varargin
+    while icav < size(varargin, 2)
+        icav = icav + 1;
+        switch lower(varargin{icav})
+            case {'xc'}
+                icav = icav + 1;
+                xShear = varargin{icav}; % x offset (lambda/D)
+            case {'yc'}
+                icav = icav + 1;
+                yShear(1) = varargin{icav}; % y offset (lambda/D)
+            otherwise
+                error('falco_gen_rounded_bowtie_FPM: Unknown keyword: %s\n', varargin{icav});
         end
-        
-        if istrut == 1
-            pms = 1;
-        elseif istrut == 3
-            pms = -1;
-        end
-        
-        maskFillet = maskFillet | ( (pms*X > 0) & (RHOSf.^2>=rocFillet.^2) & (pmf*Y >= pmf*(mSecantVec(iFillet)*X + bSecantVec(iFillet))) &...
-            (RHOS>=ID/2. & RHOS <= OD/2. & ((Y <= slopeB*X & Y >= -slopeA*X & X > 0) | (Y >= slopeB*X & Y <= -slopeA*X & X < 0))));
     end
 
-    maskFillet = double(maskFillet);
-    maskFillet2 = conv2(maskFillet, kernel);
-    maskFillet2 = pad_crop(maskFillet2, size(maskFillet));
-    grayInds = find(maskFillet2 > 0);
+    DbeamUM = 1e3; % [microns]
+    stepSize = 1; % [microns]
+%     xcMicron = xShear*DbeamUM; % [microns]
+%     ycMicron = yShear*DbeamUM; % [microns]
+    xcMicron = xShear/(2*rhoOuter)*DbeamUM; % [microns]
+    ycMicron = yShear/(2*rhoOuter)*DbeamUM; % [microns]
 
-    if(flagPlot)
-        figure(6); imagesc(x, x, maskFillet); axis xy equal tight; colorbar; colormap parula; drawnow;
-        figure(7); imagesc(x, x, maskFillet2); axis xy equal tight; colorbar; colormap parula; drawnow;
-    end
-    %% Make grayscale representation of the fillet region
 
-    subpixel = zeros(upsampleFactor, upsampleFactor);
+% maxOffset = max(abs([xShear, yShear]));
+% % Nbeam = rhoOuter*2*pixresFPM;
+% switch centering
+%     case 'pixel'
+%         Narray = ceil_even(2*pixresFPM*maxOffset + Nbeam + 1);
+%     case 'interpixel'
+%         Narray = ceil_even(2*pixresFPM*maxOffset + Nbeam);
+%     otherwise
+%         error('centering must be pixel or interpixel')
+% end
 
-    pupil2 = zeros(size(pupil));
 
-    for iFillet = 1:nFillet
 
-        Xf = X - xFilletCenterVec(iFillet);
-        Yf = Y - yFilletCenterVec(iFillet);
-        [THETASf, RHOSf] = cart2pol(Xf, Yf);
-
-        if xDeltaVec(iFillet) > 0
-            pmf = 1;
-        else
-            pmf = -1;
-        end
-        if istrut == 1
-            pms = 1;
-        elseif istrut == 3
-            pms = -1;
-        end
-        maskFillet = ( (pms*X > 0) & (RHOSf.^2>=rocFillet.^2) & (pmf*Y >= pmf*(mSecantVec(iFillet)*X + bSecantVec(iFillet))) &...
-            (RHOS>=ID/2. & RHOS <= OD/2. & ((Y <= slopeB*X & Y >= -slopeA*X & X > 0) | (Y >= slopeB*X & Y <= -slopeA*X & X < 0))));
-        maskFillet = double(maskFillet);
-            
-            
-%         if iFillet <= 2
-%             maskFillet = ( X > 0 & (RHOSf.^2>=rocFillet.^2) & (Y >= mSecantVec(iFillet)*X + bSecantVec(iFillet)) &...
-%                 (RHOS>=ID/2. & RHOS <= OD/2. & ((Y <= slopeB*X & Y >= -slopeA*X & X > 0) | (Y >= slopeB*X & Y <= -slopeA*X & X < 0))));
-%             maskFillet = double(maskFillet);
-%         else
-%             maskFillet = ( X > 0 & (RHOSf.^2>=rocFillet.^2) & (Y <= mSecantVec(iFillet)*X + bSecantVec(iFillet)) &...
-%             (RHOS>=ID/2. & RHOS <= OD/2. & ((Y <= slopeB*X & Y >= -slopeA*X & X > 0) | (Y >= slopeB*X & Y <= -slopeA*X & X < 0))));
+%     xShear = 0.;
+%     yShear = 0.;
+%     icav = 0;  % index in cell array varargin
+%     while icav < size(varargin, 2)
+%         icav = icav + 1;
+%         switch lower(varargin{icav})
+%             case {'xc'}
+%                 icav = icav + 1;
+%                 xShear = varargin{icav};  % x offset [pupil diameters]
+%             case {'yc'}
+%                 icav = icav + 1;
+%                 yShear(1) = varargin{icav};  % y offset [pupil diameters]
+%             otherwise
+%                 error('falco_gen_rounded_bowtie_FPM: Unknown keyword: %s\n', varargin{icav});
 %         end
-        maskFillet = double(maskFillet);
-        maskFillet2 = conv2(maskFillet, kernel);
-        maskFillet2 = pad_crop(maskFillet2, size(maskFillet));
-        grayInds = find(maskFillet2 > 0);
-        
-        if(flagPlot)
-            figure(6); imagesc(x, x, maskFillet); axis xy equal tight; colorbar; colormap parula; drawnow;
-        end
-        
-        for iInterior = 1:length(grayInds)
-
-            subpixel = 0*subpixel;
-
-            xCenter = X(grayInds(iInterior));
-            yCenter = Y(grayInds(iInterior));
-            Xup = Xup0 + xCenter;
-            Yup = Yup0 + yCenter;
-            RHOSup = sqrt((Xup).^2 + (Yup).^2);
-
-            Xupf = Xup - xFilletCenterVec(iFillet);
-            Yupf = Yup - yFilletCenterVec(iFillet);
-            [THETASupf, RHOSupf] = cart2pol(Xupf, Yupf);
-
-            if xDeltaVec(iFillet) > 0
-                pmf = 1;
-            else
-                pmf = -1;
-            end
-            if istrut == 1
-                pms = 1;
-            elseif istrut == 3
-                pms = -1;
-            end
-            subpixel(  (RHOSupf.^2>=rocFillet.^2) & (pmf*Yup >= pmf*(mSecantVec(iFillet)*Xup + bSecantVec(iFillet))) &...
-                (RHOSup>=ID/2. & RHOSup <= OD/2. & ((Yup <= slopeB*Xup & Yup >= -slopeA*Xup & Xup > 0) | (Yup >= slopeB*Xup & Yup <= -slopeA*Xup & Xup < 0)))) = 1;
-            
-            pixelValue = sum(subpixel(:))/upsampleFactor^2;
-            pupil2(grayInds(iInterior)) = pixelValue;
-            
-
-        end
-        if(flagPlot)
-            figure(14); imagesc(x, x, pupil2); axis xy equal tight; colorbar; colormap parula; drawnow;
-        end
-    end
-    if(flagPlot)
-        hold off
-    end
-
-    grayMap = zeros(size(mask));
-    grayMap(grayInds) = 1;
-
-    if(flagPlot)
-        figure(11); imagesc(x, x, grayMap); axis xy equal tight; colorbar; drawnow;
-
-        figure(12); imagesc(x, x, pupil2); axis xy equal tight; colorbar; drawnow;
-        figure(13); imagesc(x, x, pupil-pupil2); axis xy equal tight; colorbar; drawnow;
-
-        % figure(14); imagesc(x, x, pupil2); axis xy equal tight; colorbar; colormap parula; drawnow;
-        figure(15); imagesc(x, x, pupil2-fliplr(pupil2)); axis xy equal tight; colorbar; drawnow;
-    end
-    pupilCube(:, :, istrut) = pupil2;
-
-
-%%
-    pause(1)
-
-
-end
-if(flagPlot)
-    hold off
-end
-%%
-
-out = pupil - sum(pupilCube, 3);
-
-if(flagPlotFinal)
-    figure(20); imagesc(x, x, out); axis xy equal tight; colorbar; drawnow;
-end
-
-end % EOF
-
-%% Custom Functions
-function [ang1, ang2] = dualatan2ccw(x1, y1, x2, y2)
-    % Function to keep angles increasing when being checked going CCW along
-    % a circle.
+%     end
     
-    ang1 = atan2(y1, x1);
-    ang2 = atan2(y2, x2);
+
+
+    % Masks have 180-degree rotational symmetry
+    clockDeg = mod(clockDeg, 180);
     
-    if (ang1 > 0) && (ang2 < 0)
-        ang2 = ang2 + 2*pi;
+    % Depending on the clocking, call a different function because of
+    % the tangent function
+    if clockDeg < (90 - angDeg/2.0)
+        [mask, ~] = falco_gen_rounded_bowtie_horizontal_vector(Nbeam, ID, OD, Rfillet, angDeg, clockDeg, upsampleFactor, DbeamUM, stepSize, xcMicron, ycMicron, centering);
+    elseif clockDeg > (90 - angDeg/2.0) && clockDeg < (90 + angDeg/2.0)
+        [mask, ~] = falco_gen_rounded_bowtie_vertical_vector(Nbeam, ID, OD, Rfillet, angDeg, clockDeg-90, upsampleFactor, DbeamUM, stepSize, xcMicron, ycMicron, centering);
+    elseif clockDeg > (90 + angDeg/2.0)
+        [mask, ~] = falco_gen_rounded_bowtie_horizontal_vector(Nbeam, ID, OD, Rfillet, angDeg, clockDeg-180, upsampleFactor, DbeamUM, stepSize, xcMicron, ycMicron, centering);
+    else
+        error('Sorry, not set up yet to handle vertical edges of the bowtie.')
     end
 
-end
+end % END OF FUNCTION
 
-
-function [ang1, ang2] = dualatan2cw(x1, y1, x2, y2)
-    % Function to keep angles increasing when being checked going CW along
-    % a circle.
-    
-    ang1 = atan2(y1, x1);
-    ang2 = atan2(y2, x2);
-    
-    if (ang1 < 0) && (ang2 > 0)
-        ang1 = ang1 + 2*pi;
-    end
-
-end

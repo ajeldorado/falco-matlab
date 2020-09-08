@@ -16,21 +16,21 @@ mp.P2.compact.dx = mp.P2.D/mp.P1.compact.Nbeam;
 
 %--Generate/Load Input Pupil
 switch upper(mp.whichPupil)
-    case{'SIMPLE','SIMPLEPROPER'}
-        
-        if(strcmpi(mp.whichPupil,'simpleproper'))
-            inputs.flagPROPER = true;
-        end
+    case{'SIMPLE'}
         
         inputs.Nbeam = mp.P1.full.Nbeam; % number of points across the pupil diameter
-        inputs.OD = mp.P1.ODnorm;
-        inputs.ID = mp.P1.IDnorm;
-        inputs.Nstrut = mp.P1.Nstrut;
-        inputs.angStrut = mp.P1.angStrut; % Angles of the struts 
-        inputs.wStrut = mp.P1.wStrut; % spider width (fraction of the pupil diameter)
         inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
-        inputs.stretch = mp.P1.stretch; 
-        
+        inputs.OD = mp.P1.ODnorm;
+        if(isfield(mp.P1, 'IDnorm')); inputs.ID = mp.P1.IDnorm; end %else; inputs.ID = 0; end
+        if(isfield(mp.P1, 'angStrut')); inputs.angStrut = mp.P1.angStrut; end
+        if(isfield(mp.P1, 'wStrut')); inputs.wStrut = mp.P1.wStrut; end % spider width (fraction of the pupil diameter)
+        if(isfield(mp.P1, 'stretch')); inputs.stretch = mp.P1.stretch; end % else; inputs.stretch = 1; end
+        if(isfield(inputs,'centering')); inputs.centering = mp.P1.centering; else; inputs.centering = mp.centering; end
+        if(isfield(inputs, 'clocking')); inputs.clocking = mp.P1.clocking; end % clocking [degrees]
+        if(isfield(inputs, 'xShear')); inputs.xShear = mp.P1.xShear; end % x-shear [pupil diameters]
+        if(isfield(inputs, 'yShear')); inputs.yShear = mp.P1.yShear;  end % y-shear [pupil diameters]
+        if(isfield(mp.P1, 'flagHG')); inputs.flagHG = mp.P1.flagHG; end % whether to use hyper-Gaussians to generate the pupil instead. (Old behavior)
+
         mp.P1.full.mask = falco_gen_pupil_Simple(inputs);
         
         %--Generate low-res input pupil for the 'compact' model
