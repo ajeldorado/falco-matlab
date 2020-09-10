@@ -27,7 +27,7 @@ mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 6;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
 mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
@@ -144,8 +144,8 @@ mp.ctrl.sched_mat = [...
 mp.dm1.inf_fn = 'influence_dm5v2.fits';
 mp.dm2.inf_fn = 'influence_dm5v2.fits';
 
-mp.dm1.dm_spacing = 1e-3; %--User defined actuator pitch
-mp.dm2.dm_spacing = 1e-3; %--User defined actuator pitch
+mp.dm1.dm_spacing = 0.9906e-3; %--User defined actuator pitch
+mp.dm2.dm_spacing = 0.9906e-3; %--User defined actuator pitch
 
 mp.dm1.inf_sign = '+';
 mp.dm2.inf_sign = '+';
@@ -175,7 +175,7 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = true;  %--Whether to apply an iris or not
+mp.flagDM2stop = false;  %--Whether to apply an iris or not
 mp.dm2.Dstop = 50e-3;   %--Diameter of iris [meters]
 
 %--DM separations
@@ -251,19 +251,19 @@ mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
 %--Pupil definition
 mp.whichPupil = 'Simple';
-mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
+% mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
-mp.P1.stretch = 1.00; % factor that stretches the horizontal axis to create elliptical beam 
+% mp.P1.stretch = 1.00; % factor that stretches the horizontal axis to create elliptical beam 
 mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.Nstrut = 0;% Number of struts 
-mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
-mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
+% mp.P1.Nstrut = 0;% Number of struts 
+% mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
+% mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
 
 %--Lyot stop padding
 mp.P4.IDnorm = 47.36/227.86; %--Lyot stop ID [Dtelescope]
 mp.P4.ODnorm = 156.21/227.86; %--Lyot stop OD [Dtelescope]
-mp.P4.Nstrut = 3;% Number of struts 
+% mp.P4.Nstrut = 3;% Number of struts 
 mp.P4.angStrut = [90 210 330];%Array of angles of the radial struts (deg)
 mp.P4.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
 
@@ -271,7 +271,7 @@ mp.P4.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
 mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0/D]
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
-mp.FPMampFac = 10^(-3.7); % amplitude transmission of the FPM
+mp.FPMampFac = 10^(-3.7/2.0); % amplitude transmission of the FPM
 
 
 %% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

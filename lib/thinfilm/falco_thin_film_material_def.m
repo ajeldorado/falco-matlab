@@ -12,6 +12,7 @@
 % INPUTS:
 %   lam: Wavelength [m]
 %   aoi:    Angle of incidense [deg]
+%   t_Ti_base: Ti base layer thickness [m]
 %   t_Ni:   Nickel layer thickness [m]
 %   t_PMGI: PMGI layer thickness [m]
 %   pol: = 0 for TE(s) polarization, = 1 for TM(p) polarization, 2 for mean
@@ -20,16 +21,6 @@
 % OUTPUTS:
 %   cMask(t_PMGI,t_ni): complex field transmission coeffient. Scalar,
 %   complex value.
-%
-% REVISION HISTORY:
-% Modified on 2019-01-28 by A.J. Riggs to:
-%  -Allow for returning the mean transmission for different polarizations
-%  -Add optional keyword input for OPD or non-OPD phase convention choice
-%  -Add optional keyword input for substrate material choice.
-%  -Cleaned up the code.
-% Modified on 2018-05-01 by A.J. Riggs.
-% Created on 2017-12-11 by Erkin Sidick.
-% 1/25/2019: Erkin replaced Ni, Ti and Fused-Silica indices with Dwight's.
 % -------------------------------------------------------------------------
 
 function [tCoef, rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol, varargin)
@@ -57,6 +48,7 @@ end
 
 lam_nm = lam * 1.0e9;    % m --> nm
 lam_u = lam*1.0e6; % m --> microns
+wvl_um = lam*1.0e6; % m --> microns
 theta  = aoi*pi/180;     % deg --> rad
 
 % ---------------------------------------------
@@ -64,12 +56,22 @@ theta  = aoi*pi/180;     % deg --> rad
 switch lower(substrate)
     case{'fs','fusedsilica','fused_silica'}   % Fused Silica
         % ----------- Fused Silica from Dwight Moody------------------
-        lamm = [.4e-6,  .5e-6, .51e-6, .52e-6, .53e-6, .54e-6, .55e-6, .56e-6, .57e-6, .58e-6, .59e-6, .6e-6, .72e-6, .76e-6,   .8e-6,  .88e-6,  .90e-6 1.04e-6]*1d9;
-        nx = [ 1.47012, 1.462, 1.462,  1.461,  1.461,  1.460,  1.460,  1.460,  1.459,  1.459,  1.458,  1.458, 1.45485, 1.45404, 1.45332, 1.45204, 1.45175, 1.44992];
-        vsilica = [lamm(:) nx(:)];
-        lam_silica = vsilica(:,1);  % nm
-        n_silica   = vsilica(:,2);
-        n_substrate    = interp1(lam_silica, n_silica, lam_nm, 'linear');
+%         lamm = [.4e-6,  .5e-6, .51e-6, .52e-6, .53e-6, .54e-6, .55e-6, .56e-6, .57e-6, .58e-6, .59e-6, .6e-6, .72e-6, .76e-6,   .8e-6,  .88e-6,  .90e-6 1.04e-6]*1d9;
+%         nx = [ 1.47012, 1.462, 1.462,  1.461,  1.461,  1.460,  1.460,  1.460,  1.459,  1.459,  1.458,  1.458, 1.45485, 1.45404, 1.45332, 1.45204, 1.45175, 1.44992];
+%         vsilica = [lamm(:) nx(:)];
+%         lam_silica = vsilica(:,1);  % nm
+%         n_silica   = vsilica(:,2);
+%         n_substrate    = interp1(lam_silica, n_silica, lam_nm, 'linear');
+        
+        A1 = 0.68374049400;
+        A2 = 0.42032361300;
+        A3 = 0.58502748000;
+
+        B1 = 0.00460352869;
+        B2 = 0.01339688560;
+        B3 = 64.49327320000;
+
+        n_substrate = sqrt( 1 +  A1*wvl_um.^2./(wvl_um.^2 - B1) + A2*wvl_um.^2./(wvl_um.^2 - B2) + A3*wvl_um.^2./(wvl_um.^2 - B3) );
     
     case{'n-bk7','nbk7','bk7','bk-7'} % N-BK7
     
@@ -92,22 +94,24 @@ Ndiel  = length(t_PMGI_vec);
 
 % ---------------------------------------------
 %--Metal layer properties
-%--New logic: Titanium layer goes beneath Nickel only. Always include them
-%together. Subtract off the thickness of the Ti layer from the intended Ni
-%layer thickness.
+
 
 Nmetal = length(t_Ni_vec);
-t_Ti_vec = zeros(Nmetal,1);
+t_Ti_vec = t_Ti_base*ones(Nmetal, 1);
 
-for ii = 1:Nmetal
-    if(t_Ni_vec(ii) > t_Ti_base) %--For thicker layers
-        t_Ni_vec(ii) = t_Ni_vec(ii) - t_Ti_base;
-        t_Ti_vec(ii) = t_Ti_base;
-    else %--For very thin layers.
-        t_Ti_vec(ii) = t_Ni_vec(ii);
-        t_Ni_vec(ii) = 0;
-    end
-end
+% %--New logic: Titanium layer goes beneath Nickel only. Always include them
+% %together. Subtract off the thickness of the Ti layer from the intended Ni
+% %layer thickness.
+% t_Ti_vec = zeros(Nmetal,1);
+% for ii = 1:Nmetal
+%     if(t_Ni_vec(ii) > t_Ti_base) %--For thicker layers
+%         t_Ni_vec(ii) = t_Ni_vec(ii) - t_Ti_base;
+%         t_Ti_vec(ii) = t_Ti_base;
+%     else %--For very thin layers.
+%         t_Ti_vec(ii) = t_Ni_vec(ii);
+%         t_Ni_vec(ii) = 0;
+%     end
+% end
 
 
 % % GUIDE:

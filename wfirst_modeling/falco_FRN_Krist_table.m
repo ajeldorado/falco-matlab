@@ -147,7 +147,10 @@ function tableKrist = falco_FRN_Krist_table(mp)
         xi_offset = rs(ioff);
         eta_offset = 0;
         Icam = IoffaxisCube(:,:,ioff);
-        if(mp.full.flagPROPER==false);  Icam = Icam/mp.sumPupil;  end  %--PROPER already normalizes the energy
+        if(mp.full.flagPROPER==false)
+            %Icam = Icam/mp.sumPupil;
+            Icam = Icam/sum(sum(abs(mp.P1.full.mask).^2));
+        end
         if(mp.flagPlot); figure(324); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,Icam); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 
         %--Peak pixel value
@@ -196,7 +199,10 @@ function tableKrist = falco_FRN_Krist_table(mp)
         Icam = Icam + IonaxisArray{ii};
     end
     clear IonaxisArray
-    if(mp.full.flagPROPER==false); Icam = Icam/mp.sumPupil;  end %--PROPER already normalizes the energy
+    if(mp.full.flagPROPER==false)
+            %Icam = Icam/mp.sumPupil;
+            Icam = Icam/sum(sum(abs(mp.P1.full.mask).^2));
+        end
     if(mp.flagPlot); figure(324); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Icam)); axis xy equal tight; title('On-axis Intensity','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end             
 
     %--Average the intensity for each annular sector or annulus.
@@ -263,7 +269,10 @@ function tableKrist = falco_FRN_Krist_table(mp)
     occ_trans_vec = zeros(Noff,1);
     for ioff=1:Noff 
         Icam = IoffaxisCube(:,:,ioff);
-        if(mp.full.flagPROPER==false);  Icam = Icam/mp.sumPupil;  end%--PROPER already normalizes the energy
+        if(mp.full.flagPROPER==false)
+            %Icam = Icam/mp.sumPupil;
+            Icam = Icam/sum(sum(abs(mp.P1.full.mask).^2));
+        end
 %         if(mp.flagPlot); figure(324); imagesc(Icam); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 %         if(mp.flagPlot); figure(325); imagesc(log10(Icam)); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
         occ_trans_vec(ioff) = sum(sum(Icam));
