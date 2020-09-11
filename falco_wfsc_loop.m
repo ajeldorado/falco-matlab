@@ -45,7 +45,7 @@ for Itr=1:mp.Nitr
     if(any(mp.fineAlignment_it==Itr))
         bench = hcstr_realignFPMAndRecenter(bench,mp);
     end
-    if(any(mp.search4OffaxisSMF_it==Itr))
+    if(~mp.flagSim && any(mp.search4OffaxisSMF_it==Itr))
         [ x_smf_out, y_smf_out ] = hcst_fiu_findOffaxisSMFwProbe(bench, mp);
         mp.est.probe.Xloc = x_smf_out;
         mp.est.probe.Yloc = y_smf_out;
@@ -417,10 +417,12 @@ fprintf('\n\n');
 
 if mp.flagFiber
     InormSMFHist(Itr+1) = Ifiber;%mean(Im(mp.Fend.corr.maskBool));
-    % Increase the exp time if needed
-    peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint*bench.andor.tint);
-    if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
-        hcst_andor_setExposureTime(bench,bench.andor.tint+1);
+    if ~mp.flagSim
+        % Increase the exp time if needed
+        peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint*bench.andor.tint);
+        if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
+            hcst_andor_setExposureTime(bench,bench.andor.tint+1);
+        end
     end
     fprintf('Prev and New Measured SMF Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
         InormSMFHist(Itr), InormSMFHist(Itr+1), InormSMFHist(Itr)/InormSMFHist(Itr+1) ); 

@@ -68,7 +68,7 @@ mp.Nitr = 100; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
-mp.use_lastJacStruc = false;
+mp.use_lastJacStruc = true;
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -79,15 +79,15 @@ mp.flagFiber = true;  %--whether to go place single-mode fibers in the focal pla
 mp.flagLenslet = false;  %--whether to go through a lenslet array before using the fibers
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
-% temp = load(fn_prev,'out');
-% mp.dm1.V = temp.out.DM1V;
-% mp.dm2.V = temp.out.DM2V;
-% clear temp
+fn_prev = 'ws_Series0004_Trial0004_vortex_Simple_1DM34_z0.2_IWA3_OWA10_1lams775nm_BW1_gridsearchEFC_360DH_segmented_Iter2of100.mat';
+temp = load(fn_prev);
+mp.dm1.dV = temp.DM1V;
+mp.dm2.dV = temp.DM2V;
+clear temp
 
 %--DEBUGGING IN MONOCHROMATIC LIGHT
-mp.fracBW = 0.30;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 7;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 %% Other stuff
@@ -102,7 +102,7 @@ if(mp.flagFiber)
     mp.Fend.Nfibers = mp.Fend.Nlens;
     %--Fiber locations and number
     mp.Fend.Nfiber = 1;
-    mp.Fend.x_fiber = [7];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+    mp.Fend.x_fiber = [-7];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
     mp.Fend.y_fiber = [0];%[0 5.3597 -5.3597];%[0 4.625 -4.625];
 
     %--Off-axis, incoherent point source (exoplanet)
