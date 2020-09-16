@@ -69,8 +69,12 @@ function normI = falco_get_dst_sbp_image(mp,si)
     % Send the commands to the DM. 
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
-    DM_apply2Dmap(tb.DM1,dm1_map);
-    DM_apply2Dmap(tb.DM2,dm2_map);
+    if(tb.DM1.installed && tb.DM1.CONNECTED)
+        DM_apply2Dmap(tb.DM1,dm1_map);
+    end
+    if(tb.DM2.installed && tb.DM2.CONNECTED)
+        DM_apply2Dmap(tb.DM2,dm2_map);
+    end
     
     %----- Get image from the testbed -----
     disp(['Getting image from testbed in band ',num2str(si),'. texp = ',num2str(sbp_texp)])
