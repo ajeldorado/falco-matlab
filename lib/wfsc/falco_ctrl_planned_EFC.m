@@ -8,23 +8,6 @@
 % -This function performs an empirical grid search over these parameters:
 %  a) a scalar coefficient for the regularization matrix
 %  b) a scalar gain for the final DM command.
-%
-% -This code is based on electric field conjugation (EFC) as described 
-% by Give'on et al. SPIE 2011.
-%
-%
-% REVISION HISTORY:
-% - Modified on 2019-09-26 by A.J. Riggs to handle DM actuator constraints
-% outside this function in a more user-robust way.
-% - Modified on 2019-06-25 by A.J. Riggs to pass out tied actuator pairs. 
-% - Modified on 2018-07-24 to use Erkin's latest controller strategy.
-% - Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
-%   Required calling a new function. 
-% - Modified by A.J. Riggs on October 11, 2017 to allow easier mixing of
-%   which DMs are used and to also do a grid search over the gain of the 
-%   overall DM command. 
-% - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
-% - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
 function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
 
@@ -89,9 +72,9 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         cvar.latestBestlog10reg = vals_list(1,indBest);
         cvar.latestBestDMfac = vals_list(2,indBest);
         if(mp.ctrl.flagUseModel)
-            fprintf('Model-based grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
+            fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e normalized intensity.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
         else
-            fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
+            fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e normalized intensity.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
         end
     end
     

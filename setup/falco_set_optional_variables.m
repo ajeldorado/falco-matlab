@@ -51,6 +51,9 @@ if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to pro
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
 if(isfield(mp,'flagWFS')==false);  mp.flagWFS = false;  end  %--Whether to activate the WFS mode 
 
+%--Whether to use an apodizer at all
+if(isfield(mp,'flagApod')==false);  mp.flagApod = false;  end
+
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
 if(isfield(mp.compact,'flagGenApod')==false);  mp.compact.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
