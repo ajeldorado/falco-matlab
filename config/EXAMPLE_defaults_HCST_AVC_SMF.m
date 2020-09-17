@@ -318,5 +318,5 @@ mp.dm2.xc = xc_best;              % x-center location of DM surface [actuator wi
 mp.dm2.yc = yc_best;               % y-center location of DM surface [actuator widths]
 Nactbeam = 18.7e-3/mp.dm1.dm_spacing;                % Nactact across the "beam"
 
-mp.dm1.HminStep = 0.5e-9;
-mp.dm2.HminStep = 0.5e-9;
+% mp.dm1.HminStep = 0.0e-9;
+% mp.dm2.HminStep = 0.0e-9;

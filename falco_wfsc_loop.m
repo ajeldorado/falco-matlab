@@ -497,7 +497,12 @@ if(isfield(mp,'testbed'))
     InormHist_tb.beta(Itr-1) = out.log10regHist(Itr-1);
     hProgress = falco_plot_progress_hcst(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
+    if(mp.flagFiber)
+        InormHist_show = InormSMFHist; 
+    else
+        InormHist_show = InormHist; 
+    end
+    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist_show,Im,DM1surf,DM2surf,ImSimOffaxis);
 end
 % %% Optional output variable: mp
 % varargout{1} = mp;
@@ -522,7 +527,8 @@ end
 out.thput = mp.thput_vec;
 out.Nitr = mp.Nitr;
 out.InormHist = InormHist;
-out.InormMod = InormHist_tb.mod;
+if(mp.flagFiber);out.InormSMFHist = InormSMFHist; end
+if(~mp.flagSim); out.InormMod = InormHist_tb.mod;end
 
 fnOut = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
 

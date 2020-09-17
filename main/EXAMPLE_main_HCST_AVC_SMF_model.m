@@ -59,16 +59,16 @@ mp.flagSaveWS = true;
 %% Step 3: Overwrite default values as desired
 
 %--Record Keeping
-mp.SeriesNum = 5;
-mp.TrialNum = 1;
+mp.SeriesNum = 1;
+mp.TrialNum = 2;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 100; %--Number of estimation+control iterations to perform
+mp.Nitr = 5; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
-mp.use_lastJacStruc = true;
+mp.use_lastJacStruc = false;
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -79,15 +79,15 @@ mp.flagFiber = true;  %--whether to go place single-mode fibers in the focal pla
 mp.flagLenslet = false;  %--whether to go through a lenslet array before using the fibers
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-fn_prev = 'ws_Series0004_Trial0004_vortex_Simple_1DM34_z0.2_IWA3_OWA10_1lams775nm_BW1_gridsearchEFC_360DH_segmented_Iter2of100.mat';
-temp = load(fn_prev);
-mp.dm1.dV = temp.DM1V;
-mp.dm2.dV = temp.DM2V;
-clear temp
+% fn_prev = 'ws_Series0004_Trial0004_vortex_Simple_1DM34_z0.2_IWA3_OWA10_1lams775nm_BW1_gridsearchEFC_360DH_segmented_Iter2of100.mat';
+% temp = load(fn_prev);
+% mp.dm1.dV = temp.DM1V;
+% mp.dm2.dV = temp.DM2V;
+% clear temp
 
 %--DEBUGGING IN MONOCHROMATIC LIGHT
-mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.30;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 11;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 %% Other stuff
@@ -96,13 +96,13 @@ mp.fineAlignment_it = [];
 %--Special settings for fibers
 
 if(mp.flagFiber)
-    mp.Fend.FOV = 20;
+    mp.Fend.FOV = 12;
     mp.Fend.res = 5;
     mp.Fend.Nlens = 1; %Number of lenslets in Fend
     mp.Fend.Nfibers = mp.Fend.Nlens;
     %--Fiber locations and number
     mp.Fend.Nfiber = 1;
-    mp.Fend.x_fiber = [-7];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+    mp.Fend.x_fiber = [-4];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
     mp.Fend.y_fiber = [0];%[0 5.3597 -5.3597];%[0 4.625 -4.625];
 
     %--Off-axis, incoherent point source (exoplanet)
@@ -125,7 +125,7 @@ end
 
 mp.flagSaveEachItr = false;
 
-label = 'SMF';
+label = 'EFCSMF_forTTanalysis';
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
     '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
