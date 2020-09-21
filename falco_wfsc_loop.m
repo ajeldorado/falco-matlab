@@ -50,18 +50,12 @@ for Itr=1:mp.Nitr
     %--Fill in History of DM commands to Store
     if(isfield(mp,'dm1')); if(isfield(mp.dm1,'V'));  out.dm1.Vall(:,:,Itr) = mp.dm1.V;  end;  end
     if(isfield(mp,'dm2')); if(isfield(mp.dm2,'V'));  out.dm2.Vall(:,:,Itr) = mp.dm2.V;  end;  end
-    if(isfield(mp,'dm5')); if(isfield(mp.dm5,'V'));  out.dm5.Vall(:,:,Itr) = mp.dm5.V;  end;  end
     if(isfield(mp,'dm8')); if(isfield(mp.dm8,'V'));  out.dm8.Vall(:,Itr) = mp.dm8.V(:);  end;  end
     if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall(:,Itr) = mp.dm9.V(:);  end;  end
 
     %--Compute the DM surfaces
     if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  else; DM1surf = zeros(mp.dm1.compact.Ndm);  end
     if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  else; DM2surf = zeros(mp.dm2.compact.Ndm);    end
-    if(any(mp.dm_ind==5))
-        DM5surf =  falco_gen_dm_surf(mp.dm5, mp.dm5.compact.dx, mp.dm5.compact.Ndm); 
-        figure(325); imagesc(DM5surf); axis xy equal tight; colorbar; drawnow;
-        figure(326); imagesc(mp.dm5.V); axis xy equal tight; colorbar; drawnow;
-    end
 
     switch upper(mp.coro)
         case{'EHLC'}
@@ -89,25 +83,6 @@ for Itr=1:mp.Nitr
     
     %--Compute the current contrast level
     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
-
-    %--Plot the updates to the DMs and PSF
-    if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
-    if(isfield(mp,'testbed') )
-        InormHist_tb.total = InormHist; 
-        Im_tb.Im = Im;
-        Im_tb.E = zeros(size(Im));
-        if(Itr>1)
-            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
-            InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
-            Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
-        else
-            InormHist_tb.mod = NaN;
-            InormHist_tb.unmod = NaN;
-        end
-        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
-    else
-        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
-    end
     
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
@@ -136,13 +111,11 @@ for Itr=1:mp.Nitr
         %--Re-include all actuators in the basis set. Need act_ele to be a column vector.
         if(any(mp.dm_ind==1)); mp.dm1.act_ele = (1:mp.dm1.NactTotal).'; end
         if(any(mp.dm_ind==2)); mp.dm2.act_ele = (1:mp.dm2.NactTotal).'; end
-        if(any(mp.dm_ind==5)); mp.dm5.act_ele = (1:mp.dm5.NactTotal).'; end
         if(any(mp.dm_ind==8)); mp.dm8.act_ele = (1:mp.dm8.NactTotal).'; end
         if(any(mp.dm_ind==9)); mp.dm9.act_ele = (1:mp.dm9.NactTotal).'; end
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
-        if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); else; mp.dm5.Nele = 0; end
         if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); else; mp.dm8.Nele = 0; end
         if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); else; mp.dm9.Nele = 0; end
     end
@@ -174,8 +147,9 @@ for Itr=1:mp.Nitr
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
+            Im = falco_get_summed_image(mp);
         case{'pwp-bp','pwp-kf'}
-			if(mp.flagFiber && mp.flagLenslet)
+            if(mp.flagFiber && mp.flagLenslet)
 				if(mp.est.flagUseJac) %--Send in the Jacobian if true
 					ev = falco_est_pairwise_probing_fiber(mp,jacStruct);
 				else %--Otherwise don't pass the Jacobian
@@ -191,6 +165,26 @@ for Itr=1:mp.Nitr
             
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
+            Im = ev.Im;
+    end
+    
+    %% Plot the updates to the DMs and PSF
+    if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
+    if(isfield(mp,'testbed') )
+        InormHist_tb.total = InormHist; 
+        Im_tb.Im = Im;
+        Im_tb.E = zeros(size(Im));
+        if(Itr>1)
+            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
+            InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
+            Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
+        else
+            InormHist_tb.mod = NaN;
+            InormHist_tb.unmod = NaN;
+        end
+        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+    else
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
     end
     
     %% Compute and Plot the Singular Mode Spectrum of the Control Jacobian
@@ -270,6 +264,9 @@ for Itr=1:mp.Nitr
     cvar.EfieldVec = EfieldVec;
     cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
+    if isfield(cvar, 'Im') && mp.ctrl.flagUseModel == false
+        Im = cvar.Im;
+    end
     
     %--Enforce constraints on DM commands 
     % (not needed here--just done here for stats and plotting)
@@ -354,17 +351,18 @@ if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
     out.Zsens(:,:,Itr) = falco_get_Zernike_sensitivities(mp);
 end
 
-% Take the next image to check the contrast level (in simulation only)
-tic; fprintf('Getting updated summed image... ');
-Im = falco_get_summed_image(mp);
-fprintf('done. Time = %.1f s\n',toc);
+% % Take the next image to check the contrast level (in simulation only)
+% tic; fprintf('Getting updated summed image... ');
+% Im = falco_get_summed_image(mp);
+% fprintf('done. Time = %.1f s\n',toc);
 
 %--REPORTING NORMALIZED INTENSITY
-InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
-fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-    InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
-
-fprintf('\n\n');
+if isfield(cvar, 'cMin')
+    InormHist(Itr+1) = cvar.cMin; % mean(Im(mp.Fend.corr.maskBool));
+    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+        InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
+    fprintf('\n\n');
+end
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
 if(mp.flagSaveEachItr)

@@ -98,6 +98,7 @@ ev.Eest = zeros(mp.Fend.corr.Npix,mp.Nsbp);
 ev.IincoEst = zeros(mp.Fend.corr.Npix,mp.Nsbp);
 ev.I0mean = 0;
 ev.IprobedMean = 0;
+ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 
 %% Get images and perform estimates in each sub-bandpass
 
@@ -114,13 +115,14 @@ for si=1:mp.Nsbp
     % Reset DM commands to the unprobed state:
     mp.dm1.V = DM1Vnom;
     mp.dm2.V = DM2Vnom;
+    
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     Iplus  = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
     Iminus = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of minus probes' intensities
-    DM1Vplus  = zeros( [Nact,Nact, Npairs]);
-    DM1Vminus = zeros( [Nact,Nact, Npairs]);
-    DM2Vplus  = zeros( [Nact,Nact, Npairs]);
-    DM2Vminus = zeros( [Nact,Nact, Npairs]);
+    DM1Vplus  = zeros( [Nact, Nact, Npairs]);
+    DM1Vminus = zeros( [Nact, Nact, Npairs]);
+    DM2Vplus  = zeros( [Nact, Nact, Npairs]);
+    DM2Vminus = zeros( [Nact, Nact, Npairs]);
 
     %% Compute probe shapes and take probed images:
 
@@ -128,7 +130,8 @@ for si=1:mp.Nsbp
     whichImg = 1;
     I0 = falco_get_sbp_image(mp,si);
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
-    ev.I0mean = ev.I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
+    ev.I0mean = ev.I0mean + I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
+    ev.Im = ev.Im + I0/mp.Nsbp; % band-averaged image for plotting
 
     %--Store values for first image and its DM commands
     ev.Icube(:,:, whichImg) = I0;

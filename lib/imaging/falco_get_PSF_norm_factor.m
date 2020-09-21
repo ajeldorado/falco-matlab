@@ -86,11 +86,13 @@ if(mp.flagPlot)
     title('(Compact Model: Normalization Check Using Starting PSF)'); 
     drawnow;
 end
-E0f = model_full(mp, modvar);
-I0f = abs(E0f).^2;
-if(mp.flagPlot)
-    figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
-    title('(Full Model: Normalization Check Using Starting PSF)'); drawnow;
+if(mp.flagSim)
+    E0f = model_full(mp, modvar);
+    I0f = abs(E0f).^2;
+    if(mp.flagPlot)
+        figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
+        title('(Full Model: Normalization Check Using Starting PSF)'); drawnow;
+    end
 end
 
 end %--END OF FUNCTION
