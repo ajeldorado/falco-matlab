@@ -144,6 +144,15 @@ for Itr=1:mp.Nitr
     end
 
     %% Wavefront Estimation
+    if(Itr > 1)
+        EprevMeas = EfieldVec;
+        EprevModel = EnowModel;
+    end
+    %--Model-based estimate for comparison
+    modvar.whichSource = 'star';
+    modvar.sbpIndex = mp.si_ref;
+    EnowModel = model_compact(mp, modvar);
+    
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
@@ -165,7 +174,7 @@ for Itr=1:mp.Nitr
             
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
-            Im = ev.Im;
+            Im = ev.Im; % Updated unprobed image
     end
     
     %% Plot the updates to the DMs and PSF
@@ -187,6 +196,45 @@ for Itr=1:mp.Nitr
         hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
     end
     
+    %% Plot the expected and measured delta E-fields
+    if(Itr > 1)
+        dEmeas = squeeze(EfieldVec(:, mp.si_ref) - EprevMeas(:, mp.si_ref));
+        dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        dEmeas2D(mp.Fend.corr.maskBool) = dEmeas; % 2-D for plotting
+        dEmodel = EnowModel(mp.Fend.corr.maskBool) - EprevModel(mp.Fend.corr.maskBool);
+        dEmodel2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        dEmodel2D(mp.Fend.corr.maskBool) = dEmodel;  % 2-D for plotting
+        out.complexProjection(Itr-1) = abs(dEmodel'*dEmeas)/abs(dEmodel'*dEmodel);
+        fprintf('Complex projection of deltaE is %3.2f \n', out.complexProjection(Itr-1));
+        out.complexCorrelation(Itr-1) = abs(dEmodel'*dEmeas/(sqrt(abs(dEmeas'*dEmeas))*sqrt(abs(dEmodel'*dEmodel)) ));
+        fprintf('Complex correlation of deltaE is %3.2f \n', out.complexCorrelation(Itr-1));
+        
+        if mp.flagPlot            
+            figure(50); set(gcf, 'Color', 'w');
+            fs = 18;
+            
+            hModelAmp = subplot(2,2,1); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelAmp, 'parula');
+            title('abs(dE_{model})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            
+            hMeasAmp = subplot(2,2,2); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D)); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+            title('abs(dE_{meas})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            
+            hModelPh = subplot(2,2,3); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelPh, 'hsv');
+            title('angle(dE_{model})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            
+            hMeasPh = subplot(2,2,4); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmeas2D)); axis xy equal tight; colorbar; colormap(hMeasPh, 'hsv');
+            title('angle(dE_{meas})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            drawnow;
+        end
+    end
     %% Compute and Plot the Singular Mode Spectrum of the Control Jacobian
 
     if(mp.flagSVD)
@@ -357,7 +405,7 @@ end
 % fprintf('done. Time = %.1f s\n',toc);
 
 %--REPORTING NORMALIZED INTENSITY
-if isfield(cvar, 'cMin')
+if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
     InormHist(Itr+1) = cvar.cMin; % mean(Im(mp.Fend.corr.maskBool));
     fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
         InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 

@@ -1,11 +1,12 @@
-% Copyright 2018,2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
 % Function to run after a FALCO trial to compute the |dE|^2 sensitivities 
-% of a coronagraph to Zernike modes introduced at the entrance pupil.
+% of a coronagraph to Zernike modes introduced at the entrance pupil
+% in the compact model only.
 % 
 % Modified on 2019-05-08 by A.J. Riggs to use all wavelengths and to
 % parallelize all the E-field calculations when using a PROPER full model.
