@@ -34,7 +34,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         
         %--Loop over all the settings to check empirically
         ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
-        if(mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
+        if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
             parfor ni = 1:Nvals
                 [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
                 %--delta voltage commands

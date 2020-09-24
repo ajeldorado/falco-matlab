@@ -204,10 +204,11 @@ for Itr=1:mp.Nitr
         dEmodel = EnowModel(mp.Fend.corr.maskBool) - EprevModel(mp.Fend.corr.maskBool);
         dEmodel2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
         dEmodel2D(mp.Fend.corr.maskBool) = dEmodel;  % 2-D for plotting
+        dEmax = max(abs(dEmodel)); % max value in plots
         out.complexProjection(Itr-1) = abs(dEmodel'*dEmeas)/abs(dEmodel'*dEmodel);
-        fprintf('Complex projection of deltaE is %3.2f \n', out.complexProjection(Itr-1));
+        fprintf('  Complex projection of deltaE is %3.2f \n', out.complexProjection(Itr-1));
         out.complexCorrelation(Itr-1) = abs(dEmodel'*dEmeas/(sqrt(abs(dEmeas'*dEmeas))*sqrt(abs(dEmodel'*dEmodel)) ));
-        fprintf('Complex correlation of deltaE is %3.2f \n', out.complexCorrelation(Itr-1));
+        fprintf('  Complex correlation of deltaE is %3.2f \n', out.complexCorrelation(Itr-1));
         
         if mp.flagPlot            
             figure(50); set(gcf, 'Color', 'w');
@@ -219,7 +220,7 @@ for Itr=1:mp.Nitr
             set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
             
             hMeasAmp = subplot(2,2,2); % Save the handle of the subplot
-            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D)); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
             title('abs(dE_{meas})', 'Fontsize', fs); 
             set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
             
@@ -407,9 +408,11 @@ end
 %--REPORTING NORMALIZED INTENSITY
 if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
     InormHist(Itr+1) = cvar.cMin; % mean(Im(mp.Fend.corr.maskBool));
-    fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+    fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
         InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
     fprintf('\n\n');
+else
+    fprintf('Previous Measured NI:\t\t\t %.2e \n', InormHist(Itr))
 end
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
