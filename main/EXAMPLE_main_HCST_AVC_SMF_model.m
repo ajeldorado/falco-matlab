@@ -86,10 +86,12 @@ mp.flagLenslet = false;  %--whether to go through a lenslet array before using t
 % clear temp
 
 %--DEBUGGING IN MONOCHROMATIC LIGHT
-mp.fracBW = 0.30;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 11;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-
+if mp.Nsbp==1
+    mp.fracBW = 0.01;
+end
 %% Other stuff
 mp.fineAlignment_it = [];
 
@@ -102,7 +104,7 @@ if(mp.flagFiber)
     mp.Fend.Nfibers = mp.Fend.Nlens;
     %--Fiber locations and number
     mp.Fend.Nfiber = 1;
-    mp.Fend.x_fiber = [-4];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+    mp.Fend.x_fiber = [-5];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
     mp.Fend.y_fiber = [0];%[0 5.3597 -5.3597];%[0 4.625 -4.625];
 
     %--Off-axis, incoherent point source (exoplanet)
@@ -128,7 +130,7 @@ mp.flagSaveEachItr = false;
 label = 'EFCSMF_forTTanalysis';
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-    '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
+    '_xfiber',num2str(mp.Fend.x_fiber),'_yfiber',num2str(mp.Fend.y_fiber),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
     '_',mp.controller,'_',label];
 
