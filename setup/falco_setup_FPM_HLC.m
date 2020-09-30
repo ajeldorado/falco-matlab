@@ -157,10 +157,10 @@ FPMgenInputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lamb
 FPMgenInputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
 FPMgenInputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
 FPMgenInputs.centering = mp.centering;
-mp.dm8.inf_datacube =  padOrCropEven(1-falco_gen_annular_FPM(FPMgenInputs),mp.dm8.NdmPad);
+mp.dm8.inf_datacube =  round(pad_crop(1-falco_gen_annular_FPM(FPMgenInputs), mp.dm8.NdmPad));
 %--Make or read in DM8 disk for the compact model
 FPMgenInputs.pixresFPM = mp.F3.compact.res; %--pixels per lambda_c/D
-mp.dm8.compact.inf_datacube =  padOrCropEven(1-falco_gen_annular_FPM(FPMgenInputs),mp.dm8.compact.NdmPad);
+mp.dm8.compact.inf_datacube =  round(pad_crop(1-falco_gen_annular_FPM(FPMgenInputs), mp.dm8.compact.NdmPad));
 
 %--Zero out parts of DM9 actuators that go outside the nickel disk. Also apply the grayscale edge.
 DM8windowFull = mp.dm8.inf_datacube;
