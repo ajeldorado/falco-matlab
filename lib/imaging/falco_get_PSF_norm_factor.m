@@ -48,12 +48,18 @@ for si=1:mp.Nsbp
 end
 
 %--Full Model Normalizations (at points for entire-bandpass evaluation)
-if(mp.flagSim)
+% if(mp.flagSim)
     if(mp.flagParfor)
-        parfor li = 1:mp.Nsbp*mp.Nwpsbp
-            I00vec{li} = model_full_norm_wrapper(li,mp);
+        % Remove testbed object
+        if isfield(mp, 'tb')
+            mptmp = rmfield(mp, 'tb');
+        else
+            mptmp = mp;
         end
-        
+        parfor li = 1:mp.Nsbp*mp.Nwpsbp
+            I00vec{li} = model_full_norm_wrapper(li,mptmp);
+        end
+
         counter = 0;
         for si=1:mp.Nsbp
             for wi=1:mp.Nwpsbp
@@ -71,8 +77,7 @@ if(mp.flagSim)
             end
         end
     end
-    
-end
+% end
 
 %--Visually verify the normalized coronagraphic PSF
 modvar.ttIndex = 1;
@@ -86,11 +91,13 @@ if(mp.flagPlot)
     title('(Compact Model: Normalization Check Using Starting PSF)'); 
     drawnow;
 end
-E0f = model_full(mp, modvar);
-I0f = abs(E0f).^2;
-if(mp.flagPlot)
-    figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
-    title('(Full Model: Normalization Check Using Starting PSF)'); drawnow;
+if(mp.flagSim)
+    E0f = model_full(mp, modvar);
+    I0f = abs(E0f).^2;
+    if(mp.flagPlot)
+        figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
+        title('(Full Model: Normalization Check Using Starting PSF)'); drawnow;
+    end
 end
 
 end %--END OF FUNCTION

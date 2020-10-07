@@ -33,6 +33,11 @@ function Imean = falco_get_summed_image(mp)
         ind_list = allcomb(1:mp.full.NlamUnique,1:length(mp.full.pol_conds)).';
         Nval = size(ind_list,2);
         
+        % Remove testbed objects
+        if isfield(mp, 'tb')
+           mp = rmfield(mp, 'tb');
+        end
+        
         %--Obtain all the images in parallel
         parfor ic=1:Nval
             Iall{ic} = falco_get_single_sim_image(ic,ind_list,mp);  

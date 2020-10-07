@@ -5,7 +5,7 @@
 % -------------------------------------------------------------------------
 %
 
-function mp = falco_init_storage_arrays(mp)
+function out = falco_init_storage_arrays(mp)
     %--EFC regularization history
     out.log10regHist = zeros(mp.Nitr,1);
 
@@ -38,4 +38,7 @@ function mp = falco_init_storage_arrays(mp)
     if(isfield(mp,'dm8')); if(isfield(mp.dm8,'V'));  out.dm8.Vall = zeros(mp.dm8.NactTotal,mp.Nitr+1); end; end
     if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall = zeros(mp.dm9.NactTotal,mp.Nitr+1); end; end
 
+    %--Delta electric field performance metrics
+    out.complexProjection = zeros(mp.Nitr-1, 1);
+    out.complexCorrelation = zeros(mp.Nitr-1, 1);
 end
