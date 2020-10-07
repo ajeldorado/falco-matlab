@@ -48,31 +48,32 @@ for si=1:mp.Nsbp
 end
 
 %--Full Model Normalizations (at points for entire-bandpass evaluation)
-if(mp.flagSim)
-    if(mp.flagParfor)
-        % Remove testbed object
-        if isfield(mp, 'tb')
-            mp = rmfield(mp, 'tb');
+if(mp.flagParfor)
+    
+    % Remove testbed object
+    if isfield(mp, 'tb')
+        mptmp = rmfield(mp, 'tb');
+    else
+        mptmp = mp;
+    end
+    parfor li = 1:mp.Nsbp*mp.Nwpsbp
+        I00vec{li} = model_full_norm_wrapper(li,mptmp);
+    end
+
+    counter = 0;
+    for si=1:mp.Nsbp
+        for wi=1:mp.Nwpsbp
+            counter = counter+1;
+            mp.Fend.full.I00(si,wi) = I00vec{counter};
         end
-        parfor li = 1:mp.Nsbp*mp.Nwpsbp
-            I00vec{li} = model_full_norm_wrapper(li,mp);
-        end
-        
-        counter = 0;
-        for si=1:mp.Nsbp
-            for wi=1:mp.Nwpsbp
-                counter = counter+1;
-                mp.Fend.full.I00(si,wi) = I00vec{counter};
-            end
-        end
-    else %--No parfor
-        for si=1:mp.Nsbp
-            for wi=1:mp.Nwpsbp
-                modvar.sbpIndex = si;
-                modvar.wpsbpIndex = wi;
-                Etemp = model_full(mp, modvar,'getNorm');
-                mp.Fend.full.I00(si,wi) = max(max(abs(Etemp).^2));
-            end
+    end
+else %--No parfor
+    for si=1:mp.Nsbp
+        for wi=1:mp.Nwpsbp
+            modvar.sbpIndex = si;
+            modvar.wpsbpIndex = wi;
+            Etemp = model_full(mp, modvar,'getNorm');
+            mp.Fend.full.I00(si,wi) = max(max(abs(Etemp).^2));
         end
     end
 end
@@ -85,18 +86,19 @@ modvar.whichSource = 'star';
 E0c = model_compact(mp, modvar);
 I0c = abs(E0c).^2;
 if(mp.flagPlot)
-    figure(501); imagesc(mp.Fend.xisDL, mp.Fend.etasDL, log10(I0c)); axis xy equal tight; colorbar;
+    figure(501); imagesc(log10(I0c)); axis xy equal tight; colorbar;
     title('Compact Model Image for Normalization');
-    set(gca, 'FontSize', 18);
+    set(gca,'Fontsize', 18)
     drawnow;
 end
 if(mp.flagSim)
     E0f = model_full(mp, modvar);
     I0f = abs(E0f).^2;
     if(mp.flagPlot)
-        figure(502); imagesc(mp.Fend.xisDL, mp.Fend.etasDL, log10(I0f)); axis xy equal tight; colorbar;
-        set(gca, 'FontSize', 18);
-        title('Full Model Image for Normalization'); drawnow;
+        figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
+        title('Full Model Image for Normalization');
+        set(gca,'Fontsize', 18)
+        drawnow;
     end
 end
 

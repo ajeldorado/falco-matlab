@@ -153,6 +153,7 @@ for Itr=1:mp.Nitr
     modvar.sbpIndex = mp.si_ref;
     EnowModel = model_compact(mp, modvar);
     
+    ev.Itr = Itr;
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
@@ -166,9 +167,9 @@ for Itr=1:mp.Nitr
 				end
 			else
 				if(mp.est.flagUseJac) %--Send in the Jacobian if true
-					ev = falco_est_pairwise_probing(mp,jacStruct);
+					ev = falco_est_pairwise_probing(mp, ev, jacStruct);
 				else %--Otherwise don't pass the Jacobian
-					ev = falco_est_pairwise_probing(mp);
+					ev = falco_est_pairwise_probing(mp, ev);
 				end
             end
             
@@ -298,7 +299,6 @@ for Itr=1:mp.Nitr
 
     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end
-    if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5.*repmat(mp.WspatialVec,[1,mp.dm5.Nele,mp.jac.Nmode]); end
     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end
 
