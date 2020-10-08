@@ -224,7 +224,7 @@ mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex.
 %% Mask Definitions
 
 %--Pupil definition
-mp.whichPupil = 'LUVOIR_B_offaxis';
+mp.whichPupil = 'LUVOIR_B'; %'LUVOIR_B_offaxis';
 mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
 mp.P1.D = 7.989; %--meters, circumscribed. The segment size is 0.955 m, flat-to-flat, and the gaps are 6 mm. %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.

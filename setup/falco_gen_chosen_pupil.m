@@ -117,7 +117,24 @@ switch upper(mp.whichPupil)
         inputs.Nbeam = mp.P1.compact.Nbeam; 
         if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_0(inputs); end
         
-    case{'LUVOIR_B_OFFAXIS'}
+    case{'LUVOIR_B', 'LUVOIRB'} % simple version of LUVOIR B using PROPER
+        inputs.centering = mp.centering;
+        
+        %--Generate high-res input pupil for the 'full' model
+        inputs.Nbeam = mp.P1.full.Nbeam*0.96075;  % factor makes the beam size match the hypergaussian approach
+        Narray = 2^(nextpow2(inputs.Nbeam));
+        if(mp.full.flagGenPupil)
+            mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), Narray);
+        end
+        
+        %--Generate low-res input pupil for the 'compact' model
+        inputs.Nbeam = mp.P1.compact.Nbeam*0.96075;  % factor makes the beam size match the hypergaussian approach
+        Narray = 2^(nextpow2(inputs.Nbeam));
+        if(mp.compact.flagGenPupil)
+            mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), Narray);
+        end
+        
+    case{'LUVOIR_B_OFFAXIS'} % more complicated version with more features
         input.Nbeam = mp.P1.full.Nbeam/0.925; % number of points across the pupil diameter
         input.wGap = mp.P1.wGap*mp.P1.full.Nbeam; % samples
         input.numRings = 4; % Number of rings in hexagonally segmented mirror 

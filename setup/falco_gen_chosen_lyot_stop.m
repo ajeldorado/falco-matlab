@@ -149,7 +149,7 @@ switch upper(mp.whichPupil)
         inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
         if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_5_Lyot_struts(inputs,'ROT180'); end
         
-    case {'LUVOIR_B_OFFAXIS','HABEX_B_OFFAXIS'}
+    case {'LUVOIR_B_OFFAXIS','HABEX_B_OFFAXIS', 'LUVOIR_B', 'LUVOIRB'}
         %--Full model
         inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam 
         inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
