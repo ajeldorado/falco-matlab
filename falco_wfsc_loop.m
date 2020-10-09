@@ -81,9 +81,6 @@ for Itr=1:mp.Nitr
         mp.thput_vec(Itr) = thput; %--record keeping
     end
     
-    %--Compute the current contrast level
-    InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
-    
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
     if(Itr==1); mp.jac.zerns0 = mp.jac.zerns; end
@@ -177,6 +174,9 @@ for Itr=1:mp.Nitr
             IincoVec = ev.IincoEst;
             Im = ev.Im; % Updated unprobed image
     end
+    
+    %--Compute the current normalized intensity
+    InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
     
     %% Plot the updates to the DMs and PSF
     if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
@@ -412,7 +412,7 @@ if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
         InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
     fprintf('\n\n');
 else
-    fprintf('Previous Measured NI:\t\t\t %.2e \n', InormHist(Itr))
+    fprintf('Previous Measured NI:\t\t\t %.2e \n\n', InormHist(Itr))
 end
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
@@ -460,16 +460,18 @@ else
     mp.thput_vec(Itr) = thput; %--record keeping
 end
 
-if(isfield(mp,'testbed'))
-    InormHist_tb.total = InormHist; 
-    InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
-    InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
-    Im_tb.Im = Im;
-    Im_tb.E = zeros(size(Im));
-    Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
-    hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
-else
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
+if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
+    if(isfield(mp,'testbed'))
+        InormHist_tb.total = InormHist; 
+        InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
+        InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
+        Im_tb.Im = Im;
+        Im_tb.E = zeros(size(Im));
+        Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
+        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+    else
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
+    end
 end
 % %% Optional output variable: mp
 % varargout{1} = mp;

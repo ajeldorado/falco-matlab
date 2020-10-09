@@ -80,9 +80,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     cvarOut.log10regUsed = vals_list(1,indBest);
     dmfacBest = vals_list(2,indBest);
     if(mp.ctrl.flagUseModel)
-        fprintf('Model-based grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
     else
-        fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
     end
     
     %% Plot the grid search results
