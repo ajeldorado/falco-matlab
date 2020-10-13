@@ -121,14 +121,14 @@ switch upper(mp.whichPupil)
         inputs.centering = mp.centering;
         
         %--Generate high-res input pupil for the 'full' model
-        inputs.Nbeam = mp.P1.full.Nbeam*0.96075;  % factor makes the beam size match the hypergaussian approach
+        inputs.Nbeam = mp.P1.full.Nbeam;
         Narray = 2^(nextpow2(inputs.Nbeam));
         if(mp.full.flagGenPupil)
             mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), Narray);
         end
         
         %--Generate low-res input pupil for the 'compact' model
-        inputs.Nbeam = mp.P1.compact.Nbeam*0.96075;  % factor makes the beam size match the hypergaussian approach
+        inputs.Nbeam = mp.P1.compact.Nbeam;
         Narray = 2^(nextpow2(inputs.Nbeam));
         if(mp.compact.flagGenPupil)
             mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), Narray);

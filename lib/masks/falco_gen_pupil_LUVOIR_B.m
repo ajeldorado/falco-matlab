@@ -40,7 +40,7 @@ end
 
 %--Gap between primary mirror segments [meters]
 if(isfield(inputs,'wGap_m')) 
-    hexGap0 = inputs.wGap_m;
+    hexGap0 = inputs.wGap_m; % [meters]
 else
     hexGap0 = 6e-3; %--Default of 6.0 millimeters
 end
@@ -49,11 +49,12 @@ end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--USER INPUTS
-Nbeam = inputs.Nbeam;     % number of points across the incoming beam 
+Nbeam0 = inputs.Nbeam;     % number of points across the incoming beam
+Nbeam = Nbeam0*0.96075;  % Change Nbeam to be flat-to-flat. Nbeam0 is for the circumscribing circle. makes the beam size match the hypergaussian approach
 nrings = 4;
 width_hex0 = 0.955; % flat-to-flat (m)
 Dap = ((2*nrings)*width_hex0 + (2*nrings-1)*hexGap0);
-dx = Dap/Nbeam;
+dx = Dap/Nbeam0;
 
 if(strcmpi(centering,'pixel'))
     Narray = ceil_even(1.02*Nbeam/mag+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
