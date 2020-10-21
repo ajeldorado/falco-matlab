@@ -39,17 +39,22 @@ switch upper(mp.whichPupil)
         mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
     case{'WFIRST20200513', 'ROMAN20200513', 'ROMAN'}
-            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.full.Nbeam, mp.centering);  end
-            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.centering);  end
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.full.Nbeam, mp.centering);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.centering);  end
     
     case{'WFIRST20191009'}
-            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.full.Nbeam, mp.centering);  end
-            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.compact.Nbeam, mp.centering);  end
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.full.Nbeam, mp.centering);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.compact.Nbeam, mp.centering);  end
     
     case{'WFIRST180718'}
-            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);  end
-            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);  end
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);  end
 
+    case{'WFIRST2016', 'WFIRST2016ONAXIS'}
+        if(isfield(mp.P1, 'wStrut')); changes.wStrut = mp.P1.wStrut; end % strut width (fraction of the pupil diameter)
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_2016_onaxis(mp.P1.full.Nbeam, mp.centering, changes);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_2016_onaxis(mp.P1.compact.Nbeam, mp.centering, changes);  end
+            
     case{'KECK'}
         inputs.centering = mp.centering; 
         

@@ -246,12 +246,12 @@ if(whichDM == 1)
             EP4 = EP4.*mp.P4.compact.croppedMask;
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
             
-%             if iact = 538
+%             if iact == 538
 %                 IF3 = abs(fftshift(EF3incShift)).^2;
 %                 IF3 = IF3/max(IF3(:));
 %                 figure(701); imagesc(abs(EP3)); axis xy equal tight; colorbar;
-%                 figure(703); imagesc(log10(IF3), [-5, 0]); axis xy equal tight; colorbar;
-%                 figure(704); imagesc(angle(fftshift(EF3incShift))); axis xy equal tight; colorbar;
+%                 figure(703); imagesc(log10(IF3), [-5, 0]); axis xy equal tight; colorbar; set(gca, 'Fontsize', 20); set(gcf, 'Color', 'w');
+%                 figure(704); imagesc(angle(fftshift(EF3incShift))); colormap hsv; axis xy equal tight; colorbar;
 %                 figure(705); imagesc(abs(EP4)); axis xy equal tight; colorbar;
 %                 figure(706); imagesc(angle(EP4)); axis xy equal tight; colorbar;
 %                 figure(707); imagesc(pad_crop(mp.P4.compact.croppedMask, Nfft1)); axis xy equal tight; colorbar;

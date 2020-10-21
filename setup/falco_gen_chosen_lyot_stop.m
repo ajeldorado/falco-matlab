@@ -37,11 +37,6 @@ switch upper(mp.whichPupil)
             if(isfield(inputs, 'xShear')); inputs.xShear = mp.P4.xShear; end % x-shear [pupil diameters]
             if(isfield(inputs, 'yShear')); inputs.yShear = mp.P4.yShear;  end % y-shear [pupil diameters]
             if(isfield(mp.P4, 'flagHG')); inputs.flagHG = mp.P4.flagHG; end % whether to use hyper-Gaussians to generate the pupil instead. (Old behavior)
-            
-%             inputs.ID = mp.P4.IDnorm;
-%             inputs.Nstrut = mp.P4.Nstrut;
-%             inputs.angStrut = mp.P4.angStrut; % Angles of the struts 
-%             inputs.wStrut = mp.P4.wStrut; % spider width (fraction of the pupil diameter)
         end
 
         if(mp.full.flagGenLS)
@@ -56,7 +51,7 @@ switch upper(mp.whichPupil)
             mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
         end
  
-    case{'ROMAN', 'ROMAN20200513', 'WFIRST20200513','WFIRST20191009', 'WFIRST180718'}
+    case{'ROMAN', 'ROMAN20200513', 'WFIRST20200513','WFIRST20191009', 'WFIRST180718', 'WFIRST2016', 'WFIRST2016ONAXIS'}
 
         %--Define Lyot stop generator function inputs for the 'full' optical model
         if(mp.compact.flagGenLS || mp.full.flagGenLS)
@@ -86,6 +81,10 @@ switch upper(mp.whichPupil)
             case{'WFIRST180718'}
                 if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam,mp.centering,changes); end
                 if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam,mp.centering,changes); end
+            
+            case{'WFIRST2016', 'WFIRST2016ONAXIS'}
+                if(mp.full.flagGenLS); mp.P4.full.mask = falco_gen_pupil_WFIRST_2016_onaxis(mp.P4.full.Nbeam,mp.centering,changes); end
+                if(mp.compact.flagGenLS); mp.P4.compact.mask = falco_gen_pupil_WFIRST_2016_onaxis(mp.P4.compact.Nbeam,mp.centering,changes); end
         end
         
         if(isfield(mp,'LSshape'))
