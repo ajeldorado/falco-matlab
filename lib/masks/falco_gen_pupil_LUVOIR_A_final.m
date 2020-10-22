@@ -35,27 +35,34 @@ while icav < size(varargin, 2)
     end
 end
 
-%--Centering of array: 'pixel' or 'interpixel'
-if(isfield(inputs,'centering'))
-    centering = inputs.centering;
-else
-    centering = 'pixel';
+if(isfield(inputs,'centering')); centering = inputs.centering; else; centering = 'pixel'; end %--Centering of pupil
+if(isfield(inputs,'magfacD')); mag = inputs.magfacD; else; mag = 1; end % Pupil Magnification
+if(isfield(inputs,'wGap_m')); hexGap0 = inputs.wGap_m; else;  hexGap0 = 6e-3; end % Gap between primary mirror segments [meters]. Default is 6mm
+if(isfield(inputs,'clock_deg')); clockDeg = inputs.clock_deg; else; clockDeg = 0; end
+if(isfield(inputs,'flagLyot')); flagLyot = inputs.flagLyot; else; flagLyot = false; end
+if(isfield(inputs,'xShear')); xShear = inputs.xShear; else; xShear = 0; end % [pupil diameters]
+if(isfield(inputs,'yShear')); yShear = inputs.yShear; else; yShear = 0; end % [pupil diameters]
+shearMax = max(abs([xShear, yShear])); % [pupil diameters]
+
+%%--(Optional) Lyot stop mode (concentric, circular ID and OD)
+
+if(flagLyot == true)
+    if(isfield(inputs,'ID'))
+        ID = inputs.ID;
+    else
+        error('inputs.ID must be defined for Lyot stop generation mode.')
+    end
+
+    if(isfield(inputs,'OD'))
+        OD = inputs.OD;
+    else
+        error('inputs.OD must be defined for Lyot stop generation mode.')
+    end
 end
 
-%--Pupil Magnification
-if(isfield(inputs,'magfacD')) 
-    mag = inputs.magfacD;
-else
-    mag = 1;
-end
 
-%--Gap between primary mirror segments [meters]
-if(isfield(inputs,'wGap_m')) 
-    hexGap0 = inputs.wGap_m;
-else
-    hexGap0 = 6e-3; %--Default of 6.0 millimeters
-end
-
+%--Rotation matrix used on center coordinates.
+rotMat = [cosd(clockDeg), -sind(clockDeg); sind(clockDeg), cosd(clockDeg)];
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
@@ -63,26 +70,27 @@ end
 Nbeam   = inputs.Nbeam;     % number of points across the incoming beam  
 Nap   = Nbeam; % number of points across FULL usable pupil
 width_hex0 = 1.2225; %-- flat-to-flat (m)
-Dap = (12*width_hex0 + 11*hexGap0);%(12*width_hex0 + 12*hexgap0);
+wFlatToFlat = (12*width_hex0 + 11*hexGap0); % flat-to-flat width
+Dap = 1.01824*wFlatToFlat; % minimum diameter of circumscribing circle.
+% fprintf('Diameter = %.5f\n meters', Dap);
 dx = Dap/Nap;
-dxDrawing = 1.2225/158; % (m) %--In actual drawing, 158 pixels across the 1.2225m, so dx_pixel =
+xShear = Dap*xShear; % meters
+yShear = Dap*yShear; % meters
+% dxDrawing = 1.2225/158; % (m) %--In actual drawing, 158 pixels across the 1.2225m, so dx_pixel =
 %dx_drawing. strut in drawing is 19 pixels across, so dx_strut =
 %19*dx_drawing = 0.1470m
 
 if(strcmpi(centering,'pixel'))
-    Narray = ceil_even(Nbeam/mag+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
+    Narray = ceil_even((1+2*shearMax)*Nbeam*max([mag, 1])+1); %--number of points across output array. Sometimes requires two more pixels when pixel centered.
 else
-    Narray = ceil_even(Nbeam/mag); %--number of points across output array. Same size as width when interpixel centered.
+    Narray = ceil_even((1+2*shearMax)*Nbeam*max([mag, 1])); %--number of points across output array. Same size as width when interpixel centered.
 end
-Darray = Narray*dx;
+% Darray = Narray*dx;
 
 %--For PROPER 
 wl_dummy = 1e-6; % wavelength (m)
 bdf = Nbeam/Narray; %--beam diameter factor in output array
       
-dx_t = 0;
-dy_t = 0;
-
 hexWidth = mag*width_hex0; %-- flat-to-flat (m)
 nrings = 6;
 hexRadius = 2/sqrt(3)*hexWidth/2;
@@ -109,11 +117,38 @@ end
 
 % Use PROPER to generate the hexagonal mirrors and rectangular struts.
 bm = prop_begin(Dap, wl_dummy, Narray,'beam_diam_fraction',bdf);
-[ap] = falco_hex_aperture_LUVOIR_A_5(bm,nrings,hexRadius,hexSep,'XC',cShift-dx_t,'YC',cShift-dy_t,'DARKCENTER');
-bm = prop_rectangular_obscuration(bm, strutWidth, 7*hexWidth, 'XC',cShift-dx_t, 'YC',cShift-dy_t + mag*Dap/4);
+prop_set_antialiasing(33)
+if ~flagLyot % (Entrance pupil mode)
+    
+    [ap] = falco_hex_aperture_LUVOIR_A_5(bm,nrings,hexRadius,hexSep,'XC',cShift+xShear,'YC',cShift+yShear,'DARKCENTER', 'ROTATION', clockDeg);
+
+else % (Lyot stop mode)
+    
+    %--OUTER DIAMETER
+    ra_OD = magFac*(OD/2.);
+    bm = prop_circular_aperture(bm, ra_OD, 'XC', cshift + xShear, 'YC', cshift + yShear);
+
+    %--INNER DIAMETER
+    ra_ID = magFac*(ID/2.);
+    bm = prop_circular_obscuration(bm, ra_ID, 'XC', cshift + xShear, 'YC', cshift + yShear);
+end
+
+% Struts
+xc = cShift;
+yc = mag*Dap/4;
+xyc = rotMat*[xc; yc]; xc = xyc(1); yc = xyc(2);
+bm = prop_rectangular_obscuration(bm, strutWidth, 7*hexWidth, 'XC', xc+xShear+cShift, 'YC', yc+yShear+cShift, 'ROTATION', clockDeg);
 len_1b = (sqrt(93)+0.5)*hexRadius;
-bm = prop_rectangular_obscuration(bm, strutWidth, len_1b, 'XC',cShift-dx_t + 1.5*hexRadius, 'YC',cShift-dy_t - 11*sqrt(3)/4*hexRadius,'ROT',12.7);
-bm = prop_rectangular_obscuration(bm, strutWidth, len_1b, 'XC',cShift-dx_t - 1.5*hexRadius, 'YC',cShift-dy_t - 11*sqrt(3)/4*hexRadius,'ROT',-12.7);
+
+xc = 1.5*hexRadius;
+yc = -11*sqrt(3)/4*hexRadius;
+xyc = rotMat*[xc; yc]; xc = xyc(1); yc = xyc(2);
+bm = prop_rectangular_obscuration(bm, strutWidth, len_1b, 'XC', xc+xShear+cShift, 'YC', yc+yShear+cShift, 'ROT', 12.7+clockDeg);
+
+xc = -1.5*hexRadius;
+yc = -11*sqrt(3)/4*hexRadius;
+xyc = rotMat*[xc; yc]; xc = xyc(1); yc = xyc(2);
+bm = prop_rectangular_obscuration(bm, strutWidth, len_1b, 'XC', xc+xShear+cShift, 'YC', yc+yShear+cShift, 'ROT', -12.7+clockDeg);
 
 pupil = ifftshift(abs(bm.wf)).*ap;
 
