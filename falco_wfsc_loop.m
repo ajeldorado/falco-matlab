@@ -150,6 +150,7 @@ for Itr=1:mp.Nitr
     modvar.sbpIndex = mp.si_ref;
     EnowModel = model_compact(mp, modvar);
     
+    ev.Itr = Itr;
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
@@ -157,13 +158,13 @@ for Itr=1:mp.Nitr
         case{'pwp-bp','pwp-kf'}
             if(mp.flagFiber && mp.flagLenslet)
 				if(mp.est.flagUseJac) %--Send in the Jacobian if true
-					ev = falco_est_pairwise_probing_fiber(mp,jacStruct);
+					ev = falco_est_pairwise_probing_fiber(mp,ev,jacStruct);
 				else %--Otherwise don't pass the Jacobian
 					ev = falco_est_pairwise_probing_fiber(mp);
 				end
 			else
 				if(mp.est.flagUseJac) %--Send in the Jacobian if true
-					ev = falco_est_pairwise_probing(mp,jacStruct);
+					ev = falco_est_pairwise_probing(mp,ev,jacStruct);
 				else %--Otherwise don't pass the Jacobian
 					ev = falco_est_pairwise_probing(mp);
 				end

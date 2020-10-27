@@ -63,7 +63,11 @@ if(mp.flagPlot)
     axis xy equal tight; 
     colorbar; 
     colormap(gca,parula);
-    title(['it = ',num2str(Itr),', Inorm = ',num2str(Inorm.total(Itr),2)]);
+    try
+        title(['it = ',num2str(Itr-1),', Inorm = ',num2str(Inorm.total(Itr),2)]);
+    catch % sometimes the Inorm total doesnt have a new value, like the last plot update
+        title(['it = ',num2str(Itr-1),', Inorm = ',num2str(Inorm.total(Itr-1),2)]);
+    end
 
 	subplot(2,3,2); 
     imagesc(1e9*DM1surf);  axis xy equal tight; axis off;
