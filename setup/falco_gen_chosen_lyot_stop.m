@@ -113,23 +113,24 @@ switch upper(mp.whichPupil)
     case{'LUVOIRAFINAL'}
         if(mp.compact.flagGenLS || mp.full.flagGenLS)
             %--Define Lyot stop generator function inputs
-            inputs.Dbeam = mp.P1.D;
+            inputs.flagLyot = true;
             inputs.ID = mp.P4.IDnorm;
             inputs.OD = mp.P4.ODnorm;
             inputs.wStrut = mp.P4.wStrut;
             inputs.centering = mp.centering;
+            inputs.flagRot180 = true;
         end
         
         if(mp.full.flagGenLS)
             %--Make or read in Lyot stop (LS) for the 'full' model
             inputs.Nbeam = mp.P4.full.Nbeam; % number of points across incoming beam  
-            mp.P4.full.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
+            mp.P4.full.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
         end
         
         if(mp.compact.flagGenLS)
             %--Make or read in Lyot stop (LS) for the 'compact' model
             inputs.Nbeam = mp.P4.compact.Nbeam;     % number of points across incoming beam           
-            mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_final_Lyot(inputs,'ROT180');
+            mp.P4.compact.mask = falco_gen_pupil_LUVOIR_A_final(inputs);
         end
         
 	case{'LUVOIRA5'}

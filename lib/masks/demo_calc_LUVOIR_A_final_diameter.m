@@ -20,7 +20,7 @@ Nfinal = ceil_even(fac*1049);
 
 Nbeam0 = fac*1000;
 inputs.Nbeam = Nbeam0;
-inputs.magfacD = 1;
+inputs.magFac = 1;
 inputs.clock_deg = 0;
 
 pupil = falco_gen_pupil_LUVOIR_A_final(inputs);

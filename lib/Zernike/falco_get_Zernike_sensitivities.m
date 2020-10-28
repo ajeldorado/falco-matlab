@@ -33,6 +33,17 @@ for ni = 1:Nannuli
     maskStruct.centering = mp.centering;
     maskStruct.FOV = mp.Fend.FOV;
     maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+    maskStruct.pixresFP = mp.Fend.res;
+    maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+    if(isfield(mp.Fend,'shape'));  maskStruct.shape = mp.Fend.shape;  end
+    if(isfield(mp.Fend,'clockAngDeg'));  maskStruct.clockAngDeg = mp.Fend.clockAngDeg;  end
+    if(isfield(mp.Fend,'FOV'));  maskStruct.FOV = mp.Fend.FOV;  end
+    if(isfield(mp.Fend,'xiFOV'));  maskStruct.xiFOV = mp.Fend.xiFOV;  end
+    if(isfield(mp.Fend,'etaFOV'));  maskStruct.etaFOV = mp.Fend.etaFOV;  end
+    if(isfield(mp.Fend,'xiOffset'));  maskStruct.xiOffset = mp.Fend.xiOffset;  end
+    if(isfield(mp.Fend,'etaOffset'));  maskStruct.etaOffset = mp.Fend.etaOffset;  end
+    if(isfield(mp.Fend,'Nxi'));  maskStruct.Nxi = mp.Fend.Nxi;  end
+    if(isfield(mp.Fend,'Neta'));  maskStruct.Neta = mp.Fend.Neta;  end
     %--Generate Software Mask for Correction 
     [maskCube(:,:,ni), ~, ~] = falco_gen_SW_mask(maskStruct);
 end

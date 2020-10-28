@@ -19,7 +19,7 @@ clear all
 % addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 inputs.Nbeam = 1000;
-inputs.magfacD = 1;
+inputs.magFac = 1;
 inputs.wStrut = 1/100;
 % inputs.strutWidth_m = 0; % Optional input, strutwidth in meters 
 
@@ -29,7 +29,7 @@ figure(1); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',2
 
 figure(2); imagesc(pupil(2:end,2:end)-fliplr(pupil(2:end,2:end))); axis xy equal tight; title('Symmetry Check: Differencing','Fontsize',20); colorbar; drawnow;
 
-inputs.magfacD = 0.3;
+inputs.magFac = 0.3;
 inputs.clock_deg = 30;
 inputs.xShear = 0.4;
 pupil2 = falco_gen_pupil_LUVOIR_A_final(inputs);
