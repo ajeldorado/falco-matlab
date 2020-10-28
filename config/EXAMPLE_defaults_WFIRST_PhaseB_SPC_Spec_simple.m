@@ -209,7 +209,6 @@ mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
-mp.Fend.clockAngDeg = 90; %--Amount to rotate the dark hole location
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle

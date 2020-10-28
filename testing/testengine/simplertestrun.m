@@ -14,7 +14,8 @@ clc
 % file that includes the directory or location. There is other ways of
 % defining tests but for the most part these are the two we will be using.
 %--------------------------------------------------------------------------
-tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive'};
+% tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive'};
+tests={'/Users/ajriggs/Repos/falco-matlab/testing/testarchive'};
 
 %% Example 1
 % 

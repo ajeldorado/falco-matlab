@@ -35,7 +35,7 @@ inds_list = allcomb(1:mp.Nwpsbp,1:Npol).'; %--dimensions: [2 x mp.Nwpsbp*Npol ]
 Nvals = size(inds_list,2);
     
 if(mp.flagParfor) %--Save a lot of time by running full model in parallel
-    parfor ic=1:Nvals;  Iall{ic} = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  end %--Obtain all the images in parallel
+    parfor ic=1:Nvals;  Iall{ic} = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  end
 else %--Run in serial
     for ic=Nvals:-1:1;  Iall{ic} = falco_get_single_sbp_image_WvlPol(ic,inds_list,si,mp);  end
 end

@@ -38,18 +38,23 @@ switch upper(mp.whichPupil)
         inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); % number of points across usable pupil 
         mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
-    case{'WFIRST20200513', 'ROMAN20200513'}
-            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.full.Nbeam, mp.centering);  end
-            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.centering);  end
+    case{'WFIRST20200513', 'ROMAN20200513', 'ROMAN'}
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.full.Nbeam, mp.centering);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.centering);  end
     
     case{'WFIRST20191009'}
-            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.full.Nbeam, mp.centering);  end
-            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.compact.Nbeam, mp.centering);  end
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.full.Nbeam, mp.centering);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_20191009(mp.P1.compact.Nbeam, mp.centering);  end
     
     case{'WFIRST180718'}
-            if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);  end
-            if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);  end
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);  end
 
+    case{'WFIRST2016', 'WFIRST2016ONAXIS'}
+        if(isfield(mp.P1, 'wStrut')); changes.wStrut = mp.P1.wStrut; end % strut width (fraction of the pupil diameter)
+        if(mp.full.flagGenPupil);  mp.P1.full.mask = falco_gen_pupil_WFIRST_2016_onaxis(mp.P1.full.Nbeam, mp.centering, changes);  end
+        if(mp.compact.flagGenPupil);  mp.P1.compact.mask = falco_gen_pupil_WFIRST_2016_onaxis(mp.P1.compact.Nbeam, mp.centering, changes);  end
+            
     case{'KECK'}
         inputs.centering = mp.centering; 
         
@@ -117,7 +122,24 @@ switch upper(mp.whichPupil)
         inputs.Nbeam = mp.P1.compact.Nbeam; 
         if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_LUVOIR_A_0(inputs); end
         
-    case{'LUVOIR_B_OFFAXIS'}
+    case{'LUVOIR_B', 'LUVOIRB'} % simple version of LUVOIR B using PROPER
+        inputs.centering = mp.centering;
+        
+        %--Generate high-res input pupil for the 'full' model
+        inputs.Nbeam = mp.P1.full.Nbeam;
+        Narray = 2^(nextpow2(inputs.Nbeam));
+        if(mp.full.flagGenPupil)
+            mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), Narray);
+        end
+        
+        %--Generate low-res input pupil for the 'compact' model
+        inputs.Nbeam = mp.P1.compact.Nbeam;
+        Narray = 2^(nextpow2(inputs.Nbeam));
+        if(mp.compact.flagGenPupil)
+            mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), Narray);
+        end
+        
+    case{'LUVOIR_B_OFFAXIS'} % more complicated version with more features
         input.Nbeam = mp.P1.full.Nbeam/0.925; % number of points across the pupil diameter
         input.wGap = mp.P1.wGap*mp.P1.full.Nbeam; % samples
         input.numRings = 4; % Number of rings in hexagonally segmented mirror 

@@ -64,6 +64,10 @@ ang = inputs.ang; %--Opening angle on each side of the bowtie (degrees)
 if Rfillet > 0
     
     mask = falco_gen_rounded_bowtie_FPM(rhoInner, rhoOuter, Rfillet, pixresFPM, ang, clocking, upsampleFactor, centering, 'xc', xOffset, 'yc', yOffset);
+    
+    if(isfield(inputs, 'Narray'))
+        mask = pad_crop(mask, inputs.Narray);
+    end
 
 else
 

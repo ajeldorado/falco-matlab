@@ -1,11 +1,12 @@
-% Copyright 2018,2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
 % Function to run after a FALCO trial to compute the |dE|^2 sensitivities 
-% of a coronagraph to Zernike modes introduced at the entrance pupil.
+% of a coronagraph to Zernike modes introduced at the entrance pupil
+% in the compact model only.
 % 
 % Modified on 2019-05-08 by A.J. Riggs to use all wavelengths and to
 % parallelize all the E-field calculations when using a PROPER full model.
@@ -32,6 +33,17 @@ for ni = 1:Nannuli
     maskStruct.centering = mp.centering;
     maskStruct.FOV = mp.Fend.FOV;
     maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+    maskStruct.pixresFP = mp.Fend.res;
+    maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+    if(isfield(mp.Fend,'shape'));  maskStruct.shape = mp.Fend.shape;  end
+    if(isfield(mp.Fend,'clockAngDeg'));  maskStruct.clockAngDeg = mp.Fend.clockAngDeg;  end
+    if(isfield(mp.Fend,'FOV'));  maskStruct.FOV = mp.Fend.FOV;  end
+    if(isfield(mp.Fend,'xiFOV'));  maskStruct.xiFOV = mp.Fend.xiFOV;  end
+    if(isfield(mp.Fend,'etaFOV'));  maskStruct.etaFOV = mp.Fend.etaFOV;  end
+    if(isfield(mp.Fend,'xiOffset'));  maskStruct.xiOffset = mp.Fend.xiOffset;  end
+    if(isfield(mp.Fend,'etaOffset'));  maskStruct.etaOffset = mp.Fend.etaOffset;  end
+    if(isfield(mp.Fend,'Nxi'));  maskStruct.Nxi = mp.Fend.Nxi;  end
+    if(isfield(mp.Fend,'Neta'));  maskStruct.Neta = mp.Fend.Neta;  end
     %--Generate Software Mask for Correction 
     [maskCube(:,:,ni), ~, ~] = falco_gen_SW_mask(maskStruct);
 end

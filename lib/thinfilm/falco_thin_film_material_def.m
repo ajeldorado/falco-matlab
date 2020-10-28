@@ -98,6 +98,7 @@ Ndiel  = length(t_PMGI_vec);
 
 Nmetal = length(t_Ni_vec);
 t_Ti_vec = t_Ti_base*ones(Nmetal, 1);
+t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no Ni
 
 % %--New logic: Titanium layer goes beneath Nickel only. Always include them
 % %together. Subtract off the thickness of the Ti layer from the intended Ni

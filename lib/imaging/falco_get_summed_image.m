@@ -28,10 +28,15 @@ function Imean = falco_get_summed_image(mp)
     if(any(mp.dm_ind==2)); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.NdmPad); end
     if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
     
-    if(mp.flagParfor && mp.flagSim) %(mp.flagSim && mp.full.flagPROPER) %--Save a lot of time by making all PROPER full model in parallel
+    if(mp.flagParfor && mp.flagSim) %--Save a lot of time by making all PROPER full model in parallel
         %--Loop over all wavelengths and polarizations        
         ind_list = allcomb(1:mp.full.NlamUnique,1:length(mp.full.pol_conds)).';
         Nval = size(ind_list,2);
+        
+        % Remove testbed objects
+        if isfield(mp, 'tb')
+            mp = rmfield(mp, 'tb');
+        end
         
         %--Obtain all the images in parallel
         parfor ic=1:Nval
