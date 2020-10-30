@@ -81,7 +81,10 @@ if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodiz
 
 %--Propagation method
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
+
+%--Vortex coronagraphs
 if(isfield(mp.jac, 'mftToVortex')==false);  mp.jac.mftToVortex = false;  end  %--Whether to use MFTs to propagate to/from the vortex FPM
+if(isfield(mp.F3, 'VortexSpotDiam')==false);  mp.F3.VortexSpotDiam = 0;  end  %--Diameter of the opaque spot at the center of the vortex. [lambda0/D]
 
 %--Sensitivities to Zernike-Mode Perturbations
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
