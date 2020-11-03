@@ -83,10 +83,8 @@ if(mp.flagPlot)
 
     subplot(2,3,4);
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
-    if(Itr>1)
-        semilogy(0:Itr-2,mean(Inorm.mod,2),'-o');
-        semilogy(0:Itr-2,mean(Inorm.unmod,2),'--o');
-    end
+    semilogy(0:Itr-1,mean(Inorm.mod,2),'-o');
+    semilogy(0:Itr-1,mean(Inorm.unmod,2),'--o');
     hold off;
     xlim([0 length(Inorm.total)])
     xlabel('Iteration')
@@ -99,19 +97,19 @@ if(mp.flagPlot)
 	subplot(2,3,5)
     cmap = jet(mp.Nsbp+1);
     cmap = cmap ./ sum(cmap,2);% make the jet cmap darker
-    if(Itr>1)
-        for si = 1:mp.Nsbp
-            if(si==mp.si_ref)
-                linecolor=[0 0 0];
-            elseif(si==mp.Nsbp)
-                linecolor=cmap(end,:);% force last band to red
-            else
-                linecolor=cmap(si,:);
-            end
-            semilogy(0:Itr-2,Inorm.mod(:,si),'-o','Color',linecolor); hold on;
-            %hl2(si)=semilogy(0:Itr-2,Inorm.unmod(:,si),'--o','Color',linecolor);
+
+    for si = 1:mp.Nsbp
+        if(si==mp.si_ref)
+            linecolor=[0 0 0];
+        elseif(si==mp.Nsbp)
+            linecolor=cmap(end,:);% force last band to red
+        else
+            linecolor=cmap(si,:);
         end
+        semilogy(0:Itr-1,Inorm.mod(:,si),'-o','Color',linecolor); hold on;
+        %hl2(si)=semilogy(0:Itr-2,Inorm.unmod(:,si),'--o','Color',linecolor);
     end
+
     hold off;
     xlim([0 length(Inorm.total)])
     xlabel('Iteration')
@@ -122,14 +120,13 @@ if(mp.flagPlot)
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
 
 	subplot(2,3,6)
-    if(Itr>1)
-%         semilogy(mp.sbp_centers*1e9,Inorm.total*ones(1,mp.Nsbp),'-o'); hold on;
-        if(mp.Nsbp>1)
-            semilogy(mp.sbp_centers*1e9,Inorm.mod(end,:),'-o');
-        else
-            semilogy(mp.sbp_centers*1e9,Inorm.mod(end),'-o');
-        end
+
+    if(mp.Nsbp>1)
+        semilogy(mp.sbp_centers*1e9,Inorm.mod(end,:),'-o');
+    else
+        semilogy(mp.sbp_centers*1e9,Inorm.mod(end),'-o');
     end
+
 %     hold off;
     xlabel('Wavelength (nm)')
 %     legend('Mean Total','Modulated','location','best');
@@ -221,14 +218,13 @@ if(any(mp.dm_ind==2))
     sciCam_fitswrite(tb,DM2surf,[out_dir,'dm2_model_it',num2str(Itr-1),tag,'.fits']);
 end
 
-if(Itr>1)
-    sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-2),tag,'.fits']);
-    sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-2),tag,'.fits']);
-    sciCam_fitswrite(tb,Im_tb.Iinco,[out_dir,'normI_inco_it',num2str(Itr-2),tag,'.fits']);
-    
-    ev = Im_tb.ev;
-    save([out_dir,'probing_data_',num2str(Itr-2),tag,'.mat'],'ev');
-end
+
+sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-1),tag,'.fits']);
+sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-1),tag,'.fits']);
+sciCam_fitswrite(tb,Im_tb.Iinco,[out_dir,'normI_inco_it',num2str(Itr-1),tag,'.fits']);
+
+ev = Im_tb.ev;
+save([out_dir,'probing_data_',num2str(Itr-1),tag,'.mat'],'ev');
 
 % Update the diary 
 diary off; diary(mp.diaryfile)

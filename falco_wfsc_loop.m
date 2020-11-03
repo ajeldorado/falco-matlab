@@ -182,7 +182,7 @@ for Itr=1:mp.Nitr
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im),mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im),mp.Nsbp]);
-        if(Itr>1 && ~strcmpi(mp.estimator,'perfect') )
+        if( ~strcmpi(mp.estimator,'perfect') )
             for si = 1:mp.Nsbp
                 tmp = zeros(size(Im));
                 tmp(mp.Fend.corr.mask) = EfieldVec(:,si);
@@ -192,8 +192,8 @@ for Itr=1:mp.Nitr
                 tmp(mp.Fend.corr.mask) = IincoVec(:,si);
                 Im_tb.Iinco(:,:,si) = tmp; % unmodulated component 
 
-                InormHist_tb.mod(Itr-1,si) = mean(abs(EfieldVec(:,si)).^2);
-                InormHist_tb.unmod(Itr-1,si) = mean(IincoVec(:,si));
+                InormHist_tb.mod(Itr,si) = mean(abs(EfieldVec(:,si)).^2);
+                InormHist_tb.unmod(Itr,si) = mean(IincoVec(:,si));
 
                 Im_tb.ev = ev;% Passing the probing structure so I can save it
             end
@@ -491,8 +491,8 @@ if(isfield(mp,'testbed') )
             tmp(mp.Fend.corr.mask) = IincoVec(:,si);
             Im_tb.Iinco(:,:,si) = tmp; % unmodulated component 
 
-            InormHist_tb.mod(Itr-1,si) = mean(abs(EfieldVec(:,si)).^2);
-            InormHist_tb.unmod(Itr-1,si) = mean(IincoVec(:,si));
+            InormHist_tb.mod(Itr,si) = mean(abs(EfieldVec(:,si)).^2);
+            InormHist_tb.unmod(Itr,si) = mean(IincoVec(:,si));
 
             Im_tb.ev = ev; % Passing the probing structure so I can save it
         end

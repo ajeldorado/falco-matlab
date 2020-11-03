@@ -25,7 +25,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
 
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
-    
+    tb.sciCam.subdir = 'falco';
     
     if(mp.isProbing)
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
