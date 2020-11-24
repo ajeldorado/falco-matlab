@@ -14,7 +14,7 @@ clear all
 % addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
 % addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
-fac = 2;
+fac = 1;
 Npad = fac*1050;
 Nfinal = ceil_even(fac*1049);
 
@@ -30,7 +30,7 @@ figure(2); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',2
 
 inputs.Npad = Npad; %Number of samples in NxN grid 
 inputs.OD = 1; % pupil outer diameter, can be < 1
-inputs.Nbeam = Nbeam0*1.000; %1.01824 ;
+inputs.Nbeam = Nbeam0*1.000*0.90; %1.01824 ;
 circle = pad_crop(falco_gen_pupil_Simple(inputs), Nfinal);
 
 figure(1); imagesc(pupil); axis xy equal tight; title('Input Pupil','Fontsize',20); colorbar;

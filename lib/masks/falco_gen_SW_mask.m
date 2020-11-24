@@ -21,7 +21,7 @@
 %  -clockAngDeg: Dark hole rotation about the z-axis (deg)
 %
 %--OUTPUTS:
-% maskSW: rectangular, even-sized, binary-valued software mask
+% softwareMask: rectangular, even-sized, binary-valued software mask
 % xis: vector of coordinates along the horizontal axis (in lambda_c/D)
 % etas: : vector of coordinates along the vertical axis (in lambda_c/D)
 
@@ -104,28 +104,20 @@ else
 end
 clockAngRad = clockAngRad + clockAngDeg*pi/180; %--Add extra clocking specified by inputs.clockAngDeg
 
-
-% if strcmpi(whichSide,'l') || strcmpi(whichSide,'left') || strcmpi(whichSide,'lr') || strcmpi(whichSide,'lr')
-%     clockAngRad = pi;
-% elseif strcmpi(whichSide,'r') || strcmpi(whichSide,'right')
-%     clockAngRad = 0;
-% elseif strcmpi(whichSide,'t') || strcmpi(whichSide,'top')
-%     clockAngRad = pi/2;
-% elseif strcmpi(whichSide,'b') || strcmpi(whichSide,'bottom')
-%     clockAngRad = 3/2*pi;   
-% elseif strcmpi(whichSide,'both')
-%     clockAngRad = 0;
-% else
-%     error('falco_gen_SW_mask.m: Unknown value specified for inputs.whichSide')
-% end
-% clockAngRad = clockAngRad + clockAngDeg*pi/180; %--Add extra clocking specified by inputs.clockAngDeg
-
 %--Generate the Outer Mask
+rhoInner = rhoInner - 13*eps; % Avoidy a ratty line from the higher numerical noise floor introduced by RHOS*cos().
+rhoOuter = rhoOuter + 13*eps; % Avoidy a ratty line from the higher numerical noise floor introduced by RHOS*cos().
 switch lower(darkHoleShape)
     case{'circle', 'annulus'}
         softwareMask0 = (RHOS>=rhoInner & RHOS<=rhoOuter);
     case{'square'}
-        softwareMask0 = (RHOS>=rhoInner & abs(XIS)<=rhoOuter & abs(ETAS)<=rhoOuter);
+        % softwareMask0 = (RHOS>=rhoInner & abs(XIS)<=rhoOuter & abs(ETAS)<=rhoOuter);
+%         softwareMask0 = (RHOS>=rhoInner) & (RHOS.*cos(THETAS-clockAngRad)<=rhoOuter);
+        softwareMask0 = ((RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
+                        (RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter)) &...
+                        (RHOS>=rhoInner);
+%         softwareMask0 = (RHOS.*cos(THETAS-clockAngRad)>=rhoInner & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
+%                 (RHOS.*cos(THETAS-clockAngRad)<=-rhoInner & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter);
     case{'rect', 'rectangle'}
         softwareMask0 = (RHOS.*cos(THETAS-clockAngRad)>=rhoInner & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
                         (RHOS.*cos(THETAS-clockAngRad)<=-rhoInner & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter);
