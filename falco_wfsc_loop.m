@@ -198,7 +198,7 @@ for Itr=1:mp.Nitr
     end
     
     %% Plot the expected and measured delta E-fields
-    if(Itr > 1)
+    if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0))
         dEmeas = squeeze(EfieldVec(:, mp.si_ref) - EprevMeas(:, mp.si_ref));
         dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
         dEmeas2D(mp.Fend.corr.maskBool) = dEmeas; % 2-D for plotting

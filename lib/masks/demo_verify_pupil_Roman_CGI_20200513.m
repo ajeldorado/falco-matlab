@@ -28,6 +28,8 @@ figure(1); imagesc(pupilFromFile); axis xy equal tight; colorbar; drawnow;
 figure(2); imagesc(pupilFromFALCO); axis xy equal tight; colorbar; drawnow;
 figure(3); imagesc(diff, [-1 1]); axis xy equal tight; colorbar; colormap gray; drawnow;
 figure(4); imagesc(-abs(diff), [-1 0]); axis xy equal tight; colorbar; colormap gray; drawnow;
+%%
+
 
 %% Verify at lower res that the fit is still correct
 dsfac = 16; % downsampling factor

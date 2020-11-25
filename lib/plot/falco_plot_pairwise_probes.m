@@ -9,7 +9,7 @@
 % REVISION HISTORY:
 % -Created on 2018-04-22 by A.J. Riggs.
 
-function falco_plot_pairwise_probes(mp,ev,dDMVplus,ampSq2Dcube)
+function falco_plot_pairwise_probes(mp,ev,dDMVplus, VtoH, ampSq2Dcube)
 
 if(mp.flagPlot)
     Npairs = mp.est.probe.Npairs;
@@ -23,7 +23,7 @@ if(mp.flagPlot)
     %--Plot the DM shapes for each probe
     for iProbe=1:Npairs
         subplot(4,Npairs,iProbe); % Save the handle of the subplot
-        imagesc(1e9*dDMVplus(:,:,iProbe).*mp.dm1.VtoH); axis xy equal tight; axis off;
+        imagesc(1e9*dDMVplus(:,:,iProbe).*VtoH); axis xy equal tight; axis off;
         colorbar;
         colormap(gca,parula);
         title(sprintf('Probe %d (nm)',iProbe));

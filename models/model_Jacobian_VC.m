@@ -141,8 +141,22 @@ if(whichDM == 1)
         
         vortex = falco_gen_vortex_mask(charge, Nxi);
     else
-        % Generate vortex FPM with fftshift already applied
-        fftshiftVortex = fftshift(falco_gen_vortex_mask(charge, Nfft1));
+        % Generate central opaque spot
+        if mp.F3.VortexSpotDiam > 0
+            inputs.pixresFPM = Nfft1/mp.P1.compact.Nbeam; %--pixels per lambda/D
+            inputs.rhoInner = mp.F3.VortexSpotDiam/2*(mp.lambda0/lambda); % radius of inner FPM amplitude spot (in lambda_c/D)
+            inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
+            inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
+            inputs.centering = 'pixel';
+            spot = falco_gen_annular_FPM(inputs);
+            spot = pad_crop(spot, Nfft1, 'extrapval', 1);
+        else
+            spot = 1;
+        end
+        
+        % Generate FPM with fftshift already applied
+        vortex = falco_gen_vortex_mask(charge, Nfft1);
+        fftshiftVortex = fftshift(spot.*vortex);    
     end
     
     if(any(mp.dm_ind==2))
@@ -333,9 +347,23 @@ if(whichDM==2)
         etas = xis.';
         
         vortex = falco_gen_vortex_mask(charge, Nxi);
-    else
-        % Generate vortex FPM with fftshift already applied
-        fftshiftVortex = fftshift(falco_gen_vortex_mask(charge, Nfft2));
+    else        
+        % Generate central opaque spot
+        if mp.F3.VortexSpotDiam > 0
+            inputs.pixresFPM = Nfft2/mp.P1.compact.Nbeam; %--pixels per lambda/D
+            inputs.rhoInner = mp.F3.VortexSpotDiam/2*(mp.lambda0/lambda); % radius of inner FPM amplitude spot (in lambda_c/D)
+            inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
+            inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
+            inputs.centering = 'pixel';
+            spot = falco_gen_annular_FPM(inputs);
+            spot = pad_crop(spot, Nfft2, 'extrapval', 1);
+        else
+            spot = 1;
+        end
+        
+        % Generate FPM with fftshift already applied
+        vortex = falco_gen_vortex_mask(charge, Nfft2);
+        fftshiftVortex = fftshift(spot.*vortex);        
     end
     
     apodReimaged = padOrCropEven( apodReimaged, mp.dm2.compact.NdmPad);

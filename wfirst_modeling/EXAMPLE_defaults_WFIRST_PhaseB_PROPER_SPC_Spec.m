@@ -212,8 +212,8 @@ mp.Fend.score.Rin = 3;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
-mp.Fend.clockAngDeg = 90; %--Amount to rotate the dark hole location
+mp.Fend.sides = 'lr'; %--Which side(s) for correction: 'left', 'right', 'top', 'up', 'bottom', 'down', 'lr', 'rl', 'leftright', 'rightleft', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'
+mp.Fend.clockAngDeg = 0; %--Amount to rotate the dark hole location
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 

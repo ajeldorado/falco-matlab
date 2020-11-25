@@ -69,7 +69,7 @@ end
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if(any(mp.dm_ind==1));  DM1surf = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,NdmPad); end
+if(any(mp.dm_ind==1));  DM1surf = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,NdmPad); else; DM1surf=zeros(NdmPad); end
 if(any(mp.dm_ind==2));  DM2surf = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,NdmPad); else; DM2surf=zeros(NdmPad); end
 
 pupil = padOrCropEven(mp.P1.full.mask,NdmPad);
@@ -139,7 +139,7 @@ switch upper(mp.coro)
             % represents a chromatic vortex FPM
             charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
         end
-        EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU );  %--MFTs
+        EP4 = propcustom_mft_Pup2Vortex2Pup(EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda),mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));  %--MFTs
         EP4 = padOrCropEven(EP4,mp.P4.full.Narr);
 
     case{'SPLC','FLC'}
