@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-function [ arrayOut ] = hexSegMirror_addHexagon( cenrow, cencol, hexFlatDiam, arrayIn)
+function arrayOut = hexSegMirror_addHexagon(cenrow, cencol, hexFlatDiam, arrayIn)
 %hexSegMirror_addHexagon Adds hexagon to arrayIn, centered at (cenrow,
 %cencol), with segment width 'hexFlatDiam'.
 %   Inputs:
@@ -15,17 +15,20 @@ function [ arrayOut ] = hexSegMirror_addHexagon( cenrow, cencol, hexFlatDiam, ar
 %   
 %   Coordinate system origin: (rows/2+1, cols/2+1)
 
-    [rows,cols]=size(arrayIn);
+    % Found empirically
+    hg_expon = ceil_even(2.3741*hexFlatDiam - 17.4); % hyper-gaussian exponent for anti-aliasing
+%     hg_expon = 1000; % hyper-gaussian exponent for anti-aliasing
+    
+    [rows, cols]=size(arrayIn);
 
-    [X,Y] = meshgrid(-cols/2:cols/2-1,-rows/2:rows/2-1); % Grids with Cartesian (x,y) coordinates 
+    [X,Y] = meshgrid(-cols/2:cols/2-1, -rows/2:rows/2-1); % Grids with Cartesian (x,y) coordinates 
 
-    RHOprime = sqrt((X-cencol).^2+(Y-cenrow).^2);
-    THETA = atan2(Y-cenrow,X-cencol); 
+    RHOprime = sqrt((X-cencol).^2 + (Y-cenrow).^2);
+    THETA = atan2(Y-cenrow, X-cencol); 
 
-    HEX = exp(-(RHOprime.*sin(THETA)/(hexFlatDiam/2)).^1000)...
-        .*exp(-(RHOprime.*cos(THETA-pi/6)/(hexFlatDiam/2)).^1000)...
-        .*exp(-(RHOprime.*cos(THETA+pi/6)/(hexFlatDiam/2)).^1000);
+    HEX = exp(-(RHOprime.*sin(THETA)/(hexFlatDiam/2)).^hg_expon)...
+        .*exp(-(RHOprime.*cos(THETA-pi/6)/(hexFlatDiam/2)).^hg_expon)...
+        .*exp(-(RHOprime.*cos(THETA+pi/6)/(hexFlatDiam/2)).^hg_expon);
 
     arrayOut = arrayIn + HEX;
 end
-

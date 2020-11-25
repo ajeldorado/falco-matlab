@@ -62,8 +62,8 @@ elseif(mp.est.probe.whichDM==2)
 end
 
 %--Store the initial DM commands
-if(any(mp.dm_ind==1));  DM1Vnom = mp.dm1.V;  end
-if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm1.V)); end
+if(any(mp.dm_ind==1));  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end
+if(any(mp.dm_ind==2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
@@ -98,6 +98,7 @@ ev.Eest = zeros(mp.Fend.corr.Npix,mp.Nsbp);
 ev.IincoEst = zeros(mp.Fend.corr.Npix,mp.Nsbp);
 ev.I0mean = 0;
 ev.IprobedMean = 0;
+ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 
 %% Get images and perform estimates in each sub-bandpass
 
@@ -114,13 +115,14 @@ for si=1:mp.Nsbp
     % Reset DM commands to the unprobed state:
     mp.dm1.V = DM1Vnom;
     mp.dm2.V = DM2Vnom;
+    
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     Iplus  = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
     Iminus = zeros( [mp.Fend.corr.Npix, Npairs]); % Pixels of minus probes' intensities
-    DM1Vplus  = zeros( [Nact,Nact, Npairs]);
-    DM1Vminus = zeros( [Nact,Nact, Npairs]);
-    DM2Vplus  = zeros( [Nact,Nact, Npairs]);
-    DM2Vminus = zeros( [Nact,Nact, Npairs]);
+    DM1Vplus  = zeros( [Nact, Nact, Npairs]);
+    DM1Vminus = zeros( [Nact, Nact, Npairs]);
+    DM2Vplus  = zeros( [Nact, Nact, Npairs]);
+    DM2Vminus = zeros( [Nact, Nact, Npairs]);
 
     %% Compute probe shapes and take probed images:
 
@@ -128,7 +130,8 @@ for si=1:mp.Nsbp
     whichImg = 1;
     I0 = falco_get_sbp_image(mp,si);
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
-    ev.I0mean = ev.I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
+    ev.I0mean = ev.I0mean + I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
+    ev.Im = ev.Im + I0/mp.Nsbp; % band-averaged image for plotting
 
     %--Store values for first image and its DM commands
     ev.Icube(:,:, whichImg) = I0;
@@ -215,8 +218,11 @@ for si=1:mp.Nsbp
     end
 
     %% Plot relevant data for all the probes
-    falco_plot_pairwise_probes(mp,ev,DM1Vplus-repmat(DM1Vnom,[1,1,size(DM1Vplus,3)]),ampSq2Dcube)
-
+    if mp.est.probe.whichDM == 1
+        falco_plot_pairwise_probes(mp,ev,DM1Vplus-repmat(DM1Vnom,[1,1,size(DM1Vplus,3)]),mp.dm1.VtoH,ampSq2Dcube)
+    elseif mp.est.probe.whichDM == 2
+        falco_plot_pairwise_probes(mp,ev,DM2Vplus-repmat(DM2Vnom,[1,1,size(DM2Vplus,3)]),mp.dm2.VtoH,ampSq2Dcube)
+    end
     %% Perform the estimation
     
     if(mp.est.flagUseJac) %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
@@ -224,10 +230,10 @@ for si=1:mp.Nsbp
         dEplus  = zeros(size(Iplus ));
         for iProbe=1:Npairs
             if(mp.est.probe.whichDM == 1)
-                dV = DM1Vplus(:,:,iProbe)-DM1Vnom;
+                dV = (DM1Vplus(:,:,iProbe)-DM1Vnom);%/mp.est.probe.gainFudge;
                 dEplus(:,iProbe) = squeeze(jacStruct.G1(:,:,si))*dV(mp.dm1.act_ele);
             elseif(mp.est.probe.whichDM == 2)
-                dV = DM2Vplus(:,:,iProbe)-DM2Vnom;
+                dV = (DM2Vplus(:,:,iProbe)-DM2Vnom);%/mp.est.probe.gainFudge;
                 dEplus(:,iProbe) = squeeze(jacStruct.G2(:,:,si))*dV(mp.dm2.act_ele);
             end
         end
@@ -249,8 +255,8 @@ for si=1:mp.Nsbp
         Eminus = zeros(size(Iminus));
         for iProbe=1:Npairs
             % For plus probes:
-            if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vplus(:,:,iProbe));  end
-            if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vplus(:,:,iProbe));  end
+            if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vplus(:,:,iProbe); end %DM1Vnom + (DM1Vplus(:,:,iProbe)-DM1Vnom)/mp.est.probe.gainFudge;  end
+            if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vplus(:,:,iProbe); end %DM2Vnom + (DM2Vplus(:,:,iProbe)-DM2Vnom)/mp.est.probe.gainFudge;  end
             if(mp.flagFiber)
                 [~, Etemp] = model_compact(mp, modvar);
             else
@@ -258,8 +264,8 @@ for si=1:mp.Nsbp
             end
             Eplus(:,iProbe) = Etemp(mp.Fend.corr.maskBool);
             % For minus probes:
-            if(any(mp.dm_ind==1));  mp.dm1.V = squeeze( DM1Vminus(:,:,iProbe));  end
-            if(any(mp.dm_ind==2));  mp.dm2.V = squeeze( DM2Vminus(:,:,iProbe));  end
+            if(any(mp.dm_ind==1));  mp.dm1.V = DM1Vminus(:,:,iProbe); end %DM1Vnom + (DM1Vminus(:,:,iProbe)-DM1Vnom)/mp.est.probe.gainFudge;  end
+            if(any(mp.dm_ind==2));  mp.dm2.V = DM2Vminus(:,:,iProbe); end %DM2Vnom + (DM2Vminus(:,:,iProbe)-DM2Vnom)/mp.est.probe.gainFudge;  end
             if(mp.flagFiber)
                 [~, Etemp] = model_compact(mp, modvar);
             else

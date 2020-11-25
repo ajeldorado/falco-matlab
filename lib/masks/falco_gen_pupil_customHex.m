@@ -14,13 +14,22 @@
 
 function PUPIL = falco_gen_pupil_customHex( input )
 
-    hg_expon = 1000; % hyper-gaussian exponent for anti-aliasing 
-    hg_expon_spider = 100; % hyper-gaussian exponent for anti-aliasing 
-
     N = input.Npad;%Number of samples in NxN grid 
     OD = input.OD; % pupil outer diameter, can be < 1
-    ID = input.ID; % central obscuration radius 
-    apRad = input.Nbeam/2; % aperture radius in samples 
+    ID = input.ID; % central obscuration radius
+    Nbeam = input.Nbeam;
+    apRad = Nbeam/2; % aperture radius in samples 
+    
+    %     % Hypergaussian tuning: Measured data for segments compared to
+    %     PROPER:
+    %     NpupVec = 200:100:1000;
+    %     hgExpVec = [44, 64, 84, 110, 130, 160, 194, 224, 250];
+    %     y = 0.2623*x -17.4000
+    hg_expon = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
+    hg_expon_spider = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
+%     hg_expon = 1000; % hyper-gaussian exponent for anti-aliasing 
+%     hg_expon_spider = 100; % hyper-gaussian exponent for anti-aliasing 
+    
     
     %Create coordinates
     [X,Y] = meshgrid(-N/2:N/2-1);

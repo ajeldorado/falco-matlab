@@ -96,7 +96,10 @@ function jacStruct = model_Jacobian(mp)
     Nvals = size(vals_list,2);
 
     %--Parallel/distributed computing
-    if(mp.flagParfor) 
+    if(mp.flagParfor)
+        if isfield(mp, 'tb')
+            mp = rmfield(mp, 'tb');
+        end
         parfor ii=1:Nvals
             Jtemp{ii} = model_Jacobian_middle_layer(mp, vals_list, ii)
         end        

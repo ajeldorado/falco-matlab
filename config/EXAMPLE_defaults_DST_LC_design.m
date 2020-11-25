@@ -103,17 +103,17 @@ mp.maxAbsdV = 1000;  %--Max +/- delta voltage step for each actuator for DMs 1 a
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
 %  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
-mp.controller = 'plannedEFC';
 
-% % % % GRID SEARCH EFC DEFAULTS     
-% %--WFSC Iterations and Control Matrix Relinearization
-% mp.Nitr = 20; %--Number of estimation+control iterations to perform
+% % % % % GRID SEARCH EFC DEFAULTS     
+% % %--WFSC Iterations and Control Matrix Relinearization
+% mp.controller = 'gridsearchEFC';
+% mp.Nitr = 4; %--Number of estimation+control iterations to perform
 % mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-% 
 % mp.dm_ind = [1 2]; %--Which DMs to use
 
 
-% % % PLANNED SEARCH EFC DEFAULTS     
+% % % PLANNED SEARCH EFC DEFAULTS
+mp.controller = 'plannedEFC';
 mp.dm_ind = [1 2]; % vector of DMs used in controller at ANY time (not necessarily all at once or all the time). 
 mp.ctrl.dmfacVec = 1;
 %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 

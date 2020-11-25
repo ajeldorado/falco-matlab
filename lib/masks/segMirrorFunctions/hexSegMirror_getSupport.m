@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-function [ OUT ] = hexSegMirror_getSupport( hexMirror_struct )
+function [ OUT ] = hexSegMirror_getSupport(hexMirror_struct)
 %hexSegMirror_getSupport Returns the support of the pupil function defined
 %by a hexagonally segmented mirror 
 %   Input: hexMirror_struct - Structure with the following variables 
@@ -15,7 +15,7 @@ function [ OUT ] = hexSegMirror_getSupport( hexMirror_struct )
 %   missingSegments - list of zeros and ones indicating if each segment is present 
 %   offset - centering offset vector [N/2+1+offset(1), N/2+1+offset(2)]
 
-apDia = hexMirror_struct.apDia; % flat to flat aperture diameter (samples)
+apDiam = hexMirror_struct.apDia; % flat to flat aperture diameter (samples)
 wGap = hexMirror_struct.wGap; % samples
 numRings = hexMirror_struct.numRings;% Number of rings in hexagonally segmented mirror 
 N = hexMirror_struct.Npad;
@@ -26,12 +26,12 @@ end
 if(isfield(hexMirror_struct,'missingSegments'))
     missingSegments = hexMirror_struct.missingSegments;
 else
-    missingSegments = ones(1,hexSegMirror_numSegments( numRings ));
+    missingSegments = ones(1,hexSegMirror_numSegments(numRings));
 end
     
 OUT = zeros(N);
 
-hexFlatDiam = (apDia-numRings*2*wGap)/(2*numRings+1);
+hexFlatDiam = (apDiam-numRings*2*wGap)/(2*numRings+1);
 hexSep = hexFlatDiam + wGap;
 
 count = 1;
@@ -45,8 +45,8 @@ for ringNum = 0:numRings
         cencol = cencol + offset(2);
     end
     
-    if(missingSegments(count)==1)
-        [ OUT ] = hexSegMirror_addHexagon( cenrow,cencol, hexFlatDiam, OUT );
+    if(missingSegments(count) == 1)
+    	OUT = hexSegMirror_addHexagon(cenrow,cencol, hexFlatDiam, OUT);
     end
     count = count + 1;
     
@@ -65,7 +65,7 @@ for ringNum = 0:numRings
                 %disp(['Finished ring ',num2str(ringNum)]);
             else
                 if(missingSegments(count)==1)
-                    [ OUT ] = hexSegMirror_addHexagon( cenrow,cencol, hexFlatDiam, OUT );
+                    OUT = hexSegMirror_addHexagon(cenrow,cencol, hexFlatDiam, OUT);
                 end
                 count = count + 1;
             end
