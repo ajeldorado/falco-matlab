@@ -148,10 +148,10 @@ for si=1:mp.Nsbp
 
     % Set (approximate) probe intensity based on current measured Inorm
     if(mp.flagFiber)
-        ev.InormProbeMax = 1e-5;
+        ev.InormProbeMax = mp.est.InormProbeMax;
         InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
     else
-        ev.InormProbeMax = 1e-4;
+        ev.InormProbeMax = mp.est.InormProbeMax;
         InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
     end
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
@@ -312,7 +312,7 @@ if( strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator,'pwp-kf') && ev.Itr<
         Epix = pinv(H)*zAll(:,ipix); %--Batch process estimation
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
-    Eest(abs(Eest).^2 > mp.est.Ethreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
+    Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
     fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
 
     %--Initialize the state and state covariance estimates for Kalman

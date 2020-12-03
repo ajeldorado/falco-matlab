@@ -223,8 +223,10 @@ sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-1),tag
 sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-1),tag,'.fits']);
 sciCam_fitswrite(tb,Im_tb.Iinco,[out_dir,'normI_inco_it',num2str(Itr-1),tag,'.fits']);
 
-ev = Im_tb.ev;
-save([out_dir,'probing_data_',num2str(Itr-1),tag,'.mat'],'ev');
+if(~strcmpi(mp.estimator,'perfect'))
+    ev = Im_tb.ev;
+    save([out_dir,'probing_data_',num2str(Itr-1),tag,'.mat'],'ev');
+end
 
 % Update the diary 
 diary off; diary(mp.diaryfile)

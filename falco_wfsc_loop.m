@@ -216,6 +216,7 @@ for Itr=1:mp.Nitr
         dEmodel2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
         dEmodel2D(mp.Fend.corr.maskBool) = dEmodel;  % 2-D for plotting
         dEmax = max(abs(dEmodel)); % max value in plots
+        if(dEmax==0);dEmax=1;end
         out.complexProjection(Itr-1) = abs(dEmodel'*dEmeas)/abs(dEmodel'*dEmodel);
         fprintf('  Complex projection of deltaE is %3.2f \n', out.complexProjection(Itr-1));
         out.complexCorrelation(Itr-1) = abs(dEmodel'*dEmeas/(sqrt(abs(dEmeas'*dEmeas))*sqrt(abs(dEmodel'*dEmodel)) ));

@@ -14,12 +14,16 @@ maskCorr.rhoInner = mp.Fend.corr.Rin; %--lambda0/D
 maskCorr.rhoOuter = mp.Fend.corr.Rout ; %--lambda0/D
 maskCorr.angDeg = mp.Fend.corr.ang; %--degrees
 maskCorr.centering = mp.centering;
-maskCorr.FOV = mp.Fend.FOV;
 maskCorr.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
 if(isfield(mp.Fend,'shape'));  maskCorr.shape = mp.Fend.shape;  end
 if(isfield(mp.Fend,'clockAngDeg'));  maskCorr.clockAngDeg = mp.Fend.clockAngDeg;  end
-if(isfield(mp.Fend,'xi_cen'));   maskCorr.xi_cen = mp.Fend.xi_cen;  end
-if(isfield(mp.Fend,'eta_cen'));  maskCorr.eta_cen = mp.Fend.eta_cen;  end
+if(isfield(mp.Fend,'FOV'));  maskCorr.FOV = mp.Fend.FOV;  end
+if(isfield(mp.Fend,'xiFOV'));  maskCorr.xiFOV = mp.Fend.xiFOV;  end
+if(isfield(mp.Fend,'etaFOV'));  maskCorr.etaFOV = mp.Fend.etaFOV;  end
+if(isfield(mp.Fend,'xiOffset'));  maskCorr.xiOffset = mp.Fend.xiOffset;  end
+if(isfield(mp.Fend,'etaOffset'));  maskCorr.etaOffset = mp.Fend.etaOffset;  end
+if(isfield(mp.Fend,'Nxi'));  maskCorr.Nxi = mp.Fend.Nxi;  end
+if(isfield(mp.Fend,'Neta'));  maskCorr.Neta = mp.Fend.Neta;  end
 
 %--Compact Model: Generate Software Mask for Correction 
 [mp.Fend.corr.mask, mp.Fend.xisDL, mp.Fend.etasDL] = falco_gen_SW_mask(maskCorr); 
@@ -59,16 +63,31 @@ mp.thput_vec = zeros(mp.Nitr+1,1);
 
 %--Software Mask for Scoring Contrast 
 %--Set Inputs
+maskScore.pixresFP = mp.Fend.res;
 maskScore.rhoInner = mp.Fend.score.Rin; %--lambda0/D
 maskScore.rhoOuter = mp.Fend.score.Rout ; %--lambda0/D
 maskScore.angDeg = mp.Fend.score.ang; %--degrees
 maskScore.centering = mp.centering;
-maskScore.FOV = mp.Fend.FOV; %--Determines max dimension length
 maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
 if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
 if(isfield(mp.Fend,'clockAngDeg'));  maskScore.clockAngDeg = mp.Fend.clockAngDeg;  end
-if(isfield(mp.Fend,'xi_cen'));   maskScore.xi_cen = mp.Fend.xi_cen;  end
-if(isfield(mp.Fend,'eta_cen'));  maskScore.eta_cen = mp.Fend.eta_cen;  end
+if(isfield(mp.Fend,'FOV'));  maskScore.FOV = mp.Fend.FOV;  end
+if(isfield(mp.Fend,'xiFOV'));  maskScore.xiFOV = mp.Fend.xiFOV;  end
+if(isfield(mp.Fend,'etaFOV'));  maskScore.etaFOV = mp.Fend.etaFOV;  end
+if(isfield(mp.Fend,'xiOffset'));  maskScore.xiOffset = mp.Fend.xiOffset;  end
+if(isfield(mp.Fend,'etaOffset'));  maskScore.etaOffset = mp.Fend.etaOffset;  end
+if(isfield(mp.Fend,'Nxi'));  maskScore.Nxi = mp.Fend.Nxi;  end
+if(isfield(mp.Fend,'Neta'));  maskScore.Neta = mp.Fend.Neta;  end
+% maskScore.rhoInner = mp.Fend.score.Rin; %--lambda0/D
+% maskScore.rhoOuter = mp.Fend.score.Rout ; %--lambda0/D
+% maskScore.angDeg = mp.Fend.score.ang; %--degrees
+% maskScore.centering = mp.centering;
+% maskScore.FOV = mp.Fend.FOV; %--Determines max dimension length
+% maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
+% if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
+% if(isfield(mp.Fend,'clockAngDeg'));  maskScore.clockAngDeg = mp.Fend.clockAngDeg;  end
+% if(isfield(mp.Fend,'xi_cen'));   maskScore.xi_cen = mp.Fend.xi_cen;  end
+% if(isfield(mp.Fend,'eta_cen'));  maskScore.eta_cen = mp.Fend.eta_cen;  end
 
 %--Compact Model: Generate Software Mask for Scoring Contrast 
 maskScore.Nxi = mp.Fend.Nxi; %--Set min dimension length to be same as for corr 

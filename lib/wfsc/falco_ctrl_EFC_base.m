@@ -45,7 +45,7 @@ dmfac = vals_list(2,ni); %--Scaling factor for entire DM command
 cvar = falco_ctrl_setup(mp,cvar);
 
 %% Least-squares solution with regularization:
-duVec = -dmfac*(10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum;
+duVec = -dmfac*((10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar.RealGstarEab_wsum);
 
 %% Parse the command vector by DM and assign the output commands
 [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec);

@@ -21,69 +21,60 @@
 %  -clockAngDeg: Dark hole rotation about the z-axis (deg)
 %
 %--OUTPUTS:
-% maskSW: rectangular, even-sized, binary-valued software mask
+% softwareMask: rectangular, even-sized, binary-valued software mask
 % xis: vector of coordinates along the horizontal axis (in lambda_c/D)
 % etas: : vector of coordinates along the vertical axis (in lambda_c/D)
 
 function [softwareMask, xis, etas] = falco_gen_SW_mask(inputs)     
 
-%--Read in user inputs
+% REQUIRED USER INPUTS
 pixresFP = inputs.pixresFP; %--pixels per lambda_c/D
 rhoInner = inputs.rhoInner; % radius of inner FPM amplitude spot (in lambda_c/D)
 rhoOuter = inputs.rhoOuter; % radius of outer opaque FPM ring (in lambda_c/D)
 angDeg = inputs.angDeg; %--angular opening (input in degrees) on the left/right/both sides of the dark hole.
-whichSide = inputs.whichSide; %--which (sides) of the dark hole have open
+whichSide = lower(inputs.whichSide); %--which (sides) of the dark hole have open
 
-if( isfield(inputs,'FOV') ) % minimum field of view along horizontal (xi) axis
-    minFOV = inputs.FOV;
-else
-    minFOV = rhoOuter; %--Default to the size of the viewable area the field of view is not specified.
-end
-
-if( isfield(inputs,'centering') )
-    centering = inputs.centering;
-else
-    centering = 'pixel'; %--Default to pixel centering if it is not specified.
-end
-
-if( isfield(inputs,'shape') ) %--shape of the outer part of the dark hole
-    darkHoleShape = inputs.shape;
-else
-    darkHoleShape = 'circle'; %--Default to a circular outer edge
-end
-
-if(~isfield(inputs,'clockAngDeg'));  inputs.clockAngDeg = 0;  end %--Amount extra to clock the dark hole
-
-
-xiCenter = 0;
-etaCenter = 0;
-
-if(isfield(inputs,'xi_cen'))
-    xiCenter = inputs.xi_cen;
-end
-
-if(isfield(inputs,'eta_cen'))
-    etaCenter = inputs.eta_cen;
-end
+angRad = angDeg*(pi/180); %--Convert opening angle to radians
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% OPTIONAL USER INPUTS
 
-%--Convert opening angle to radians
-angRad = angDeg*(pi/180);
+% minimum +/- field of view along both axes
+if isfield(inputs,'FOV') 
+    minFOVxi = inputs.FOV;
+    minFOVeta = inputs.FOV;
+else
+    minFOVxi = rhoOuter; %--Default to the size of the viewable area the field of view is not specified.
+    minFOVeta = rhoOuter;
+end
+%--Overwrite FOV values if specified individually
+if isfield(inputs,'xiFOV'); minFOVxi = inputs.xiFOV; end % minimum field of view along horizontal (xi) axis
+if isfield(inputs,'etaFOV'); minFOVeta = inputs.etaFOV; end % minimum field of view along vertical (eta) axis
+    
+if isfield(inputs,'centering'); centering = inputs.centering; else; centering = 'pixel'; end %--Default to pixel centering if it is not specified.
+
+ %--shape of the outer part of the dark hole
+if isfield(inputs,'shape'); darkHoleShape = inputs.shape; else; darkHoleShape = 'circle'; end %--Default to a circular outer edge
+
+if isfield(inputs,'clockAngDeg');  clockAngDeg = inputs.clockAngDeg; else; clockAngDeg = 0;  end %--Amount extra to clock the dark hole
+
+%--Lateral offsets of the dark hole
+if(isfield(inputs,'xiOffset')); xiOffset = inputs.xiOffset; else; xiOffset = 0; end
+if(isfield(inputs,'etaOffset')); etaOffset = inputs.etaOffset; else; etaOffset = 0; end
 
 %--Number of points across each axis. Crop the vertical (eta) axis if angDeg<180 degrees.
 if( strcmpi(centering,'interpixel') )
-    Nxi =  ceil_even(2*minFOV*pixresFP); % Number of points across the full FPM
-    Neta = ceil_even(2*minFOV*pixresFP);
+    Nxi =  ceil_even(2*minFOVxi*pixresFP); % Number of points across the full FPM
+    Neta = ceil_even(2*minFOVeta*pixresFP);
 else
-    Nxi =  ceil_even(2*(minFOV*pixresFP+1/2)); % Number of points across the full FPM
-    Neta = ceil_even(2*(minFOV*pixresFP+1/2));
+    Nxi =  ceil_even(2*(minFOVxi*pixresFP+1/2)); % Number of points across the full FPM
+    Neta = ceil_even(2*(minFOVeta*pixresFP+1/2));
 end
-
 %--Overwrite the calculated value if it is specified.
-if(isfield(inputs,'Nxi'))
-    Nxi = inputs.Nxi;
-end
+if(isfield(inputs, 'Nxi')); Nxi = inputs.Nxi; end
+if(isfield(inputs, 'Neta')); Neta = inputs.Neta; end
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %--Focal Plane Coordinates
 dxi = 1/pixresFP;
@@ -95,38 +86,50 @@ else %--pixel centering
     xis  = (-Nxi/2: (Nxi/2-1) )*dxi;
     etas = (-Neta/2:(Neta/2-1))*deta;
 end
-[XIS,ETAS] = meshgrid(xis,etas);
-% [THETA,RHO] = cart2pol(XIS,ETAS);
-THETAS = atan2((XIS-xiCenter), (ETAS-etaCenter));
-RHOS = sqrt((XIS - xiCenter).^2 + (ETAS - etaCenter).^2);
+[XIS, ETAS] = meshgrid(xis,etas);
+XIS = XIS - xiOffset;
+ETAS = ETAS - etaOffset;
+[THETAS, RHOS] = cart2pol(XIS, ETAS);
+
+if any(strcmp(whichSide, {'r', 'right', 'lr', 'rl', 'leftright', 'rightleft', 'both'}))
+    clockAngRad = 0;
+elseif any(strcmp(whichSide, {'l', 'left'}))
+    clockAngRad = pi;
+elseif any(strcmp(whichSide, {'t', 'top', 'u', 'up', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'}))
+    clockAngRad = pi/2;
+elseif any(strcmp(whichSide, {'b', 'bottom', 'd', 'down'}))
+    clockAngRad = 3/2*pi;
+else
+    error('falco_gen_SW_mask.m: Invalid value given for inputs.whichSide')
+end
+clockAngRad = clockAngRad + clockAngDeg*pi/180; %--Add extra clocking specified by inputs.clockAngDeg
 
 %--Generate the Outer Mask
+rhoInner = rhoInner - 13*eps; % Avoidy a ratty line from the higher numerical noise floor introduced by RHOS*cos().
+rhoOuter = rhoOuter + 13*eps; % Avoidy a ratty line from the higher numerical noise floor introduced by RHOS*cos().
 switch lower(darkHoleShape)
-    case{'square'}
-        softwareMask0 = (RHOS>=rhoInner & abs(XIS)<=rhoOuter & abs(ETAS)<=rhoOuter);
-    otherwise
+    case{'circle', 'annulus'}
         softwareMask0 = (RHOS>=rhoInner & RHOS<=rhoOuter);
+    case{'square'}
+        % softwareMask0 = (RHOS>=rhoInner & abs(XIS)<=rhoOuter & abs(ETAS)<=rhoOuter);
+%         softwareMask0 = (RHOS>=rhoInner) & (RHOS.*cos(THETAS-clockAngRad)<=rhoOuter);
+        softwareMask0 = ((RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
+                        (RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter)) &...
+                        (RHOS>=rhoInner);
+%         softwareMask0 = (RHOS.*cos(THETAS-clockAngRad)>=rhoInner & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
+%                 (RHOS.*cos(THETAS-clockAngRad)<=-rhoInner & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter);
+    case{'rect', 'rectangle'}
+        softwareMask0 = (RHOS.*cos(THETAS-clockAngRad)>=rhoInner & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
+                        (RHOS.*cos(THETAS-clockAngRad)<=-rhoInner & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter);
+    case{'d'}
+        softwareMask0 = ((RHOS.*cos(THETAS-clockAngRad)>=rhoInner | RHOS.*cos(THETAS-clockAngRad)<=-rhoInner) & RHOS<=rhoOuter);
+    otherwise
+        error('falco_gen_SW_mask.m: Invalid value given for inputs.shape')
 end
-
-if( strcmpi(whichSide,'L') || strcmpi(whichSide,'left') )
-    clockAngRad = 3*pi/2;
-elseif( strcmpi(whichSide,'R') || strcmpi(whichSide,'right') )
-    clockAngRad = pi/2;
-elseif( strcmpi(whichSide,'T') || strcmpi(whichSide,'top') )
-    clockAngRad = 0;
-elseif( strcmpi(whichSide,'B') || strcmpi(whichSide,'bottom') )
-    clockAngRad = pi;   
-elseif( strcmpi(whichSide,'both') )
-    clockAngRad = 0;
-else
-    error('falco_gen_SW_mask.m: Unknown value specified for inputs.whichSide')
-end
-
-clockAngRad = clockAngRad + inputs.clockAngDeg*pi/180; %--Add extra clocking specified by inputs.clockAngDeg
 
 softwareMask = softwareMask0 & abs(angle(exp(1i*(THETAS-clockAngRad))))<=angRad/2;
 
-if(strcmpi(whichSide,'both'))
+if any(strcmpi(whichSide, {'both', 'lr', 'rl', 'leftright', 'rightleft', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'}))
     softwareMask2 = softwareMask0 & abs(angle(exp(1i*(THETAS-(clockAngRad+pi)))))<=angRad/2;
     softwareMask = or(softwareMask, softwareMask2);
 end
