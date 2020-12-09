@@ -211,7 +211,7 @@ function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
 
     %--Select which optical layout's Jacobian model to use and get the output E-field
     switch lower(mp.layout)
-        case{'fourier', 'proper'}
+        case{'fourier'}
 
             switch upper(mp.coro) 
                 case{'FOHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
@@ -249,7 +249,22 @@ function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
                     jacMode  = model_Jacobian_SPLC(mp, imB, whichDMb); 
                 otherwise
                     error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
-            end                  
+            end
+            
+        case{'proper'}
+
+            switch upper(mp.coro) 
+                case{'HLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
+                    jacMode = model_Jacobian_HLC_scale(mp, imB, whichDMb); 
+                case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
+                    jacMode = model_Jacobian_LC(mp, imB, whichDMb); 
+                case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
+                    jacMode = model_Jacobian_SPLC(mp, imB, whichDMb); 
+                case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
+                    jacMode = model_Jacobian_VC(mp, imB, whichDMb); 
+                otherwise
+                    error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
+            end  
 
         otherwise
             error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');  

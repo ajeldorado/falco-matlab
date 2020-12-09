@@ -15,7 +15,7 @@ switch upper(mp.coro)
     otherwise
         
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+            case{'wfirst_phaseb_simple', 'wfirst_phaseb_proper', 'proper'}
             otherwise
                 %--FPM (at F3) Resolution [meters]
                 mp.F3.full.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.full.res;
@@ -34,7 +34,7 @@ switch upper(mp.coro)
         end
 
         switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_proper'}
+            case{'wfirst_phaseb_simple','wfirst_phaseb_proper', 'proper'}
             otherwise
                 %--Coordinates (dimensionless [DL]) for the FPMs in the full model
                 if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi,2)==1)

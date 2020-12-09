@@ -27,7 +27,7 @@ mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 6;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
 mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
