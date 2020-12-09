@@ -13,6 +13,9 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
     % Diameter of the central opaque spot is an optional input argument
     if length(varargin) == 1
         diamSpotLamD = varargin{1};
+    elseif length(varargin) == 2
+        diamSpotLamD = varargin{1};
+        offsetsLamD = varargin{2};
     elseif length(varargin) > 1
         error('Too many inputs.')
     else
@@ -62,6 +65,8 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
         inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
         inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
         inputs.centering = 'pixel';
+        inputs.xOffset = offsetsLamD(1);
+        inputs.yOffset = offsetsLamD(2);
         spot1 = falco_gen_annular_FPM(inputs);
         spot1 = pad_crop(spot1, NB, 'extrapval', 1);
     else
@@ -83,6 +88,8 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
         inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
         inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
         inputs.centering = 'pixel';
+        inputs.xOffset = offsetsLamD(1);
+        inputs.yOffset = offsetsLamD(2);
         spot2 = falco_gen_annular_FPM(inputs);
         spot2 = pad_crop(spot2, NB, 'extrapval', 1);
     else

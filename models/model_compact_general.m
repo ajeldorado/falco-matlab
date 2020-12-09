@@ -146,7 +146,7 @@ switch upper(mp.coro)
             % represents a chromatic vortex FPM
             charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
         end
-        EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda));%--MFTs
+        EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda),  mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));%--MFTs
         
         % Resize beam if Lyot plane has different resolution
         if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam

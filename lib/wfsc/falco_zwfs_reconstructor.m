@@ -32,9 +32,9 @@ function phz = falco_zwfs_reconstructor(I0,IZ, mask, b, theta, type, varargin)
 
         a1 = 2*b.*A.*(-2*b.^2+IZ+3*b.*A-A.^2+b.*(2*b-A)*cos(theta))*sin(theta/2)^2;
         a2 = b.*A.*sin(theta);
-        numer = sqrt(a1) + a2;
-        denom = b.*A*(cos(theta)-1);
-        phz = -1*real(numer./(denom+1e-30)); 
+        numer = sqrt(a1) - a2;
+        denom = b.*A*(1-cos(theta));
+        phz = real(numer./(denom+1e-30)); 
         
     elseif( strcmpi(type,'full') || strcmpi(type,'f') ) % Full analytical solution 
         
