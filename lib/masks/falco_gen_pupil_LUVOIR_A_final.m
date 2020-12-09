@@ -50,6 +50,8 @@ rotMat = [cosd(clockDeg), -sind(clockDeg); sind(clockDeg), cosd(clockDeg)];
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
+prop_set_antialiasing(101);
+
 %--USER INPUTS
 Nbeam   = inputs.Nbeam;     % number of points across the incoming beam  
 Nap   = Nbeam; % number of points across FULL usable pupil

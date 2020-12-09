@@ -205,8 +205,8 @@ switch lower(mp.layout)
                     optval.use_fpm = false;
             end
         end
-
-        Eout = prop_run(mp.full.prescription, lambda*1e6, mp.P1.full.Narr, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
+        
+        Eout = prop_run(mp.full.prescription, lambda*1e6, mp.full.gridsize, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end
