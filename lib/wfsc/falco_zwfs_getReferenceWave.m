@@ -13,5 +13,9 @@ function rw = falco_zwfs_getReferenceWave(mp)
     mp.dm2.V = zeros(mp.dm2.Nact);
     mp.P1.full.E = ones(size(mp.P1.full.E));
     rw = model_ZWFS(mp, modvar, 'refwave');
-
+    
+	if(mp.wfs.cam.Npix~=mp.wfs.cam.Narr || any(mp.wfs.cam.centerPixOffset ~=0))
+        rw = fourierPixelate(rw,mp.wfs.cam.Npix,mp.wfs.cam.centerPixOffset);
+    end
+    
 end

@@ -159,7 +159,7 @@ else % otherwise, go through the mask and on to the next pupil.
     maskDepth_m = mp.wfs.mask.depth; % mask depth in meters 
     maskAmp = mp.wfs.mask.amp; % dimple amplitude 
     WFScam_Narr = mp.wfs.cam.Narr; % Array size at WFS camera 
-    WFScam_dx = mp.wfs.cam.dx;
+    WFScam_dx = mp.P4.D/mp.wfs.cam.Nbeam;
     
     if(refwave)
         EF3 = phzSupport.*EF3inc; % Take only the part of the beam in the phase dimple
@@ -187,6 +187,7 @@ else % otherwise, go through the mask and on to the next pupil.
     else
         Eout = EP4noFPM-EP4sub;
     end
+    
 end
 
 if(mp.useGPU)

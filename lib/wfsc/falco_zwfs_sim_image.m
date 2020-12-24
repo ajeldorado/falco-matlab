@@ -25,5 +25,9 @@ function Isum = falco_zwfs_sim_image(mp)
 %         end
 
     end
+    
+	if(mp.wfs.cam.Npix~=mp.wfs.cam.Narr || any(mp.wfs.cam.centerPixOffset ~=0))
+        Isum = fourierPixelate(Isum,mp.wfs.cam.Npix,mp.wfs.cam.centerPixOffset);
+    end
 
-end %--END OF FUNCTION
+end 
