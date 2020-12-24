@@ -199,8 +199,8 @@ for Itr=1:mp.Nitr
             end
             clear tmp;
         else
-            InormHist_tb.mod = NaN;
-            InormHist_tb.unmod = NaN;
+            InormHist_tb.mod = NaN(Itr,mp.Nsbp);
+            InormHist_tb.unmod = NaN(Itr,mp.Nsbp);
         end
         hProgress = falco_plot_progress_testbed(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
     else
@@ -224,7 +224,7 @@ for Itr=1:mp.Nitr
         
         if mp.flagPlot
             figure(50); set(gcf, 'Color', 'w');
-            fs = 18;
+            fs = 10;
             
             hModelAmp = subplot(2,2,1); % Save the handle of the subplot
             imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelAmp, 'parula');
@@ -295,10 +295,11 @@ for Itr=1:mp.Nitr
         
         if(mp.flagPlot)
             figure(401); if(Itr==1);hold off; end
-            loglog(out.sm{Itr}.^2/out.alpha2{Itr},smooth(out.smspectra{Itr},31),'Linewidth',3,'Color',[0.3, 1-(0.2+Itr/mp.Nitr)/(1.3),1 ]);
-            set(gca,'Fontsize',20); grid on; 
+            loglog(out.sm{Itr}.^2/out.alpha2{Itr},smooth(out.smspectra{Itr},31),'Linewidth',2,'Color',[0.3, 1-(0.2+Itr/mp.Nitr)/(1.3),1 ]);
+            %set(gca,'Fontsize',20); 
+            grid on; set(gca,'minorgridlines','none')
             set(gcf,'Color',[1 1 1]);
-            title('Singular Mode Spectrum','Fontsize',20)
+            title('Singular Mode Spectrum')%,'Fontsize',20)
             xlim([1e-10, 2*max(s.^2/alpha2)])
             ylim([1e-12, 1e-0]) 
             drawnow;
@@ -499,8 +500,8 @@ if(isfield(mp,'testbed') )
         end
         clear tmp;
     else
-        InormHist_tb.mod = NaN;
-        InormHist_tb.unmod = NaN;
+        InormHist_tb.mod = NaN(Itr,mp.Nsbp);
+        InormHist_tb.unmod = NaN(Itr,mp.Nsbp);
     end
     hProgress = falco_plot_progress_testbed(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
