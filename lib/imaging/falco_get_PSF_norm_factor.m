@@ -31,19 +31,20 @@ mp.Fend.eval.I00 = ones(1,mp.Nsbp); % Initial input before computing
 mp.Fend.full.I00 = ones(mp.Nsbp,mp.Nwpsbp); % Initial input before computing
 
 modvar.zernIndex = 1;
-modvar.whichSource = 'star';    
+modvar.whichSource = 'star';  
+modvar.whichStar = 1; % Always use first star for image normalization
 
 %--Compact Model Normalizations
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
-    Etemp = model_compact(mp, modvar,'getNorm');
+    Etemp = model_compact(mp, modvar, 'getNorm');
     mp.Fend.compact.I00(si) = max(max(abs(Etemp).^2));
 end
 
 %--Compact Evaluation Model Normalizations
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
-    Etemp = model_compact(mp, modvar,'getNorm','eval');
+    Etemp = model_compact(mp, modvar, 'getNorm', 'eval');
     mp.Fend.eval.I00(si) = max(max(abs(Etemp).^2));
 end
 
@@ -92,8 +93,12 @@ if(mp.flagPlot)
     drawnow;
 end
 if(mp.flagSim)
-    E0f = model_full(mp, modvar);
-    I0f = abs(E0f).^2;
+    I0f = 0;
+    for iStar = 1:mp.star.count
+        modvar.whichStar = iStar;
+        E0f = model_full(mp, modvar);
+        I0f = I0f + abs(E0f).^2;
+    end
     if(mp.flagPlot)
         figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
         title('Full Model Image for Normalization');

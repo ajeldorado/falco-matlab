@@ -145,8 +145,9 @@ for Itr=1:mp.Nitr
         EprevMeas = EfieldVec;
         EprevModel = EnowModel;
     end
-    %--Model-based estimate for comparison
+    %--Model-based estimate for comparing Delta E (1st star only)
     modvar.whichSource = 'star';
+    modvar.whichStar = 1;
     modvar.sbpIndex = mp.si_ref;
     EnowModel = model_compact(mp, modvar);
     

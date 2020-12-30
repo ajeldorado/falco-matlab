@@ -30,8 +30,8 @@ function Imean = falco_get_summed_image(mp)
     
     if(mp.flagParfor && mp.flagSim) %--Save a lot of time by making all PROPER full model in parallel
         %--Loop over all wavelengths and polarizations        
-        ind_list = allcomb(1:mp.full.NlamUnique,1:length(mp.full.pol_conds)).';
-        Nval = size(ind_list,2);
+        ind_list = allcomb(1:mp.full.NlamUnique, 1:length(mp.full.pol_conds)).';
+        Nval = size(ind_list, 2);
         
         % Remove testbed objects
         if isfield(mp, 'tb')
@@ -54,7 +54,7 @@ function Imean = falco_get_summed_image(mp)
     else %--Otherwise, just loop over the function to get the sbp images. Need to do this for testbeds
         Imean = 0; % Initialize image
         for si=1:mp.Nsbp    
-            Imean = Imean +  mp.sbp_weights(si)*falco_get_sbp_image(mp,si);
+            Imean = Imean +  mp.sbp_weights(si) * falco_get_sbp_image(mp, si);
         end
     end
 

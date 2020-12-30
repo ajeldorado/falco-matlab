@@ -185,6 +185,7 @@ else %--Include the Zernike map at the input pupil for the FALCO full model
     
 end %--End of mp.full.flagPROPER if statement
 
+modvar.whichStar = 1;
 Estar = model_full(mp, modvar);
     
 end %--END OF FUNCTION
@@ -201,6 +202,7 @@ modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),1);
 modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),2);
 mp.full.polaxis = mp.full.pol_conds(ipol);
 modvar.whichSource = 'star';
+modvar.whichStar = 1;
 
 Estar = model_full(mp, modvar);
 % Iout = (abs(Estar).^2); %--Apply spectral weighting outside this function

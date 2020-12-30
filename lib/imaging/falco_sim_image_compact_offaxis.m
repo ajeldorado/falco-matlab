@@ -26,7 +26,7 @@ while icav < size(varargin, 2)
         case {'eval'}
             flagEval = true; % flag to use a different (usually higher) resolution at final focal plane for evaluation 
         otherwise
-            error('falco_sim_image_compact: Unknown keyword: %s\n', varargin{icav});
+            error('falco_sim_image_compact_offaxis: Unknown keyword: %s\n', varargin{icav});
     end
 end
 
@@ -41,25 +41,28 @@ if(mp.flagFiber)
 end
   
 Iout = 0; %--Initialize
-    
-for si=1:mp.Nsbp
-    modvar.sbpIndex = si; 
-    modvar.zernIndex = 1;
-    modvar.wpsbpIndex = mp.wi_ref;
 
-    if(mp.flagFiber)
-        [E2D, Efiber] = model_compact(mp, modvar);
-    elseif(flagEval)
-        E2D = model_compact(mp, modvar, 'eval');
-    else
-        E2D = model_compact(mp, modvar);
-    end
-        
-    Iout = Iout + (abs(E2D).^2)*mp.jac.weightMat(si,1);
-    if(mp.flagFiber)
-        Ifiber = Ifiber + (abs(Efiber).^2)*mp.jac.weightMat(si,1);
-        varargout{1} = Ifiber;
+for iStar = 1:mp.star.count
+    modvar.whichStar = iStar;
+    
+    for si=1:mp.Nsbp
+        modvar.sbpIndex = si; 
+        modvar.zernIndex = 1;
+        modvar.wpsbpIndex = mp.wi_ref;
+
+        if(mp.flagFiber)
+            [E2D, Efiber] = model_compact(mp, modvar);
+        elseif(flagEval)
+            E2D = model_compact(mp, modvar, 'eval');
+        else
+            E2D = model_compact(mp, modvar);
+        end
+
+        Iout = Iout + (abs(E2D).^2)*mp.jac.weightMat(si,1);
+        if(mp.flagFiber)
+            Ifiber = Ifiber + (abs(Efiber).^2)*mp.jac.weightMat(si,1);
+            varargout{1} = Ifiber;
+        end
     end
 end
-
 end %--END OF FUNCTION
