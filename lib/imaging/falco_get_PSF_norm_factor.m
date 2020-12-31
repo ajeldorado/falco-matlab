@@ -80,10 +80,11 @@ else %--No parfor
 end
 
 %--Visually verify the normalized coronagraphic PSF
-modvar.ttIndex = 1;
+% modvar.ttIndex = 1;
 modvar.sbpIndex = mp.si_ref;
 modvar.wpsbpIndex = mp.wi_ref;
-modvar.whichSource = 'star';     
+modvar.whichSource = 'star'; 
+
 E0c = model_compact(mp, modvar);
 I0c = abs(E0c).^2;
 if(mp.flagPlot)
@@ -92,31 +93,36 @@ if(mp.flagPlot)
     set(gca,'Fontsize', 18)
     drawnow;
 end
-if(mp.flagSim)
-    I0f = 0;
-    for iStar = 1:mp.star.count
-        modvar.starIndex = iStar;
-        E0f = model_full(mp, modvar);
-        I0f = I0f + abs(E0f).^2;
-    end
-    if(mp.flagPlot)
-        figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
-        title('Full Model Image for Normalization');
-        set(gca,'Fontsize', 18)
-        drawnow;
-    end
+
+% I0f = 0;
+% for iStar = 1:mp.star.count
+%     modvar.starIndex = iStar;
+%     E0f = model_full(mp, modvar);
+%     I0f = I0f + abs(E0f).^2;
+% end
+
+E0f = model_full(mp, modvar);
+I0f = abs(E0f).^2;
+
+if(mp.flagPlot)
+    figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
+    title('Full Model Image for Normalization');
+    set(gca,'Fontsize', 18)
+    drawnow;
 end
+
 
 end %--END OF FUNCTION
 
 
 %--Extra function needed to use parfor (because parfor can have only a
 %  single changing input argument).
-function I00 = model_full_norm_wrapper(li,mp)
+function I00 = model_full_norm_wrapper(li, mp)
     modvar.sbpIndex = mp.full.indsLambdaMat(li,1);
     modvar.wpsbpIndex = mp.full.indsLambdaMat(li,2);
     modvar.zernIndex = 1;
-    modvar.whichSource = 'star'; 
+    modvar.starIndex = 1;
+    modvar.whichSource = 'star';
     
     Etemp = model_full(mp, modvar,'getNorm');
     I00 = max(max(abs(Etemp).^2));

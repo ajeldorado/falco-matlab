@@ -22,7 +22,7 @@
 
 function [Eout, varargout] = model_compact(mp, modvar, varargin)
 
-modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
+modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
 
 % Set default values of input parameters
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
@@ -36,9 +36,9 @@ while icav < size(varargin, 2)
         case{'getnorm'}
             normFac = 0; 
             flagNewNorm = true;
-        case {'normoff','unnorm','nonorm'} % Set to 0 when finding the normalization factor
+        case {'normoff','unnorm','nonorm'} 
             normFac = 1;
-        case {'eval'} % Set to 0 when finding the normalization factor
+        case {'eval'}
             flagEval = true;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
@@ -51,7 +51,7 @@ if ~flagNewNorm && flagEval
 end
 
 %--Set the wavelength
-if(isfield(modvar,'lambda'))
+if isfield(modvar, 'lambda')
     lambda = modvar.lambda;
 else
     lambda = mp.sbp_centers(modvar.sbpIndex);
@@ -104,11 +104,9 @@ end
 %--Shift the source off-axis to compute the intensity normalization value.
 %  This replaces the previous way of taking the FPM out in the optical model.
 if normFac == 0
-    source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
-    source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
-    TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.compact.XsDL + source_y_offset*mp.P2.compact.YsDL));
+    TTphase = (-1)*(2*pi*(mp.source_x_offset_norm*mp.P2.compact.XsDL + mp.source_y_offset_norm*mp.P2.compact.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex); 
+    Ein = Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
 end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
