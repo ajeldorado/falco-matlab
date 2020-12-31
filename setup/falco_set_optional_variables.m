@@ -11,6 +11,7 @@ mp.jac.dummy = 1;
 mp.est.dummy = 1;
 mp.star.dummy = 1;
 mp.compact.star.dummy = 1;
+mp.jac.star.dummy = 1;
 mp.full.dummy = 1;
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
@@ -89,6 +90,7 @@ if ~isfield(mp.compact.star, 'count');  mp.compact.star.count = 1;  end
 if ~isfield(mp.compact.star, 'xiOffsetVec');  mp.compact.star.xiOffsetVec = 0;  end
 if ~isfield(mp.compact.star, 'etaOffsetVec');  mp.compact.star.etaOffsetVec = 0;  end
 if ~isfield(mp.compact.star, 'weights');  mp.compact.star.weights = 1;  end
+if ~isfield(mp.jac.star, 'weights');  mp.jac.star.weights = ones(1, mp.compact.star.count);  end % Spatial weighting in the Jacobian by star
 
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
 if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.

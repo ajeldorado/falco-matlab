@@ -21,7 +21,12 @@ function mp = falco_set_spatial_weights(mp)
     end
 
     %--Spatial weighting vector
-    mp.WspatialVec = mp.Wspatial(mp.Fend.corr.maskBool); 
+    Npix = sum(sum(mp.Fend.corr.maskBool));
+    mp.WspatialVec = zeros(Npix, mp.compact.star.count);
+    for iStar = 1:mp.compact.star.count
+        mp.WspatialVec(:, iStar) = mp.jac.star.weights(iStar) * mp.Wspatial(mp.Fend.corr.maskBool); 
+    end
+%     mp.WspatialVec = mp.Wspatial(mp.Fend.corr.maskBool); 
     if(mp.flagFiber && mp.flagLenslet);  mp.WspatialVec = ones(mp.Fend.Nlens,1);  end
 
 end

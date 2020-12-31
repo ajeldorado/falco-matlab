@@ -58,6 +58,7 @@ function mp = falco_set_jacobian_weights(mp)
 
     mp.jac.weightMatInd = find(mp.jac.weightMat > 0); %--Indices of the non-zero control Jacobian modes in the weighting matrix
     NmodePerStar = length(mp.jac.weightMatInd);
+    mp.jac.NmodePerStar = NmodePerStar;
     mp.jac.weights = repmat(mp.jac.weightMat(mp.jac.weightMatInd), [1, mp.compact.star.count]); %--Vector of control Jacobian mode weights
     mp.jac.Nmode = mp.compact.star.count * NmodePerStar; %--Number of (Zernike-wavelength pair-star) modes in the control Jacobian
     

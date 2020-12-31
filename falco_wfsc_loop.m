@@ -285,13 +285,32 @@ for Itr=1:mp.Nitr
         
     end
     
-    %% Add spatially-dependent weighting to the control Jacobians
+    %% Add spatially-dependent (and star-dependent) weighting to the control Jacobians
 
-    if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1, mp.dm1.Nele, mp.jac.Nmode]); end
-    if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1, mp.dm2.Nele, mp.jac.Nmode]); end
-    if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1, mp.dm8.Nele, mp.jac.Nmode]); end 
-    if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1, mp.dm9.Nele, mp.jac.Nmode]); end
-
+    for iStar = 1:mp.compact.star.count
+        if(any(mp.dm_ind==1))
+            jacStruct.G1(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G1(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm1.Nele, mp.jac.NmodePerStar]);
+        end
+        if(any(mp.dm_ind==2))
+            jacStruct.G2(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G2(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm2.Nele, mp.jac.NmodePerStar]);
+        end
+        if(any(mp.dm_ind==8))
+            jacStruct.G8(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G8(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm8.Nele, mp.jac.NmodePerStar]);
+        end
+        if(any(mp.dm_ind==9))
+            jacStruct.G9(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G9(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm9.Nele, mp.jac.NmodePerStar]);
+        end
+    end
+    
+%     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1, mp.dm1.Nele, mp.jac.Nmode]); end
+%     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1, mp.dm2.Nele, mp.jac.Nmode]); end
+%     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1, mp.dm8.Nele, mp.jac.Nmode]); end 
+%     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1, mp.dm9.Nele, mp.jac.Nmode]); end
+    
     %--Compute the number of total actuators for all DMs used. 
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     

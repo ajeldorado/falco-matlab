@@ -90,6 +90,7 @@ mp.star.weights = starWeights; % relative stellar peak intensities
 mp.Fend.xiFOV = 66;
 mp.Fend.etaFOV = 10;
 
+mp.jac.star.weights = [1, 1]; % star weights for control
 
 
 %--Correction and scoring region definition
@@ -104,6 +105,8 @@ mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees
 mp.Fend.shape = 'square';
 mp.Fend.xiOffset = 6;
 
+mp.ctrl.log10regVec = -6:1/2:0; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.flagUseModel = true;
 
 % mp.Fend.xiFOV = 40;
 % mp.Fend.etaFOV = 12;
@@ -121,12 +124,12 @@ mp.SeriesNum = 1;
 mp.TrialNum = 2;
 
 %--Use just 1 wavelength for initial debugging of code
-% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-mp.fracBW = 0.03;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% mp.fracBW = 0.03;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 
 
