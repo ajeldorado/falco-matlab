@@ -32,7 +32,7 @@ mp.Fend.full.I00 = ones(mp.Nsbp,mp.Nwpsbp); % Initial input before computing
 
 modvar.zernIndex = 1;
 modvar.whichSource = 'star';  
-modvar.whichStar = 1; % Always use first star for image normalization
+modvar.starIndex = 1; % Always use first star for image normalization
 
 %--Compact Model Normalizations
 for si=1:mp.Nsbp
@@ -95,7 +95,7 @@ end
 if(mp.flagSim)
     I0f = 0;
     for iStar = 1:mp.star.count
-        modvar.whichStar = iStar;
+        modvar.starIndex = iStar;
         E0f = model_full(mp, modvar);
         I0f = I0f + abs(E0f).^2;
     end

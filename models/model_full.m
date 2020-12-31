@@ -76,7 +76,7 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Include the tip/tilt in the input wavefront
-iStar = modvar.whichStar;
+iStar = modvar.starIndex;
 xiOffset = mp.star.xiOffsetVec(iStar);
 etaOffset = mp.star.etaOffsetVec(iStar);
 starWeight = mp.star.weights(iStar);

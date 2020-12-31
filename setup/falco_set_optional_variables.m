@@ -9,7 +9,8 @@ function mp = falco_set_optional_variables(mp)
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 mp.est.dummy = 1;
-mp.compact.dummy = 1;
+mp.star.dummy = 1;
+mp.compact.star.dummy = 1;
 mp.full.dummy = 1;
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
@@ -76,6 +77,19 @@ if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end
 
 %% Optional/hidden variables
+
+% How many stars to use and their positions
+% mp.star is for the full model, and mp.compact.star is for the compact and
+% Jacobian models.
+if ~isfield(mp.star, 'count');  mp.star.count = 1;  end
+if ~isfield(mp.star, 'xiOffsetVec');  mp.star.xiOffsetVec = 0;  end
+if ~isfield(mp.star, 'etaOffsetVec');  mp.star.etaOffsetVec = 0;  end
+if ~isfield(mp.star, 'weights');  mp.star.weights = 1;  end
+if ~isfield(mp.compact.star, 'count');  mp.compact.star.count = 1;  end
+if ~isfield(mp.compact.star, 'xiOffsetVec');  mp.compact.star.xiOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'etaOffsetVec');  mp.compact.star.etaOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'weights');  mp.compact.star.weights = 1;  end
+
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
 if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
 

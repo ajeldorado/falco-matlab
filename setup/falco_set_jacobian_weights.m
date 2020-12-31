@@ -56,18 +56,25 @@ function mp = falco_set_jacobian_weights(mp)
         end
     end
 
-    mp.jac.weightMat_ele = find(mp.jac.weightMat > 0); %--Indices of the non-zero control Jacobian modes in the weighting matrix
-    mp.jac.weights = mp.jac.weightMat(mp.jac.weightMat_ele); %--Vector of control Jacobian mode weights
-    mp.jac.Nmode = length(mp.jac.weights); %--Number of (Zernike-wavelength pair) modes in the control Jacobian
-
+    mp.jac.weightMatInd = find(mp.jac.weightMat > 0); %--Indices of the non-zero control Jacobian modes in the weighting matrix
+    NmodePerStar = length(mp.jac.weightMatInd);
+    mp.jac.weights = repmat(mp.jac.weightMat(mp.jac.weightMatInd), [1, mp.compact.star.count]); %--Vector of control Jacobian mode weights
+    mp.jac.Nmode = mp.compact.star.count * NmodePerStar; %--Number of (Zernike-wavelength pair-star) modes in the control Jacobian
+    
     %--Get the wavelength indices for the nonzero values in the weight matrix. 
     temp = (1:mp.Nsbp).';
-    tempMat = repmat(temp,[1, mp.jac.Nzern]);
-    mp.jac.sbp_inds = tempMat(mp.jac.weightMat_ele);
-
+    tempMat = repmat(temp, [1, mp.jac.Nzern]);
+    mp.jac.sbp_inds = repmat(tempMat(mp.jac.weightMatInd), [1, mp.compact.star.count]);
+    
     %--Get the Zernike indices for the nonzero elements in the weight matrix. 
     temp = mp.jac.zerns;
-    tempMat = repmat(temp,[mp.Nsbp, 1]);
-    mp.jac.zern_inds = tempMat(mp.jac.weightMat_ele);
+    tempMat = repmat(temp, [mp.Nsbp, 1]);
+    mp.jac.zern_inds = repmat(tempMat(mp.jac.weightMatInd), [1, mp.compact.star.count]);
+    
+    %--Get the star indices for each mode
+    mp.jac.star_inds = zeros(1, mp.jac.Nmode);
+    for iStar = 1:mp.compact.star.count
+        mp.jac.star_inds((iStar-1)*NmodePerStar+1:iStar*NmodePerStar) = iStar*ones(1, NmodePerStar);
+    end
 
 end %--END OF FUNCTION

@@ -60,7 +60,7 @@ function Iout = falco_get_single_sbp_image_WvlPol(ic, inds_list, si, mp)
     %--Get the starlight image
     modvar.sbpIndex = si;
     modvar.wpsbpIndex = wi;
-    modvar.whichStar = iStar;
+    modvar.starIndex = iStar;
     mp.full.polaxis = mp.full.pol_conds(ipol);
     modvar.whichSource = 'star';
     Estar = model_full(mp, modvar);

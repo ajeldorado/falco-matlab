@@ -57,20 +57,6 @@ for Itr=1:mp.Nitr
     if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  else; DM1surf = zeros(mp.dm1.compact.Ndm);  end
     if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  else; DM2surf = zeros(mp.dm2.compact.Ndm);    end
 
-    switch upper(mp.coro)
-        case{'EHLC'}
-            mp.DM8surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
-            mp.DM9surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
-        case{'HLC','APHLC','SPHLC'}
-            switch lower(mp.layout)
-                case 'fourier'
-                    mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
-                    mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
-            end
-        case{'FOHLC'}
-            mp.DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'compact'); %--FPM amplitude transmission [amplitude]
-            mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--FPM phase shift in transmission [m]    
-    end
 
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
@@ -147,9 +133,10 @@ for Itr=1:mp.Nitr
     end
     %--Model-based estimate for comparing Delta E (1st star only)
     modvar.whichSource = 'star';
-    modvar.whichStar = 1;
+    modvar.starIndex = 1; % 1ST STAR ONLY
     modvar.sbpIndex = mp.si_ref;
     EnowModel = model_compact(mp, modvar);
+    clear modvar
     
     ev.Itr = Itr;
     switch lower(mp.estimator)
@@ -294,16 +281,16 @@ for Itr=1:mp.Nitr
             hold on;
         end
         
+        clear Gcomplex Gall Eall Eri alpha2 Uri U S EriPrime IriPrime
+        
     end
     
     %% Add spatially-dependent weighting to the control Jacobians
 
-    if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
-    if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end
-    if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
-    if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end
-
-    %fprintf('Total Jacobian Calcuation Time: %.2f\n',toc);
+    if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1, mp.dm1.Nele, mp.jac.Nmode]); end
+    if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1, mp.dm2.Nele, mp.jac.Nmode]); end
+    if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1, mp.dm8.Nele, mp.jac.Nmode]); end 
+    if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1, mp.dm9.Nele, mp.jac.Nmode]); end
 
     %--Compute the number of total actuators for all DMs used. 
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
@@ -329,8 +316,7 @@ for Itr=1:mp.Nitr
 %-----------------------------------------------------------------------------------------
 %% DM Stats
 
-%--ID and OD of pupil in units of pupil diameters
-% ID_pup = 0.303; % for WFIRST, mp.P1.IDnorm
+%--ID and OD of pupil used when computing DM actuation stats [units of pupil diameters]
 OD_pup = 1.0;
 
 %--Compute the DM surfaces
@@ -426,7 +412,7 @@ if(mp.flagSaveEachItr)
     Nitr = mp.Nitr;
     thput_vec = mp.thput_vec;
     fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.wsInProgress, mp.runLabel, Itr, mp.Nitr);
-    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM4V','DM5V','DM6V','DM7V','DM8V','DM9V','InormHist','thput_vec')
+    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','InormHist','thput_vec')
     fprintf('done.\n\n')
 end
 

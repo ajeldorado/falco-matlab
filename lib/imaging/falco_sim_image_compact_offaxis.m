@@ -43,7 +43,7 @@ end
 Iout = 0; %--Initialize
 
 for iStar = 1:mp.star.count
-    modvar.whichStar = iStar;
+    modvar.starIndex = iStar;
     
     for si=1:mp.Nsbp
         modvar.sbpIndex = si; 

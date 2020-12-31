@@ -61,11 +61,11 @@ end
 % Input E-fields
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%--Include the tip/tilt in the input wavefront
-iStar = modvar.whichStar;
-xiOffset = mp.star.xiOffsetVec(iStar);
-etaOffset = mp.star.etaOffsetVec(iStar);
-starWeight = mp.star.weights(iStar);
+%--Include the star position and weight in the starting wavefront
+iStar = modvar.starIndex;
+xiOffset = mp.compact.star.xiOffsetVec(iStar);
+etaOffset = mp.compact.star.etaOffsetVec(iStar);
+starWeight = mp.compact.star.weights(iStar);
 TTphase = (-1)*(2*pi*(xiOffset*mp.P2.compact.XsDL + etaOffset*mp.P2.compact.YsDL));
 Ett = exp(1i*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
