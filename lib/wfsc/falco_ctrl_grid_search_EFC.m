@@ -1,4 +1,4 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -9,9 +9,9 @@
 %  a) a scalar coefficient for the regularization matrix
 %  b) a scalar gain for the final DM command.
 
-function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
+function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
-    %--STEPS:
+    % STEPS:
     % Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
     % Step 1: If re-linearizing this iteration, empirically find the best regularization value.
     % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
@@ -43,7 +43,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if ~mp.flagFiber
+                ImCube(:, :, ni) = dDM_temp.Itotal;
+            end
         end
     else %--Not Parallelized
         for ni = Nvals:-1:1
@@ -53,7 +55,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if ~mp.flagFiber
+                ImCube(:, :, ni) = dDM_temp.Itotal;
+            end
         end
     end
     
@@ -70,6 +74,7 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin,indBest] = min(Inorm_list(:));
+    
     cvarOut.Im = ImCube(:, :, indBest);
     %--delta voltage commands
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
@@ -80,9 +85,9 @@ function [dDM,cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     cvarOut.log10regUsed = vals_list(1,indBest);
     dmfacBest = vals_list(2,indBest);
     if(mp.ctrl.flagUseModel)
-        fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
     else
-        fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
     end
     
     %% Plot the grid search results

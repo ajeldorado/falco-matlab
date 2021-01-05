@@ -299,6 +299,11 @@ for Itr=1:mp.Nitr
     
     %% Add spatially-dependent (and star-dependent) weighting to the control Jacobians
 
+%     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm1.Nele]), [1, 3, 2]); end
+%     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm2.Nele]), [1, 3, 2]); end
+%     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm8.Nele]), [1, 3, 2]); end
+%     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm9.Nele]), [1, 3, 2]); end
+    
     for iStar = 1:mp.compact.star.count
         if(any(mp.dm_ind==1))
             jacStruct.G1(:, :, mp.jac.star_inds == iStar) = ...

@@ -22,6 +22,11 @@ function mp = falco_set_spatial_weights(mp)
 
     %--Spatial weighting vector
     Npix = sum(sum(mp.Fend.corr.maskBool));
+%     mp.WspatialVec = zeros(Npix, mp.jac.Nmode);
+%     for iMode = 1:mp.jac.Nmode
+%         iStar = mp.jac.star_inds(iMode);
+%         mp.WspatialVec(:, iMode) = mp.jac.star.weights(iStar) * mp.Wspatial(mp.Fend.corr.maskBool); 
+%     end
     mp.WspatialVec = zeros(Npix, mp.compact.star.count);
     for iStar = 1:mp.compact.star.count
         mp.WspatialVec(:, iStar) = mp.jac.star.weights(iStar) * mp.Wspatial(mp.Fend.corr.maskBool); 

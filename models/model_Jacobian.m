@@ -45,6 +45,13 @@ function jacStruct = model_Jacobian(mp)
         	if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.corr.Npix, mp.dm1.Nele, mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM1
             if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.corr.Npix, mp.dm2.Nele, mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM2
         end
+        jacStruct.G3 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G4 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G5 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G6 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G7 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G8 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G9 = zeros(0, 0, mp.jac.Nmode);
     else
         if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.corr.Npix, mp.dm1.Nele, mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM1
         if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.corr.Npix, mp.dm2.Nele, mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM2

@@ -1,4 +1,4 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -17,7 +17,7 @@
 % REVISION HISTORY
 % - Created on 2019-04-11 by Carl Coker.
 
-function Isum = falco_get_sim_sbp_image_fiber(mp,si)
+function Isum = falco_get_sim_sbp_image_fiber(mp, si)
 
 %--Compute the DM surfaces outside the full model to save lots of time
 if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
@@ -29,20 +29,11 @@ modvar.sbpIndex = si;
 
 %--Get the starlight image
 modvar.whichSource = 'star';
+modvar.starIndex = 1;
 for wi=1:mp.Nwpsbp
     modvar.wpsbpIndex = wi;
     [~, Etemp] = model_full(mp, modvar);
     Isum = Isum + (abs(Etemp).^2)*mp.full.lambda_weights(wi); %--Do not apply sbp_weight unless full bandpass image is being created.
 end 
-
-%--Include the planet image if flagged
-if(mp.planetFlag)
-    modvar.whichSource = 'exoplanet';
-    for wi=1:mp.Nwpsbp
-        modvar.wpsbpIndex = wi;
-        [~, Eplanet] = model_full(mp,modvar);
-        Isum = Isum + abs(Eplanet).^2*mp.full.lambda_weights(wi); %--Do not apply sbp_weight unless full bandpass image is being created.
-    end
-end
     
 end %--END OF FUNCTION

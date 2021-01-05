@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,7 +6,7 @@
 %
 % Script to perform a DMLC design run.
 
-clear all;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 

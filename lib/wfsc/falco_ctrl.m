@@ -33,10 +33,11 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
         Gstack = [jacStruct.G1(:,:,iMode), jacStruct.G2(:,:,iMode), jacStruct.G3(:,:,iMode), jacStruct.G4(:,:,iMode), jacStruct.G5(:,:,iMode), jacStruct.G6(:,:,iMode), jacStruct.G7(:,:,iMode), jacStruct.G8(:,:,iMode), jacStruct.G9(:,:,iMode)];
 
         %--Square matrix part stays the same if no re-linearization has occurrred. 
-        cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(iMode)*real(Gstack'*Gstack); 
+        cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(iMode) * real(Gstack'*Gstack); 
 
         %--The G^*E part changes each iteration because the E-field changes.
-        Eweighted = mp.WspatialVec(:, iMode) .* cvar.EfieldVec(:, iMode); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
+        iStar = mp.jac.star_inds(iMode);
+        Eweighted = mp.WspatialVec(:, iStar) .* cvar.EfieldVec(:, iMode); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
         cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(iMode)*real(Gstack'*Eweighted); %--Apply the Jacobian weights and add to the total.
 
     end

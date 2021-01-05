@@ -297,7 +297,7 @@ for iSubband=1:mp.Nsbp
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
-if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp') || (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
+if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp-square') || (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
     Eest = zeros(mp.Fend.corr.Npix, 1);
     zerosCounter = 0;
     for ipix=1:mp.Fend.corr.Npix
