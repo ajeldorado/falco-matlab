@@ -1,4 +1,4 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -13,11 +13,6 @@
 %
 % OUTPUTS
 % - Isum: sub-bandpass image
-%
-% REVISION HISTORY
-% - Modified on 2019-06-14 by A.J. Riggs to use parfor over the wavelengths
-% and polarization states.
-% - Created on 2019-02-06 by A.J. Riggs.
 
 function Isbp = falco_get_sim_sbp_image(mp, si)
 

@@ -30,51 +30,12 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_try_running_FALCO
+EXAMPLE_defaults_MSWC
 
 
 %% Step 3: Overwrite default values as desired
 
-% % On-axis star only:
-% starWeights = 1;
-% mp.compact.star.count = 1;
-% mp.compact.star.xiOffsetVec = 0;
-% mp.compact.star.etaOffsetVec = 0;
-% mp.compact.star.weights = starWeights; % relative stellar peak intensities
-% mp.star.count = 1;
-% mp.star.xiOffsetVec = 0;
-% mp.star.etaOffsetVec = 0;
-% mp.star.weights = starWeights; % relative stellar peak intensities
-% mp.Fend.xiFOV = 66;
-% mp.Fend.etaFOV = 10;
-
-% % Off-axis star only:
-% starWeights = 1;
-% mp.compact.star.count = 1;
-% mp.compact.star.xiOffsetVec = 56;
-% mp.compact.star.etaOffsetVec = -6;
-% mp.compact.star.weights = starWeights; % relative stellar peak intensities
-% mp.star.count = 1;
-% mp.star.xiOffsetVec = 56;
-% mp.star.etaOffsetVec = -6;
-% mp.star.weights = starWeights; % relative stellar peak intensities
-% mp.Fend.xiFOV = 66;
-% mp.Fend.etaFOV = 10;
-
-% % % Both Stars
-% starWeights = [1, 1];
-% mp.compact.star.count = 2;
-% mp.compact.star.xiOffsetVec = [0, 56];
-% mp.compact.star.etaOffsetVec = [0, -6];
-% mp.compact.star.weights = starWeights; % relative stellar peak intensities
-% 
-% mp.star.count = 2;
-% mp.star.xiOffsetVec = [0, 56];
-% mp.star.etaOffsetVec = [0, -6];
-% mp.star.weights = starWeights; % relative stellar peak intensities
-% mp.Fend.xiFOV = 66;
-% mp.Fend.etaFOV = 10;
-
+mp.jac.star.weights = [1, 1]; % star weights for control
 
 % % Both Stars
 starWeights = [1, 1];
@@ -90,7 +51,36 @@ mp.star.weights = starWeights; % relative stellar peak intensities
 mp.Fend.xiFOV = 66;
 mp.Fend.etaFOV = 10;
 
-mp.jac.star.weights = [1, 1]; % star weights for control
+
+% % % SNWC Only
+% starWeights = [1];
+% mp.compact.star.count = 1;
+% mp.compact.star.xiOffsetVec = [50]; %[0, 56];
+% mp.compact.star.etaOffsetVec = [-6];
+% mp.compact.star.weights = starWeights; % relative stellar peak intensities
+% 
+% mp.star.count = 1;
+% mp.star.xiOffsetVec = [50]; %[0, 56];
+% mp.star.etaOffsetVec = [-6];
+% mp.star.weights = starWeights; % relative stellar peak intensities
+% mp.Fend.xiFOV = 66;
+% mp.Fend.etaFOV = 10;
+% 
+% %--New variables for pairwise probing estimation:
+% mp.est.probe.Npairs = 2;     % Number of pair-wise probe PAIRS to use.
+% mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
+% mp.probe.est.width = [6]; % Width of probed rectangular region. Units of lambda/D.
+% mp.probe.est.height = [5]; % Height of probed rectangular region. Units of lambda/D.
+% mp.est.probe.xiOffset = [6]; % xi (horizontal) offset of probed region's center in focal plane. Units of lambda/D.
+% mp.est.probe.etaOffset = [6]; % eta (horizontal) offset of probed region's center in focal plane. Units of lambda/D.
+% mp.est.probe.xOffset = 0;   % offset of probe center in x at DM [actuators]. Use to avoid central obscurations.
+% mp.est.probe.yOffset = 10;    % offset of probe center in y at DM [actuators]. Use to avoid central obscurations.
+% mp.est.probe.gainFudge = [5];     % empirical fudge factor to make average probe amplitude match desired value.
+
+
+
+
+
 
 
 %--Correction and scoring region definition
@@ -106,7 +96,7 @@ mp.Fend.shape = 'square';
 mp.Fend.xiOffset = 6;
 
 mp.ctrl.log10regVec = -6:1/2:0; %--log10 of the regularization exponents (often called Beta values)
-mp.ctrl.flagUseModel = true;
+mp.ctrl.flagUseModel = false;%true;
 
 % mp.Fend.xiFOV = 40;
 % mp.Fend.etaFOV = 12;
@@ -133,7 +123,7 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 
 
 
-mp.Nitr = 15; %--Number of wavefront control iterations
+mp.Nitr = 20; %--Number of wavefront control iterations
 
 %% Step 4: Generate the label associated with this trial
 
@@ -149,13 +139,12 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 [mp, out] = falco_flesh_out_workspace(mp);
 
+% Apply a grid of spots to the input pupil to allow SNWC
 block0 = ones(5, 5);
 block0(3, 3) = 0.7;%0;
 dotGrid = repmat(block0, [51, 51]);
 dotGrid = pad_crop(dotGrid, mp.P1.compact.Narr, 'extrapval', 1);
-figure; imagesc(dotGrid); axis xy equal tight; colorbar;
-
-
+% figure; imagesc(dotGrid); axis xy equal tight; colorbar;
 for si = 1:mp.Nsbp
     wvl = mp.sbp_centers(si);
     mp.P1.compact.E(:, :, si) = dotGrid .* ones(mp.P1.compact.Narr);
@@ -163,22 +152,6 @@ for si = 1:mp.Nsbp
         mp.P1.full.E(:, :, wi, si) = dotGrid .* ones(mp.P1.full.Narr);
     end
 end
-
-
-% Narray = mp.P1.compact.Narr;
-% Nbeam = mp.P1.compact.Nbeam;
-% xs = (-Narray/2:(Narray/2-1))/Nbeam;
-% [XS, YS] = meshgrid(xs);
-% 
-% sinusoid = 0.5 * sin(2*pi*XS*mp.star.xiOffsetVec);
-% 
-% for si = 1:mp.Nsbp
-%     wvl = mp.sbp_centers(si);
-%     mp.P1.compact.E(:, :, si) = exp(1j*sinusoid*wvl/mp.lambda0);
-%     mp.P1.full.E(:, :, :, si) = mp.P1.compact.E(:, :, si);
-% end
-% % mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex)
-
 
 [mp, out] = falco_wfsc_loop(mp, out);
 

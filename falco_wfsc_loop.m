@@ -143,17 +143,18 @@ for Itr=1:mp.Nitr
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
             Im = falco_get_summed_image(mp);
-        case{'pwp-bp','pwp-kf'}
+            
+        case{'pwp-bp', 'pwp-bp-square', 'pwp-kf'}
             if(mp.flagFiber && mp.flagLenslet)
-				if(mp.est.flagUseJac) %--Send in the Jacobian if true
-					ev = falco_est_pairwise_probing_fiber(mp,jacStruct);
-				else %--Otherwise don't pass the Jacobian
+				if mp.est.flagUseJac
+					ev = falco_est_pairwise_probing_fiber(mp, jacStruct);
+                else
 					ev = falco_est_pairwise_probing_fiber(mp);
 				end
 			else
-				if(mp.est.flagUseJac) %--Send in the Jacobian if true
+				if mp.est.flagUseJac
 					ev = falco_est_pairwise_probing(mp, ev, jacStruct);
-				else %--Otherwise don't pass the Jacobian
+                else
 					ev = falco_est_pairwise_probing(mp, ev);
 				end
             end
@@ -161,14 +162,25 @@ for Itr=1:mp.Nitr
             EfieldVec = ev.Eest;
             IincoVec = ev.IincoEst;
             Im = ev.Im; % Updated unprobed image
+    
+%         case{'pwp-mswc'}
+%             if mp.est.flagUseJac
+%                 ev = falco_est_pairwise_probing_mswc(mp, ev, jacStruct);
+%             else
+%                 ev = falco_est_pairwise_probing_mswc(mp, ev);
+%             end
+%             
+%             EfieldVec = ev.Eest;
+%             IincoVec = ev.IincoEst;
+%             Im = ev.Im; % Updated unprobed image    
     end
     
     %--Compute the current normalized intensity
     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
     
     %% Plot the updates to the DMs and PSF
-    if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the handle variable
-    if(isfield(mp,'testbed') )
+    if Itr == 1; hProgress.master = 1; end % dummy value to intialize the handle variable
+    if isfield(mp,'testbed')
         InormHist_tb.total = InormHist; 
         Im_tb.Im = Im;
         Im_tb.E = zeros(size(Im));

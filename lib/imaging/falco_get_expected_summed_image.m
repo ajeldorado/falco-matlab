@@ -1,4 +1,4 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -10,15 +10,11 @@
 % bandpass by adding the model-based delta electric field on top of the
 % current E-field estimate in each sub-bandpass.
 %
-%--INPUTS
-% mp = structure of all model parameters
+% INPUTS
+% mp : structure of all model parameters
 %
-%--OUTPUTS
-% Ibandavg = band-averaged image in units of normalized intensity
-%
-%--REVISION HISTORY
-% - Created on 2019-04-23 by A.J. Riggs. 
-%--------------------------------------------------------------------------
+% OUTPUTS
+% Ibandavg : band-averaged image in units of normalized intensity
 
 function Ibandavg = falco_get_expected_summed_image(mp,cvar)
 
@@ -62,7 +58,7 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
     
     %--Compute the expected new 2-D intensity image
     for iMode = 1:mp.jac.Nmode    
-        EexpectedVec = cvar.EfieldVec(:, iMode) + (EnewTempVecArray(:, iMode)-EoldTempVecArray(:, iMode));
+        EexpectedVec = cvar.EfieldVec(:, iMode) + (EnewTempVecArray(:, iMode) - EoldTempVecArray(:, iMode));
         Eexpected2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
         Eexpected2D(mp.Fend.corr.mask) = EexpectedVec;
         
