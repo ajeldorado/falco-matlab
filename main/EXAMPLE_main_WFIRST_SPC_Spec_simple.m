@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,7 +6,7 @@
 %
 % Script to perform wavefront control with the WFIRST CGI Phase B SP(L)C-Spectroscopy design.
 
-clear all;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -79,4 +79,4 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 Im = falco_get_summed_image(mp);
 Inorm = mean(Im(mp.Fend.corr.maskBool))
 
-% [mp, out] = falco_wfsc_loop(mp, out);
+[mp, out] = falco_wfsc_loop(mp, out);

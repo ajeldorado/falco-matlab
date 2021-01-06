@@ -64,9 +64,9 @@ mp.thput_vec = zeros(mp.Nitr+1,1);
 %--Software Mask for Scoring Contrast 
 %--Set Inputs
 maskScore.pixresFP = mp.Fend.res;
-maskScore.rhoInner = mp.Fend.corr.Rin; %--lambda0/D
-maskScore.rhoOuter = mp.Fend.corr.Rout ; %--lambda0/D
-maskScore.angDeg = mp.Fend.corr.ang; %--degrees
+maskScore.rhoInner = mp.Fend.score.Rin; %--lambda0/D
+maskScore.rhoOuter = mp.Fend.score.Rout ; %--lambda0/D
+maskScore.angDeg = mp.Fend.score.ang; %--degrees
 maskScore.centering = mp.centering;
 maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
 if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
@@ -78,14 +78,6 @@ if(isfield(mp.Fend,'xiOffset'));  maskScore.xiOffset = mp.Fend.xiOffset;  end
 if(isfield(mp.Fend,'etaOffset'));  maskScore.etaOffset = mp.Fend.etaOffset;  end
 if(isfield(mp.Fend,'Nxi'));  maskScore.Nxi = mp.Fend.Nxi;  end
 if(isfield(mp.Fend,'Neta'));  maskScore.Neta = mp.Fend.Neta;  end
-% maskScore.rhoInner = mp.Fend.score.Rin; %--lambda0/D
-% maskScore.rhoOuter = mp.Fend.score.Rout ; %--lambda0/D
-% maskScore.angDeg = mp.Fend.score.ang; %--degrees
-% maskScore.centering = mp.centering;
-% maskScore.FOV = mp.Fend.FOV; %--Determines max dimension length
-% maskScore.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
-% if(isfield(mp.Fend,'shape'));  maskScore.shape = mp.Fend.shape;  end
-% if(isfield(mp.Fend,'clockAngDeg'));  maskScore.clockAngDeg = mp.Fend.clockAngDeg;  end
 
 %--Compact Model: Generate Software Mask for Scoring Contrast 
 maskScore.Nxi = mp.Fend.Nxi; %--Set min dimension length to be same as for corr 

@@ -1,21 +1,12 @@
-% Copyright 2018, 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an LC design run.
-%  1) Load the default model parameters for an LC.
-%  2) Specify the values to overwrite.
-%  3) Run a single trial of WFC using FALCO.
-%
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
-% ---------------
+% Script to perform run EFC on one of the LUVOIR-A APLC designs.
 
-clear all;
-
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -85,12 +76,6 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 
+[mp, out] = falco_flesh_out_workspace(mp);
 
-% %--Save the config file
-% fn_config = [mp.path.config mp.runLabel,'_config.mat'];
-% save(fn_config)
-% [mp,out] = falco_init_ws(fn_config);
-
-out = falco_wfsc_loop(mp);
-
-
+[mp, out] = falco_wfsc_loop(mp, out);

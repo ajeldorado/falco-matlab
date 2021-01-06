@@ -1,4 +1,4 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -36,13 +36,13 @@ duVec = -dmfac*((10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar
 %% Take images and compute average intensity in dark hole
 
 if(mp.ctrl.flagUseModel) %--Perform a model-based grid search using the compact model
-    if(mp.flagFiber == false)
+    if ~mp.flagFiber
         Itotal = falco_get_expected_summed_image(mp,cvar);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
         dDM.Itotal = Itotal;
     end
 else %--Perform an empirical grid search with actual images from the testbed or full model
-    if(mp.flagFiber == false)
+    if ~mp.flagFiber
         Itotal = falco_get_summed_image(mp);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
         dDM.Itotal = Itotal;

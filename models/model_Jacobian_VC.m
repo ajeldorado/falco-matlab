@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian_VC(mp, im, whichDM)
+% function jac = model_Jacobian_VC(mp, iMode, whichDM)
 %--Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
@@ -13,21 +13,22 @@
 % ---------------
 %
 % INPUTS:
-% -mp = structure of model parameters
-% -im = index of the pair of sub-bandpass index and Zernike mode index
-% -whichDM = which DM number
+% mp : structure of model parameters
+% iMode : index of the pair of sub-bandpass index and Zernike mode index
+% whichDM : which DM number
 %
 % OUTPUTS:
-% -Gzdl = Jacobian for the specified Zernike mode (z), DM (d), and sub-bandpass (l).
+% Gzdl : Jacobian for the specified Zernike mode (z), DM (d), star, and sub-bandpass (l).
 
-function Gzdl = model_Jacobian_VC(mp, im, whichDM)
+function Gzdl = model_Jacobian_VC(mp, iMode, whichDM)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Setup
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-modvar.sbpIndex = mp.jac.sbp_inds(im);
-modvar.zernIndex = mp.jac.zern_inds(im);
+modvar.sbpIndex = mp.jac.sbp_inds(iMode);
+modvar.zernIndex = mp.jac.zern_inds(iMode);
+modvar.starIndex = mp.jac.star_inds(iMode);
 
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 mirrorFac = 2; % Phase change is twice the DM surface height.f
@@ -37,7 +38,14 @@ NdmPad = mp.compact.NdmPad;
 % Input E-fields
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
+%--Include the star position and weight in the starting wavefront
+iStar = modvar.starIndex;
+xiOffset = mp.compact.star.xiOffsetVec(iStar);
+etaOffset = mp.compact.star.etaOffsetVec(iStar);
+starWeight = mp.compact.star.weights(iStar);
+TTphase = (-1)*(2*pi*(xiOffset*mp.P2.compact.XsDL + etaOffset*mp.P2.compact.YsDL));
+Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex);
 
 %--Apply a Zernike (in amplitude) at input pupil
 if(modvar.zernIndex~=1)
