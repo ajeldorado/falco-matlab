@@ -27,7 +27,7 @@ mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 6;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
 mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
@@ -41,29 +41,21 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 
 %--Estimator Options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing with batch process estimation
+% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+%    one or more stars
+% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
+% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
 mp.estimator = 'perfect';
 
 %--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
-mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
-mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
+mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [lambda/D].
+mp.est.probe.xOffset = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
+mp.est.probe.yOffset = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
 mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
-
-%--New variables for pairwise probing with a Kalman filter
-% mp.est.ItrStartKF = 2 %Which correction iteration to start recursive estimate
-% mp.est.tExp =
-% mp.est.num_im =
-% mp.readNoiseStd =
-% mp.peakCountsPerPixPerSec =
-% mp.est.Qcoef =
-% mp.est.Rcoef =
-% mp.est.Pcoef0 = 
 
 %% Wavefront Control: General
 
@@ -75,10 +67,11 @@ mp.jac.zerns = 1;  %--Which Zernike modes to include in Jacobian. Given as the m
 mp.jac.Zcoef = 1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is reset to 1 later)
     
 %--Zernikes to compute sensitivities for
-mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
+mp.eval.indsZnoll = [];%2:3; %--Noll indices of Zernikes to compute values for
 %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
-mp.eval.Rsens = [3, 4;...
-              4, 8];  
+mp.eval.Rsens = [];
+% mp.eval.Rsens = [3, 4;...
+%               4, 8];  
 
 %--Grid- or Line-Search Settings
 mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
@@ -98,9 +91,9 @@ mp.dm2.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] 
 mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 1 and 2 [volts] %--NOT ENFORCED YET
 
 %--Voltage range restrictions: neighboring actuators
-mp.dm1.flagNbrRule = true;
+mp.dm1.flagNbrRule = false;
 mp.dm1.dVnbr = 150; %--absolute value of max delta voltage between neighbors [volts]
-mp.dm2.flagNbrRule = true;
+mp.dm2.flagNbrRule = false;
 mp.dm2.dVnbr = 150; %--absolute value of max delta voltage between neighbors [volts]
 
 %% Wavefront Control: Controller Specific
@@ -207,7 +200,7 @@ mp.dm2.inf_sign = '+';
 mp.dm1.Nact = 48;               % # of actuators across DM array
 mp.dm1.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm1.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm1.ytilt = 5.83;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm1.ytilt = 9.65;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
 mp.dm1.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm1.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
@@ -217,7 +210,7 @@ mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 mp.dm2.Nact = 48;               % # of actuators across DM array
 mp.dm2.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm2.ytilt = 5.55;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.ytilt = 9.65;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm2.zrot = 0;                % clocking of DM surface [degrees]
 mp.dm2.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm2.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
@@ -226,8 +219,8 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = true;  %--Whether to apply an iris or not
-mp.dm2.Dstop = 50e-3;   %--Diameter of iris [meters]
+mp.flagDM2stop = false;  %--Whether to apply an iris or not
+mp.dm2.Dstop = 55e-3;   %--Diameter of iris [meters]
 
 %--DM separations
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
@@ -248,11 +241,11 @@ mp.Fend.FOV = 12; %--half-width of the field of view in both dimensions [lambda0
 
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 2.7;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 9.7;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = 2.7;  % inner radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rin = 3;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
@@ -264,9 +257,9 @@ mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right'
 mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Pupil Plane Diameters
-mp.P2.D = 46.2987e-3;
-mp.P3.D = 46.2987e-3;
-mp.P4.D = 46.2987e-3;
+mp.P2.D = 46.3e-3;
+mp.P3.D = 46.3e-3;
+mp.P4.D = 46.3e-3;
 
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 250;
@@ -288,7 +281,6 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 %--Focal Lengths
 % mp.fl = 1; 
 
-
 %--Pupil Plane Resolutions
 mp.P1.full.Nbeam = 250;
 mp.P2.full.Nbeam = 250;
@@ -298,19 +290,19 @@ mp.P4.full.Nbeam = 250;
 %% Mask Definitions
 
 %--Pupil definition
-mp.whichPupil = 'WFIRST180718';
+mp.whichPupil = 'Roman';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
-mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+mp.P1.D = 2.363114; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
 
 %--Lyot stop padding
 mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
-mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
+mp.P4.IDnorm = 0.50; %--Lyot stop ID [Dtelescope]
+mp.P4.ODnorm = 0.80; %--Lyot stop OD [Dtelescope]
 
 %--FPM size
-mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
-mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+mp.F3.Rin = 2.8;    % maximum radius of inner part of the focal plane mask [lambda0/D]
+mp.F3.RinA = 2.8;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 
@@ -322,7 +314,7 @@ mp.F3.ang = 180;    % on each side, opening angle [degrees]
 
 
 %% FPM Material Properties
-mp.aoi = 6.69;%10.04; % Angle of incidence at FPM [deg]
+mp.aoi = 5.5; % Angle of incidence at FPM [deg]
 mp.t_Ti_nm = 3.0; %--Static base layer of titanium beneath any nickel [nm]
 
 mp.dt_metal_nm = 1;%0.25;%1/10; %--thickness step size for FPM metal layer (nm)
@@ -335,7 +327,7 @@ mp.FPM.d0fac = 4;
 
 %% DM8: FPM Metal Thickness
 
-mp.dm8.V0coef = 100; % Nominal Nickel layer thickness [nm]
+mp.dm8.V0coef = 109; % Nominal Nickel layer thickness [nm]
 
 %--DM8 parameters
 mp.dm8.Vmin = 0;
@@ -345,22 +337,31 @@ mp.dm8.Vmax = 300;
 %% DM9: FPM Dielectric thickness
 
 %--DM9 weights and sensitivities: Used by the controller
-mp.dm9.weight = 1; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm9.weight = 4; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
 mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
 mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
 %--Starting dielectric thicknesses
 mp.t_diel_bias_nm = 0; %--Thickness of starting uniform bias layer of PMGI [nm]. % (Requires an outer stop in reality if >0, but will run without it to see if it gives essentially the same result as the EHLC but faster)
-mp.dm9.V0coef = 390; % Nominal PMGI layer thickness [nm] 
+mp.dm9.V0coef = 600; % Nominal PMGI layer thickness [nm] 
 
 %--DM9 influence function options:
 % - '3x3'
+% - 'cosine'
 % - 'Xinetics'
 % - '3foldZern'
-%--DM9 parameters for 3x3 influence function
-mp.dm9.actres = 7; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
-mp.dm9.FPMbuffer = -0.5; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
-mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
+% %--DM9 parameters for 3x3 influence function
+% mp.dm9.actres = 7; % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.
+% mp.dm9.FPMbuffer = 0; %0.5; %--Zero out DM9 actuators too close to the outer edge (within mp.dm9.FPMbuffer lambda0/D of edge)
+% mp.dm9.inf0name = '3x3';   % This gives inf0 = 1/4*[1, 2, 1; 2, 4, 2; 1, 2, 1];  
+
+% %--DM9 parameters for cosine tapered annular segments
+mp.dm9.inf0name = 'cosine';
+mp.F3.compact.res = 20;
+mp.F3.full.res = 20;
+mp.dm9.VtoHavg = 1e-9;
+mp.dm9.actres = 3;%5; 
+mp.min_azimSize_dm9 = 25; % [um]
 
 % %%--DM9 parameters for Lanczos3 influence function
 % mp.dm9.actres = 8;% % number of "actuators" per lambda0/D in the FPM's focal plane. On a square actuator array.

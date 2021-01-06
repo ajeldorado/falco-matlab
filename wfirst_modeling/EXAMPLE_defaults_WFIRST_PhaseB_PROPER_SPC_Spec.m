@@ -41,28 +41,21 @@ mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image
 
 %--Estimator Options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing with batch process estimation
+% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+%    one or more stars
+% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
+% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
 mp.estimator = 'perfect';
 
 %--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
-mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
-mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
+mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [lambda/D].
+mp.est.probe.xOffset = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
+mp.est.probe.yOffset = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
 mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
-
-%--New variables for pairwise probing with a Kalman filter
-%  mp.est.ItrStartKF =  %Which correction iteration to start recursive estimate
-%  mp.est.tExp =
-%  mp.est.num_im =
-%  mp.readNoiseStd =
-%  mp.peakCountsPerPixPerSec =
-%  mp.est.Qcoef =
-%  mp.est.Rcoef =
 
 %% Wavefront Control: General
 
@@ -212,8 +205,8 @@ mp.Fend.score.Rin = 3;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
-mp.Fend.clockAngDeg = 90; %--Amount to rotate the dark hole location
+mp.Fend.sides = 'lr'; %--Which side(s) for correction: 'left', 'right', 'top', 'up', 'bottom', 'down', 'lr', 'rl', 'leftright', 'rightleft', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'
+mp.Fend.clockAngDeg = 0; %--Amount to rotate the dark hole location
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 

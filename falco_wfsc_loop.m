@@ -27,6 +27,11 @@ Im = falco_get_summed_image(mp);
 
 for Itr=1:mp.Nitr
 
+    %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
+    if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
+    if(any(mp.dm_ind==2));  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
+    
+    %%
     %--Start of new estimation+control iteration
     fprintf(['Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
 
@@ -52,20 +57,6 @@ for Itr=1:mp.Nitr
     if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  else; DM1surf = zeros(mp.dm1.compact.Ndm);  end
     if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  else; DM2surf = zeros(mp.dm2.compact.Ndm);    end
 
-    switch upper(mp.coro)
-        case{'EHLC'}
-            mp.DM8surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
-            mp.DM9surf = falco_gen_EHLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
-        case{'HLC','APHLC','SPHLC'}
-            switch lower(mp.layout)
-                case 'fourier'
-                    mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
-                    mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
-            end
-        case{'FOHLC'}
-            mp.DM8amp = falco_gen_HLC_FPM_amplitude_from_cube(mp.dm8,'compact'); %--FPM amplitude transmission [amplitude]
-            mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--FPM phase shift in transmission [m]    
-    end
 
     %% Updated plot and reporting
     %--Calculate the core throughput (at higher resolution to be more accurate)
@@ -106,13 +97,11 @@ for Itr=1:mp.Nitr
         %--Re-include all actuators in the basis set. Need act_ele to be a column vector.
         if(any(mp.dm_ind==1)); mp.dm1.act_ele = (1:mp.dm1.NactTotal).'; end
         if(any(mp.dm_ind==2)); mp.dm2.act_ele = (1:mp.dm2.NactTotal).'; end
-        if(any(mp.dm_ind==5)); mp.dm5.act_ele = (1:mp.dm5.NactTotal).'; end
         if(any(mp.dm_ind==8)); mp.dm8.act_ele = (1:mp.dm8.NactTotal).'; end
         if(any(mp.dm_ind==9)); mp.dm9.act_ele = (1:mp.dm9.NactTotal).'; end
         %--Update the number of elements used per DM
         if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
         if(any(mp.dm_ind==2)); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
-        if(any(mp.dm_ind==5)); mp.dm5.Nele = length(mp.dm5.act_ele); else; mp.dm5.Nele = 0; end
         if(any(mp.dm_ind==8)); mp.dm8.Nele = length(mp.dm8.act_ele); else; mp.dm8.Nele = 0; end
         if(any(mp.dm_ind==9)); mp.dm9.Nele = length(mp.dm9.act_ele); else; mp.dm9.Nele = 0; end
     end
@@ -145,28 +134,32 @@ for Itr=1:mp.Nitr
         EprevMeas = EfieldVec;
         EprevModel = EnowModel;
     end
-    %--Model-based estimate for comparison
+
+    %--Model-based estimate for comparing Delta E (1st star only)
     modvar.whichSource = 'star';
+    modvar.starIndex = 1; % 1ST STAR ONLY
     modvar.sbpIndex = mp.si_ref;
     EnowModel = model_compact(mp, modvar);
+    clear modvar
     
     ev.Itr = Itr;
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
             Im = falco_get_summed_image(mp);
-        case{'pwp-bp','pwp-kf'}
+            
+        case{'pwp-bp-square', 'pwp-bp', 'pwp-kf'}
             if(mp.flagFiber && mp.flagLenslet)
-				if(mp.est.flagUseJac) %--Send in the Jacobian if true
-					ev = falco_est_pairwise_probing_fiber(mp,ev,jacStruct);
-				else %--Otherwise don't pass the Jacobian
+				if mp.est.flagUseJac
+					ev = falco_est_pairwise_probing_fiber(mp, jacStruct);
+                else
 					ev = falco_est_pairwise_probing_fiber(mp);
 				end
 			else
-				if(mp.est.flagUseJac) %--Send in the Jacobian if true
-					ev = falco_est_pairwise_probing(mp,ev,jacStruct);
-				else %--Otherwise don't pass the Jacobian
-					ev = falco_est_pairwise_probing(mp);
+				if mp.est.flagUseJac
+					ev = falco_est_pairwise_probing(mp, ev, jacStruct);
+                else
+					ev = falco_est_pairwise_probing(mp, ev);
 				end
             end
             
@@ -249,6 +242,68 @@ for Itr=1:mp.Nitr
         end
     end
     
+    %--Compute the current normalized intensity
+    InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
+    
+    %% Plot the updates to the DMs and PSF
+    if Itr == 1; hProgress.master = 1; end % dummy value to intialize the handle variable
+    if isfield(mp,'testbed')
+        InormHist_tb.total = InormHist; 
+        Im_tb.Im = Im;
+        Im_tb.E = zeros(size(Im));
+        if(Itr>1)
+            InormHist_tb.mod(Itr-1) = mean(abs(EfieldVec(:)).^2);
+            InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
+            Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
+        else
+            InormHist_tb.mod = NaN;
+            InormHist_tb.unmod = NaN;
+        end
+        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+    else
+        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
+    end
+    
+    %% Plot the expected and measured delta E-fields
+    if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0))
+        dEmeas = squeeze(EfieldVec(:, mp.si_ref) - EprevMeas(:, mp.si_ref));
+        dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        dEmeas2D(mp.Fend.corr.maskBool) = dEmeas; % 2-D for plotting
+        dEmodel = EnowModel(mp.Fend.corr.maskBool) - EprevModel(mp.Fend.corr.maskBool);
+        dEmodel2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        dEmodel2D(mp.Fend.corr.maskBool) = dEmodel;  % 2-D for plotting
+        dEmax = max(abs(dEmodel)); % max value in plots
+        out.complexProjection(Itr-1) = abs(dEmodel'*dEmeas)/abs(dEmodel'*dEmodel);
+        fprintf('  Complex projection of deltaE is %3.2f \n', out.complexProjection(Itr-1));
+        out.complexCorrelation(Itr-1) = abs(dEmodel'*dEmeas/(sqrt(abs(dEmeas'*dEmeas))*sqrt(abs(dEmodel'*dEmodel)) ));
+        fprintf('  Complex correlation of deltaE is %3.2f \n', out.complexCorrelation(Itr-1));
+        
+        if mp.flagPlot            
+            figure(50); set(gcf, 'Color', 'w');
+            fs = 18;
+            
+            hModelAmp = subplot(2,2,1); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelAmp, 'parula');
+            title('abs(dE_{model})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            
+            hMeasAmp = subplot(2,2,2); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+            title('abs(dE_{meas})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            
+            hModelPh = subplot(2,2,3); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelPh, 'hsv');
+            title('angle(dE_{model})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            
+            hMeasPh = subplot(2,2,4); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmeas2D)); axis xy equal tight; colorbar; colormap(hMeasPh, 'hsv');
+            title('angle(dE_{meas})', 'Fontsize', fs); 
+            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+            drawnow;
+        end
+    end
     %% Compute and Plot the Singular Mode Spectrum of the Control Jacobian
 
     if(mp.flagSVD)
@@ -306,18 +361,41 @@ for Itr=1:mp.Nitr
             hold on;
         end
         
+        clear Gcomplex Gall Eall Eri alpha2 Uri U S EriPrime IriPrime
+        
     end
     
-    %% Add spatially-dependent weighting to the control Jacobians
+    %% Add spatially-dependent (and star-dependent) weighting to the control Jacobians
 
-    if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1,mp.dm1.Nele,mp.jac.Nmode]); end
-    if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1,mp.dm2.Nele,mp.jac.Nmode]); end
-    if(any(mp.dm_ind==5)); jacStruct.G5 = jacStruct.G5.*repmat(mp.WspatialVec,[1,mp.dm5.Nele,mp.jac.Nmode]); end
-    if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1,mp.dm8.Nele,mp.jac.Nmode]); end 
-    if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1,mp.dm9.Nele,mp.jac.Nmode]); end
-
-    %fprintf('Total Jacobian Calcuation Time: %.2f\n',toc);
-
+%     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm1.Nele]), [1, 3, 2]); end
+%     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm2.Nele]), [1, 3, 2]); end
+%     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm8.Nele]), [1, 3, 2]); end
+%     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm9.Nele]), [1, 3, 2]); end
+    
+    for iStar = 1:mp.compact.star.count
+        if(any(mp.dm_ind==1))
+            jacStruct.G1(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G1(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm1.Nele, mp.jac.NmodePerStar]);
+        end
+        if(any(mp.dm_ind==2))
+            jacStruct.G2(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G2(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm2.Nele, mp.jac.NmodePerStar]);
+        end
+        if(any(mp.dm_ind==8))
+            jacStruct.G8(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G8(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm8.Nele, mp.jac.NmodePerStar]);
+        end
+        if(any(mp.dm_ind==9))
+            jacStruct.G9(:, :, mp.jac.star_inds == iStar) = ...
+                jacStruct.G9(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm9.Nele, mp.jac.NmodePerStar]);
+        end
+    end
+    
+%     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1, mp.dm1.Nele, mp.jac.Nmode]); end
+%     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1, mp.dm2.Nele, mp.jac.Nmode]); end
+%     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1, mp.dm8.Nele, mp.jac.Nmode]); end 
+%     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1, mp.dm9.Nele, mp.jac.Nmode]); end
+    
     %--Compute the number of total actuators for all DMs used. 
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     
@@ -327,8 +405,8 @@ for Itr=1:mp.Nitr
     cvar.EfieldVec = EfieldVec;
     cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
-    if isfield(cvar, 'Im') && mp.ctrl.flagUseModel == false
-       Im = cvar.Im; 
+    if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
+        Im = cvar.Im; 
     end
     
     %--Enforce constraints on DM commands 
@@ -342,8 +420,7 @@ for Itr=1:mp.Nitr
 %-----------------------------------------------------------------------------------------
 %% DM Stats
 
-%--ID and OD of pupil in units of pupil diameters
-% ID_pup = 0.303; % for WFIRST, mp.P1.IDnorm
+%--ID and OD of pupil used when computing DM actuation stats [units of pupil diameters]
 OD_pup = 1.0;
 
 %--Compute the DM surfaces
@@ -413,13 +490,6 @@ end
 if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
     out.Zsens(:,:,Itr) = falco_get_Zernike_sensitivities(mp);
 end
-
-% % Take the next image to check the contrast level (in simulation only)
-% if mp.flagSim
-%     tic; fprintf('Getting updated summed image... ');
-%     Im = falco_get_summed_image(mp);
-%     fprintf('done. Time = %.1f s\n',toc);
-% end
 
 %--REPORTING NORMALIZED INTENSITY
 if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false

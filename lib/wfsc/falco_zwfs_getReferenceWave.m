@@ -2,8 +2,8 @@ function rw = falco_zwfs_getReferenceWave(mp)
 % Computes the reference wave for the Zernike wavefront sensor using
 % FALCO model
 
-    modvar.wpsbpIndex = 1;
-    modvar.sbpIndex = 1;
+    modvar.wpsbpIndex = mp.wi_ref;
+    modvar.sbpIndex = mp.si_ref;
     
     modvar.whichSource = 'star';
     modvar.lambda = mp.wfs.lambda0;

@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -9,7 +9,9 @@ function mp = falco_set_optional_variables(mp)
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 mp.est.dummy = 1;
-mp.compact.dummy = 1;
+mp.star.dummy = 1;
+mp.compact.star.dummy = 1;
+mp.jac.star.dummy = 1;
 mp.full.dummy = 1;
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
@@ -51,6 +53,9 @@ if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to pro
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
 if(isfield(mp,'flagWFS')==false);  mp.flagWFS = false;  end  %--Whether to activate the WFS mode 
 
+%--Whether to use an apodizer at all
+if(isfield(mp,'flagApod')==false);  mp.flagApod = false;  end
+
 %--Whether to generate or load various masks: compact model
 if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
 if(isfield(mp.compact,'flagGenApod')==false);  mp.compact.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
@@ -69,10 +74,34 @@ if(isfield(mp.full,'flagGenApod')==false);  mp.full.flagGenApod = false;  end %-
 if(isfield(mp.full,'flagGenFPM')==false);  mp.full.flagGenFPM = true;  end
 if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 
+%--Lyot stop symmetry (for WFIRST/Roman only)
+if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end
+
 %% Optional/hidden variables
+
+% How many stars to use and their positions
+% mp.star is for the full model, and mp.compact.star is for the compact and
+% Jacobian models.
+if ~isfield(mp.star, 'count');  mp.star.count = 1;  end
+if ~isfield(mp.star, 'xiOffsetVec');  mp.star.xiOffsetVec = 0;  end
+if ~isfield(mp.star, 'etaOffsetVec');  mp.star.etaOffsetVec = 0;  end
+if ~isfield(mp.star, 'weights');  mp.star.weights = 1;  end
+if ~isfield(mp.compact.star, 'count');  mp.compact.star.count = 1;  end
+if ~isfield(mp.compact.star, 'xiOffsetVec');  mp.compact.star.xiOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'etaOffsetVec');  mp.compact.star.etaOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'weights');  mp.compact.star.weights = 1;  end
+if ~isfield(mp.jac.star, 'weights');  mp.jac.star.weights = ones(1, mp.compact.star.count);  end % Spatial weighting in the Jacobian by star
+
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
-if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
 if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
+
+%--Propagation method
+if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
+
+%--Vortex coronagraphs
+if(isfield(mp.jac, 'mftToVortex')==false);  mp.jac.mftToVortex = false;  end  %--Whether to use MFTs to propagate to/from the vortex FPM
+if(isfield(mp.F3, 'VortexSpotDiam')==false);  mp.F3.VortexSpotDiam = 0;  end  %--Diameter of the opaque spot at the center of the vortex. [lambda0/D]
+if(isfield(mp.F3, 'VortexSpotOffsets')==false);  mp.F3.VortexSpotOffsets = [0 0];  end  %--Offsets for the opaque spot at the center of the vortex. [lambda0/D]
 
 %--Sensitivities to Zernike-Mode Perturbations
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
@@ -83,13 +112,13 @@ if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = -1000;  end %--Min allowed voltage command
 if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed voltage command
 if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned actuators
-if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = [];  end %--(Fixed) voltage commands of pinned actuators
+if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) voltage commands of pinned actuators
 if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
 if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = -1000;  end %--Min allowed voltage command
 if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed voltage command
 if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned actuators
-if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = [];  end %--(Fixed) voltage commands of pinned actuators
+if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) voltage commands of pinned actuators
 if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
 if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 
@@ -99,12 +128,13 @@ if(isfield(mp,'x_planet')==false);  mp.x_planet = 5;  end % xi position of exopl
 if(isfield(mp,'y_planet')==false);  mp.y_planet = 1;  end % eta position of exoplanet in lambda0/D
 
 %--Control
-if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; else; mp.jac.zerns = 1; end %--Zernike modes in Jacobian
+if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
 
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
 mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %% Conversion factor: milliarcseconds (mas) to lambda0/D
+if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Needed for computing RMS DM surface actuation
 
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 

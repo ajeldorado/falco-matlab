@@ -26,9 +26,11 @@ function [mp] = falco_gen_FPM(mp)
         case 'fourier'
             switch upper(mp.coro)
                 case{'HLC'}
-                    switch mp.dm9.inf0name
-                        case '3foldZern'
+                    switch upper(mp.dm9.inf0name)
+                        case '3FOLDZERN'
                             mp = falco_setup_FPM_HLC_3foldZern(mp);
+                        case{'COS', 'COSINE'}
+                            mp = falco_setup_FPM_HLC_cosine(mp);
                         otherwise
                             mp = falco_setup_FPM_HLC(mp);
                     end

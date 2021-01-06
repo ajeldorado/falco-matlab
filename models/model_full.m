@@ -74,33 +74,42 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-fields
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%--Set the point source as the exoplanet or the star
-if strcmpi(modvar.whichSource, 'exoplanet') %--Don't include tip/tilt jitter for planet wavefront since the effect is minor
-    %--The planet does not move in sky angle, so the actual tip/tilt angle needs to scale inversely with wavelength.
-    planetAmp = sqrt(mp.c_planet);  % Scale the E field to the correct contrast
-    planetPhase = (-1)*(2*pi*(mp.x_planet*mp.P2.full.XsDL + mp.y_planet*mp.P2.full.YsDL));
-    Ein = planetAmp*exp(1i*planetPhase*mp.lambda0/lambda).*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);
 
-elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+%--Include the tip/tilt in the input wavefront
+iStar = modvar.starIndex;
+xiOffset = mp.star.xiOffsetVec(iStar);
+etaOffset = mp.star.etaOffsetVec(iStar);
+starWeight = mp.star.weights(iStar);
+TTphase = (-1)*(2*pi*(xiOffset*mp.P2.full.XsDL + etaOffset*mp.P2.full.YsDL));
+Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ein = sqrt(starWeight) * Ett .* mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
+
+if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
-        
-else % Default to using the starlight
-    %--Include the tip/tilt in the input stellar wavefront
-    if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
-        %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
-        x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
-        y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
-
-        TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
-        Ett = exp(1i*TTphase*mp.lambda0/lambda);
-        Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
-
-    else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-        Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
-    end
+    Ein = Ett .* Ein; 
 end
+% %--Set the location and magnitude of the point source
+% if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+%     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
+%     Ett = exp(1i*TTphase*mp.lambda0/lambda);
+%     Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
+%         
+% else % Default to using the starlight
+%     %--Include the tip/tilt in the input stellar wavefront
+%     if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
+%         %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
+%         x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
+%         y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
+% 
+%         TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
+%         Ett = exp(1i*TTphase*mp.lambda0/lambda);
+%         Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+% 
+%     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
+%         Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+%     end
+% end
 
 %--Shift the source off-axis to compute the intensity normalization value.
 %  This replaces the previous way of taking the FPM out in the optical model.
@@ -165,6 +174,11 @@ switch lower(mp.layout)
                 mp.FPM.mask = mp.full.FPMcube(:,:,ilam);%modvar.sbpIndex,modvar.wpsbpIndex);
         end
 end
+
+% %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
+% if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
+% if(any(mp.dm_ind==2));  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
+
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
     case{'fourier'}
@@ -200,8 +214,8 @@ switch lower(mp.layout)
                     optval.use_fpm = false;
             end
         end
-
-        Eout = prop_run(mp.full.prescription, lambda*1e6, mp.P1.full.Narr, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
+        
+        Eout = prop_run(mp.full.prescription, lambda*1e6, mp.full.gridsize, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end

@@ -1,4 +1,4 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -12,23 +12,6 @@
 % -This code is based on electric field conjugation (EFC) as described 
 % by Give'on et al. SPIE 2011.
 %
-%
-% REVISION HISTORY: 
-% - Modified on 2019-04-23 by A.J. Riggs to have an option for a
-%   model-based grid search.
-% - Modified on 2019-02-13 by A.J. Riggs to use falco_ctrl_setup.m and
-%   falco_ctrl_wrapup.m to save a bunch of space.
-% - Modified on 2018-11-12 by A.J. Riggs to clean up code, especially to 
-%   remove the large commented-out blocks.
-% - Modified on 2018-07-24 by A.J. Riggs to switch from the Lagrange multiplier to the Tikhonov regularization.
-% - Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
-%   Called by a higher function. 
-% - Modified by A.J. Riggs on October 11, 2017 to allow easier mixing of
-%   which DMs are used and to also do a grid search over the gain of the 
-%   overall DM command. 
-% - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
-% - Created at Princeton on 19 Feb 2015 by A.J. Riggs
-
 %--Return values:
 %  Measured average normalized intensity
 %  DM commands
@@ -53,13 +36,13 @@ duVec = -dmfac*((10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum)\cvar
 %% Take images and compute average intensity in dark hole
 
 if(mp.ctrl.flagUseModel) %--Perform a model-based grid search using the compact model
-    if(mp.flagFiber == false)
+    if ~mp.flagFiber
         Itotal = falco_get_expected_summed_image(mp,cvar);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
         dDM.Itotal = Itotal;
     end
 else %--Perform an empirical grid search with actual images from the testbed or full model
-    if(mp.flagFiber == false)
+    if ~mp.flagFiber
         Itotal = falco_get_summed_image(mp);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
         dDM.Itotal = Itotal;

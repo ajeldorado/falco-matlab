@@ -146,8 +146,27 @@ switch upper(mp.coro)
             % represents a chromatic vortex FPM
             charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
         end
-        EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU );%--MFTs
-        EP4 = padOrCropEven(EP4,mp.P4.compact.Narr);
+        EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.compact.Nbeam/2, 0.3, 5, mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda),  mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));%--MFTs
+        
+        % Resize beam if Lyot plane has different resolution
+        if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
+            N1 = length(EP4);
+            mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
+            N4 = ceil_even(mag*N1);
+            if strcmpi(mp.centering, 'pixel')
+                x1 = (-N1/2:(N1/2-1))/mp.P1.compact.Nbeam;
+                x4 = (-N4/2:(N4/2-1))/mp.P4.compact.Nbeam;
+            else
+                x1 = (-(N1-1)/2:(N1-1)/2)/mp.P1.compact.Nbeam;
+                x4 = (-(N4-1)/2:(N4-1)/2)/mp.P4.compact.Nbeam;
+            end
+            [X1, Y1] = meshgrid(x1);
+            [X4, Y4] = meshgrid(x4);
+            EP4 = interp2(X1, Y1, EP4, X4, Y4);
+        end
+
+        EP4 = padOrCropEven(EP4, mp.P4.compact.Narr);
+        
     case{'SPLC','FLC'}
         %--MFT from SP to FPM (i.e., P3 to F3)
         EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.compact.dx,mp.F3.compact.dxi,mp.F3.compact.Nxi,mp.F3.compact.deta,mp.F3.compact.Neta,mp.centering); %--E-field incident upon the FPM
@@ -232,7 +251,23 @@ end
 if(normFac==0)
     switch upper(mp.coro)
         case{'VORTEX','VC','AVC'}
-            EP4 = propcustom_relay(EP3,mp.Nrelay3to4, mp.centering);
+            EP4 = propcustom_relay(EP3 ,mp.Nrelay3to4, mp.centering);
+            % Resize beam if Lyot plane has different resolution
+            if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
+                N1 = length(EP4);
+                mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
+                N4 = ceil_even(mag*N1);
+                if strcmpi(mp.centering, 'pixel')
+                    x1 = (-N1/2:(N1/2-1))/mp.P1.compact.Nbeam;
+                    x4 = (-N4/2:(N4/2-1))/mp.P4.compact.Nbeam;
+                else
+                    x1 = (-(N1-1)/2:(N1-1)/2)/mp.P1.compact.Nbeam;
+                    x4 = (-(N4-1)/2:(N4-1)/2)/mp.P4.compact.Nbeam;
+                end
+                [X1, Y1] = meshgrid(x1);
+                [X4, Y4] = meshgrid(x4);
+                EP4 = interp2(X1, Y1, EP4, X4, Y4);
+            end
             EP4 = padOrCropEven(EP4,mp.P4.compact.Narr);
     end
 end

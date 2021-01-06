@@ -12,7 +12,8 @@ function falco_plot_superposed_pupil_masks(mp)
 
     %--Plot superposed apodizer and telescope pupil
     if(mp.flagApod && mp.flagPlot)
-        figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight; colorbar; drawnow;
+        figure(600); imagesc(mp.P3.compact.mask - mp.P1.compact.mask,[-1 1]); axis xy equal tight;
+        colorbar; drawnow;
     end
     
     %--Plot superposed Lyot stop and telescope pupil
@@ -28,12 +29,14 @@ function falco_plot_superposed_pupil_masks(mp)
                 P1andP4 = abs(mp.P1.compact.mask) + P4mask;
                 figure(301); imagesc(P1andP4); axis xy equal tight; colorbar; 
                 set(gca,'Fontsize',20); title('Pupil and LS Superimposed','Fontsize',16');
+                drawnow;
 
                 if(mp.flagApod)
                     P1andP3 = abs(mp.P1.compact.mask) + ...
                         pad_crop(mp.P3.compact.mask,length(mp.P1.compact.mask));
                     figure(302); imagesc(P1andP3); axis xy equal tight; colorbar; 
                     set(gca,'Fontsize',20); title('Pupil and Apod Superimposed','Fontsize',16');
+                    drawnow;
                 end
             end
     end

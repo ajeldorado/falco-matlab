@@ -22,6 +22,15 @@
 
 function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
 
+
+%         %% Get set of unpinned actuators
+%         if(any(mp.dm_ind==1))
+%             mp.dm1.unpinned = setdiff(1:mp.dm1.NactTotal, mp.dm1.pinned);
+%         end
+%         if(any(mp.dm_ind==2))
+%             mp.dm2.unpinned = setdiff(1:mp.dm2.NactTotal, mp.dm2.pinned);
+%         end
+        
         %% Cull Weak Actuators
         %--MOVE TO A FUNCTION
         %--Reduce the number of actuators used based on their relative strength in the Jacobian
@@ -48,36 +57,44 @@ function [mp,jacStruct] = falco_ctrl_cull(mp,cvar,jacStruct)
                 mp.dm9.act_ele = find(G9intNorm/max(G9intNorm(:))>=10^(mp.logGmin));
                 clear G9intNorm
             end
+            
+            %--Remove pinned or dead actuators from Jacobian
+            if(any(mp.dm_ind==1))
+                mp.dm1.act_ele = setdiff(mp.dm1.act_ele, mp.dm1.pinned);
+            end
+            if(any(mp.dm_ind==2))
+                mp.dm2.act_ele = setdiff(mp.dm2.act_ele, mp.dm2.pinned);
+            end
 
-           %--Add back in all actuators that are tied (to keep the tied actuator logic correct when a weak actuator is included)
-           if(any(mp.dm_ind==1))
+            %--Add back in all actuators that are tied (to keep the tied actuator logic correct when a weak actuator is included)
+            if(any(mp.dm_ind==1))
                for ti=1:size(mp.dm1.tied,1)
                    if(any(mp.dm1.act_ele==mp.dm1.tied(ti,1))==false);  mp.dm1.act_ele = [mp.dm1.act_ele; mp.dm1.tied(ti,1)];  end
                    if(any(mp.dm1.act_ele==mp.dm1.tied(ti,2))==false);  mp.dm1.act_ele = [mp.dm1.act_ele; mp.dm1.tied(ti,2)];  end
                end
                mp.dm1.act_ele = sort(mp.dm1.act_ele); %--Need to sort for the logic in model_Jacobian.m
-           end
-           if(any(mp.dm_ind==2))
+            end
+            if(any(mp.dm_ind==2))
                for ti=1:size(mp.dm2.tied,1)
                    if(any(mp.dm2.act_ele==mp.dm2.tied(ti,1))==false);  mp.dm2.act_ele = [mp.dm2.act_ele; mp.dm2.tied(ti,1)];  end
                    if(any(mp.dm2.act_ele==mp.dm2.tied(ti,2))==false);  mp.dm2.act_ele = [mp.dm2.act_ele; mp.dm2.tied(ti,2)];  end
                end
                mp.dm2.act_ele = sort(mp.dm2.act_ele);
-           end
-           if(any(mp.dm_ind==8))
+            end
+            if(any(mp.dm_ind==8))
                for ti=1:size(mp.dm8.tied,1)
                    if(any(mp.dm8.act_ele==mp.dm8.tied(ti,1))==false);  mp.dm8.act_ele = [mp.dm8.act_ele; mp.dm8.tied(ti,1)];  end
                    if(any(mp.dm8.act_ele==mp.dm8.tied(ti,2))==false);  mp.dm8.act_ele = [mp.dm8.act_ele; mp.dm8.tied(ti,2)];  end
                end
                mp.dm8.act_ele = sort(mp.dm8.act_ele);
-           end
-           if(any(mp.dm_ind==9))
+            end
+            if(any(mp.dm_ind==9))
                for ti=1:size(mp.dm9.tied,1)
                    if(any(mp.dm9.act_ele==mp.dm9.tied(ti,1))==false);  mp.dm9.act_ele = [mp.dm9.act_ele; mp.dm9.tied(ti,1)];  end
                    if(any(mp.dm9.act_ele==mp.dm9.tied(ti,2))==false);  mp.dm9.act_ele = [mp.dm9.act_ele; mp.dm9.tied(ti,2)];  end
                end
                mp.dm9.act_ele = sort(mp.dm9.act_ele);
-           end
+            end
             
             %--Update the number of elements used per DM
             if(any(mp.dm_ind==1)); mp.dm1.Nele = length(mp.dm1.act_ele); end

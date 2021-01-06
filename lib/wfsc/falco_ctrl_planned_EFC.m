@@ -8,23 +8,6 @@
 % -This function performs an empirical grid search over these parameters:
 %  a) a scalar coefficient for the regularization matrix
 %  b) a scalar gain for the final DM command.
-%
-% -This code is based on electric field conjugation (EFC) as described 
-% by Give'on et al. SPIE 2011.
-%
-%
-% REVISION HISTORY:
-% - Modified on 2019-09-26 by A.J. Riggs to handle DM actuator constraints
-% outside this function in a more user-robust way.
-% - Modified on 2019-06-25 by A.J. Riggs to pass out tied actuator pairs. 
-% - Modified on 2018-07-24 to use Erkin's latest controller strategy.
-% - Modified on 2018-02-06 by A.J. Riggs to be parallelized with parfor.
-%   Required calling a new function. 
-% - Modified by A.J. Riggs on October 11, 2017 to allow easier mixing of
-%   which DMs are used and to also do a grid search over the gain of the 
-%   overall DM command. 
-% - Modified from hcil_ctrl_checkMuEmp.m by A.J. Riggs on August 31, 2016
-% - Created at Princeton on 19 Feb 2015 by A.J. Riggs
 
 function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
 
@@ -50,7 +33,8 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
     if(any(mp.gridSearchItrVec==cvar.Itr))
         
         %--Loop over all the settings to check empirically
-        if(mp.flagParfor) %--Parallelized
+        ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
+        if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
             parfor ni = 1:Nvals
                 [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
                 %--delta voltage commands
@@ -58,6 +42,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
                 if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
                 if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
+                ImCube(:, :, ni) = dDM_temp.Itotal;
             end
         else %--Not Parallelized
             for ni = Nvals:-1:1
@@ -67,6 +52,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
                 if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
                 if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
+                ImCube(:, :, ni) = dDM_temp.Itotal;
             end
         end
 
@@ -85,10 +71,11 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         [cvar.cMin,indBest] = min(Inorm_list(:));
         cvar.latestBestlog10reg = vals_list(1,indBest);
         cvar.latestBestDMfac = vals_list(2,indBest);
+        cvar.Im = ImCube(:, :, indBest);
         if(mp.ctrl.flagUseModel)
-            fprintf('Model-based grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
+            fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e normalized intensity.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
         else
-            fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
+            fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e normalized intensity.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
         end
     end
     
@@ -119,6 +106,8 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         vals_list = [log10regSchedOut; cvar.latestBestDMfac];
         
         [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+        cvar.Im = dDM.Itotal;
+        dDM = rmfield(dDM, 'Itotal'); % reduce amount of memory used since image moved to cvar structure
         if(mp.ctrl.flagUseModel)
             fprintf('Model says scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
         else

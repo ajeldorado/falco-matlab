@@ -1,25 +1,22 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function Vout = falco_fit_dm_surf(dm,Vin)
+% function Vout = falco_fit_dm_surf(dm, Vin)
 % 
-%--Function to fit a surface to a deformable mirror (DM) commands using PROPER.
+% Fit a surface to a deformable mirror (DM) commands using PROPER.
 %
-%--INPUTS
+% INPUTS
 % dm: structure of DM parameters
 % surfaceToFit: 2-D array of desired DM surface heights at each actuator
 %
-%--OUTPUT
+% OUTPUT
 % Vout: 2-D array of output DM voltage commands to give the desired surface
 %       heights in Vin
-% 
-%--VERSION HISTORY
-% Created on 2019-01-23 by A.J. Riggs.
 
-function Vout = falco_fit_dm_surf(dm,surfaceToFit)
+function Vout = falco_fit_dm_surf(dm, surfaceToFit)
 
 %--Set the order of operations
 orderOfOps = 'XYZ';

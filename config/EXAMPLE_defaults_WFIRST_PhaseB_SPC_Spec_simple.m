@@ -41,29 +41,21 @@ mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image
 
 %--Estimator Options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing with batch process estimation
+% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+%    one or more stars
+% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
+% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
 mp.estimator = 'perfect';
 
 %--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [actuators].
-mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
-mp.est.probe.offsetY = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
+mp.est.probe.radius = 12;%20;    % Max x/y extent of probed region [lambda/D].
+mp.est.probe.xOffset = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
+mp.est.probe.yOffset = 14;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
 mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
-
-%--New variables for pairwise probing with a Kalman filter
-% mp.est.ItrStartKF = 2 %Which correction iteration to start recursive estimate
-% mp.est.tExp =
-% mp.est.num_im =
-% mp.readNoiseStd =
-% mp.peakCountsPerPixPerSec =
-% mp.est.Qcoef =
-% mp.est.Rcoef =
-% mp.est.Pcoef0 = 
 
 %% Wavefront Control: General
 
@@ -160,7 +152,7 @@ mp.dm2.inf_sign = '+';
 mp.dm1.Nact = 48;               % # of actuators across DM array
 mp.dm1.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm1.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm1.ytilt = 5.83;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm1.ytilt = 5.7;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
 mp.dm1.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm1.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
@@ -170,7 +162,7 @@ mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 mp.dm2.Nact = 48;               % # of actuators across DM array
 mp.dm2.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm2.ytilt = 5.55;%8;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.ytilt = 5.7;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm2.zrot = 0;              % clocking of DM surface [degrees]
 mp.dm2.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm2.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
@@ -179,7 +171,7 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = true;  %--Whether to apply an iris or not
+mp.flagDM2stop = false;  %--Whether to apply an iris or not
 mp.dm2.Dstop = 50e-3;   %--Diameter of iris [meters]
 
 %--DM separations
@@ -201,7 +193,7 @@ mp.Fend.FOV = 11.; %--half-width of the field of view in both dimensions [lambda
 
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 2.6;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 9;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 9.0;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 65;  % angular opening of dark hole correction region [degrees]
 
 mp.Fend.score.Rin = 3;  % inner radius of dark hole scoring region [lambda0/D]
@@ -209,7 +201,6 @@ mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
-mp.Fend.clockAngDeg = 90; %--Amount to rotate the dark hole location
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -285,43 +276,6 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 %--FPM resolution
 mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda0/D]
 
-%--Load and downsample the FPM. To get good grayscale edges, convolve with the correct window before downsampling. 
-FPM0 = fitsread('FPM_res100_SPC-20190130.fits'); %--Resolution of 100 pixels per lambda0/D
-FPM0 = padOrCropOdd(FPM0,1821);
-% figure(1); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
-% figure(11); imagesc(FPM0-rot90(FPM0,2)); axis xy equal tight; colormap jet; colorbar;
-dx0 = 1/100;
-dx1 = 1/mp.F3.compact.res;
-N0 = size(FPM0,1);
-switch lower(mp.centering)
-    case{'pixel'}
-        N1 = ceil_odd(N0*dx0/dx1);
-    case{'interpixel'}
-        N1 = ceil_even(N0*dx0/dx1);
-end
-x0 = (-(N0-1)/2:(N0-1)/2)*dx0;
-[X0,Y0] = meshgrid(x0);
-R0 = sqrt(X0.^2+Y0.^2);
-Window = 0*R0;
-Window(R0<=dx1/2) = 1; Window = Window/sum(sum(Window));
-% figure(10); imagesc(Window); axis xy equal tight; colormap jet; colorbar;
-FPM0 = ifftshift(  ifft2( fft2(fftshift(Window)).*fft2(fftshift(FPM0)) )); %--To get good grayscale edges, convolve with the correct window before downsampling.
-FPM0 = circshift(FPM0,[1 1]); %--Undo a centering shift
-x1 = (-(N1-1)/2:(N1-1)/2)*dx1;
-[X1,Y1] = meshgrid(x1);
-FPM1 = interp2(X0,Y0,FPM0,X1,Y1,'cubic',0); %--Downsample by interpolation
-switch lower(mp.centering)
-    case{'pixel'}
-        mp.F3.compact.mask.amp = zeros(N1+1,N1+1);
-        mp.F3.compact.mask.amp(2:end,2:end) = FPM1;
-    otherwise
-        mp.F3.compact.mask.amp = FPM1;
-end
-% figure(2); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
-% figure(3); imagesc(FPM1); axis xy equal tight; colormap jet; colorbar;
-% figure(12); imagesc(FPM0-rot90(FPM0,2)); axis xy equal tight; colormap jet; colorbar;
-% figure(13); imagesc(FPM1-rot90(FPM1,2)); axis xy equal tight; colormap jet; colorbar;
-
 %% Optical Layout: Full Model 
 
 %--Focal Lengths
@@ -340,42 +294,6 @@ mp.SPname = 'SPC-20190130';
 %--FPM resolution
 mp.F3.full.res = 20;    % sampling of FPM for full model [pixels per lambda0/D]
 
-%--Load and downsample the FPM. To get good grayscale edges, convolve with the correct window before downsampling. 
-FPM0 = fitsread('FPM_res100_SPC-20190130.fits'); %--Resolution of 100 pixels per lambda0/D
-FPM0 = padOrCropOdd(FPM0,1821);
-% figure(1); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
-dx0 = 1/100;
-dx1 = 1/mp.F3.full.res;
-N0 = size(FPM0,1);
-switch lower(mp.centering)
-    case{'pixel'}
-        N1 = ceil_odd(N0*dx0/dx1);
-    case{'interpixel'}
-        N1 = ceil_even(N0*dx0/dx1);
-end
-x0 = (-(N0-1)/2:(N0-1)/2)*dx0;
-[X0,Y0] = meshgrid(x0);
-R0 = sqrt(X0.^2+Y0.^2);
-Window = 0*R0;
-Window(R0<=dx1/2) = 1; Window = Window/sum(sum(Window));
-% figure(10); imagesc(Window); axis xy equal tight; colormap jet; colorbar;
-FPM0 = ifftshift(  ifft2( fft2(fftshift(Window)).*fft2(fftshift(FPM0)) )); %--To get good grayscale edges, convolve with the correct window before downsampling.
-FPM0 = circshift(FPM0,[1 1]); %--Undo a centering shift
-x1 = (-(N1-1)/2:(N1-1)/2)*dx1;
-[X1,Y1] = meshgrid(x1);
-FPM1 = interp2(X0,Y0,FPM0,X1,Y1,'cubic',0); %--Downsample by interpolation
-switch lower(mp.centering)
-    case{'pixel'}
-        mp.F3.full.mask.amp = zeros(N1+1,N1+1);
-        mp.F3.full.mask.amp(2:end,2:end) = FPM1;
-    otherwise
-        mp.F3.full.mask.amp = FPM1;
-end
-
-% figure(2); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
-% figure(3); imagesc(FPM1); axis xy equal tight; colormap jet; colorbar;
-
-
 %% Mask Definitions
 
 %--Pupil definition
@@ -391,10 +309,27 @@ mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
 mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
 mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
 
+rocFilletLS = 0.1/100; % [pupil diameters]
+upsampleFactor = 100;
+clockDeg = 0;
+mp.P4.compact.mask = falco_gen_rounded_bowtie_LS(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, rocFilletLS, upsampleFactor, mp.P4.ang, clockDeg, mp.centering);
+mp.P4.full.mask = falco_gen_rounded_bowtie_LS(mp.P4.full.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, rocFilletLS, upsampleFactor, mp.P4.ang, clockDeg, mp.centering);
+% mp.P4.compact.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, mp.P4.wStrut, rocFilletLS, upsampleFactor, mp.centering);
+% mp.P4.full.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.full.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, mp.P4.wStrut, rocFilletLS, upsampleFactor, mp.centering);
+
+mp.compact.flagGenLS = false;
+mp.full.flagGenLS = false;
+
+
 %--FPM size
 mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 65;    % on each side, opening angle [degrees]
+rocFillet = 0.25;
+clockDeg = 0;
+upsampleFactor = 100;
+mp.F3.compact.mask.amp = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.compact.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
+mp.F3.full.mask.amp = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.full.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
 
 
 %% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,4 +1,4 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -39,6 +39,7 @@ function out = falco_init_storage_arrays(mp)
     if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall = zeros(mp.dm9.NactTotal,mp.Nitr+1); end; end
 
     %--Delta electric field performance metrics
-    out.complexProjection = zeros(mp.Nitr-1, 1);
-    out.complexCorrelation = zeros(mp.Nitr-1, 1);
+    out.complexProjection = zeros(mp.Nitr-1, 1); % Metric to compare magnitude of the correction step taken to the expected one
+    out.complexCorrelation = zeros(mp.Nitr-1, 1); % Metric to compare the morphology of the delta E-field estimated vs expected in the model
+
 end

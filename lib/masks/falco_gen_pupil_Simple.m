@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Inputs: 
+% Inputs structure:
 % inputs.Nbeam - Number of samples across the beam 
 % inputs.OD - Outer diameter (fraction of Nbeam)
 % inputs.ID - Inner diameter (fraction of Nbeam)
@@ -15,117 +15,126 @@
 %                   the horizontal direction by a factor of stretch (PROPER
 %                   version isn't implemented as of March 2019).
 
-function PUPIL = falco_gen_pupil_Simple( input )
-%falco_gen_pupil_SCDA Generates a simple pupil.
-%   Function may be used to generate circular, annular, and simple on-axis 
+function pupil = falco_gen_pupil_Simple(inputs)
+%   Generate a simple pupil.
+%   Can be used to generate circular, annular, and simple on-axis 
 %   telescopes with radial struts. 
 
-    hg_expon = 1000; % hyper-gaussian exponent for anti-aliasing 
-    hg_expon_spider = 100; % hyper-gaussian exponent for anti-aliasing 
+    Nbeam = inputs.Nbeam;
+    Narray = inputs.Npad; %Number of samples in NxN grid 
+    OD = inputs.OD; % pupil outer diameter, can be < 1
+    if(isfield(inputs, 'ID')); ID = inputs.ID; else; ID = 0; end % central obscuration radius
+    if(isfield(inputs, 'wStrut')); wStrut = inputs.wStrut; else; wStrut = 0; end % strut width [pupil diameters]
+    if(isfield(inputs, 'angStrut')); angStrutVec = inputs.angStrut; else; angStrutVec = []; wStrut = 0; end % vector of strut orientation angles
+    if(isfield(inputs,'centering')); centering = inputs.centering; else; centering = 'pixel'; end
+    if(isfield(inputs,'stretch')); xStretch = inputs.stretch; else; xStretch = 1; end
+    if(isfield(inputs, 'clocking')); clocking = inputs.clocking; else; clocking = 0; end % clocking [degrees]
+    if(isfield(inputs, 'xShear')); xShear = inputs.xShear; else; xShear = 0; end % x-shear [pupil diameters]
+    if(isfield(inputs, 'yShear')); yShear = inputs.yShear; else; yShear = 0; end % y-shear [pupil diameters]
+    if(isfield(inputs, 'flagHG')); flagHG = inputs.flagHG; else; flagHG = false; end % whether to use hyper-Gaussians to generate the pupil instead. (Old behavior)
 
-    if(isfield(input,'centering'))
-        centering = input.centering;
-    else
-        centering = 'pixel';
-    end
     
-    N = input.Npad;%Number of samples in NxN grid 
-    OD = input.OD; % pupil outer diameter, can be < 1
-    ID = input.ID; % central obscuration radius 
-    apRad = input.Nbeam/2; % aperture radius in samples 
-    if(isfield(input,'stretch'));b = input.stretch;else; b=1; end
+    if ~flagHG % By default, don't use hyger-gaussians for anti-aliasing the edges.
     
-    %Create coordinates
-    switch centering
-        case 'interpixel'
-            [X,Y] = meshgrid(-(N-1)/2:(N-1)/2);
-        otherwise
-            [X,Y] = meshgrid(-N/2:N/2-1);
-    end
-    [THETA,RHO] = cart2pol(X/b,Y); 
-    
-    % Make sure the inputs make sense
-    if(ID > OD)
-        error('Pupil generation error: Inner diameter larger than outer diameter.');
-    end
-    
-    % Create inner and outer circles
-    if(ID > 0)
-        PUPIL = exp(-(RHO/(apRad*OD)).^hg_expon) - exp(-(RHO/(apRad*ID)).^hg_expon);
-    else
-        PUPIL = exp(-(RHO/(apRad*OD)).^hg_expon);
-    end
-    
-    %--OVERWRITE if PROPER is specified
-    if(isfield(input,'flagPROPER'))
-        if(input.flagPROPER==true)
-            %Create coordinates
-            switch centering
-                case 'interpixel'
-                    [X,Y] = meshgrid(-(N-1)/2:(N-1)/2);
-                otherwise
-                    [X,Y] = meshgrid(-N/2:N/2-1);
-            end
-            [THETA,RHO] = cart2pol(X,Y); 
+        % Create outer aperture
+        inpOuter.Nbeam = Nbeam;
+        inpOuter.Narray = Narray;
+        inpOuter.radiusX = xStretch*0.5*OD;
+        inpOuter.radiusY = 0.5*OD;
+        inpOuter.centering = centering;
+        inpOuter.clockingDegrees = clocking;
+        inpOuter.xShear = xShear;
+        inpOuter.yShear = yShear;
+        apOuter = falco_gen_ellipse(inpOuter);
 
-            % Make sure the inputs make sense
-            if(ID > OD)
-                error('Pupil generation error: Inner diameter larger than outer diameter.');
-            end
-
-            % Create inner and outer circles in PROPER
-
+        % Create inner aperture
+        if ID > 0
+            inpInner.Nbeam = Nbeam;
+            inpInner.Narray = Narray;
+            inpInner.radiusX = xStretch*0.5*ID;
+            inpInner.radiusY = 0.5*ID;
+            inpInner.centering = centering;
+            inpInner.clockingDegrees = clocking;
+            inpInner.xShear = xShear;
+            inpInner.yShear = yShear;
+            apInner = 1 - falco_gen_ellipse(inpInner);
+        elseif ID > OD
+            error('Pupil generation error: Inner diameter cannot be larger than outer diameter.');
+        else
+            apInner = 1;
+        end
+        
+        % Create struts in PROPER
+        if isempty(angStrutVec)
+            
+            apStruts = 1;
+            
+        else
             %--INITIALIZE PROPER
             Dbeam = 1; %--diameter of beam (normalized to itself)
-            dx = Dbeam/input.Nbeam;
-            Narray = N;
+            dx = Dbeam/inputs.Nbeam;
             Darray = Narray*dx;
             wl_dummy = 1e-6; %--dummy value
             bdf = Dbeam/Darray; %--beam diameter fraction
-            xshift = 0; %--x-shear of pupil
-            yshift = 0; %--y-shear of pupil
-            bm = prop_begin(Dbeam, wl_dummy, Narray,'beam_diam_fraction',bdf);
+            bm = prop_begin(Dbeam, wl_dummy, Narray, 'beam_diam_fraction', bdf);
 
             switch centering % 0 shift for pixel-centered pupil, or -diam/Narray shift for inter-pixel centering
                 case {'interpixel'}
-                    cshift = -dx/2; 
+                    cshift = -dx/2; % [pupil diameters]  
                 case {'pixel'}
                     cshift = 0;
             end
 
-            %--PRIMARY MIRROR (OUTER DIAMETER)
-            ra_OD = OD/2;
-            cx_OD = 0 + cshift + xshift;
-            cy_OD = 0 + cshift + yshift;
-            bm = prop_circular_aperture(bm, ra_OD,'cx',cx_OD,'cy',cy_OD);%, cx, cy, norm);
-
-            if(ID > 0)
-                %--SECONDARY MIRROR (INNER DIAMETER)
-                ra_ID = ID/2;
-                cx_ID = 0 + cshift + xshift;
-                cy_ID = 0 + cshift + yshift;
-                bm = prop_circular_obscuration(bm, ra_ID,'cx',cx_ID,'cy',cy_ID);%, cx, cy, norm)
+            %--STRUTS
+            lStrut = 0.6; % [pupil diameters]
+            rcStrut0 = lStrut / 2.0;
+            for iStrut = 1:length(angStrutVec)
+                ang =  angStrutVec(iStrut) + clocking;
+                bm = prop_rectangular_obscuration(bm, lStrut, wStrut,...
+                    'XC', rcStrut0*cosd(ang)+cshift+xShear, 'YC', rcStrut0*sind(ang)+cshift+yShear, 'ROT', ang);
             end
-            PUPIL = ifftshift(abs(bm.wf));            
+            apStruts = ifftshift(abs(bm.wf));
             
         end
-    end
+        
+        % Combine all features
+        pupil = apOuter.*apInner.*apStruts;      
+        
+        
+    else % Use hyper-Gaussians
+        
+        hg_expon = 1000; % hyper-gaussian exponent for anti-aliasing 
+        hg_expon_spider = 100; % hyper-gaussian exponent for anti-aliasing 
+        apRad = inputs.Nbeam/2; % aperture radius in samples 
+    
+        %Create coordinates
+        switch centering
+            case 'interpixel'
+                [X,Y] = meshgrid(-(Narray-1)/2:(Narray-1)/2);
+            otherwise
+                [X,Y] = meshgrid(-Narray/2:Narray/2-1);
+        end
+        [THETA,RHO] = cart2pol(X/xStretch,Y); 
+        
+        % Create inner and outer circles
+        if(ID > 0 && ID < OD)
+            pupil = exp(-(RHO/(apRad*OD)).^hg_expon) - exp(-(RHO/(apRad*ID)).^hg_expon);
+        else
+            pupil = exp(-(RHO/(apRad*OD)).^hg_expon);
+        end
 
-    % Create spiders 
-    if(input.wStrut > 0)
-        
-        numSpiders = input.Nstrut;
-        angs = input.angStrut;
-        
-        if(numSpiders~=numel(angs))
-            error('Pupil generation error: ''angStrut'' should be an array of length ''Nstrut''');
+        % Create spiders 
+        if inputs.wStrut > 0
+
+            halfwidth = inputs.wStrut*apRad;
+            for ang = inputs.angStrut
+               pupil = pupil.*(1-exp(-(RHO.*sin(THETA-ang*pi/180)/halfwidth).^hg_expon_spider).*...
+                   (RHO.*cos(THETA-ang*pi/180)>0));
+            end
+
         end
         
-        halfwidth = input.wStrut*2*apRad;
-        for ang = angs
-           PUPIL = PUPIL.*(1-exp(-(RHO.*sin(THETA-ang*pi/180)/halfwidth).^hg_expon_spider).*...
-               (RHO.*cos(THETA-ang*pi/180)>0));
-        end
+
     end
     
 end

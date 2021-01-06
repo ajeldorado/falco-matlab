@@ -7,6 +7,18 @@
 % Function for 
 % -This function 
 %
+%--CONTROL SCHEDULE. Columns of sched_mat are: 
+    % Column 1: # of iterations, 
+    % Column 2: log10(regularization), 
+    % Column 3: which DMs to use (12, 128, 129, or 1289) for control
+    % Column 4: flag (0 = false, 1 = true), whether to re-linearize
+    %   at that iteration.
+    % Column 5: flag (0 = false, 1 = true), whether to perform an
+    %   EFC parameter grid search to find the set giving the best
+    %   contrast .
+    % The imaginary part of the log10(regularization) in column 2 is
+    %  replaced for that iteration with the optimal log10(regularization)
+    % A row starting with [0, 0, 0, 1...] is for relinearizing only at that time
 %
 %
 % REVISION HISTORY:
