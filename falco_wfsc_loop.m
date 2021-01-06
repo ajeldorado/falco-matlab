@@ -1,31 +1,21 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to run wavefront a estimation and control loop for various 
-% types of coronagraphs.
+% Run a wavefront estimation and control loop.
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
-%% Initializations of Arrays for Data Storage 
-InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
+% Initializations of Arrays for Data Storage 
+InormHist = zeros(mp.Nitr, 1); % Measured, mean raw contrast in scoring region of dark hole.
 
-%% Plot the pupil masks
-% if(mp.flagPlot); figure(101); imagesc(mp.P1.full.mask);axis image; colorbar; title('pupil');drawnow; end
-% if(mp.flagPlot && (length(mp.P4.full.mask)==length(mp.P1.full.mask))); figure(102); imagesc(mp.P4.full.mask);axis image; colorbar; title('Lyot stop');drawnow; end
-% if(mp.flagPlot && isfield(mp,'P3.full.mask')); figure(103); imagesc(padOrCropEven(mp.P1.full.mask,mp.P3.full.Narr).*mp.P3.full.mask);axis image; colorbar; drawnow; end
-
-%% Take initial broadband image 
+% Take initial broadband image 
 Im = falco_get_summed_image(mp);
 
-%% 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Begin the Correction Iterations
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-for Itr=1:mp.Nitr
+% Begin the Estimation+Control Iterations
+for Itr = 1:mp.Nitr
 
     %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
     if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
@@ -58,7 +48,7 @@ for Itr=1:mp.Nitr
     if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  else; DM2surf = zeros(mp.dm2.compact.Ndm);    end
 
 
-    %% Updated plot and reporting
+    %% Throughput and Normalized Intensity
     %--Calculate the core throughput (at higher resolution to be more accurate)
     [mp,thput,ImSimOffaxis] = falco_compute_thput(mp);
     if(mp.flagFiber)
@@ -67,7 +57,7 @@ for Itr=1:mp.Nitr
         mp.thput_vec(Itr) = thput; %--record keeping
     end
     
-    %--Compute the current contrast level
+    %--Compute the current normalized intensity level
     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
     
     %% Updated selection of Zernike modes targeted by the controller
@@ -242,8 +232,8 @@ for Itr=1:mp.Nitr
         end
     end
     
-    %--Compute the current normalized intensity
-    InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
+%     %--Compute the current normalized intensity
+%     InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
     
     %% Plot the updates to the DMs and PSF
     if Itr == 1; hProgress.master = 1; end % dummy value to intialize the handle variable
@@ -266,42 +256,44 @@ for Itr=1:mp.Nitr
     
     %% Plot the expected and measured delta E-fields
     if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0))
-        dEmeas = squeeze(EfieldVec(:, mp.si_ref) - EprevMeas(:, mp.si_ref));
-        dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-        dEmeas2D(mp.Fend.corr.maskBool) = dEmeas; % 2-D for plotting
-        dEmodel = EnowModel(mp.Fend.corr.maskBool) - EprevModel(mp.Fend.corr.maskBool);
-        dEmodel2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-        dEmodel2D(mp.Fend.corr.maskBool) = dEmodel;  % 2-D for plotting
-        dEmax = max(abs(dEmodel)); % max value in plots
-        out.complexProjection(Itr-1) = abs(dEmodel'*dEmeas)/abs(dEmodel'*dEmodel);
-        fprintf('  Complex projection of deltaE is %3.2f \n', out.complexProjection(Itr-1));
-        out.complexCorrelation(Itr-1) = abs(dEmodel'*dEmeas/(sqrt(abs(dEmeas'*dEmeas))*sqrt(abs(dEmodel'*dEmodel)) ));
-        fprintf('  Complex correlation of deltaE is %3.2f \n', out.complexCorrelation(Itr-1));
-        
-        if mp.flagPlot            
-            figure(50); set(gcf, 'Color', 'w');
-            fs = 18;
-            
-            hModelAmp = subplot(2,2,1); % Save the handle of the subplot
-            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelAmp, 'parula');
-            title('abs(dE_{model})', 'Fontsize', fs); 
-            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
-            
-            hMeasAmp = subplot(2,2,2); % Save the handle of the subplot
-            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
-            title('abs(dE_{meas})', 'Fontsize', fs); 
-            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
-            
-            hModelPh = subplot(2,2,3); % Save the handle of the subplot
-            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelPh, 'hsv');
-            title('angle(dE_{model})', 'Fontsize', fs); 
-            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
-            
-            hMeasPh = subplot(2,2,4); % Save the handle of the subplot
-            imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmeas2D)); axis xy equal tight; colorbar; colormap(hMeasPh, 'hsv');
-            title('angle(dE_{meas})', 'Fontsize', fs); 
-            set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
-            drawnow;
+        for si = 1:mp.Nsbp
+            dEmeas = squeeze(EfieldVec(:, si) - EprevMeas(:, si));
+            dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+            dEmeas2D(mp.Fend.corr.maskBool) = dEmeas; % 2-D for plotting
+            dEmodel = EnowModel(mp.Fend.corr.maskBool) - EprevModel(mp.Fend.corr.maskBool);
+            dEmodel2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+            dEmodel2D(mp.Fend.corr.maskBool) = dEmodel;  % 2-D for plotting
+            dEmax = max(abs(dEmodel)); % max value in plots
+            out.complexProjection(Itr-1, si) = abs(dEmodel'*dEmeas)/abs(dEmodel'*dEmodel);
+            fprintf('  Complex projection of deltaE is %3.2f    for subband %/d/%d\n', out.complexProjection(Itr-1, si), si, mp.Nsbp);
+            out.complexCorrelation(Itr-1, si) = abs(dEmodel'*dEmeas/(sqrt(abs(dEmeas'*dEmeas))*sqrt(abs(dEmodel'*dEmodel)) ));
+            fprintf('  Complex correlation of deltaE is %3.2f    for subband %/d/%d\n', out.complexCorrelation(Itr-1, si), si, mp.Nsbp);
+
+            if mp.flagPlot            
+                figure(50+si); set(gcf, 'Color', 'w');
+                fs = 18;
+
+                hModelAmp = subplot(2,2,1); % Save the handle of the subplot
+                imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelAmp, 'parula');
+                title('abs(dE_{model})', 'Fontsize', fs); 
+                set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+
+                hMeasAmp = subplot(2,2,2); % Save the handle of the subplot
+                imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+                title('abs(dE_{meas})', 'Fontsize', fs); 
+                set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+
+                hModelPh = subplot(2,2,3); % Save the handle of the subplot
+                imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmodel2D)); axis xy equal tight; colorbar; colormap(hModelPh, 'hsv');
+                title('angle(dE_{model})', 'Fontsize', fs); 
+                set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+
+                hMeasPh = subplot(2,2,4); % Save the handle of the subplot
+                imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmeas2D)); axis xy equal tight; colorbar; colormap(hMeasPh, 'hsv');
+                title('angle(dE_{meas})', 'Fontsize', fs); 
+                set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+                drawnow;
+            end
         end
     end
     %% Compute and Plot the Singular Mode Spectrum of the Control Jacobian
@@ -367,11 +359,6 @@ for Itr=1:mp.Nitr
     
     %% Add spatially-dependent (and star-dependent) weighting to the control Jacobians
 
-%     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm1.Nele]), [1, 3, 2]); end
-%     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm2.Nele]), [1, 3, 2]); end
-%     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm8.Nele]), [1, 3, 2]); end
-%     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9 .* permute(repmat(mp.WspatialVec, [1, 1, mp.dm9.Nele]), [1, 3, 2]); end
-    
     for iStar = 1:mp.compact.star.count
         if(any(mp.dm_ind==1))
             jacStruct.G1(:, :, mp.jac.star_inds == iStar) = ...
@@ -390,12 +377,7 @@ for Itr=1:mp.Nitr
                 jacStruct.G9(:, :, mp.jac.star_inds == iStar) .* repmat(mp.WspatialVec(:, iStar), [1, mp.dm9.Nele, mp.jac.NmodePerStar]);
         end
     end
-    
-%     if(any(mp.dm_ind==1)); jacStruct.G1 = jacStruct.G1.*repmat(mp.WspatialVec,[1, mp.dm1.Nele, mp.jac.Nmode]); end
-%     if(any(mp.dm_ind==2)); jacStruct.G2 = jacStruct.G2.*repmat(mp.WspatialVec,[1, mp.dm2.Nele, mp.jac.Nmode]); end
-%     if(any(mp.dm_ind==8)); jacStruct.G8 = jacStruct.G8.*repmat(mp.WspatialVec,[1, mp.dm8.Nele, mp.jac.Nmode]); end 
-%     if(any(mp.dm_ind==9)); jacStruct.G9 = jacStruct.G9.*repmat(mp.WspatialVec,[1, mp.dm9.Nele, mp.jac.Nmode]); end
-    
+
     %--Compute the number of total actuators for all DMs used. 
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     
@@ -437,7 +419,7 @@ switch mp.centering
 end
 [XS,YS] = meshgrid(xs);
 RS = sqrt(XS.^2 + YS.^2);
-rmsSurf_ele = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
+rmsSurfInd = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
 
 %--Compute the RMS stroke
 if(any(mp.dm_ind==1))
@@ -447,7 +429,7 @@ if(any(mp.dm_ind==1))
     xs = ( -(Nact-1)/2:(Nact-1)/2 )*dx_dm;
     [XS,YS] = meshgrid(xs);
     RS = sqrt(XS.^2 + YS.^2);
-    rmsStroke1_ele = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
+    rmsStrokeInd1 = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
 end
 
 %--Calculate and report updated P-V DM voltages.
@@ -477,12 +459,12 @@ end
 %--Calculate and report updated RMS DM surfaces.
 if(any(mp.dm_ind==1))
     out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
-    out.dm1.Srms(Itr) = falco_rms(DM1surf(rmsSurf_ele));
+    out.dm1.Srms(Itr) = falco_rms(DM1surf(rmsSurfInd));
     fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
 end
 if(any(mp.dm_ind==2))
     out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
-    out.dm2.Srms(Itr) = falco_rms(DM2surf(rmsSurf_ele));
+    out.dm2.Srms(Itr) = falco_rms(DM2surf(rmsSurfInd));
     fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
 end
 
@@ -494,13 +476,13 @@ end
 %--REPORTING NORMALIZED INTENSITY
 if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
     InormHist(Itr+1) = cvar.cMin; % mean(Im(mp.Fend.corr.maskBool));
-    fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+    fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n\n',...
         InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) );
     if ~mp.flagSim
         fprintf('\n\n');
     end
 else
-    fprintf('Previous Measured NI:\t\t\t %.2e \n', InormHist(Itr))
+    fprintf('Previous Measured NI:\t\t\t %.2e \n\n', InormHist(Itr))
 end
 
 %--Save out DM commands after each iteration in case the trial crashes part way through.
@@ -524,7 +506,7 @@ if(mp.flagTrainModel)
 end
 
 end %--END OF ESTIMATION + CONTROL LOOP
-%% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
 
 %% Update progress plot one last time
 Itr = Itr + 1;

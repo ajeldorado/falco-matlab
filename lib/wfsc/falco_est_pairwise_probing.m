@@ -153,12 +153,11 @@ for iSubband=1:mp.Nsbp
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
-    if(mp.flagFiber)
-        ev.InormProbeMax = mp.est.InormProbeMax;
+    ev.InormProbeMax = mp.est.InormProbeMax;
+    if mp.flagFiber
         InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
     else
-        ev.InormProbeMax = mp.est.InormProbeMax;
-        InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
+        InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
     end
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 

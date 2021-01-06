@@ -1,17 +1,21 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to plot relevant data for pairwise probing.
-%
-% REVISION HISTORY:
-% -Created on 2018-04-22 by A.J. Riggs.
+% Plot relevant data for pairwise probing.
 
-function falco_plot_pairwise_probes(mp, ev, dDMVplus, VtoH, ampSq2Dcube)
+function falco_plot_pairwise_probes(mp, ev, dDMVplus, ampSq2Dcube)
 
 if(mp.flagPlot)
+    
+    if mp.est.probe.whichDM == 1
+        VtoH = mp.dm1.VtoH;
+    elseif mp.est.probe.whichDM == 2
+        VtoH = mp.dm2.VtoH;
+    end
+    
     Npairs = mp.est.probe.Npairs;
 
     subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]); %--Define a trimmed-down plot
