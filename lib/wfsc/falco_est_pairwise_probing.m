@@ -38,6 +38,8 @@
 
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
+mp.isProbing = true;
+
 %--If there is a third input, it is the Jacobian structure
 if( size(varargin, 2)== 1 )
     jacStruct = varargin{1};
@@ -58,8 +60,8 @@ elseif(mp.est.probe.whichDM== 2)
 end
 
 %--Store the initial DM commands
-if(any(mp.dm_ind == 1));  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end
-if(any(mp.dm_ind == 2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end
+if(any(mp.dm_ind == 1));  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
+if(any(mp.dm_ind == 2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
@@ -130,7 +132,9 @@ for iSubband=1:mp.Nsbp
 
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImage = 1;
+    mp.isProbing = false;
     I0 = falco_get_sbp_image(mp, iSubband);
+    mp.isProbing = true;
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     
     if iStar == 1 % Already includes all stars, so don't sum over star loop
@@ -150,10 +154,10 @@ for iSubband=1:mp.Nsbp
 
     % Set (approximate) probe intensity based on current measured Inorm
     if(mp.flagFiber)
-        ev.InormProbeMax = 1e-5;
+        ev.InormProbeMax = mp.est.InormProbeMax;
         InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
     else
-        ev.InormProbeMax = 1e-4;
+        ev.InormProbeMax = mp.est.InormProbeMax;
         InormProbe = min( [sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
     end
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
@@ -175,7 +179,7 @@ for iSubband=1:mp.Nsbp
             dDM2Vprobe = 0;
         elseif mp.est.probe.whichDM == 2
             dDM1Vprobe = 0;        
-            dDM2Vprobe = probeCmd ./ mp.dm1.VtoH; % Now in volts
+            dDM2Vprobe = probeCmd ./ mp.dm2.VtoH; % Now in volts
         end
         if(any(mp.dm_ind == 1));  mp.dm1.V = DM1Vnom + dDM1Vprobe;  end
         if(any(mp.dm_ind == 2));  mp.dm2.V = DM2Vnom + dDM2Vprobe;  end
@@ -230,10 +234,12 @@ for iSubband=1:mp.Nsbp
     %% Plot relevant data for all the probes
     ev.iStar = iStar;
     if mp.est.probe.whichDM == 1
-        falco_plot_pairwise_probes(mp, ev, DM1Vplus-repmat(DM1Vnom, [1, 1, size(DM1Vplus, 3)]), mp.dm1.VtoH, ampSq2Dcube)
+        DMV4plot = DM1Vplus - repmat(DM1Vnom, [1, 1, size(DM1Vplus, 3)]);
     elseif mp.est.probe.whichDM == 2
-        falco_plot_pairwise_probes(mp, ev, DM2Vplus-repmat(DM2Vnom, [1, 1, size(DM2Vplus, 3)]), mp.dm2.VtoH, ampSq2Dcube)
+        DMV4plot = DM2Vplus - repmat(DM2Vnom, [1, 1, size(DM2Vplus, 3)]);
     end
+    falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube)
+
     %% Perform the estimation
     
     if(mp.est.flagUseJac) %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
@@ -318,8 +324,9 @@ if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp-square') || (s
         Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
-    Eest(abs(Eest).^2 > 1e-2) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
-    fprintf('%d of %d pixels were given zero probe amplitude. \n', zerosCounter, mp.Fend.corr.Npix); 
+
+    Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
+    fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
 
     %--Initialize the state and state covariance estimates for Kalman
     %filter. The state is the real and imag parts of the E-field.
@@ -470,6 +477,8 @@ ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
 ev.Iest = abs(ev.Eest).^2;
 ev.InormEst = mean(ev.Iest(:));
 
-fprintf(' done. Time: %.3f\n', toc);
+mp.isProbing = false;
+
+fprintf(' done. Time: %.3f\n',toc);
 
 end %--END OF FUNCTION

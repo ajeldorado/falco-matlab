@@ -18,15 +18,15 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     % Step 3: Compute the EFC command to use.
     
     %% Initializations    
-    vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
+    vals_list = allcomb(mp.ctrl.log10regVec, mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
     Nvals = max(size(vals_list,2));
     Inorm_list = zeros(Nvals,1);
 
     % Temporarily store computed DM commands so that the best one does not have to be re-computed
-    if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact,mp.dm1.Nact,Nvals); end
-    if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact,mp.dm2.Nact,Nvals); end
-    if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals); end
-    if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals); end
+    if(any(mp.dm_ind==1)); dDM1V_store = zeros(mp.dm1.Nact, mp.dm1.Nact, Nvals); end
+    if(any(mp.dm_ind==2)); dDM2V_store = zeros(mp.dm2.Nact, mp.dm2.Nact, Nvals); end
+    if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal, Nvals); end
+    if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal, Nvals); end
 
     %% Empirically find the regularization value giving the best contrast
     
@@ -35,7 +35,8 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
         if isfield(mp, 'tb')
             mp = rmfield(mp, 'tb');
-        end        
+        end
+        
         parfor ni = 1:Nvals
             [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
             %--delta voltage commands
@@ -47,6 +48,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
                 ImCube(:, :, ni) = dDM_temp.Itotal;
             end
         end
+        
     else %--Not Parallelized
         for ni = Nvals:-1:1
             [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
@@ -73,14 +75,14 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     fprintf('\n')
 
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
-    [cvarOut.cMin,indBest] = min(Inorm_list(:));
-    
+    [cvarOut.cMin, indBest] = min(Inorm_list(:));
     cvarOut.Im = ImCube(:, :, indBest);
+    
     %--delta voltage commands
-    if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
-    if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
-    if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:,indBest); end
-    if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:,indBest); end
+    if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:, :, indBest); end
+    if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:, :, indBest); end
+    if(any(mp.dm_ind==8)); dDM.dDM8V = dDM8V_store(:, indBest); end
+    if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:, indBest); end
 
     cvarOut.log10regUsed = vals_list(1,indBest);
     dmfacBest = vals_list(2,indBest);

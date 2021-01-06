@@ -1,11 +1,11 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to compute the normalization value for the compact and full
-% models. 
+% Compute the normalization value for the compact and full models.
+%
 % For vortex coronagraphs: The normalization value is the peak intensity 
 %   for an on-axis object with the entire coronagraph in place except with 
 %   the focal plane mask removed.
@@ -13,12 +13,13 @@
 %   for an off-axis object at separation (mp.source_x_offset_norm,
 %   mp.source_y_offset_norm) lambda0/D.
 %
-% ---------------
-% INPUTS:
-% - mp = structure of model parameters
+% INPUTS
+% ------
+% mp : structure of model parameters
 %
 % OUTPUTS
-% - mp = structure of model parameters
+% -------
+% mp : structure of model parameters
 
 function mp = falco_get_PSF_norm_factor(mp)
 
@@ -50,13 +51,14 @@ end
 
 %--Full Model Normalizations (at points for entire-bandpass evaluation)
 if(mp.flagParfor)
-    
+
     % Remove testbed object
     if isfield(mp, 'tb')
         mptmp = rmfield(mp, 'tb');
     else
         mptmp = mp;
     end
+    
     parfor li = 1:mp.Nsbp*mp.Nwpsbp
         I00vec{li} = model_full_norm_wrapper(li,mptmp);
     end
@@ -65,9 +67,10 @@ if(mp.flagParfor)
     for si=1:mp.Nsbp
         for wi=1:mp.Nwpsbp
             counter = counter+1;
-            mp.Fend.full.I00(si,wi) = I00vec{counter};
+            mp.Fend.full.I00(si, wi) = I00vec{counter};
         end
     end
+    
 else %--No parfor
     for si=1:mp.Nsbp
         for wi=1:mp.Nwpsbp
@@ -80,37 +83,27 @@ else %--No parfor
 end
 
 %--Visually verify the normalized coronagraphic PSF
-% modvar.ttIndex = 1;
-modvar.sbpIndex = mp.si_ref;
-modvar.wpsbpIndex = mp.wi_ref;
-modvar.whichSource = 'star'; 
-
-E0c = model_compact(mp, modvar);
-I0c = abs(E0c).^2;
 if(mp.flagPlot)
+    modvar.sbpIndex = mp.si_ref;
+    modvar.wpsbpIndex = mp.wi_ref;
+    modvar.zernIndex = 1;
+    modvar.starIndex = 1; % Always use first star for image normalization
+    modvar.whichSource = 'star'; 
+
+    E0c = model_compact(mp, modvar);
+    I0c = abs(E0c).^2;
     figure(501); imagesc(log10(I0c)); axis xy equal tight; colorbar;
-    title('Compact Model Image for Normalization');
+    title('Compact Model: Normalization Check');
     set(gca,'Fontsize', 18)
     drawnow;
-end
 
-% I0f = 0;
-% for iStar = 1:mp.star.count
-%     modvar.starIndex = iStar;
-%     E0f = model_full(mp, modvar);
-%     I0f = I0f + abs(E0f).^2;
-% end
-
-E0f = model_full(mp, modvar);
-I0f = abs(E0f).^2;
-
-if(mp.flagPlot)
+    E0f = model_full(mp, modvar);
+    I0f = abs(E0f).^2;
     figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
-    title('Full Model Image for Normalization');
+    title('(Full Model: Normalization Check)');
     set(gca,'Fontsize', 18)
     drawnow;
 end
-
 
 end %--END OF FUNCTION
 

@@ -29,6 +29,8 @@ function normI = falco_get_testbed_sbp_image(mp,si)
             normI = falco_get_hcst_sbp_image(mp,si);
         case 'GPCT'
             normI = falco_get_gpct_sbp_image(mp,si); 
+        case 'DST'
+            normI = falco_get_dst_sbp_image(mp,si); 
         %Can put other testbeds or fancy models here
         %case 'WHATEVER'
             %normI = falco_get_whatever_sbp_image(mp,si); 

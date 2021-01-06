@@ -38,6 +38,11 @@ function Imean = falco_get_summed_image(mp)
         %--Remove testbed objects in parfor loops
         if isfield(mp, 'tb'); mp = rmfield(mp, 'tb'); end
         
+        % Remove testbed objects
+        if isfield(mp, 'tb')
+           mp = rmfield(mp, 'tb');
+        end
+        
         %--Obtain all the images in parallel
         parfor ic = 1:Nval
             Iall{ic} = falco_get_single_sim_image(ic, ind_list, mp);  
