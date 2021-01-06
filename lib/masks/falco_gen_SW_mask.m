@@ -1,4 +1,4 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -111,13 +111,9 @@ switch lower(darkHoleShape)
     case{'circle', 'annulus'}
         softwareMask0 = (RHOS>=rhoInner & RHOS<=rhoOuter);
     case{'square'}
-        % softwareMask0 = (RHOS>=rhoInner & abs(XIS)<=rhoOuter & abs(ETAS)<=rhoOuter);
-%         softwareMask0 = (RHOS>=rhoInner) & (RHOS.*cos(THETAS-clockAngRad)<=rhoOuter);
         softwareMask0 = ((RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
                         (RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter)) &...
                         (RHOS>=rhoInner);
-%         softwareMask0 = (RHOS.*cos(THETAS-clockAngRad)>=rhoInner & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
-%                 (RHOS.*cos(THETAS-clockAngRad)<=-rhoInner & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter);
     case{'rect', 'rectangle'}
         softwareMask0 = (RHOS.*cos(THETAS-clockAngRad)>=rhoInner & RHOS.*cos(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter) |...
                         (RHOS.*cos(THETAS-clockAngRad)<=-rhoInner & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter);

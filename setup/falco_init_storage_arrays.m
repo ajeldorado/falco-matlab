@@ -37,9 +37,9 @@ function out = falco_init_storage_arrays(mp)
     if(isfield(mp,'dm2')); if(isfield(mp.dm2,'V'));  out.dm2.Vall = zeros(mp.dm2.Nact,mp.dm2.Nact,mp.Nitr+1); end; end
     if(isfield(mp,'dm8')); if(isfield(mp.dm8,'V'));  out.dm8.Vall = zeros(mp.dm8.NactTotal,mp.Nitr+1); end; end
     if(isfield(mp,'dm9')); if(isfield(mp.dm9,'V'));  out.dm9.Vall = zeros(mp.dm9.NactTotal,mp.Nitr+1); end; end
-    
+
     %--Delta electric field performance metrics
-    out.complexProjection = zeros(mp.Nitr-1, 1); % Metric to compare magnitude of the correction step taken to the expected one
-    out.complexCorrelation = zeros(mp.Nitr-1, 1); % Metric to compare the morphology of the delta E-field estimated vs expected in the model
-    
+    out.complexProjection = zeros(mp.Nitr-1, mp.Nsbp); % Metric to compare magnitude of the correction step taken to the expected one
+    out.complexCorrelation = zeros(mp.Nitr-1, mp.Nsbp); % Metric to compare the morphology of the delta E-field estimated vs expected in the model
+
 end

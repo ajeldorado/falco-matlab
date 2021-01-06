@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,7 +6,7 @@
 %
 % Script to perform a DMVC design run with single-mode fibers in the final plane.
 
-clear all;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -27,7 +27,7 @@ EXAMPLE_defaults_LUVOIRB_VC_design_fibers
 %% Step 3: Overwrite default values as desired
 
 %--Special Computational Settings
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true;%false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 mp.flagFiber = true;  %--whether to go place single-mode fibers in the focal plane
 mp.flagLenslet = false;  %--whether to go through a lenslet array before using the fibers
@@ -40,7 +40,7 @@ mp.lambda0 = 690e-9;
 mp.fracBW = 0.40;
 mp.Nsbp = 12;
 mp.Nitr = 6;
-mp.estimator = 'pwp-bp';
+mp.estimator = 'pwp-bp-square';
 mp.est.flagUseJac = false;
 
 mp.fineAlignment_it = 0;
