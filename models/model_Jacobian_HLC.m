@@ -1,38 +1,23 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian_HLC(mp, im, whichDM)
-%--Wrapper for the simplified optical models used for the fast Jacobian calculation.
+%  Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
-%  This function is for the HLC coronagraphs.
+%  This function is for the hybrid Lyot coronagraph (HLC).
 %
-% REVISION HISTORY:
-% --------------
-% Modified on 2018-04-22 by A.J. Riggs to use propcustom_relay.
-% Modified on 2017-11-13 by A.J. Riggs to be compatible with parfor.
-% Modified on 2017-11-09 by A.J. Riggs to compute only one row of the whole Jacobian. 
-%  This enables much easier parallelization.
-% Modified on 2017-11-09 by A.J. Riggs to have the Jacobian calculation be
-% its own function.
-% Modified on 2017-10-17 by A.J. Riggs to have model_compact.m be a wrapper. All the 
-%  actual compact models have been moved to sub-routines for clarity.
-% Modified on 19 June 2017 by A.J. Riggs to use lower resolution than the
-%   full model.
-% Modified by A.J. Riggs on 18 August 2016 from hcil_model.m to model_compact.m.
-% Modified by A.J. Riggs on 18 Feb 2015 from HCIL_model_lab_BB_v3.m to hcil_model.m.
-% ---------------
+% INPUTS
+% ------
+% mp : structure of model parameters
+% iMode : index of the pair of sub-bandpass index and Zernike mode index
+% whichDM : which DM number
 %
-% INPUTS:
-% -mp = structure of model parameters
-% -im = index of the pair of sub-bandpass index and Zernike mode index
-% -whichDM = which DM number
-%
-% OUTPUTS:
-% -Gzdl = Jacobian for the specified Zernike mode (z), DM (d), and sub-bandpass (l).
+% OUTPUTS
+% ------
+% Gzdl : Jacobian for the specified Zernike mode (z), DM (d), star, and sub-bandpass (l).
 
 function Gzdl = model_Jacobian_HLC(mp, im, whichDM)
 
@@ -42,16 +27,24 @@ function Gzdl = model_Jacobian_HLC(mp, im, whichDM)
 
 modvar.sbpIndex = mp.jac.sbp_inds(im);
 modvar.zernIndex = mp.jac.zern_inds(im);
+modvar.starIndex = mp.jac.star_inds(iMode);
 
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 mirrorFac = 2; % Phase change is twice the DM surface height.f
 NdmPad = mp.compact.NdmPad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Input E-fields
+% Input E-field
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
+%--Include the star position and weight in the starting wavefront
+iStar = modvar.starIndex;
+xiOffset = mp.compact.star.xiOffsetVec(iStar);
+etaOffset = mp.compact.star.etaOffsetVec(iStar);
+starWeight = mp.compact.star.weights(iStar);
+TTphase = (-1)*(2*pi*(xiOffset*mp.P2.compact.XsDL + etaOffset*mp.P2.compact.YsDL));
+Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex);
 
 %--Apply a Zernike (in amplitude) at input pupil
 if(modvar.zernIndex~=1)

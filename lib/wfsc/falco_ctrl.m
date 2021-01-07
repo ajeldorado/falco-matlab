@@ -37,7 +37,7 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
 
         %--The G^*E part changes each iteration because the E-field changes.
         iStar = mp.jac.star_inds(iMode);
-        Eweighted = mp.WspatialVec(:, iStar) .* cvar.EfieldVec(:, iMode); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
+        Eweighted = mp.WspatialVec(:, iStar) .* cvar.EfieldMeas(:, iMode); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
         cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(iMode)*real(Gstack'*Eweighted); %--Apply the Jacobian weights and add to the total.
 
     end

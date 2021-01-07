@@ -4,19 +4,20 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian_LC(mp, iMode, whichDM)
-%--Wrapper for the simplified optical models used for the fast Jacobian calculation.
+%  Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
 %  This function is for the Lyot coronagraph, DMLC, and APLC.
 %
-% INPUTS:
-% -mp = structure of model parameters
-% -iMode = index of the pair of sub-bandpass index and Zernike mode index
-% -whichDM = which DM number
+% INPUTS
+% ------
+% mp : structure of model parameters
+% iMode : index of the pair of sub-bandpass index and Zernike mode index
+% whichDM : which DM number
 %
-% OUTPUTS:
-% -Gzdl = Jacobian for the specified Zernike mode (z), DM (d), and sub-bandpass (l).
+% OUTPUTS
+% ------
+% Gzdl : Jacobian for the specified Zernike mode (z), DM (d), star, and sub-bandpass (l).
 
 function Gzdl = model_Jacobian_LC(mp, iMode, whichDM)
 
