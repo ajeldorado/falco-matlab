@@ -163,13 +163,13 @@ for Itr = 1:mp.Nitr
     end
     
     %% Plot the updates to the DMs and PSF
-    if(Itr==1); hProgress.master = 1; end %--dummy value to intialize the progress plot's handle
-    if(isfield(mp,'testbed') )
+    if Itr == 1; hProgress.master = 1; end %--dummy value to intialize the progress plot's handle
+    if isfield(mp, 'testbed')
         InormHist_tb.total = InormHist; 
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im),mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im),mp.Nsbp]);
-        if( ~strcmpi(mp.estimator,'perfect') )
+        if ~strcmpi(mp.estimator, 'perfect')
             for si = 1:mp.Nsbp
                 tmp = zeros(size(Im));
                 tmp(mp.Fend.corr.mask) = EfieldMeas(:,si);
@@ -182,7 +182,7 @@ for Itr = 1:mp.Nitr
                 InormHist_tb.mod(Itr,si) = mean(abs(EfieldMeas(:,si)).^2);
                 InormHist_tb.unmod(Itr,si) = mean(IincoVec(:,si));
 
-                Im_tb.ev = ev;% Passing the probing structure so I can save it
+                Im_tb.ev = ev; % Passing the probing structure so I can save it
             end
             clear tmp;
         else
@@ -198,28 +198,9 @@ for Itr = 1:mp.Nitr
     if Itr > 1
         out = falco_plot_DeltaE(mp, out, EfieldMeas, EfieldMeasPrev, EfieldSim, EfieldSimPrev, Itr);
     end
-
-    %% Plot the updates to the DMs and PSF
-    if Itr == 1; hProgress.master = 1; end % dummy value to intialize the handle variable
-    if isfield(mp,'testbed')
-        InormHist_tb.total = InormHist; 
-        Im_tb.Im = Im;
-        Im_tb.E = zeros(size(Im));
-        if(Itr>1)
-            InormHist_tb.mod(Itr-1) = mean(abs(EfieldMeas(:)).^2);
-            InormHist_tb.unmod(Itr-1) = mean(IincoVec(:));
-            Im_tb.E(mp.Fend.corr.mask) = EfieldMeas(:,ceil(mp.Nsbp/2));
-        else
-            InormHist_tb.mod = NaN;
-            InormHist_tb.unmod = NaN;
-        end
-        hProgress = falco_plot_progress_gpct(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
-    else
-        hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
-    end
     
     %% Compute and Plot the Singular Mode Spectrum of the Electric Field
-    if(mp.flagSVD) 
+    if mp.flagSVD
         out = falco_plot_singular_mode_spectrum_of_Efield(mp, out, jacStruct, EfieldMeas, Itr);
     end
     
@@ -262,53 +243,55 @@ for Itr = 1:mp.Nitr
     if(any(mp.dm_ind==1)); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
     if(any(mp.dm_ind==2)); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
     
+    %--Update DM actuator gains for new voltages
+    if(any(mp.dm_ind==1)); mp.dm1 = falco_update_dm_gain_map(mp.dm1); end
+    if(any(mp.dm_ind==2)); mp.dm2 = falco_update_dm_gain_map(mp.dm2); end
+    
     %--Save out regularization used.
     out.log10regHist(Itr) = cvar.log10regUsed; 
 
-%-----------------------------------------------------------------------------------------
-%% Report and Store Various Stats
+    %% Report and Store Various Stats
 
-out = falco_compute_dm_stats(mp, out, Itr);
+    out = falco_compute_dm_stats(mp, out, Itr);
 
-%--Calculate sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
-if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
-    out.Zsens(:,:,Itr) = falco_get_Zernike_sensitivities(mp);
-end
-
-%--REPORTING NORMALIZED INTENSITY
-if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
-    InormHist(Itr+1) = cvar.cMin; % mean(Im(mp.Fend.corr.maskBool));
-    fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n\n',...
-        InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) );
-    if ~mp.flagSim
-        fprintf('\n\n');
+    %--Calculate sensitivities to 1nm RMS of Zernike phase aberrations at entrance pupil.
+    if( isempty(mp.eval.Rsens)==false || isempty(mp.eval.indsZnoll)==false )
+        out.Zsens(:,:,Itr) = falco_get_Zernike_sensitivities(mp);
     end
-else
-    fprintf('Previous Measured NI:\t\t\t %.2e \n\n', InormHist(Itr))
-end
 
-%--Save out DM commands after each iteration in case the trial crashes part way through.
-if(mp.flagSaveEachItr)
-    fprintf('Saving DM commands for this iteration...')
-    if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
-    if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
-    if(any(mp.dm_ind==8)); DM8V = mp.dm8.V; else; DM8V = 0; end
-    if(any(mp.dm_ind==9)); DM9V = mp.dm9.V; else; DM9V = 0; end
-    Nitr = mp.Nitr;
-    thput_vec = mp.thput_vec;
-    fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.wsInProgress, mp.runLabel, Itr, mp.Nitr);
-    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','InormHist','thput_vec','out')
-    fprintf('done.\n\n')
-end
+    %--REPORTING NORMALIZED INTENSITY
+    if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
+        InormHist(Itr+1) = cvar.cMin; % mean(Im(mp.Fend.corr.maskBool));
+        fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n\n',...
+            InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) );
+        if ~mp.flagSim
+            fprintf('\n\n');
+        end
+    else
+        fprintf('Previous Measured NI:\t\t\t %.2e \n\n', InormHist(Itr))
+    end
 
-%% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
-if(mp.flagTrainModel)
-    ev.Itr = Itr;
-    mp = falco_train_model(mp,ev);
-end
+    %--Save out DM commands after each iteration in case the trial crashes part way through.
+    if(mp.flagSaveEachItr)
+        fprintf('Saving DM commands for this iteration...')
+        if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
+        if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
+        if(any(mp.dm_ind==8)); DM8V = mp.dm8.V; else; DM8V = 0; end
+        if(any(mp.dm_ind==9)); DM9V = mp.dm9.V; else; DM9V = 0; end
+        Nitr = mp.Nitr;
+        thput_vec = mp.thput_vec;
+        fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.wsInProgress, mp.runLabel, Itr, mp.Nitr);
+        save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','InormHist','thput_vec','out')
+        fprintf('done.\n\n')
+    end
+
+    %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
+    if(mp.flagTrainModel)
+        ev.Itr = Itr;
+        mp = falco_train_model(mp,ev);
+    end
 
 end %--END OF ESTIMATION + CONTROL LOOP
-% ------------------------------------------------------------------------
 
 %% Update progress plot one last time
 Itr = Itr + 1;
