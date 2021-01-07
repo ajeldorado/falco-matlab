@@ -243,6 +243,10 @@ for Itr = 1:mp.Nitr
     if(any(mp.dm_ind==1)); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
     if(any(mp.dm_ind==2)); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
     
+    %--Update DM actuator gains for new voltages
+    if(any(mp.dm_ind==1)); mp.dm1 = falco_update_dm_gain_map(mp.dm1); end
+    if(any(mp.dm_ind==2)); mp.dm2 = falco_update_dm_gain_map(mp.dm2); end
+    
     %--Save out regularization used.
     out.log10regHist(Itr) = cvar.log10regUsed; 
 
