@@ -9,11 +9,11 @@
 %
 % INPUTS
 % ------
-% dm: structure of DM parameters. Is either mp.dm1 or mp.dm2
+% dm : structure of DM parameters. Is either mp.dm1 or mp.dm2
 %
 % OUTPUTS
 % -------
-% dm: structure of DM parameters. Is either mp.dm1 or mp.dm2
+% dm : structure of DM parameters. Is either mp.dm1 or mp.dm2
 
 function dm = falco_update_dm_gain_map(dm)
 
@@ -38,7 +38,7 @@ switch lower(dm.fitType)
                 "\nThose fields satisfy the formula:\n"+...
                 "height = a0 + a1*cos(V*w) + b1*sin(V*w) + a2*cos(2*V*w) + b2*sin(2*V*w)"))
         end        
-        Vtotal = dm.V + Vbias;
+        Vtotal = dm.V + dm.biasMap;
         dm.VtoH = dm.w*(-dm.a1*sin(Vtotal*dm.w) + dm.b1*cos(Vtotal*dm.w) + ...
                -2*dm.a2*sin(2*Vtotal*dm.w) + 2*dm.b2*cos(2*Vtotal*dm.w)); 
            
