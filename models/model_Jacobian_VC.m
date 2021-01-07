@@ -1,23 +1,22 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian_VC(mp, iMode, whichDM)
-%--Wrapper for the simplified optical models used for the fast Jacobian calculation.
+%  Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
-%  This function is for the apodized/unapodized vortex coronagraphs.
+%  This function is for vortex coronagraphs.
 %
-% ---------------
-%
-% INPUTS:
+% INPUTS
+% ------
 % mp : structure of model parameters
 % iMode : index of the pair of sub-bandpass index and Zernike mode index
 % whichDM : which DM number
 %
-% OUTPUTS:
+% OUTPUTS
+% ------
 % Gzdl : Jacobian for the specified Zernike mode (z), DM (d), star, and sub-bandpass (l).
 
 function Gzdl = model_Jacobian_VC(mp, iMode, whichDM)
@@ -35,7 +34,7 @@ mirrorFac = 2; % Phase change is twice the DM surface height.f
 NdmPad = mp.compact.NdmPad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Input E-fields
+% Input E-field
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--Include the star position and weight in the starting wavefront
