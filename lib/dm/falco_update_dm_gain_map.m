@@ -29,7 +29,7 @@ switch lower(dm.fitType)
                 "height = p1*V*V + p2*V + p3"))
         end
         Vtotal = dm.V + dm.biasMap;
-        dm.VtoH = 2*dm.p1*Vtotal + dm.p2;
+        dm.VtoH = 2*dm.p1.*Vtotal + dm.p2;
     
     case{'fourier2'}
         if ~isfield(dm, 'a0') || ~isfield(dm, 'a1') || ~isfield(dm, 'a2') || ...
