@@ -35,7 +35,7 @@ dm.Vpinned = [dm.Vpinned; (dm.Vmin*ones(size(indVoltageTooLow))-dm.biasMap(indVo
 % Max voltage limit
 indVoltageTooHigh = find(Vtotal > dm.Vmax);
 dm.pinned = [dm.pinned; indVoltageTooHigh]; % augment the column vector of pinned actuators' linear indices
-dm.Vpinned = [dm.Vpinned; (dm.Vmax*ones(size(indVoltageTooHigh))-dm.biasMap(indVoltageTooLow))];
+dm.Vpinned = [dm.Vpinned; (dm.Vmax*ones(size(indVoltageTooHigh))-dm.biasMap(indVoltageTooHigh))];
 
 % 2) Enforce bounds at pinned actuators
 dm.V(dm.pinned) = dm.Vpinned; 
