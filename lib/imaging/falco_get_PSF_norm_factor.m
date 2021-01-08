@@ -100,7 +100,7 @@ if(mp.flagPlot)
     E0f = model_full(mp, modvar);
     I0f = abs(E0f).^2;
     figure(502); imagesc(log10(I0f)); axis xy equal tight; colorbar;
-    title('(Full Model: Normalization Check)');
+    title('Full Model: Normalization Check');
     set(gca,'Fontsize', 18)
     drawnow;
 end

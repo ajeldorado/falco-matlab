@@ -112,7 +112,7 @@ function Evec = falco_est_perfect_Efield_with_Zernikes_parfor(ni, ind_list, mp)
     
     modvar.sbpIndex = mp.jac.sbp_inds(iMode);
     modvar.zernIndex = mp.jac.zern_inds(iMode);
-    modvar.starnIndex = mp.jac.star_inds(iMode);
+    modvar.starIndex = mp.jac.star_inds(iMode);
     modvar.wpsbpIndex = wi;
     modvar.whichSource = 'star';
     

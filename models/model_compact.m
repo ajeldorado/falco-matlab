@@ -1,24 +1,20 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function Eout = model_compact(mp,   modvar)
 % Blind model used by the estimator and controller
 % Does not include unknown aberrations/errors that are in the full model.
 %
 % INPUTS
+% ------
 % mp : structure of model parameters
 % modvar : structure of model variables
 %
 % OUTPUTS
+% -------
 % Eout : 2-D electric field at final focus
-%
-% NOTES
-% modvar structure fields required for model_compact:
-% - sbpIndex
-% - whichSource
 
 function [Eout, varargout] = model_compact(mp, modvar, varargin)
 
@@ -57,10 +53,6 @@ else
     lambda = mp.sbp_centers(modvar.sbpIndex);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Input E-fields
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %--Include the star position and weight in the starting wavefront
 iStar = modvar.starIndex;
 xiOffset = mp.compact.star.xiOffsetVec(iStar);
@@ -75,31 +67,6 @@ if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
     Ein = Ett .* Ein;
 end
-% if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
-%     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.compact.XsDL + modvar.y_offset*mp.P2.compact.YsDL));
-%     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-%     Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex);
-% else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-%     Ein = mp.P1.compact.E(:, :, modvar.sbpIndex);  
-% end
-
-% if(isfield(mp,'ttx'))
-%     %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
-%     x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
-%     y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
-% 
-%     TTphase = (-1)*(2*pi*(x_offset*mp.P2.compact.XsDL + y_offset*mp.P2.compact.YsDL));
-%     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-%     Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex);  
-% 
-% elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
-%     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.compact.XsDL + modvar.y_offset*mp.P2.compact.YsDL));
-%     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-%     Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex); 
-%     
-% else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-%     Ein = mp.P1.compact.E(:, :, modvar.sbpIndex);  
-% end
 
 %--Shift the source off-axis to compute the intensity normalization value.
 %  This replaces the previous way of taking the FPM out in the optical model.

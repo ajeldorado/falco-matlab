@@ -65,48 +65,22 @@ mp.Fend.etaFOV = 10;
 % mp.star.weights = starWeights; % relative stellar peak intensities
 % mp.Fend.xiFOV = 66;
 % mp.Fend.etaFOV = 10;
-% 
-% %--New variables for pairwise probing estimation:
-% mp.est.probe.Npairs = 2;     % Number of pair-wise probe PAIRS to use.
-% mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-% mp.probe.est.width = [6]; % Width of probed rectangular region. Units of lambda/D.
-% mp.probe.est.height = [5]; % Height of probed rectangular region. Units of lambda/D.
-% mp.est.probe.xiOffset = [6]; % xi (horizontal) offset of probed region's center in focal plane. Units of lambda/D.
-% mp.est.probe.etaOffset = [6]; % eta (horizontal) offset of probed region's center in focal plane. Units of lambda/D.
-% mp.est.probe.xOffset = 0;   % offset of probe center in x at DM [actuators]. Use to avoid central obscurations.
-% mp.est.probe.yOffset = 10;    % offset of probe center in y at DM [actuators]. Use to avoid central obscurations.
-% mp.est.probe.gainFudge = [5];     % empirical fudge factor to make average probe amplitude match desired value.
-
-
-
-
-
-
 
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 0;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 2;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
-
 mp.Fend.score.Rin = 0;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = 2;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
-
 mp.Fend.shape = 'square';
 mp.Fend.xiOffset = 6;
 
 mp.ctrl.log10regVec = -6:1/2:0; %--log10 of the regularization exponents (often called Beta values)
 mp.ctrl.flagUseModel = false;%true;
 
-% mp.Fend.xiFOV = 40;
-% mp.Fend.etaFOV = 12;
-
-
-% mp.jac.zerns = [1,2,3];
-% mp.jac.Zcoef = 1e-9*[1,1,1];
-
 %%--Special Computational Settings
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true;%false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 
 %--Record Keeping

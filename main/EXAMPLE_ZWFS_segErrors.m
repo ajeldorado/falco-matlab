@@ -1,10 +1,10 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 
-clear;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -69,7 +69,9 @@ mp.wfs.mask.res = 20;
 %%- ZWFS camera properties 
 mp.wfs.cam.Nbeam = mp.P1.full.Nbeam;% beam size at WFS camera 
 mp.wfs.cam.Narr = 512; % array size at WFS camera 
-mp.wfs.cam.dx = mp.P4.D/mp.wfs.cam.Nbeam;
+
+mp.wfs.cam.Npix = 512; % Number of camera pixels across the Narr samples 
+mp.wfs.cam.centerPixOffset = [0,0];% Offset of camera wrt beam center (pixels) 
 
 
 %% Generate the label associated with this trial

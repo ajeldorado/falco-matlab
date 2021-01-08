@@ -1,39 +1,22 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function Eout = model_full(mp,modvar,varargin)
-%--Full-knowledge optical model.
-%    --> Not used by the estimator and controller.
-%    --> Used only to create simulated intensity images.
+% Full-knowledge optical model.
+% --> Not used by the estimator and controller.
+% --> Used only to create simulated intensity images.
 %
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-05-06 to have mp.Fend.full.I00 be a matrix that includes
-% an index for the wavelength per sub-bandpass index.
-% Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
-% of having Efiber as a required output. 
-% Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
-%  actual full models have been moved to sub-routines for clarity.
-% model_full.m - Modified from hcil_simTestbed.m
-% hcil_simTestbed.m - 18 Feb 2015: Modified from hcil_model.m. Includes
-%  extra errors in the model to simulate the actual testbed for fake images.
+% INPUTS
+% ------
+% mp : structure of model parameters
+% modvar : structure of model variables
 %
-% ---------------
-% INPUTS:
-% -mp = structure of model parameters
-% -modvar = structure of model variables
-%
-% OUTPUTS:
-% -Eout
-% -Efiber==varargout{1}
-%
-% modvar structure fields for model_full:
-% -sbpIndex
-% -wpsbpIndex
-% -whichSource
+% OUTPUTS
+% -------
+% Eout : 2-D complex E-field at final focus
+% Efiber : (optional) Electric field coming out of fiber
 
 function [Eout, varargout] = model_full(mp,modvar,varargin)
 

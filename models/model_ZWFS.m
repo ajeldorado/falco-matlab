@@ -46,13 +46,7 @@ mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex) = exp(1i*phz);
 
 
 %--Set the point source as the exoplanet or the star
-if strcmpi(modvar.whichSource, 'exoplanet') %--Don't include tip/tilt jitter for planet wavefront since the effect is minor
-    %--The planet does not move in sky angle, so the actual tip/tilt angle needs to scale inversely with wavelength.
-    planetAmp = sqrt(mp.c_planet);  % Scale the E field to the correct contrast
-    planetPhase = (-1)*(2*pi*(mp.x_planet*mp.P2.full.XsDL + mp.y_planet*mp.P2.full.YsDL));
-    Ein = planetAmp*exp(1i*planetPhase*mp.lambda0/lambda);
-
-elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
     Ein = Ett.*mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
@@ -159,7 +153,7 @@ else % otherwise, go through the mask and on to the next pupil.
     maskDepth_m = mp.wfs.mask.depth; % mask depth in meters 
     maskAmp = mp.wfs.mask.amp; % dimple amplitude 
     WFScam_Narr = mp.wfs.cam.Narr; % Array size at WFS camera 
-    WFScam_dx = mp.wfs.cam.dx;
+    WFScam_dx = mp.P4.D/mp.wfs.cam.Nbeam;
     
     if(refwave)
         EF3 = phzSupport.*EF3inc; % Take only the part of the beam in the phase dimple
@@ -187,6 +181,7 @@ else % otherwise, go through the mask and on to the next pupil.
     else
         Eout = EP4noFPM-EP4sub;
     end
+    
 end
 
 if(mp.useGPU)
