@@ -39,8 +39,8 @@ switch lower(dm.fitType)
                 "height = a0 + a1*cos(V*w) + b1*sin(V*w) + a2*cos(2*V*w) + b2*sin(2*V*w)"))
         end        
         Vtotal = dm.V + dm.biasMap;
-        dm.VtoH = dm.w*(-dm.a1*sin(Vtotal*dm.w) + dm.b1*cos(Vtotal*dm.w) + ...
-               -2*dm.a2*sin(2*Vtotal*dm.w) + 2*dm.b2*cos(2*Vtotal*dm.w)); 
+        dm.VtoH = dm.w.*(-dm.a1.*sin(Vtotal.*dm.w) + dm.b1.*cos(Vtotal.*dm.w) + ...
+               -2*dm.a2.*sin(2*Vtotal.*dm.w) + 2*dm.b2.*cos(2*Vtotal.*dm.w)); 
            
     otherwise
         error('Value of dm.fitType not recognized.')
