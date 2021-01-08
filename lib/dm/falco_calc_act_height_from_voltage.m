@@ -31,8 +31,8 @@ switch lower(dm.fitType)
         end
         Vbias = dm.biasMap;
         Vtotal = dm.V + Vbias;
-        heightMapTotal = dm.p1.*Vtotal.*Vtotal + dm.p2.*Vtotal + dm.p3;
-        heightMapBias = dm.p1.*Vbias.*Vbias + dm.p2.*Vbias + dm.p3;
+        heightMapTotal = dm.p1.*Vtotal.^2 + dm.p2.*Vtotal + dm.p3;
+        heightMapBias = dm.p1.*Vbias.^2 + dm.p2.*Vbias + dm.p3;
         heightMap = heightMapTotal - heightMapBias;
         
     case{'fourier2'}

@@ -51,7 +51,7 @@ end
 % 4) Enforce tied actuator pairs
 % In each pair of tied actuators, assign the command for the 1st actuator to that of the 2nd actuator
 if ~isempty(dm.tied)
-    dm.V(dm.tied(:, 2)) = dm.V(dm.tied(:, 1)) + dm.biasMap(dm.tied(:, 1)) - dm.biasMap(dm.tied(:, 2));
+    dm.V(dm.tied(:, 2)) = dm.V(dm.tied(:, 1));% + dm.biasMap(dm.tied(:, 1)) - dm.biasMap(dm.tied(:, 2));
 end
 
 end %--END OF FUNCTION
