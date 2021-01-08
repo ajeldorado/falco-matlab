@@ -46,13 +46,7 @@ mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex) = exp(1i*phz);
 
 
 %--Set the point source as the exoplanet or the star
-if strcmpi(modvar.whichSource, 'exoplanet') %--Don't include tip/tilt jitter for planet wavefront since the effect is minor
-    %--The planet does not move in sky angle, so the actual tip/tilt angle needs to scale inversely with wavelength.
-    planetAmp = sqrt(mp.c_planet);  % Scale the E field to the correct contrast
-    planetPhase = (-1)*(2*pi*(mp.x_planet*mp.P2.full.XsDL + mp.y_planet*mp.P2.full.YsDL));
-    Ein = planetAmp*exp(1i*planetPhase*mp.lambda0/lambda);
-
-elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
     Ein = Ett.*mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 

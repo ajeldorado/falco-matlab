@@ -1,39 +1,22 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function Eout = model_full(mp,modvar,varargin)
-%--Full-knowledge optical model.
-%    --> Not used by the estimator and controller.
-%    --> Used only to create simulated intensity images.
+% Full-knowledge optical model.
+% --> Not used by the estimator and controller.
+% --> Used only to create simulated intensity images.
 %
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-05-06 to have mp.Fend.full.I00 be a matrix that includes
-% an index for the wavelength per sub-bandpass index.
-% Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
-% of having Efiber as a required output. 
-% Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
-%  actual full models have been moved to sub-routines for clarity.
-% model_full.m - Modified from hcil_simTestbed.m
-% hcil_simTestbed.m - 18 Feb 2015: Modified from hcil_model.m. Includes
-%  extra errors in the model to simulate the actual testbed for fake images.
+% INPUTS
+% ------
+% mp : structure of model parameters
+% modvar : structure of model variables
 %
-% ---------------
-% INPUTS:
-% -mp = structure of model parameters
-% -modvar = structure of model variables
-%
-% OUTPUTS:
-% -Eout
-% -Efiber==varargout{1}
-%
-% modvar structure fields for model_full:
-% -sbpIndex
-% -wpsbpIndex
-% -whichSource
+% OUTPUTS
+% -------
+% Eout : 2-D complex E-field at final focus
+% Efiber : (optional) Electric field coming out of fiber
 
 function [Eout, varargout] = model_full(mp,modvar,varargin)
 
@@ -74,33 +57,42 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-fields
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%--Set the point source as the exoplanet or the star
-if strcmpi(modvar.whichSource, 'exoplanet') %--Don't include tip/tilt jitter for planet wavefront since the effect is minor
-    %--The planet does not move in sky angle, so the actual tip/tilt angle needs to scale inversely with wavelength.
-    planetAmp = sqrt(mp.c_planet);  % Scale the E field to the correct contrast
-    planetPhase = (-1)*(2*pi*(mp.x_planet*mp.P2.full.XsDL + mp.y_planet*mp.P2.full.YsDL));
-    Ein = planetAmp*exp(1i*planetPhase*mp.lambda0/lambda).*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);
 
-elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+%--Include the tip/tilt in the input wavefront
+iStar = modvar.starIndex;
+xiOffset = mp.star.xiOffsetVec(iStar);
+etaOffset = mp.star.etaOffsetVec(iStar);
+starWeight = mp.star.weights(iStar);
+TTphase = (-1)*(2*pi*(xiOffset*mp.P2.full.XsDL + etaOffset*mp.P2.full.YsDL));
+Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ein = sqrt(starWeight) * Ett .* mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
+
+if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
-        
-else % Default to using the starlight
-    %--Include the tip/tilt in the input stellar wavefront
-    if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
-        %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
-        x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
-        y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
-
-        TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
-        Ett = exp(1i*TTphase*mp.lambda0/lambda);
-        Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
-
-    else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-        Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
-    end
+    Ein = Ett .* Ein; 
 end
+% %--Set the location and magnitude of the point source
+% if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+%     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
+%     Ett = exp(1i*TTphase*mp.lambda0/lambda);
+%     Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
+%         
+% else % Default to using the starlight
+%     %--Include the tip/tilt in the input stellar wavefront
+%     if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
+%         %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
+%         x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
+%         y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
+% 
+%         TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
+%         Ett = exp(1i*TTphase*mp.lambda0/lambda);
+%         Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+% 
+%     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
+%         Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+%     end
+% end
 
 %--Shift the source off-axis to compute the intensity normalization value.
 %  This replaces the previous way of taking the FPM out in the optical model.
@@ -205,8 +197,8 @@ switch lower(mp.layout)
                     optval.use_fpm = false;
             end
         end
-
-        Eout = prop_run(mp.full.prescription, lambda*1e6, mp.P1.full.Narr, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
+        
+        Eout = prop_run(mp.full.prescription, lambda*1e6, mp.full.gridsize, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
         if(normFac~=0)
             Eout = Eout/sqrt(normFac);
         end

@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -9,7 +9,10 @@ function mp = falco_set_optional_variables(mp)
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 mp.est.dummy = 1;
-mp.compact.dummy = 1;
+mp.est.probe.dummy = 1;
+mp.star.dummy = 1;
+mp.compact.star.dummy = 1;
+mp.jac.star.dummy = 1;
 mp.full.dummy = 1;
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
@@ -76,7 +79,22 @@ if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end
 
 %% Optional/hidden variables
+
+% How many stars to use and their positions
+% mp.star is for the full model, and mp.compact.star is for the compact and
+% Jacobian models.
+if ~isfield(mp.star, 'count');  mp.star.count = 1;  end
+if ~isfield(mp.star, 'xiOffsetVec');  mp.star.xiOffsetVec = 0;  end
+if ~isfield(mp.star, 'etaOffsetVec');  mp.star.etaOffsetVec = 0;  end
+if ~isfield(mp.star, 'weights');  mp.star.weights = 1;  end
+if ~isfield(mp.compact.star, 'count');  mp.compact.star.count = 1;  end
+if ~isfield(mp.compact.star, 'xiOffsetVec');  mp.compact.star.xiOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'etaOffsetVec');  mp.compact.star.etaOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'weights');  mp.compact.star.weights = 1;  end
+if ~isfield(mp.jac.star, 'weights');  mp.jac.star.weights = ones(1, mp.compact.star.count);  end % Spatial weighting in the Jacobian by star
+
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
+
 if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
 
 %--Propagation method
@@ -93,27 +111,42 @@ if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
 if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 
 %--Deformable mirror settings
-if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = -1000;  end %--Min allowed voltage command
-if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed voltage command
-if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned actuators
-if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) voltage commands of pinned actuators
+if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = zeros(mp.dm1.Nact, mp.dm1.Nact);  end %--For testbeds. Starting voltage map unseen in FALCO model.
+if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned/railed actuators
+if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
 if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
 if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
-if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = -1000;  end %--Min allowed voltage command
-if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed voltage command
-if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned actuators
-if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) voltage commands of pinned actuators
+if mp.flagSim
+    if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = -1000;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed absolute voltage command
+else
+    if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 100;  end %--Max allowed absolute voltage command
+end
+
+if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = zeros(mp.dm2.Nact, mp.dm2.Nact);  end %--For testbeds. Starting voltage map unseen in FALCO model.
+if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned/railed actuators
+if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
 if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
 if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
-
-%--Off-axis, incoherent point source (exoplanet). Used if modvar.whichSource = 'exoplanet'
-if(isfield(mp,'c_planet')==false);  mp.c_planet = 1e-10;  end % flux ratio of of exoplanet to star
-if(isfield(mp,'x_planet')==false);  mp.x_planet = 5;  end % xi position of exoplanet in lambda0/D
-if(isfield(mp,'y_planet')==false);  mp.y_planet = 1;  end % eta position of exoplanet in lambda0/D
+if mp.flagSim
+    if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = -1000;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed absolute voltage command
+else
+    if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 100;  end %--Max allowed absolute voltage command
+end
 
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
+
+%--Estimation
+if(isfield(mp.est.probe,'whichDM')==false); mp.est.probe.whichDM = 1; end %--Which DM to use for probing
+if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max probe intensity
+if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Lower estimated intensities to this value if they exceed this (probably due to a bad inversion)
 
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
