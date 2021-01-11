@@ -7,7 +7,10 @@
 %  Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
-%  This function is for the hybrid Lyot coronagraph (HLC).
+%
+%  For lyot-type coronagraphs with or without an outer stop on the FPM,
+%  with or without an apodizer, and with an opaque or complex-valued
+%  occulting spot.
 %
 % INPUTS
 % ------
@@ -17,21 +20,16 @@
 %
 % OUTPUTS
 % ------
-% Gzdl : Jacobian for the specified Zernike mode (z), DM (d), star, and sub-bandpass (l).
+% Gmode : Jacobian for the specified Zernike mode, DM, star, and subband.
 
-function Gzdl = model_Jacobian_HLC(mp, im, whichDM)
+function Gmode = model_Jacobian_lyot(mp, iMode, whichDM)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Setup
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-modvar.sbpIndex = mp.jac.sbp_inds(im);
-modvar.zernIndex = mp.jac.zern_inds(im);
+modvar.sbpIndex = mp.jac.sbp_inds(iMode);
+modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);
-
 lambda = mp.sbp_centers(modvar.sbpIndex); 
-mirrorFac = 2; % Phase change is twice the DM surface height.f
 NdmPad = mp.compact.NdmPad;
+surfIntoPhase = 2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-field
@@ -60,6 +58,11 @@ end
 
 pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
 Ein = padOrCropEven(Ein,NdmPad);
+if(mp.useGPU)
+    pupil = gpuArray(pupil);
+    Ein = gpuArray(Ein);
+end
+
 %--Re-image the apodizer from pupil P3 back to pupil P2. (Sign of mp.Nrelay2to3 doesn't matter.)
 if(mp.flagApod) 
     apodReimaged = padOrCropEven(mp.P3.compact.mask, NdmPad);
@@ -73,22 +76,30 @@ if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; 
 
 if(any(mp.dm_ind==1)); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
 if(any(mp.dm_ind==2)); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
-if(any(mp.dm_ind==5)); DM5apod = falco_gen_dm_surf(mp.dm5, mp.dm1.compact.dx, NdmPad); else; DM5apod = ones(NdmPad); end %--Pre-compute the starting DM5 amplitude
-
-FPM = squeeze(mp.FPMcube(:,:,modvar.sbpIndex)); %--Complex transmission of the FPM. Calculated in model_Jacobian.m.
-
-%--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
-t_Ti_base = 0;
-t_Ni_vec = 0;
-t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-pol = 2;
-[tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-transOuterFPM = tCoef;
-
 if(mp.useGPU)
-    pupil = gpuArray(pupil);
-    Ein = gpuArray(Ein);
     if(any(mp.dm_ind==1)); DM1surf = gpuArray(DM1surf); end
+    if(any(mp.dm_ind==2)); DM2surf = gpuArray(DM2surf); end
+end
+
+% Define the FPM
+switch upper(mp.coro)
+    
+    case{'LC', 'APLC', 'FLC', 'SPLC'}
+        fpm = mp.F3.compact.mask.amp;
+        transOuterFPM = 1;
+        
+    case{'HLC'}
+        fpm = squeeze(mp.FPMcube(:,:,modvar.sbpIndex)); %--Complex transmission of the FPM. Calculated in model_Jacobian.m.
+        
+        %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
+        t_Ti_base = 0;
+        t_Ni_vec = 0;
+        t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+        pol = 2;
+        [transOuterFPM, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+        
+    otherwise
+        error('Value of mp.coro not recognized.');
 end
 
 %--For including DM surface errors (quilting, scalloping, etc.)
@@ -114,11 +125,11 @@ if( abs(mp.d_P2_dm1)~=0 )
 else
     Edm1 = EP2; %--E-field arriving at DM1
 end
-Edm1 = Edm1WFE.*DM1stop.*DM5apod.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
+Edm1 = Edm1WFE.*DM1stop.*exp(surfIntoPhase*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 %--DM1---------------------------------------------------------
-if(whichDM==1) 
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
+if whichDM == 1 
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
@@ -153,9 +164,9 @@ if(whichDM==1)
             y_box = mp.dm1.compact.y_pupPad(y_box_AS_ind); % full pupil y-coordinates of the box
             
             %--Propagate from DM1 to DM2, and then back to P2
-            dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact),NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
+            dEbox = (surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact),NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
             dEbox = propcustom_PTP_inf_func(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2,mp.dm1.dm_spacing,mp.propMethodPTP); % forward propagate to DM2 and apply DM2 E-field
-            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind,x_box_AS_ind).*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm1.dm_spacing,mp.propMethodPTP ); % back-propagate to DM1
+            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind,x_box_AS_ind).*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(surfIntoPhase*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm1.dm_spacing,mp.propMethodPTP ); % back-propagate to DM1
             
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
@@ -171,35 +182,51 @@ if(whichDM==1)
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
-            EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
-            EF3 = (transOuterFPM-FPM).*EF3; %--Propagate through (1-complex FPM) for Babinet's principle
-
-            %--DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
-            EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  %--Subtrahend term for the Lyot plane E-field    
-            EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Get the correct orientation
+            EF3inc = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
             
-            %--Full Lyot plane pupil (for Babinet)
-            EP4noFPM = zeros(mp.dm1.compact.NdmPad);
-            if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
-            EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
-            EP4noFPM = propcustom_relay(EP4noFPM,mp.Nrelay2to3+mp.Nrelay3to4,mp.centering); %--Get the correct orientation 
-            EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
-            EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
+            switch upper(mp.coro)
+                
+                case{'LC', 'APLC', 'HLC'}
+                    EF3 = (transOuterFPM-fpm).*EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
 
+                    %--DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
+                    EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  %--Subtrahend term for the Lyot plane E-field    
+                    EP4sub = propcustom_relay(EP4sub, mp.Nrelay3to4-1, mp.centering); %--Get the correct orientation
+
+                    %--Full Lyot plane pupil (for Babinet)
+                    EP4noFPM = zeros(mp.dm1.compact.NdmPad);
+                    if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
+                    EP4noFPM(y_box_AS_ind, x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
+                    EP4noFPM = propcustom_relay(EP4noFPM,mp.Nrelay2to3+mp.Nrelay3to4,mp.centering); %--Get the correct orientation 
+                    EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
+                    EP4 = (transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
+                    
+                case{'FLC', 'SPLC'}
+                    EF3 = mp.F3.compact.mask.amp.*EF3inc; % Apply FPM
+                    EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % MFT to Lyot Plane
+                    EP4 = propcustom_relay(EP4, mp.Nrelay3to4-1, mp.centering); % Add more re-imaging relays between pupils P3 and P4 if necessary
+                
+                otherwise
+                    error('Value of mp.coro not recognized.')
+                    
+            end
+
+            EP4 = mp.P4.compact.croppedMask .* EP4; % Apply Lyot stop
+            
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
 
-            Gzdl(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex+1;
     end
 end    
 
 %--DM2---------------------------------------------------------
-if(whichDM==2)
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
+if whichDM == 2
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS; 
@@ -212,7 +239,7 @@ if(whichDM==2)
     %--Propagate full field to DM2 before back-propagating in small boxes
     Edm2inc = padOrCropEven( propcustom_PTP(Edm1,mp.compact.NdmPad*mp.P2.compact.dx,lambda,mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
     Edm2inc = padOrCropEven(Edm2inc,mp.dm2.compact.NdmPad);
-    Edm2 = Edm2WFEpad.*DM2stopPad.*Edm2inc.*exp(mirrorFac*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
+    Edm2 = Edm2WFEpad.*DM2stopPad.*Edm2inc.*exp(surfIntoPhase*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
     
     %--Propagate each actuator from DM2 through the rest of the optical system
     Gindex = 1; % Initialize index counter
@@ -224,7 +251,7 @@ if(whichDM==2)
             x_box = mp.dm2.compact.x_pupPad(x_box_AS_ind).'; % full pupil x-coordinates of the box 
             y_box = mp.dm2.compact.y_pupPad(y_box_AS_ind); % full pupil y-coordinates of the box 
             
-            dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
+            dEbox = mp.dm2.VtoH(iact)*(surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
             dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad2AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm2.dm_spacing,mp.propMethodPTP); % back-propagate to pupil P2
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
@@ -241,40 +268,56 @@ if(whichDM==2)
             rect_mat_post  = (exp(-2*pi*1j*(x_box*mp.F3.compact.xis)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
-            EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
-            EF3 = (transOuterFPM-FPM).*EF3; %--Propagate through ( 1 - (complex FPM) ) for Babinet's principle
-
-            % DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
-            EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  %--Subtrahend term for the Lyot plane E-field    
-            EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Get the correct orientation
+            EF3inc = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
             
-            EP4noFPM = zeros(mp.dm2.compact.NdmPad);
-            if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
-            EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
-            EP4noFPM = propcustom_relay(EP4noFPM,mp.Nrelay2to3+mp.Nrelay3to4,mp.centering); %--Get the correct orientation 
-            EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
-            EP4 = mp.P4.compact.croppedMask.*(transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
+            switch upper(mp.coro)
+                
+                case{'LC', 'APLC', 'HLC'}
+                    EF3 = (transOuterFPM-fpm).*EF3inc; %--Propagate through ( 1 - (complex FPM) ) for Babinet's principle
+
+                    % DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
+                    EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering);  %--Subtrahend term for the Lyot plane E-field    
+                    EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Get the correct orientation
+
+                    EP4noFPM = zeros(mp.dm2.compact.NdmPad);
+                    if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
+                    EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
+                    EP4noFPM = propcustom_relay(EP4noFPM,mp.Nrelay2to3+mp.Nrelay3to4,mp.centering); %--Get the correct orientation 
+                    EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
+                    EP4 = transOuterFPM*EP4noFPM - EP4sub; % Babinet's principle to get E-field at Lyot plane
+            
+                case{'FLC', 'SPLC'}
+                    EF3 = mp.F3.compact.mask.amp.*EF3inc; % Apply FPM
+                    EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % MFT to Lyot Plane
+                    EP4 = propcustom_relay(EP4, mp.Nrelay3to4-1, mp.centering); % Add more re-imaging relays between pupils P3 and P4 if necessary
+                
+                otherwise
+                    error('Value of mp.coro not recognized.')
+                    
+            end
+                    
+            EP4 = mp.P4.compact.croppedMask .* EP4;
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
 
-            Gzdl(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex+1;
     end
 end
 
 %--DM8--------------------------------------------------------- 
-if(whichDM==8)
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm8.Nele);
+if whichDM == 8
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm8.Nele);
     Nbox8 = mp.dm8.compact.Nbox;
     
     stepFac = 1; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
     
     %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
-    Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
+    Edm2 = Edm2WFE.*DM2stop.*exp(surfIntoPhase*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
     
     %--Back-propagate to pupil P2
     if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 )
@@ -325,7 +368,7 @@ if(whichDM==8)
                 end
             end            
   
-            dEF3box = ( (transOuterFPM-FPMpoked) - (transOuterFPM-FPM(eta_box_ind,xi_box_ind)) ).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
+            dEF3box = ( (transOuterFPM-FPMpoked) - (transOuterFPM-fpm(eta_box_ind,xi_box_ind)) ).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
@@ -342,15 +385,15 @@ if(whichDM==8)
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
             
-            Gzdl(:,Gindex) = (1/stepFac)*mp.dm8.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = (1/stepFac)*mp.dm8.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
             Gindex = Gindex + 1;
         end
     end
 end
 
 %--DM9--------------------------------------------------------- 
-if(whichDM==9)
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm9.Nele);
+if whichDM == 9
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm9.Nele);
     Nbox9 = mp.dm9.compact.Nbox;
     
     if(isfield(mp.dm9,'stepFac')==false)
@@ -360,7 +403,7 @@ if(whichDM==9)
     end
 
     %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
-    Edm2 = Edm2WFE.*DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
+    Edm2 = Edm2WFE.*DM2stop.*exp(surfIntoPhase*2*pi*1i*DM2surf/lambda).*propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); % Pre-compute the initial DM2 E-field
     
     %--Back-propagate to pupil P2
     if( mp.d_P2_dm1 + mp.d_dm1_dm2 == 0 )
@@ -410,7 +453,7 @@ if(whichDM==9)
                 end
             end            
 
-            dEF3box = ( (transOuterFPM-FPMpoked) - (transOuterFPM-FPM(eta_box_ind,xi_box_ind)) ).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
+            dEF3box = ((transOuterFPM-FPMpoked) - (transOuterFPM-fpm(eta_box_ind,xi_box_ind))).*EF3inc(eta_box_ind,xi_box_ind); % Delta field (in a small region) at the FPM
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
@@ -427,14 +470,14 @@ if(whichDM==9)
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
 
-            Gzdl(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;       
     end
 end
 
 if(mp.useGPU)
-    Gzdl = gather(Gzdl);
+    Gmode = gather(Gmode);
 end
 
 end %--END OF FUNCTION

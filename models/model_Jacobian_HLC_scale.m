@@ -16,10 +16,10 @@
 % whichDM : which DM number
 %
 % OUTPUTS
-% ------
-% Gzdl : Jacobian for the specified Zernike mode (z), DM (d), star, and sub-bandpass (l).
+% -------
+% Gmode : Jacobian for the specified Zernike mode, DM, star, and subband.
 
-function Gzdl = model_Jacobian_HLC_scale(mp, iMode, whichDM)
+function Gmode = model_Jacobian_HLC_scale(mp, iMode, whichDM)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Setup
@@ -126,7 +126,7 @@ Edm1 = Edm1WFE.*DM1stop.*DM5apod.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %
 
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox1 = mp.dm1.compact.Nbox; %--Smaller array size for MFT to FPM after FFT-AS propagations from DM1->DM2->DM1
@@ -197,7 +197,7 @@ if(whichDM==1)
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
 
-            Gzdl(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex+1;
     end
@@ -206,7 +206,7 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     Nbox2 = mp.dm2.compact.Nbox;
@@ -268,7 +268,7 @@ if(whichDM==2)
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
             if(mp.useGPU); EFend = gather(EFend) ;end
 
-            Gzdl(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex+1;
 
@@ -276,7 +276,7 @@ if(whichDM==2)
 
 end
 
-if(mp.useGPU);  Gzdl = gather(Gzdl);  end
+if(mp.useGPU);  Gmode = gather(Gmode);  end
 
 
 end %--END OF FUNCTION
