@@ -16,10 +16,10 @@
 % whichDM : which DM number
 %
 % OUTPUTS
-% ------
-% Gzdl : Jacobian for the specified Zernike mode (z), DM (d), star, and sub-bandpass (l).
+% -------
+% Gmode : Jacobian for the specified Zernike mode, DM, star, and subband.
 
-function Gzdl = model_Jacobian_Roddier(mp, iMode, whichDM)
+function Gmode = model_Jacobian_Roddier(mp, iMode, whichDM)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Setup
@@ -94,7 +94,7 @@ Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving 
 
 %--DM1---------------------------------------------------------
 if(whichDM==1) 
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
@@ -158,7 +158,7 @@ if(whichDM==1)
             
             if(mp.useGPU);EFend = gather(EFend) ;end
             
-            Gzdl(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -166,7 +166,7 @@ end
 
 %--DM2---------------------------------------------------------
 if(whichDM==2)
-    Gzdl = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
+    Gmode = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS; 
@@ -228,14 +228,14 @@ if(whichDM==2)
 
             if(mp.useGPU);EFend = gather(EFend) ;end
             
-            Gzdl(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
 end
 
 if(mp.useGPU)
-    Gzdl = gather(Gzdl);
+    Gmode = gather(Gmode);
 end
 
 end %--END OF FUNCTION

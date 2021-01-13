@@ -46,13 +46,13 @@ mp.TrialNum = 1;
 mp.P4.compact.Nbeam = 180;
 mp.P4.full.Nbeam = 180;
 
-%--DEBUGGING SETTINGS TO RUN FASTER:
+% %--DEBUGGING SETTINGS TO RUN FASTER:
 % mp.estimator = 'perfect';
-mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 2;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-mp.F3.compact.res = 4; % sampling of FPM for compact model [pixels per lambda0/D]
-mp.F3.full.res = 4; % sampling of FPM for full model [pixels per lambda0/D]
+% mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+% mp.F3.compact.res = 4; % sampling of FPM for compact model [pixels per lambda0/D]
+% mp.F3.full.res = 4; % sampling of FPM for full model [pixels per lambda0/D]
 
 
 %% Step 4: Generate the label associated with this trial
