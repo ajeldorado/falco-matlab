@@ -35,7 +35,7 @@ dm.Vpinned = [dm.Vpinned; (dm.Vmin*ones(size(indVoltageTooLow))-dm.biasMap(indVo
 % Max voltage limit
 indVoltageTooHigh = find(Vtotal > dm.Vmax);
 dm.pinned = [dm.pinned; indVoltageTooHigh]; % augment the column vector of pinned actuators' linear indices
-dm.Vpinned = [dm.Vpinned; (dm.Vmax*ones(size(indVoltageTooHigh))-dm.biasMap(indVoltageTooLow))];
+dm.Vpinned = [dm.Vpinned; (dm.Vmax*ones(size(indVoltageTooHigh))-dm.biasMap(indVoltageTooHigh))];
 
 % 2) Enforce bounds at pinned actuators
 dm.V(dm.pinned) = dm.Vpinned; 
@@ -51,7 +51,7 @@ end
 % 4) Enforce tied actuator pairs
 % In each pair of tied actuators, assign the command for the 1st actuator to that of the 2nd actuator
 if ~isempty(dm.tied)
-    dm.V(dm.tied(:, 2)) = dm.V(dm.tied(:, 1)) + dm.biasMap(dm.tied(:, 1)) - dm.biasMap(dm.tied(:, 2));
+    dm.V(dm.tied(:, 2)) = dm.V(dm.tied(:, 1));% + dm.biasMap(dm.tied(:, 1)) - dm.biasMap(dm.tied(:, 2));
 end
 
 end %--END OF FUNCTION

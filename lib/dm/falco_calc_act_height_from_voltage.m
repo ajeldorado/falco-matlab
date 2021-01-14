@@ -31,8 +31,8 @@ switch lower(dm.fitType)
         end
         Vbias = dm.biasMap;
         Vtotal = dm.V + Vbias;
-        heightMapTotal = dm.p1*Vtotal.*Vtotal + dm.p2*Vtotal + dm.p3;
-        heightMapBias = dm.p1*Vbias.*Vbias + dm.p2*Vbias + dm.p3;
+        heightMapTotal = dm.p1.*Vtotal.^2 + dm.p2.*Vtotal + dm.p3;
+        heightMapBias = dm.p1.*Vbias.^2 + dm.p2.*Vbias + dm.p3;
         heightMap = heightMapTotal - heightMapBias;
         
     case{'fourier2'}
@@ -44,8 +44,8 @@ switch lower(dm.fitType)
         end  
         Vbias = dm.biasMap;
         Vtotal = dm.V + Vbias;
-        heightMapTotal = a0 + a1*cos(Vtotal*dm.w) + b1*sin(Vtotal*dm.w) + a2*cos(2*Vtotal*dm.w) + b2*sin(2*Vtotal*dm.w);
-        heightMapBias = a0 + a1*cos(Vbias*dm.w) + b1*sin(Vbias*dm.w) + a2*cos(2*Vbias*dm.w) + b2*sin(2*Vbias*dm.w);
+        heightMapTotal = dm.a0 + dm.a1.*cos(Vtotal.*dm.w) + dm.b1.*sin(Vtotal.*dm.w) + dm.a2.*cos(2*Vtotal.*dm.w) + dm.b2.*sin(2*Vtotal.*dm.w);
+        heightMapBias = dm.a0 + dm.a1.*cos(Vbias.*dm.w) + dm.b1.*sin(Vbias.*dm.w) + dm.a2.*cos(2*Vbias.*dm.w) + dm.b2.*sin(2*Vbias.*dm.w);
         heightMap = heightMapTotal - heightMapBias;        
 
     otherwise

@@ -4,16 +4,17 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function jac = model_Jacobian(mp, modvar)
 %  Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
 %
 % INPUTS
+% ------
 % mp : structure of model parameters
 %
 % OUTPUTS
-% jacStruct = structure containing a separate control Jacobian for each DM
+% -------
+% jacStruct : structure containing a separate control Jacobian for each DM
 
 function jacStruct = model_Jacobian(mp)
 
@@ -170,13 +171,15 @@ end %--END OF FUNCTION model_Jacobian.m
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% INPUTS:
-% -mp = structure of model parameters
-% -vals_list = structure containing combinations of:
-%     -tsi = index of the pair of sub-bandpass index and tip/tilt offset index
-%     -whichDM = which DM number
+% INPUTS
+% ------
+% mp : structure of model parameters
+% vals_list : structure containing combinations of:
+%     -tsi : index of the pair of sub-bandpass index and tip/tilt offset index
+%     -whichDM : which DM number
 %
-% OUTPUTS:
+% OUTPUTS
+% -------
 % -jacMode = Jacobian for the specified combo of DM, wavelength, and Zernike mode.
 
 function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
@@ -187,55 +190,46 @@ function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
     %--Select which optical layout's Jacobian model to use and get the output E-field
     switch lower(mp.layout)
         case{'fourier'}
-
             switch upper(mp.coro) 
-                case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-                    jacMode = model_Jacobian_EHLC(mp, iModeCopy, whichDMCopy); 
-                case{'HLC','APHLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
-                    jacMode = model_Jacobian_HLC(mp, iModeCopy, whichDMCopy); 
-                case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
-                    jacMode = model_Jacobian_LC(mp, iModeCopy, whichDMCopy); 
-                case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-                    jacMode = model_Jacobian_SPLC(mp, iModeCopy, whichDMCopy); 
-                case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
+                case{'LC', 'APLC', 'SPLC', 'FLC', 'HLC'}
+                    jacMode = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
+                case{'VORTEX','VC','AVC'}
                     jacMode = model_Jacobian_VC(mp, iModeCopy, whichDMCopy); 
                 case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
-                    jacMode = model_Jacobian_Roddier(mp, iModeCopy, whichDMCopy); 
+                    jacMode = model_Jacobian_Roddier(mp, iModeCopy, whichDMCopy);
+                case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
+                    jacMode = model_Jacobian_EHLC(mp, iModeCopy, whichDMCopy); 
                 otherwise
                     error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
             end  
 
         case{'fpm_scale'}
             switch upper(mp.coro) 
-                case{'HLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
+                case{'HLC'}
                     jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy); 
-            end
-
-        case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--WFIRST CGI Phase B Models
-
-            switch upper(mp.coro) 
-                case{'HLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
-                    jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy); 
-                case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-                    jacMode  = model_Jacobian_SPLC(mp, iModeCopy, whichDMCopy); 
-                otherwise
-                    error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
             end
             
         case{'proper'}
-
             switch upper(mp.coro) 
-                case{'HLC'} %--DMs, optional apodizer, FPM with phase modulation, and LS.
-                    jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy); 
-                case{'LC','DMLC','APLC'} %--DMs, optional apodizer, occulting spot FPM, and LS.
-                    jacMode = model_Jacobian_LC(mp, iModeCopy, whichDMCopy); 
-                case{'SPLC','FLC'} %--DMs, optional apodizer, binary-amplitude FPM with outer diaphragm, LS
-                    jacMode = model_Jacobian_SPLC(mp, iModeCopy, whichDMCopy); 
-                case{'VORTEX','VC','AVC'} %--DMs, optional apodizer, vortex FPM, LS
-                    jacMode = model_Jacobian_VC(mp, iModeCopy, whichDMCopy); 
+                case{'LC', 'APLC', 'SPLC', 'FLC'}
+                    jacMode = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
+                case{'VORTEX','VC','AVC'}
+                    jacMode = model_Jacobian_VC(mp, iModeCopy, whichDMCopy);
+                case{'HLC'}
+                    jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy);
                 otherwise
                     error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
             end  
+            
+        case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--WFIRST CGI Phase B Models
+            switch upper(mp.coro) 
+                case{'HLC'}
+                    jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy); 
+                case{'SPLC','FLC'}
+                    jacMode  = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
+                otherwise
+                    error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
+            end
 
         otherwise
             error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');  
@@ -243,9 +237,3 @@ function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
     end
 
 end %--END OF FUNCTION model_Jacobian_middle_layer.m    
-
-%funcMiddle = @(ii) model_Jacobian_middle_layer(mp,vals_list,ii); %--Make a function handle for parfor to use
-    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% END OF model_Jacobian_middle_layer.m
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

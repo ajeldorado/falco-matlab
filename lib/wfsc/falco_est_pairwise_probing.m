@@ -39,9 +39,10 @@
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
 mp.isProbing = true;
+whichDM = mp.est.probe.whichDM;
 
 %--If there is a third input, it is the Jacobian structure
-if( size(varargin, 2)== 1 )
+if size(varargin, 2) == 1
     jacStruct = varargin{1};
 end
 
@@ -52,22 +53,30 @@ switch lower(mp.estimator)
         clear ev
 end
 
+% Augment which DMs are used if the probing DM isn't used for control.
+if whichDM == 1 && ~any(mp.dm_ind == 1)
+    mp.dm_ind = [mp.dm_ind(:); 1];
+elseif whichDM == 2 && ~any(mp.dm_ind == 2)
+    mp.dm_ind = [mp.dm_ind(:); 2];
+end
+    
+
 %--Select number of actuators across based on chosen DM for the probing
-if(mp.est.probe.whichDM== 1)
+if whichDM == 1
     Nact = mp.dm1.Nact;
-elseif(mp.est.probe.whichDM== 2)
+elseif whichDM == 2
     Nact = mp.dm2.Nact;
 end
 
 %--Store the initial DM commands
-if(any(mp.dm_ind == 1));  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
-if(any(mp.dm_ind == 2));  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+if any(mp.dm_ind == 1);  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
+if any(mp.dm_ind == 2);  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
 ev.Icube = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1+2*Npairs);
-if(any(mp.dm_ind == 1));  ev.Vcube.dm1 = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs);  end
-if(any(mp.dm_ind == 2));  ev.Vcube.dm2 = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs);  end
+if whichDM == 1;  ev.Vcube.dm1 = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs);  end
+if whichDM == 2;  ev.Vcube.dm2 = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs);  end
 
 %--Generate evenly spaced probes along the complex unit circle
 % NOTE: Nprobes=Npairs*2;   
@@ -106,7 +115,7 @@ fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
 for iStar = 1:mp.compact.star.count
     modvar.starIndex = iStar;
-for iSubband=1:mp.Nsbp
+for iSubband = 1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ', iSubband, mp.Nsbp);
     modeIndex = (iStar-1)*mp.Nsbp + iSubband;
     fprintf('Mode: %u/%u ... ', modeIndex, mp.jac.Nmode);
@@ -143,8 +152,8 @@ for iSubband=1:mp.Nsbp
 
         %--Store values for first image and its DM commands
         ev.Icube(:, :, whichImage) = I0;
-        if any(mp.dm_ind == 1);  ev.Vcube.dm1(:, :, whichImage) = mp.dm1.V;  end
-        if any(mp.dm_ind == 2);  ev.Vcube.dm2(:, :, whichImage) = mp.dm2.V;  end
+        if whichDM == 1;  ev.Vcube.dm1(:, :, whichImage) = mp.dm1.V;  end
+        if whichDM == 2;  ev.Vcube.dm2(:, :, whichImage) = mp.dm2.V;  end
     end
     
     %--Compute the average Inorm in the scoring and correction regions
@@ -173,47 +182,45 @@ for iSubband=1:mp.Nsbp
                 probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe));
         end
         %--Select which DM to use for probing. Allocate probe to that DM
-        if mp.est.probe.whichDM == 1
+        if whichDM == 1
             dDM1Vprobe = probeCmd ./ mp.dm1.VtoH; % Now in volts
             dDM2Vprobe = 0;
-        elseif mp.est.probe.whichDM == 2
+        elseif whichDM == 2
             dDM1Vprobe = 0;        
             dDM2Vprobe = probeCmd ./ mp.dm2.VtoH; % Now in volts
         end
-        if(any(mp.dm_ind == 1));  mp.dm1.V = DM1Vnom + dDM1Vprobe;  end
-        if(any(mp.dm_ind == 2));  mp.dm2.V = DM2Vnom + dDM2Vprobe;  end
+        if whichDM == 1;  mp.dm1.V = DM1Vnom + dDM1Vprobe;  end
+        if whichDM == 2;  mp.dm2.V = DM2Vnom + dDM2Vprobe;  end
 
         %--Take probed image
-        if(mp.flagFiber)
+        if mp.flagFiber
             Im = falco_get_sbp_image_fiber(mp, iSubband);
         else
             Im = falco_get_sbp_image(mp, iSubband);
         end
-        ImNonneg = Im;
-        ImNonneg(Im < 0) = 0;
         whichImage = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
 
         %--Store probed image and its DM settings
         ev.Icube(:, :, whichImage) = Im;
-        if(any(mp.dm_ind == 1));  ev.Vcube.dm1(:, :,whichImage) = mp.dm1.V;  end
-        if(any(mp.dm_ind == 2));  ev.Vcube.dm2(:, :,whichImage) = mp.dm2.V;  end
+        if whichDM == 1;  ev.Vcube.dm1(:, :, whichImage) = mp.dm1.V;  end
+        if whichDM == 2;  ev.Vcube.dm2(:, :, whichImage) = mp.dm2.V;  end
 
         %--Report results
         probeSign = ['-', '+'];
         fprintf('Actual Probe %d%s Contrast is: %.2e \n', ceil(iProbe/2), probeSign(mod(iProbe, 2)+1), mean(Im(mp.Fend.corr.maskBool)));
 
         %--Assign image to positive or negative probe collection:
-        if mod(iProbe, 2)== 1  % Odd; for plus probes
-            if(any(mp.dm_ind == 1));  DM1Vplus(:, :, iOdd) = dDM1Vprobe + DM1Vnom;  end
-            if(any(mp.dm_ind == 2));  DM2Vplus(:, :, iOdd) = dDM2Vprobe + DM2Vnom;  end
+        if mod(iProbe, 2) == 1  % Odd; for plus probes
+            if whichDM == 1;  DM1Vplus(:, :, iOdd) = dDM1Vprobe + DM1Vnom;  end
+            if whichDM == 2;  DM2Vplus(:, :, iOdd) = dDM2Vprobe + DM2Vnom;  end
             Iplus(:, iOdd) = Im(mp.Fend.corr.maskBool);
-            iOdd=iOdd+1;
-        elseif mod(iProbe, 2)==0  % Even; for minus probes
-            if(any(mp.dm_ind == 1));  DM1Vminus(:, :, iEven) = dDM1Vprobe + DM1Vnom;  end
-            if(any(mp.dm_ind == 2));  DM2Vminus(:, :, iEven) = dDM2Vprobe + DM2Vnom;  end 
+            iOdd = iOdd + 1;
+        elseif mod(iProbe, 2) == 0  % Even; for minus probes
+            if whichDM == 1;  DM1Vminus(:, :, iEven) = dDM1Vprobe + DM1Vnom;  end
+            if whichDM == 2;  DM2Vminus(:, :, iEven) = dDM2Vprobe + DM2Vnom;  end 
             Iminus(:, iEven) = Im(mp.Fend.corr.maskBool);
-            iEven=iEven+1;
+            iEven = iEven + 1;
         end
     end
 
@@ -222,7 +229,7 @@ for iSubband=1:mp.Nsbp
     ampSq(ampSq < 0) = 0;  % If probe amplitude is zero, amplitude is zero there.
     amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
     isnonzero = all(amp, 2);
-    zAll = ( (Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
+    zAll = ((Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
     ampSq2Dcube = zeros(mp.Fend.Neta, mp.Fend.Nxi, mp.est.probe.Npairs);
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
@@ -232,9 +239,9 @@ for iSubband=1:mp.Nsbp
 
     %% Plot relevant data for all the probes
     ev.iStar = iStar;
-    if mp.est.probe.whichDM == 1
+    if whichDM == 1
         DMV4plot = DM1Vplus - repmat(DM1Vnom, [1, 1, size(DM1Vplus, 3)]);
-    elseif mp.est.probe.whichDM == 2
+    elseif whichDM == 2
         DMV4plot = DM2Vplus - repmat(DM2Vnom, [1, 1, size(DM2Vplus, 3)]);
     end
     falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube)
@@ -245,11 +252,11 @@ for iSubband=1:mp.Nsbp
         
         dEplus  = zeros(size(Iplus ));
         for iProbe=1:Npairs
-            if(mp.est.probe.whichDM == 1)
-                dV = (DM1Vplus(:, :, iProbe)-DM1Vnom);%/mp.est.probe.gainFudge;
+            if whichDM == 1
+                dV = DM1Vplus(:, :, iProbe) - DM1Vnom;
                 dEplus(:, iProbe) = squeeze(jacStruct.G1(:, :, modeIndex))*dV(mp.dm1.act_ele);
-            elseif(mp.est.probe.whichDM == 2)
-                dV = (DM2Vplus(:, :, iProbe)-DM2Vnom);%/mp.est.probe.gainFudge;
+            elseif whichDM == 2
+                dV = DM2Vplus(:, :, iProbe) - DM2Vnom;
                 dEplus(:, iProbe) = squeeze(jacStruct.G2(:, :, modeIndex))*dV(mp.dm2.act_ele);
             end
         end
@@ -257,8 +264,8 @@ for iSubband=1:mp.Nsbp
     else %--Get the probe phase from the model and the probe amplitude from the measurements
 
         % For unprobed field based on model:
-        if(any(mp.dm_ind == 1));  mp.dm1.V = DM1Vnom;  end
-        if(any(mp.dm_ind == 2));  mp.dm2.V = DM2Vnom;  end % Added July 9, 2014
+        if any(mp.dm_ind == 1); mp.dm1.V = DM1Vnom; end
+        if any(mp.dm_ind == 2); mp.dm2.V = DM2Vnom; end
         if(mp.flagFiber)
             [~, E0] = model_compact(mp, modvar);
         else
@@ -271,8 +278,8 @@ for iSubband=1:mp.Nsbp
         Eminus = zeros(size(Iminus));
         for iProbe=1:Npairs
             % For plus probes:
-            if(any(mp.dm_ind == 1));  mp.dm1.V = DM1Vplus(:, :, iProbe); end %DM1Vnom + (DM1Vplus(:, :, iProbe)-DM1Vnom)/mp.est.probe.gainFudge;  end
-            if(any(mp.dm_ind == 2));  mp.dm2.V = DM2Vplus(:, :, iProbe); end %DM2Vnom + (DM2Vplus(:, :, iProbe)-DM2Vnom)/mp.est.probe.gainFudge;  end
+            if whichDM == 1; mp.dm1.V = DM1Vplus(:, :, iProbe); end 
+            if whichDM == 2; mp.dm2.V = DM2Vplus(:, :, iProbe); end
             if(mp.flagFiber)
                 [~, Etemp] = model_compact(mp, modvar);
             else
@@ -280,8 +287,8 @@ for iSubband=1:mp.Nsbp
             end
             Eplus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             % For minus probes:
-            if(any(mp.dm_ind == 1));  mp.dm1.V = DM1Vminus(:, :, iProbe); end %DM1Vnom + (DM1Vminus(:, :, iProbe)-DM1Vnom)/mp.est.probe.gainFudge;  end
-            if(any(mp.dm_ind == 2));  mp.dm2.V = DM2Vminus(:, :, iProbe); end %DM2Vnom + (DM2Vminus(:, :, iProbe)-DM2Vnom)/mp.est.probe.gainFudge;  end
+            if whichDM == 1;  mp.dm1.V = DM1Vminus(:, :, iProbe); end 
+            if whichDM == 2;  mp.dm2.V = DM2Vminus(:, :, iProbe); end
             if(mp.flagFiber)
                 [~, Etemp] = model_compact(mp, modvar);
             else
@@ -291,11 +298,11 @@ for iSubband=1:mp.Nsbp
         end
 
         %%--Create delta E-fields for each probe image. Then create Npairs phase angles.
-        dEplus  = Eplus  - repmat(E0vec, [1,Npairs]);
-        dEminus = Eminus - repmat(E0vec, [1,Npairs]);
-        dphdm  = zeros( [mp.Fend.corr.Npix, Npairs]); %--phases of the probes
-        for iProbe=1:Npairs
-            dphdm(:, iProbe) = atan2( imag(dEplus(:, iProbe))-imag(dEminus(:, iProbe)), real(dEplus(:, iProbe))-real(dEminus(:, iProbe)) );
+        dEplus  = Eplus  - repmat(E0vec, [1, Npairs]);
+        dEminus = Eminus - repmat(E0vec, [1, Npairs]);
+        dphdm  = zeros([mp.Fend.corr.Npix, Npairs]); %--phases of the probes
+        for iProbe = 1:Npairs
+            dphdm(:, iProbe) = atan2(imag(dEplus(:, iProbe))-imag(dEminus(:, iProbe)), real(dEplus(:, iProbe))-real(dEminus(:, iProbe)));
         end
         
     end 
@@ -305,16 +312,15 @@ for iSubband=1:mp.Nsbp
 if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp-square') || (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
     Eest = zeros(mp.Fend.corr.Npix, 1);
     zerosCounter = 0;
-    for ipix=1:mp.Fend.corr.Npix
-        
-        if(mp.est.flagUseJac) 
+    for ipix = 1:mp.Fend.corr.Npix
+        if mp.est.flagUseJac 
             dE = dEplus(ipix, :).';
             H = [real(dE), imag(dE)];
         else
             H = zeros(Npairs, 2); % Observation matrix
-            if(isnonzero(ipix)== 1) % Leave Eest for a pixel as zero if any probe amplitude is zero there.
-                for iProbe=1:Npairs
-                    H(iProbe, :) = amp(ipix, iProbe)*[cos(dphdm(ipix,iProbe)), sin(dphdm(ipix, iProbe)) ];
+            if isnonzero(ipix) == 1 % Leave Eest for a pixel as zero if any probe amplitude is zero there.
+                for iProbe = 1:Npairs
+                    H(iProbe, :) = amp(ipix, iProbe)*[cos(dphdm(ipix, iProbe)), sin(dphdm(ipix, iProbe)) ];
                 end
             else
                 zerosCounter = zerosCounter+1;
@@ -325,11 +331,11 @@ if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp-square') || (s
     end
 
     Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
-    fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
+    fprintf('%d of %d pixels were given zero probe amplitude. \n', zerosCounter, mp.Fend.corr.Npix); 
 
     %--Initialize the state and state covariance estimates for Kalman
     %filter. The state is the real and imag parts of the E-field.
-    if(strcmpi(mp.estimator, 'pwp-kf'))
+    if strcmpi(mp.estimator, 'pwp-kf')
         %--Re-organize the batch-processed E-field estimate into the first state estimate for the Kalman filter
         xOld = zeros(2*mp.Fend.corr.Npix, 1);
         for ii = 1:mp.Fend.corr.Npix
@@ -346,7 +352,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%--Kalman Filter Update
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%      
-if(strcmpi(mp.estimator, 'pwp-kf') && (ev.Itr >= mp.est.ItrStartKF) )
+if strcmpi(mp.estimator, 'pwp-kf') && (ev.Itr >= mp.est.ItrStartKF)
     
     xOld = ev.xOld;
     Pold = ev.Pold_KF_array(:, :, modeIndex);
@@ -370,9 +376,9 @@ if(strcmpi(mp.estimator, 'pwp-kf') && (ev.Itr >= mp.est.ItrStartKF) )
     
     %--Compute the change in E-field since last correction iteration
     if(mp.est.flagUseJac) %--Use Jacobian to compute delta E-field from previous correction step to now.
-        if(mp.est.probe.whichDM == 1)
+        if whichDM == 1
             dE = squeeze(jacStruct.G1(:, :, modeIndex))*mp.dm1.dV(mp.dm1.act_ele);
-        elseif(mp.est.probe.whichDM == 2)
+        elseif whichDM == 2
             dE = squeeze(jacStruct.G2(:, :, modeIndex))*mp.dm2.dV(mp.dm2.act_ele);
         end
     else
@@ -380,9 +386,9 @@ if(strcmpi(mp.estimator, 'pwp-kf') && (ev.Itr >= mp.est.ItrStartKF) )
         % difference the output of model_compact rather than using the
         % Jacobian.
         %--Previous unprobed field based on model:
-        if(any(mp.dm_ind == 1));  mp.dm1.V = DM1Vnom-mp.dm1.dV;  end
-        if(any(mp.dm_ind == 2));  mp.dm2.V = DM2Vnom-mp.dm2.dV;  end
-        if(mp.flagFiber)
+        if whichDM == 1;  mp.dm1.V = DM1Vnom - mp.dm1.dV;  end
+        if whichDM == 2;  mp.dm2.V = DM2Vnom - mp.dm2.dV;  end
+        if mp.flagFiber
             [~, Eprev] = model_compact(mp, modvar);
         else
             Eprev = model_compact(mp, modvar);
@@ -393,7 +399,7 @@ if(strcmpi(mp.estimator, 'pwp-kf') && (ev.Itr >= mp.est.ItrStartKF) )
 
     %--Construct dX, the change in state, from dE
     dX = zeros(size(xOld));
-    for ii=1:mp.Fend.corr.Npix
+    for ii = 1:mp.Fend.corr.Npix
        dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
     end
 
@@ -463,6 +469,14 @@ end %End Kalman Filter Computation
 %% Save out the estimates
 ev.Eest(:, modeIndex) = Eest;
 ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
+
+Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+Eest2D(mp.Fend.corr.maskBool) = Eest;
+
+figure(401); imagesc(real(Eest2D)); axis xy equal tight; colorbar;
+figure(402); imagesc(imag(Eest2D)); axis xy equal tight; colorbar;
+figure(403); imagesc(log10(abs(Eest2D).^2)); axis xy equal tight; colorbar;
+drawnow;
 
 end %--End of loop over the wavelengths
 end %--End of loop over stars

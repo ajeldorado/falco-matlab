@@ -1,10 +1,8 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
-%
-% function Eout = model_full_scale(mp, lambda, Ein, normFac)
 % 
 % Function to run the full-knowledge optical model and return the final
 % E-field.
@@ -17,35 +15,19 @@
 %   - Instead use a full model with Fresnel propagations for more realistic simulations.
 % - Different from "Fourier" layout because FPM scales with wavelength
 %
-% ---------------
-% INPUTS:
-% - mp = structure of model parameters
-% - lambda = wavelength in meters
-% - Ein = 2D input E-field at entrance
-% - normFac = intensity normalization factor 
+% INPUTS
+% ------
+% mp : structure of model parameters
+% lambda : wavelength in meters
+% Ein : 2D input E-field at entrance
+% normFac : intensity normalization factor 
 %
 %
-% OUTPUTS:
-% - Eout = 2-D electric field at final plane of optical layout
-% - varargout{1}==Efiber = E-field at final plane when a single mode fiber
+% OUTPUTS
+% -------
+% Eout : 2-D electric field at final plane of optical layout
+% varargout{1}==Efiber : E-field at final plane when a single mode fiber
 % is used
-%
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-07-10 by A.J. Riggs to have the FPM scale with
-% wavelength.
-% Modified on 2019-04-18 by A.J. Riggs to use varargout for Efiber instead
-% of having Efiber as a required output. 
-% Modified on 2019-04-05 by A.J. Riggs to have the normalization be
-%   computed by moving the source off-axis instead of removing the FPM.
-% Modified on 2019-02-14 by G. Ruane to handle scalar vortex FPMs
-% Modified on 2019-02-14 by A.J. Riggs to be the "Fourier" layout for all
-% types of coronagraphs.
-% Modified on 2017-10-17 by A.J. Riggs to have model_full.m be a wrapper. All the 
-%  actual full models, including this one, have been moved to sub-routines for clarity.
-% Modified by A.J. Riggs from hcil_simTestbed.m to model_full.m.
-% Modified on 2015-02-18 by A.J. Riggs from hcil_model.m to hcil_simTestbed.m to include
-%  extra errors in the model to simulate the actual testbed for fake images.
 
 function [Eout, varargout] = model_full_scale(mp, lambda, Ein, normFac)
 
