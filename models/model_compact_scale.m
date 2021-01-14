@@ -1,10 +1,8 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
-%
-% function Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval)
 % 
 % This function produces the electric field based on the knowledge
 % available to the user in what is called the "compact model." Usually, 
@@ -15,35 +13,18 @@
 % useful and needed between the deformable mirrors and key coronagraph 
 % optics known to be out of the pupil or focal planes.
 %
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-04-08 by A.J. Riggs from model_compact_general to model_compact_scale.
-% Modified on 2019-04-05 by A.J. Riggs to have the normalization be
-%   computed by moving the source off-axis instead of removing the FPM.
-% Modified on 2019-02-14 by G. Ruane to handle scalar vortex FPMs
-% Modified on 2019-02-11 by A.J. Riggs to have all coronagraph types
-% together.
-% Modified on 2018-01-23 by A.J. Riggs to allow DM1 to not be at a pupil
-%   and to have an aperture stop.
-% Modified on 2017-11-09 by A.J. Riggs to remove the Jacobian calculation.
-% Modified on 2017-10-17 by A.J. Riggs to have model_compact.m be a wrapper. All the 
-%  actual compact models have been moved to sub-routines for clarity.
-% Modified on 19 June 2017 by A.J. Riggs to use lower resolution than the
-%   full model.
-% model_compact.m - 18 August 2016: Modified from hcil_model.m
-% hcil_model.m - 18 Feb 2015: Modified from HCIL_model_lab_BB_v3.m
-% ---------------
-%
-% INPUTS:
-% - mp = structure of model parameters
-% - lambda = wavelength in meters
-% - Ein = 2D input E-field at entrance
-% - normFac = intensity normalization factor 
-% - flagEval = true/false flag whether to evaluate at higher resolution for
+% INPUTS
+% ------
+% mp : structure of model parameters
+% lambda : wavelength in meters
+% Ein : 2D input E-field at entrance
+% normFac : intensity normalization factor 
+% flagEval : true/false flag whether to evaluate at higher resolution for
 %              throughput computation
 %
-% OUTPUTS:
-% - Eout = electric field in the final focal plane
+% OUTPUTS
+% -------
+% Eout : electric field in the final focal plane
 %
 %
 % NOTE: In wrapper above this that chooses layout, need to define mp.FPM.mask
