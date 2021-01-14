@@ -229,9 +229,22 @@ for Itr = 1:mp.Nitr
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     
     %% Wavefront Control
-
-    cvar.Itr = Itr;
+    
     cvar.EfieldMeas = EfieldMeas;
+    if mp.jac.minimizeNI
+        for iMode = 1:mp.jac.Nmode
+            modvar.whichSource = 'star';
+            modvar.sbpIndex = mp.jac.sbp_inds(iMode);
+            modvar.zernIndex = mp.jac.zern_inds(iMode);
+            modvar.starIndex = mp.jac.star_inds(iMode);
+            Eunocculted = model_compact(mp, modvar, 'nofpm');
+            [~, indPeak] = max(abs(Eunocculted(:)));
+            Epeak = Eunocculted(indPeak);
+            cvar.EfieldMeas(:, iMode) = cvar.EfieldMeas(:, iMode) / Epeak;            
+        end
+        clear modvar
+    end
+    cvar.Itr = Itr;
     cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
     if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel

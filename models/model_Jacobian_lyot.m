@@ -45,11 +45,11 @@ Ett = exp(1i*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex);
 
 %--Apply a Zernike (in amplitude) at input pupil
-if(modvar.zernIndex~=1)
+if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
-    zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
+    zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = padOrCropEven(zernMat, mp.P1.compact.Narr);
+    Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,7 +66,7 @@ end
 %--Re-image the apodizer from pupil P3 back to pupil P2. (Sign of mp.Nrelay2to3 doesn't matter.)
 if(mp.flagApod) 
     apodReimaged = padOrCropEven(mp.P3.compact.mask, NdmPad);
-    apodReimaged = propcustom_relay(apodReimaged,mp.Nrelay2to3,mp.centering);
+    apodReimaged = propcustom_relay(apodReimaged, mp.Nrelay2to3, mp.centering);
 else
     apodReimaged = ones(NdmPad); 
 end
@@ -114,6 +114,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Get the unocculted peak E-field and coronagraphic E-field
+if mp.jac.minimizeNI
+    modvar.whichSource = 'star';
+    Eocculted = model_compact(mp, modvar);
+    Eunocculted = model_compact(mp, modvar, 'nofpm');
+    [~, indPeak] = max(abs(Eunocculted(:)));
+    Epeak = Eunocculted(indPeak);
+end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
@@ -195,7 +204,7 @@ if whichDM == 1
 
                     %--Full Lyot plane pupil (for Babinet)
                     EP4noFPM = zeros(mp.dm1.compact.NdmPad);
-                    if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
+                    if mp.useGPU; EP4noFPM = gpuArray(EP4noFPM);end
                     EP4noFPM(y_box_AS_ind, x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field. 
                     EP4noFPM = propcustom_relay(EP4noFPM,mp.Nrelay2to3+mp.Nrelay3to4,mp.centering); %--Get the correct orientation 
                     EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
@@ -216,17 +225,25 @@ if whichDM == 1
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend) ;end
-
-            Gmode(:,Gindex) = mp.dm1.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            if(mp.useGPU); EFend = gather(EFend); end
+            
+            Gmode(:, Gindex) = EFend(mp.Fend.corr.inds) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
-        Gindex = Gindex+1;
+        
+        Gindex = Gindex + 1;
     end
+    
+    if mp.jac.minimizeNI
+       JacOfPeak = model_Jacobian_no_FPM(mp, iMode, whichDM); 
+       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.inds) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
+    end
+    
+    Gmode = mp.dm1.weight * Gmode;
 end    
 
 %--DM2---------------------------------------------------------
 if whichDM == 2
-    Gmode = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
+    Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele);
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS; 
@@ -280,7 +297,7 @@ if whichDM == 2
                     EP4sub = propcustom_relay(EP4sub,mp.Nrelay3to4-1,mp.centering); %--Get the correct orientation
 
                     EP4noFPM = zeros(mp.dm2.compact.NdmPad);
-                    if(mp.useGPU); EP4noFPM = gpuArray(EP4noFPM);end
+                    if mp.useGPU; EP4noFPM = gpuArray(EP4noFPM);end
                     EP4noFPM(y_box_AS_ind,x_box_AS_ind) = dEP2box; %--Propagating the E-field from P2 to P4 without masks gives the same E-field.
                     EP4noFPM = propcustom_relay(EP4noFPM,mp.Nrelay2to3+mp.Nrelay3to4,mp.centering); %--Get the correct orientation 
                     EP4noFPM = padOrCropEven(EP4noFPM,mp.P4.compact.Narr);
@@ -301,12 +318,19 @@ if whichDM == 2
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend) ;end
+            if mp.useGPU; EFend = gather(EFend); end
 
-            Gmode(:,Gindex) = mp.dm2.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:, Gindex) = EFend(mp.Fend.corr.inds) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
-        Gindex = Gindex+1;
+        Gindex = Gindex + 1;
     end
+    
+    if mp.jac.minimizeNI
+       JacOfPeak = model_Jacobian_no_FPM(mp, iMode, whichDM); 
+       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.inds) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
+    end
+    
+    Gmode = mp.dm2.weight * Gmode;
 end
 
 %--DM8--------------------------------------------------------- 
@@ -383,7 +407,7 @@ if whichDM == 8
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend) ;end
+            if mp.useGPU; EFend = gather(EFend); end
             
             Gmode(:,Gindex) = (1/stepFac)*mp.dm8.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
             Gindex = Gindex + 1;
@@ -468,7 +492,7 @@ if whichDM == 9
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
             EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend) ;end
+            if mp.useGPU; EFend = gather(EFend); end
 
             Gmode(:,Gindex) = mp.dm9.act_sens*(1/stepFac)*mp.dm9.weight*EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
