@@ -24,6 +24,7 @@ modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
+flagUseFPM = true; % default is to have the FPM in the beam
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
@@ -36,6 +37,8 @@ while icav < size(varargin, 2)
             normFac = 1;
         case {'eval'}
             flagEval = true;
+        case{'nofpm', 'unocculted'}
+            flagUseFPM = false;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
     end
@@ -59,12 +62,12 @@ xiOffset = mp.compact.star.xiOffsetVec(iStar);
 etaOffset = mp.compact.star.etaOffsetVec(iStar);
 starWeight = mp.compact.star.weights(iStar);
 TTphase = (-1)*(2*pi*(xiOffset*mp.P2.compact.XsDL + etaOffset*mp.P2.compact.YsDL));
-Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ett = exp(1j*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
 
 if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.compact.XsDL + modvar.y_offset*mp.P2.compact.YsDL));
-    Ett = exp(1i*TTphase*mp.lambda0/lambda);
+    Ett = exp(1j*TTphase*mp.lambda0/lambda);
     Ein = Ett .* Ein;
 end
 
@@ -72,7 +75,7 @@ end
 %  This replaces the previous way of taking the FPM out in the optical model.
 if normFac == 0
     TTphase = (-1)*(2*pi*(mp.source_x_offset_norm*mp.P2.compact.XsDL + mp.source_y_offset_norm*mp.P2.compact.YsDL));
-    Ett = exp(1i*TTphase*mp.lambda0/lambda);
+    Ett = exp(1j*TTphase*mp.lambda0/lambda);
     Ein = Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
 end
 
@@ -82,11 +85,11 @@ if ~isfield(modvar, 'zernIndex')
 end
 %--Only used for Zernike sensitivity control, which requires the perfect 
 % E-field of the differential Zernike term.
-if modvar.zernIndex ~=1
+if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
-    zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    Ein = Ein.*zernMat*(2*pi*1i/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
+    zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = padOrCropEven(zernMat, mp.P1.compact.Narr);
+    Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
@@ -110,32 +113,32 @@ end
 switch lower(mp.layout)
     case{'fourier'}
         if(mp.flagFiber)
-            [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+            [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
             varargout{1} = Efiber;
         else
-            Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+            Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
         end
         
     case{'proper'}
         switch upper(mp.coro)
             case{'HLC'}
-                    Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
+                    Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
             otherwise
-                    Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+                    Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
         end
         
     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
         switch upper(mp.coro)
             case{'SPLC'}
-                Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+                Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
             case{'HLC'}
-                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
+                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
         end
         
     case{'fpm_scale'}
         switch upper(mp.coro)
             case{'HLC'}
-                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval);
+                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
         end
 end
     
