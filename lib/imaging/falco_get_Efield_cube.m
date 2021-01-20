@@ -28,6 +28,7 @@ function Ecube = falco_get_Efield_cube(mp)
         modvar.sbpIndex   = si;
         modvar.wpsbpIndex = mp.wi_ref;
         modvar.whichSource = 'star';
+        modvar.starIndex = 1;
         Ecube(:,:,si) = model_full(mp, modvar);
     end
 

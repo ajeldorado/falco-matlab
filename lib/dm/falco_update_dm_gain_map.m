@@ -46,4 +46,6 @@ switch lower(dm.fitType)
         error('Value of dm.fitType not recognized.')
 end
 
+dm.VtoH = dm.VtoH.*dm.VtoHfudge;
+
 end %--END OF FUNCTION
