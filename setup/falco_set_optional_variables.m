@@ -142,7 +142,8 @@ end
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
-
+if(isfield(mp.jac,'minimizeNI')==false); mp.jac.minimizeNI = false; end %--Have EFC minimize normalized intensity instead of intensity
+    
 %--Estimation
 if(isfield(mp.est.probe,'whichDM')==false); mp.est.probe.whichDM = 1; end %--Which DM to use for probing
 if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max probe intensity

@@ -1,17 +1,19 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function acting as a wrapper for the different controller functions.
+% Wrapper function for the different controller functions.
 %
-% INPUTS:
+% INPUTS
+% ------
 % mp : structure of model parameters
 % cvar : structure of controller variables
 % jacStruct : structure containing the Jacobians
 %
-% OUTPUTS:
+% OUTPUTS
+% -------
 % mp : structure of model parameters
 % cvar : structure of controller variables
 
@@ -27,7 +29,7 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
     %--Compute matrices for linear control with regular EFC
     cvar.GstarG_wsum  = zeros(cvar.NeleAll, cvar.NeleAll); 
     cvar.RealGstarEab_wsum = zeros(cvar.NeleAll, 1);
-
+    
     for iMode = 1:mp.jac.Nmode
 
         Gstack = [jacStruct.G1(:,:,iMode), jacStruct.G2(:,:,iMode), jacStruct.G3(:,:,iMode), jacStruct.G4(:,:,iMode), jacStruct.G5(:,:,iMode), jacStruct.G6(:,:,iMode), jacStruct.G7(:,:,iMode), jacStruct.G8(:,:,iMode), jacStruct.G9(:,:,iMode)];
@@ -37,7 +39,17 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
 
         %--The G^*E part changes each iteration because the E-field changes.
         iStar = mp.jac.star_inds(iMode);
-        Eweighted = mp.WspatialVec(:, iStar) .* cvar.EfieldMeas(:, iMode); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
+        if mp.jac.minimizeNI
+            modvar.whichSource = 'star';
+            modvar.sbpIndex = mp.jac.sbp_inds(iMode);
+            modvar.zernIndex = mp.jac.zern_inds(iMode);
+            modvar.starIndex = mp.jac.star_inds(iMode);
+            Eunocculted = model_compact(mp, modvar, 'nofpm');
+            [~, indPeak] = max(abs(Eunocculted(:)));
+            Epeak = Eunocculted(indPeak);
+            cvar.Eest(:, iMode) = cvar.Eest(:, iMode) / Epeak;
+        end
+        Eweighted = mp.WspatialVec(:, iStar) .* cvar.Eest(:, iMode); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
         cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(iMode)*real(Gstack'*Eweighted); %--Apply the Jacobian weights and add to the total.
 
     end
