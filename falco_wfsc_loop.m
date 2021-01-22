@@ -211,7 +211,7 @@ for Itr = 1:mp.Nitr
         Nitr = mp.Nitr;
         thput_vec = mp.thput_vec;
         fnWS = sprintf('%sws_%s_Iter%dof%d.mat', mp.path.wsInProgress, mp.runLabel, Itr, mp.Nitr);
-        save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','out.InormHist','thput_vec','out')
+        save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','thput_vec','out')
         fprintf('done.\n\n')
     end
 
@@ -302,7 +302,7 @@ fprintf('...done.\n\n')
 
 %% Save out the data from the workspace
 if mp.flagSaveWS
-    clear cvar G* h* jacStruct; % Save a ton of space when storing the workspace
+    clear ev cvar G* h* jacStruct; % Save a ton of space when storing the workspace
 
     % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
     mp.P1.full.mask=1; mp.P1.compact.mask=1;
