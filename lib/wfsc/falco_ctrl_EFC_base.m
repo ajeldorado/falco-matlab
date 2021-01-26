@@ -90,6 +90,10 @@ if mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr
         \(cvar.RealGstarEab_wsum...
         +mp.aux.gamma*10^(log10reg)*cvar.EyeGstarGdiag.*...
         vec_dm_ele);
+elseif mp.aux.peakJacKern
+    duVec =  -dmfac*(diag(reg_diag) + mp.aux.gamma*cvar.EyeGstarGdiag + cvar.GstarG_wsum)...
+        \(cvar.RealGstarEab_wsum+mp.aux.gamma*cvar.EyeGstarGdiag.*...
+        vec_dm_ele);
 else
     duVec = -dmfac*(diag(reg_diag) + mp.aux.gamma*cvar.EyeGstarGdiag + cvar.GstarG_wsum)...
         \(cvar.RealGstarEab_wsum+mp.aux.gamma*cvar.EyeGstarGdiag.*...
@@ -123,7 +127,11 @@ else %--Perform an empirical grid search with actual images from the testbed or 
     else
         Itotal = falco_get_summed_image(mp);
         InormAvg = mean(Itotal(mp.Fend.corr.maskBool));
-        [mp,thput] = falco_compute_thput(mp);
+        if mp.aux.flagNIthput2
+            [mp,thput] = falco_compute_thput(mp);
+        else
+            thput = Inf;
+        end
     end
 end
         

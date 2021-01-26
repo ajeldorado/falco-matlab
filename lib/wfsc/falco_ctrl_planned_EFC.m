@@ -125,7 +125,11 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         fprintf('\n')
 
         %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
-        [cvar.cMin,indBest] = min(Inorm_list(:)./(thput_list(:).^2));
+        if mp.aux.flagNIthput2
+            [cvar.cMin,indBest] = min(Inorm_list(:)./(thput_list(:).^2));
+        else
+            [cvar.cMin,indBest] = min(Inorm_list(:));
+        end
        
         [indBest,indBestOmega,indBestRegDM9] = ind2sub(size(Inorm_list),indBest);
         mp.aux.omega = valsOmega_list(indBestOmega);

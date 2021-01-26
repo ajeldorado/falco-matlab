@@ -88,8 +88,21 @@ for ri=start_rad:Nrad
         
         count=count+1;
     end
+    numdiv = 2;
+    for II=1:numdiv+1
+        % Choose power for number of lobes
+        powmin = 2*pi*rMin/min_azimSize*18;
+        aux = pow_arr-powmin;
+        aux(aux<0)=Inf;
+        [~,ind_mi] = min(aux);
+        pow = pow_arr(ind_mi);
+%         numdiv = pow/6;
+        
+        count=count+1;
+    end
+
 end
-mp.dm9.NactTotal = Nrad + count*2;
+mp.dm9.NactTotal = Nrad + count;
 mp.dm9.compact.inf_datacube = zeros(mp.dm9.compact.NdmPad,mp.dm9.compact.NdmPad,mp.dm9.NactTotal);
 
 %--Compute the ring influence functions
@@ -108,7 +121,7 @@ for ri = 1:Nrad
 %     figure(11); plot(xc,mp.dm9.compact.inf_datacube(:,mp.dm9.compact.NdmPad/2+1,ri)); xlim([0,mp.F3.Rin]); drawnow;
 %     pause(0.1);
 end
-% figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
+figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
 
 %
 beamRad = NbeamCompact/2;
@@ -164,14 +177,16 @@ for ri=start_rad:Nrad
         indTot = or(indTot,ind3_rev);
     %     cosII = zeros(N);
         cosII = cosFull.*indTot.*modeTemp;
-%         figure(102);imagesc(cosII);axis image; set(gca,'YDir', 'normal')
-%         pause(0.1)
+        if count<11
+            figure(104);imagesc(indTot);axis image; set(gca,'YDir', 'normal');
+            pause(0.25)
+        end
         mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
         count = count+1;
     end
 end
 % Sin basis
-numdiv = 2;
+numdiv = 3;
 for ri=start_rad:Nrad
     modeTemp = windowFull.*(1+(-1)^(mod(ri+1,2))*cos(2*pi*(Rc*mp.dm9.actres-0.5)))/2;
     rMin = drSep*(ri - 1);
@@ -190,36 +205,32 @@ for ri=start_rad:Nrad
         [~,ind_mi] = min(aux);
         pow = pow_arr(ind_mi);
 %         disp(['Number of lobes',num2str(pow)])
-        sinFull = -sin(THETA*pow)+1;
-        sinFull_rev = (sin(THETA*pow)+1);
-        numdiv = pow/6;
+        cosFull = -cos(THETA*pow)+1;
+%         numdiv = pow/6;
         dth = 2*pi/pow;
-        th_arr = linspace(pi/2-pi/2/pow,pi/2+pi/3-pi/2/pow,numdiv+1);
-        th_rev_arr = linspace(pi/2+pi/3+pi/2/pow,pi/2+pi/2/pow,numdiv+1);
+        th_arr = linspace(pi/2,pi/2+pi/3+pi/6,numdiv+1);
 
         %
-        th = th_arr(II);
-        th_rev = th_rev_arr(II);
-        ind = and((THETA)<(th+dth/2),(THETA)>(th-dth/2));
-        ind_rev = and((THETA4)<(th_rev+dth/2),(THETA4)>(th_rev-dth/2));
+        th = th_arr(II)+pi/12;
+        if th<pi
+            ind = and((THETA)<(th+dth/2),(THETA)>(th-dth/2));
+        else
+            ind = fliplr(and((THETA)<(pi-th+dth/2),(THETA)>(pi-th-dth/2)));
+        end
         ind2 = and((THETA2)<(th+dth/2),(THETA2)>(th-dth/2));
-        ind2_rev = and((THETA5)<(th_rev+dth/2),(THETA5)>(th_rev-dth/2));
         ind3 = and((THETA3)<(th+dth/2),(THETA3)>(th-dth/2));
-        ind3_rev = and((THETA6)<(th+dth/2-pi/2-pi/3/2),(THETA6)>(th-dth/2-pi/2-pi/3/2));
-        indTot0 = or(ind,ind2);
-        indTot0 = or(indTot0,ind3);
-        indTot_rev = or(ind_rev,ind2_rev);
-        indTot_rev = or(indTot_rev,ind3_rev);
-    %     cosII = zeros(N);
-        sinII = sinFull.*indTot0.*modeTemp + sinFull_rev.*indTot_rev.*modeTemp;
-%         figure(102);imagesc(sinII);axis image; set(gca,'YDir', 'normal')
-%         pause(0.1)
-        mp.dm9.compact.inf_datacube(:,:,Nrad+count) = sinII;
+        indTotsin = or(ind,ind2);
+        indTotsin = or(indTotsin,ind3);
+        cosII = cosFull.*indTotsin.*modeTemp;
+%         figure(102);imagesc(indTotsin);axis image; set(gca,'YDir', 'normal');
+%         pause(0.5)
+        mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
         count = count+1;
     end
 end
 
 mp.dm9.inf_datacube = mp.dm9.compact.inf_datacube;
+% figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
 
 
 %%

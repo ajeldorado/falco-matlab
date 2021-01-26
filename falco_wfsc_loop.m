@@ -230,9 +230,9 @@ for Itr=1:mp.Nitr
         cvar.flagRelin=false;
     end
     
-    if( (Itr==1) || cvar.flagRelin )
+    if( (Itr==1) || cvar.flagRelin ) 
         jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
-        if mp.aux.omega ~= 0 && Itr>=mp.aux.firstOmegaItr; jacStructCP = model_JacobianCP(mp);end %--Get structure containing Jacobians for CP JLlop
+        if (mp.aux.omega ~= 0 && Itr>=mp.aux.firstOmegaItr)||mp.aux.peakJacKern; jacStructCP = model_JacobianCP(mp);end %--Get structure containing Jacobians for CP JLlop
     end
 
     %% Cull actuators, but only if(cvar.flagCullAct && cvar.flagRelin)
@@ -332,7 +332,7 @@ for Itr=1:mp.Nitr
     % JLlop
 %     [mp,jacStructCP] = falco_ctrl_cull(mp,cvar,jacStructCP); %JLlop
             %--Crop out unused actuators from the control Jacobian
-    if mp.aux.omega ~= 0
+    if mp.aux.omega ~= 0||mp.aux.peakJacKern
         if(cvar.flagCullAct && cvar.flagRelin)
             if(any(mp.dm_ind==1)); jacStructCP.G1 = jacStructCP.G1(:,mp.dm1.act_ele,:); end
             if(any(mp.dm_ind==2)); jacStructCP.G2 = jacStructCP.G2(:,mp.dm2.act_ele,:); end
@@ -413,6 +413,10 @@ for Itr=1:mp.Nitr
 
     cvar.Itr = Itr;
     cvar.EfieldVec = EfieldVec;
+    if mp.aux.peakJacKern
+        [~,thput_Kern] = falco_compute_thput(mp);
+        cvar.thput = thput_Kern;
+    end
     cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
     
@@ -519,6 +523,21 @@ fprintf('Prev and New Measured Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x sma
     InormHist(Itr), InormHist(Itr+1), InormHist(Itr)/InormHist(Itr+1) ); 
 
 fprintf('\n\n');
+figure(201)
+plot(log10(InormHist(1:Itr)),mp.thput_vec(1:Itr),'LineWidth',3)
+xlabel('RC')
+ylabel('Throughput')
+set(gca,'FontSize',15)
+figure(202)
+plot(1:Itr,log10(InormHist(1:Itr)),'LineWidth',3)
+xlabel('Itr')
+ylabel('NI')
+set(gca,'FontSize',15)
+figure(203)
+plot(1:Itr,mp.thput_vec(1:Itr),'LineWidth',3)
+xlabel('Itr')
+ylabel('Throughput')
+set(gca,'FontSize',15)
 
 % Look if NI is going up too many times
 if Itr>3
@@ -675,8 +694,10 @@ if(mp.flagSaveWS)
     mp.dm8.inf_datacube = 0;
     mp.dm9.inf_datacube = 0;
     
-    mp.DM9surf = DM9surf;
-    
+    if exist('DM9surf','var')
+        mp.DM9surf = DM9surf;
+    end
+        
     fnAll = [mp.path.ws mp.runLabel,'_all.mat'];
     disp(['Saving entire workspace to file ' fnAll '...'])
     save(fnAll);
@@ -929,18 +950,37 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     %--Compute matrices for linear control with regular EFC
     cvar.GstarG_wsum  = zeros(cvar.NeleAll,cvar.NeleAll); 
     cvar.RealGstarEab_wsum = zeros(cvar.NeleAll, 1);
-
+    
+    if (mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr) || mp.aux.peakJacKern
+        cvar.GcptransGcp_wsum  = zeros(cvar.NeleAll,cvar.NeleAll);
+    end
     for im=1:mp.jac.Nmode
 
         Gstack = [jacStruct.G1(:,:,im), jacStruct.G2(:,:,im), jacStruct.G3(:,:,im), jacStruct.G4(:,:,im), jacStruct.G5(:,:,im), jacStruct.G6(:,:,im), jacStruct.G7(:,:,im), jacStruct.G8(:,:,im), jacStruct.G9(:,:,im)];
 
-        %--Square matrix part stays the same if no re-linearization has occurrred. 
-        cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(im)*real(Gstack'*Gstack); 
-
-        %--The G^*E part changes each iteration because the E-field changes.
-        Eweighted = mp.WspatialVec.*cvar.EfieldVec(:,im); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
-        cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(im)*real(Gstack'*Eweighted); %--Apply the Jacobian weights and add to the total.
-
+        if ~mp.aux.peakJacKern
+            %--Square matrix part stays the same if no re-linearization has occurrred. 
+            cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(im)*real(Gstack'*Gstack); 
+            %--The G^*E part changes each iteration because the E-field changes.
+            Eweighted = mp.WspatialVec.*cvar.EfieldVec(:,im); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
+            cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(im)*real(Gstack'*Eweighted); %--Apply the Jacobian weights and add to the total.
+        end
+        
+        
+        if (mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr) || mp.aux.peakJacKern
+            Gstackcp = [jacStruct.jacStructCP.G1(:,:,im), jacStruct.jacStructCP.G2(:,:,im), ...
+                jacStruct.jacStructCP.G3(:,:,im), jacStruct.jacStructCP.G4(:,:,im), jacStruct.jacStructCP.G5(:,:,im), ...
+                jacStruct.jacStructCP.G6(:,:,im), jacStruct.jacStructCP.G7(:,:,im), jacStruct.jacStructCP.G8(:,:,im), ...
+                jacStruct.jacStructCP.G9(:,:,im)];
+            %--Square matrix part stays the same if no re-linearization has occurrred. 
+            cvar.GcptransGcp_wsum  = cvar.GcptransGcp_wsum  + mp.jac.weights(im)*real(Gstackcp'*Gstackcp); 
+            if mp.aux.peakJacKern
+                Eweighted = mp.WspatialVec.*cvar.EfieldVec(:,im); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
+                Gstack = Gstack/cvar.thput - 1/cvar.thput^2*(Eweighted*Gstackcp);
+                cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(im)*real(Gstack'*Gstack);
+                cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(im)*real(Gstack'*Eweighted/cvar.thput); %--Apply the Jacobian weights and add to the total.
+            end
+        end
     end
     clear GallCell Gstack Eweighted % save RAM
 
@@ -951,7 +991,7 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
     cvar.EyeGstarGdiag = max(diag(cvar.GstarG_wsum ))*ones(cvar.NeleAll,1);
     cvar.EyeNorm = max(diag(cvar.GstarG_wsum ));
     fprintf(' done. Time: %.3f\n',toc);
-    if mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr
+    if (mp.aux.flagOmega==1 && cvar.Itr>=mp.aux.firstOmegaItr) || mp.aux.peakJacKern
         fprintf('Computing linearized control matrices from the JacobianCP...'); tic;
 
         %--Compute matrices for linear control with regular EFC
@@ -975,6 +1015,8 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
         end
         clear GallCell Gstack  % save RAM
     end
+    
+    % Kern method, CF with E_dh/E_peak
     %%%%%cvar.GstarG_wsum = cvar.GstarG_wsum(cvar.dm_subset,cvar.dm_subset);
     %%%%cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum(cvar.dm_subset);
     

@@ -80,7 +80,7 @@ mp.eval.Rsens = [3, 4;...
               4, 8];  
 
 %--Grid- or Line-Search Settings
-mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -6:1:3; %--log10 of the regularization exponents (often called Beta values)
 mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
    
