@@ -131,8 +131,8 @@ IZ2 = falco_zwfs_sim_image(mp);
 
 disp('Reconstructing the wavefront...');
 theta = 2*pi*mp.wfs.mask.depth*(mp.wfs.mask.n(mp.wfs.lambda0)-1)/mp.wfs.lambda0;
-phz1 = falco_zwfs_reconstructor(Ical, IZ1, mask, b, theta, 'f');
-phz2 = falco_zwfs_reconstructor(Ical, IZ2, mask, b, theta, 'f');
+phz1 = falco_zwfs_reconstructor(Ical, IZ1, mask, b, theta, 'f','subbias');
+phz2 = falco_zwfs_reconstructor(Ical, IZ2, mask, b, theta, 'f','subbias');
 
 phz1 = circshift(rot90(phz1,2),[1 1]);
 phz2 = circshift(rot90(phz2,2),[1 1]);
