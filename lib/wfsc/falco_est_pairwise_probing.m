@@ -473,9 +473,9 @@ ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
 Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 Eest2D(mp.Fend.corr.maskBool) = Eest;
 
-figure(401); imagesc(real(Eest2D)); axis xy equal tight; colorbar;
-figure(402); imagesc(imag(Eest2D)); axis xy equal tight; colorbar;
-figure(403); imagesc(log10(abs(Eest2D).^2)); axis xy equal tight; colorbar;
+% figure(401); imagesc(real(Eest2D)); axis xy equal tight; colorbar;
+% figure(402); imagesc(imag(Eest2D)); axis xy equal tight; colorbar;
+% figure(403); imagesc(log10(abs(Eest2D).^2)); axis xy equal tight; colorbar;
 drawnow;
 
 end %--End of loop over the wavelengths
