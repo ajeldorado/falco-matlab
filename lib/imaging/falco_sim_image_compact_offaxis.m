@@ -53,5 +53,5 @@ for si=1:mp.Nsbp
         varargout{1} = Ifiber;
     end
 end
-
+varargout{2}=E2D;
 end %--END OF FUNCTION

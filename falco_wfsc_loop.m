@@ -414,7 +414,12 @@ for Itr=1:mp.Nitr
     cvar.Itr = Itr;
     cvar.EfieldVec = EfieldVec;
     if mp.aux.peakJacKern
-        [~,thput_Kern] = falco_compute_thput(mp);
+%         [~,thput_Kern] = falco_compute_thput(mp);
+        x_offset_far = 10;
+        y_offset_far = 10;
+        [Iout, ~,Eout] = falco_sim_image_compact_offaxis(mp,x_offset_far,y_offset_far);
+        [~,ind_ma] = max(Iout(:));
+        thput_Kern = Eout(ind_ma);
         cvar.thput = thput_Kern;
     end
     cvar.InormHist = InormHist(Itr);
