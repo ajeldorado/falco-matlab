@@ -27,8 +27,8 @@ mp.dm9.compact = mp.dm9;
 % <<< DEBUGGING: HARD-CODED VALUES FOR TESTING
 % mp.dm9.actres = 5;
 % mp.F3.Rin = 2.8;
-mp.F3.compact.res = 20;
-mp.F3.full.res = 20;
+mp.F3.compact.res = 40;
+mp.F3.full.res = 40;
 % mp.centering = 'pixel';
 mp.dm9.VtoHavg = 1e-9;
 % mp.fl = 1;

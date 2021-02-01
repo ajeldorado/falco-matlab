@@ -415,12 +415,22 @@ for Itr=1:mp.Nitr
     cvar.EfieldVec = EfieldVec;
     if mp.aux.peakJacKern
 %         [~,thput_Kern] = falco_compute_thput(mp);
-        x_offset_far = 10;
-        y_offset_far = 10;
-        [Iout, ~,Eout] = falco_sim_image_compact_offaxis(mp,x_offset_far,y_offset_far);
-        [~,ind_ma] = max(Iout(:));
-        thput_Kern = Eout(ind_ma);
-        cvar.thput = thput_Kern;
+        mp.aux.flagCPpeakJacKern = true;
+       
+        cvar.thput = zeros(mp.jac.Nmode,1);
+        for im=1:mp.jac.Nmode
+             modvar_cp.sbpIndex = im; 
+            modvar_cp.zernIndex = 1;
+            modvar_cp.wpsbpIndex = mp.wi_ref;
+            modvar_cp.whichSource = 'star';
+%             [Iout, ~,Eout] = falco_sim_image_compact_offaxis(mp,0,0);
+            Eout = model_compact(mp, modvar_cp, 'eval');
+            Iout = abs(Eout);
+            [~,ind_ma] = max(Iout(:));
+            thput_Kern = Eout(ind_ma)/sqrt(mp.Fend.compact.I00(im));
+            cvar.thput(im) = thput_Kern;
+        end
+        mp.aux.flagCPpeakJacKern = false;
     end
     cvar.InormHist = InormHist(Itr);
     [mp,cvar] = falco_ctrl(mp,cvar,jacStruct);
@@ -981,9 +991,9 @@ function [mp,cvar] = falco_ctrl(mp,cvar,jacStruct)
             cvar.GcptransGcp_wsum  = cvar.GcptransGcp_wsum  + mp.jac.weights(im)*real(Gstackcp'*Gstackcp); 
             if mp.aux.peakJacKern
                 Eweighted = mp.WspatialVec.*cvar.EfieldVec(:,im); %--Apply 2-D spatial weighting to E-field in dark hole pixels.
-                Gstack = Gstack/cvar.thput - 1/cvar.thput^2*(Eweighted*Gstackcp);
+                Gstack = Gstack/cvar.thput(im) - 1/cvar.thput(im)^2*(Eweighted*Gstackcp);
                 cvar.GstarG_wsum  = cvar.GstarG_wsum  + mp.jac.weights(im)*real(Gstack'*Gstack);
-                cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(im)*real(Gstack'*Eweighted/cvar.thput); %--Apply the Jacobian weights and add to the total.
+                cvar.RealGstarEab_wsum = cvar.RealGstarEab_wsum + mp.jac.weights(im)*real(Gstack'*Eweighted/cvar.thput(im)); %--Apply the Jacobian weights and add to the total.
             end
         end
     end
