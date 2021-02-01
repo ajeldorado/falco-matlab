@@ -71,7 +71,7 @@ drSep = drCos/2;
 max_azimSize = mp.max_azimSize_dm9;%um (5)
 pow_arr = (2:2:60)*6;
 numdiv = 2;
-count_act = 1;
+count_act = 0;
 start_rad = floor(mp.dm9.actres/2)+1;
 %
 % Here we're just counting the number of actuators
@@ -79,29 +79,11 @@ start_rad = floor(mp.dm9.actres/2)+1;
 for ri=start_rad:Nrad
     rMin = drSep*(ri - 1);
     rMax = drSep*(ri + 1);
-    for II=1:numdiv+1
-        % Choose power for number of lobes
-        powmin = 2*pi*rMin/max_azimSize*18;
-        aux = pow_arr-powmin;
-        aux(aux<0)=Inf;
-        [~,ind_mi] = min(aux);
-        pow = pow_arr(ind_mi);
-        numdiv = pow/6;
-        
-        count_act=count_act+1;
-    end
-    numdiv = 2;
-    for II=1:numdiv+1
-        % Choose power for number of lobes
-        powmin = 2*pi*rMin/max_azimSize*18;
-        aux = pow_arr-powmin;
-        aux(aux<0)=Inf;
-        [~,ind_mi] = min(aux);
-        pow = pow_arr(ind_mi);
-%         numdiv = pow/6;
-        count_act=count_act+1;
-    end
+    numdiv0 = 2*pi*rMin/max_azimSize;
+    numdiv = (numdiv0-mod(numdiv0,3))+3;
 
+    numact_per_rad = numdiv/3;
+    count_act = count_act + numact_per_rad*2;
 end
 mp.dm9.NactTotal = Nrad + count_act;
 mp.dm9.compact.inf_datacube = zeros(mp.dm9.compact.NdmPad,mp.dm9.compact.NdmPad,mp.dm9.NactTotal);
