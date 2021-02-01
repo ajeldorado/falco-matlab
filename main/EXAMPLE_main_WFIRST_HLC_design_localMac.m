@@ -99,6 +99,10 @@ FlippedLinIndMat = fliplr(LinIndMat);
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
+%%
+mp.dm9.actres = 5;%dm9_actres_arr(randperm(length(dm9_actres_arr),1));
+% mp.min_azimSize_dm9 = 5;%min_azimSize_dm9_arr(randperm(length(min_azimSize_dm9_arr),1));
+mp.max_azimSize_dm9 = 1;
 
 %% Step 4: Generate the label associated with this trial
 

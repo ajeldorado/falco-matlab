@@ -247,7 +247,8 @@ switch lower(mp.layout)
                     case '3foldZern'
                         mp = falco_setup_FPM_HLC_3foldZern(mp);
                     case 'cosine'
-                        mp = falco_setup_FPM_HLC_cosine_vJorge(mp);
+%                         mp = falco_setup_FPM_HLC_cosine_vJorge(mp);
+                        mp = falco_setup_FPM_HLC_cosine_vJorgev2(mp);
                     otherwise
                         mp = falco_setup_FPM_HLC(mp);
                 end
