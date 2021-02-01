@@ -11,7 +11,7 @@ Major contributions and testing were done by Garreth Ruane, Erkin Sidick, Carl C
  
 # What is FALCO?
 
-The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source toolbox of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at github.com/ajeldorado/falco-matlab and is in development in Python 3.
+The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source toolbox of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at github.com/ajeldorado/falco-matlab and in Python 3 at github.com/ajeldorado/falco-python.
 
 # Documentation and Support
 
@@ -46,12 +46,10 @@ FALCO was written primarily on the MacOS operating system and used to a lesser e
 
 4) Now go ahead and try some of the other example scripts in _falco-matlab/main_, which start with "EXAMPLE_", again adjusting the path definitions for the FALCO and PROPER libraries. For this initial functionality test, in the main script you should set the number of wavelengths to 1 (`mp.Nsbp = 1;`) and turn off the parallel computing  flag (`mp.flagParfor = false;`) for it to run quickly. I recommend finding the script closest to your intended purpose and starting to make changes from a copy of that.
 
-5) (Optional--not used for regular functionality.) Download CVX from [cvxr.com](cvxr.com). Wherever you decide to unzip and place the PROPER library on your machine, add the path to the CVX directory to the MATLAB path (similar to how it was done for PROPER). Then, perform the CVX installation instructions listed on the CVX website.
-
 
 # Version History
 
-Upcoming: In Version 3.1, there will be the first "full models" that differ from the compact model and look like actual testbeds or instrument layouts. More coronagraph types will be added back in that were not fully converted in the Version 3.0 release.
+Upcoming: In Version 4.1, there will be the first "full models" that differ from the compact model and look like actual testbeds or instrument layouts.
 
 February 28, 2018: Version 3.0 released. Version 3 should be the first stable version of FALCO and be supported for some time. Version 3 was re-designed to be expandable for many people's different needs and uses without them having to overwrite each other's features.
   - Wavefront estimation added (pairwise probing with batch process and Kalman filter).

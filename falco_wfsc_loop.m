@@ -16,10 +16,6 @@ for Itr = 1:mp.Nitr
     
     ev.Itr = Itr;
     cvar.Itr = Itr;
-
-    %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
-    if any(mp.dm_ind == 1);  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
-    if any(mp.dm_ind == 2);  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
     
     %%
     %--Start of new estimation+control iteration
@@ -47,19 +43,13 @@ for Itr = 1:mp.Nitr
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
 
-    %% Throughput and Normalized Intensity
-    %--Calculate the core throughput (at higher resolution to be more accurate)
+    %% Calculate the core throughput (at higher resolution to be more accurate)
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     if mp.flagFiber
         mp.thput_vec(Itr) = max(thput);
     else
         mp.thput_vec(Itr) = thput;
     end
-    
-    %--Compute the current normalized intensity level
-    out.InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
-    out.IrawCorrHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
-    out.IrawScoreHist(Itr) = mean(Im(mp.Fend.score.maskBool));
     
     %% Updated selection of Zernike modes targeted by the controller
     %--Decide with Zernike modes to include in the Jacobian
@@ -106,11 +96,14 @@ for Itr = 1:mp.Nitr
     
     Eest = ev.Eest;
     IincoEst = ev.IincoEst;
-    Im = ev.Im;
     out.IestCorrHist(Itr) = ev.IestCorrMean;
     out.IestScoreHist(Itr) = ev.IestScoreMean;
     out.IincoCorrHist(Itr) = ev.IincoCorrMean;
     out.IincoScoreHist(Itr) = ev.IincoScoreMean;
+    Im = ev.Im;
+    out.InormHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
+    out.IrawCorrHist(Itr) = mean(Im(mp.Fend.corr.maskBool));
+    out.IrawScoreHist(Itr) = mean(Im(mp.Fend.score.maskBool));
     
     %% Plot the updates to the DMs and PSF
     if Itr == 1; hProgress.master = 1; end %--dummy value to intialize the progress plot's handle
@@ -170,7 +163,6 @@ for Itr = 1:mp.Nitr
     end
     
     %--Enforce constraints on DM commands 
-    % (not needed here--just done here for stats and plotting)
     if any(mp.dm_ind == 1); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
     if any(mp.dm_ind == 2); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
     

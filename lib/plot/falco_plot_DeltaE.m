@@ -6,15 +6,15 @@
 % Plot the model-based (simulated) and estimated change in electric field
 % at each subband.
 
-function out = falco_plot_DeltaE(mp, out, EfieldMeas, EfieldMeasPrev, EfieldSim, EfieldSimPrev, Itr)
+function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
 
     if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0))
         for si = 1:mp.Nsbp
-            dEmeas = squeeze(EfieldMeas(:, si) - EfieldMeasPrev(:, si));
+            dEmeas = squeeze(Eest(:, si) - EestPrev(:, si));
             dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
             dEmeas2D(mp.Fend.corr.maskBool) = dEmeas; % 2-D for plotting
             
-            dEsim = squeeze(EfieldSim(:, si) - EfieldSimPrev(:, si));
+            dEsim = squeeze(Esim(:, si) - EsimPrev(:, si));
             dEsim2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
             dEsim2D(mp.Fend.corr.maskBool) = dEsim;  % 2-D for plotting
             

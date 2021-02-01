@@ -5,20 +5,20 @@
 %
 % Plot the singular mode spectrum of the E-field.
 
-function out = falco_plot_singular_mode_spectrum_of_Efield(mp, out, jacStruct, EfieldVec, Itr)
+function out = falco_plot_singular_mode_spectrum_of_Efield(mp, out, jacStruct, Eest, Itr)
     
     % Initialize Gall and Eall
     iMode = 1;
     Gcomplex = [jacStruct.G1(:,:,iMode), jacStruct.G2(:,:,iMode), jacStruct.G3(:,:,iMode), jacStruct.G4(:,:,iMode), jacStruct.G5(:,:,iMode), jacStruct.G6(:,:,iMode), jacStruct.G7(:,:,iMode), jacStruct.G8(:,:,iMode), jacStruct.G9(:,:,iMode)];
     Gall = zeros(mp.jac.Nmode*size(Gcomplex, 1), size(Gcomplex, 2));
-    Eall = zeros(mp.jac.Nmode*size(EfieldVec, 1), 1);
+    Eall = zeros(mp.jac.Nmode*size(Eest, 1), 1);
 
     for iMode = 1:mp.jac.Nmode
         N = size(Gcomplex, 1);
         inds = (iMode-1)*N+1 : iMode*N;
         Gcomplex = [jacStruct.G1(:,:,iMode), jacStruct.G2(:,:,iMode), jacStruct.G3(:,:,iMode), jacStruct.G4(:,:,iMode), jacStruct.G5(:,:,iMode), jacStruct.G6(:,:,iMode), jacStruct.G7(:,:,iMode), jacStruct.G8(:,:,iMode), jacStruct.G9(:,:,iMode)];
         Gall(inds, :) = Gcomplex;
-        Eall(inds) = EfieldVec(:, iMode);
+        Eall(inds) = Eest(:, iMode);
     end
 
     Eri = [real(Eall); imag(Eall)];
