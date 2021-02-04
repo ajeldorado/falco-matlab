@@ -38,7 +38,7 @@ mp.dm9.compact.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.compact.res; % width of a 
 
 
 drCos = 1/mp.dm9.actres; %--Width and double-separation of the cosine rings [lambda0/D]
-Nrad = ceil(2*mp.dm9.actres*mp.F3.Rin);
+Nrad = ceil(2*mp.dm9.actres*mp.F3.Rin); %--number of ring actuators
 
 %--Generate datacube of influence functions, which are rings with radial cosine profile
 %--Compact model
@@ -51,7 +51,7 @@ mp.dm9.compact.Nbox = mp.dm9.compact.NdmPad; %--the modes take up the full array
 if(strcmpi(mp.centering,'pixel')  ) 
     xc = (-mp.dm9.compact.NdmPad/2:(mp.dm9.compact.NdmPad/2-1))/mp.F3.compact.res;    
 else
-    xc = (-(mp.dm9.compact.NdmPad-1)/2:(mp.dm9.compact.NdmPad-1)/2)/mp.F3.compact.res;    
+    xc = (-(mp.dm9.compact.NdmPad-1)/2:(mp.dm9.compact.NdmPad-1)/2-1)/mp.F3.compact.res;    
 end
 [Xc,Yc] = meshgrid(xc);
 Rc = sqrt(Xc.^2 + Yc.^2);
@@ -63,25 +63,24 @@ mask = Rc<=mp.F3.Rin;
 windowFull = mask.*exp(-(Rc/mp.F3.Rin/(apRad*OD)).^hg_expon);
 
 drSep = drCos/2;
-min_azimSize = mp.min_azimSize_dm9;%um (5)
+max_azimSize = mp.max_azimSize_dm9;%um (5)
 pow_arr = (2:2:60)*6;
-numdivCos = 2;
-countCos = 0;
+numdiv = 2;
+count_act = 0;
 start_rad = floor(mp.dm9.actres/2)+1;
-for ri = start_rad:Nrad
-    for iter=1:numdivCos+1
-        countCos = countCos+1;
-    end
+%
+% Here we're just counting the number of actuators
+%
+for ri=start_rad:Nrad
+    rMin = drSep*(ri - 1);
+    rMax = drSep*(ri + 1);
+    numdiv0 = 2*pi*rMin/max_azimSize;
+    numdiv = (numdiv0-mod(numdiv0,3))+3;
+
+    numact_per_rad = numdiv/3;
+    count_act = count_act + numact_per_rad*2;
 end
-numdivSin = 3;
-countSin = 0;
-start_rad = floor(mp.dm9.actres/2)+1;
-for ri = start_rad:Nrad
-    for iter=1:numdivSin+1
-        countSin = countSin+1;
-    end
-end
-mp.dm9.NactTotal = Nrad + countCos + countSin;
+mp.dm9.NactTotal = Nrad + count_act;
 mp.dm9.compact.inf_datacube = zeros(mp.dm9.compact.NdmPad,mp.dm9.compact.NdmPad,mp.dm9.NactTotal);
 
 %--Compute the ring influence functions
@@ -96,27 +95,16 @@ for ri = 1:Nrad
     end
     modeTemp(Rc>rMax) = 0;
     mp.dm9.compact.inf_datacube(:,:,ri) = modeTemp;
-
 %     figure(10); imagesc(xc,xc,mp.dm9.compact.inf_datacube(:,:,ri)); axis xy equal tight; colorbar; drawnow;
 %     figure(11); plot(xc,mp.dm9.compact.inf_datacube(:,mp.dm9.compact.NdmPad/2+1,ri)); xlim([0,mp.F3.Rin]); drawnow;
 %     pause(0.1);
 end
-% figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
+figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
 
-
+% Compute sine basis
 beamRad = NbeamCompact/2;
 [X,Y] = meshgrid(-beamRad:beamRad-1,-beamRad:beamRad-1);
-[THETA, RHO] = cart2pol(double(X),double(Y));
-THETA2 = THETA+pi/3*2;
-THETA3 = THETA+pi/3*4;
-THETA4 = THETA+pi/3;
-THETA5 = THETA+pi/3*3;
-THETA6 = fliplr(THETA);
-apRad = mp.F3.Rin/(mp.F3.Rin+0.1); %--Found empirically
-OD = 1;
-mask = Rc<=mp.F3.Rin;
-
-% Cosine basis
+[THETA0,~] = cart2pol(double(X),double(Y));
 numdiv = 2;
 count = 1;
 for ri=start_rad:Nrad
@@ -129,141 +117,71 @@ for ri=start_rad:Nrad
         modeTemp(Rc<rMin) = 0;
     end
     modeTemp(Rc>rMax) = 0;
-    for II=1:numdiv+1
-        % Choose power for number of lobes
-        powmin = 2*pi*rMin/min_azimSize*18;
-        aux = pow_arr-powmin;
-        aux(aux<0)=Inf;
-        [~,ind_mi] = min(aux);
-        pow = pow_arr(ind_mi);
-%         disp(['Number of lobes',num2str(pow)])
-        cosFull = cos(THETA*pow)+1;
-        numdiv = pow/6;
-        dth = 2*pi/pow;
-        th_arr = linspace(pi/2,pi/2+pi/3,numdiv+1);
-        th_rev_arr = linspace(pi/2+pi/3,pi/2,numdiv+1);
+    % Choose number of lobes
+    numdiv0 = 2*pi*rMin/max_azimSize;
+    numdiv = (numdiv0-mod(numdiv0,3))+3;
 
-        %
-        th = th_arr(II);
-        th_rev = th_rev_arr(II);
-        ind = and((THETA)<(th+dth/2),(THETA)>(th-dth/2));
-        ind_rev = and((THETA4)<(th_rev+dth/2),(THETA4)>(th_rev-dth/2));
-        ind2 = and((THETA2)<(th+dth/2),(THETA2)>(th-dth/2));
-        ind2_rev = and((THETA5)<(th_rev+dth/2),(THETA5)>(th_rev-dth/2));
-        ind3 = and((THETA3)<(th+dth/2),(THETA3)>(th-dth/2));
-        ind3_rev = and((THETA6)<(th+dth/2-pi/2-pi/3/2),(THETA6)>(th-dth/2-pi/2-pi/3/2));
-        indTot = or(ind,ind2);
-        indTot = or(indTot,ind3);
-        indTot = or(indTot,ind_rev);
-        indTot = or(indTot,ind2_rev);
-        indTot = or(indTot,ind3_rev);
-    %     cosII = zeros(N);
-        cosII = cosFull.*indTot.*modeTemp/2;
-%         figure(102);imagesc(cosII);axis image; set(gca,'YDir', 'normal')
-%         pause(0.1)
-        mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
-        count = count+1;
-    end
-end
 
-% Sin basis
-numdiv = 3;
-for ri=start_rad:Nrad
-    modeTemp = windowFull.*(1+(-1)^(mod(ri+1,2))*cos(2*pi*(Rc*mp.dm9.actres-0.5)))/2;
-    rMin = drSep*(ri - 1);
-    rMax = drSep*(ri + 1);
-    if(ri==1) %--Fill in the center
-        modeTemp(Rc<drSep) = 1; 
-    else
-        modeTemp(Rc<rMin) = 0;
-    end
-    modeTemp(Rc>rMax) = 0;
-    for II=1:numdiv+1
-        % Choose power for number of lobes
-        powmin = 2*pi*rMin/min_azimSize*18;
-        aux = pow_arr-powmin;
-        aux(aux<0)=Inf;
-        [~,ind_mi] = min(aux);
-        pow = pow_arr(ind_mi);
-%         disp(['Number of lobes',num2str(pow)])
-        cosFull = -cos(THETA*pow)+1;
-%         numdiv = pow/6;
-        dth = 2*pi/pow;
-        th_arr = linspace(pi/2,pi/2+pi/3+pi/6,numdiv+1);
+    dth = 2*pi/numdiv;
+    ang_mat = linspace(-180,180,numdiv+1);
+    ang_mat = [ang_mat;linspace(-180,180,numdiv+1)+dth*180/pi/2];
 
-        %
-        th = th_arr(II)+pi/12;
-        if th<pi
-            ind = and((THETA)<(th+dth/2),(THETA)>(th-dth/2));
-        else
-            ind = fliplr(and((THETA)<(pi-th+dth/2),(THETA)>(pi-th-dth/2)));
+    numact_per_rad = numdiv/3;
+    %%
+    for II=1:2
+        if II==1;cosFull = cos(THETA0*numdiv+pi+pi*(1-mod(numdiv,2)))+1;end
+        if II==2;cosFull = cos(THETA0*numdiv+pi*(1-mod(numdiv,2)))+1;end
+        ang_arr = ang_mat(II,:);
+        for JJ=1:numact_per_rad
+            ind_rad = zeros(NbeamCompact);
+            for KK=1:numact_per_rad:numdiv
+                ang = ang_arr(KK +(JJ-1));
+                ang_rad = ang/180*pi;
+
+                ang1 = ang_rad+dth/2;
+                ang2 = ang_rad-dth/2;
+
+                if ang1>pi 
+                    THETA = fliplr(THETA0);
+                    ang1 = (pi-ang_rad)+dth/2;
+                    ang2 = (pi-ang_rad)-dth/2;
+                elseif ang2<-pi
+                    THETA = fliplr(THETA0);
+                    ang1 = -(pi+ang_rad)+dth/2;
+                    ang2 = -(pi+ang_rad)-dth/2;
+                else
+                    THETA = THETA0;
+                end
+                ind_ang = and(THETA<=(ang1), THETA>(ang2));
+                ind_rad = ind_rad + ind_ang;
+            end
+            cosII = cosFull.*ind_rad.*modeTemp;
+            mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
+            count = count+1;
+%             figure(100)
+% %             imagesc(cosII)
+%             imagesc(cosFull)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             figure(101)
+%             imagesc(ind_rad)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             figure(102)
+%             imagesc(cosII)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             if ri>=6
+%                 pause(0.1)
+%             end
         end
-        ind2 = and((THETA2)<(th+dth/2),(THETA2)>(th-dth/2));
-        ind3 = and((THETA3)<(th+dth/2),(THETA3)>(th-dth/2));
-        indTotsin = or(ind,ind2);
-        indTotsin = or(indTotsin,ind3);
-        cosII = cosFull.*indTotsin.*modeTemp/2;
-%         figure(102);imagesc(indTotsin);axis image; set(gca,'YDir', 'normal');
-%         pause(0.5)
-        mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
-        count = count+1;
     end
 end
-
-% % Sin basis
-% numdiv = 2;
-% for ri=start_rad:Nrad
-%     modeTemp = windowFull.*(1+(-1)^(mod(ri+1,2))*cos(2*pi*(Rc*mp.dm9.actres-0.5)))/2;
-%     rMin = drSep*(ri - 1);
-%     rMax = drSep*(ri + 1);
-%     if(ri==1) %--Fill in the center
-%         modeTemp(Rc<drSep) = 1; 
-%     else
-%         modeTemp(Rc<rMin) = 0;
-%     end
-%     modeTemp(Rc>rMax) = 0;
-%     for II=1:numdiv+1
-%         % Choose power for number of lobes
-%         powmin = 2*pi*rMin/min_azimSize*18;
-%         aux = pow_arr-powmin;
-%         aux(aux<0)=Inf;
-%         [~,ind_mi] = min(aux);
-%         pow = pow_arr(ind_mi);
-% %         disp(['Number of lobes',num2str(pow)])
-%         sinFull = -sin(THETA*pow)+1;
-%         sinFull_rev = (sin(THETA*pow)+1);
-%         numdiv = pow/6;
-%         dth = 2*pi/pow;
-%         th_arr = linspace(pi/2-pi/2/pow,pi/2+pi/3-pi/2/pow,numdiv+1);
-%         th_rev_arr = linspace(pi/2+pi/3+pi/2/pow,pi/2+pi/2/pow,numdiv+1);
-% 
-%         %
-%         th = th_arr(II);
-%         th_rev = th_rev_arr(II);
-%         ind = and((THETA)<(th+dth/2),(THETA)>(th-dth/2));
-%         ind_rev = and((THETA4)<(th_rev+dth/2),(THETA4)>(th_rev-dth/2));
-%         ind2 = and((THETA2)<(th+dth/2),(THETA2)>(th-dth/2));
-%         ind2_rev = and((THETA5)<(th_rev+dth/2),(THETA5)>(th_rev-dth/2));
-%         ind3 = and((THETA3)<(th+dth/2),(THETA3)>(th-dth/2));
-%         ind3_rev = and((THETA6)<(th+dth/2-pi/2-pi/3/2),(THETA6)>(th-dth/2-pi/2-pi/3/2));
-%         indTot0 = or(ind,ind2);
-%         indTot0 = or(indTot0,ind3);
-%         indTot_rev = or(ind_rev,ind2_rev);
-%         indTot_rev = or(indTot_rev,ind3_rev);
-%     %     cosII = zeros(N);
-%         sinII = sinFull.*indTot0.*modeTemp + sinFull_rev.*indTot_rev.*modeTemp;
-% %         figure(102);imagesc(sinII);axis image; set(gca,'YDir', 'normal')
-% %         pause(0.1)
-%         mp.dm9.compact.inf_datacube(:,:,Nrad+count) = sinII;
-%         count = count+1;
-%     end
-% end
-
 mp.dm9.inf_datacube = mp.dm9.compact.inf_datacube;
-
-% for ii = 1:mp.dm9.NactTotal
-%     figure(202); imagesc(mp.dm9.inf_datacube(:, :, ii)); colorbar(); axis xy equal tight; drawnow; pause(0.01);
-% end
+% figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
 %%
 
 
