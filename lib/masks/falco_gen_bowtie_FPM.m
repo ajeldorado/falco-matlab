@@ -127,14 +127,34 @@ else
          %--Create the bowtie region
         if(ang < 180)
             %--Top part
-            Lside = 2* ra_OD;
-            xvert = cshift + xOffset + [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
-            yvert = cshift + yOffset + [0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
+            Lside = 2 * ra_OD;
+            
+            rotMat = [cosd(clocking), -sind(clocking); sind(clocking), cosd(clocking)];
+            xTop = [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
+            yTop = [0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
+            for ii = 1:length(xTop)
+                xy = rotMat * [xTop(ii); yTop(ii)];
+                xTop(ii) = xy(1);
+                yTop(ii) = xy(2);
+            end
+            xvert = cshift + xOffset + xTop;
+            yvert = cshift + yOffset + yTop;
+%             xvert = cshift + xOffset + [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
+%             yvert = cshift + yOffset + [0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
             bowtieTop = prop_irregular_polygon(bm, xvert, yvert, 'DARK');
 
             %--Bottom part
-            xvert = cshift + xOffset + [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
-            yvert = cshift + yOffset + -1*[0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
+            xBottom = [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
+            yBottom = -1*[0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
+            for ii = 1:length(xBottom)
+                xy = rotMat * [xBottom(ii); yBottom(ii)];
+                xBottom(ii) = xy(1);
+                yBottom(ii) = xy(2);
+            end
+            xvert = cshift + xOffset + xBottom;
+            yvert = cshift + yOffset + yBottom;
+%             xvert = cshift + xOffset + [0, Lside*cosd(ang/2), Lside*cosd(ang/2), -Lside*cosd(ang/2), -Lside*cosd(ang/2)];
+%             yvert = cshift + yOffset + -1*[0, Lside*sind(ang/2), Lside,            Lside,            Lside*sind(ang/2)];
             bowtieBottom = prop_irregular_polygon(bm, xvert, yvert, 'DARK');
         else
             bowtieTop = 1;

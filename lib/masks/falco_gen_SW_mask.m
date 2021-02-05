@@ -39,13 +39,26 @@ angRad = angDeg*(pi/180); %--Convert opening angle to radians
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % OPTIONAL USER INPUTS
 
+ %--shape of the outer part of the dark hole
+if isfield(inputs,'shape'); darkHoleShape = inputs.shape; else; darkHoleShape = 'circle'; end %--Default to a circular outer edge
+
+%--Lateral offsets of the dark hole
+if(isfield(inputs,'xiOffset')); xiOffset = inputs.xiOffset; else; xiOffset = 0; end
+if(isfield(inputs,'etaOffset')); etaOffset = inputs.etaOffset; else; etaOffset = 0; end
+
 % minimum +/- field of view along both axes
 if isfield(inputs,'FOV') 
     minFOVxi = inputs.FOV;
     minFOVeta = inputs.FOV;
 else
-    minFOVxi = rhoOuter; %--Default to the size of the viewable area the field of view is not specified.
-    minFOVeta = rhoOuter;
+    switch lower(darkHoleShape)
+        case{'square', 'rect', 'rectangle'}
+            minFOVxi = sqrt(2)*rhoOuter + abs(xiOffset);
+            minFOVeta = sqrt(2)*rhoOuter + abs(etaOffset);
+        otherwise
+            minFOVxi = rhoOuter + abs(xiOffset);
+            minFOVeta = rhoOuter + abs(etaOffset);
+    end
 end
 %--Overwrite FOV values if specified individually
 if isfield(inputs,'xiFOV'); minFOVxi = inputs.xiFOV; end % minimum field of view along horizontal (xi) axis
@@ -53,14 +66,7 @@ if isfield(inputs,'etaFOV'); minFOVeta = inputs.etaFOV; end % minimum field of v
     
 if isfield(inputs,'centering'); centering = inputs.centering; else; centering = 'pixel'; end %--Default to pixel centering if it is not specified.
 
- %--shape of the outer part of the dark hole
-if isfield(inputs,'shape'); darkHoleShape = inputs.shape; else; darkHoleShape = 'circle'; end %--Default to a circular outer edge
-
 if isfield(inputs,'clockAngDeg');  clockAngDeg = inputs.clockAngDeg; else; clockAngDeg = 0;  end %--Amount extra to clock the dark hole
-
-%--Lateral offsets of the dark hole
-if(isfield(inputs,'xiOffset')); xiOffset = inputs.xiOffset; else; xiOffset = 0; end
-if(isfield(inputs,'etaOffset')); etaOffset = inputs.etaOffset; else; etaOffset = 0; end
 
 %--Number of points across each axis. Crop the vertical (eta) axis if angDeg<180 degrees.
 if( strcmpi(centering,'interpixel') )
