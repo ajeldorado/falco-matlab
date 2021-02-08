@@ -6,7 +6,8 @@
 trigger:
 - azure-pipelines
 
-pool: 'ubuntu-latest'
+pool:
+  vmimage: 'ubuntu-latest'
 
 steps:
 - script: |
