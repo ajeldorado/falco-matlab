@@ -1,6 +1,5 @@
-# FALCO
-
-Fast Linear Least-Squares Coronagraph Optimization (FALCO) software package
+# FALCO: Fast Linear Coronagraph Optimizer
+[![Build Status](https://dev.azure.com/highcontrast/falco-matlab/_apis/build/status/ajeldorado.falco-matlab?branchName=refs%2Fpull%2F147%2Fmerge)](https://dev.azure.com/highcontrast/falco-matlab/_build/latest?definitionId=1&branchName=refs%2Fpull%2F147%2Fmerge)
 
 Refer to the SPIE conference paper "Fast Linearized Coronagraph Optimizer (FALCO) I: A software toolbox for rapid coronagraphic design and wavefront correction" for an overview of FALCO and its uses. 
 DOI: 10.1117/12.2313812
