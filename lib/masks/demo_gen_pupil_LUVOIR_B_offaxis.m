@@ -40,8 +40,7 @@ figure(2); imagesc(pupilHG); axis xy equal tight; title('Hypergaussian', 'Fontsi
 
 %% Generate with PROPER
 clear inputs
-inputs.Nbeam = apDia*0.96075;  % factor makes the beam size match the hypergaussian approach
-% inputs.Nbeam = apDia*0.9607;
+inputs.Nbeam = apDia;%*0.96075;  % factor makes the beam size match the hypergaussian approach
 pupilPROPER = falco_gen_pupil_LUVOIR_B(inputs);
 pupilPROPER = pad_crop(pupilPROPER, size(pupilHG));
 
