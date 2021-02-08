@@ -6,7 +6,7 @@
 trigger:
 - azure-pipelines
 
-pool: 'Default'
+pool: 'ubuntu-latest'
 
 steps:
 - script: |
