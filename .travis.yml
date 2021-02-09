@@ -1,4 +1,3 @@
 language: matlab
 matlab: R2020a
-script: matlab -batch 'disp("Hello World")'
-
+script: matlab -batch "tests = {[fileparts(fileparts(mfilename('fullpath'))), filesep, 'testarchive']}; te=TestEngine(tests); results1=te.runTests(te.largeSuite);"
