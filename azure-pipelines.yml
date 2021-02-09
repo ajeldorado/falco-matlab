@@ -16,11 +16,15 @@ steps:
 
   - task: RunMATLABTests@0
     inputs:
-      codeCoverageCobertura: 'ci/testing_coverage.xml'
+      codeCoverageCobertura: 'code-coverage/coverage.xml'
       selectByFolder: 'testing/testarchive/'
       sourceFolder: 'lib:models:setup'
-      testResultsJUnit: 'ci/testing_results.xml'
-
-#  - task: RunMATLABCommand@0
-#    inputs:
-#      command: run_tests_Azure
+      testResultsJUnit: 'test-results/results.xml'
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: 'test-results/results.xml'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: 'code-coverage/coverage.xml'
