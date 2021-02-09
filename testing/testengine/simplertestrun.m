@@ -4,6 +4,7 @@ clear
 %
 %
 % addpath /Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/utils
+addpath(genpath(fileparts(fileparts(fileparts(mfilename('fullpath'))))));
 
 %--------------------------------------------------------------------------
 % Define test or tests in form of cell array, this is an input to the
@@ -18,9 +19,9 @@ tests = {[fileparts(fileparts(mfilename('fullpath'))), filesep, 'testarchive']};
 % Runs tests without specifying the output file. This will create a text
 % file labeled "TestingResults.txt' with test output results in table
 % format.
- te=TestEngine(tests);
- results1=te.runTests(te.largeSuite);
- table(results1)
+te=TestEngine(tests);
+results1=te.runTests(te.largeSuite);
+table(results1)
  
 %% Example 2
 %

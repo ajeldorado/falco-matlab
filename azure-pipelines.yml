@@ -7,13 +7,24 @@ trigger:
 - master
 
 pool:
-  vmimage: 'ubuntu-20.04'
-
+  vmimage: Ubuntu 16.04
 
 steps:
   - task: InstallMATLAB@0
     inputs:
       release: R2020a
-  - task: RunMATLABCommand@0
+
+  - task: RunMATLABTests@0
     inputs:
-      command: run_tests_Azure
+      codeCoverageCobertura: 'code-coverage/coverage.xml'
+      selectByFolder: 'testing/testarchive/'
+      sourceFolder: 'lib:models:setup'
+      testResultsJUnit: 'test-results/results.xml'
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: 'test-results/results.xml'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: 'code-coverage/coverage.xml'
