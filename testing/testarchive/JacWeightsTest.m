@@ -5,7 +5,7 @@
 % test assumes that the function is not in the path and adds mp.path.falco 
 % to path for testing purposes, and then it removes path after tests are 
 % over. This is done for total independence.
-classdef TestJacWeights < matlab.unittest.TestCase
+classdef JacWeightsTest < matlab.unittest.TestCase
 %% Properties
 %
 % We defined a function called Parameters.m which when called it generates

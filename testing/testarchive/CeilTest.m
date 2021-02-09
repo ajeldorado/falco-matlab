@@ -7,7 +7,7 @@
 % reason to supply a test to verify the actual solution is of interger
 % type.
 %
-classdef TestCeil < matlab.unittest.TestCase
+classdef CeilTest < matlab.unittest.TestCase
 %% Properties
 %
 % A presaved file with FALCO parameters was saved and is lodaded to be used
