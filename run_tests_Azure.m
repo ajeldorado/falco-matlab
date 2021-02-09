@@ -4,7 +4,7 @@ clear
 %
 %
 % addpath /Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/utils
-addpath(genpath(fileparts(fileparts(fileparts(mfilename('fullpath'))))));
+addpath(genpath(fileparts(mfilename('fullpath'))));
 
 %--------------------------------------------------------------------------
 % Define test or tests in form of cell array, this is an input to the
@@ -12,7 +12,7 @@ addpath(genpath(fileparts(fileparts(fileparts(mfilename('fullpath'))))));
 % file that includes the directory or location. There is other ways of
 % defining tests but for the most part these are the two we will be using.
 %--------------------------------------------------------------------------
-tests = {[fileparts(fileparts(mfilename('fullpath'))), filesep, 'testarchive']};
+tests = {[fileparts(mfilename('fullpath')), filesep, 'testing', filesep, 'testarchive']};
 
 %% Example 1
 % 
@@ -21,10 +21,4 @@ tests = {[fileparts(fileparts(mfilename('fullpath'))), filesep, 'testarchive']};
 % format.
 te=TestEngine(tests);
 results1=te.runTests(te.largeSuite);
-table(results1)
- 
-%% Example 2
-%
-% Runs tests and outputs results to a Matlab "tap" file.
-%  te=TestEngine(tests);
-%  results2=te.runTests(te.largeSuite,'TestingResults.tap');
+% table(results1)
