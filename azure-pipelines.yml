@@ -1,0 +1,26 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmimage: Ubuntu 16.04
+
+steps:
+  - task: InstallMATLAB@0
+    inputs:
+      release: R2020a
+
+  - task: RunMATLABTests@0
+    inputs:
+      codeCoverageCobertura: 'docs/coverage.xml'
+      selectByFolder: 'testing/testarchive/'
+      sourceFolder: 'lib:models:setup'
+      testResultsJUnit: 'docs/results.xml'
+
+#  - task: RunMATLABCommand@0
+#    inputs:
+#      command: run_tests_Azure
