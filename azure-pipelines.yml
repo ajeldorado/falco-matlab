@@ -16,4 +16,4 @@ steps:
       release: R2020a
   - task: RunMATLABCommand@0
     inputs:
-      command: "addpath(genpath(pwd)); simplertestrun; quit"
+      command: run_tests_Azure
