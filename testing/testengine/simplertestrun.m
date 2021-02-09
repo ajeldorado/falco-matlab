@@ -1,7 +1,4 @@
-clear all
-clc
-
-%cd /Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests
+clear
 
 %% Add Path to Utils
 %
@@ -14,8 +11,7 @@ clc
 % file that includes the directory or location. There is other ways of
 % defining tests but for the most part these are the two we will be using.
 %--------------------------------------------------------------------------
-% tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive'};
-tests={'/Users/ajriggs/Repos/falco-matlab/testing/testarchive'};
+tests = {[fileparts(fileparts(mfilename('fullpath'))), filesep, 'testarchive']};
 
 %% Example 1
 % 
