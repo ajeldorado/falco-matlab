@@ -9,7 +9,11 @@ trigger:
 pool:
   vmimage: 'ubuntu-latest'
 
+
 steps:
-- script: |
-   matlab -nojvm -nodisplay -nosplash -r "addpath(genpath(pwd)); simplertestrun; quit"
-   echo Successfully run my first MATLAB CI!
+  - task: InstallMATLAB@0
+    inputs:
+      release: R2020a
+  - task: RunMATLABCommand@0
+    inputs:
+      command: "addpath(genpath(pwd)); simplertestrun; quit"
