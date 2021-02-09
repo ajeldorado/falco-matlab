@@ -16,10 +16,10 @@ steps:
 
   - task: RunMATLABTests@0
     inputs:
-      codeCoverageCobertura: 'docs/coverage.xml'
+      codeCoverageCobertura: 'ci/testing_coverage.xml'
       selectByFolder: 'testing/testarchive/'
       sourceFolder: 'lib:models:setup'
-      testResultsJUnit: 'docs/results.xml'
+      testResultsJUnit: 'ci/testing_results.xml'
 
 #  - task: RunMATLABCommand@0
 #    inputs:
