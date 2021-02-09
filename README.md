@@ -10,7 +10,6 @@ Major contributions and testing were provided by Garreth Ruane, Luis Marchen, Sa
 
 FALCO is provided as-is and has no guarantee of performance. Nevertheless, reasonable attempts have been made to debug and troubleshoot the code, and the developers are still using and improving the software.
 
-#### DOCUMENTATION:
 Documentation on specific usage cases is available at the Github Wiki at https://github.com/ajeldorado/falco-matlab/wiki.
 
 For an overview of FALCO and its uses, refer to the SPIE conference paper "Fast Linearized Coronagraph Optimizer (FALCO) I: A software toolbox for rapid coronagraphic design and wavefront correction". 
