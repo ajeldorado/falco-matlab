@@ -53,6 +53,9 @@ function out = falco_init_storage_arrays(mp)
     out.IincoCorrHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in correction region of dark hole.
     out.IincoScoreHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in scoring region of dark hole.
     
+    %--Storage array for throughput at each iteration
+    mp.thput_vec = zeros(mp.Nitr+1, 1);
+    
     %--Image resolution
     out.Fend.res = mp.Fend.res;
 
