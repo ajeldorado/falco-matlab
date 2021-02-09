@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmimage: 'ubuntu-latest'
+  vmimage: 'ubuntu-20.04'
 
 
 steps:
