@@ -13,14 +13,14 @@ steps:
   - task: InstallMATLAB@0
     inputs:
       release: R2020a
-
   - task: RunMATLABTests@0
     inputs:
       codeCoverageCobertura: 'code-coverage/coverage.xml'
       selectByFolder: 'testing/testarchive/'
       sourceFolder: 'lib:models:setup'
       testResultsJUnit: 'test-results/results.xml'
-  - task: PublishTestResults@2
+
+  - task: PublishTestResults@1
     condition: succeededOrFailed()
     inputs:
       testResultsFiles: 'test-results/results.xml'
