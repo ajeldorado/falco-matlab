@@ -62,6 +62,11 @@ data/frn/**
 !data/ws_inprogress/placeholder.txt
 !data/frn/placeholder.txt
 
+
+demo/**
+!demo/demo_*.m
+
+
 FRN/**
 #wfirst_modeling/FRN/calculateFRN/*
 #wfirst_modeling/FRN/**
