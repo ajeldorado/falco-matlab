@@ -1,10 +1,10 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 
-clear all; 
+clear 
 
 fnum = 32;
 lam = 600e-9; % wavelength [meters]
@@ -53,7 +53,7 @@ Ipup2fft = abs(Epup2fft).^2;
 
 %% Propagation with MFTs with low-res and high-res regions
 
-Epup2 = propcustom_mft_Pup2Vortex2Pup_spot(pad_crop(Epup1, Nout), charge, Nbeam/2, 0.3, 5, useGPU, diamSpotLamD);  %--MFTs
+Epup2 = propcustom_mft_Pup2Vortex2Pup(pad_crop(Epup1, Nout), charge, Nbeam/2, 0.3, 5, useGPU, diamSpotLamD);  %--MFTs
 Ipup2 = abs(Epup2).^2;
 
 
