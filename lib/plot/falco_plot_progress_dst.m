@@ -209,6 +209,13 @@ end
 
 sciCam_fitswrite(tb,Im,[out_dir,'normI_it',num2str(Itr-1),tag,'.fits']);
 
+if(any(mp.dm_ind==1) && Itr==1)
+    sciCam_fitswrite(tb,mp.dm1.biasMap,[out_dir,'dm1_Vbias.fits']);
+end
+if(any(mp.dm_ind==2) && Itr==1)
+    sciCam_fitswrite(tb,mp.dm2.biasMap,[out_dir,'dm2_Vbias.fits']);
+end
+
 if(any(mp.dm_ind==1))
     sciCam_fitswrite(tb,mp.dm1.V,[out_dir,'dm1_V_it',num2str(Itr-1),tag,'.fits']);
     sciCam_fitswrite(tb,DM1surf,[out_dir,'dm1_model_it',num2str(Itr-1),tag,'.fits']);
