@@ -16,7 +16,7 @@ steps:
   - task: RunMATLABTests@0
     inputs:
       codeCoverageCobertura: 'code-coverage/coverage.xml'
-      selectByFolder: 'testing/testarchive/'
+      selectByFolder: 'testing/testarchive'
       sourceFolder: 'lib:models:setup'
       testResultsJUnit: 'test-results/results.xml'
 
