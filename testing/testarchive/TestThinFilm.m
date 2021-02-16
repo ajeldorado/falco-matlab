@@ -24,12 +24,12 @@ classdef TestThinFilm < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco 'lib/thinfilm']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib/thinfilm']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco 'lib/thinfilm']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib/thinfilm']))
         end
     end
     

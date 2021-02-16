@@ -23,12 +23,12 @@ classdef TestCeil < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco 'lib/utils']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib/utils']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco 'lib/utils']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib/utils']))
         end
     end
     
