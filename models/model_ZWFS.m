@@ -110,7 +110,7 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_2FT(EP1,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
+EP2 = propcustom_relay(EP1,mp.Nrelay1to2, mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
@@ -136,7 +136,7 @@ if(to_input) % if the user only wants to propagate to the input pupil (i.e. thro
 else % otherwise, go through the mask and on to the next pupil.
 
     %--Rotate 180 degrees to propagate to pupil P3
-    EP3 = propcustom_2FT(EP2eff, mp.centering);
+    EP3 = propcustom_relay(EP2eff, mp.Nrelay2to3, mp.centering);
 
     %--Apply apodizer mask.
     if(mp.flagApod)
@@ -169,13 +169,14 @@ else % otherwise, go through the mask and on to the next pupil.
         EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
 
         %--Use Babinet's principle at the Lyot plane.
-        EP4noFPM = propcustom_2FT(EP3,mp.centering); %--Propagate forward another pupil plane 
+        EP4noFPM = propcustom_relay(EP3, mp.Nrelay3to4, mp.centering); %--Propagate forward another pupil plane 
         EP4noFPM = padOrCropEven(EP4noFPM,WFScam_Narr); %--Crop down to the size of the Lyot stop opening
     end
 
     %--MFT from WFS FPM to WFS camera
     EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.wfs.mask.dxi,mp.wfs.mask.deta,WFScam_dx,WFScam_Narr,mp.centering); % Subtrahend term for Babinet's principle     
-
+    EP4sub = propcustom_relay(EP4sub, mp.Nrelay3to4-1, mp.centering);
+    
     if(refwave)
         Eout = EP4sub;
     else

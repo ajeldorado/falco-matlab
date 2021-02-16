@@ -28,6 +28,9 @@ lib/PROPER/**
 ##--PROPER manual
 #**/PROPER_manual*.pdf
 
+TestingResults.txt
+**/TestingResults.txt
+
 #--CVX license
 **/LICENSE.txt
 

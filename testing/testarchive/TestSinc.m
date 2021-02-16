@@ -5,14 +5,6 @@
 % is an extra test which verifies that the sinc.m is actually a file in the
 % ../lib/utils in the FALCO path.
 classdef TestSinc < matlab.unittest.TestCase
-%% Properties
-%
-% A presaved file with FALCO parameters was saved and is lodaded to be used
-% by methods. In this case we only use the mp.path.falco + lib/utils to
-% addpath to utils functions to be tested.
-    properties
-        mp=Parameters();
-    end
 
 %% Setup and Teardown Methods
 %
@@ -20,14 +12,14 @@ classdef TestSinc < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco filesep 'lib/utils']));
+            addpath(genpath('../../lib/utils'));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'lib/utils']))
+            rmpath(genpath('../../lib/utils'));
         end
-    end  
+    end
      
 %% Tests
 %
