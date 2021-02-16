@@ -23,15 +23,6 @@ classdef TestGetSummedImage < matlab.unittest.TestCase
         end
     end   
     
-    
-%% Properties
-%
-% This routine applies tests to falco_get_summed_image.m. At this point we
-% are just testing the size of the output array is consistent with supplied
-% parameter.
-    properties
-        mp=Parameters()
-    end
 
 %% Tests
 %

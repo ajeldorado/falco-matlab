@@ -27,15 +27,6 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
         end
     end    
     
-%% *Properties*
-%
-% We defined a function called Parameters.m which when called it generates
-% FALCO default parameters as well as some required parameters to run the
-% main example in ../falco-matlab/main/EXAMPLE_main_WFIRST_LC.m.
-    properties
-        mp=Parameters();
-    end
-    
 %% *Tests*
 %
 % *Creates five tests:*
