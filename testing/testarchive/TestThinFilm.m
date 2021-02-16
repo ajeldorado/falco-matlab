@@ -9,30 +9,21 @@
 % We define some tests for falco_thin_film_material_def.m to test responses to
 % different input parameters. 
 classdef TestThinFilm < matlab.unittest.TestCase    
-%% Properties
-%
-% A presaved file with FALCO parameters was saved and is lodaded to be used
-% by methods. In this case we only use the mp.path.falco + lib/utils to
-% addpath to utils functions to be tested.
-    properties
-        mp=Parameters();
-    end
-
 %% Setup and Teardown Methods
 %
 %  Add and remove path to utils functions to be tested.
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco filesep 'lib/thinfilm']));
+            addpath(genpath('../../lib/thinfilm'));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'lib/thinfilm']))
+            rmpath(genpath('../../lib/thinfilm'));
         end
     end
-    
+     
 %% Tests
                                       
     methods (Test)    

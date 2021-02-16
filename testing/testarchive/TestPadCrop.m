@@ -2,27 +2,18 @@
 %
 % 
 classdef TestPadCrop < matlab.unittest.TestCase
-%% Properties
+%% Setup and Teardown Methods
 %
-% A presaved file with FALCO parameters was saved and is lodaded to be used
-% by methods. In this case we only use the mp.path.falco + lib/utils to
-% addpath to utils functions to be tested.
-%     properties
-%         mp=DefaultParameters();
-%     end
-    
-%% Setup and Teardown Methods at Class Level
-%
-%  Add and remove path to utility functions directory where pad_crop.m resides.
+%  Add and remove path to utils functions to be tested.
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath(['../../../falco-matlab/lib/utils']));
+            addpath(genpath('../../lib/utils'));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath(['../../../falco-matlab/lib/utils']))
+            rmpath(genpath('../../lib/utils'));
         end
     end
 
@@ -126,14 +117,3 @@ classdef TestPadCrop < matlab.unittest.TestCase
         end
     end    
 end
-
-
-
-
-
-
-
-
-
-
-

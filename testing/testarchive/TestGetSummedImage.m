@@ -14,12 +14,12 @@ classdef TestGetSummedImage < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco filesep 'lib/utils']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'lib/utils']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']))
         end
     end   
     
