@@ -13,7 +13,21 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
     properties
         mp=DefaultParameters();
     end
-     
+
+%% Setup and Teardown Methods
+%
+%  Add and remove path to utils functions to be tested.
+%
+    methods (TestClassSetup)
+        function addPath(testCase)
+            addpath(genpath([testCase.mp.path.falco filesep 'setup']));
+        end
+    end
+    methods (TestClassTeardown)
+        function removePath(testCase)
+            rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
+        end
+    end        
 %% Tests
 %
 %  Creates tests:
@@ -35,20 +49,20 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
 
             mp = falco_set_optional_variables(testCase.mp);
             testCase.verifyThat(mp.path.falco,IsFolder)
-            testCase.verifyThat(mp.path.proper,IsFolder)
+%             testCase.verifyThat(mp.path.proper,IsFolder)
             testCase.verifyThat(mp.path.config,IsFolder)
             testCase.verifyThat(mp.path.ws,IsFolder)
-            testCase.verifyThat(mp.path.falcoaps,IsFolder)
+%             testCase.verifyThat(mp.path.falcoaps,IsFolder)
             testCase.verifyThat(mp.path.jac,IsFolder)
             testCase.verifyThat(mp.path.images,IsFolder)
             testCase.verifyThat(mp.path.dm,IsFolder)
             %testCase.verifyThat(mp.path.wsInProgress,IsFolder)
             
             testCase.verifyThat(mp.path, HasField('falco'))
-            testCase.verifyThat(mp.path, HasField('proper'))
+%             testCase.verifyThat(mp.path, HasField('proper'))
             testCase.verifyThat(mp.path, HasField('config'))
             testCase.verifyThat(mp.path, HasField('ws'))
-            testCase.verifyThat(mp.path, HasField('falcoaps'))
+%             testCase.verifyThat(mp.path, HasField('falcoaps'))
             testCase.verifyThat(mp.path, HasField('jac'))
             testCase.verifyThat(mp.path, HasField('images'))
             testCase.verifyThat(mp.path, HasField('dm'))
