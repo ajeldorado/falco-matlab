@@ -1,11 +1,33 @@
 %% Test falco_set_jacobian_weights.m
 %
 % We define some tests for falco_set_jacobian_weights.m to test  
-% of error exceptions, and responses to a different input parameters. The 
-% test assumes that the function is not in the path and adds mp.path.falco 
-% to path for testing purposes, and then it removes path after tests are 
-% over. This is done for total independence.
+% error exceptions, and responses to a different input parameters. The 
+% test assumes that the user has set the path to FALCO functionality. 
 classdef TestJacWeights < matlab.unittest.TestCase
+%% Properties
+%
+% A presaved file with FALCO parameters was saved and is lodaded to be used
+% by methods. In this case we only use the mp.path.falco + lib/utils to
+% addpath to utils functions to be tested.
+    properties
+        mp=Parameters();
+    end
+
+%% Setup and Teardown Methods
+%
+%  Add and remove path to utils functions to be tested.
+%
+    methods (TestClassSetup)
+        function addPath(testCase)
+            addpath(genpath([testCase.mp.path.falco 'lib/utils']));
+        end
+    end
+    methods (TestClassTeardown)
+        function removePath(testCase)
+            rmpath(genpath([testCase.mp.path.falco 'lib/utils']))
+        end
+    end    
+    
 %% Properties
 %
 % We defined a function called Parameters.m which when called it generates
@@ -13,23 +35,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
 % main example in ../falco-matlab/main/EXAMPLE_main_WFIRST_LC.m.
     properties
         mp=Parameters();
-    end
-
-%% Setup and Teardown Methods
-%
-%  Add and remove path to FALCO functions. The test assumes we do not have
-%  a path to FALCO, so here we add the path to FALCO functionality, and
-%  when the test is done running we remove the path.
-%
-    methods (TestClassSetup)
-        function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco]));
-        end
-    end
-    methods (TestClassTeardown)
-        function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco]))
-        end
     end
     
 %% Tests

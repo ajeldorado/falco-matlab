@@ -5,27 +5,37 @@ classdef TestGetSummedImage < matlab.unittest.TestCase
 % by methods. In this case we only use the mp.path.falco + lib/utils to
 % addpath to utils functions to be tested.
     properties
-        mp=Parameters()
+        mp=Parameters();
     end
 
 %% Setup and Teardown Methods
 %
 %  Add and remove path to utils functions to be tested.
 %
-    methods(TestMethodSetup)
+    methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco]));
+            addpath(genpath([testCase.mp.path.falco 'lib/utils']));
         end
     end
-    methods(TestMethodTeardown)
+    methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco]))
+            rmpath(genpath([testCase.mp.path.falco 'lib/utils']))
         end
-    end
+    end   
     
+    
+%% Properties
+%
+% This routine applies tests to falco_get_summed_image.m. At this point we
+% are just testing the size of the output array is consistent with supplied
+% parameter.
+    properties
+        mp=Parameters()
+    end
+
 %% Tests
 %
-%  Creates four testrs:
+%  Creates tests:
 %
 % # *test Image Size* with actal size equal to [mp.Fend.Nxi,mp.Fend.Nxi]
 % 
