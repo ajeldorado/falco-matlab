@@ -25,11 +25,13 @@ classdef TestPupilLuvoirA < matlab.unittest.TestCase
     methods (TestClassSetup)
         function addPath(testCase)
             addpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib_external']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
             rmpath(genpath([testCase.mp.path.falco filesep 'lib']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib_external']));
         end
     end    
     
@@ -105,8 +107,7 @@ classdef TestPupilLuvoirA < matlab.unittest.TestCase
             pupilRot = zeros(size(pupil));
             pupilRot(2:end, 2:end) = rot90(pupil(2:end, 2:end),-1);
             diff = pad_crop(pupilRot, size(pupilOffset)) - circshift(pupilRotOffset, -inputs.Nbeam*[inputs.yShear, inputs.xShear]);
-            sum(abs(diff(:))/sum(pupilRotOffset(:))) < 1e-4 % test of rotation and translation
-            testCase.verifyLessThan(sum(abs(diff(:))/sum(pupilRotOffset(:))),1e-4)
+            testCase.verifyLessThan(sum(abs(diff(:))/sum(pupilRotOffset(:))), 1e-4)
         end
     end    
 end

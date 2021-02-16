@@ -23,12 +23,14 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco]));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            addpath(genpath([testCase.mp.path.falco filesep 'models']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco]))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            rmpath(genpath([testCase.mp.path.falco filesep 'models']));
         end
     end
     
@@ -80,7 +82,7 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             meanIdiff = mean(abs(Etrue2D(mp.Fend.corr.maskBool)-Eest2D(mp.Fend.corr.maskBool)).^2);
             
             percentEstError = meanIdiff/meanI*100;
-            testCase.verifyLessThan(percentEstError,3.0)
+            testCase.verifyLessThan(percentEstError, 4.0)
         end
     end    
 end

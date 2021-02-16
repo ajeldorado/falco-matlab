@@ -18,12 +18,12 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco 'lib/setup']));
+            addpath(genpath([testCase.mp.path.falco filesep 'setup']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco 'lib/setup']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
         end
     end    
     

@@ -24,13 +24,15 @@ classdef TestPupilSimple < matlab.unittest.TestCase
     methods (TestClassSetup)
         function addPath(testCase)
             addpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib_external']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'lib']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib_external']));
         end
-    end   
+    end
 
 %% Tests
 %
