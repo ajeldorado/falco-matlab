@@ -42,7 +42,7 @@ classdef TestSinc < matlab.unittest.TestCase
     methods (Test)
         function testSincpath(testCase)
             import matlab.unittest.constraints.IsFile;
-            act = '../../../falco-matlab/lib/utils/sinc.m';
+            act = '../../lib/utils/sinc.m';
             testCase.verifyThat(act,IsFile)
         end
         function testSinczero(testCase)
