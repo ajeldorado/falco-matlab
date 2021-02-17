@@ -3,7 +3,7 @@
 ![Azure DevOps tests (branch)](https://img.shields.io/azure-devops/tests/highcontrast/falco-matlab/1/master)
 ![Azure DevOps coverage (branch)](https://img.shields.io/azure-devops/coverage/highcontrast/falco-matlab/1/master)
 
-The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source package of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at github.com/ajeldorado/falco-matlab and in Python 3 at github.com/ajeldorado/falco-python.
+The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source package of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at [github.com/ajeldorado/falco-matlab](github.com/ajeldorado/falco-matlab) and in Python 3 at [github.com/ajeldorado/falco-python](github.com/ajeldorado/falco-python).
 
 Developed by A.J. Riggs at the Jet Propulsion Laboratory, California Institute of Technology.
 Major contributions and testing were provided by Garreth Ruane, Luis Marchen, Santos (Felipe) Fregoso, Erkin Sidick, Carl Coker, Navtej Saini, and Jorge Llop-Sayson.
@@ -19,7 +19,7 @@ For an overview of FALCO and its uses, refer to the SPIE conference paper ["Fast
 
 # Matlab Versions and Libraries
 
-FALCO was written using Matlab 2019a and is tested with Azure DevOps in Matlab 2020a. It may still work on older versions, but functionality is not guaranteed.
+FALCO was written using Matlab 2019a and is tested with [Azure DevOps](https://dev.azure.com/highcontrast/falco-matlab/_build?view=pipelines) in Matlab 2020a. It may still work on older versions, but functionality is not guaranteed.
 
 No Matlab toolboxes should be required for FALCO. However, the Parallel Computing Toolbox or Distributed Computing Toolbox can be used to parallelize some repetitive calculations by changing the value of a flag, *mp.flagParfor = true;*.
 
@@ -36,7 +36,7 @@ FALCO was written primarily on the MacOS operating system but is also used on Wi
   A) You can temporarily do that by defining the variable `mp.path.falco` in each main script or config file you use, or
   B) Permanently add FALCO to the MATLAB path with the commands `addpath(path/to/falco-matlab); savepath;` where _path/to/falco-matlab_ is the absolute file path on your computer for the PROPER directory. The command `savepath` will keep the directory you included in the *pathdef.m* file that MATLAB uses to look for the functions is expects. Note that the *pathdef.m* file might not be writeable on a server without admin privileges.
 
-3) *No need to download PROPER yourself anymore.* PROPER is now included in FALCO (in the *lib_external* subdirectory) so that it is available for continuous integration tests. Just FYI, the official PROPER source code repository is on SourceForge at [https://sourceforge.net/projects/proper-library/](https://sourceforge.net/projects/proper-library/).
+3) *No need to download PROPER yourself anymore.* PROPER is now included in FALCO (in the *lib_external* subdirectory) so that it is available for continuous integration tests. Just FYI, the official PROPER source code repository is on [SourceForge](https://sourceforge.net/projects/proper-library/).
 
 
 4) Try to run the example script file _EXAMPLE_try_running_FALCO.m_ in the subdirectory *main/*. If the example script runs through with no errors, then the file paths are set correctly.
