@@ -58,7 +58,7 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
     
     %--Compute the expected new 2-D intensity image
     for iMode = 1:mp.jac.Nmode    
-        EexpectedVec = cvar.EfieldMeas(:, iMode) + (EnewTempVecArray(:, iMode) - EoldTempVecArray(:, iMode));
+        EexpectedVec = cvar.Eest(:, iMode) + (EnewTempVecArray(:, iMode) - EoldTempVecArray(:, iMode));
         Eexpected2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
         Eexpected2D(mp.Fend.corr.mask) = EexpectedVec;
         

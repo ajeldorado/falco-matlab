@@ -28,6 +28,9 @@ lib/PROPER/**
 ##--PROPER manual
 #**/PROPER_manual*.pdf
 
+TestingResults.txt
+**/TestingResults.txt
+
 #--CVX license
 **/LICENSE.txt
 
@@ -61,6 +64,11 @@ data/frn/**
 !data/ws/placeholder.txt
 !data/ws_inprogress/placeholder.txt
 !data/frn/placeholder.txt
+
+
+demo/**
+!demo/demo_*.m
+
 
 FRN/**
 #wfirst_modeling/FRN/calculateFRN/*
@@ -115,9 +123,6 @@ main/**
 config/**
 !config/EXAMPLE_*
 
-#--Sync only example tesing files
-testing/**
-!testing/EXAMPLE_*
 
 #--Documentation intermediate files
 docs/**

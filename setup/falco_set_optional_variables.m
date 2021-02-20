@@ -28,14 +28,12 @@ mp.path.falco = fileparts(fileparts(mfilename('fullpath')));
 if(isfield(mp.path,'config')==false);  mp.path.config = [mp.path.falco filesep 'data' filesep 'brief' filesep];  end
 
 %--Entire final workspace from FALCO gets saved here.
-if(isfield(mp.path,'ws')==false);  mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];  end
-
-if(isfield(mp.path,'ws')==false); mp.path.ws = [mp.path.falco 'data' filesep 'ws' filesep]; end % Store final workspace data here
-if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco 'maps' filesep]; end % Maps go here
-if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
-if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco 'data' filesep 'images' filesep]; end % Store all full, reduced images here
-if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco 'data' filesep 'DM' filesep]; end % Store DM command maps here
-if(isfield(mp.path,'wsInProgress')==false); mp.path.wsInProgress = [mp.path.falco 'data' filesep 'wsInProgress' filesep]; end % Store in progress workspace data here
+if(isfield(mp.path,'ws')==false);  mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];  end % Store final workspace data here
+if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco filesep 'maps' filesep]; end % Maps go here
+if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco filesep 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
+if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco filesep 'data' filesep 'images' filesep]; end % Store all full, reduced images here
+if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' filesep 'DM' filesep]; end % Store DM command maps here
+if(isfield(mp.path,'wsInProgress')==false); mp.path.wsInProgress = [mp.path.falco filesep 'data' filesep 'wsInProgress' filesep]; end % Store in progress workspace data here
 
 %% Optional/hidden boolean flags
 %--Saving data
@@ -142,7 +140,8 @@ end
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
-
+if(isfield(mp.jac,'minimizeNI')==false); mp.jac.minimizeNI = false; end %--Have EFC minimize normalized intensity instead of intensity
+    
 %--Estimation
 if(isfield(mp.est.probe,'whichDM')==false); mp.est.probe.whichDM = 1; end %--Which DM to use for probing
 if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max probe intensity

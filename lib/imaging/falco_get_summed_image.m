@@ -15,12 +15,7 @@
 % OUTPUTS
 % -------
 % Imean : 2-D stellar PSF averaged over sub-bandpasses and polarization states [normalized intensity]
-%
-%--REVISION HISTORY
-% - Modified on 2019-05-06 by A.J. Riggs to include a different option for
-% looping over a full model in PROPER.
-% - Simplified on 2019-03-01 by A.J. Riggs to loop over falco_get_sbp_image.m 
-%--------------------------------------------------------------------------
+
 
 function Imean = falco_get_summed_image(mp)
 

@@ -17,7 +17,7 @@ clc
 % tests={'/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests/SolverTest.m'...
 %      ; '/Users/lmarchen/Documents/MATLAB/work/unittesting/Tests/testarchive/classTests'};
  
-tests={'/Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/testarchive/TestSinc.m'};
+tests={'/Users/lmarchen/Documents/falco_source/falco-matlab/testing/testarchive'};
 
 %% Example 1
 % 
@@ -26,7 +26,7 @@ tests={'/Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tes
 % format.
  te=TestEngine(tests);
  results1=te.runTests(te.largeSuite);
-
+return
 %% Example 2
 %
 % Runs tests and outputs results to a Matlab "tap" file.

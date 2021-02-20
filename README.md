@@ -1,29 +1,25 @@
-# FALCO
+# FALCO: Fast Linearized Coronagraph Optimizer
+[![Build Status](https://dev.azure.com/highcontrast/falco-matlab/_apis/build/status/ajeldorado.falco-matlab?branchName=master)](https://dev.azure.com/highcontrast/falco-matlab/_build/latest?definitionId=1&branchName=master)
+![Azure DevOps tests (branch)](https://img.shields.io/azure-devops/tests/highcontrast/falco-matlab/1/master)
+![Azure DevOps coverage (branch)](https://img.shields.io/azure-devops/coverage/highcontrast/falco-matlab/1/master)
 
-Fast Linear Least-Squares Coronagraph Optimization (FALCO) software package
-
-Refer to the SPIE conference paper "Fast Linearized Coronagraph Optimizer (FALCO) I: A software toolbox for rapid coronagraphic design and wavefront correction" for an overview of FALCO and its uses. 
-DOI: 10.1117/12.2313812
+The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source package of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at github.com/ajeldorado/falco-matlab and in Python 3 at github.com/ajeldorado/falco-python.
 
 Developed by A.J. Riggs at the Jet Propulsion Laboratory, California Institute of Technology.
-Major contributions and testing were done by Garreth Ruane, Erkin Sidick, Carl Coker, Navtej Saini, and Jorge Llop-Sayson.
-
- 
-# What is FALCO?
-
-The Fast Linearized Coronagraph Optimizer (FALCO) is an open-source toolbox of routines and example scripts for coronagraphic focal plane wavefront correction. The goal of FALCO is to provide a free, modular framework for the simulation or testbed operation of several common types of coronagraphs, and the design of coronagraphs that use wavefront control algorithms to shape deformable mirrors (DMs) and masks. FALCO includes routines for pair-wise probing estimation of the complex electric field and Electric Field Conjugation (EFC) control, and we ask the community to contribute other wavefront correction algorithms and optical layouts. FALCO utilizes and builds upon PROPER, an established optical propagation library. The key innovation in FALCO is the rapid computation of the linearized response matrix for each DM, which facilitates re-linearization after each control step for faster DM-integrated coronagraph design and wavefront correction experiments. FALCO is freely available as source code in MATLAB at github.com/ajeldorado/falco-matlab and is in development in Python 3.
+Major contributions and testing were provided by Garreth Ruane, Luis Marchen, Santos (Felipe) Fregoso, Erkin Sidick, Carl Coker, Navtej Saini, and Jorge Llop-Sayson.
 
 # Documentation and Support
 
 FALCO is provided as-is and has no guarantee of performance. Nevertheless, reasonable attempts have been made to debug and troubleshoot the code, and the developers are still using and improving the software.
 
-#### DOCUMENTATION:  
-For now, the documentation is available at the Github Wiki at https://github.com/ajeldorado/falco-matlab/wiki.
+Documentation on specific usage cases is available at the Github Wiki at https://github.com/ajeldorado/falco-matlab/wiki.
 
+For an overview of FALCO and its uses, refer to the SPIE conference paper "Fast Linearized Coronagraph Optimizer (FALCO) I: A software toolbox for rapid coronagraphic design and wavefront correction". 
+DOI: 10.1117/12.2313812
 
 # Matlab Versions and Libraries
 
-FALCO was built and tested in Matlab 2017a and b. It may still work on older versions, but functionality is not guaranteed.
+FALCO was written using Matlab 2019a and is tested with Azure DevOps in Matlab 2020a. It may still work on older versions, but functionality is not guaranteed.
 
 No Matlab toolboxes should be required for FALCO. However, the Parallel Computing Toolbox or Distributed Computing Toolbox can be used to parallelize some repetitive calculations by changing the value of a flag, *mp.flagParfor = true;*. 
 
@@ -46,12 +42,10 @@ FALCO was written primarily on the MacOS operating system and used to a lesser e
 
 4) Now go ahead and try some of the other example scripts in _falco-matlab/main_, which start with "EXAMPLE_", again adjusting the path definitions for the FALCO and PROPER libraries. For this initial functionality test, in the main script you should set the number of wavelengths to 1 (`mp.Nsbp = 1;`) and turn off the parallel computing  flag (`mp.flagParfor = false;`) for it to run quickly. I recommend finding the script closest to your intended purpose and starting to make changes from a copy of that.
 
-5) (Optional--not used for regular functionality.) Download CVX from [cvxr.com](cvxr.com). Wherever you decide to unzip and place the PROPER library on your machine, add the path to the CVX directory to the MATLAB path (similar to how it was done for PROPER). Then, perform the CVX installation instructions listed on the CVX website.
-
 
 # Version History
 
-Upcoming: In Version 3.1, there will be the first "full models" that differ from the compact model and look like actual testbeds or instrument layouts. More coronagraph types will be added back in that were not fully converted in the Version 3.0 release.
+Upcoming: In Version 4.1, there will be the first "full models" that differ from the compact model and look like actual testbeds or instrument layouts.
 
 February 28, 2018: Version 3.0 released. Version 3 should be the first stable version of FALCO and be supported for some time. Version 3 was re-designed to be expandable for many people's different needs and uses without them having to overwrite each other's features.
   - Wavefront estimation added (pairwise probing with batch process and Kalman filter).

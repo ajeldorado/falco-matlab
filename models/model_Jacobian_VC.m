@@ -30,7 +30,7 @@ modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);
 
 lambda = mp.sbp_centers(modvar.sbpIndex); 
-mirrorFac = 2; % Phase change is twice the DM surface height.f
+mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -47,11 +47,11 @@ Ett = exp(1i*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex);
 
 %--Apply a Zernike (in amplitude) at input pupil
-if(modvar.zernIndex~=1)
+if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
-    zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat,mp.P1.compact.Narr);
-    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns==modvar.zernIndex);
+    zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = padOrCropEven(zernMat, mp.P1.compact.Narr);
+    Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,6 +85,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Get the unocculted peak E-field and coronagraphic E-field
+if mp.jac.minimizeNI
+    modvar.whichSource = 'star';
+    Eocculted = model_compact(mp, modvar);
+    Eunocculted = model_compact(mp, modvar, 'nofpm');
+    [~, indPeak] = max(abs(Eunocculted(:)));
+    Epeak = Eunocculted(indPeak);
+end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
@@ -223,20 +232,7 @@ if(whichDM == 1)
                 EF3 = vortex.*EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
                 
                 %--MFT to LS
-                EP4 = propcustom_mft_FtoP(EF3, mp.fl,lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);  
-                
-%                 if iact == 538
-%                     IF3 = abs((EF3inc)).^2;
-%                     IF3 = IF3/max(IF3(:));
-%                     figure(701); imagesc(abs(dEP3box)); axis xy equal tight; colorbar;
-%                     figure(703); imagesc(log10(IF3), [-5, 0]); axis xy equal tight; colorbar;
-%                     figure(704); imagesc(angle(EF3inc)); axis xy equal tight; colorbar;
-%                     figure(705); imagesc(abs(EP4)); axis xy equal tight; colorbar;
-%                     figure(706); imagesc(angle(EP4)); axis xy equal tight; colorbar;
-%                     figure(707); imagesc(abs(EP4).*mp.P4.compact.croppedMask); axis xy equal tight; colorbar;
-%                     drawnow;
-%                     keyboard
-%                 end                
+                EP4 = propcustom_mft_FtoP(EF3, mp.fl,lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);                
                 
             else % Use FFTs to go to/from the vortex
                 %--Re-insert the window around the influence function back into the full beam array.
@@ -266,18 +262,6 @@ if(whichDM == 1)
             EP4 = propcustom_relay(EP4, mp.Nrelay3to4-1, mp.centering); %--Add more re-imaging relays if necessary
             EP4 = EP4.*mp.P4.compact.croppedMask;
             EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
-            
-%             if iact == 538
-%                 IF3 = abs(fftshift(EF3incShift)).^2;
-%                 IF3 = IF3/max(IF3(:));
-%                 figure(701); imagesc(abs(EP3)); axis xy equal tight; colorbar;
-%                 figure(703); imagesc(log10(IF3), [-5, 0]); axis xy equal tight; colorbar; set(gca, 'Fontsize', 20); set(gcf, 'Color', 'w');
-%                 figure(704); imagesc(angle(fftshift(EF3incShift))); colormap hsv; axis xy equal tight; colorbar;
-%                 figure(705); imagesc(abs(EP4)); axis xy equal tight; colorbar;
-%                 figure(706); imagesc(angle(EP4)); axis xy equal tight; colorbar;
-%                 figure(707); imagesc(pad_crop(mp.P4.compact.croppedMask, Nfft1)); axis xy equal tight; colorbar;
-%                 keyboard
-%             end
 
             %--MFT to detector
             if(mp.flagFiber)
@@ -305,11 +289,20 @@ if(whichDM == 1)
                     EFend = gather(EFend);
                 end
             
-                Gmode(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.inds) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
             end
+            
         end
+        
         Gindex = Gindex + 1;
     end
+    
+    if mp.jac.minimizeNI
+       JacOfPeak = model_Jacobian_no_FPM(mp, iMode, whichDM); 
+       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.inds) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
+    end
+    
+    Gmode = mp.dm1.weight * Gmode;
 end    
 
 %--DM2---------------------------------------------------------
@@ -423,18 +416,6 @@ if(whichDM==2)
                 %--MFT to LS
                 EP4 = propcustom_mft_FtoP(EF3, mp.fl,lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);  
                 
-%                 if iact == 538
-%                     IF3 = abs((EF3inc)).^2;
-%                     IF3 = IF3/max(IF3(:));
-%                     figure(701); imagesc(abs(dEP3box)); axis xy equal tight; colorbar;
-%                     figure(703); imagesc(log10(IF3), [-5, 0]); axis xy equal tight; colorbar;
-%                     figure(704); imagesc(angle(EF3inc)); axis xy equal tight; colorbar;
-%                     figure(705); imagesc(abs(EP4)); axis xy equal tight; colorbar;
-%                     figure(706); imagesc(angle(EP4)); axis xy equal tight; colorbar;
-%                     figure(707); imagesc(abs(EP4).*mp.P4.compact.croppedMask); axis xy equal tight; colorbar;
-%                     drawnow;
-%                 end
-                
             else % Use FFTs to go to/from the vortex
             
                 if(isa(dEP2boxEff,'gpuArray'))
@@ -488,11 +469,18 @@ if(whichDM==2)
                     EFend = gather(EFend);
                 end
             
-                Gmode(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.inds) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
             end
         end
         Gindex = Gindex + 1;
     end
+    
+    if mp.jac.minimizeNI
+       JacOfPeak = model_Jacobian_no_FPM(mp, iMode, whichDM); 
+       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.inds) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
+    end
+    
+    Gmode = mp.dm2.weight * Gmode;
 end
 
 end % End of function
