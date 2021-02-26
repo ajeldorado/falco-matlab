@@ -122,11 +122,11 @@ for Itr = 1:mp.Nitr
         if ~strcmpi(mp.estimator, 'perfect')
             for si = 1:mp.Nsbp
                 tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.mask) = Eest(:, si);
+                tmp(mp.Fend.corr.maskBool) = Eest(:, si);
                 Im_tb.E(:, :, si) = tmp; % modulated component 
  
                 tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.mask) = IincoEst(:, si);
+                tmp(mp.Fend.corr.maskBool) = IincoEst(:, si);
                 Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
 
                 out.InormHist_tb.mod(Itr, si) = mean(abs(Eest(:, si)).^2);
@@ -252,11 +252,11 @@ if isfield(mp, 'testbed')
     if ~strcmpi(mp.estimator, 'perfect')
         for si = 1:mp.Nsbp
             tmp = zeros(size(Im));
-            tmp(mp.Fend.corr.mask) = Eest(:,si);
+            tmp(mp.Fend.corr.maskBool) = Eest(:,si);
             Im_tb.E(:,:,si) = tmp; % modulated component 
 
             tmp = zeros(size(Im));
-            tmp(mp.Fend.corr.mask) = IincoEst(:,si);
+            tmp(mp.Fend.corr.maskBool) = IincoEst(:,si);
             Im_tb.Iinco(:,:,si) = tmp; % unmodulated component 
 
             out.InormHist_tb.mod(Itr,si) = mean(abs(Eest(:,si)).^2);
