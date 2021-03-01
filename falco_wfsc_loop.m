@@ -45,6 +45,7 @@ for Itr = 1:mp.Nitr
 
     %% Calculate the core throughput (at higher resolution to be more accurate)
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
+    out.thput(Itr) = thput;
     if mp.flagFiber
         mp.thput_vec(Itr) = max(thput);
     else
@@ -201,9 +202,8 @@ for Itr = 1:mp.Nitr
         if any(mp.dm_ind == 8); DM8V = mp.dm8.V; else; DM8V = 0; end
         if any(mp.dm_ind == 9); DM9V = mp.dm9.V; else; DM9V = 0; end
         Nitr = mp.Nitr;
-        thput_vec = mp.thput_vec;
         fnWS = sprintf('%sws_%s_Iter%dof%d.mat', mp.path.wsInProgress, mp.runLabel, Itr, mp.Nitr);
-        save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','thput_vec','out')
+        save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','out')
         fprintf('done.\n\n')
     end
 
