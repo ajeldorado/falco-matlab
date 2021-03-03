@@ -2,8 +2,6 @@ clear
 
 %% Add Path to Utils
 %
-%
-% addpath /Users/lmarchen/Documents/MATLAB/Matlab/work/unittesting/unittesting/Tests/utils
 addpath(genpath(fileparts(fileparts(fileparts(mfilename('fullpath'))))));
 
 %--------------------------------------------------------------------------
@@ -22,9 +20,3 @@ tests = {[fileparts(fileparts(mfilename('fullpath'))), filesep, 'testarchive']};
 te=TestEngine(tests);
 results1=te.runTests(te.largeSuite);
 table(results1)
- 
-%% Example 2
-%
-% Runs tests and outputs results to a Matlab "tap" file.
-%  te=TestEngine(tests);
-%  results2=te.runTests(te.largeSuite,'TestingResults.tap');
