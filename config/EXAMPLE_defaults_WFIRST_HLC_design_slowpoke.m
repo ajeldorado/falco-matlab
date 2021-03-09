@@ -1,6 +1,6 @@
 
 % %--Initialize some structures if they don't already exist
-
+mp.aux.flagCPpeakJacKern = false;
 %% Misc
 
 %--Record Keeping
@@ -80,7 +80,7 @@ mp.eval.Rsens = [3, 4;...
               4, 8];  
 
 %--Grid- or Line-Search Settings
-mp.ctrl.log10regVec = -6:1:3; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -4:1/2:1; %--log10 of the regularization exponents (often called Beta values)
 mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
    
@@ -261,10 +261,10 @@ mp.P3.D = 46.2987e-3;
 mp.P4.D = 46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 150;
-mp.P2.compact.Nbeam = 150;
-mp.P3.compact.Nbeam = 150;
-mp.P4.compact.Nbeam = 150;
+mp.P1.compact.Nbeam = 250;
+mp.P2.compact.Nbeam = 250;
+mp.P3.compact.Nbeam = 250;
+mp.P4.compact.Nbeam = 250;
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -282,10 +282,10 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 150;
-mp.P2.full.Nbeam = 150;
-mp.P3.full.Nbeam = 150;
-mp.P4.full.Nbeam = 150;
+mp.P1.full.Nbeam = 250;
+mp.P2.full.Nbeam = 250;
+mp.P3.full.Nbeam = 250;
+mp.P4.full.Nbeam = 250;
 
 %% Mask Definitions
 
@@ -301,8 +301,8 @@ mp.P4.IDnorm = 0.5;%0.45; %--Lyot stop ID [Dtelescope]
 mp.P4.ODnorm = 0.8;%0.78; %--Lyot stop OD [Dtelescope]
 
 %--FPM size
-mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
-mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
+mp.F3.Rin = 2.8;    % maximum radius of inner part of the focal plane mask [lambda0/D]
+mp.F3.RinA = 2.8;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 

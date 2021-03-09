@@ -163,25 +163,25 @@ for ri=start_rad:Nrad
             cosII = cosFull.*ind_rad.*modeTemp;
             mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
             count = count+1;
-            figure(100)
+%             figure(100)
+% %             imagesc(cosII)
+%             imagesc(cosFull)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             figure(101)
+%             imagesc(ind_rad)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             figure(102)
 %             imagesc(cosII)
-            imagesc(cosFull)
-            axis image
-            title(num2str(II))
-            drawnow
-            figure(101)
-            imagesc(ind_rad)
-            axis image
-            title(num2str(II))
-            drawnow
-            figure(102)
-            imagesc(cosII)
-            axis image
-            title(num2str(II))
-            drawnow
-            if ri>=6
-                pause(0.1)
-            end
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             if ri>=6
+%                 pause(0.1)
+%             end
         end
     end
 end
