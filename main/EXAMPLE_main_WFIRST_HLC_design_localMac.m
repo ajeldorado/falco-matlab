@@ -39,8 +39,9 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 % EXAMPLE_defaults_WFIRST_HLC_design_local
 EXAMPLE_defaults_WFIRST_HLC_design_slowpoke
+mp.aux.peakJacKern = false;
 mp.aux.omega = 0;
-mp.aux.gamma = 1e-4;
+mp.aux.gamma = 0;
 mp.aux.firstOmegaItr = 11111110;
 mp.aux.betaMinusOne = 0;
 mp.aux.ItrDump = 0;
@@ -49,12 +50,15 @@ mp.aux.omegaMin = 2;
 mp.aux.omegaMax = 9;
 mp.aux.minNIprob = 1111111;
 mp.aux.firstDM9It = 0;
+mp.aux.dm9OnlyItr_arr = [];
 mp.aux.NumConvCFIt = 2;
 mp.aux.wDM9_arr = [];
 mp.aux.flagRegDM9 = false;
 mp.aux.betadm9Min = -8;
 mp.aux.betadm9Max = -5;
 mp.aux.firstRegDM9Itr = 111110;
+mp.aux.flagNIthput2 = false; % search for best Reg with NI/thput^2 or not
+
 SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
 SetB2 = [1, 1j, 129, 1, 1];
 
@@ -70,10 +74,11 @@ mp.ctrl.sched_mat = [...
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
+mp.flagSaveWS = true;
 
 %--Record Keeping
-mp.SeriesNum = 2;
-mp.TrialNum = 5;
+mp.SeriesNum = 8;
+mp.TrialNum = 36;
 
 %--Force DM9 to be mirror symmetric about y-axis
 NactTotal = ceil_even(mp.dm9.actres*mp.F3.Rin*2)^2; %-NOTE: This will be different if influence function for DM9 is not '3x3'. Needs to be the same value as mp.dm9.NactTotal, which is calculated later.
@@ -88,10 +93,11 @@ FlippedLinIndMat = fliplr(LinIndMat);
 % end
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
+% fn_prev = 'Series0008_Trial0035_HLC_WFIRST180718_3DM48_z1_IWA2.7_OWA10_4lams575nm_BW10_plannedEFC_all.mat';
 % temp = load(fn_prev,'out');
 % mp.dm1.V = temp.out.DM1V;
 % mp.dm2.V = temp.out.DM2V;
+% % mp.dm3.V = temp.out.DM3V;
 % clear temp
 
 % %--DEBUGGING ONLY: Monochromatic light
