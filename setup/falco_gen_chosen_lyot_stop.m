@@ -96,6 +96,8 @@ switch upper(mp.whichPupil)
                     inputs.OD = mp.P4.ODnorm; % (pupil diameters)
                     inputs.ang = mp.P4.ang; % (degrees)
                     inputs.centering = mp.centering; % 'interpixel' or 'pixel'
+                    if(isfield(mp.P4, 'clocking')); inputs.clocking = mp.P4.clocking; end
+                    if(isfield(mp.P4, 'Rfillet')); inputs.Rfillet = mp.P4.Rfillet; end
 
                     if(mp.full.flagGenLS)
                         inputs.Nbeam = mp.P4.full.Nbeam; 

@@ -238,7 +238,7 @@ switch lower(mp.layout)
             case 'wfirst_phaseb_proper'
                 Eout = prop_run('model_full_wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
             case 'roman_phasec_proper'
-                Eout = prop_run('roman_phasec_jpl_mswc', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
+                Eout = prop_run('roman_phasec_efc_jpl', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         end
         
         if(normFac~=0)
