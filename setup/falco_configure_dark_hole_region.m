@@ -141,5 +141,6 @@ mp.Fend.corr.maskBool = logical(mp.Fend.corr.mask);
 mp.Fend.score.inds = find(mp.Fend.score.mask~=0);
 mp.Fend.score.maskBool = logical(mp.Fend.score.mask);
 
+mp.Fend.scoreInCorr = mp.Fend.score.mask(mp.Fend.corr.mask); % vector indicating which pixels in vectorized correction region are also in the scoring region
 
 end

@@ -68,7 +68,8 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             Im = falco_get_summed_image(mp);
             mp = falco_compute_PSF_norm_factor(mp);
             mp.estimator = 'perfect';
-            Etrue = falco_est_perfect_Efield_with_Zernikes(mp);
+            ev = falco_est_perfect_Efield_with_Zernikes(mp);
+            Etrue = ev.Eest;
             mp.estimator = 'pwp-bp-square';
             ev.dummy = 1;
             ev = falco_est_pairwise_probing(mp, ev);

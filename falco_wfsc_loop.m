@@ -30,7 +30,7 @@ for Itr = 1:mp.Nitr
     end
     fprintf(' ]\n')
     
-    out = store_dm_command_history(mp, out);
+    out = store_dm_command_history(mp, out, Itr);
 
     %% Normalization and throughput calculations
     
@@ -61,7 +61,9 @@ for Itr = 1:mp.Nitr
     %% Wavefront Estimation
     
     if (Itr > 1); EestPrev = ev.Eest; end % save previous estimate for Delta E plot
-    [ev, out] = falco_est(mp, ev, out, jacStruct);
+    ev = falco_est(mp, ev, jacStruct);
+    
+    out = store_intensities(mp, out, ev, Itr);
     
     %% Progress plots (PSF, NI, and DM surfaces)
 
@@ -116,20 +118,20 @@ for Itr = 1:mp.Nitr
 
     %--REPORTING NORMALIZED INTENSITY
     if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
-        fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n\n',...
+        fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
             out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
         if ~mp.flagSim
-            fprintf('\n\n');
+            fprintf('\n');
         end
     else
-        fprintf('Previous Measured NI:\t\t\t %.2e \n\n', out.InormHist(Itr))
+        fprintf('Previous Measured NI:\t\t\t %.2e \n', out.InormHist(Itr))
     end
 
     %% Save 'out' structure after each iteration in case the trial terminates early.
     fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
-    fprintf('\nSaving data snippet to:\n\t%s\n', fnSnippet)
+    fprintf('Saving data snippet to \n%s\n', fnSnippet)
     save(fnSnippet, 'out');
-    fprintf('...done.\n')
+    fprintf('...done.\n\n')
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
@@ -140,14 +142,16 @@ end %--END OF ESTIMATION + CONTROL LOOP
 %% Update 'out' structure and progress plot one last time
 Itr = Itr + 1;
 
-out = store_dm_command_history(mp, out);
+out = store_dm_command_history(mp, out, Itr);
 
 [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
 out.thput(Itr) = thput;
 mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true
 
-[out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
-
+if isfield(cvar, 'Im')
+    ev.Im = cvar.Im;
+    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
+end
 %% Save out an abridged workspace
 
 fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
@@ -191,12 +195,13 @@ end %--END OF main FUNCTION
 % Local Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function out = store_dm_command_history(mp, out)
+function out = store_dm_command_history(mp, out, Itr)
     if isfield(mp, 'dm1'); if(isfield(mp.dm1,'V'));  out.dm1.Vall(:,:,Itr) = mp.dm1.V;  end;  end
     if isfield(mp, 'dm2'); if(isfield(mp.dm2,'V'));  out.dm2.Vall(:,:,Itr) = mp.dm2.V;  end;  end
     if isfield(mp, 'dm8'); if(isfield(mp.dm8,'V'));  out.dm8.Vall(:,Itr) = mp.dm8.V(:);  end;  end
     if isfield(mp, 'dm9'); if(isfield(mp.dm9,'V'));  out.dm9.Vall(:,Itr) = mp.dm9.V(:);  end;  end
 end
+
 
 function Esim = compute_simulated_efield_for_delta_efield_plot(mp)
 
@@ -210,11 +215,72 @@ function Esim = compute_simulated_efield_for_delta_efield_plot(mp)
     end
 end
 
+
+function out = store_intensities(mp, out, ev, Itr)
+
+    %% Calculate the average measured, coherent, and incoherent intensities
+    
+    % Apply subband weights and then sum over subbands
+    Iest = abs(ev.Eest).^2;
+    Iinco = ev.IincoEst;
+    for iMode = 1:mp.jac.Nmode
+        iSubband = mp.jac.sbp_inds(iMode);
+        Iest(:, iMode) = mp.sbp_weights(iSubband) * Iest(:, iMode);
+        Iinco(:, iMode) = mp.sbp_weights(iSubband) * Iinco(:, iMode);
+    end
+    IestAllBands = sum(Iest, 2);
+    IincoAllBands = sum(Iinco, 2);
+    
+    
+    % Put intensities back into 2-D arrays to use correct indexing of scoring region.
+    % Modulated
+    Iest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+    Iest2D(mp.Fend.corr.maskBool) = IestAllBands(:);
+    out.IestScoreHist(Itr) = mean(Iest2D(mp.Fend.score.maskBool));
+    out.IestCorrHist(Itr) = mean(Iest2D(mp.Fend.corr.maskBool));
+    % Unmodulated
+    Iinco2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+    Iinco2D(mp.Fend.corr.maskBool) = IincoAllBands(:);
+    out.IincoScoreHist(Itr) = mean(Iinco2D(mp.Fend.score.maskBool));
+    out.IincoCorrHist(Itr) = mean(Iinco2D(mp.Fend.corr.maskBool));
+
+    % Measured
+    out.IrawScoreHist(Itr) = mean(ev.Im(mp.Fend.score.maskBool));
+    out.IrawCorrHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
+    out.InormHist(Itr) = out.IrawCorrHist(Itr); % InormHist is a vestigial variable
+    
+    %% Calculate the measured, coherent, and incoherent intensities by subband
+    
+    % measured intensities
+    for iSubband = 1:mp.Nsbp
+        imageMeas = squeeze(ev.imageArray(:, :, 1, iSubband));
+        out.normIntMeasCorr(Itr, iSubband) = mean(imageMeas(mp.Fend.corr.maskBool));
+        out.normIntMeasScore(Itr, iSubband) = mean(imageMeas(mp.Fend.score.maskBool));
+        clear im        
+    end
+    
+    % estimated
+    for iMode = 1:(mp.Nsbp*mp.compact.star.count)
+        
+        imageModVec = abs(ev.Eest(:, iMode)).^2;
+        imageUnmodVec = ev.IincoEst(:, iMode);
+        
+        out.normIntModCorr(Itr, iMode) = mean(imageModVec);
+        out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
+        
+        out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
+        out.normIntModScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+    end
+    
+end
+
+
 function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis)
 
+    Im = ev.Im;
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
-
+    
     if isfield(mp, 'testbed')
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;

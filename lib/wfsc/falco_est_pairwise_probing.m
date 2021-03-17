@@ -470,10 +470,9 @@ end %End Kalman Filter Computation
 ev.Eest(:, modeIndex) = Eest;
 ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
 
-Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-Eest2D(mp.Fend.corr.maskBool) = Eest;
-
 if mp.flagPlot
+    Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+    Eest2D(mp.Fend.corr.maskBool) = Eest;
     figure(701); imagesc(real(Eest2D)); title('real(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
     figure(702); imagesc(imag(Eest2D)); title('imag(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
     figure(703); imagesc(log10(abs(Eest2D).^2)); title('abs(Eest)^2', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
@@ -486,11 +485,6 @@ end %--End of loop over stars
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
-
-%--Calculate the mean normalized intensity over the whole dark hole at all
-% wavelengths.
-ev.Iest = abs(ev.Eest).^2;
-ev.InormEst = mean(ev.Iest(:));
 
 mp.isProbing = false;
 

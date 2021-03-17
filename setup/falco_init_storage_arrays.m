@@ -54,6 +54,13 @@ function out = falco_init_storage_arrays(mp)
     out.IincoCorrHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in correction region of dark hole.
     out.IincoScoreHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in scoring region of dark hole.
     
+    out.normIntMeasCorr = zeros(mp.Nitr, mp.Nsbp); % Measured raw NI in correction region of dark hole.
+    out.normIntMeasScore = zeros(mp.Nitr, mp.Nsbp); % Measured raw NI in scoring region of dark hole.
+    out.normIntModCorr = zeros(mp.Nitr, mp.Nsbp*mp.compact.star.count); % Estimated modulated NI in correction region of dark hole.
+    out.normIntModScore = zeros(mp.Nitr, mp.Nsbp*mp.compact.star.count); % Estimated modulated NI in scoring region of dark hole.
+    out.normIntUnmodCorr = zeros(mp.Nitr, mp.Nsbp*mp.compact.star.count); % Estimated unmodulated NI in correction region of dark hole.
+    out.normIntUnmodScore = zeros(mp.Nitr, mp.Nsbp*mp.compact.star.count); % Estimated unmodulated NI in correction region of dark hole.
+    
     %--Storage array for throughput at each iteration
     mp.thput_vec = zeros(mp.Nitr+1, 1);
     
