@@ -19,7 +19,7 @@ for Itr = 1:mp.Nitr
     ev.Itr = Itr;
     cvar.Itr = Itr;
     
-    mp = falco_get_PSF_norm_factor(mp);
+    mp = falco_compute_PSF_norm_factor(mp);
     
     %% Updated DM data
     

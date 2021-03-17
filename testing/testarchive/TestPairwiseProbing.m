@@ -66,7 +66,7 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             mp.P1.full.E = exp(2*pi*1j/mp.lambda0*errormap);
             mp.P1.compact.E = exp(2*pi*1j/mp.lambda0*errormap);
             Im = falco_get_summed_image(mp);
-            mp = falco_get_PSF_norm_factor(mp);
+            mp = falco_compute_PSF_norm_factor(mp);
             mp.estimator = 'perfect';
             Etrue = falco_est_perfect_Efield_with_Zernikes(mp);
             mp.estimator = 'pwp-bp-square';
