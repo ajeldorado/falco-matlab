@@ -8,67 +8,64 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
-% Take initial broadband image 
-Im = falco_get_summed_image(mp);
-
-% Begin the Estimation+Control Iterations
 for Itr = 1:mp.Nitr
+    
+    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
+    
+    if mp.flagSim
+        fprintf('Zernike modes used in this Jacobian:\t'); fprintf('%d ',mp.jac.zerns); fprintf('\n');
+    end
     
     ev.Itr = Itr;
     cvar.Itr = Itr;
     
-    %%
-    %--Start of new estimation+control iteration
-    fprintf(['Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
-
-    %--Re-compute the starlight normalization factor for the compact and full models (to convert images to normalized intensity). No tip/tilt necessary.
     mp = falco_get_PSF_norm_factor(mp);
     
     %% Updated DM data
-    %--Change the selected DMs if using the scheduled EFC controller
+    
+    %--Change which DMs are used
     switch lower(mp.controller)
         case{'plannedefc'} 
             mp.dm_ind = mp.dm_ind_sched{Itr};
     end
-    %--Report which DMs are used in this iteration
-    fprintf('DMs to be used in this iteration = ['); for jj = 1:length(mp.dm_ind); fprintf(' %d',mp.dm_ind(jj)); end; fprintf(' ]\n');
+    
+    fprintf('DMs to be used in this iteration = [')
+    for jj = 1:length(mp.dm_ind)
+        fprintf(' %d', mp.dm_ind(jj)); 
+    end
+    fprintf(' ]\n')
 
-    %--Fill in History of DM commands to Store
+    %--Fill in DM command history
     if isfield(mp, 'dm1'); if(isfield(mp.dm1,'V'));  out.dm1.Vall(:,:,Itr) = mp.dm1.V;  end;  end
     if isfield(mp, 'dm2'); if(isfield(mp.dm2,'V'));  out.dm2.Vall(:,:,Itr) = mp.dm2.V;  end;  end
     if isfield(mp, 'dm8'); if(isfield(mp.dm8,'V'));  out.dm8.Vall(:,Itr) = mp.dm8.V(:);  end;  end
     if isfield(mp, 'dm9'); if(isfield(mp.dm9,'V'));  out.dm9.Vall(:,Itr) = mp.dm9.V(:);  end;  end
 
-    %--Compute the DM surfaces
+    %--Compute the DM surfaces for plotting
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
 
     %% Calculate the core throughput (at higher resolution to be more accurate)
+    
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr) = thput;
     if mp.flagFiber
         mp.thput_vec(Itr) = max(thput);
     else
         mp.thput_vec(Itr) = thput;
-    end
-    
-    %% Updated selection of Zernike modes targeted by the controller
-    %--Decide with Zernike modes to include in the Jacobian
-    if Itr == 1; mp.jac.zerns0 = mp.jac.zerns; end
-    fprintf('Zernike modes used in this Jacobian:\t'); fprintf('%d ',mp.jac.zerns); fprintf('\n');
-    
-    %--Re-compute the Jacobian weights
-    mp = falco_set_jacobian_weights(mp); 
+    end  
 
-    %% Compute the control Jacobians for each DM
+    %% Control Jacobian
+
+    mp = falco_set_jacobian_weights(mp); 
+    
     if (Itr == 1) || any(mp.relinItrVec == Itr)
-        jacStruct =  model_Jacobian(mp); %--Get structure containing Jacobians
+        jacStruct =  model_Jacobian(mp);
     end
     
-    %% Cull weak actuators from the Jacobian
     [mp, jacStruct] = falco_ctrl_cull_weak_actuators(mp, cvar, jacStruct);
 
-    %% Load the improved Jacobian if using the E-M technique
+    % Load the improved Jacobian if using the E-M technique
     if mp.flagUseLearnedJac
         jacStructLearned = load('jacStructLearned.mat');
         if any(mp.dm_ind == 1);  jacStruct.G1 = jacStructLearned.G1;  end
@@ -156,11 +153,11 @@ for Itr = 1:mp.Nitr
     cvar.Eest = Eest;
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
+    
     if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
-        Im = cvar.Im;
-        out.InormHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
-        out.IrawCorrHist(Itr+1) = mean(Im(mp.Fend.corr.maskBool));
-        out.IrawScoreHist(Itr+1) = mean(Im(mp.Fend.score.maskBool));
+        out.InormHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
+        out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
+        out.IrawScoreHist(Itr+1) = mean(cvar.Im(mp.Fend.score.maskBool));
     end
     
     %--Enforce constraints on DM commands 
@@ -194,29 +191,23 @@ for Itr = 1:mp.Nitr
         fprintf('Previous Measured NI:\t\t\t %.2e \n\n', out.InormHist(Itr))
     end
 
-    %--Save out DM commands after each iteration in case the trial crashes part way through.
-    if mp.flagSaveEachItr
-        fprintf('Saving DM commands for this iteration...')
-        if any(mp.dm_ind == 1); DM1V = mp.dm1.V; else; DM1V = 0; end
-        if any(mp.dm_ind == 2); DM2V = mp.dm2.V; else; DM2V = 0; end
-        if any(mp.dm_ind == 8); DM8V = mp.dm8.V; else; DM8V = 0; end
-        if any(mp.dm_ind == 9); DM9V = mp.dm9.V; else; DM9V = 0; end
-        Nitr = mp.Nitr;
-        fnWS = sprintf('%sws_%s_Iter%dof%d.mat', mp.path.wsInProgress, mp.runLabel, Itr, mp.Nitr);
-        save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','out')
-        fprintf('done.\n\n')
-    end
+    %--Save 'out' structure after each iteration in case the trial terminates early.
+    fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
+    fprintf('\nSaving data snippet to:\n\t%s\n', fnSnippet)
+    save(fnSnippet, 'out');
+    fprintf('...done.\n')
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
-    if mp.flagTrainModel
-        ev.Itr = Itr;
-        mp = falco_train_model(mp,ev);
-    end
+    if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
 
 end %--END OF ESTIMATION + CONTROL LOOP
 
-%% Update progress plot one last time
+%% Update 'out' structure and progress plot one last time
 Itr = Itr + 1;
+
+% Calculate the core throughput (at higher resolution to be more accurate)
+[mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
+out.thput(Itr) = thput;
 
 %--Compute the DM surfaces
 if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  end
@@ -228,13 +219,13 @@ if any(mp.dm_ind == 2); out.dm2.Vall(:,:,Itr) = mp.dm2.V; end
 if any(mp.dm_ind == 8); out.dm8.Vall(:,Itr) = mp.dm8.V; end
 if any(mp.dm_ind == 9); out.dm9.Vall(:,Itr) = mp.dm9.V; end
 
-%--Calculate the core throughput (at higher resolution to be more accurate)
-[mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
-if mp.flagFiber
-    mp.thput_vec(Itr) = max(thput);
-else
-    mp.thput_vec(Itr) = thput;
-end
+% %--Calculate the core throughput (at higher resolution to be more accurate)
+% [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
+% if mp.flagFiber
+%     mp.thput_vec(Itr) = max(thput);
+% else
+%     mp.thput_vec(Itr) = thput;
+% end
 
 if isfield(mp, 'testbed')
     out.InormHist_tb.total = out.InormHist; 
@@ -266,31 +257,12 @@ else
     hProgress = falco_plot_progress(hProgress,mp,Itr,out.InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
 end
 
-%% Save the final DM commands separately for faster reference
-if isfield(mp, 'dm1'); if(isfield(mp.dm1, 'V')); out.DM1V = mp.dm1.V; end; end
-if isfield(mp, 'dm2'); if(isfield(mp.dm2, 'V')); out.DM2V = mp.dm2.V; end; end
-switch upper(mp.coro)
-    case{'HLC', 'EHLC'}
-        if isfield(mp.dm8, 'V'); out.DM8V = mp.dm8.V; end
-        if isfield(mp.dm9, 'V'); out.DM9V = mp.dm9.V; end
-end
-
 %% Save out an abridged workspace
 
-%--Variables to save out:
-% contrast vs iter
-% regularization history
-%  DM1surf,DM1V, DM2surf,DM2V, DM8surf,DM9surf, fpm sampling, base pmgi thickness, base nickel thickness, dm_tilts, aoi, ...
-% to reproduce your basic design results of NI, throughput, etc..
-
-out.thput = mp.thput_vec;
-out.Nitr = mp.Nitr;
-
-fnOut = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
-
-fprintf('\nSaving abridged workspace to file:\n\t%s\n',fnOut)
-save(fnOut,'out');
-fprintf('...done.\n\n')
+fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
+fprintf('\nSaving data snippet to:\n\t%s\n', fnSnippet)
+save(fnSnippet, 'out');
+fprintf('...done.\n')
 
 %% Save out the data from the workspace
 if mp.flagSaveWS

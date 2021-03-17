@@ -56,7 +56,6 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
             testCase.verifyThat(mp.path.jac,IsFolder)
             testCase.verifyThat(mp.path.images,IsFolder)
             testCase.verifyThat(mp.path.dm,IsFolder)
-            %testCase.verifyThat(mp.path.wsInProgress,IsFolder)
             
             testCase.verifyThat(mp.path, HasField('falco'))
 %             testCase.verifyThat(mp.path, HasField('proper'))
@@ -66,7 +65,6 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
             testCase.verifyThat(mp.path, HasField('jac'))
             testCase.verifyThat(mp.path, HasField('images'))
             testCase.verifyThat(mp.path, HasField('dm'))
-            %testCase.verifyThat(mp.path, HasField('wsInProgress'))
         end
         function testBooleanFlags(testCase)            
             import matlab.unittest.constraints.HasField
