@@ -9,6 +9,7 @@
 % INPUTS
 % ------
 % mp : structure of model parameters
+% out : structure of output variables
 % ev : structure of estimator variables
 % jacStruct : structure containing the Jacobians
 %
@@ -16,7 +17,7 @@
 % -------
 % ev : structure of estimator variables
 
-function ev = falco_est(mp, ev, jacStruct)
+function [ev, out] = falco_est(mp, ev, out, jacStruct)
 
     if ~mp.est.flagUseJac
         clear jacStruct
@@ -68,5 +69,13 @@ function ev = falco_est(mp, ev, jacStruct)
     Iinco2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
     Iinco2D(mp.Fend.corr.maskBool) = IincoAllBands(:);
     ev.IincoScoreMean = mean(Iinco2D(mp.Fend.score.maskBool));
+    
+    out.IestCorrHist(Itr) = ev.IestCorrMean;
+    out.IestScoreHist(Itr) = ev.IestScoreMean;
+    out.IincoCorrHist(Itr) = ev.IincoCorrMean;
+    out.IincoScoreHist(Itr) = ev.IincoScoreMean;
+    out.InormHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
+    out.IrawCorrHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
+    out.IrawScoreHist(Itr) = mean(ev.Im(mp.Fend.score.maskBool));
 
 end
