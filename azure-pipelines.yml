@@ -7,9 +7,11 @@ trigger:
 - master
 
 # Self-Hosted Agent
-pool: MyPool
+pool: myPool
 
 steps:
+  - bash: echo '##vso[task.prependpath]/usr/local/MATLAB/R2020b/bin'  # Linux agent
+  
   - task: RunMATLABTests@0
     inputs:
       codeCoverageCobertura: 'code-coverage/coverage.xml'
@@ -21,11 +23,12 @@ steps:
     condition: succeededOrFailed()
     inputs:
       testResultsFiles: 'test-results/results.xml'
+      
   - task: PublishCodeCoverageResults@1
     inputs:
       codeCoverageTool: Cobertura
       summaryFileLocation: 'code-coverage/coverage.xml'
-      
+
       
 # #Microsoft-Hosted Agent
 
