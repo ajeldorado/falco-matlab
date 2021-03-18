@@ -134,6 +134,6 @@ function Evec = falco_est_perfect_Efield_with_Zernikes_parfor(ni, ind_list, mp)
     modvar.whichSource = 'star';
     
     E2D = model_full(mp, modvar);
-    Evec = E2D(mp.Fend.corr.inds);
+    Evec = E2D(mp.Fend.corr.maskBool);
 end
 

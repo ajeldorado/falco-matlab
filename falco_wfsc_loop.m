@@ -289,11 +289,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         if ~strcmpi(mp.estimator, 'perfect')
             for si = 1:mp.Nsbp
                 tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.mask) = ev.Eest(:, si);
+                tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
                 Im_tb.E(:, :, si) = tmp; % modulated component 
  
                 tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.mask) = ev.IincoEst(:, si);
+                tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
                 Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
 
                 out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
