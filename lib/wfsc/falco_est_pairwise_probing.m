@@ -105,7 +105,6 @@ end
 %% Initialize output arrays
 ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
-ev.I0mean = 0;
 ev.IprobedMean = 0;
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 
@@ -147,8 +146,7 @@ for iSubband = 1:mp.Nsbp
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     
     if iStar == 1 % Already includes all stars, so don't sum over star loop
-        ev.I0mean = ev.I0mean + mp.sbp_weights(iSubband)*I0; %--Getting the sub-bandpass-averaged Inorm
-        ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % band-averaged image for plotting
+        ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
 
         %--Store values for first image and its DM commands
         ev.imageArray(:, :, whichImage, iSubband) = I0;
