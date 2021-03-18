@@ -33,12 +33,10 @@ if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco filesep 'm
 if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco filesep 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
 if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco filesep 'data' filesep 'images' filesep]; end % Store all full, reduced images here
 if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' filesep 'DM' filesep]; end % Store DM command maps here
-if(isfield(mp.path,'wsInProgress')==false); mp.path.wsInProgress = [mp.path.falco filesep 'data' filesep 'wsInProgress' filesep]; end % Store in progress workspace data here
 
 %% Optional/hidden boolean flags
 %--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
-if(isfield(mp,'flagSaveEachItr')==false);  mp.flagSaveEachItr = false;  end  %--Whether to save out the performance at each iteration. Useful for long trials in case it crashes or is stopped early.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
 %--Jacobian or controller related
 if(isfield(mp,'flagTrainModel')==false);  mp.flagTrainModel = false;  end  %--Whether to call the Expectation-Maximization (E-M) algorithm to improve the linearized model. 

@@ -37,7 +37,7 @@ mp = falco_set_dm_surface_padding(mp); %% DM Surface Array Sizes for Angular Spe
 
 mp = falco_set_initial_Efields(mp);
 
-mp = falco_get_PSF_norm_factor(mp);
+mp = falco_compute_PSF_norm_factor(mp);
 % mp = falco_gen_contrast_over_NI_map(mp); %--Contrast to Normalized Intensity Map Calculation (NOT INCLUDED YET)
 
 out = falco_init_storage_arrays(mp); %% Initialize Arrays to Store Performance History

@@ -74,9 +74,9 @@ if any(mp.dm_ind == 2);  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.
 
 % Definitions:
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
-ev.Icube = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1+2*Npairs);
-if whichDM == 1;  ev.Vcube.dm1 = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs);  end
-if whichDM == 2;  ev.Vcube.dm2 = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs);  end
+ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1+2*Npairs, mp.Nsbp);
+if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, mp.Nsbp);  end
+if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, mp.Nsbp);  end
 
 %--Generate evenly spaced probes along the complex unit circle
 % NOTE: Nprobes=Npairs*2;   
@@ -151,9 +151,9 @@ for iSubband = 1:mp.Nsbp
         ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % band-averaged image for plotting
 
         %--Store values for first image and its DM commands
-        ev.Icube(:, :, whichImage) = I0;
-        if whichDM == 1;  ev.Vcube.dm1(:, :, whichImage) = mp.dm1.V;  end
-        if whichDM == 2;  ev.Vcube.dm2(:, :, whichImage) = mp.dm2.V;  end
+        ev.imageArray(:, :, whichImage, iSubband) = I0;
+        if whichDM == 1;  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
+        if whichDM == 2;  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
     end
     
     %--Compute the average Inorm in the scoring and correction regions
@@ -202,9 +202,9 @@ for iSubband = 1:mp.Nsbp
         ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
 
         %--Store probed image and its DM settings
-        ev.Icube(:, :, whichImage) = Im;
-        if whichDM == 1;  ev.Vcube.dm1(:, :, whichImage) = mp.dm1.V;  end
-        if whichDM == 2;  ev.Vcube.dm2(:, :, whichImage) = mp.dm2.V;  end
+        ev.imageArray(:, :, whichImage, iSubband) = Im;
+        if whichDM == 1;  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
+        if whichDM == 2;  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
 
         %--Report results
         probeSign = ['-', '+'];
@@ -470,10 +470,9 @@ end %End Kalman Filter Computation
 ev.Eest(:, modeIndex) = Eest;
 ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
 
-Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-Eest2D(mp.Fend.corr.maskBool) = Eest;
-
 if mp.flagPlot
+    Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+    Eest2D(mp.Fend.corr.maskBool) = Eest;
     figure(701); imagesc(real(Eest2D)); title('real(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
     figure(702); imagesc(imag(Eest2D)); title('imag(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
     figure(703); imagesc(log10(abs(Eest2D).^2)); title('abs(Eest)^2', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
@@ -486,11 +485,6 @@ end %--End of loop over stars
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
-
-%--Calculate the mean normalized intensity over the whole dark hole at all
-% wavelengths.
-ev.Iest = abs(ev.Eest).^2;
-ev.InormEst = mean(ev.Iest(:));
 
 mp.isProbing = false;
 

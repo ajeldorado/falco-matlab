@@ -26,6 +26,7 @@ function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
 
             if mp.flagPlot            
                 figure(50+si); set(gcf, 'Color', 'w');
+                if Itr > 2; clf(50+si); end
                 fs = 18;
 
                 hModelAmp = subplot(2,2,1); % Save the handle of the subplot

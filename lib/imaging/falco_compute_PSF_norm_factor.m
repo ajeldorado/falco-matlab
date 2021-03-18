@@ -21,7 +21,7 @@
 % -------
 % mp : structure of model parameters
 
-function mp = falco_get_PSF_norm_factor(mp)
+function mp = falco_compute_PSF_norm_factor(mp)
 
 %--Different normalization factor used when comparing to PROPER model:
 mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2));
