@@ -38,7 +38,7 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
 %     folder running FALCO's tests.
 % # *testBooleanFlags:* verify that the output from
 %     falco_set_optional_variables.m contains the boolean fields
-%     flagSaveWS, flagSaveEachItr, flagSVD, flagUseLearnedJac, flagUseJac,
+%     flagSaveWS, flagSVD, flagUseLearnedJac, flagUseJac,
 %     and flagUseModel. In addition we verify that the value of all these
 %     fields is false.
 %
@@ -70,14 +70,12 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
             import matlab.unittest.constraints.HasField
             mp = falco_set_optional_variables(testCase.mp);
             testCase.verifyThat(mp, HasField('flagSaveWS'))
-            testCase.verifyThat(mp, HasField('flagSaveEachItr'))
             testCase.verifyThat(mp, HasField('flagSVD'))
             testCase.verifyThat(mp, HasField('flagUseLearnedJac'))
             testCase.verifyThat(mp.est, HasField('flagUseJac'))
             testCase.verifyThat(mp.ctrl, HasField('flagUseModel'))
             
             testCase.verifyFalse(mp.flagSaveWS,false)
-            testCase.verifyFalse(mp.flagSaveEachItr,false)
             testCase.verifyFalse(mp.flagSVD,false)
             testCase.verifyFalse(mp.flagUseLearnedJac,false)
             testCase.verifyFalse(mp.est.flagUseJac,false)
