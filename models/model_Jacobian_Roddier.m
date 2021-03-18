@@ -158,7 +158,7 @@ if(whichDM==1)
             
             if(mp.useGPU);EFend = gather(EFend) ;end
             
-            Gmode(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = EFend(mp.Fend.corr.maskBool)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
@@ -228,7 +228,7 @@ if(whichDM==2)
 
             if(mp.useGPU);EFend = gather(EFend) ;end
             
-            Gmode(:,Gindex) = EFend(mp.Fend.corr.inds)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            Gmode(:,Gindex) = EFend(mp.Fend.corr.maskBool)/sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         Gindex = Gindex + 1;
     end
