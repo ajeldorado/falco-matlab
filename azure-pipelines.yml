@@ -7,7 +7,7 @@ trigger:
 - master
 
 # Self-Hosted Agent
-pool: myPool
+pool: Default
 
 steps:
   - bash: echo '##vso[task.prependpath]/usr/local/MATLAB/R2020b/bin'  # Linux agent
