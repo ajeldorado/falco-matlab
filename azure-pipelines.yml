@@ -6,13 +6,12 @@
 trigger:
 - master
 
-pool:
-  vmimage: Ubuntu 16.04
+# Self-Hosted Agent
+pool: Default
 
 steps:
-  - task: InstallMATLAB@0
-    inputs:
-      release: R2020a
+  - bash: echo '##vso[task.prependpath]/usr/local/MATLAB/R2020b/bin'  # Linux agent
+  
   - task: RunMATLABTests@0
     inputs:
       codeCoverageCobertura: 'code-coverage/coverage.xml'
@@ -24,7 +23,34 @@ steps:
     condition: succeededOrFailed()
     inputs:
       testResultsFiles: 'test-results/results.xml'
+      
   - task: PublishCodeCoverageResults@1
     inputs:
       codeCoverageTool: Cobertura
       summaryFileLocation: 'code-coverage/coverage.xml'
+
+      
+# #Microsoft-Hosted Agent
+
+#pool:
+#  vmimage: Ubuntu 16.04
+#
+#steps:
+#  - task: InstallMATLAB@0
+#    inputs:
+#      release: R2020a
+#  - task: RunMATLABTests@0
+#    inputs:
+#      codeCoverageCobertura: 'code-coverage/coverage.xml'
+#      selectByFolder: 'testing/testarchive'
+#      sourceFolder: 'lib:models:setup'
+#      testResultsJUnit: 'test-results/results.xml'
+#
+#  - task: PublishTestResults@1
+#    condition: succeededOrFailed()
+#    inputs:
+#      testResultsFiles: 'test-results/results.xml'
+#  - task: PublishCodeCoverageResults@1
+#    inputs:
+#      codeCoverageTool: Cobertura
+#      summaryFileLocation: 'code-coverage/coverage.xml'

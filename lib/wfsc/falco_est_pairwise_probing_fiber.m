@@ -104,7 +104,7 @@ else
     ev.Est = zeros(mp.Fend.Nfiber, mp.Nsbp);
     ev.IincoEst = zeros(mp.Fend.Nfiber, mp.Nsbp);
 end
-ev.I0mean = 0;
+ev.Im = 0;
 ev.IprobedMean = 0;
 
 %% Get images and perform estimates in each sub-bandpass
@@ -140,7 +140,7 @@ for si=1:mp.Nsbp
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImg = 1;
     I0 = max(max(falco_get_sbp_image_fiber(mp,si)));
-    ev.I0mean = ev.I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
+    ev.Im = ev.Im+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
 
     %--Store values for first image and its DM commands
     ev.Icube(:,:, whichImg) = I0;

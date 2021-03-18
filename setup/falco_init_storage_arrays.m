@@ -62,10 +62,12 @@ function out = falco_init_storage_arrays(mp)
     out.normIntUnmodScore = zeros(mp.Nitr, mp.Nsbp*mp.compact.star.count); % Estimated unmodulated NI in correction region of dark hole.
     
     %--Storage array for throughput at each iteration
+    out.thput = zeros(mp.Nitr+1, 1);
     mp.thput_vec = zeros(mp.Nitr+1, 1);
     
-    %--Image resolution
+    %--Variables related to final image
     out.Fend.res = mp.Fend.res;
+    out.Fend.scoreInCorr = mp.Fend.scoreInCorr;
     out.Fend.corr.maskBool = mp.Fend.corr.maskBool;
     out.Fend.score.maskBool = mp.Fend.score.maskBool;
 
