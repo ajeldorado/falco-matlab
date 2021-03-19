@@ -42,7 +42,7 @@ for Itr = 1:mp.Nitr
 
     %% Control Jacobian
 
-    mp = falco_set_jacobian_weights(mp); 
+    mp = falco_set_jacobian_modal_weights(mp); 
     
     relinearizeThisIter = any(mp.relinItrVec == Itr);
     if (Itr == 1) || relinearizeThisIter

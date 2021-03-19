@@ -1,4 +1,4 @@
-%% Test falco_set_jacobian_weights.m
+%% Test falco_set_spectral_properties.m
 %
 % We define some tests for falco_set_spectral_properties.m to test  
 % responses to different input parameters. 
