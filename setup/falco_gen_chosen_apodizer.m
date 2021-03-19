@@ -1,19 +1,18 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to generate the apodizer representation based on configuration settings.
+% Generate the chosen apodizer mask, if any.
 %
-% 
-% REVISION HISTORY:
-% ----------------
-% Modified on 2019-06-19 by A.J. Riggs to be greatly simplified. Is now
-% independent of the coronagraph type.
-% Modified on 2019-06-13 by Garreth Ruane to update how the vortex apodizer
-% is called.
-% Created on 2018-05-29 by A.J. Riggs.
+% INPUTS
+% ------
+% mp : structure of model parameters
+%
+% OUTPUTS
+% -------
+% mp : structure of model parameters
 
 function mp = falco_gen_chosen_apodizer(mp)
 

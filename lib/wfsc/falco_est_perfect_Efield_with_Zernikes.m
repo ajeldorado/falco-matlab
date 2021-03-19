@@ -1,16 +1,18 @@
-% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
 % Return the perfect-knowledge E-field from the full model for
 % the all the modes (combinations of subband, Zernike, and star)
 %
 % INPUTS
+% ------
 % mp : structure of model parameters
 %
 % OUTPUTS
+% -------
 % ev : structure of estimation variables
 
 function ev = falco_est_perfect_Efield_with_Zernikes(mp)
@@ -136,4 +138,3 @@ function Evec = falco_est_perfect_Efield_with_Zernikes_parfor(ni, ind_list, mp)
     E2D = model_full(mp, modvar);
     Evec = E2D(mp.Fend.corr.maskBool);
 end
-

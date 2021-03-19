@@ -4,43 +4,16 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Function to estimate the final focal plane electric field via 
-%  pair-wise probing and batch process estimation.
+% Estimate the final focal plane electric field (as measured through a
+% fiber) via pair-wise probing. 
 %
-%--References for the algorithms and their usage:
-% A. Give'on, B. Kern, and S. Shaklan, "Pair-wise, deformable mirror, 
-% image plane-based diversity electric field estimation for high contrast 
-% coronagraphy," in Proceedings of SPIE, vol. 8151, p. 815110, 2011.
+% INPUTS
+% mp : structure of model parameters
 %
-% T. D. Groff and N. J. Kasdin, "Kalman filtering techniques for focal plane 
-% electric field estimation," Journal of the Optical Society of America A, 
-% vol. 30, no. 1, pp. 128-139, 2013.
-%
-%
-%--INPUTS
-% x_in: Scalar value.
-%
-%--OUTPUTS
-%  x_out: even-valued integer value
-%
-%--REVISION HISTORY
-% Modified on 2019-02-25 by A.J. Riggs to include the batch process
-%   estimator and Kalman filter in the same file since their setup is the same.
-% Modified on 2019-02-06 by A.J. Riggs for the updated FALCO syntax.
-% Modified on 2018-04-23 by A.J. Riggs from the Princeton HCIL lab code.
-% Created on 2015-02-19 by A.J. Riggs at Princeton University.
-%
-%
-%--New variables for Kalman filter
-%  - mp.est.ItrStartKF:  Which correction iteration to start recursive estimate
-%  - mp.est.tExp
-%  - mp.est.num_im
-%  - mp.readNoiseStd
-%  - mp.peakCountsPerPixPerSec
-%  - mp.est.Qcoef
-%  - mp.est.Rcoef
+% OUTPUTS
+% ev : structure of estimation variables
 
-function [ev] = falco_est_pairwise_probing_fiber(mp,varargin)
+function [ev] = falco_est_pairwise_probing_fiber(mp, varargin)
 
 %--If there is a second input, it is the Jacobian structure
 if(size(varargin, 2)==1)
