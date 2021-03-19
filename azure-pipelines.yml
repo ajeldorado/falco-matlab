@@ -23,7 +23,7 @@ steps:
   - task: RunMATLABTests@0
     inputs:
       codeCoverageCobertura: 'code-coverage/coverage.xml'
-      selectByFolder: 'testing/testarchive'; 'testing/tests_long'
+      selectByFolder: testing/testarchive;testing/tests_long
       sourceFolder: 'lib:models:setup'
       testResultsJUnit: 'test-results/results.xml'
   - task: PublishTestResults@1
