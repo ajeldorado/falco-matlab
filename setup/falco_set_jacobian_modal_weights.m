@@ -1,18 +1,20 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% mp = falco_set_jac_weights(mp)
+% Assign weights to each spectral and Zernike mode in the control Jacobian.
 %
-% Function to set the weights for the Jacobian modes.
+% INPUTS
+% ------
+% mp : structure of model parameters
 %
-% REVISION HISTORY:
-% ----------------
-% Created on 2018-09-17 by A.J. Riggs.
+% OUTPUTS
+% -------
+% mp : structure of model parameters
 
-function mp = falco_set_jacobian_weights(mp)
+function mp = falco_set_jacobian_modal_weights(mp)
     
     %--Which Zernike modes to include in Jacobian. Given as a vector of Noll indices. 1 is the on-axis piston mode.
     mp.jac.Nzern = numel(mp.jac.zerns);

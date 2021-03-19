@@ -1,14 +1,23 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Initial Electric Fields for Star and Exoplanet
+% Define the initial stellar electric field(s) in the compact and full
+% models.
+%
+% INPUTS
+% ------
+% mp : structure of model parameters
+%
+% OUTPUTS
+% -------
+% mp : structure of model parameters
 
 function [mp] = falco_set_initial_Efields(mp)
 
-    if(isfield(mp.P1.full,'E')==false)
+    if ~isfield(mp.P1.full, 'E')
         mp.P1.full.E  = ones(mp.P1.full.Narr ,mp.P1.full.Narr, mp.Nwpsbp, mp.Nsbp);
     else % if loading, pad to the correct size if necessary
         if(size(mp.P1.full.E, 1) ~= mp.P1.full.Narr)
@@ -23,11 +32,7 @@ function [mp] = falco_set_initial_Efields(mp)
         end
     end
     
-    if(isfield(mp,'Eplanet')==false)
-        mp.Eplanet = mp.P1.full.E; % NOTE: Phase ramp added later in propagation model
-    end
-    
-    if(isfield(mp.P1.compact,'E')==false)
+    if ~isfield(mp.P1.compact, 'E')
         mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
     else % if loading, pad to the correct size if necessary
         if(size(mp.P1.compact.E, 1) ~= mp.P1.compact.Narr)

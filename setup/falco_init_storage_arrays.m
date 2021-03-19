@@ -1,10 +1,18 @@
-% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
 % Initialize arrays to store data from each WFSC iteration.
+%
+% INPUTS
+% ------
+% mp : structure of model parameters
+%
+% OUTPUTS
+% -------
+% out : structure of output variables
 
 function out = falco_init_storage_arrays(mp)
 
@@ -67,6 +75,8 @@ function out = falco_init_storage_arrays(mp)
     
     %--Variables related to final image
     out.Fend.res = mp.Fend.res;
+    out.Fend.xisDL = mp.Fend.xisDL;
+    out.Fend.etasDL = mp.Fend.etasDL;
     out.Fend.scoreInCorr = mp.Fend.scoreInCorr;
     out.Fend.corr.maskBool = mp.Fend.corr.maskBool;
     out.Fend.score.maskBool = mp.Fend.score.maskBool;

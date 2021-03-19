@@ -1,12 +1,20 @@
-% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Spatial weighting of pixel intensity in the dark hole
+% Assign weights to the control Jacobian by spatial location.
+%
+% INPUTS
+% ------
+% mp : structure of model parameters
+%
+% OUTPUTS
+% -------
+% mp : structure of model parameters
 
-function mp = falco_set_spatial_weights(mp)
+function mp = falco_set_jacobian_spatial_weights(mp)
 
     [XISLAMD,ETASLAMD] = meshgrid(mp.Fend.xisDL, mp.Fend.etasDL);
     RHOScompact = sqrt(XISLAMD.^2+ETASLAMD.^2);

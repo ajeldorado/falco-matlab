@@ -3,6 +3,16 @@
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
+%
+% Define necessary, lesser-used variables if not already defined.
+% This function exists to enable backwards compatibility when adding new
+% features.
+%
+% INPUTS
+% mp : structure of model parameters
+%
+% OUTPUTS
+% mp : structure of model parameters
 
 function mp = falco_set_optional_variables(mp)
 

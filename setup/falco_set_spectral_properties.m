@@ -1,16 +1,18 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Spectral weighting of images. 
+% Define all spectral properties for the compact and full models.
 %
+% INPUTS
+% ------
+% mp : structure of model parameters
 %
-% REVISION HISTORY:
-% --------------
-% Created by A.J. Riggs on 2019-12-10 by extracting material from falco_init_ws.m.
-% ---------------
+% OUTPUTS
+% -------
+% mp : structure of model parameters
 
 function mp = falco_set_spectral_properties(mp)
 
@@ -112,6 +114,5 @@ mp.full.NlamUnique = length(inds_unique);
 %     end
 % end
 % mp.full.Nlambdas = mp.Nsbp*mp.Nwpsbp;
-
 
 end
