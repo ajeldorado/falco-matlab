@@ -1,29 +1,22 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to handle the output command vectors from the controller.
+% Modify the output command vectors from the controller.
 %
-% ---------------
-% INPUTS:
-% - mp = structure of model parameters
-% - cvar = structure of controller variables
-% - duVec = the vector of delta commands computed by the controller
+% INPUTS
+% ------
+% mp : structure of model parameters
+% cvar : structure of controller variables
+% duVec : vector of delta commands computed by the controller
 %
 % OUTPUTS
-% - mp = structure of model parameters
-% - dDM = structure of the delta control commands separated by DM number.
-%         Also contains the updated array of tied actuator pairs
-%
-% REVISION HISTORY
-% - Created on 2019-02-13 by A.J. Riggs.
-% - Modified on 2019-02-25 by A.J. Riggs to save the delta steps.
-% - Modified on 2019-03-26 by A.J. Riggs to include tied actuators.
-% - Modified on 2019-06-25 by A.J. Riggs to tie actuators that violate the neighbor rule.
-% - Modified on 2019-09-26 by A.J. Riggs to handle DM1 and DM2 actuator 
-% constraints outside this function in a more user-robust way.
+% -------
+% mp : structure of model parameters
+% dDM : structure of the delta control commands separated by DM number.
+%       Also contains the updated array of tied actuator pairs
 
 function [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec)
 

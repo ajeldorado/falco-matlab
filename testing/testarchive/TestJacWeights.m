@@ -1,36 +1,32 @@
-%% Test falco_set_jacobian_weights.m
+%% Test falco_set_jacobian_modal_weights.m
 %
-% We define some tests for falco_set_jacobian_weights.m to test  
-% of error exceptions, and responses to a different input parameters. The 
-% test assumes that the function is not in the path and adds mp.path.falco 
-% to path for testing purposes, and then it removes path after tests are 
-% over. This is done for total independence.
+% We define some tests for falco_set_jacobian_modal_weights.m to test  
+% error exceptions, and responses to a different input parameters. The 
+% test assumes that the user has set the path to FALCO functionality. 
 classdef TestJacWeights < matlab.unittest.TestCase
 %% Properties
 %
-% We defined a function called Parameters.m which when called it generates
-% FALCO default parameters as well as some required parameters to run the
-% main example in ../falco-matlab/main/EXAMPLE_main_WFIRST_LC.m.
+% A presaved file with FALCO parameters was saved and is lodaded to be used
+% by methods. In this case we only use the mp.path.falco + lib/utils to
+% addpath to utils functions to be tested.
     properties
         mp=Parameters();
     end
 
 %% Setup and Teardown Methods
 %
-%  Add and remove path to FALCO functions. The test assumes we do not have
-%  a path to FALCO, so here we add the path to FALCO functionality, and
-%  when the test is done running we remove the path.
+%  Add and remove path to utils functions to be tested.
 %
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco]));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco]))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']))
         end
-    end
+    end    
     
 %% Tests
 %
@@ -45,7 +41,7 @@ classdef TestJacWeights < matlab.unittest.TestCase
 %         verifies this is true.
 % # *testJacWeightsinputs1* Inputs1 test case where mp.estimator = 'perfect',
 %         mp.jac.zerns = 1, mp.jac.Zcoef = 1e-9, mp.Nsbp = 1,
-%         mp.si_ref = ceil(mp.Nsbp/2), and mp = falco_set_jacobian_weights(mp).
+%         mp.si_ref = ceil(mp.Nsbp/2), and mp = falco_set_jacobian_modal_weights(mp).
 %         These inputs generate the following results:  mp.jac.Nzern = 1, 
 %         mp.jac.zerns = 1, mp.jac.Zcoef = Zcoef: 1, mp.jac.weights = 1,
 %         mp.jac.Nmode = 1, mp.jac.weightMat = 1, mp.jac.sbp_inds = 1,
@@ -77,7 +73,7 @@ classdef TestJacWeights < matlab.unittest.TestCase
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
             mp.Nsbp = 2;
             mp.si_ref = ceil(mp.Nsbp/2);
-            testCase.verifyThat(@() falco_set_jacobian_weights(mp),Throws(?MException))
+            testCase.verifyThat(@() falco_set_jacobian_modal_weights(mp),Throws(?MException))
         end
         function testJacWeightserror2(testCase)
             import matlab.unittest.constraints.Throws
@@ -87,7 +83,7 @@ classdef TestJacWeights < matlab.unittest.TestCase
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
             mp.Nsbp = 2;
             mp.si_ref = ceil(mp.Nsbp/2);
-            testCase.verifyThat(@() falco_set_jacobian_weights(mp),Throws(?MException))
+            testCase.verifyThat(@() falco_set_jacobian_modal_weights(mp),Throws(?MException))
         end       
         function testJacWeightsinputs1(testCase)
             mp=testCase.mp;
@@ -96,7 +92,7 @@ classdef TestJacWeights < matlab.unittest.TestCase
             mp.jac.Zcoef = 1e-9;
             mp.Nsbp = 1;
             mp.si_ref = ceil(mp.Nsbp/2);
-            mp = falco_set_jacobian_weights(mp);
+            mp = falco_set_jacobian_modal_weights(mp);
 
             testCase.verifyEqual(1,mp.jac.Nzern);  
             testCase.verifyEqual(1,mp.jac.zerns); 
@@ -114,7 +110,7 @@ classdef TestJacWeights < matlab.unittest.TestCase
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
             mp.Nsbp = 3;
             mp.si_ref = ceil(mp.Nsbp/2);
-            mp = falco_set_jacobian_weights(mp);
+            mp = falco_set_jacobian_modal_weights(mp);
             % Expected Outputs:    
             actSolution1= 3;
             actSolution2= [1, 5, 6];
@@ -141,7 +137,7 @@ classdef TestJacWeights < matlab.unittest.TestCase
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
             mp.Nsbp = 3;
             mp.si_ref = ceil(mp.Nsbp/2);
-            mp = falco_set_jacobian_weights(mp);
+            mp = falco_set_jacobian_modal_weights(mp);
             % Expected Outputs:    
             actSolution1= 3;
             actSolution2= [1, 5, 6];

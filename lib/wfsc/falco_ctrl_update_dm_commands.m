@@ -1,4 +1,4 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,11 +6,13 @@
 %
 % Incorporate delta DM commands into the total DM commands.
 %
-% INPUTS:
+% INPUTS
+% ------
 % mp : structure of model parameters
 % dDM : structure of delta DM commands
 %
-% OUTPUTS:
+% OUTPUTS
+% -------
 % mp : structure of model parameters
 
 function mp = falco_ctrl_update_dm_commands(mp, dDM)

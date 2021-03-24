@@ -30,7 +30,7 @@ switch lower(dm.fitType)
         end
         Vtotal = dm.V + dm.biasMap;
         dm.VtoH = 2*dm.p1.*Vtotal + dm.p2;
-    
+            
     case{'fourier2'}
         if ~isfield(dm, 'a0') || ~isfield(dm, 'a1') || ~isfield(dm, 'a2') || ...
                 ~isfield(dm, 'b1') || ~isfield(dm, 'b2') || ~isfield(dm, 'w')
@@ -41,11 +41,9 @@ switch lower(dm.fitType)
         Vtotal = dm.V + dm.biasMap;
         dm.VtoH = dm.w.*(-dm.a1.*sin(Vtotal.*dm.w) + dm.b1.*cos(Vtotal.*dm.w) + ...
                -2*dm.a2.*sin(2*Vtotal.*dm.w) + 2*dm.b2.*cos(2*Vtotal.*dm.w)); 
-           
+                      
     otherwise
         error('Value of dm.fitType not recognized.')
 end
-
-dm.VtoH = dm.VtoH.*dm.VtoHfudge;
 
 end %--END OF FUNCTION

@@ -3,8 +3,6 @@
 % Any commercial use must be negotiated with the Office of Technology
 % Transfer at the California Institute of Technology.
 % -----------------------------------------------------------------------
-%
-%
 
 function mp = falco_configure_dark_hole_region(mp)
 
@@ -56,6 +54,8 @@ elseif Nzones > 1
     CORR.Neta = size(maskCorr, 1);
     [~, mp.Fend.xisDL, mp.Fend.etasDL] = falco_gen_SW_mask(CORR); % generate coordinates
 end
+mp.Fend.corr.mask = logical(mp.Fend.corr.mask);
+mp.Fend.corr.maskBool = logical(mp.Fend.corr.mask);
 
 % Size of the output image 
 mp.Fend.Nxi  = size(mp.Fend.corr.mask, 2);
@@ -125,6 +125,8 @@ elseif Nzones > 1
     mp.Fend.score.mask = maskScore;
     
 end
+mp.Fend.score.mask = logical(mp.Fend.score.mask);
+mp.Fend.score.maskBool = logical(mp.Fend.score.mask);
 
 %--Number of pixels used in the dark hole
 mp.Fend.corr.Npix = sum(mp.Fend.corr.mask(:));
@@ -133,13 +135,9 @@ mp.Fend.score.Npix = sum(mp.Fend.score.mask(:));
 %--Indices of dark hole pixels and logical masks
 if mp.flagFiber && mp.flagLenslet
     mp.Fend.corr.inds = find(sum(mp.Fend.lenslet.mask,3) ~= 0);
-else
-    mp.Fend.corr.inds = find(mp.Fend.corr.mask~=0);
 end
-mp.Fend.corr.maskBool = logical(mp.Fend.corr.mask);
 
-mp.Fend.score.inds = find(mp.Fend.score.mask~=0);
-mp.Fend.score.maskBool = logical(mp.Fend.score.mask);
-
+%%
+mp.Fend.scoreInCorr = mp.Fend.score.mask(mp.Fend.corr.mask); % vector indicating which pixels in vectorized correction region are also in the scoring region
 
 end

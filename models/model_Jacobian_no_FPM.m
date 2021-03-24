@@ -4,12 +4,12 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%  Wrapper for the simplified optical models used for the fast Jacobian calculation.
-%  The first-order derivative of the DM pokes are propagated through the system.
-%  Does not include unknown aberrations/errors that are in the full model.
+% Wrapper for the simplified optical models used for the fast Jacobian calculation.
+% The first-order derivative of the DM pokes are propagated through the system.
+% Does not include unknown aberrations/errors that are in the full model.
 %
-%  For computing the control Jacobian of the coronagraph with the FPM
-%  removed (but Lyot stop still in place).
+% For computing the control Jacobian of the coronagraph with the FPM
+% removed (but Lyot stop still in place).
 %
 % INPUTS
 % ------
@@ -18,7 +18,7 @@
 % whichDM : which DM number
 %
 % OUTPUTS
-% ------
+% -------
 % Gmode : Jacobian for the specified Zernike mode, DM, star, and subband.
 
 function Gmode = model_Jacobian_no_FPM(mp, iMode, whichDM)

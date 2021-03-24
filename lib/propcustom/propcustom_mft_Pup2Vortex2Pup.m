@@ -11,6 +11,8 @@
 function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, useGPU, varargin)
 
     % Diameter of the central opaque spot is an optional input argument
+    diamSpotLamD = 0;
+    offsetsLamD = [0, 0]; % default
     if length(varargin) == 1
         diamSpotLamD = varargin{1};
     elseif length(varargin) == 2
@@ -18,8 +20,6 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
         offsetsLamD = varargin{2};
     elseif length(varargin) > 1
         error('Too many inputs.')
-    else
-        diamSpotLamD = 0;
     end
     
     showPlots2debug = false; 

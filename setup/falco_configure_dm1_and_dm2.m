@@ -4,10 +4,19 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
+% Flesh out the dm1 and dm2 structures
+%
+% INPUTS
+% ------
+% mp : structure of model parameters
+%
+% OUTPUTS
+% -------
+% mp : structure of model parameters
 
 function mp = falco_configure_dm1_and_dm2(mp)
 
-if any(mp.dm_ind == 1) &&  any(mp.dm_ind == 2)
+if any(mp.dm_ind == 1) && any(mp.dm_ind == 2)
     disp(['DM 1-to-2 Fresnel number (using radius) = ',num2str((mp.P2.D/2)^2/(mp.d_dm1_dm2*mp.lambda0))]);
 end
 
@@ -27,7 +36,7 @@ switch lower(mp.dm1.inf_sign(1))
         mp.dm1.inf0 = -1*mp.dm1.inf0;
     otherwise
         %--Leave coefficient as +1
-end   
+end
 
 %--Create influence function datacubes for each DM
 mp.dm1.centering = mp.centering;

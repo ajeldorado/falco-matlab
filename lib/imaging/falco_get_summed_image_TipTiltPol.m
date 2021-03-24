@@ -71,6 +71,7 @@ function Iout = falco_get_single_sim_image_TipTiltPol(ic,inds_list,mp)
 ilam = inds_list(1,ic);
 itt  = inds_list(2,ic);
 ipol = inds_list(3,ic);
+modvar.starIndex = 1;
 
 %--Get the starlight image
 modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),1);

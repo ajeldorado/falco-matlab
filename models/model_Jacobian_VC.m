@@ -280,7 +280,7 @@ if(whichDM == 1)
                         Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
                         Gmodetemp = Gmodetemp + Eonefiber;
                     end
-                    Gmode(:,Gindex) = Gmodetemp(mp.Fend.corr.inds);
+                    Gmode(:,Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
@@ -289,7 +289,7 @@ if(whichDM == 1)
                     EFend = gather(EFend);
                 end
             
-                Gmode(:, Gindex) = EFend(mp.Fend.corr.inds) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
             end
             
         end
@@ -299,7 +299,7 @@ if(whichDM == 1)
     
     if mp.jac.minimizeNI
        JacOfPeak = model_Jacobian_no_FPM(mp, iMode, whichDM); 
-       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.inds) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
+       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.maskBool) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
     end
     
     Gmode = mp.dm1.weight * Gmode;
@@ -460,7 +460,7 @@ if(whichDM==2)
                         Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
                         Gmodetemp = Gmodetemp + Eonefiber;
                     end
-                    Gmode(:,Gindex) = Gmodetemp(mp.Fend.corr.inds);
+                    Gmode(:,Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
@@ -469,7 +469,7 @@ if(whichDM==2)
                     EFend = gather(EFend);
                 end
             
-                Gmode(:, Gindex) = EFend(mp.Fend.corr.inds) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
             end
         end
         Gindex = Gindex + 1;
@@ -477,7 +477,7 @@ if(whichDM==2)
     
     if mp.jac.minimizeNI
        JacOfPeak = model_Jacobian_no_FPM(mp, iMode, whichDM); 
-       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.inds) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
+       Gmode = Gmode/Epeak - Eocculted(mp.Fend.corr.maskBool) / (Epeak*Epeak) .* repmat(JacOfPeak, [mp.Fend.corr.Npix, 1]);
     end
     
     Gmode = mp.dm2.weight * Gmode;
