@@ -55,5 +55,7 @@ function out = falco_init_storage_arrays(mp)
     
     %--Image resolution
     out.Fend.res = mp.Fend.res;
+    out.Fend.corr.maskBool = mp.Fend.corr.maskBool;
+    out.Fend.score.maskBool = mp.Fend.score.maskBool;
 
 end
