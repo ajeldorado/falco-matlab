@@ -1,0 +1,41 @@
+# MATLAB Test Pipeline
+#
+# Choose between a self-hosted or Microsoft hosted agent.
+# (The agent is the computer than runs the tests.)
+#
+# Refer to these websites for help when modifying this file:
+# https://marketplace.visualstudio.com/items?itemName=MathWorks.matlab-azure-devops-extension
+# https://qmrlab.org/2020/06/16/matlab-ci.html
+
+trigger:
+- master
+
+########### Self-Hosted Agent ###########
+pool: Default
+steps:
+  - bash: echo '##vso[task.prependpath]/usr/local/MATLAB/R2020b/bin'  # Linux agent
+#########################################
+  
+########### Microsoft-Hosted Agent ###########
+#pool:
+#  vmimage: Ubuntu 16.04
+#steps:
+#  - task: InstallMATLAB@0
+#    inputs:
+#      release: R2020a
+##############################################
+  
+  - task: RunMATLABTests@0
+    inputs:
+      codeCoverageCobertura: 'code-coverage/coverage.xml'
+      selectByFolder: testing/testarchive;testing/tests_long
+      sourceFolder: 'lib:models:setup'
+      testResultsJUnit: 'test-results/results.xml'
+  - task: PublishTestResults@1
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: 'test-results/results.xml'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: 'code-coverage/coverage.xml'

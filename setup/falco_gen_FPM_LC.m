@@ -17,8 +17,8 @@ function [mp] = falco_gen_FPM_LC(mp)
         %--Make or read in focal plane mask (FPM) amplitude for the full model
         FPMgenInputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
         FPMgenInputs.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
-        FPMgenInputs.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
         FPMgenInputs.centering = mp.centering;
+        if isfield(mp, 'FPMampFac'); FPMgenInputs.FPMampFac = mp.FPMampFac; end % amplitude transmission of inner FPM spot
     end
         
     if(mp.full.flagGenFPM)

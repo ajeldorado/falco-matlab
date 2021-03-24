@@ -14,8 +14,8 @@ switch upper(mp.coro)
     case 'SPHLC' %--Moved to separate function
     otherwise
         
-        switch mp.layout
-            case{'wfirst_phaseb_simple', 'wfirst_phaseb_proper', 'proper'}
+        switch lower(mp.layout)
+            case{'roman_phasec_proper', 'wfirst_phaseb_simple', 'wfirst_phaseb_proper', 'proper'}
             otherwise
                 %--FPM (at F3) Resolution [meters]
                 mp.F3.full.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.full.res;
@@ -33,8 +33,8 @@ switch upper(mp.coro)
             mp.F3.compact.etas = (-mp.F3.compact.Neta/2:(mp.F3.compact.Neta/2-1)).'*mp.F3.compact.deta;
         end
 
-        switch mp.layout
-            case{'wfirst_phaseb_simple','wfirst_phaseb_proper', 'proper'}
+        switch lower(mp.layout)
+            case{'roman_phasec_proper', 'wfirst_phaseb_simple','wfirst_phaseb_proper', 'proper'}
             otherwise
                 %--Coordinates (dimensionless [DL]) for the FPMs in the full model
                 if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi,2)==1)

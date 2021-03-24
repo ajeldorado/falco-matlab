@@ -1,15 +1,23 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function for regularized linear least-squares control (EFC).
-% -This function performs an empirical grid search over these parameters:
-%  a) a scalar coefficient for the regularization matrix
-%  b) a scalar gain for the final DM command.
+% Peform EFC according to a pre-defined (planned) scheme.
+%
+% INPUTS
+% ------
+% mp : structure of model parameters
+% cvar : structure of controller variables
+%
+% OUTPUTS
+% -------
+% dDM : structure of the delta control commands separated by DM number.
+%       Also contains the updated array of tied actuator pairs
+% cvar : structure of controller variables
 
-function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
+function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
 
     %--STEPS:
     % Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 

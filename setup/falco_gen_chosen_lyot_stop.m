@@ -1,11 +1,18 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to generate the Lyot stop representation based on configuration settings.
+% Generate the chosen lyot stop.
 %
+% INPUTS
+% ------
+% mp : structure of model parameters
+%
+% OUTPUTS
+% -------
+% mp : structure of model parameters
 
 function mp = falco_gen_chosen_lyot_stop(mp)
 
@@ -96,6 +103,8 @@ switch upper(mp.whichPupil)
                     inputs.OD = mp.P4.ODnorm; % (pupil diameters)
                     inputs.ang = mp.P4.ang; % (degrees)
                     inputs.centering = mp.centering; % 'interpixel' or 'pixel'
+                    if(isfield(mp.P4, 'clocking')); inputs.clocking = mp.P4.clocking; end
+                    if(isfield(mp.P4, 'Rfillet')); inputs.Rfillet = mp.P4.Rfillet; end
 
                     if(mp.full.flagGenLS)
                         inputs.Nbeam = mp.P4.full.Nbeam; 
