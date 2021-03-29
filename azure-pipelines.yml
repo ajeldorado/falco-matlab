@@ -15,9 +15,9 @@ trigger:
 pool: Default
 steps:
   - bash: echo '##vso[task.prependpath]/usr/local/MATLAB/R2020b/bin'  # Linux agent
-  
-  - task: DotNetCoreInstaller@0
-    displayName: 'install dotnet core'
+
+  - task: UseDotNet@2
+    displayName: 'Use .NET Core sdk'
     inputs:
       packageType: sdk
       version: 2.2.203
