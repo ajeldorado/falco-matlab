@@ -17,6 +17,13 @@
 
 function mp = falco_compute_entrance_pupil_coordinates(mp)
 
+    % Resolution at input pupil, pupil P2, DM1, and DM2
+    mp.P2.full.dx = mp.P2.D/mp.P1.full.Nbeam; 
+    mp.P2.compact.dx = mp.P2.D/mp.P1.compact.Nbeam;
+    % Same at apodizer plane (P3)
+    mp.P3.full.dx = mp.P2.full.dx; 
+    mp.P3.compact.dx = mp.P2.compact.dx;    
+
     % Compact model: Make sure mask is square
     mp.P1.compact.mask = pad_to_even_square(mp.P1.compact.mask); % force to be square
 

@@ -10,17 +10,14 @@ clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+%--Required packages are FALCO and PROPER. 
+% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); savepath;
+% Add PROPER to the MATLAB path with the command:  addpath(full_path_to_proper); savepath;
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
-%%--Add to the MATLAB Path
-addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+% mp.path.config = ; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = ; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
+% mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
 
 
 %% Step 2: Load default model parameters
@@ -30,40 +27,18 @@ EXAMPLE_defaults_LUVOIRA_APLC_smallFPM
 
 %% Step 3: Overwrite default values as desired
 
-mp.F3.compact.res = 2.2;%size(mp.F3.compact.mask.amp,1)/mp.F3.Rin/2;
-mp.F3.full.res = 2.2;%size(mp.F3.full.mask.amp,1)/mp.F3.Rin/2;
-
-
 % %%--Special Computational Settings
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
-
-%mp.propMethodPTP = 'mft';
 
 %--Record Keeping
 mp.TrialNum = 1;
 mp.SeriesNum = 1;
 
-%%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
-% temp = load(fn_prev,'out');
-% mp.dm1.V = temp.out.DM1V;
-% mp.dm2.V = temp.out.DM2V;
-% clear temp
-
 %--Use just 1 wavelength for initial debugging of code
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-
-% mp.F3.Rin = 3.5;    % maximum radius of inner part of the focal plane mask [lambda0/D]
-% mp.F3.RinA = mp.F3.Rin;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-% mp.Fend.corr.Rin = mp.F3.Rin;   % inner radius of dark hole correction region [lambda0/D]
-% mp.Fend.score.Rin = mp.F3.Rin;  % inner radius of dark hole scoring region [lambda0/D]
-% mp.F3.Rout = Inf; 
-% mp.FPMampFac = 0;
-% mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
-% mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
 
 %% Step 4: Generate the label associated with this trial
 
