@@ -15,8 +15,14 @@ mp = falco_set_jacobian_modal_weights(mp);
 
 %--Pupil Masks
 mp = falco_gen_chosen_pupil(mp);
+mp = falco_compute_entrance_pupil_coordinates(mp);
+
 mp = falco_gen_chosen_apodizer(mp);
+
 mp = falco_gen_chosen_lyot_stop(mp);
+mp = falco_crop_lyot_stop(mp);
+mp = falco_compute_lyot_stop_coordinates(mp);
+
 falco_plot_superimposed_pupil_masks(mp); %--Visually inspect relative pupil mask alignment
 
 %--Focal planes
@@ -38,13 +44,11 @@ mp = falco_set_initial_Efields(mp);
 
 mp = falco_compute_PSF_norm_factor(mp);
 
-out = falco_init_storage_arrays(mp); %% Initialize Arrays to Store Performance History
+out = falco_init_storage_arrays(mp); % Initialize Arrays to Store Performance History
 
 %--Save the config file
-fn_config = [mp.path.config mp.runLabel,'_config.mat'];
-save(fn_config,'mp')
-fprintf('Saved the config file: \t%s\n',fn_config)
-
-fprintf('\nBeginning Trial %d of Series %d.\n',mp.TrialNum,mp.SeriesNum);
+fn_config = [mp.path.config filesep mp.runLabel,'_config.mat'];
+save(fn_config, 'mp')
+fprintf('Saved the config file: \t%s\n', fn_config)
 
 end %--END OF FUNCTION

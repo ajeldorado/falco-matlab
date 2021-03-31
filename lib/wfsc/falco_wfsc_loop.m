@@ -8,6 +8,8 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
+fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
+
 for Itr = 1:mp.Nitr
     
     %% Bookkeeping

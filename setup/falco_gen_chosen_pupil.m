@@ -252,35 +252,5 @@ switch upper(mp.whichPupil)
         end
         if(mp.compact.flagGenPupil); mp.P1.compact.mask = falco_gen_pupil_iSAT(input); end
 end
-mp.P1.compact.Narr = length(mp.P1.compact.mask); %--Number of pixels across the array containing the input pupil in the compact model
-
-%--NORMALIZED (in pupil diameter) coordinate grids in the input pupil for making the tip/tilted input wavefront within the compact model
-if(strcmpi(mp.centering,'interpixel'))
-    mp.P2.compact.xsDL = (-(mp.P1.compact.Narr-1)/2:(mp.P1.compact.Narr-1)/2)*mp.P2.compact.dx/mp.P2.D;
-else
-    mp.P2.compact.xsDL = (-mp.P1.compact.Narr/2:(mp.P1.compact.Narr/2-1))*mp.P2.compact.dx/mp.P2.D;
-end
-
-[mp.P2.compact.XsDL,mp.P2.compact.YsDL] = meshgrid(mp.P2.compact.xsDL);
-
-if(mp.full.flagPROPER)
-    switch mp.centering
-        case{'interpixel'}
-            mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam);
-        otherwise
-            mp.P1.full.Narr = ceil_even(mp.P1.full.Nbeam+1);
-    end
-else
-    mp.P1.full.Narr = length(mp.P1.full.mask);  %--Total number of pixels across array containing the pupil in the full model. Add 2 pixels to Nbeam when the beam is pixel-centered.
-end
-
-%--NORMALIZED (in pupil diameter) coordinate grids in the input pupil for making the tip/tilted input wavefront within the full model
-if(strcmpi(mp.centering,'interpixel') )
-    mp.P2.full.xsDL = (- (mp.P1.full.Narr-1)/2:(mp.P1.full.Narr-1)/2)*mp.P2.full.dx/mp.P2.D;
-else
-    mp.P2.full.xsDL = ( -mp.P1.full.Narr/2:(mp.P1.full.Narr/2 -1) )*mp.P2.full.dx/mp.P2.D;
-end
-
-[mp.P2.full.XsDL,mp.P2.full.YsDL] = meshgrid(mp.P2.full.xsDL);
 
 end %--END OF FUNCTION

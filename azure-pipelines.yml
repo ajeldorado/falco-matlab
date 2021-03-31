@@ -7,6 +7,7 @@
 # https://marketplace.visualstudio.com/items?itemName=MathWorks.matlab-azure-devops-extension
 # https://qmrlab.org/2020/06/16/matlab-ci.html
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/dotnet-core-tool-installer?view=azure-devops&viewFallbackFrom=azure-devops.
 
 trigger:
 - master
