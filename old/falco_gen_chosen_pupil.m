@@ -17,9 +17,7 @@
 function mp = falco_gen_chosen_pupil(mp)
 
 %% Input pupil plane resolution, masks, and coordinates
-%--Resolution at input pupil and DM1 and DM2
-mp.P2.full.dx = mp.P2.D/mp.P1.full.Nbeam; 
-mp.P2.compact.dx = mp.P2.D/mp.P1.compact.Nbeam;
+
 
 %--Generate/Load Input Pupil
 switch upper(mp.whichPupil)

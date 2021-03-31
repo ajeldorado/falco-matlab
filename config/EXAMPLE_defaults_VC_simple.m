@@ -211,29 +211,43 @@ mp.P4.full.Nbeam = 350;  % P4 must be the same as P1 for Vortex.
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
-%% Mask Definitions
+%% Entrance Pupil (P1) Definition and Generation
 
-%--Pupil definition
-mp.whichPupil = 'Simple';
-mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
-mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
-mp.P1.stretch = 1.00; % factor that stretches the horizontal axis to create elliptical beam 
+mp.whichPupil = 'simple'; % Used only for run label
 mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.Nstrut = 0;% Number of struts 
-mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
-mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
 
-%--Aperture stop definition
-mp.flagApod = false;    %--Whether to use an apodizer or not. Can be a simple aperture stop
+% Both full and compact models
+inputs.OD = 1.00;
 
-%--Lyot stop padding
-mp.P4.IDnorm = 0; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.90; %--Lyot stop OD [Dtelescope]
-mp.P4.padFacPct = 0;
-mp.P4.Nstrut = 0;% Number of struts 
-mp.P4.angStrut = [];%Array of angles of the radial struts (deg)
-mp.P4.wStrut = []; % Width of the struts (fraction of pupil diam.)
+% Full model
+inputs.Nbeam = mp.P1.full.Nbeam; % number of points across the pupil diameter
+inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
+mp.P1.full.mask = falco_gen_pupil_Simple(inputs);
+
+% Compact model
+inputs.Nbeam = mp.P1.compact.Nbeam; % number of points across usable pupil   
+inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); % number of points across usable pupil 
+mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
+
+%% "Apodizer" (P3) Definition and Generation
+mp.flagApod = false;    %--Whether to use an apodizer or not in the FALCO models.
+
+
+%% Lyot stop (P4) Definition and Generation
+
+% Inputs common to both the compact and full models
+inputs.ID = 0;
+inputs.OD = 0.90;
+
+% Full model
+inputs.Nbeam = mp.P4.full.Nbeam;
+inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
+mp.P4.full.mask = falco_gen_pupil_Simple(inputs); 
+
+% Compact model
+inputs.Nbeam = mp.P4.compact.Nbeam;
+inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
+mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
 
 
 %% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

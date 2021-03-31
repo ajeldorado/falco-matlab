@@ -4,7 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Script to perform a DM-apodized VC (DMVC) simple design run.
+% Script to run wavefront control on a vortex coronagraph with a segmented
+% input pupil.
 
 clear
 

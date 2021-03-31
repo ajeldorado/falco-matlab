@@ -291,15 +291,17 @@ mp.SPname = 'SPC-20190130';
 %--FPM resolution
 mp.F3.full.res = 20;    % sampling of FPM for full model [pixels per lambda0/D]
 
-%% Mask Definitions
+%% Entrance Pupil (P1) Definition and Generation
 
-%--Pupil definition
-mp.whichPupil = 'WFIRST180718';
+mp.whichPupil = 'WFIRST180718'; % Used only for run label
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
 
-%--Lyot stop shape
+
+%% Lyot stop shape
 mp.LSshape = 'bowtie';
 mp.P4.IDnorm = 0.38; %--Lyot stop ID [Dtelescope]
 mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
@@ -314,11 +316,8 @@ mp.P4.full.mask = falco_gen_rounded_bowtie_LS(mp.P4.full.Nbeam, mp.P4.IDnorm, mp
 % mp.P4.compact.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, mp.P4.wStrut, rocFilletLS, upsampleFactor, mp.centering);
 % mp.P4.full.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.full.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, mp.P4.wStrut, rocFilletLS, upsampleFactor, mp.centering);
 
-mp.compact.flagGenLS = false;
-mp.full.flagGenLS = false;
 
-
-%--FPM size
+%% FPM size
 mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 65;    % on each side, opening angle [degrees]
