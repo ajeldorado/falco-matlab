@@ -15,9 +15,6 @@ mp.flagPlot = false;
 %--General
 mp.centering = 'pixel';
 
-%--Whether to include planet in the images
-mp.planetFlag = false;
-
 %--Method of computing core throughput:
 % - 'HMI' for energy within half-max isophote divided by energy at telescope pupil
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
@@ -41,10 +38,10 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 
 %--Estimator Options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
-%    one or more stars
 % - 'pwp-bp-square' for pairwise probing with batch process estimation in a
 % square region for one star [original functionality of 'pwp-bp' prior to January 2021]
+% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+%    one or more stars
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
 mp.estimator = 'perfect';
 
@@ -93,7 +90,6 @@ mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
-%  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
 mp.controller = 'gridsearchEFC';
 
 % % % GRID SEARCH EFC DEFAULTS     
