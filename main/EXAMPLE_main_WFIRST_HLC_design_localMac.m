@@ -51,7 +51,7 @@ mp.aux.omegaMax = 9;
 mp.aux.minNIprob = 1111111;
 mp.aux.firstDM9It = 0;
 mp.aux.dm9OnlyItr_arr = [];
-mp.aux.NumConvCFIt = 2;
+mp.aux.NumConvCFIt = 0;
 mp.aux.wDM9_arr = [];
 mp.aux.flagRegDM9 = false;
 mp.aux.betadm9Min = -8;
@@ -62,6 +62,7 @@ mp.aux.flagNIthput2 = false; % search for best Reg with NI/thput^2 or not
 SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
 SetB2 = [1, 1j, 129, 1, 1];
 
+mp.Nitr = 30;
 mp.ctrl.sched_mat = [...
      repmat(SetA2,[min([mp.Nitr,mp.aux.firstDM9It]),1]);...
      repmat(SetB2,[mp.Nitr-mp.aux.firstDM9It,1])...
@@ -76,16 +77,13 @@ mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 mp.flagSaveWS = true;
 
-%--Record Keeping
-mp.SeriesNum = 8;
-mp.TrialNum = 36;
 
 %--Force DM9 to be mirror symmetric about y-axis
-NactTotal = ceil_even(mp.dm9.actres*mp.F3.Rin*2)^2; %-NOTE: This will be different if influence function for DM9 is not '3x3'. Needs to be the same value as mp.dm9.NactTotal, which is calculated later.
-Nact = sqrt(NactTotal);
-LinIndMat = zeros(Nact); %--Matrix of the linear indices
-LinIndMat(:) = 1:NactTotal;
-FlippedLinIndMat = fliplr(LinIndMat);
+% NactTotal = ceil_even(mp.dm9.actres*mp.F3.Rin*2)^2; %-NOTE: This will be different if influence function for DM9 is not '3x3'. Needs to be the same value as mp.dm9.NactTotal, which is calculated later.
+% Nact = sqrt(NactTotal);
+% LinIndMat = zeros(Nact); %--Matrix of the linear indices
+% LinIndMat(:) = 1:NactTotal;
+% FlippedLinIndMat = fliplr(LinIndMat);
 % mp.dm9.tied = zeros(NactTotal/2,2);
 % for jj=1:NactTotal/2
 %     mp.dm9.tied(jj,1) = LinIndMat(jj);
@@ -106,17 +104,25 @@ FlippedLinIndMat = fliplr(LinIndMat);
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 %%
-mp.dm9.actres = 5;%dm9_actres_arr(randperm(length(dm9_actres_arr),1));
+mp.dm9.actres = 2;%dm9_actres_arr(randperm(length(dm9_actres_arr),1));
 % mp.min_azimSize_dm9 = 5;%min_azimSize_dm9_arr(randperm(length(min_azimSize_dm9_arr),1));
 mp.max_azimSize_dm9 = 1;
 
 %% Step 4: Generate the label associated with this trial
 
+mp.aux.gamma = 0;
+% mp.aux.dm9OnyItr_arr = [1:10];
+runlabel = ['gammaFig_gamma',num2str(mp.aux.gamma),'_Mar312021'];
+
+%--Record Keeping
+mp.SeriesNum = 10;
+mp.TrialNum = 1;
+
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
     '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller];
+    '_',mp.controller,'_',runlabel];
 
 
 %% Step 5: Perform the Wavefront Sensing and Control

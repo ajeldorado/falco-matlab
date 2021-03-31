@@ -239,11 +239,11 @@ mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 12; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scog region definition
-mp.Fend.corr.Rin = 2.7;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rin = 2.8;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = 2.7;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rin = 2.8;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
@@ -337,7 +337,7 @@ mp.dm8.Vmax = 300;
 %% DM9: FPM Dielectric thickness
 
 %--DM9 weights and sensitivities: Used by the controller
-mp.dm9.weight = 1; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
+mp.dm9.weight = 5; % Jacobian weight for the FPM dielectric. Smaller weight makes stroke larger by the inverse of this factor.
 mp.dm9.act_sens = 10; %--Change in oomph (E-field sensitivity) of DM9 actuators. Chosen empirically based on how much DM9 actuates during a control step.
 mp.dm9.stepFac = 10;%200; %--Adjust the step size in the Jacobian, then divide back out. Used for helping counteract effect of discretization.
 
