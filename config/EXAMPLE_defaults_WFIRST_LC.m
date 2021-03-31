@@ -177,6 +177,7 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 mp.flagSim = true;      %--Simulation or not
 mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'LC';%'HLC';
+mp.flagApod = false;    %--Whether to use an apodizer or not
 
 %--Final Focal Plane Properties
 mp.Fend.res = 2.5;%3; %--Sampling [ pixels per lambda0/D]
@@ -234,36 +235,25 @@ mp.P4.full.Nbeam = 250;
 
 mp.F3.full.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
 
-%% Entrance Pupil (P1) Definition and Generation
+%% Mask Definitions
 
-mp.whichPupil = 'WFIRST180718'; % Used only for run label
+%--Pupil definition
+mp.whichPupil = 'WFIRST180718';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
-mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
 
+%--Lyot stop padding
+mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
+mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
+mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
 
-%% "Apodizer" (P3) Definition and Generation
-mp.flagApod = false;    %--Whether to use an apodizer or not in the FALCO models.
-
-
-%% Lyot stop (P4) Definition and Generation
-
-changes.flagLyot = true;
-changes.ID = 0.50;
-changes.OD = 0.80;
-changes.wStrut = 3.6/100; % nominal pupil's value is 76mm = 3.216%
-changes.flagRot180 = true;
-mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam, mp.centering, changes);
-mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam, mp.centering, changes);
-
-
-%% FPM size
+%--FPM size
 mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
 mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
+
 mp.FPMampFac = 0;%10^(-3.7); % amplitude transmission of the FPM
 
 %% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -101,6 +101,8 @@ if(mp.flagApod)
     
 end
 
-    
+% %--Set the pixel width [meters]
+mp.P3.full.dx = mp.P2.full.dx; 
+mp.P3.compact.dx = mp.P2.compact.dx;        
         
 end %--END OF FUNCTION

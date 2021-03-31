@@ -237,27 +237,49 @@ mp.P4.full.Nbeam = 1000;
 
 %% Mask Definitions
 
+
+%--Whether to generate or load various masks: compact model
+mp.compact.flagGenPupil = false;  
+mp.compact.flagGenApod = false;
+mp.compact.flagGenFPM = true;%false;  
+mp.compact.flagGenLS = false;
+
 mp.P1.compact.mask = double(imread('TelAp_LUVOIR_gap_pad01_bw_ovsamp04_N1000.png'))/255;
 mp.P3.compact.mask = double(imread('0_LUVOIR_N1000_FPM350M0150_IWA0340_OWA01200_C10_BW10_Nlam5_LS_IDD0120_OD0982_no_ls_struts.png'))/255;
+% % mp.F3.compact.mask.amp = 1 - fitsread([mask_fn_prefix 'inputs/FPM_full_occspot_M030.fits']);
 mp.P4.compact.mask = double(imread('LS_LUVOIR_ID0120_OD0982_no_struts_gy_ovsamp4_N1000.png'))/255;
 
 %--Whether to generate or load various masks: full model
+mp.full.flagGenPupil = false;  
+mp.full.flagGenApod = false;
+mp.full.flagGenFPM = true;%false;  
+mp.full.flagGenLS = false;
 mp.P1.full.mask = mp.P1.compact.mask;
 mp.P3.full.mask = mp.P3.compact.mask;
 mp.P4.full.mask = mp.P4.compact.mask;
+% mp.F3.full.mask.amp = mp.F3.compact.mask.amp;
+
+% mp.F3.Rin = 3.5;
+mp.F3.compact.res = 3;%size(mp.F3.compact.mask.amp,1)/mp.F3.Rin/2;
+mp.F3.full.res = 4;%size(mp.F3.full.mask.amp,1)/mp.F3.Rin/2;
 
 %--Pupil definition
 mp.whichPupil = 'LUVOIRAfinal';
 mp.P1.IDnorm = 0.10; %--ID of the central obscuration [diameters]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
-mp.P1.D = 15.0; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-
-%% FPM size
-mp.compact.flagGenFPM = true;  
-mp.full.flagGenFPM = true;  
-mp.F3.compact.res = 3;%size(mp.F3.compact.mask.amp,1)/mp.F3.Rin/2;
-mp.F3.full.res = 4;%size(mp.F3.full.mask.amp,1)/mp.F3.Rin/2;
+mp.P1.D = 15.0;%2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+% 
+% %--Lyot stop padding
+% mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
+% mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
+% mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
+% 
+%--FPM size
 mp.F3.Rin = 3.5;    % maximum radius of inner part of the focal plane mask [lambda0/D]
 mp.F3.RinA = 3.5;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 mp.FPMampFac = 0;%10^(-3.7); % amplitude transmission of the FPM
+
+%% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

@@ -1,5 +1,5 @@
-% Initialize some structures if they don't already exist.
-% Generate or load the pupil masks.
+
+% %--Initialize some structures if they don't already exist
 
 %% Misc
 
@@ -209,58 +209,31 @@ mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex.
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
-%% Entrance Pupil (P1) Definition and Generation
+%% Mask Definitions
 
-mp.whichPupil = 'LUVOIR_B'; % Used only for run label
-mp.P1.D = 7.989; %--circumscribed telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-
-%--Generate the entrance pupil aperture
-inputs.centering = mp.centering;
-% Full model:
-inputs.Nbeam = mp.P1.full.Nbeam;
-mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
-% Compact model
-inputs.Nbeam = mp.P1.compact.Nbeam;
-mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
-
-%% "Apodizer" (P3) Definition and Generation
-mp.flagApod = true;    %--Whether to use an apodizer or not in the FALCO models.
-
-% Inputs common to both the compact and full models
-inputs.ID = 0;
-inputs.OD = 0.84;
-inputs.Nstrut = 0;
-inputs.angStrut = []; %Angles of the struts 
-inputs.wStrut = 0; % spider width (fraction of the pupil diameter)
-
-% Full model only
-inputs.Nbeam = mp.P1.full.Nbeam;
-inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam)); 
-mp.P3.full.mask = falco_gen_pupil_Simple(inputs);
-
-% Compact model only 
-inputs.Nbeam = mp.P1.compact.Nbeam;
-inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); 
-mp.P3.compact.mask = falco_gen_pupil_Simple(inputs);
+%--Pupil definition
+mp.whichPupil = 'LUVOIR_B'; %'LUVOIR_B_offaxis';
+mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
+mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
+mp.P1.D = 7.989; %--meters, circumscribed. The segment size is 0.955 m, flat-to-flat, and the gaps are 6 mm. %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+mp.P1.wGap = 6e-3/mp.P1.D; % Fractional width of segment gaps
+        
+%--Aperture stop definition
+mp.flagApod = true;    %--Whether to use an apodizer or not. Can be a simple aperture stop
+mp.apodType = 'Simple';
+mp.P3.IDnorm = 0;
+mp.P3.ODnorm = 0.84;
+mp.full.flagGenApod = true;
+mp.compact.flagGenApod = true;
 
 
-%% Lyot stop (P4) Definition and Generation
-
-% Inputs common to both the compact and full models
-inputs.ID = 0;
-inputs.OD = 0.82;
-
-% Full model
-inputs.Nbeam = mp.P4.full.Nbeam;
-inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
-mp.P4.full.mask = falco_gen_pupil_Simple(inputs); 
-
-% Compact model
-inputs.Nbeam = mp.P4.compact.Nbeam;
-inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
-mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
+%--Lyot stop padding
+mp.P4.IDnorm = 0; %--Lyot stop ID [Dtelescope]
+mp.P4.ODnorm = 0.82; %--Lyot stop OD [Dtelescope]
+mp.P4.padFacPct = 0;
 
 
-%% Vortex Specific Values %%
+%% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 mp.F3.VortexCharge = 6; %--Charge of the vortex mask

@@ -14,18 +14,16 @@ mp = falco_set_spectral_properties(mp);
 mp = falco_set_jacobian_modal_weights(mp);
 
 %--Pupil Masks
-% mp = falco_gen_chosen_pupil(mp);
+mp = falco_gen_chosen_pupil(mp);
 mp = falco_compute_entrance_pupil_coordinates(mp);
 
-% mp = falco_gen_chosen_apodizer(mp);
-mp = falco_compute_apodizer_coordinates(mp);
+mp = falco_gen_chosen_apodizer(mp);
 
-% mp = falco_gen_chosen_lyot_stop(mp);
+mp = falco_gen_chosen_lyot_stop(mp);
 mp = falco_crop_lyot_stop(mp);
 mp = falco_compute_lyot_stop_coordinates(mp);
 
 falco_plot_superimposed_pupil_masks(mp); %--Visually inspect relative pupil mask alignment
-
 
 %--Focal planes
 mp = falco_gen_FPM(mp);

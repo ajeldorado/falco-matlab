@@ -11,7 +11,7 @@ clear
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Required packages are FALCO and PROPER. 
-% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); rmpath(genpath(full_path_to_falco filesep '.git')); savepath;
+% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); savepath;
 % Add PROPER to the MATLAB path with the command:  addpath(full_path_to_proper); savepath;
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
@@ -35,14 +35,25 @@ mp.flagPlot = true;
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
 
+%%--[OPTIONAL] Start from a previous FALCO trial's DM settings
+% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
+% temp = load(fn_prev,'out');
+% mp.dm1.V = temp.out.DM1V;
+% mp.dm2.V = temp.out.DM2V;
+% clear temp
+
+%--Lyot Plane Sampling (can be lower than input pupil sampling because of spatial filter in FPM)
+mp.P4.compact.Nbeam = 180;
+mp.P4.full.Nbeam = 180;
+
 % %--DEBUGGING SETTINGS TO RUN FASTER:
 % mp.estimator = 'perfect';
 % mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1;
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 % mp.F3.compact.res = 4; % sampling of FPM for compact model [pixels per lambda0/D]
 % mp.F3.full.res = 4; % sampling of FPM for full model [pixels per lambda0/D]
+
 
 %% Step 4: Generate the label associated with this trial
 

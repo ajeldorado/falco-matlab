@@ -27,7 +27,7 @@ EXAMPLE_defaults_DST_LC_design
 mp.flagWFS = true; % Activate the WFS mode 
 mp.wfs.flagSim = true; % Simulates WFS images, if true 
 
-%% Pupil definitions
+%%-- Pupil definitions
 
 mp.flagApod = false;
 mp.whichPupil = 'LUVOIR_B_offaxis';
@@ -39,16 +39,16 @@ mp.P4.full.Nbeam = mp.P1.full.Nbeam; % P4 must be the same as P1 for Vortex.
 
 mp.P1.compact.Nbeam = 500;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam; % P4 must be the same as P1 for Vortex.
+
 mp.P1.wGap = 0.01; % Fractional gap width
 mp.P4.padFacPct = 0; 
-mp = falco_gen_pupil_LUVOIR_B_with_phase(mp);
 
 %%- segmented mirror errors
 numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
 % LUVOIR B has four rings, but ignores some corner segments 
 
 
-%% ZWFS Mask Properties
+%%--ZWFS Mask Properties
 mp.wfs.lambda0 = 425e-9;%--Central wavelength of the whole spectral bandpass [meters]
 mp.wfs.fracBW = 0.10; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.wfs.Nsbp = 3; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
@@ -107,9 +107,7 @@ mp.P1.pistons = randn(1,numSegments)/100;% Segment piston in waves
 mp.P1.tiltxs  = randn(1,numSegments)/50;% %Tilts on segments in horiz direction (waves/apDia)
 mp.P1.tiltys  = randn(1,numSegments)/50;% %Tilts on segments in vert direction (waves/apDia)
 
-% mp = falco_gen_chosen_pupil(mp);
-mp = falco_gen_pupil_LUVOIR_B_with_phase(mp);
-mp = falco_compute_entrance_pupil_coordinates(mp);
+mp = falco_gen_chosen_pupil(mp);
 
 actual_phz1 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 
@@ -122,9 +120,7 @@ mp.P1.pistons = mp.P1.pistons + randn(1,numSegments)/2000;% Segment piston in wa
 mp.P1.tiltxs  = mp.P1.tiltxs + randn(1,numSegments)/1000;% %Tilts on segments in horiz direction (waves/apDia)
 mp.P1.tiltys  = mp.P1.tiltys + randn(1,numSegments)/1000;% %Tilts on segments in vert direction (waves/apDia)
 
-% mp = falco_gen_chosen_pupil(mp);
-mp = falco_gen_pupil_LUVOIR_B_with_phase(mp);
-mp = falco_compute_entrance_pupil_coordinates(mp);
+mp = falco_gen_chosen_pupil(mp);
 
 actual_phz2 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 
