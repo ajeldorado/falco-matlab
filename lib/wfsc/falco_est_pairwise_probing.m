@@ -242,7 +242,7 @@ for iSubband = 1:mp.Nsbp
     elseif whichDM == 2
         DMV4plot = DM2Vplus - repmat(DM2Vnom, [1, 1, size(DM2Vplus, 3)]);
     end
-    falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube, iSubband)
+    falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube)
 
     %% Perform the estimation
     
