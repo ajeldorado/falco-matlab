@@ -15,6 +15,7 @@ function [mp] = ConfigurationLC()
 mp.path.falco = fileparts(fileparts(fileparts(fileparts(mfilename('fullpath'))))); % falco-matlab directory;
 addpath(genpath([mp.path.falco filesep 'setup']))
 addpath(genpath([mp.path.falco filesep 'lib']))
+addpath(genpath([mp.path.falco filesep 'lib_external']))
 
 %% Record Keeping
 %
