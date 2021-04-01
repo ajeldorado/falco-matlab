@@ -308,5 +308,21 @@ mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0
 mp.F3.Rout = 20;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 mp.FPMampFac = sqrt(10^(-3.7)); % amplitude transmission of the FPM
+mp.F3.clocking = 0;
+mp.F3.Rfillet = 0;
+
+% Both models
+inputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+inputs.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
+inputs.ang = mp.F3.ang;  % [degrees]
+inputs.centering = mp.centering;
+inputs.clocking = mp.F3.clocking;
+inputs.Rfillet = mp.F3.Rfillet;
+% Full model
+inputs.pixresFPM = mp.F3.full.res;
+mp.F3.full.mask.amp = falco_gen_bowtie_FPM(inputs);
+% Compact model
+inputs.pixresFPM = mp.F3.compact.res;
+mp.F3.compact.mask.amp = falco_gen_bowtie_FPM(inputs);
 
 end

@@ -182,7 +182,6 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 mp.flagSim = true;      %--Simulation or not
 mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'SPLC';
-mp.flagApod = true;    %--Whether to use an apodizer or not
 
 %--Final Focal Plane Properties
 mp.Fend.res = 6;%(730/660)*2.; %--Sampling [ pixels per lambda0/D]
@@ -199,8 +198,7 @@ mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
-%% Optical Layout: Compact Model (and Jacobian Model)
-% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
+%% Optical Layout
 
 %--Focal Lengths
 mp.fl = 1.; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
@@ -210,16 +208,45 @@ mp.P2.D = 46.2987e-3;
 mp.P3.D = 46.2987e-3;
 mp.P4.D = 46.2987e-3;
 
+% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 386;%1000;%386;
 mp.P2.compact.Nbeam = 386;%1000;%386;
 mp.P3.compact.Nbeam = 386;%1000;%386;
 mp.P4.compact.Nbeam = 60;
 
-%--Shaped Pupil Mask: Load and downsample.
-mp.SPname = 'SPC-20190130';
-SP0 = fitsread('SPM_SPC-20190130.fits');
+%--Pupil Plane Resolutions
+mp.P1.full.Nbeam = 1000;
+mp.P2.full.Nbeam = 1000;
+mp.P3.full.Nbeam = 1000;
+mp.P4.full.Nbeam = 200;
 
+%--Number of re-imaging relays between pupil planesin compact model. Needed
+%to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
+%full model, which probably has extra collimated beams compared to the
+%compact model.
+mp.Nrelay1to2 = 1;
+mp.Nrelay2to3 = 1;
+mp.Nrelay3to4 = 1;
+mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
+
+%% Entrance Pupil (P1) Definition and Generation
+
+mp.whichPupil = 'WFIRST180718'; % Used only for run label
+mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
+mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
+
+%% "Apodizer" (P3) Definition and Generation
+
+mp.flagApod = true;    %--Whether to use an apodizer or not
+mp.P3.full.mask = fitsread('SPM_SPC-20190130.fits');
+mp.SPname = 'SPC-20190130';
+
+% Downsample for compact model
+SP0 = mp.P3.full.mask;
 if(mp.P1.compact.Nbeam==1000)
     mp.P3.compact.mask = SP0;
 else
@@ -260,47 +287,6 @@ else
     % figure(13); imagesc(SP1-fliplr(SP1)); axis xy equal tight; colormap jet; colorbar;
 end
 
-%%
-%--Number of re-imaging relays between pupil planesin compact model. Needed
-%to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
-%full model, which probably has extra collimated beams compared to the
-%compact model.
-mp.Nrelay1to2 = 1;
-mp.Nrelay2to3 = 1;
-mp.Nrelay3to4 = 1;
-mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
-
-%--FPM resolution
-mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda0/D]
-
-%% Optical Layout: Full Model 
-
-%--Focal Lengths
-% mp.fl = 1; 
-
-%--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 1000;
-mp.P2.full.Nbeam = 1000;
-mp.P3.full.Nbeam = 1000;
-mp.P4.full.Nbeam = 200;
-
-%--Shaped Pupil Mask.
-mp.P3.full.mask = fitsread('SPM_SPC-20190130.fits');
-mp.SPname = 'SPC-20190130';
-
-%--FPM resolution
-mp.F3.full.res = 20;    % sampling of FPM for full model [pixels per lambda0/D]
-
-%% Entrance Pupil (P1) Definition and Generation
-
-mp.whichPupil = 'WFIRST180718'; % Used only for run label
-mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
-mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
-mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
-
-
 %% Lyot stop shape
 mp.LSshape = 'bowtie';
 mp.P4.IDnorm = 0.38; %--Lyot stop ID [Dtelescope]
@@ -317,7 +303,11 @@ mp.P4.full.mask = falco_gen_rounded_bowtie_LS(mp.P4.full.Nbeam, mp.P4.IDnorm, mp
 % mp.P4.full.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.full.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, mp.P4.wStrut, rocFilletLS, upsampleFactor, mp.centering);
 
 
-%% FPM size
+%% FPM (F3) Definition and Generation
+
+mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda0/D]
+mp.F3.full.res = 20;    % sampling of FPM for full model [pixels per lambda0/D]
+
 mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 65;    % on each side, opening angle [degrees]
@@ -326,7 +316,3 @@ clockDeg = 0;
 upsampleFactor = 100;
 mp.F3.compact.mask.amp = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.compact.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
 mp.F3.full.mask.amp = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.full.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
-
-
-%% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-

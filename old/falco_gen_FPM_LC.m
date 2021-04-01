@@ -3,13 +3,6 @@
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
-%
-%
-% REVISION HISTORY:
-% --------------
-% Created by A.J. Riggs on 2018-10-01 by extracting material from
-% falco_init_ws.m.
-% ---------------
 
 function [mp] = falco_gen_FPM_LC(mp)
 
@@ -21,6 +14,7 @@ function [mp] = falco_gen_FPM_LC(mp)
         if isfield(mp, 'FPMampFac'); FPMgenInputs.FPMampFac = mp.FPMampFac; end % amplitude transmission of inner FPM spot
     end
         
+    
     if(mp.full.flagGenFPM)
         FPMgenInputs.pixresFPM = mp.F3.full.res; %--pixels per lambda_c/D
         if(isfield(mp.F3.full,'mask'))
@@ -28,10 +22,8 @@ function [mp] = falco_gen_FPM_LC(mp)
         end
         mp.F3.full.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
     end
-    mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
-    mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);   
+ 
 
-    
     if(mp.compact.flagGenFPM)
         %--Number of points across the FPM in the compact model
         if(isinf(mp.F3.Rout))
@@ -58,8 +50,7 @@ function [mp] = falco_gen_FPM_LC(mp)
         end
         mp.F3.compact.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
     else
-        mp.F3.compact.Nxi = size(mp.F3.compact.mask.amp,2);
-        mp.F3.compact.Neta= size(mp.F3.compact.mask.amp,1); 
+        %
     end
 
 end %--END OF FUNCTION

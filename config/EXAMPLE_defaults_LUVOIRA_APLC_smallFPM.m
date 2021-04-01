@@ -195,7 +195,6 @@ mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
-% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
 %--Focal Lengths
 mp.fl = 1.; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
@@ -205,11 +204,18 @@ mp.P2.D = 30e-3;
 mp.P3.D = 30e-3;
 mp.P4.D = 30e-3;
 
+% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 1000;
 mp.P2.compact.Nbeam = 1000;
 mp.P3.compact.Nbeam = 1000;
 mp.P4.compact.Nbeam = 1000;
+
+%--Pupil Plane Resolutions
+mp.P1.full.Nbeam = 1000;
+mp.P2.full.Nbeam = 1000;
+mp.P3.full.Nbeam = 1000;
+mp.P4.full.Nbeam = 1000;
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 % to keep track of 180-degree rotations compared to the full model, which 
@@ -220,22 +226,7 @@ mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
-% mp.F3.compact.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
-
-%% Optical Layout: Full Model 
-
-%--Focal Lengths
-% mp.fl = 1; 
-
-%--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 1000;
-mp.P2.full.Nbeam = 1000;
-mp.P3.full.Nbeam = 1000;
-mp.P4.full.Nbeam = 1000;
-
-% mp.F3.full.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
-
-%% Mask Definitions
+%% Pupil Masks
 
 mp.P1.compact.mask = double(imread('TelAp_LUVOIR_gap_pad01_bw_ovsamp04_N1000.png'))/255;
 mp.P3.compact.mask = double(imread('0_LUVOIR_N1000_FPM350M0150_IWA0340_OWA01200_C10_BW10_Nlam5_LS_IDD0120_OD0982_no_ls_struts.png'))/255;
@@ -251,13 +242,24 @@ mp.whichPupil = 'LUVOIRAfinal';
 mp.P1.IDnorm = 0.10; %--ID of the central obscuration [diameters]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 15.0; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 
-%% FPM size
-mp.compact.flagGenFPM = true;  
-mp.full.flagGenFPM = true;  
-mp.F3.compact.res = 3;%size(mp.F3.compact.mask.amp,1)/mp.F3.Rin/2;
-mp.F3.full.res = 4;%size(mp.F3.full.mask.amp,1)/mp.F3.Rin/2;
+%% FPM (F3) Definition and Generation
+
+mp.F3.compact.res = 3; % sampling of FPM for compact model [pixels per lambda0/D]
+mp.F3.full.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
+
 mp.F3.Rin = 3.5;    % maximum radius of inner part of the focal plane mask [lambda0/D]
-mp.F3.RinA = 3.5;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
-mp.FPMampFac = 0;%10^(-3.7); % amplitude transmission of the FPM
+mp.FPMampFac = 0; % amplitude transmission of the FPM
+
+% Both models
+fpmStruct.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+fpmStruct.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
+fpmStruct.centering = mp.centering;
+fpmStruct.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
+% Full model
+fpmStruct.pixresFPM = mp.F3.full.res;
+mp.F3.full.mask.amp = falco_gen_annular_FPM(fpmStruct);
+% Compact model
+fpmStruct.pixresFPM = mp.F3.compact.res;
+mp.F3.compact.mask.amp = falco_gen_annular_FPM(fpmStruct);

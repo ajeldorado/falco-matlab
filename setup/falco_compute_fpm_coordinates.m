@@ -4,19 +4,24 @@
 % of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Compute FPM coordinates, both in [meters] and [dimensionless]
+% Compute FPM coordinates, both in meters and lambda/D.
 
 function mp = falco_compute_fpm_coordinates(mp)
 
-
 switch upper(mp.coro)
+    
     case{'VORTEX','VC'}
         % No coordinates needed in vortex models
     
     otherwise
+        
         fLamD = mp.fl*mp.lambda0/mp.P2.D;
         
         %% Compact Model
+        
+        mp.F3.compact.Nxi = size(mp.F3.compact.mask.amp,2);
+        mp.F3.compact.Neta= size(mp.F3.compact.mask.amp,1);
+        
         % Resolution in compact model
         mp.F3.compact.dxi = fLamD/mp.F3.compact.res; % [meters/pixel]
         mp.F3.compact.deta = mp.F3.compact.dxi; % [meters/pixel]
@@ -41,8 +46,6 @@ switch upper(mp.coro)
 
         
         %% Full Model
-        
-        
         switch lower(mp.layout)
             
             case{'roman_phasec_proper', 'wfirst_phaseb_simple','wfirst_phaseb_proper', 'proper'}
@@ -50,17 +53,24 @@ switch upper(mp.coro)
             
             otherwise
                 
-                %--Resolution
-                mp.F3.full.dxi = fLamD/mp.F3.full.res; % [meters/pixel]
-                mp.F3.full.deta = mp.F3.full.dxi; % [meters/pixel]
+                if mp.full.flagPROPER == false
+                    
+                    mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
+                    mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);
                 
-                %--Coordinates (dimensionless [DL]) for the FPMs in the full model
-                if(strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi,2)==1)
-                    mp.F3.full.xisDL  = (-(mp.F3.full.Nxi-1)/2:(mp.F3.full.Nxi-1)/2)/mp.F3.full.res;
-                    mp.F3.full.etasDL = (-(mp.F3.full.Neta-1)/2:(mp.F3.full.Neta-1)/2)/mp.F3.full.res;
-                else
-                    mp.F3.full.xisDL  = (-mp.F3.full.Nxi/2:(mp.F3.full.Nxi/2-1))/mp.F3.full.res;
-                    mp.F3.full.etasDL = (-mp.F3.full.Neta/2:(mp.F3.full.Neta/2-1))/mp.F3.full.res;
+                    %--Resolution
+                    mp.F3.full.dxi = fLamD/mp.F3.full.res; % [meters/pixel]
+                    mp.F3.full.deta = mp.F3.full.dxi; % [meters/pixel]
+
+                    %--Coordinates (dimensionless [DL]) for the FPMs in the full model
+                    if strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi, 2) == 1
+                        mp.F3.full.xisDL  = (-(mp.F3.full.Nxi-1)/2:(mp.F3.full.Nxi-1)/2)/mp.F3.full.res;
+                        mp.F3.full.etasDL = (-(mp.F3.full.Neta-1)/2:(mp.F3.full.Neta-1)/2)/mp.F3.full.res;
+                    else
+                        mp.F3.full.xisDL  = (-mp.F3.full.Nxi/2:(mp.F3.full.Nxi/2-1))/mp.F3.full.res;
+                        mp.F3.full.etasDL = (-mp.F3.full.Neta/2:(mp.F3.full.Neta/2-1))/mp.F3.full.res;
+                    end
+                    
                 end
         end
         

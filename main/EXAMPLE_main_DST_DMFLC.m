@@ -41,8 +41,6 @@ mp.TrialNum = 1;
 % mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.Nwpsbp = 1;
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-% mp.F3.compact.res = 4; % sampling of FPM for compact model [pixels per lambda0/D]
-% mp.F3.full.res = 4; % sampling of FPM for full model [pixels per lambda0/D]
 
 %% Step 4: Generate the label associated with this trial
 

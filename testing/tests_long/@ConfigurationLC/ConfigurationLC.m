@@ -283,11 +283,24 @@ mp.P4.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.compact.Nbeam, mp.
 % mp.P4.compact.mask = propcustom_relay(falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, changes.ID, changes.OD, changes.wStrut, rocFillet, upsampleFactor, mp.centering), 1, mp.centering);
                 
 
-%% FPM size
+%% FPM (F3) Definition and Generation
+
 mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
 mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 mp.FPMampFac = 0;%10^(-3.7); % amplitude transmission of the FPM
+
+% Both models
+fpmStruct.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+fpmStruct.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
+fpmStruct.centering = mp.centering;
+fpmStruct.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
+% Full model
+fpmStruct.pixresFPM = mp.F3.full.res;
+mp.F3.full.mask.amp = falco_gen_annular_FPM(fpmStruct);
+% Compact model
+fpmStruct.pixresFPM = mp.F3.compact.res;
+mp.F3.compact.mask.amp = falco_gen_annular_FPM(fpmStruct);
 
 end

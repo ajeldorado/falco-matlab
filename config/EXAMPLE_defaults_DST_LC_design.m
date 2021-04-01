@@ -194,8 +194,7 @@ mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
-%% Optical Layout: Compact Model (and Jacobian Model)
-% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
+%% Optical Layout
 
 %--Focal Lengths
 mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
@@ -205,11 +204,18 @@ mp.P2.D = 46.3e-3;
 mp.P3.D = 46.3e-3;
 mp.P4.D = 46.3e-3;
 
+% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 300;
 mp.P2.compact.Nbeam = 300;
 mp.P3.compact.Nbeam = 300;
 mp.P4.compact.Nbeam = 300;
+
+%--Pupil Plane Resolutions
+mp.P1.full.Nbeam = 300;
+mp.P2.full.Nbeam = 300;
+mp.P3.full.Nbeam = 300;
+mp.P4.full.Nbeam = 300;
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -219,21 +225,6 @@ mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
-
-mp.F3.compact.res = 6; % sampling of FPM for compact model [pixels per lambda0/D]
-
-%% Optical Layout: Full Model 
-
-%--Focal Lengths
-% mp.fl = 1; 
-
-%--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 300;
-mp.P2.full.Nbeam = 300;
-mp.P3.full.Nbeam = 300;
-mp.P4.full.Nbeam = 300;
-
-mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
 %% Entrance Pupil (P1) Definition and Generation
 
@@ -276,8 +267,24 @@ inputs.Nbeam = mp.P4.compact.Nbeam;
 inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
 mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
 
-%% FPM size
+%% FPM (F3) Definition and Generation
+
+mp.F3.compact.res = 6; % sampling of FPM for compact model [pixels per lambda0/D]
+mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
+
 mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0/D]
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
 mp.FPMampFac = 10^(-3.7/2.0); % amplitude transmission of the FPM
+
+% Both models
+fpmStruct.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+fpmStruct.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
+fpmStruct.centering = mp.centering;
+fpmStruct.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
+% Full model
+fpmStruct.pixresFPM = mp.F3.full.res;
+mp.F3.full.mask.amp = falco_gen_annular_FPM(fpmStruct);
+% Compact model
+fpmStruct.pixresFPM = mp.F3.compact.res;
+mp.F3.compact.mask.amp = falco_gen_annular_FPM(fpmStruct);

@@ -41,12 +41,6 @@ if(mp.compact.flagGenFPM)
     mp.F3.compact.mask.amp = falco_gen_bowtie_FPM(inputs);        
 end
 
-if(mp.full.flagPROPER==false)
-    mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
-    mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);
-end
 
-mp.F3.compact.Nxi = size(mp.F3.compact.mask.amp,2);
-mp.F3.compact.Neta= size(mp.F3.compact.mask.amp,1);
         
 end %--END OF FUNCTION
