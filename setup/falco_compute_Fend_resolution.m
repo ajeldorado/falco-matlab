@@ -1,4 +1,4 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,11 +6,12 @@
 %
 % Resolution at Final Focal Plane (Fend)
 
-function mp = falco_get_Fend_resolution(mp)
-
-    mp.Fend.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.Fend.res; % sampling at Fend.[meters]
-    mp.Fend.deta = mp.Fend.dxi; % sampling at Fend.[meters]    
-    if(mp.flagLenslet)
+function mp = falco_compute_Fend_resolution(mp)
+    fLamD = mp.fl*mp.lambda0/mp.P4.D;
+    mp.Fend.dxi = fLamD/mp.Fend.res; % sampling at Fend [meters/pixel]
+    mp.Fend.deta = mp.Fend.dxi; % sampling at Fend [meters/pixel]    
+    
+    if mp.flagLenslet
         mp.Fend.lenslet.D = 2*mp.Fend.res*mp.Fend.lensletWavRad*mp.Fend.dxi;
         mp.Fend.x_lenslet_phys = mp.Fend.dxi*mp.Fend.res*mp.Fend.x_lenslet;
         mp.Fend.y_lenslet_phys = mp.Fend.deta*mp.Fend.res*mp.Fend.y_lenslet;
@@ -20,7 +21,7 @@ function mp = falco_get_Fend_resolution(mp)
     end
 
     %--Compact evaluation model at higher resolution
-    mp.Fend.eval.dxi = (mp.fl*mp.lambda0/mp.P4.D)/mp.Fend.eval.res; % [meters]
-    mp.Fend.eval.deta = mp.Fend.eval.dxi; % [meters]  
+    mp.Fend.eval.dxi = fLamD/mp.Fend.eval.res; % [meters/pixel]
+    mp.Fend.eval.deta = mp.Fend.eval.dxi; % [meters/pixel]  
     
-end %--END OF FUNCTION
+end

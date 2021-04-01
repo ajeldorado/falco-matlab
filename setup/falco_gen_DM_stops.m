@@ -1,7 +1,7 @@
-% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
 % Generate circular aperture stops at DMs 1 and 2.
@@ -14,7 +14,7 @@
 % -------
 % mp : structure of model parameters
 
-function mp = falco_gen_DM_stops(mp)
+function mp = falco_gen_dm_stops(mp)
 
     if mp.flagDM1stop
         mp.dm1.full.mask = falco_gen_DM_stop(mp.P2.full.dx,mp.dm1.Dstop,mp.centering);

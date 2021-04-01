@@ -14,7 +14,7 @@
 % -------
 % mp : structure of model parameters
 
-function mp = falco_configure_WFS(mp)
+function mp = falco_configure_wfs(mp)
 
     if mp.flagWFS
         
