@@ -26,12 +26,14 @@ classdef TestGenBowtieLyotStop < matlab.unittest.TestCase
         function addPath(testCase)
             pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
             addpath(genpath([pathToFalco filesep 'lib']));
+            addpath(genpath([pathToFalco filesep 'lib_external']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
             pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
             rmpath(genpath([pathToFalco filesep 'lib']));
+            addpath(genpath([pathToFalco filesep 'lib_external']));
         end
     end
      
