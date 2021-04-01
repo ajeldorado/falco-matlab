@@ -22,7 +22,7 @@ mp = falco_compute_lyot_stop_coordinates(mp);
 falco_plot_superimposed_pupil_masks(mp); %--Visually inspect relative pupil mask alignment
 
 %--Focal plane masks
-mp = falco_gen_FPM(mp);
+mp = falco_gen_fpm(mp);
 mp = falco_compute_fpm_coordinates(mp); 
 
 %--Final focal plane

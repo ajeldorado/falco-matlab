@@ -6,7 +6,7 @@
 %
 % Generate FPMs. For hybrid FPMs only ('HLC' or 'EHLC'), which use DM8 and DM9.
 
-function [mp] = falco_gen_FPM(mp)
+function [mp] = falco_gen_fpm(mp)
     
     %--Stash DM8 and DM9 starting commands if they are given in the main script
     if isfield(mp, 'dm8')
