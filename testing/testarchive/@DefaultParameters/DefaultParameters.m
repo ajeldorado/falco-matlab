@@ -16,6 +16,7 @@ mp.path.falco = fileparts(fileparts(fileparts(fileparts(mfilename('fullpath'))))
 addpath(genpath([mp.path.falco filesep 'setup']))
 addpath(genpath([mp.path.falco filesep 'lib']))
 addpath(genpath([mp.path.falco filesep 'config']))
+addpath(genpath([mp.path.falco filesep 'lib_external']))
 
 %% Load default model parameters
 %
