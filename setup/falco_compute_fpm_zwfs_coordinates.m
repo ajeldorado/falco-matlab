@@ -6,7 +6,7 @@
 %
 % FPM coordinates, [meters] and [dimensionless]
 
-function mp = falco_get_FPM_ZWFS_coordinates(mp)
+function mp = falco_compute_fpm_zwfs_coordinates(mp)
 
     lam0 = mp.wfs.lambda0;
 

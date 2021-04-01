@@ -18,9 +18,9 @@ function mp = falco_configure_wfs(mp)
 
     if mp.flagWFS
         
-        mp = falco_gen_FPM_ZWFS(mp);
-        mp = falco_get_FPM_ZWFS_coordinates(mp);
-        mp = falco_set_WFS_spectral_properties(mp);
+        mp = falco_gen_fpm_zwfs(mp);
+        mp = falco_compute_fpm_zwfs_coordinates(mp);
+        mp = falco_set_wfs_spectral_properties(mp);
         
         % Intialize E-field seen by WFS (will be different to coronagraph 
         % if using WFS out of band). This is updated in model_ZWFS.
