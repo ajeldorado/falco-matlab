@@ -6,16 +6,12 @@
 
 function [mp] = Parameters()
 %% Define Necessary Paths on Your Computer System
-%
-% In this section we define and add necessary paths to FAlCO and PROPER. If 
-% we do not define and add these paths we will not be able to call FALCO or PROPER
-% functions.
-addpath(genpath(fileparts(fileparts(fileparts(fileparts(mfilename('fullpath')))))));
-mp.path.falco = '../../../falco-matlab'; 
 
-addpath(genpath(mp.path.falco)) 
-mp.path.proper = '/Users/lmarchen/Documents/PROPER';
-addpath(genpath(mp.path.proper)) 
+% In this section we define and add necessary paths to FALCO.
+mp.path.falco = fileparts(fileparts(fileparts(fileparts(mfilename('fullpath'))))); % falco-matlab directory;
+addpath(genpath([mp.path.falco filesep 'setup']))
+addpath(genpath([mp.path.falco filesep 'lib']))
+addpath(genpath([mp.path.falco filesep 'config']))
 
 %% Load default model parameters
 %
@@ -55,4 +51,4 @@ mp.runLabel = 'testing_label';
 [mp, out] = falco_flesh_out_workspace(mp);
 % timerValEnd = toc;
 % disp(['Time Elapsed:  ' num2str(timerValEnd)])
-return
+end
