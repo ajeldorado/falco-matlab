@@ -19,8 +19,8 @@ switch upper(mp.coro)
         
         %% Compact Model
         
-        mp.F3.compact.Nxi = size(mp.F3.compact.mask.amp,2);
-        mp.F3.compact.Neta= size(mp.F3.compact.mask.amp,1);
+        mp.F3.compact.Nxi = size(mp.F3.compact.mask,2);
+        mp.F3.compact.Neta= size(mp.F3.compact.mask,1);
         
         % Resolution in compact model
         mp.F3.compact.dxi = fLamD/mp.F3.compact.res; % [meters/pixel]
@@ -55,8 +55,8 @@ switch upper(mp.coro)
                 
                 if mp.full.flagPROPER == false
                     
-                    mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
-                    mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);
+                    mp.F3.full.Nxi = size(mp.F3.full.mask,2);
+                    mp.F3.full.Neta= size(mp.F3.full.mask,1);
                 
                     %--Resolution
                     mp.F3.full.dxi = fLamD/mp.F3.full.res; % [meters/pixel]

@@ -314,5 +314,5 @@ mp.F3.ang = 65;    % on each side, opening angle [degrees]
 rocFillet = 0.25;
 clockDeg = 0;
 upsampleFactor = 100;
-mp.F3.compact.mask.amp = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.compact.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
-mp.F3.full.mask.amp = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.full.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
+mp.F3.compact.mask = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.compact.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
+mp.F3.full.mask = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.full.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);

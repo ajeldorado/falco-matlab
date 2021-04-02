@@ -26,7 +26,7 @@ if(mp.full.flagGenFPM)
     inputs.pixresFPM = mp.F3.full.res; %--pixels per lambda_c/D
     if isfield(mp.F3, 'clocking'); inputs.clocking = mp.F3.clocking; end
     if isfield(mp.F3, 'Rfillet'); inputs.Rfillet = mp.F3.Rfillet; end
-    mp.F3.full.mask.amp = falco_gen_bowtie_FPM(inputs);
+    mp.F3.full.mask = falco_gen_bowtie_FPM(inputs);
 end
 
 if(mp.compact.flagGenFPM)
@@ -38,7 +38,7 @@ if(mp.compact.flagGenFPM)
     inputs.pixresFPM = mp.F3.compact.res;
     if isfield(mp.F3, 'clocking'); inputs.clocking = mp.F3.clocking; end
     if isfield(mp.F3, 'Rfillet'); inputs.Rfillet = mp.F3.Rfillet; end
-    mp.F3.compact.mask.amp = falco_gen_bowtie_FPM(inputs);        
+    mp.F3.compact.mask = falco_gen_bowtie_FPM(inputs);        
 end
 
 

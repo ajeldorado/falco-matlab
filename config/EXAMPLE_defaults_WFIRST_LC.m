@@ -269,7 +269,7 @@ fpmStruct.centering = mp.centering;
 fpmStruct.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
 % Full model
 fpmStruct.pixresFPM = mp.F3.full.res;
-mp.F3.full.mask.amp = falco_gen_annular_FPM(fpmStruct);
+mp.F3.full.mask = falco_gen_annular_FPM(fpmStruct);
 % Compact model
 fpmStruct.pixresFPM = mp.F3.compact.res;
-mp.F3.compact.mask.amp = falco_gen_annular_FPM(fpmStruct);
+mp.F3.compact.mask = falco_gen_annular_FPM(fpmStruct);

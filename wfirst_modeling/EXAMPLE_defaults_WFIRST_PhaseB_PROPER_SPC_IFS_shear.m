@@ -432,10 +432,10 @@ mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda
 % FPM1 = interp2(X0,Y0,FPM0,X1,Y1,'cubic',0); %--Downsample by interpolation
 % switch lower(mp.centering)
 %     case{'pixel'}
-%         mp.F3.compact.mask.amp = zeros(N1+1,N1+1);
-%         mp.F3.compact.mask.amp(2:end,2:end) = FPM1;
+%         mp.F3.compact.mask = zeros(N1+1,N1+1);
+%         mp.F3.compact.mask(2:end,2:end) = FPM1;
 %     otherwise
-%         mp.F3.compact.mask.amp = FPM1;
+%         mp.F3.compact.mask = FPM1;
 % end
 % figure(2); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
 % figure(3); imagesc(FPM1); axis xy equal tight; colormap jet; colorbar;
@@ -526,10 +526,10 @@ mp.full.dm2.flatmap = 0;
 % FPM1 = interp2(X0,Y0,FPM0,X1,Y1,'cubic',0); %--Downsample by interpolation
 % switch lower(mp.centering)
 %     case{'pixel'}
-%         mp.F3.full.mask.amp = zeros(N1+1,N1+1);
-%         mp.F3.full.mask.amp(2:end,2:end) = FPM1;
+%         mp.F3.full.mask = zeros(N1+1,N1+1);
+%         mp.F3.full.mask(2:end,2:end) = FPM1;
 %     otherwise
-%         mp.F3.full.mask.amp = FPM1;
+%         mp.F3.full.mask = FPM1;
 % end
 % % figure(2); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
 % % figure(3); imagesc(FPM1); axis xy equal tight; colormap jet; colorbar;

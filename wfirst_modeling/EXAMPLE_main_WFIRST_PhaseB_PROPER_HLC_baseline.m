@@ -1,20 +1,12 @@
-% Copyright 2018, 2019, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an HLC design run.
-%  1) Load the default model parameters for an HLC.
-%  2) Specify the values to overwrite.
-%  3) Run a single trial of WFC using FALCO.
-%
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
-% ---------------
+% Script to run the wavefront correction with the Roman (formerly WFIRST) HLC from Phase B. 
 
-clear all;
+clear
 
 
 %% Step 1: Define Necessary Paths on Your Computer System
@@ -23,18 +15,9 @@ clear all;
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
-%--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-
-%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
-%%--Add to the MATLAB Path
-% addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-% addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
-
+% %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+% mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 %% Step 2: Load default model parameters
 
@@ -86,10 +69,13 @@ mp.ctrl.sched_mat = [...
 
 %%
 
-if(mp.Nsbp==1)
+if mp.Nsbp == 1
     lambdaFacs = 1;
+elseif mp.Nwpsbp == 1
+    lambdaFacs = linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
 else
-    lambdaFacs = linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
+    DeltaBW = mp.fracBW/(mp.Nsbp)*(mp.Nsbp-1)/2;
+    lambdaFacs = linspace(1-DeltaBW, 1+DeltaBW, mp.Nsbp);
 end
 
 lam_occ = lambdaFacs*mp.lambda0;

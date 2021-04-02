@@ -85,7 +85,7 @@ end
 switch upper(mp.coro)
     
     case{'LC', 'APLC', 'FLC', 'SPLC'}
-        fpm = mp.F3.compact.mask.amp;
+        fpm = mp.F3.compact.mask;
         transOuterFPM = 1;
         
     case{'HLC'}
@@ -211,7 +211,7 @@ if whichDM == 1
                     EP4 = (transOuterFPM*EP4noFPM - EP4sub); % Babinet's principle to get E-field at Lyot plane
                     
                 case{'FLC', 'SPLC'}
-                    EF3 = mp.F3.compact.mask.amp.*EF3inc; % Apply FPM
+                    EF3 = mp.F3.compact.mask.*EF3inc; % Apply FPM
                     EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % MFT to Lyot Plane
                     EP4 = propcustom_relay(EP4, mp.Nrelay3to4-1, mp.centering); % Add more re-imaging relays between pupils P3 and P4 if necessary
                 
@@ -304,7 +304,7 @@ if whichDM == 2
                     EP4 = transOuterFPM*EP4noFPM - EP4sub; % Babinet's principle to get E-field at Lyot plane
             
                 case{'FLC', 'SPLC'}
-                    EF3 = mp.F3.compact.mask.amp.*EF3inc; % Apply FPM
+                    EF3 = mp.F3.compact.mask.*EF3inc; % Apply FPM
                     EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.compact.dxi,mp.F3.compact.deta,mp.P4.compact.dx,mp.P4.compact.Narr,mp.centering); % MFT to Lyot Plane
                     EP4 = propcustom_relay(EP4, mp.Nrelay3to4-1, mp.centering); % Add more re-imaging relays between pupils P3 and P4 if necessary
                 

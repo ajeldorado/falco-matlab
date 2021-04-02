@@ -19,10 +19,10 @@ function [mp] = falco_gen_FPM_Roddier(mp)
         FPMgenInputs.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
         FPMgenInputs.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
         FPMgenInputs.centering = mp.centering;
-        mp.F3.full.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
+        mp.F3.full.mask = falco_gen_annular_FPM(FPMgenInputs);
 
-        mp.F3.full.Nxi = size(mp.F3.full.mask.amp,2);
-        mp.F3.full.Neta= size(mp.F3.full.mask.amp,1);   
+        mp.F3.full.Nxi = size(mp.F3.full.mask,2);
+        mp.F3.full.Neta= size(mp.F3.full.mask,1);   
         
         %--Number of points across the FPM in the compact model
         if(isinf(mp.F3.Rout))
@@ -44,7 +44,7 @@ function [mp] = falco_gen_FPM_Roddier(mp)
         
         %--Make or read in focal plane mask (FPM) amplitude for the compact model
         FPMgenInputs.pixresFPM = mp.F3.compact.res; %--pixels per lambda_c/D
-        mp.F3.compact.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
+        mp.F3.compact.mask = falco_gen_annular_FPM(FPMgenInputs);
 
         %-- Make a mask for the phase pattern
         FPMgenInputsPhz = FPMgenInputs;
@@ -63,8 +63,8 @@ function [mp] = falco_gen_FPM_Roddier(mp)
             n = @(lam) real(sqrt(nsquared(lam*1e6)));
         elseif(strcmp(mp.FPMmaterial,'reflective'))
             n = @(lam) -1;
-            mp.F3.full.mask.amp = -1*mp.F3.full.mask.amp;
-            mp.F3.compact.mask.amp = -1*mp.F3.compact.mask.amp;
+            mp.F3.full.mask = -1*mp.F3.full.mask;
+            mp.F3.compact.mask = -1*mp.F3.compact.mask;
         else
             error('Material not defined for Roddier(or Zernike) mask.');
         end

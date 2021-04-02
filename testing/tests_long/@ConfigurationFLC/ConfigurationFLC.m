@@ -320,9 +320,9 @@ inputs.clocking = mp.F3.clocking;
 inputs.Rfillet = mp.F3.Rfillet;
 % Full model
 inputs.pixresFPM = mp.F3.full.res;
-mp.F3.full.mask.amp = falco_gen_bowtie_FPM(inputs);
+mp.F3.full.mask = falco_gen_bowtie_FPM(inputs);
 % Compact model
 inputs.pixresFPM = mp.F3.compact.res;
-mp.F3.compact.mask.amp = falco_gen_bowtie_FPM(inputs);
+mp.F3.compact.mask = falco_gen_bowtie_FPM(inputs);
 
 end

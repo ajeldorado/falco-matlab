@@ -20,7 +20,7 @@ function [mp] = falco_gen_FPM_LC(mp)
         if(isfield(mp.F3.full,'mask'))
             mp.F3.full = rmfield(mp.F3.full,'mask');
         end
-        mp.F3.full.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
+        mp.F3.full.mask = falco_gen_annular_FPM(FPMgenInputs);
     end
  
 
@@ -48,7 +48,7 @@ function [mp] = falco_gen_FPM_LC(mp)
         if(isfield(mp.F3.compact,'mask'))
             mp.F3.compact = rmfield(mp.F3.compact,'mask');
         end
-        mp.F3.compact.mask.amp = falco_gen_annular_FPM(FPMgenInputs);
+        mp.F3.compact.mask = falco_gen_annular_FPM(FPMgenInputs);
     else
         %
     end
