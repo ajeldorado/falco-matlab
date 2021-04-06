@@ -15,7 +15,6 @@
 % This script was first written by A.J. Riggs on 2017-01-11.
 %
 % Required Inputs:
-% inputs.Dbeam: diameter of the incoming beam
 % inputs.Nbeam: number of points across the incoming beam 
 % inputs.ID: inner diameter of mask (in pupil diameters)
 % inputs.OD: outer diameter of mask (in pupil diameters)

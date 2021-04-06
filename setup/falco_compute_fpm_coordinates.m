@@ -18,9 +18,13 @@ switch upper(mp.coro)
         fLamD = mp.fl*mp.lambda0/mp.P2.D;
         
         %% Compact Model
-        
-        mp.F3.compact.Nxi = size(mp.F3.compact.mask,2);
-        mp.F3.compact.Neta= size(mp.F3.compact.mask,1);
+        mp.F3.compact.dummy = 1;
+        if ~isfield(mp.F3.compact, 'Nxi')
+            mp.F3.compact.Nxi = size(mp.F3.compact.mask, 2);
+        end
+        if ~isfield(mp.F3.compact, 'Neta')
+            mp.F3.compact.Neta= size(mp.F3.compact.mask, 1);
+        end
         
         % Resolution in compact model
         mp.F3.compact.dxi = fLamD/mp.F3.compact.res; % [meters/pixel]
@@ -55,8 +59,13 @@ switch upper(mp.coro)
                 
                 if mp.full.flagPROPER == false
                     
-                    mp.F3.full.Nxi = size(mp.F3.full.mask,2);
-                    mp.F3.full.Neta= size(mp.F3.full.mask,1);
+                    mp.F3.full.dummy = 1;
+                    if ~isfield(mp.F3.full, 'Nxi')
+                        mp.F3.full.Nxi = size(mp.F3.full.mask, 2);
+                    end
+                    if ~isfield(mp.F3.full, 'Neta')
+                        mp.F3.full.Neta= size(mp.F3.full.mask, 1);
+                    end
                 
                     %--Resolution
                     mp.F3.full.dxi = fLamD/mp.F3.full.res; % [meters/pixel]
