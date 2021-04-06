@@ -4,36 +4,21 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an HLC design run.
-%  1) Load the default model parameters for an HLC.
-%  2) Specify the values to overwrite.
-%  3) Run a single trial of WFC using FALCO.
-%
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
-% ---------------
+% Script to run the wavefront correction with the Roman (formerly WFIRST)
+% CGI's SPC-Spec mode from Phase B. 
 
-clear all;
+clear
 
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Functions for when the full model uses PROPER
-addpath('~/Repos/proper-models/wfirst_phaseb/matlab');
+%--Tell Matlab where to find the PROPER model prescription and FITS files
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
+addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
-%--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-
-%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
-%%--Add to the MATLAB Path
-addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
-
+% %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+% mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 %% Step 2: Load default model parameters
 
@@ -153,7 +138,9 @@ figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula;
     
     figure(617); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv;
 
-
+% Don't double count the pupil amplitude with the phase retrieval and a model-based mask
+mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
+    
 %%
 % return
 

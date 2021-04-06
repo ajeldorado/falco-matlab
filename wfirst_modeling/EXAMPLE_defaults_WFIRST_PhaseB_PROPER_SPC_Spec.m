@@ -216,9 +216,9 @@ mp.P3.D = 46.3e-3; %46.2987e-3;
 mp.P4.D = 46.3e-3; %46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 386;
-mp.P2.compact.Nbeam = 386;
-mp.P3.compact.Nbeam = 386;
+mp.P1.compact.Nbeam = 300;
+mp.P2.compact.Nbeam = 300;
+mp.P3.compact.Nbeam = 300;
 mp.P4.compact.Nbeam = 60;
 
 %--Shaped Pupil Mask: Load and downsample.
@@ -412,20 +412,25 @@ mp.full.dm2.flatmap = 0;
 
 %% Mask Definitions
 
-mp.compact.flagGenFPM = false;
-
 %--Pupil definition
 mp.whichPupil = 'WFIRST180718';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
 
 %--Lyot stop shape
 mp.LSshape = 'bowtie';
 mp.P4.IDnorm = 0.38; %--Lyot stop ID [Dtelescope]
 mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
 mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
-mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
+inputs.ID = mp.P4.IDnorm; % (pupil diameters)
+inputs.OD = mp.P4.ODnorm; % (pupil diameters)
+inputs.ang = mp.P4.ang; % (degrees)
+inputs.centering = mp.centering; % 'interpixel' or 'pixel'
+inputs.Nbeam = mp.P4.compact.Nbeam; 
+mp.P4.compact.mask = falco_gen_bowtie_LS(inputs);
 
 % %--FPM size
 % mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 

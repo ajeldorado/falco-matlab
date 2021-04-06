@@ -216,9 +216,9 @@ mp.P3.D = 46.3e-3; %46.2987e-3;
 mp.P4.D = 46.3e-3; %46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 386;
-mp.P2.compact.Nbeam = 386;
-mp.P3.compact.Nbeam = 386;
+mp.P1.compact.Nbeam = 300;
+mp.P2.compact.Nbeam = 300;
+mp.P3.compact.Nbeam = 300;
 mp.P4.compact.Nbeam = 120;
 
 %--Lyot Stop:
@@ -279,9 +279,6 @@ mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 1; %--How many times to rotate the final image by 180 degrees
-
-%--FPM resolution
-mp.F3.compact.res = 3;    % sampling of FPM for compact model [pixels per lambda0/D]
 
 %% Optical Layout: Full Model 
 
@@ -376,14 +373,14 @@ mp.full.dm2.flatmap = 0;
 
 %% Mask Definitions
 
-mp.compact.flagGenLS = false;
-mp.compact.flagGenFPM = true;
-
 %--Pupil definition
 mp.whichPupil = 'WFIRST180718';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
+
 
 % %--Lyot stop shape
 % mp.LSshape = 'bowtie';
@@ -395,5 +392,10 @@ mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the teles
 %--FPM size
 mp.F3.Rin = 5.4;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = 20;   % radius of outer opaque edge of FPM [lambda0/D]
-mp.F3.ang = 180;    % on each side, opening angle [degrees]
+mp.F3.compact.res = 3;    % sampling of FPM for compact model [pixels per lambda0/D]
 
+inputs.pixresFPM = mp.F3.compact.res; %--pixels per lambda_c/D
+inputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+inputs.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
+inputs.centering = mp.centering;
+mp.F3.compact.mask = falco_gen_annular_FPM(inputs);

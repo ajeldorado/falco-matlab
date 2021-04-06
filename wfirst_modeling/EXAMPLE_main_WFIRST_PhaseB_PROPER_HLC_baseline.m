@@ -11,7 +11,7 @@ clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Functions for when the full model uses PROPER
+%--Tell Matlab where to find the PROPER model prescription and FITS files
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
@@ -165,6 +165,10 @@ for si=1:mp.Nsbp
 
 
 end
+
+% Don't double count the pupil amplitude with the phase retrieval and a model-based mask
+mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
+
 %% After getting input E-field, add back HLC DM shapes
 % mp.dm1.V = fitsread('hlc_dm1.fits')./mp.dm1.VtoH;
 % mp.dm2.V = fitsread('hlc_dm2.fits')./mp.dm2.VtoH;
@@ -188,11 +192,15 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 [mp, out] = falco_flesh_out_workspace(mp);
 
+
+figure; imagesc(mp.P1.compact.mask); axis xy equal tight; colorbar; drawnow;
+
 [mp, out] = falco_wfsc_loop(mp, out);
 
 
 %%
 return
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS

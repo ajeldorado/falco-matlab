@@ -4,36 +4,21 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an HLC design run.
-%  1) Load the default model parameters for an HLC.
-%  2) Specify the values to overwrite.
-%  3) Run a single trial of WFC using FALCO.
-%
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
-% ---------------
+% Script to run the wavefront correction with the Roman (formerly WFIRST)
+% CGI's SPC-WFOV mode from Phase B. 
 
-clear all;
+clear
 
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Functions for when the WFIRST CGI full model uses PROPER
+%--Tell Matlab where to find the PROPER model prescription and FITS files
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
-%--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-
-%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
-%%--Add to the MATLAB Path
-addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
+% %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+% mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 
 %% Step 2: Load default model parameters
@@ -46,7 +31,6 @@ EXAMPLE_defaults_WFIRST_PhaseB_PROPER_SPC_WFOV
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
-% mp.propMethodPTP = 'mft';
 
 %--Record Keeping
 mp.SeriesNum = 49;
@@ -60,7 +44,6 @@ mp.TrialNum = 4;
 % clear temp
 
 % %--DEBUGGING:
-mp.full.pol_conds = 10;
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
@@ -77,15 +60,81 @@ mp.ctrl.sched_mat = repmat([1,1j,12,0,1],[5,1]);
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 
-%% Step 3b: Obtain the phase retrieval phase.
+%% Choose starting DM commands to flatten the wavefront
 
 mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
 optval = mp.full;
 optval.source_x_offset =0;
 optval.zindex = 4;
 optval.zval_m = 0.19e-9;
-optval.dm1_m = fitsread('errors_polaxis10_dm.fits');
-optval.use_dm1 = 1;
+optval.use_dm1 = false;
+optval.use_dm2 = false;
+
+optval.end_at_fpm_exit_pupil = 1;
+optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
+optval.use_fpm = 0;
+optval.use_hlc_dm_patterns = 0;
+nout = 1024; %512; 			% nout > pupil_daim_pix
+optval.output_dim = 1024;%% Get the Input Pupil's E-field
+
+optval.use_pupil_mask = false;  % No SP for getting initial phase
+
+if mp.Nsbp == 1
+    lambdaFacs = 1;
+elseif mp.Nwpsbp == 1
+    lambdaFacs = linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
+else
+    DeltaBW = mp.fracBW/(mp.Nsbp)*(mp.Nsbp-1)/2;
+    lambdaFacs = linspace(1-DeltaBW, 1+DeltaBW, mp.Nsbp);
+end
+
+%--Get the Input Pupil's E-field
+mp.P1.compact.E = ones(mp.P1.compact.Nbeam+2,mp.P1.compact.Nbeam+2,mp.Nsbp); %--Initialize
+si = ceil(mp.Nsbp/2);
+lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
+
+EpupFull = prop_run('model_full_wfirst_phaseb', lambda_um, nout, 'quiet', 'passvalue', optval );
+if(mp.flagPlot)
+    figure(505); imagesc(angle(EpupFull)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+    figure(506); imagesc(abs(EpupFull)); axis xy equal tight; colorbar; colormap parula; drawnow;
+end
+
+% Which pixels to use when flattening the phase
+mask = 0*EpupFull;
+mask(abs(EpupFull) > 1e-1*max(abs(EpupFull(:)))) = 1;
+figure(3); imagesc(mask); axis xy equal tight; colorbar; drawnow;
+
+    
+surfaceToFit = -0.5*mask.*angle(EpupFull) * (mp.lambda0/(2*pi));
+figure(1); imagesc(abs(EpupFull)); axis xy equal tight; colorbar; colormap parula; drawnow;
+figure(2); imagesc(surfaceToFit); axis xy equal tight; colorbar; colormap parula;  drawnow;
+
+mp.dm1.inf0 = fitsread(mp.dm1.inf_fn);
+% mp.dm1.dm_spacing = 400e-6;
+mp.dm1.dx_inf0 = mp.dm1.dm_spacing/10;
+mp.dm1.dx = mp.P2.D/mp.P2.compact.Nbeam;
+mp.dm1.centering = 'pixel';
+dm1copy = mp.dm1;
+dm1copy.dx = mp.dm1.dx * (mp.P1.compact.Nbeam/mp.P1.full.Nbeam);
+flatmap = falco_fit_dm_surf(dm1copy, surfaceToFit);
+figure(4); imagesc(flatmap); axis xy equal tight; colorbar; drawnow;
+
+% Split commands evenly between DMs 1 and 2
+mp.full.dm1.flatmap = flatmap/2;% ./ mp.dm1.VtoH;
+mp.full.dm2.flatmap = flatmap/2;% ./ mp.dm2.VtoH;
+
+
+%% Step 3b: Perform an idealized phase retrieval (get the E-field directly)
+
+mp.full.input_field_rootname = '/Users/ajriggs/Repos/falco-matlab/data/maps/input_full';
+optval = mp.full;
+optval.source_x_offset =0;
+optval.zindex = 4;
+optval.zval_m = 0.19e-9;
+optval.use_dm1 = true;
+optval.dm1_m = mp.full.dm1.flatmap;% .* mp.dm1.VtoH;
+optval.use_dm2 = true;
+optval.dm2_m = mp.full.dm2.flatmap;% .* mp.dm2.VtoH;
 
 optval.end_at_fpm_exit_pupil = 1;
 optval.output_field_rootname = [fileparts(mp.full.input_field_rootname) filesep 'fld_at_xtPup'];
@@ -103,7 +152,8 @@ else
 end
 
 %--Get the Input Pupil's E-field
-mp.P1.compact.E = ones(mp.P1.compact.Nbeam+2,mp.P1.compact.Nbeam+2,mp.Nsbp); %--Initialize
+nCompact = ceil_even(mp.P1.compact.Nbeam+1);
+mp.P1.compact.E = ones(nCompact, nCompact, mp.Nsbp);
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
 
@@ -125,8 +175,8 @@ for si=1:mp.Nsbp
     Nc = ceil_even( (mp.P1.compact.Nbeam/mp.P1.full.Nbeam)*Nf ); %--N compact
     xF = (-Nf/2:Nf/2-1)*dxF;
     xC = (-Nc/2:Nc/2-1)*dxC;
-    [Xf,Yf] = meshgrid(xF);
-    [Xc,Yc] = meshgrid(xC);
+    [Xf, Yf] = meshgrid(xF);
+    [Xc, Yc] = meshgrid(xC);
     fldC = interp2(Xf,Yf,fldFull,Xc,Yc,'cubic',0); %--Downsample by interpolation
     fldC = padOrCropEven(fldC,ceil_even(mp.P1.compact.Nbeam+1));
     if(mp.flagPlot)
@@ -135,11 +185,12 @@ for si=1:mp.Nsbp
     end
 
     %--Assign to initial E-field in compact model.
-    temp = 0*fldC;
-    temp(2:end,2:end) = rot90(fldC(2:end,2:end),2);
-    mp.P1.compact.E(:,:,si) = temp;
+    mp.P1.compact.E(:, :, si) = propcustom_relay(fldC, 1, mp.centering);
     
 end
+
+% Don't double count the pupil amplitude with the phase retrieval and a model-based mask
+mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
 
 %% Step 4: Generate the label associated with this trial
 
