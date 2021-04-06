@@ -4,15 +4,10 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Spectral weighting of images. 
-%
-%
-% REVISION HISTORY:
-% --------------
-% Created by G. Ruane on 2020-04-21 based on falco_set_spectral_properties
-% ---------------
+% Spectral weighting of WFS images. 
 
-function mp = falco_set_WFS_spectral_properties(mp)
+
+function mp = falco_set_wfs_spectral_properties(mp)
 
 if(~isfield(mp.wfs,'lambda0')); mp.wfs.lambda0 = mp.lambda0; end
 if(~isfield(mp.wfs,'Nsbp')); mp.wfs.Nsbp = 1; end

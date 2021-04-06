@@ -137,7 +137,7 @@ if(whichDM==1)
 
             %--MFT from pupil P3 to FPM
             EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
-            FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t);
+            FPM = mp.F3.compact.mask.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t);
             EF3 = (1-FPM).*EF3; %--Apply (1-FPM) for Babinet's principle later
 
             %--MFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
@@ -209,7 +209,7 @@ if(whichDM==2)
 
             %--MFT from pupil P3 to FPM
             EF3 = rect_mat_pre*dEP3box*rect_mat_post; % MFT to FPM
-            FPM = mp.F3.compact.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
+            FPM = mp.F3.compact.mask.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.compact.mask.phzSupport);
             EF3 = (1-FPM).*EF3; %--Apply (1-FPM) for Babinet's principle later
 
             % DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)

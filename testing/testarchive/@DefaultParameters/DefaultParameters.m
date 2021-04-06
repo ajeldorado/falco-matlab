@@ -10,15 +10,13 @@
 
 function [mp] = DefaultParameters()
 %% Define Necessary Paths on Your Computer System
-%
-% In this section we define and add necessary paths to FAlCO and PROPER. If 
-% we do not define and add these paths we will not be able to call FALCO or PROPER
-% functions.
-mp.path.falco = '../../../falco-matlab'; 
 
-addpath(genpath(mp.path.falco)) 
-mp.path.proper = '/Users/lmarchen/Documents/PROPER';
-addpath(genpath(mp.path.proper)) 
+% In this section we define and add necessary paths to FALCO.
+mp.path.falco = fileparts(fileparts(fileparts(fileparts(mfilename('fullpath'))))); % falco-matlab directory;
+addpath(genpath([mp.path.falco filesep 'setup']))
+addpath(genpath([mp.path.falco filesep 'lib']))
+addpath(genpath([mp.path.falco filesep 'config']))
+addpath(genpath([mp.path.falco filesep 'lib_external']))
 
 %% Load default model parameters
 %
@@ -59,10 +57,6 @@ mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
 %
 % This generates the label associated with a particular trial, not really
 % needed here.
-mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
-    mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-    '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
-    '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller];
+mp.runLabel = 'testing_label';
 
-return
+end

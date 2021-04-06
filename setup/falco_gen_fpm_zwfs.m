@@ -1,18 +1,10 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
-%
-% REVISION HISTORY:
-% --------------
-% Created by A.J. Riggs on 2018-10-01 by extracting material from
-% falco_init_ws.m.
-% Modifed from falco_config_gen_FPM_LC by G. Ruane on 2018-11-20.
-% Modifed from falco_gen_FPM_Roddier by G. Ruane on 2020-04-21.
-% ---------------
 
-function mp = falco_gen_FPM_ZWFS(mp)
+function mp = falco_gen_fpm_zwfs(mp)
 
         %--Make focal plane mask (FPM) amplitude
         FPMgenInputs.pixresFPM = mp.wfs.mask.res; %--pixels per lambda_c/D

@@ -36,7 +36,7 @@ for Itr = 1:mp.Nitr
 
     %% Normalization and throughput calculations
     
-    mp = falco_compute_PSF_norm_factor(mp);
+    mp = falco_compute_psf_norm_factor(mp);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr) = thput;
