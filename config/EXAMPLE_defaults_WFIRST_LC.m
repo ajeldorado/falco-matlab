@@ -1,5 +1,5 @@
-
-% %--Initialize some structures if they don't already exist
+% Initialize some structures if they don't already exist.
+% Generate or load the pupil and focal plane masks.
 
 %% Misc
 
@@ -176,8 +176,7 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
 mp.layout = 'Fourier';  %--Which optical layout to use
-mp.coro = 'LC';%'HLC';
-mp.flagApod = false;    %--Whether to use an apodizer or not
+mp.coro = 'LC';
 
 %--Final Focal Plane Properties
 mp.Fend.res = 2.5;%3; %--Sampling [ pixels per lambda0/D]
@@ -194,22 +193,28 @@ mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
-%% Optical Layout: Compact Model (and Jacobian Model)
+%% Optical Layout:
+
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
-
-%--Focal Lengths
-mp.fl = 1.; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
-
-%--Pupil Plane Diameters
-mp.P2.D = 46.2987e-3;
-mp.P3.D = 46.2987e-3;
-mp.P4.D = 46.2987e-3;
 
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 250;
 mp.P2.compact.Nbeam = 250;
 mp.P3.compact.Nbeam = 250;
 mp.P4.compact.Nbeam = 250;
+
+mp.P1.full.Nbeam = 250;
+mp.P2.full.Nbeam = 250;
+mp.P3.full.Nbeam = 250;
+mp.P4.full.Nbeam = 250;
+
+%--Pupil Plane Diameters
+mp.P2.D = 46.2987e-3;
+mp.P3.D = 46.2987e-3;
+mp.P4.D = 46.2987e-3;
+
+%--Focal Lengths
+mp.fl = 1.; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 % to keep track of 180-degree rotations compared to the full model, which 
@@ -220,41 +225,51 @@ mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
-mp.F3.compact.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
 
-%% Optical Layout: Full Model 
+%% Entrance Pupil (P1) Definition and Generation
 
-%--Focal Lengths
-% mp.fl = 1; 
-
-%--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 250;
-mp.P2.full.Nbeam = 250;
-mp.P3.full.Nbeam = 250;
-mp.P4.full.Nbeam = 250;
-
-mp.F3.full.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
-
-%% Mask Definitions
-
-%--Pupil definition
-mp.whichPupil = 'WFIRST180718';
+mp.whichPupil = 'WFIRST180718'; % Used only for run label
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
 
-%--Lyot stop padding
-mp.P4.wStrut = 3.6/100.; % nominal pupil's value is 76mm = 3.216%
-mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
 
-%--FPM size
+%% "Apodizer" (P3) Definition and Generation
+mp.flagApod = false;    %--Whether to use an apodizer or not in the FALCO models.
+
+
+%% Lyot stop (P4) Definition and Generation
+
+changes.flagLyot = true;
+changes.ID = 0.50;
+changes.OD = 0.80;
+changes.wStrut = 3.6/100; % nominal pupil's value is 76mm = 3.216%
+changes.flagRot180 = true;
+mp.P4.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.full.Nbeam, mp.centering, changes);
+mp.P4.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P4.compact.Nbeam, mp.centering, changes);
+
+
+%% FPM (F3) Definition and Generation
+
+mp.F3.full.res = 4; % sampling of FPM for full model [pixels per lambda0/D]
+mp.F3.compact.res = 4; % sampling of FPM for full model [pixels per lambda0/D]
+
 mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
 mp.F3.RinA = 2.7;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
+mp.FPMampFac = 0; % amplitude transmission of the FPM
 
-mp.FPMampFac = 0;%10^(-3.7); % amplitude transmission of the FPM
-
-%% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% Both models
+fpmStruct.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+fpmStruct.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
+fpmStruct.centering = mp.centering;
+fpmStruct.FPMampFac = mp.FPMampFac; % amplitude transmission of inner FPM spot
+% Full model
+fpmStruct.pixresFPM = mp.F3.full.res;
+mp.F3.full.mask = falco_gen_annular_FPM(fpmStruct);
+% Compact model
+fpmStruct.pixresFPM = mp.F3.compact.res;
+mp.F3.compact.mask = falco_gen_annular_FPM(fpmStruct);

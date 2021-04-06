@@ -20,11 +20,13 @@ classdef TestFunctionalFLC < matlab.unittest.TestCase
     methods (TestClassSetup)
         function addPath(testCase)
             addpath(genpath([testCase.mp.path.falco filesep 'setup']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
             rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end    
     

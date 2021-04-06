@@ -131,7 +131,7 @@ switch upper(mp.coro)
     case{'SPLC','FLC'}
 %         %--MFT from SP to FPM (i.e., P3 to F3)
 %         EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering); %--E-field incident upon the FPM
-%         EF3 = mp.F3.full.mask.amp.*EF3inc; %--Apply FPM
+%         EF3 = mp.F3.full.mask.*EF3inc; %--Apply FPM
 %         %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
 %         EP4 = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.F3.full.dxi,mp.F3.full.deta,mp.P4.full.dx,mp.P4.full.Narr,mp.centering); %--E-field incident upon the Lyot stop
 
@@ -140,10 +140,10 @@ switch upper(mp.coro)
 %         EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda,mp.P2.full.dx,mp.F3.full.dxi,mp.F3.full.Nxi,mp.F3.full.deta,mp.F3.full.Neta,mp.centering);
 %         % Apply (1-FPM) for Babinet's principle later
 %         if(strcmpi(mp.coro,'roddier'))
-%             FPM = mp.F3.full.mask.amp.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.full.mask.phzSupport);
+%             FPM = mp.F3.full.mask.*exp(1i*2*pi/lambda*(mp.F3.n(lambda)-1)*mp.F3.t.*mp.F3.full.mask.phzSupport);
 %             EF3 = (1-FPM).*EF3inc; %--Apply (1-FPM) for Babinet's principle later
 %         else
-%             EF3 = (1-mp.F3.full.mask.amp).*EF3inc;
+%             EF3 = (1-mp.F3.full.mask).*EF3inc;
 %         end
 %         % Use Babinet's principle at the Lyot plane. This is the term without the FPM.
 %         EP4noFPM = propcustom_relay(EP3,mp.Nrelay3to4,mp.centering); %--Propagate forward another pupil plane 
