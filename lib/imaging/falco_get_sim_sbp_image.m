@@ -39,9 +39,14 @@ function subbandImage = falco_get_sim_sbp_image(mp, iSubband)
 
     %--Apply the spectral weights and sum
     subbandImage = 0; 
-    for iCombo = 1:Ncombos  
+    for iCombo = 1:Ncombos
         subbandImage = subbandImage + Iall{iCombo};  
     end
+    
+    if mp.flagImageNoise
+        subbandImage = falco_add_noise_to_subband_image(mp, subbandImage, iSubband);
+    end
+
 
 end %--END OF FUNCTION
 

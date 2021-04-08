@@ -28,6 +28,7 @@ mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
 mp.Fend.eval.dummy = 1;
 mp.path.dummy = 1;
+mp.detector.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
@@ -166,6 +167,17 @@ if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Needed for computing
 %--Quantization of DM actuation steps based on least significant bit of the
 % DAC (digital-analog converter). In height, so called HminStep. If HminStep (minimum step in H) is defined, then quantize the DM voltages
 % Variables to define if wanted: mp.dm1.HminStep, mp.dm2.HminStep
+
+%% Detector properties for adding noise to images
+
+% Default values are for the Andor Neo sCMOS detector and testbed flux
+if ~isfield(mp, 'flagImageNoise'); mp.flagImageNoise = false; end % whether to include noise in the images
+if ~isfield(mp.detector, 'gain'); mp.detector.gain = 1.0; end % [e-/count]
+if ~isfield(mp.detector, 'darkCurrentRate'); mp.detector.darkCurrentRate = 0.015; end % [e-/pixel/second]
+if ~isfield(mp.detector, 'readNoiseStd'); mp.detector.readNoiseStd = 1.7; end % [e-/count]
+if ~isfield(mp.detector, 'wellDepth'); mp.detector.wellDepth = 3e4; end % [e-]
+if ~isfield(mp.detector, 'peakFluxVec'); mp.detector.peakFluxVec = 1e8 * ones(mp.Nsbp, 1); end % [counts/pixel/second]
+if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % [seconds]
 
 %% Initialize some basic attributes for all DMs (which include hybrid FPMs).
 mp.dm1.NactTotal=0; mp.dm2.NactTotal=0; mp.dm3.NactTotal=0; mp.dm4.NactTotal=0; mp.dm5.NactTotal=0; mp.dm6.NactTotal=0; mp.dm7.NactTotal=0; mp.dm8.NactTotal=0; mp.dm9.NactTotal=0; 
