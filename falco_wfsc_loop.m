@@ -14,7 +14,7 @@ if(isfield(mp,'testbed') )
 end
 %% Initializations of Arrays for Data Storage 
 InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of dark hole.
-
+InormSMFHist = zeros(mp.Nitr,1);
 %--Raw contrast (broadband)
 
 %% Plot the pupil masks
@@ -24,8 +24,7 @@ InormHist = zeros(mp.Nitr,1); % Measured, mean raw contrast in scoring region of
 
 %% Take initial broadband image 
 if mp.flagFiber
-    InormSMFHist = zeros(mp.Nitr,1);
-    [Im, Ifiber] = falco_get_summed_image(mp);
+    [Im, Ifiber,Ifiber_arr] = falco_get_summed_image(mp);
 else
     Im = falco_get_summed_image(mp);
 end
@@ -118,9 +117,11 @@ for Itr=1:mp.Nitr
     if(isfield(mp,'testbed') )
         if(mp.flagFiber)
             InormHist_tb.total = InormSMFHist; 
+            InormHist_tb.Inorm_arr = Ifiber_arr;
         else
             InormHist_tb.total = InormHist; 
         end
+        
         Im_tb.Im = Im;
         Im_tb.E = zeros(size(Im));
         if(Itr>1)
@@ -401,7 +402,7 @@ end
 % Take the next image to check the contrast level (in simulation only)
 tic; fprintf('Getting updated summed image... ');
 if mp.flagFiber
-    [Im, Ifiber] = falco_get_summed_image(mp);
+    [Im, Ifiber,Ifiber_arr] = falco_get_summed_image(mp);
     if(~mp.flagSim);bench.Femto.averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,Ifiber);end
 else
     Im = falco_get_summed_image(mp);
@@ -418,10 +419,10 @@ fprintf('\n\n');
 if mp.flagFiber
     InormSMFHist(Itr+1) = Ifiber;%mean(Im(mp.Fend.corr.maskBool));
     % Increase the exp time if needed
-    peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint*bench.andor.tint);
-    if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
-        hcst_andor_setExposureTime(bench,bench.andor.tint+1);
-    end
+%     peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint(1)*bench.andor.tint*mp.NDfilter_cal);
+%     if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
+%         hcst_andor_setExposureTime(bench,bench.andor.tint+1);
+%     end
     fprintf('Prev and New Measured SMF Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
         InormSMFHist(Itr), InormSMFHist(Itr+1), InormSMFHist(Itr)/InormSMFHist(Itr+1) ); 
 
@@ -438,7 +439,7 @@ if(mp.flagSaveEachItr)
     Nitr = mp.Nitr;
     thput_vec = mp.thput_vec;
     fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.ws_inprogress,mp.runLabel,Itr,mp.Nitr);
-    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','InormHist','thput_vec','Im')
+    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','InormHist','InormSMFHist','thput_vec','Im')
     fprintf('done.\n\n')
 end
 
@@ -520,9 +521,10 @@ end
 out.thput = mp.thput_vec;
 out.Nitr = mp.Nitr;
 out.InormHist = InormHist;
+out.InormSMFHist = InormSMFHist;
 out.InormMod = InormHist_tb.mod;
 
-fnOut = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
+fnOut = [mp.path.ws_inprogress filesep mp.runLabel,'_snippet.mat'];
 
 fprintf('\nSaving abridged workspace to file:\n\t%s\n',fnOut)
 save(fnOut,'out');

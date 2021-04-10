@@ -30,6 +30,13 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     sbp_texp  = bench.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
     SMFInt0   = bench.info.SMFInt0s(si);% counts per second 
     
+    % ND filter calibration
+    if numel(mp.NDfilter_cal)>1
+        NDfilter_cal = interp1(mp.NDfilter_wave_cal,mp.NDfilter_cal,mp.sbp_centers(si)*1e9,'linear','extrap');
+    else
+        NDfilter_cal=mp.NDfilter_cal;
+    end
+
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
 
@@ -51,7 +58,7 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     
     
     map = (mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
-%     map = fliplr(mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
+%     map = flipud(map); % There's a transpose between Matlab and BMC indexing
 %     
     % Send the commands to the DM. 
     % Notes: bench.DM.flatvec contains the commands to flatten the DM. 
@@ -61,7 +68,11 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
     %        are handled outside of this function. 
     cmds = hcst_DM_apply2Dmap(bench,map,1);% Returns actual DM commands 
     
-
+    %Change exp time
+    if ~mp.est.flag_performingEst
+        if sbp_texp~=bench.andor.tint;hcst_andor_setExposureTime(bench,sbp_texp);end
+    end
+    
     if(isfield(bench.info,'source') && strcmpi(bench.info.source,'nkt'))
         %----- Get image from the testbed -----
         disp(['Getting image from testbed in band ',num2str(si)])
@@ -71,9 +82,12 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
         lam1 = lam0 - sbp_width/2;
         lam2 = lam0 + sbp_width/2;
         tb_NKT_setWvlRange(bench,lam1*1e9,lam2*1e9);
+        pause(0.5)
     else
         disp('Getting image from testbed (using laser source)')
     end
+    
+    if si==1; resPos = hcst_FEUzaber_move(bench,bench.FEUzaber.posIn);end
     
     if ~mp.flagUseCamera4EFCSMF
         pause(1)
@@ -99,19 +113,35 @@ function normI = falco_get_hcst_sbp_image_fiber(mp,si)
             end
         end
     else
-        dark4EFCSMF = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
 
         hcst_andor_setSubwindow(bench,bench.andor.FEURow,...
-            bench.andor.FEUCol,128);
+            bench.andor.FEUCol,128,false);
+        dark4EFCSMF = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
         im = hcst_andor_getImage(bench)-dark4EFCSMF;
-        Vsmf = hcst_fiu_aperturePhotometryOnAndor(bench,im);%max(im(:));
-        normI = Vsmf/(SMFInt0/mp.peakPSFtint*bench.andor.tint);
+        Vsmf = hcst_fiu_aperturePhotometryOnAndor(bench,im,true);%max(im(:));
+        normI = Vsmf/(SMFInt0/mp.peakPSFtint(si)*bench.andor.tint*NDfilter_cal);
 
-        % plot image to see how it looks lik
+%         % plot image to see how it looks lik
         figure(111)
-        imagesc(im)
+%         subplot(2,2,1);
+        imagesc((im))
         axis image
         colorbar
+        title(['Wvl: ',num2str(si),'/',num2str(mp.Nsbp)])
+%         text(8,25,['# negative: ',num2str(num_neg)],'Color','w','FontSize',16);
+% 
+%         subplot(2,2,3); 
+%         if si==1;ma_im_arr = zeros(mp.Nsbp,1)*nan;end
+%         ma_im_arr(si)=max(im(:));
+%         plot(bench.info.sbp_width,ma_im_arr)
+%         xlabel(['wavelength'])
+%         ylabel(['max counts image'])
+%         
+%         subplot(2,2,4); 
+%         plot(bench.info.sbp_width,bench.info.sbp_texp)
+%         xlabel(['wavelength'])
+%         ylabel(['tint [sec]'])
+%         drawnow
     end
 
     

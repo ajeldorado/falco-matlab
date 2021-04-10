@@ -119,25 +119,28 @@ if(mp.flagPlot)
         imaux = Im_prev - abs(Im_tb.E).^2;
         imaux = imaux+abs(min(imaux(:)));
         
-    subplot(3,3,8); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(imaux),[Icbmin Icbmax]); 
-    axis xy equal tight; 
-%     colorbar; 
-    colormap(gca,parula);
-%     xlabel('\lambda_0/D'); 
-%     ylabel('\lambda_0/D');
-    title('Im - Modulated Irradiance');
+        subplot(3,3,8); % Save the handle of the subplot
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(imaux),[Icbmin Icbmax]); 
+        axis xy equal tight; 
+    %     colorbar; 
+        colormap(gca,parula);
+    %     xlabel('\lambda_0/D'); 
+    %     ylabel('\lambda_0/D');
+        title('Im - Modulated Irradiance');
+    end
+ 
+    if(isfield(Inorm,'Inorm_arr'))
+        subplot(3,3,9); % Save the handle of the subplot
+        plot(mp.sbp_centers*1e9,Inorm.Inorm_arr,'d','color','b'); 
+%         title('Normalized Intensity in Sub-Bandpasses');
+        xlabel('Wavelength [nm]');
     end
     
    drawnow;
 
 end
 
-out_dir = [mp.bench.info.OUT_DATA_DIR,mp.runLabel,'/'];
-% Directory to save dat
-if(~exist(out_dir, 'dir'))
-    mkdir(out_dir);
-end
+out_dir = mp.path.ws_inprogress;
 
 hcst_andor_fitswrite(mp.bench,Im,[out_dir,'normI_it',num2str(Itr-1),'.fits'],false);
 hcst_andor_fitswrite(mp.bench,mp.dm1.V,[out_dir,'dmV_it',num2str(Itr-1),'.fits'],false);

@@ -99,6 +99,11 @@ ev.IincoEst = zeros(mp.Fend.corr.Npix,mp.Nsbp);
 ev.I0mean = 0;
 ev.IprobedMean = 0;
 
+%% Save exp time from ctrl
+if ~mp.flagSim
+    bench = mp.bench;
+end
+
 %% Get images and perform estimates in each sub-bandpass
 
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
@@ -123,6 +128,9 @@ for si=1:mp.Nsbp
     DM2Vminus = zeros( [Nact,Nact, Npairs]);
 
     %% Compute probe shapes and take probed images:
+    if ~mp.flagSim
+        mp.est.flag_performingEst = false;
+    end
 
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImg = 1;
@@ -152,6 +160,11 @@ for si=1:mp.Nsbp
 
     %--Perform the probing
     iOdd=1; iEven=1; %--Initialize index counters
+    %--Change exp time to the one chosen to perform the sensing
+    if ~mp.flagSim
+        hcst_andor_setExposureTime(bench,mp.tint_est);
+        mp.est.flag_performingEst = true;
+    end
     for iProbe=1:2*Npairs           
 
         %--Generate the command map for the probe
@@ -454,6 +467,10 @@ ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
 % wavelengths.
 ev.Iest = abs(ev.Eest).^2;
 ev.InormEst = mean(ev.Iest(:));
+
+if ~mp.flagSim
+    mp.est.flag_performingEst = false;
+end
 
 fprintf(' done. Time: %.3f\n',toc);
 

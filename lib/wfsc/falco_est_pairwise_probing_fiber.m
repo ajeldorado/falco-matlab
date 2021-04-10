@@ -109,6 +109,7 @@ end
 ev.I0mean = 0;
 ev.IprobedMean = 0;
 
+%% Save exp time from ctrl
 if ~mp.flagSim && mp.flagUseCamera4EFCSMF
     bench = mp.bench;
     tint_efc = bench.andor.tint;
@@ -145,6 +146,7 @@ for si=1:mp.Nsbp
     %% Compute probe shapes and take probed images:
     if ~mp.flagSim && mp.flagUseCamera4EFCSMF
         hcst_andor_setExposureTime(bench,tint_efc);
+        mp.est.flag_performingEst = false;
     end
 
     %--Take initial, unprobed image (for unprobed DM settings).
@@ -173,8 +175,10 @@ for si=1:mp.Nsbp
     
     %--Perform the probing
     iOdd=1; iEven=1; %--Initialize index counters
+    %--Change exp time to the one chosen to perform the sensing
     if ~mp.flagSim && mp.flagUseCamera4EFCSMF
         hcst_andor_setExposureTime(bench,mp.tint_est);
+        mp.est.flag_performingEst = true;
     end
     for iProbe=1:2*Npairs
 
@@ -358,6 +362,7 @@ ev.InormEst = mean(ev.Iest(:));
 
 if ~mp.flagSim && mp.flagUseCamera4EFCSMF
     hcst_andor_setExposureTime(bench,tint_efc);
+    mp.est.flag_performingEst = false;
 end
 
 fprintf(' done. Time: %.3f\n',toc);
