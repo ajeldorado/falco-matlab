@@ -18,6 +18,7 @@
 
 clear all;
 
+mp.use_lastJacStruc = false;
 %% Tell Matlab which Python to use from where. Needed for the E-M algorithm.
 % setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin') %--Put the parent directory of the python version you want Matlab to use.
 % pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the python version you want Matlab to use.
@@ -33,6 +34,7 @@ mp.path.proper = '/Users/jllopsay/Documents/MATLAB/PROPER/'; %--Location of the 
 mp.path.config = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
 mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 mp.path.mask = '/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.ws_inprogress = mp.path.ws;
 
 % %--Library locations. FALCO and PROPER are required. CVX is optional.
 % mp.path.falco = 'C:\Lab\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
@@ -65,7 +67,7 @@ mp.TrialNum = 4;
 mp.controller = 'gridsearchEFC';
 mp.Nitr = 100; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
-mp.dm_ind = [1 2]; %--Which DMs to use
+mp.dm_ind = [1]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
 
 %%--Special Computational Settings
@@ -101,10 +103,9 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 % [out, data_train] = falco_adaptive_wfsc_loop(mp);
-out = falco_wfsc_loop(mp);
+[mp, out] = falco_flesh_out_workspace(mp);
 
+[mp, out] = falco_wfsc_loop(mp, out);
 if(mp.flagPlot)
     figure; semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
 end
-
-

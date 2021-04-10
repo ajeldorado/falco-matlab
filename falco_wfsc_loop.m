@@ -44,7 +44,7 @@ for Itr=1:mp.Nitr
     if(any(mp.fineAlignment_it==Itr))
         bench = hcstr_realignFPMAndRecenter(bench,mp);
     end
-    if(any(mp.search4OffaxisSMF_it==Itr))
+    if(~mp.flagSim && any(mp.search4OffaxisSMF_it==Itr))
         [ x_smf_out, y_smf_out ] = hcst_fiu_findOffaxisSMFwProbe(bench, mp);
         mp.est.probe.Xloc = x_smf_out;
         mp.est.probe.Yloc = y_smf_out;
@@ -418,11 +418,13 @@ fprintf('\n\n');
 
 if mp.flagFiber
     InormSMFHist(Itr+1) = Ifiber;%mean(Im(mp.Fend.corr.maskBool));
-    % Increase the exp time if needed
-%     peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint(1)*bench.andor.tint*mp.NDfilter_cal);
-%     if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
-%         hcst_andor_setExposureTime(bench,bench.andor.tint+1);
-%     end
+    if ~mp.flagSim
+        % Increase the exp time if needed
+        peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint*bench.andor.tint);
+        if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
+            hcst_andor_setExposureTime(bench,bench.andor.tint+1);
+        end
+    end
     fprintf('Prev and New Measured SMF Contrast (LR):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
         InormSMFHist(Itr), InormSMFHist(Itr+1), InormSMFHist(Itr)/InormSMFHist(Itr+1) ); 
 
@@ -496,7 +498,12 @@ if(isfield(mp,'testbed'))
     InormHist_tb.beta(Itr-1) = out.log10regHist(Itr-1);
     hProgress = falco_plot_progress_hcst(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
 else
-    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist,Im,DM1surf,DM2surf,ImSimOffaxis);
+    if(mp.flagFiber)
+        InormHist_show = InormSMFHist; 
+    else
+        InormHist_show = InormHist; 
+    end
+    hProgress = falco_plot_progress(hProgress,mp,Itr,InormHist_show,Im,DM1surf,DM2surf,ImSimOffaxis);
 end
 % %% Optional output variable: mp
 % varargout{1} = mp;
@@ -521,8 +528,8 @@ end
 out.thput = mp.thput_vec;
 out.Nitr = mp.Nitr;
 out.InormHist = InormHist;
-out.InormSMFHist = InormSMFHist;
-out.InormMod = InormHist_tb.mod;
+if(mp.flagFiber);out.InormSMFHist = InormSMFHist; end
+if(~mp.flagSim); out.InormMod = InormHist_tb.mod;end
 
 fnOut = [mp.path.ws_inprogress filesep mp.runLabel,'_snippet.mat'];
 

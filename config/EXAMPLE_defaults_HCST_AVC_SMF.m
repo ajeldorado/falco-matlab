@@ -254,10 +254,10 @@ mp.P4.angStrut = [];%Array of angles of the radial struts (deg)
 mp.P4.wStrut = []; % Width of the struts (fraction of pupil diam.)
 
 %--Pupil Plane Diameters
-mp.P1.D = 15.4e-3/mp.P4.ODnorm; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+mp.P1.D = 15.2e-3/mp.P4.ODnorm; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P2.D = mp.P1.D;
 mp.P3.D = mp.P1.D;
-mp.P4.D = 15.4e-3;
+mp.P4.D = 15.2e-3;
 
 %% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -317,3 +317,6 @@ mp.dm2.zrot = zrot_best;           % clocking of DM surface [degrees]
 mp.dm2.xc = xc_best;              % x-center location of DM surface [actuator widths]
 mp.dm2.yc = yc_best;               % y-center location of DM surface [actuator widths]
 Nactbeam = 18.7e-3/mp.dm1.dm_spacing;                % Nactact across the "beam"
+
+% mp.dm1.HminStep = 0.0e-9;
+% mp.dm2.HminStep = 0.0e-9;

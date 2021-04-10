@@ -11,6 +11,8 @@ mp.TrialNum = 5309;
 mp.flagParfor = false;
 mp.useGPU = false;
 mp.flagPlot = false;
+mp.flagFiber = false;
+mp.flagZWFS = false;
 
 %--General
 mp.centering = 'pixel';
@@ -173,13 +175,13 @@ mp.Fend.FOV = 12; %--half-width of the field of view in both dimensions [lambda0
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 3.0;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.ang  = 120;  % angular opening of dark hole correction region [degrees]
 
 mp.Fend.score.Rin = mp.Fend.corr.Rin;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = mp.Fend.corr.Rout;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = mp.Fend.corr.ang;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'left'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -189,10 +191,10 @@ mp.fl = 779e-3; %--[meters] Focal length value used for all FTs in the compact m
 
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 512;
-mp.P2.compact.Nbeam = 512;
-mp.P3.compact.Nbeam = 2048;
-mp.P4.compact.Nbeam = 512;  % P4 must be the same as P1 for Vortex. 
+mp.P1.compact.Nbeam = 256;
+mp.P2.compact.Nbeam = 256;
+mp.P3.compact.Nbeam = 256;
+mp.P4.compact.Nbeam = 256;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -211,10 +213,10 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 512;
-mp.P2.full.Nbeam = 512;
-mp.P3.full.Nbeam = 2048;
-mp.P4.full.Nbeam = 512;  % P4 must be the same as P1 for Vortex. 
+mp.P1.full.Nbeam = 256;
+mp.P2.full.Nbeam = 256;
+mp.P3.full.Nbeam = 256;
+mp.P4.full.Nbeam = 256;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
@@ -311,3 +313,6 @@ mp.dm2.zrot = zrot_best;           % clocking of DM surface [degrees]
 mp.dm2.xc = xc_best;              % x-center location of DM surface [actuator widths]
 mp.dm2.yc = yc_best;               % y-center location of DM surface [actuator widths]
 Nactbeam = 18.7e-3/mp.dm1.dm_spacing;                % Nactact across the "beam"
+
+mp.dm1.HminStep = 0.1;
+mp.dm2.HminStep = 0.1;
