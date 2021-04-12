@@ -45,7 +45,8 @@ classdef TestNoisyImage < matlab.unittest.TestCase
             tExp = 38;
             gain = 4.2;
             darkCurrentRate = 0; %[e-/pixel/second]
-            shotNoiseStd = sqrt(gain*tExp*trueMean*peakFluxCoef);
+            Nexp = 11;
+            shotNoiseStd = sqrt(gain*tExp*trueMean*peakFluxCoef/Nexp);
             
             mp.Nsbp = 3;
             iSubband = 3;
@@ -54,6 +55,7 @@ classdef TestNoisyImage < matlab.unittest.TestCase
             mp.detector.readNoiseStd = readNoiseStd; %1.7; % [e-/count]
             mp.detector.peakFluxVec = peakFluxCoef * ones(mp.Nsbp, 1); % [counts/pixel/second]
             mp.detector.tExpVec = tExp * ones(mp.Nsbp, 1); % [seconds]
+            mp.detector.Nexp = Nexp;
 
             imageOut = falco_add_noise_to_subband_image(mp, imageIn, iSubband);
             
@@ -78,6 +80,7 @@ classdef TestNoisyImage < matlab.unittest.TestCase
             mp.detector.readNoiseStd = 5; %1.7; % [e-/count]
             mp.detector.peakFluxVec = 1e10 * ones(mp.Nsbp, 1); % [counts/pixel/second]
             mp.detector.tExpVec = 10.0 * ones(mp.Nsbp, 1); % [seconds]
+            mp.detector.Nexp = 3;
 
             imageOut = falco_add_noise_to_subband_image(mp, imageIn, iSubband);
             
@@ -95,14 +98,17 @@ classdef TestNoisyImage < matlab.unittest.TestCase
             trueMean = 0;%1e-10; % [normalized intensity]
             imageIn = trueMean * ones(1000, 1000);
             peakFluxCoef = 0.3; % [counts/pixel/second]
-            readNoiseStd = 55; 
+            readNoiseStdPerFrame = 55; 
             tExp = 0.1;
+            mp.detector.Nexp = 7;
+            
+            readNoiseStd = readNoiseStdPerFrame/sqrt(mp.detector.Nexp);
             
             mp.Nsbp = 3;
             iSubband = 3;
             mp.detector.gain = 4; %1.0; % [e-/count]
             mp.detector.darkCurrentRate = 0;%0.015; % [e-/pixel/second]
-            mp.detector.readNoiseStd = readNoiseStd; %1.7; % [e-/count]
+            mp.detector.readNoiseStd = readNoiseStdPerFrame; %1.7; % [e-/count]
             mp.detector.peakFluxVec = peakFluxCoef * ones(mp.Nsbp, 1); % [counts/pixel/second]
             mp.detector.tExpVec = tExp * ones(mp.Nsbp, 1); % [seconds]
 
@@ -125,7 +131,9 @@ classdef TestNoisyImage < matlab.unittest.TestCase
             readNoiseStd = 0; 
             tExp = 1e4;
             darkCurrentRate = 5.3; %[e-/pixel/second]
-            darkCurrentStd = sqrt(tExp*darkCurrentRate);
+            mp.detector.Nexp = 3;
+            darkCurrentStd = sqrt(tExp*darkCurrentRate/mp.detector.Nexp);
+            
             
             mp.Nsbp = 3;
             iSubband = 3;

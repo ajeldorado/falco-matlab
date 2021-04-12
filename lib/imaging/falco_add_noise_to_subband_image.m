@@ -21,20 +21,26 @@ function imageOut = falco_add_noise_to_subband_image(mp, imageIn, iSubband)
     peakCounts = mp.detector.peakFluxVec(iSubband) * mp.detector.tExpVec(iSubband);
     peakElectrons = mp.detector.gain * peakCounts;
 
-    % Add photon shot noise
     imageInElectrons = peakElectrons * imageIn;
     factorNeededInMatlab = 1e12;
-    imageInElectrons = factorNeededInMatlab*imnoise(imageInElectrons/factorNeededInMatlab, 'poisson');
+    
+    imageInCounts = 0;
+    for iExp = 1:mp.detector.Nexp
+    
+        % Add photon shot noise
+        noisyImageInElectrons = factorNeededInMatlab*imnoise(imageInElectrons/factorNeededInMatlab, 'poisson');
 
-    % Compute dark current
-    darkCurrent = mp.detector.darkCurrentRate * mp.detector.tExpVec(iSubband)*ones(size(imageIn));
-    darkCurrent = factorNeededInMatlab*imnoise(darkCurrent/factorNeededInMatlab, 'poisson');
+        % Compute dark current
+        darkCurrent = mp.detector.darkCurrentRate * mp.detector.tExpVec(iSubband)*ones(size(imageIn));
+        darkCurrent = factorNeededInMatlab*imnoise(darkCurrent/factorNeededInMatlab, 'poisson');
 
-    % Compute Gaussian read noise
-    readNoise = mp.detector.readNoiseStd * randn(size(imageIn));
-
-    % Convert back from e- to counts and then discretize
-    imageInCounts = round((imageInElectrons + darkCurrent + readNoise)/mp.detector.gain);
+        % Compute Gaussian read noise
+        readNoise = mp.detector.readNoiseStd * randn(size(imageIn));
+        
+        % Convert back from e- to counts and then discretize
+        imageInCounts = imageInCounts + round((noisyImageInElectrons + darkCurrent + readNoise)/mp.detector.gain)/mp.detector.Nexp;
+        
+    end
 
     % Convert back from counts to normalized intensity
     imageOut = imageInCounts / peakCounts; 
