@@ -71,7 +71,6 @@ function out = falco_init_storage_arrays(mp)
     
     %--Storage array for throughput at each iteration
     out.thput = zeros(mp.Nitr+1, 1);
-    mp.thput_vec = zeros(mp.Nitr+1, 1);
     
     %--Variables related to final image
     out.Fend.res = mp.Fend.res;
@@ -80,5 +79,7 @@ function out = falco_init_storage_arrays(mp)
     out.Fend.scoreInCorr = mp.Fend.scoreInCorr;
     out.Fend.corr.maskBool = mp.Fend.corr.maskBool;
     out.Fend.score.maskBool = mp.Fend.score.maskBool;
+    
+    out.serialDate = zeros(mp.Nitr, 1); % start time of each iteration as a serial date number
 
 end
