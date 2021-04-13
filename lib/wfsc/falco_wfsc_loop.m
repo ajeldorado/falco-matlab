@@ -9,6 +9,7 @@
 function [mp, out] = falco_wfsc_loop(mp, out)
 
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
+mp.thput_vec = zeros(mp.Nitr+1, 1);
 
 for Itr = 1:mp.Nitr
     
@@ -16,7 +17,9 @@ for Itr = 1:mp.Nitr
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
     
     if mp.flagSim
-        fprintf('Zernike modes used in this Jacobian:\t');fprintf('%d ',mp.jac.zerns); fprintf('\n');
+        fprintf('Zernike modes used in this Jacobian:\t');
+        fprintf('%d ', mp.jac.zerns);
+        fprintf('\n');
     end
     
     ev.Itr = Itr;
@@ -32,6 +35,7 @@ for Itr = 1:mp.Nitr
     end
     fprintf(' ]\n')
     
+    out.serialDate(Itr) = now;
     out = store_dm_command_history(mp, out, Itr);
 
     %% Normalization and throughput calculations
