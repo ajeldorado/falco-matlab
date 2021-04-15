@@ -29,6 +29,7 @@ function bm = prop_begin(diam, wl, np, varargin)
 % 2005 Feb     jek  created idl routine 
 % 2014 Apr 18  gmg  Matlab translation
 % 2017 Feb 14  gmg  Revised for keyword/value for optional inputs
+% 2021 Apr 12  jek  Changed RayFact to 1.0 for better stability
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 % beam structure:
@@ -50,7 +51,7 @@ function bm = prop_begin(diam, wl, np, varargin)
   propcommon
   npa         = np;     % number of points across array
   OldOPD      = 0.0;
-  RayFact     = 2.0;    % wavefront switches from planar to spherical
+  RayFact     = 1.0;    % wavefront switches from planar to spherical
                         % at RayFact * bm.zRay
   bdf         = 0.5;    % beam diameter fraction
 
