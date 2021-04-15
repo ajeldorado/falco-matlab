@@ -40,29 +40,16 @@ angRad = angDeg*(pi/180); %--Convert opening angle to radians
 % OPTIONAL USER INPUTS
 
  %--shape of the outer part of the dark hole
-if isfield(inputs,'shape'); darkHoleShape = inputs.shape; else; darkHoleShape = 'circle'; end %--Default to a circular outer edge
+if isfield(inputs,'shape'); darkHoleShape = inputs.shape; else; darkHoleShape = 'circle'; end
 
 %--Lateral offsets of the dark hole
 if(isfield(inputs,'xiOffset')); xiOffset = inputs.xiOffset; else; xiOffset = 0; end
 if(isfield(inputs,'etaOffset')); etaOffset = inputs.etaOffset; else; etaOffset = 0; end
 
 % minimum +/- field of view along both axes
-if isfield(inputs,'FOV') 
-    minFOVxi = inputs.FOV;
-    minFOVeta = inputs.FOV;
-else
-    switch lower(darkHoleShape)
-        case{'square', 'rect', 'rectangle'}
-            minFOVxi = sqrt(2)*rhoOuter + abs(xiOffset);
-            minFOVeta = sqrt(2)*rhoOuter + abs(etaOffset);
-        otherwise
-            minFOVxi = rhoOuter + abs(xiOffset);
-            minFOVeta = rhoOuter + abs(etaOffset);
-    end
-end
-%--Overwrite FOV values if specified individually
-if isfield(inputs,'xiFOV'); minFOVxi = inputs.xiFOV; end % minimum field of view along horizontal (xi) axis
-if isfield(inputs,'etaFOV'); minFOVeta = inputs.etaFOV; end % minimum field of view along vertical (eta) axis
+if isfield(inputs,'FOV'); FOV = inputs.FOV; else; FOV = inputs.rhoOuter;
+if isfield(inputs,'xiFOV'); minFOVxi = inputs.xiFOV; else; minFOVxi = FOV + abs(xiOffset); end % minimum field of view along horizontal (xi) axis
+if isfield(inputs,'etaFOV'); minFOVeta = inputs.etaFOV; else; minFOVeta = FOV + abs(etaOffset); end % minimum field of view along vertical (eta) axis
     
 if isfield(inputs,'centering'); centering = inputs.centering; else; centering = 'pixel'; end %--Default to pixel centering if it is not specified.
 
