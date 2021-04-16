@@ -1,3 +1,4 @@
+# ![FALCO](https://github.com/ajeldorado/falco-matlab/blob/master/docs/falco_logo.png?raw=true)
 # FALCO: Fast Linearized Coronagraph Optimizer
 [![Build Status](https://dev.azure.com/highcontrast/falco-matlab/_apis/build/status/ajeldorado.falco-matlab?branchName=master)](https://dev.azure.com/highcontrast/falco-matlab/_build/latest?definitionId=1&branchName=master)
 ![Azure DevOps tests (branch)](https://img.shields.io/azure-devops/tests/highcontrast/falco-matlab/1/master)

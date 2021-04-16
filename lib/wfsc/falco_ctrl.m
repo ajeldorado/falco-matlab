@@ -30,6 +30,8 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
     cvar.GstarG_wsum  = zeros(cvar.NeleAll, cvar.NeleAll); 
     cvar.RealGstarEab_wsum = zeros(cvar.NeleAll, 1);
     
+    jacStruct = falco_apply_spatial_weighting_to_Jacobian(mp, jacStruct);
+    
     for iMode = 1:mp.jac.Nmode
 
         Gstack = [jacStruct.G1(:,:,iMode), jacStruct.G2(:,:,iMode), jacStruct.G3(:,:,iMode), jacStruct.G4(:,:,iMode), jacStruct.G5(:,:,iMode), jacStruct.G6(:,:,iMode), jacStruct.G7(:,:,iMode), jacStruct.G8(:,:,iMode), jacStruct.G9(:,:,iMode)];
