@@ -129,7 +129,6 @@ docs/**
 #docs/*.pptx
 **/*.pptx~
 !docs/**/*.pdf
-!docs/falco_logo.png
 
 #--Core latex/pdflatex auxiliary files:
 *.aux
@@ -188,6 +187,6 @@ PMGIplotter.m
 
 
 !lib/masks/**/*.png
-
+!docs/falco_logo.png
 
 
