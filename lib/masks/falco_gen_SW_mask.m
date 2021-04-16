@@ -47,7 +47,7 @@ if(isfield(inputs,'xiOffset')); xiOffset = inputs.xiOffset; else; xiOffset = 0; 
 if(isfield(inputs,'etaOffset')); etaOffset = inputs.etaOffset; else; etaOffset = 0; end
 
 % minimum +/- field of view along both axes
-if isfield(inputs,'FOV'); FOV = inputs.FOV; else; FOV = inputs.rhoOuter;
+if isfield(inputs,'FOV'); FOV = inputs.FOV; else; FOV = inputs.rhoOuter; end
 if isfield(inputs,'xiFOV'); minFOVxi = inputs.xiFOV; else; minFOVxi = FOV + abs(xiOffset); end % minimum field of view along horizontal (xi) axis
 if isfield(inputs,'etaFOV'); minFOVeta = inputs.etaFOV; else; minFOVeta = FOV + abs(etaOffset); end % minimum field of view along vertical (eta) axis
     
