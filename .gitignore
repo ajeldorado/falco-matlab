@@ -129,7 +129,7 @@ docs/**
 #docs/*.pptx
 **/*.pptx~
 !docs/**/*.pdf
-
+!docs/falco_logo.png
 
 #--Core latex/pdflatex auxiliary files:
 *.aux
