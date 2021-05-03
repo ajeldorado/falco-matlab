@@ -72,27 +72,6 @@ if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
     Ein = Ett .* Ein; 
 end
-% %--Set the location and magnitude of the point source
-% if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
-%     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
-%     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-%     Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
-%         
-% else % Default to using the starlight
-%     %--Include the tip/tilt in the input stellar wavefront
-%     if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
-%         %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
-%         x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
-%         y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
-% 
-%         TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
-%         Ett = exp(1i*TTphase*mp.lambda0/lambda);
-%         Ein = Ett.*mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
-% 
-%     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-%         Ein = mp.P1.full.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
-%     end
-% end
 
 %--Shift the source off-axis to compute the intensity normalization value.
 %  This replaces the previous way of taking the FPM out in the optical model.
@@ -164,6 +143,7 @@ end
 
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
+    
     case{'fourier'}
         if(mp.flagFiber)
             [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac);
@@ -199,26 +179,8 @@ switch lower(mp.layout)
         end
         
         Eout = prop_run(mp.full.prescription, lambda*1e6, mp.full.gridsize, 'quiet', 'passvalue', optval); %--wavelength needs to be in microns instead of meters for PROPER
-        if(normFac~=0)
-            Eout = Eout/sqrt(normFac);
-        end
         
-        
-    case{'wfirst_phaseb_simple'} %--Use compact model as the full model.
-                
-        optval = mp.full;
-        optval.use_dm1 = true;
-        optval.use_dm2 = true;
-        optval.dm1_m = mp.dm1.V.*mp.dm1.VtoH; %--DM1 commands in meters
-        optval.dm2_m = mp.dm2.V.*mp.dm2.VtoH; %--DM2 commands in meters
-        
-        if(normFac==0)
-            optval.source_x_offset = -mp.source_x_offset_norm;
-            optval.source_y_offset = -mp.source_y_offset_norm;
-        end
-
-        Eout = prop_run('model_compact_wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
-        if(normFac~=0)
+        if normFac ~= 0
             Eout = Eout/sqrt(normFac);
         end
 
@@ -241,16 +203,9 @@ switch lower(mp.layout)
                 Eout = prop_run('roman_phasec_efc_jpl', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue',optval ); %--wavelength needs to be in microns instead of meters for PROPER
         end
         
-        if(normFac~=0)
+        if normFac ~= 0
             Eout = Eout/sqrt(normFac);
         end
-        
-%     %--In development
-%     case{'lc_load_scale'}
-%         switch upper(mp.coro)
-%             case{'HLC'}
-%                 Eout = model_full_scale(mp, lambda, Ein, normFac);
-%         end    
 
 end
 

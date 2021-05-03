@@ -52,7 +52,7 @@ switch upper(mp.coro)
         %% Full Model
         switch lower(mp.layout)
             
-            case{'roman_phasec_proper', 'wfirst_phaseb_simple','wfirst_phaseb_proper', 'proper'}
+            case{'roman_phasec_proper','wfirst_phaseb_proper', 'proper'}
                 % Coorinates not needed in the PROPER model
             
             otherwise

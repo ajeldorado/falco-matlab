@@ -221,7 +221,7 @@ function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
                     error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
             end  
             
-        case{'roman_phasec_proper', 'wfirst_phaseb_simple', 'wfirst_phaseb_proper'} %--Roman CGI
+        case{'roman_phasec_proper', 'wfirst_phaseb_proper'} %--Roman CGI
             switch upper(mp.coro) 
                 case{'HLC'}
                     jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy); 
