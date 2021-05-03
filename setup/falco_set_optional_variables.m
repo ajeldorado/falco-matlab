@@ -46,9 +46,15 @@ if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco filesep 'd
 if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' filesep 'DM' filesep]; end % Store DM command maps here
 
 %% Optional/hidden boolean flags
+
 %--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
+
+%--Optical model/layout
+if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
+if(isfield(mp,'flagRotation')==false);  mp.flagRotation = true;  end %--Whether to have the E-field rotate 180 degrees from one pupil to the next. Does not apply to PROPER full models.
+
 %--Jacobian or controller related
 if(isfield(mp,'flagTrainModel')==false);  mp.flagTrainModel = false;  end  %--Whether to call the Expectation-Maximization (E-M) algorithm to improve the linearized model. 
 if(isfield(mp,'flagUseLearnedJac')==false);  mp.flagUseLearnedJac = false;  end  %--Whether to load and use an improved Jacobian from the Expectation-Maximization (E-M) algorithm 
@@ -63,24 +69,6 @@ if(isfield(mp,'flagWFS')==false);  mp.flagWFS = false;  end  %--Whether to activ
 
 %--Whether to use an apodizer at all
 if(isfield(mp,'flagApod')==false);  mp.flagApod = false;  end
-
-%--Whether to generate or load various masks: compact model
-if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
-if(isfield(mp.compact,'flagGenApod')==false);  mp.compact.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
-if(isfield(mp.compact,'flagGenFPM')==false);  mp.compact.flagGenFPM = true;  end
-if(isfield(mp.compact,'flagGenLS')==false);  mp.compact.flagGenLS = true;  end
-%--Whether to generate or load various masks: full model
-if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
-if(mp.full.flagPROPER)
-    mp.full.flagGenPupil = false;
-    mp.full.flagGenApod = false;
-    mp.full.flagGenFPM = false;
-    mp.full.flagGenLS = false;
-end
-if(isfield(mp.full,'flagGenPupil')==false);  mp.full.flagGenPupil = true;  end
-if(isfield(mp.full,'flagGenApod')==false);  mp.full.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
-if(isfield(mp.full,'flagGenFPM')==false);  mp.full.flagGenFPM = true;  end
-if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
 
 %--Lyot stop symmetry (for WFIRST/Roman only)
 if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end

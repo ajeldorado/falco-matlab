@@ -17,7 +17,7 @@
 function mp = falco_verify_key_values(mp)
 
     allowedCenterings = {'pixel', 'interpixel'};
-    allowedCoronagraphTypes = {'VC', 'VORTEX','LC', 'APLC', 'FLC', 'SPLC', 'HLC'};
+    allowedCoronagraphTypes = {'VC', 'VORTEX', 'LC', 'APLC', 'FLC', 'SPLC', 'HLC'};
     allowedLayouts = {'fourier', 'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'};
 
     %--Check centering

@@ -58,12 +58,12 @@ end
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
-Ein = padOrCropEven(Ein,NdmPad);
+pupil = padOrCropEven(mp.P1.compact.mask, NdmPad);
+Ein = padOrCropEven(Ein, NdmPad);
 %--Re-image the apodizer from pupil P3 back to pupil P2. (Sign of mp.Nrelay2to3 doesn't matter.)
 if(mp.flagApod) 
     apodReimaged = padOrCropEven(mp.P3.compact.mask, NdmPad);
-    apodReimaged = propcustom_relay(apodReimaged,mp.Nrelay2to3,mp.centering);
+    apodReimaged = propcustom_relay(apodReimaged, mp.Nrelay2to3, mp.centering);
 else
     apodReimaged = ones(NdmPad); 
 end
@@ -97,11 +97,11 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
+EP2 = propcustom_relay(EP1, mp.Nrelay1to2, mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
-    Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1);
+    Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
 else
     Edm1 = EP2;
 end
@@ -118,12 +118,12 @@ minPadFacVortex = 8;
 if(whichDM == 1) 
     if (mp.flagFiber)
         if(mp.flagLenslet)
-            Gmode = zeros(mp.Fend.Nlens,mp.dm1.Nele);
+            Gmode = zeros(mp.Fend.Nlens, mp.dm1.Nele);
         else
-            Gmode = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
+            Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele);
         end
     else
-        Gmode = zeros(mp.Fend.corr.Npix,mp.dm1.Nele); %--Initialize the Jacobian
+        Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele); %--Initialize the Jacobian
     end
 
     %--Array size for planes P3, F3, and P4
@@ -132,7 +132,7 @@ if(whichDM == 1)
     if(numel(mp.F3.VortexCharge)==1)
         charge = mp.F3.VortexCharge;
     else
-        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+        charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
     end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
@@ -176,38 +176,38 @@ if(whichDM == 1)
     end
     
     if(any(mp.dm_ind==2))
-        DM2surf = padOrCropEven(DM2surf,mp.dm1.compact.NdmPad);
+        DM2surf = padOrCropEven(DM2surf, mp.dm1.compact.NdmPad);
     else
         DM2surf = zeros(mp.dm1.compact.NdmPad);
     end
     
     if(mp.flagDM2stop)
-        DM2stop = padOrCropEven(DM2stop,mp.dm1.compact.NdmPad);
+        DM2stop = padOrCropEven(DM2stop, mp.dm1.compact.NdmPad);
     else
         DM2stop = ones(mp.dm1.compact.NdmPad);
     end
     
     apodReimaged = padOrCropEven( apodReimaged, mp.dm1.compact.NdmPad);
-    Edm1pad = padOrCropEven(Edm1,mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
+    Edm1pad = padOrCropEven(Edm1, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
 
     %--Propagate each actuator from DM2 through the optical system
     Gindex = 1; % initialize index counter
     for iact=mp.dm1.act_ele(:).'
-        if(any(any(mp.dm1.compact.inf_datacube(:,:,iact))))  %--Only compute for acutators specified for use or for influence functions that are not zeroed out
+        if(any(any(mp.dm1.compact.inf_datacube(:, :, iact))))  %--Only compute for acutators specified for use or for influence functions that are not zeroed out
         
             %--x- and y- coordinates of the padded influence function in the full padded pupil
-            x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1,iact):mp.dm1.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
-            y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2,iact):mp.dm1.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
+            x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1, iact):mp.dm1.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
+            y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2, iact):mp.dm1.compact.xy_box_lowerLeft_AS(2, iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
 
             %--Propagate from DM1 to DM2, and then back to P2
-            dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact),NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
+            dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:, :, iact), NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
             
             if(mp.useGPU)
                 dEbox = gpuArray(dEbox);
             end
             
-            dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2); % forward propagate to DM2 and apply DM2 E-field
-            dEP2box = propcustom_PTP(dEbox.*DM2stop(y_box_AS_ind,x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); % back-propagate to P2
+            dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad1AS, lambda, mp.d_dm1_dm2); % forward propagate to DM2 and apply DM2 E-field
+            dEP2box = propcustom_PTP(dEbox.*DM2stop(y_box_AS_ind, x_box_AS_ind).*exp(mirrorFac*2*pi*1j/lambda*DM2surf(y_box_AS_ind, x_box_AS_ind)), mp.P2.compact.dx*NboxPad1AS, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1) ); % back-propagate to P2
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
@@ -232,20 +232,20 @@ if(whichDM == 1)
                 EF3 = vortex.*EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
                 
                 %--MFT to LS
-                EP4 = propcustom_mft_FtoP(EF3, mp.fl,lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);                
+                EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);                
                 
             else % Use FFTs to go to/from the vortex
                 %--Re-insert the window around the influence function back into the full beam array.
-                if(isa(dEP2boxEff,'gpuArray'))
+                if(isa(dEP2boxEff, 'gpuArray'))
                     EP2eff = gpuArray.zeros(mp.dm1.compact.NdmPad);
                 else
                     EP2eff = zeros(mp.dm1.compact.NdmPad);
                 end
 
-                EP2eff(y_box_AS_ind,x_box_AS_ind) = dEP2boxEff;
+                EP2eff(y_box_AS_ind, x_box_AS_ind) = dEP2boxEff;
 
                 %--Forward propagate from P2 (effective) to P3
-                EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering); 
+                EP3 = propcustom_relay(EP2eff, mp.Nrelay2to3, mp.centering); 
 
                 %--Pad pupil P3 for FFT
                 EP3pad = padOrCropEven(EP3, Nfft1);
@@ -261,29 +261,29 @@ if(whichDM == 1)
             EP4 = pad_crop(EP4, mp.P4.compact.Narr);
             EP4 = propcustom_relay(EP4, mp.Nrelay3to4-1, mp.centering); %--Add more re-imaging relays if necessary
             EP4 = EP4.*mp.P4.compact.croppedMask;
-            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
+            EP4 = propcustom_relay(EP4, mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
 
             %--MFT to detector
             if(mp.flagFiber)
                 if(mp.flagLenslet)
                     for nlens = 1:mp.Fend.Nlens
-                        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
                         Elenslet = EFend.*mp.Fend.lenslet.mask;
                         EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
-                        Gmode(nlens,Gindex) = max(max(mp.F5.fiberMode(:,:,modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:,:,modvar.sbpIndex).*EF5));
+                        Gmode(nlens, Gindex) = max(max(mp.F5.fiberMode(:, :, modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:, :, modvar.sbpIndex).*EF5));
                     end
                 else
-                    EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+                    EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
                     Gmodetemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
                     for i=1:mp.Fend.Nfiber
-                        Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        Eonefiber = mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*conj(EFend)));
                         Gmodetemp = Gmodetemp + Eonefiber;
                     end
-                    Gmode(:,Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
+                    Gmode(:, Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
                 end
             else    
-                EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+                EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
                 if(mp.useGPU)
                     EFend = gather(EFend);
@@ -309,12 +309,12 @@ end
 if(whichDM==2)
     if(mp.flagFiber)
         if(mp.flagLenslet)
-            Gmode = zeros(mp.Fend.Nlens,mp.dm2.Nele);
+            Gmode = zeros(mp.Fend.Nlens, mp.dm2.Nele);
         else
-            Gmode = zeros(mp.Fend.corr.Npix,mp.dm2.Nele);
+            Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele);
         end
     else
-        Gmode = zeros(mp.Fend.corr.Npix,mp.dm2.Nele); %--Initialize the Jacobian
+        Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele); %--Initialize the Jacobian
     end
     
     %--Array size for planes P3, F3, and P4
@@ -323,7 +323,7 @@ if(whichDM==2)
     if(numel(mp.F3.VortexCharge)==1)
         charge = mp.F3.VortexCharge;
     else
-        charge = interp1(mp.F3.VortexCharge_lambdas,mp.F3.VortexCharge,lambda,'linear','extrap');
+        charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
     end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
@@ -367,33 +367,33 @@ if(whichDM==2)
     end
     
     apodReimaged = padOrCropEven( apodReimaged, mp.dm2.compact.NdmPad);
-    DM2stop = padOrCropEven(DM2stop,mp.dm2.compact.NdmPad);
+    DM2stop = padOrCropEven(DM2stop, mp.dm2.compact.NdmPad);
         
     %--Propagate full field to DM2 before back-propagating in small boxes
-    Edm2inc = padOrCropEven( propcustom_PTP(Edm1,mp.compact.NdmPad*mp.P2.compact.dx,lambda,mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
-    Edm2inc = padOrCropEven(Edm2inc,mp.dm2.compact.NdmPad);
-    Edm2 = DM2stop.*Edm2inc.*exp(mirrorFac*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
+    Edm2inc = padOrCropEven( propcustom_PTP(Edm1, mp.compact.NdmPad*mp.P2.compact.dx, lambda, mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
+    Edm2inc = padOrCropEven(Edm2inc, mp.dm2.compact.NdmPad);
+    Edm2 = DM2stop.*Edm2inc.*exp(mirrorFac*2*pi*1j/lambda*padOrCropEven(DM2surf, mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
     
     %--Propagate each actuator from DM2 through the rest of the optical system
     Gindex = 1; % initialize index counter
     for iact=mp.dm2.act_ele(:).'
-        if(any(any(mp.dm2.compact.inf_datacube(:,:,iact))) ) 
+        if(any(any(mp.dm2.compact.inf_datacube(:, :, iact))) ) 
             
             %--x- and y- coordinates of the padded influence function in the full padded pupil
-            x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1,iact):mp.dm2.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
-            y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2,iact):mp.dm2.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
+            x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1, iact):mp.dm2.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
+            y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2, iact):mp.dm2.compact.xy_box_lowerLeft_AS(2, iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
 
-            dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
+            dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:, :, iact), NboxPad2AS); %--the padded influence function at DM2
             
             if(mp.useGPU)
                 dEbox = gpuArray(dEbox);
             end
             
-            dEP2box = propcustom_PTP(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad2AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); % back-propagate to pupil P2
+            dEP2box = propcustom_PTP(dEbox.*Edm2(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad2AS, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1)); % back-propagate to pupil P2
 
             %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
             % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.
-            dEP2boxEff = apodReimaged(y_box_AS_ind,x_box_AS_ind).*dEP2box; %--Apply de-rotated SP mask.
+            dEP2boxEff = apodReimaged(y_box_AS_ind, x_box_AS_ind).*dEP2box; %--Apply de-rotated SP mask.
 
             if mp.jac.mftToVortex % Use MFTs to go to/from the vortex
                 %--x- and y- coordinates of the UN-padded influence function in the full padded pupil
@@ -414,20 +414,20 @@ if(whichDM==2)
                 EF3 = vortex.*EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
                 
                 %--MFT to LS
-                EP4 = propcustom_mft_FtoP(EF3, mp.fl,lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);  
+                EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);  
                 
             else % Use FFTs to go to/from the vortex
             
-                if(isa(dEP2boxEff,'gpuArray'))
+                if(isa(dEP2boxEff, 'gpuArray'))
                     EP2eff = gpuArray.zeros(mp.dm2.compact.NdmPad);
                 else
                     EP2eff = zeros(mp.dm2.compact.NdmPad);
                 end
 
-                EP2eff(y_box_AS_ind,x_box_AS_ind) = dEP2boxEff;
+                EP2eff(y_box_AS_ind, x_box_AS_ind) = dEP2boxEff;
 
                 %--Forward propagate from P2 (effective) to P3
-                EP3 = propcustom_relay(EP2eff,mp.Nrelay2to3,mp.centering); 
+                EP3 = propcustom_relay(EP2eff, mp.Nrelay2to3, mp.centering); 
 
                 %--Pad pupil P3 for FFT
                 EP3pad = padOrCropEven(EP3, Nfft2);
@@ -442,28 +442,28 @@ if(whichDM==2)
             EP4 = pad_crop(EP4, mp.P4.compact.Narr);
             EP4 = propcustom_relay(EP4, mp.Nrelay3to4-1, mp.centering); %--Add more re-imaging relays if necessary
             EP4 = EP4.*mp.P4.compact.croppedMask;
-            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
+            EP4 = propcustom_relay(EP4, mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
 
             %--MFT to detector
             if(mp.flagFiber)
                 if(mp.flagLenslet)
                     for nlens = 1:mp.Fend.Nlens
-                        EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
                         Elenslet = EFend.*mp.Fend.lenslet.mask;
                         EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
-                        Gmode(nlens,Gindex) = max(max(mp.F5.fiberMode(:,:,modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:,:,modvar.sbpIndex).*EF5));
+                        Gmode(nlens, Gindex) = max(max(mp.F5.fiberMode(:, :, modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:, :, modvar.sbpIndex).*EF5));
                     end
                 else
-                    EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+                    EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
                     Gmodetemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
                     for i=1:mp.Fend.Nfiber
-                        Eonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        Eonefiber = mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*conj(EFend)));
                         Gmodetemp = Gmodetemp + Eonefiber;
                     end
-                    Gmode(:,Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
+                    Gmode(:, Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
                 end
             else    
-                EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+                EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
                 if(mp.useGPU)
                     EFend = gather(EFend);

@@ -55,8 +55,8 @@ end
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
-Ein = padOrCropEven(Ein,NdmPad);
+pupil = padOrCropEven(mp.P1.compact.mask, NdmPad);
+Ein = padOrCropEven(Ein, NdmPad);
 if(mp.useGPU)
     pupil = gpuArray(pupil);
     Ein = gpuArray(Ein);
@@ -89,8 +89,8 @@ end
 
 %--For including DM surface errors (quilting, scalloping, etc.)
 if mp.flagDMwfe
-    if any(mp.dm_ind == 1); Edm1WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm1.compact.wfe,NdmPad,'extrapval',0)); else; Edm1WFE = ones(NdmPad); end
-    if any(mp.dm_ind == 2); Edm2WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm2.compact.wfe,NdmPad,'extrapval',0)); else; Edm2WFE = ones(NdmPad); end
+    if any(mp.dm_ind == 1); Edm1WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm1.compact.wfe, NdmPad, 'extrapval', 0)); else; Edm1WFE = ones(NdmPad); end
+    if any(mp.dm_ind == 2); Edm2WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm2.compact.wfe, NdmPad, 'extrapval', 0)); else; Edm2WFE = ones(NdmPad); end
 else
     Edm1WFE = ones(NdmPad);
     Edm2WFE = ones(NdmPad);
@@ -109,11 +109,11 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
+EP2 = propcustom_relay(EP1, mp.Nrelay1to2, mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if abs(mp.d_P2_dm1) ~= 0
-    Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1);
+    Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
 else
     Edm1 = EP2; %--E-field arriving at DM1
 end
@@ -128,13 +128,13 @@ if whichDM == 1
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
     if any(mp.dm_ind == 2)
-        DM2surf = padOrCropEven(DM2surf,mp.dm1.compact.NdmPad);
+        DM2surf = padOrCropEven(DM2surf, mp.dm1.compact.NdmPad);
     else
         DM2surf = zeros(mp.dm1.compact.NdmPad);
     end
     
     if(mp.flagDM2stop)
-        DM2stop = padOrCropEven(DM2stop,mp.dm1.compact.NdmPad);
+        DM2stop = padOrCropEven(DM2stop, mp.dm1.compact.NdmPad);
     else
         DM2stop = ones(mp.dm1.compact.NdmPad);
     end
@@ -146,15 +146,15 @@ if whichDM == 1
     Gindex = 1; % initialize index counter
     for iact = mp.dm1.act_ele(:).'  %--MUST BE A COLUMN VECTOR
         
-        if any(any(mp.dm1.compact.inf_datacube(:,:,iact)))
+        if any(any(mp.dm1.compact.inf_datacube(:, :, iact)))
             %--influence function indices of the padded influence function in the full padded pupil
-            x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1,iact):mp.dm1.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
-            y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2,iact):mp.dm1.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
+            x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1, iact):mp.dm1.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
+            y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2, iact):mp.dm1.compact.xy_box_lowerLeft_AS(2, iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
             
             %--Propagate from DM1 to DM2, and then back to P2
-            dEbox = (surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact), NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
-            dEbox = propcustom_PTP_inf_func(dEbox.*Edm1pad(y_box_AS_ind, x_box_AS_ind),mp.P2.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2,mp.dm1.dm_spacing,mp.propMethodPTP); % forward propagate to DM2 and apply DM2 E-field
-            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind, x_box_AS_ind).*DM2stop(y_box_AS_ind, x_box_AS_ind).*exp(surfIntoPhase*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm1.dm_spacing,mp.propMethodPTP ); % back-propagate to DM1
+            dEbox = (surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:, :, iact), NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
+            dEbox = propcustom_PTP_inf_func(dEbox.*Edm1pad(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad1AS, lambda, mp.d_dm1_dm2, mp.dm1.dm_spacing, mp.propMethodPTP); % forward propagate to DM2 and apply DM2 E-field
+            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind, x_box_AS_ind).*DM2stop(y_box_AS_ind, x_box_AS_ind).*exp(surfIntoPhase*2*pi*1j/lambda*DM2surf(y_box_AS_ind, x_box_AS_ind)), mp.P2.compact.dx*NboxPad1AS, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1), mp.dm1.dm_spacing, mp.propMethodPTP ); % back-propagate to DM1
             
             EP2eff = zeros(mp.dm1.compact.NdmPad);
             EP2eff(y_box_AS_ind, x_box_AS_ind) = dEP2box;
@@ -190,7 +190,7 @@ if whichDM == 1
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
-            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+            EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
             if(mp.useGPU); EFend = gather(EFend); end
 
             Gmode(:, Gindex) = EFend(indPeak) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
@@ -208,25 +208,25 @@ elseif whichDM == 2
     NboxPad2AS = mp.dm2.compact.NboxAS; 
     mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
     
-    DM2stopPad = padOrCropEven(DM2stop,mp.dm2.compact.NdmPad);
-    Edm2WFEpad = padOrCropEven(Edm2WFE,mp.dm2.compact.NdmPad);
+    DM2stopPad = padOrCropEven(DM2stop, mp.dm2.compact.NdmPad);
+    Edm2WFEpad = padOrCropEven(Edm2WFE, mp.dm2.compact.NdmPad);
     
     %--Propagate full field to DM2 before back-propagating in small boxes
-    Edm2inc = padOrCropEven( propcustom_PTP(Edm1,mp.compact.NdmPad*mp.P2.compact.dx,lambda,mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
-    Edm2inc = padOrCropEven(Edm2inc,mp.dm2.compact.NdmPad);
-    Edm2 = Edm2WFEpad.*DM2stopPad.*Edm2inc.*exp(surfIntoPhase*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
+    Edm2inc = padOrCropEven( propcustom_PTP(Edm1, mp.compact.NdmPad*mp.P2.compact.dx, lambda, mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
+    Edm2inc = padOrCropEven(Edm2inc, mp.dm2.compact.NdmPad);
+    Edm2 = Edm2WFEpad.*DM2stopPad.*Edm2inc.*exp(surfIntoPhase*2*pi*1j/lambda*padOrCropEven(DM2surf, mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
     
     %--Propagate each actuator from DM2 through the rest of the optical system
     Gindex = 1; % Initialize index counter
     for iact = mp.dm2.act_ele(:).'  %--Only compute for acutators specified %--MUST BE A COLUMN VECTOR
         
-        if any(any(mp.dm2.compact.inf_datacube(:,:,iact)))
+        if any(any(mp.dm2.compact.inf_datacube(:, :, iact)))
             %--influence function indices of the padded influence function in the full padded pupil
-            x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1,iact):mp.dm2.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
-            y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2,iact):mp.dm2.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
+            x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1, iact):mp.dm2.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
+            y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2, iact):mp.dm2.compact.xy_box_lowerLeft_AS(2, iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
 
-            dEbox = mp.dm2.VtoH(iact)*(surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
-            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad2AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm2.dm_spacing,mp.propMethodPTP); % back-propagate to pupil P2
+            dEbox = mp.dm2.VtoH(iact)*(surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:, :, iact), NboxPad2AS); %--the padded influence function at DM2
+            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad2AS, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1), mp.dm2.dm_spacing, mp.propMethodPTP); % back-propagate to pupil P2
 
             EP2eff = zeros(mp.dm1.compact.NdmPad);
             EP2eff(y_box_AS_ind, x_box_AS_ind) = dEP2box;
@@ -260,8 +260,8 @@ elseif whichDM == 2
             EP4 = mp.P4.compact.croppedMask .* pad_crop(EP4, mp.P4.compact.Narr);
             
             %--MFT to final focal plane
-            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
-            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
+            EP4 = propcustom_relay(EP4, mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
+            EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
             if(mp.useGPU); EFend = gather(EFend); end
 
             Gmode(:, Gindex) = EFend(indPeak) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));

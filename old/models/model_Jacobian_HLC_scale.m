@@ -89,7 +89,7 @@ if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; 
 if(any(mp.dm_ind==1)); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
 if(any(mp.dm_ind==2)); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
 
-FPM = squeeze(mp.compact.FPMcube(:,:,modvar.sbpIndex)); %--Complex transmission of the FPM. Calculated in model_Jacobian.m.
+FPM = squeeze(mp.compact.FPMcube(:,:,modvar.sbpIndex)); %--Complex transmission of the FPM.
 transOuterFPM = FPM(1,1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
 
 if(mp.useGPU)
