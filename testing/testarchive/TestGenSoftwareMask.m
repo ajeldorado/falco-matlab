@@ -8,7 +8,7 @@
 %
 % We define some tests for falco_gen_SW_mask.m to test responses to
 % different input parameters. 
-classdef TestDarkholeRegion < matlab.unittest.TestCase    
+classdef TestGenSoftwareMask < matlab.unittest.TestCase    
 %% Properties
 %
 % A presaved file with FALCO parameters was saved and is lodaded to be used
