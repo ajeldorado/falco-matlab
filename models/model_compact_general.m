@@ -149,8 +149,9 @@ if flagUseFPM
             % Resize beam if Lyot plane has different resolution
             if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
                 N1 = length(EP4);
-                mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
-                N4 = ceil_even(mag*N1);
+%                 mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
+%                 N4 = ceil_even(mag*N1);
+                N4 = ceil_even(1.1*mp.P4.compact.Narr);
                 if strcmpi(mp.centering, 'pixel')
                     x1 = (-N1/2:(N1/2-1))/mp.P1.compact.Nbeam;
                     x4 = (-N4/2:(N4/2-1))/mp.P4.compact.Nbeam;
@@ -161,6 +162,8 @@ if flagUseFPM
                 [X1, Y1] = meshgrid(x1);
                 [X4, Y4] = meshgrid(x4);
                 EP4 = interp2(X1, Y1, EP4, X4, Y4);
+                % Preserve summed intensity in the pupil:
+                EP4 = (mp.P1.compact.Nbeam/mp.P4.compact.Nbeam) * EP4;
             end
 
             EP4 = pad_crop(EP4, mp.P4.compact.Narr);
@@ -237,12 +240,13 @@ else % No FPM in beam path, so relay directly from P3 to P4.
     
     EP4 = propcustom_relay(EP3, NrelayFactor*mp.Nrelay3to4, mp.centering);
     EP4 = transOuterFPM * EP4;
-
+%     figure(551); imagesc(abs(EP4)); axis xy equal tight; colorbar; drawnow;
     % Interpolate beam if Lyot plane has different resolution
     if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
         N1 = length(EP4);
-        mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
-        N4 = ceil_even(mag*N1);
+%         mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
+%         N4 = ceil_even(mag*N1);
+        N4 = ceil_even(1.1*mp.P4.compact.Narr);
         if strcmpi(mp.centering, 'pixel')
             x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;
             x4 = (-N4/2:(N4/2-1)) / mp.P4.compact.Nbeam;
@@ -253,8 +257,11 @@ else % No FPM in beam path, so relay directly from P3 to P4.
         [X1, Y1] = meshgrid(x1);
         [X4, Y4] = meshgrid(x4);
         EP4 = interp2(X1, Y1, EP4, X4, Y4);
+        % Preserve summed intensity in the pupil:
+        EP4 = (mp.P1.compact.Nbeam/mp.P4.compact.Nbeam) * EP4;
     end
     
+%     figure(552); imagesc(abs(EP4)); axis xy equal tight; colorbar; drawnow;
     EP4 = pad_crop(EP4, mp.P4.compact.Narr);
     
 end
