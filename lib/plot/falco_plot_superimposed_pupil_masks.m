@@ -47,14 +47,14 @@ if mp.flagPlot
     switch upper(mp.coro)
         case{'HLC', 'LC', 'APLC', 'VC', 'VORTEX'}
             
-            P4mask = pad_crop(mp.P4.compact.mask,mp.P1.compact.Narr);
+            P4mask = pad_crop(mp.P4.compact.mask, mp.P1.compact.Narr);
             if mp.flagRotation
                 P4mask = propcustom_relay(P4mask, mp.Nrelay1to2+mp.Nrelay2to3+mp.Nrelay3to4);
             end
             P1andP4 = mp.P1.compact.mask + P4mask;
 
             figure(301)
-            imagesc(P1andP4, [-1, 1]);
+            imagesc(P1andP4);
             title('Superimposed Pupil and Lyot Stop', 'Fontsize', 16)
             axis xy equal tight; colorbar; 
             set(gca, 'Fontsize', 20);
