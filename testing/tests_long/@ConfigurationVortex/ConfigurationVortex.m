@@ -197,7 +197,7 @@ mp.P3.D = mp.P2.D;
 mp.P4.D = mp.P2.D;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 250;
+mp.P1.compact.Nbeam = 200;
 mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -219,7 +219,7 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = mp.P1.compact.Nbeam;
+mp.P1.full.Nbeam = 250;
 mp.P2.full.Nbeam = mp.P1.full.Nbeam;
 mp.P3.full.Nbeam = mp.P1.full.Nbeam;
 mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -265,8 +265,10 @@ mp.P3.compact.mask = falco_gen_pupil_Simple(inputs);
 %% Lyot stop (P4) Definition and Generation
 
 % Inputs common to both the compact and full models
-inputs.ID = 0;
-inputs.OD = 0.82;
+mp.P4.IDnorm = 0;
+mp.P4.ODnorm = 0.82;
+inputs.ID = mp.P4.IDnorm;
+inputs.OD = mp.P4.ODnorm;
 
 % Full model
 inputs.Nbeam = mp.P4.full.Nbeam;
@@ -282,3 +284,5 @@ mp.P4.compact.mask = falco_gen_pupil_Simple(inputs);
 %% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 mp.F3.VortexCharge = 6; %--Charge of the vortex mask
+
+end

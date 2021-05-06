@@ -33,7 +33,7 @@ while icav < size(varargin, 2)
         case{'getnorm'}
             normFac = 0; 
             flagNewNorm = true;
-        case {'normoff','unnorm','nonorm'} 
+        case {'normoff', 'unnorm', 'nonorm'} 
             normFac = 1;
         case {'eval'}
             flagEval = true;
@@ -65,7 +65,7 @@ TTphase = (-1)*(2*pi*(xiOffset*mp.P2.compact.XsDL + etaOffset*mp.P2.compact.YsDL
 Ett = exp(1j*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
 
-if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.compact.XsDL + modvar.y_offset*mp.P2.compact.YsDL));
     Ett = exp(1j*TTphase*mp.lambda0/lambda);
     Ein = Ett .* Ein;
@@ -97,49 +97,23 @@ switch lower(mp.layout)
     case{'fourier'}
         switch upper(mp.coro) 
             case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
-                mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+                mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
             case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-                mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat( mp,modvar.sbpIndex,modvar.wpsbpIndex,'compact'); %--Complex transmission map of the FPM.
+                mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
         end
         
-    case{'roman_phasec_proper', 'wfirst_phaseb_simple','wfirst_phaseb_proper','fpm_scale','proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
-        switch upper(mp.coro)     
-            case{'HLC'}
-                mp.FPM.mask = mp.compact.FPMcube(:, :, modvar.sbpIndex);
+    case{'roman_phasec_proper', 'wfirst_phaseb_proper', 'fpm_scale', 'proper'}
+        if strcmpi(mp.coro, 'HLC')
+            mp.FPM.mask = mp.compact.FPMcube(:, :, modvar.sbpIndex);
         end
 end
 
 %--Select which optical layout's compact model to use and get the output E-field
-switch lower(mp.layout)
-    case{'fourier'}
-        if(mp.flagFiber)
-            [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-            varargout{1} = Efiber;
-        else
-            Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-        end
-        
-    case{'proper'}
-        switch upper(mp.coro)
-            case{'HLC'}
-                    Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-            otherwise
-                    Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-        end
-        
-    case{'roman_phasec_proper', 'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
-        switch upper(mp.coro)
-            case{'SPLC'}
-                Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-            case{'HLC'}
-                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-        end
-        
-    case{'fpm_scale'}
-        switch upper(mp.coro)
-            case{'HLC'}
-                Eout = model_compact_scale(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-        end
+if ~mp.flagFiber
+    Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+else
+    [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    varargout{1} = Efiber;
 end
     
 end %--END OF FUNCTION

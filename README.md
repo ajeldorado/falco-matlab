@@ -19,7 +19,7 @@ For an overview of FALCO and its uses, refer to the SPIE conference paper ["Fast
 
 # Matlab Versions and Toolboxes
 
-FALCO is developed in Matlab 2020b on MacOS. Continuous Integration (CI) is performed with [Azure DevOps](https://dev.azure.com/highcontrast/falco-matlab/_build?view=pipelines) using Matlab 2020b on Ubuntu 20.04. FALCO may still work with older versions of Matlab, but functionality is not guaranteed. Please report any operating system-related FALCO bugs to the developer.
+FALCO is developed in Matlab 2020b on MacOS. Continuous Integration (CI) is performed with [Azure DevOps](https://dev.azure.com/highcontrast/falco-matlab/_build?view=pipelines) using Matlab 2020b on Ubuntu 20.04. We try not to use any Matlab features specific to new versions, but functionality with older versions is not guaranteed.
 
 No paid Matlab toolboxes should be required for FALCO. However, the Parallel Computing Toolbox or Distributed Computing Toolbox can be used to parallelize some repetitive calculations by changing the value of a flag, *mp.flagParfor = true;*. Please email the developer if you find that any other toolboxes are accidentally and/or unnecessarily used or called. FALCO versions of *rms.m* and *sinc.m* have been included since those simple functions otherwise require the Signal Processing Toolbox. Thank you to Jason Kay for reporting the rms issue.
 
@@ -41,8 +41,19 @@ No paid Matlab toolboxes should be required for FALCO. However, the Parallel Com
 
 
 # Version History
+v4.3 released on May 6, 2021.
+  - All the model functions in the model/ subdirectory were refactored.
+    - The HLC cases with an FPM that scales with wavelength are no longer separate functions; they are now just an extra case in the nominally used models.
+    - The no-FPM Jacobian calculation was simplified and sped up, and tests were added for it.
+    - The no-FPM compact model cases were corrected to fix an energy conservation bug when the Lyot plane had a different resolution than the prior pupil planes.
+  - `falco_configure_dark_hole_region()` has been refactored to reduce redundancy. Tests were added for it.
+  - Added a function to include noise in simulated subband images.
 
-v4.1.0 released on March 29, 2021.
+v4.2 released on April 6, 2021.
+  - **Mask generation (or loading) must now be done before calling `falco_flesh_out_workspace()` rather than as part of `falco_flesh_out_workspace()`.** All the example scripts in this repo have been updated to accommodate this small but important change. This makes it more clear to the user what the masks are; they no longer have to know what is inside of the buried FALCO functions such as `falco_gen_chosen_pupil()` or `falco_gen_chosen_apodizer()`, which have been deprecated.  This change covers all mask types used (input pupil mask, apodizer mask, lyot stop, focal plane mask). The two exceptions are 1) vortex masks and 2) hybrid Lyot occulters that are being optimized with DM8 and DM9. HLC occulters that are pre-optimized must still be loaded as before.
+
+
+v4.1 released on March 29, 2021.
   - Implemented Continuous Integration (CI) using Azure DevOps.
   - Lots of code cleanup and reorganization.
 

@@ -191,6 +191,3 @@ if mp.useGPU
 end
 
 end % End of entire function
-
-
-    
