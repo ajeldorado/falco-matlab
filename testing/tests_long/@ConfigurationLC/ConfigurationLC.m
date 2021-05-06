@@ -276,6 +276,7 @@ changes.flagRot180 = true;
 
 mp.P4.full.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.full.Nbeam, mp.centering, changes);
 mp.P4.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P4.compact.Nbeam, mp.centering, changes);
+mp.P4.compact.maskAtP1res = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.centering, changes);
 
 % rocFillet = 0.02;
 % upsampleFactor = 100;

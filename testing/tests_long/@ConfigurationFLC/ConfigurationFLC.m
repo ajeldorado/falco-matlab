@@ -302,6 +302,10 @@ inputs.Nbeam = mp.P4.compact.Nbeam;
 inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
 mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
 
+% For peak Jacobian calculation
+inputs.Nbeam = mp.P1.compact.Nbeam;
+inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
+mp.P4.compact.maskAtP1res = falco_gen_pupil_Simple(inputs); 
 
 %% FPM size
 mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0/D]
