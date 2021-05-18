@@ -31,7 +31,6 @@ for ni = 1:Nannuli
     maskStruct.rhoOuter = Rsens(ni,2) ; %--lambda0/D
     maskStruct.angDeg = mp.Fend.corr.ang; %--degrees
     maskStruct.centering = mp.centering;
-    maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
     maskStruct.pixresFP = mp.Fend.res;
     maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
     if(isfield(mp.Fend,'shape'));  maskStruct.shape = mp.Fend.shape;  end
