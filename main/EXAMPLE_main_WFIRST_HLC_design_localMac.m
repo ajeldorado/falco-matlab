@@ -37,44 +37,75 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-% EXAMPLE_defaults_WFIRST_HLC_design_local
 EXAMPLE_defaults_WFIRST_HLC_design_slowpoke
-mp.aux.peakJacKern = false;
-mp.aux.omega = 0;
+mp.flagSaveWS = true;
+
+mp.Nitr = 2200;
+
+% beta
+mp.aux.betaMinusOne = false;
+% DM9
+mp.aux.firstDM9It = 0;
+mp.aux.lastDM9It = 11111111;
+mp.aux.wDM9_arr = [];
+mp.aux.dm9OnlyItr_arr = [];
+mp.dm9.weight = 10;
+%gamma
 mp.aux.gamma = 0;
-mp.aux.firstOmegaItr = 11111110;
-mp.aux.betaMinusOne = 0;
-mp.aux.ItrDump = 0;
-mp.aux.flagOmega=0;
+%omega
+mp.aux.omega = 1;
+mp.aux.firstOmegaItr = 0;
+mp.aux.flagOmega=true;
 mp.aux.omegaMin = 2;
 mp.aux.omegaMax = 9;
-mp.aux.minNIprob = 1111111;
-mp.aux.firstDM9It = 0;
-mp.aux.dm9OnlyItr_arr = [];
-mp.aux.NumConvCFIt = 0;
-mp.aux.wDM9_arr = [];
-mp.aux.flagRegDM9 = false;
+% Regularization DM9
+mp.aux.flagRegDM9 = true;
 mp.aux.betadm9Min = -8;
 mp.aux.betadm9Max = -5;
-mp.aux.firstRegDM9Itr = 111110;
-mp.aux.flagNIthput2 = false; % search for best Reg with NI/thput^2 or not
-
+mp.aux.firstRegDM9Itr = 10;
+% other flags
+mp.aux.flagNIthput2 = true; % search for best Reg with NI/thput^2 or not
+mp.aux.peakJacKern = false; %use the cost function by B. Kern (JPL): E/thput
+%% Scheme that allows for a certain num of iterations to run w/o DM9
 SetA2 = [1, 1j, 12, 1, 1];  %--DMs 1 & 2. Relinearize every iteration.
 SetB2 = [1, 1j, 129, 1, 1];
+multIfNecessary = 0;
+if (mp.aux.lastDM9It-mp.aux.firstDM9It)>0; multIfNecessary = 1;end
+    
+if true
+    itA = 200;
+    itB = 5;
+    itC = 1000;
+    SetB = [1, -6, 129, 1, 1];
+    mp.ctrl.sched_mat = [...
+         repmat(SetA2,[min([mp.Nitr,mp.aux.firstDM9It]),1]);...
+%          repmat(SetB2,[min([mp.aux.lastDM9It-mp.aux.firstDM9It,mp.Nitr-mp.aux.firstDM9It]),1]);...%;%
+%             repmat(SetA2,[(mp.Nitr-mp.aux.lastDM9It)*multIfNecessary,1])...
+%             ];%         
+        repmat(SetB2,[100,1]);...
+        repmat(SetB,[itB,1]);...
+        repmat(SetB2,[400,1]);...
+        repmat(SetB,[itB,1]);...
+        repmat(SetB2,[200,1]);...
+        repmat(SetB,[itB,1]);...
+        repmat(SetB2,[200,1]);...
+        repmat(SetB,[itB,1]);...
+        repmat(SetB2,[itC,1])];
 
-mp.Nitr = 30;
-mp.ctrl.sched_mat = [...
-     repmat(SetA2,[min([mp.Nitr,mp.aux.firstDM9It]),1]);...
-     repmat(SetB2,[mp.Nitr-mp.aux.firstDM9It,1])...
-     ];
-
+else
+    mp.ctrl.sched_mat = [...
+         repmat(SetA2,[min([mp.Nitr,mp.aux.firstDM9It]),1]);...
+         repmat(SetB2,[min([mp.aux.lastDM9It-mp.aux.firstDM9It,mp.Nitr-mp.aux.firstDM9It]),1]);...
+         repmat(SetA2,[(mp.Nitr-mp.aux.lastDM9It)*multIfNecessary,1])...
+         ];
+end
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 %% Step 3: Overwrite default values as desired
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
-mp.flagPlot = true;
+mp.flagPlot = false;
 mp.flagSaveWS = true;
 
 
@@ -110,9 +141,10 @@ mp.max_azimSize_dm9 = 1;
 
 %% Step 4: Generate the label associated with this trial
 
-mp.aux.gamma = 0;
-% mp.aux.dm9OnyItr_arr = [1:10];
-runlabel = ['gammaFig_gamma',num2str(mp.aux.gamma),'_Mar312021'];
+mp.aux.gamma = 0.0;
+label_nmtest = ['weightDM9test_weight',num2str(mp.dm9.weight)];
+label_date = 'May142021';
+runlabel = ['name_',label_nmtest,'_DM9weight',num2str(mp.dm9.weight),'_gamma',num2str(mp.aux.gamma),'_',label_date];
 
 %--Record Keeping
 mp.SeriesNum = 10;

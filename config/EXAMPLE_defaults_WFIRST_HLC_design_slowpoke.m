@@ -375,3 +375,6 @@ mp.dm9.Vmin = 0;  % minimum thickness of FPM dielectric layer (nm)
 mp.dm9.Vmax = 400+mp.dm9.V0coef; % maximum thickness (from one actuator, not of the facesheet) of FPM dielectric layer (nm)
 
 mp.aux.wDM9_arr = ones(mp.Nitr,1)*mp.dm9.weight;
+mp.aux.minNIprob = 0;
+mp.aux.ItrDump = 0;
+mp.aux.NumConvCFIt = 0;
