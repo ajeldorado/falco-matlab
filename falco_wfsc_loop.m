@@ -602,22 +602,22 @@ xlabel('Itr')
 ylabel('Throughput')
 set(gca,'FontSize',15)
 
-% %--Save out DM commands after each iteration in case the run crashes part way through.
-% fprintf('Saving DM commands for this iteration...')
-% cd(mp.path.ws_inprogress)
-% 
-%         if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
-%         if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
-%         if(any(mp.dm_ind==3)); DM3V = mp.dm3.V; else; DM3V = 0; end
-%         if(any(mp.dm_ind==8)); DM8V = mp.dm8.V; else; DM8V = 0; end
-%         if(any(mp.dm_ind==9)); DM9V = mp.dm9.V; else; DM9V = 0; end
-%         Nitr = mp.Nitr;
-%         thput_vec = mp.thput_vec;
-% 
-%         fnWS = sprintf('ws_%s_Iter%dof%d.mat',mp.runLabel,Itr,mp.Nitr);
-%         save(fnWS,'Nitr','Itr','DM1V','DM2V','DM3V','DM8V','DM9V','InormHist','thput_vec')
-% cd(mp.path.falco)
-% fprintf('done.\n\n')
+%--Save out DM commands after each iteration in case the run crashes part way through.
+if(mp.flagSaveEachItr)
+    fprintf('Saving DM commands for this iteration...')
+    if(any(mp.dm_ind==1)); DM1V = mp.dm1.V; else; DM1V = 0; end
+    if(any(mp.dm_ind==2)); DM2V = mp.dm2.V; else; DM2V = 0; end
+    if(any(mp.dm_ind==8)); DM8V = mp.dm8.V; else; DM8V = 0; end
+    if(any(mp.dm_ind==9)); DM9V = mp.dm9.V; else; DM9V = 0; end
+    Nitr = mp.Nitr;
+    thput_vec = mp.thput_vec;
+    Srms1 = out.dm1.Srms*1e9;
+    Srms2 = out.dm2.Srms*1e9;
+    Zsens = out.Zsens;
+    fnWS = sprintf('%sws_%s_Iter%dof%d.mat',mp.path.ws_inprogress,mp.runLabel,Itr,mp.Nitr);
+    save(fnWS,'Nitr','Itr','DM1V','DM2V','DM8V','DM9V','InormHist','thput_vec','Srms1','Srms2','Zsens','Im')
+    fprintf('done.\n\n')
+end
 
 
 end %--END OF ESTIMATION + CONTROL LOOP
