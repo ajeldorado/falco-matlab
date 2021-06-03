@@ -17,36 +17,37 @@
 
 function falco_plot_superimposed_pupil_masks(mp)
 
-if mp.flagPlot
-    %--Plot superposed apodizer and telescope pupil
-    if mp.flagApod
-        
-        P3mask = pad_crop(mp.P3.compact.mask, size(mp.P1.compact.mask));
-        if mp.flagRotation
-            P3mask = propcustom_relay(P3mask, mp.Nrelay1to2 + mp.Nrelay2to3);
+    if mp.flagPlot
+
+        %--Plot superposed apodizer and telescope pupil
+        if mp.flagApod
+
+            P3mask = pad_crop(mp.P3.compact.mask, size(mp.P1.compact.mask));
+            if mp.flagRotation
+                P3mask = propcustom_relay(P3mask, mp.Nrelay1to2 + mp.Nrelay2to3);
+            end
+
+            figure(300)
+            imagesc(P3mask - mp.P1.compact.mask, [-1, 1]);
+            title('Apodizer - Entrance Pupil', 'Fontsize', 16)
+            axis xy equal tight; colorbar;
+            set(gca, 'Fontsize', 20);
+            set(gcf, 'Color', 'w');
+            drawnow
+
+            figure(302)
+            imagesc(P3mask + mp.P1.compact.mask);
+            title('Superimposed Pupil and Apodizer', 'Fontsize', 16);
+            axis xy equal tight; colorbar; 
+            set(gca, 'Fontsize', 20);
+            set(gcf, 'Color', 'w');
+            drawnow;
+
         end
-        
-        figure(300)
-        imagesc(P3mask - mp.P1.compact.mask, [-1, 1]);
-        title('Apodizer - Entrance Pupil', 'Fontsize', 16)
-        axis xy equal tight; colorbar;
-        set(gca, 'Fontsize', 20);
-        set(gcf, 'Color', 'w');
-        drawnow
-                
-        figure(302)
-        imagesc(P3mask + mp.P1.compact.mask);
-        title('Superimposed Pupil and Apodizer', 'Fontsize', 16);
-        axis xy equal tight; colorbar; 
-        set(gca, 'Fontsize', 20);
-        set(gcf, 'Color', 'w');
-        drawnow;
-    end
-    
-    %--Plot superimposed Lyot stop and telescope pupil
-    switch upper(mp.coro)
-        case{'HLC', 'LC', 'APLC', 'VC', 'VORTEX'}
-            
+
+        %--Plot superimposed Lyot stop and telescope pupil
+        if mp.P1.compact.Nbeam == mp.P4.compact.Nbeam
+
             P4mask = pad_crop(mp.P4.compact.mask, mp.P1.compact.Narr);
             if mp.flagRotation
                 P4mask = propcustom_relay(P4mask, mp.Nrelay1to2+mp.Nrelay2to3+mp.Nrelay3to4);
@@ -60,8 +61,9 @@ if mp.flagPlot
             set(gca, 'Fontsize', 20);
             set(gcf, 'Color', 'w');
             drawnow;
+
+        end
+
     end
-    
-end
     
 end

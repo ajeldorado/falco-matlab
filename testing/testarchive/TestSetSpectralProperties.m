@@ -137,7 +137,7 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
             import matlab.unittest.constraints.RelativeTolerance;
 %             mp=testCase.mp;
             mp.lambda0 = 1e-6;
-            mp.flagSim = false;
+            mp.flagSim = true;
             mp.Nsbp = 5;
             mp.Nwpsbp = 3;
             mp.fracBW = 0.20;
