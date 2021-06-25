@@ -1,4 +1,4 @@
-function Eout = model_ZWFS(mp, modvar, varargin)
+ function Eout = model_ZWFS(mp, modvar, varargin)
 % function Eout = model_ZWFS(mp, modvar, varargin)
 % Function to model a Zernike WFS. 
 % Options: 
@@ -16,22 +16,22 @@ to_input = false;
 % part of the beam that passes through the phase dimple. 
 if(~isempty(varargin))
     flag = varargin(1); 
-    if(strcmp(flag,'refwave'))
+    if(strcmp(flag, 'refwave'))
         refwave = true; 
     end
-    if(strcmp(flag,'to_input'))
+    if(strcmp(flag, 'to_input'))
         to_input = true;
         refwave = false; 
     end
 end
 
 %--Set the wavelength
-if(isfield(modvar,'lambda'))
+if(isfield(modvar, 'lambda'))
     lambda = modvar.lambda;
-elseif(isfield(modvar,'ebpIndex'))
+elseif(isfield(modvar, 'ebpIndex'))
     lambda = mp.wfs.lambdas(modvar.ebpIndex);
-elseif(isfield(modvar,'sbpIndex'))
-    lambda = mp.wfs.lambdasMat(modvar.sbpIndex,modvar.wpsbpIndex);
+elseif(isfield(modvar, 'sbpIndex'))
+    lambda = mp.wfs.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,41 +40,41 @@ end
 
 % For the out-of-band case, scale the E-field defined for the coronagraph 
 % full model assuming the phase aberrations are caused by surface errors. 
-lam0_ref = mp.full.lambdasMat(mp.si_ref,mp.wi_ref);
-phz = angle(mp.P1.full.E(:,:,mp.wi_ref,mp.si_ref))*lam0_ref/lambda;
-mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex) = exp(1i*phz);
+lam0_ref = mp.full.lambdasMat(mp.si_ref, mp.wi_ref);
+phz = angle(mp.P1.full.E(:, :, mp.wi_ref, mp.si_ref))*lam0_ref/lambda;
+mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex) = exp(1i*phz);
 
 
 %--Set the point source as the exoplanet or the star
-if strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations 
+if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex); 
+    Ein = Ett.*mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
         
 else % Default to using the starlight
     %--Include the tip/tilt in the input stellar wavefront
-    if(isfield(mp,'ttx'))  % #NEWFORTIPTILT
+    if(isfield(mp, 'ttx'))  % #NEWFORTIPTILT
         %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
         x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
         y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
 
         TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
         Ett = exp(1i*TTphase*mp.lambda0/lambda);
-        Ein = Ett.*mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+        Ein = Ett.*mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);  
 
     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-        Ein = mp.wfs.E(:,:,modvar.wpsbpIndex,modvar.sbpIndex);  
+        Ein = mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);  
     end
 end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
-if(isfield(modvar,'zernIndex')==false)
+if(isfield(modvar, 'zernIndex')==false)
     modvar.zernIndex = 1;
 end
 
 if(modvar.zernIndex~=1)
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
-    zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+    zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
 end
 
@@ -92,8 +92,8 @@ NdmPad = mp.compact.NdmPad;
 if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, NdmPad); else; DM1surf = 0; end %--Pre-compute the starting DM1 surface
 if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, NdmPad); else; DM2surf = 0; end %--Pre-compute the starting DM2 surface
 
-pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
-Ein = padOrCropEven(Ein,mp.compact.NdmPad);
+pupil = padOrCropEven(mp.P1.compact.mask, NdmPad);
+Ein = padOrCropEven(Ein, mp.compact.NdmPad);
 
 if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = 1; end
 if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = 1; end
@@ -110,25 +110,25 @@ end
 
 %--Define pupil P1 and Propagate to pupil P2
 EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_relay(EP1,mp.Nrelay1to2, mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
+EP2 = propcustom_relay(EP1, mp.Nrelay1to2, mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 deg.
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 if(abs(mp.d_P2_dm1)~=0) %--E-field arriving at DM1
-    Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1);
+    Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
 else
     Edm1 = EP2;
 end
 Edm1 = DM1stop.*exp(mirrorFac*2*pi*1i*DM1surf/lambda).*Edm1; %--E-field leaving DM1
 
 %--Propagate from DM1 to DM2, and apply DM2 surface and aperture stop
-Edm2 = propcustom_PTP(Edm1,mp.P2.compact.dx*NdmPad,lambda,mp.d_dm1_dm2); 
+Edm2 = propcustom_PTP(Edm1, mp.P2.compact.dx*NdmPad, lambda, mp.d_dm1_dm2); 
 Edm2 = DM2stop.*exp(mirrorFac*2*pi*1i*DM2surf/lambda).*Edm2;
 
 %--Back-propagate to pupil P2
 if(mp.d_P2_dm1 + mp.d_dm1_dm2 == 0)
     EP2eff = Edm2;
 else
-    EP2eff = propcustom_PTP(Edm2,mp.P2.compact.dx*NdmPad,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
+    EP2eff = propcustom_PTP(Edm2, mp.P2.compact.dx*NdmPad, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
 end
 
 if(to_input) % if the user only wants to propagate to the input pupil (i.e. through primary and DMs)
@@ -144,7 +144,7 @@ else % otherwise, go through the mask and on to the next pupil.
     end
 
     %--MFT from SP to FPM (i.e., P3 to F3)
-    EF3inc = propcustom_mft_PtoF(EP3, mp.fl,lambda, ...
+    EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, ...
         mp.P2.compact.dx, mp.wfs.mask.dxi, mp.wfs.mask.Nxi, ...
         mp.wfs.mask.deta, mp.wfs.mask.Neta, mp.centering); %--E-field incident upon the FPM
 
@@ -158,10 +158,10 @@ else % otherwise, go through the mask and on to the next pupil.
     if(refwave)
         EF3 = phzSupport.*EF3inc; % Take only the part of the beam in the phase dimple
     else
-        if(strcmpi(mp.wfs.mask.type,'transmissive'))
+        if(strcmpi(mp.wfs.mask.type, 'transmissive'))
             n_mask = mp.wfs.mask.n(lambda);
             FPM = maskAmp.*exp(1i*2*pi/lambda*(n_mask-1)*maskDepth_m.*phzSupport);
-        elseif(strcmpi(mp.wfs.mask.type,'reflective'))
+        elseif(strcmpi(mp.wfs.mask.type, 'reflective'))
             FPM = maskAmp.*exp(1i*4*pi/lambda*maskDepth_m.*phzSupport);
         else
             disp('mp.wfs.mask.type must be transmissive or reflective');
@@ -170,11 +170,11 @@ else % otherwise, go through the mask and on to the next pupil.
 
         %--Use Babinet's principle at the Lyot plane.
         EP4noFPM = propcustom_relay(EP3, mp.Nrelay3to4, mp.centering); %--Propagate forward another pupil plane 
-        EP4noFPM = padOrCropEven(EP4noFPM,WFScam_Narr); %--Crop down to the size of the Lyot stop opening
+        EP4noFPM = padOrCropEven(EP4noFPM, WFScam_Narr); %--Crop down to the size of the Lyot stop opening
     end
 
     %--MFT from WFS FPM to WFS camera
-    EP4sub = propcustom_mft_FtoP(EF3,mp.fl,lambda,mp.wfs.mask.dxi,mp.wfs.mask.deta,WFScam_dx,WFScam_Narr,mp.centering); % Subtrahend term for Babinet's principle     
+    EP4sub = propcustom_mft_FtoP(EF3, mp.fl, lambda, mp.wfs.mask.dxi, mp.wfs.mask.deta, WFScam_dx, WFScam_Narr, mp.centering); % Subtrahend term for Babinet's principle     
     EP4sub = propcustom_relay(EP4sub, mp.Nrelay3to4-1, mp.centering);
     
     if(refwave)

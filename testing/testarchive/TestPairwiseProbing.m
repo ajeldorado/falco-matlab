@@ -41,7 +41,9 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
 % # *testPairwiseProbing* Test falco_est_pairwise_probing.m.                                   
     methods (Test)    
         function testPairwiseProbing(testCase)
+            
             EXAMPLE_defaults_try_running_FALCO
+            
             mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
             mp.flagPlot = false;
             mp.SeriesNum = 1;
@@ -56,9 +58,23 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
                 '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
                 '_',mp.controller];
             
+            % Overwrite the LUVOIR-B pupil with an open circle to get
+            % better contrast for this test.
             mp.whichPupil = 'SIMPLE';
-            mp.P1.ODnorm = 1;
+            % Inputs common to both the compact and full models
+            inputs.ID = 0;
+            inputs.OD = 1.0;
+            % Full model
+            inputs.Nbeam = mp.P1.full.Nbeam;
+            inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
+            mp.P1.full.mask = falco_gen_pupil_Simple(inputs); 
+            % Compact model
+            inputs.Nbeam = mp.P1.compact.Nbeam;
+            inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
+            mp.P1.compact.mask = falco_gen_pupil_Simple(inputs); 
+
             [mp, out] = falco_flesh_out_workspace(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             N = size(mp.P1.full.E, 1);
             alpha = 2.5;
             mirror_figure = 1e-9;
@@ -66,7 +82,7 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             mp.P1.full.E = exp(2*pi*1j/mp.lambda0*errormap);
             mp.P1.compact.E = exp(2*pi*1j/mp.lambda0*errormap);
             Im = falco_get_summed_image(mp);
-            mp = falco_compute_PSF_norm_factor(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             mp.estimator = 'perfect';
             ev = falco_est_perfect_Efield_with_Zernikes(mp);
             Etrue = ev.Eest;

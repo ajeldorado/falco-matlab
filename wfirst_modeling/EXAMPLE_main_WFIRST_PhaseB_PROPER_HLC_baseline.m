@@ -1,40 +1,23 @@
-% Copyright 2018, 2019, by the California Institute of Technology. ALL RIGHTS
-% RESERVED. United States Government Sponsorship acknowledged. Any
-% commercial use must be negotiated with the Office of Technology Transfer
-% at the California Institute of Technology.
+% Copyright 2018-2021, by the California Institute of Technology.
+% ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+% Any commercial use must be negotiated with the Office 
+% of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform an HLC design run.
-%  1) Load the default model parameters for an HLC.
-%  2) Specify the values to overwrite.
-%  3) Run a single trial of WFC using FALCO.
-%
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-02-26 by A.J. Riggs to load the defaults first.
-% ---------------
+% Script to run the wavefront correction with the Roman (formerly WFIRST) HLC from Phase B. 
 
-clear all;
+clear
 
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
-%--Functions for when the full model uses PROPER
+%--Tell Matlab where to find the PROPER model prescription and FITS files
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab');
 addpath('~/Repos/proper-models/wfirst_cgi/models_phaseb/matlab/examples');
 
-%--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '~/Repos/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-
-%%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
-%%--Add to the MATLAB Path
-% addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-% addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
-
+% %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+% mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 %% Step 2: Load default model parameters
 
@@ -86,10 +69,13 @@ mp.ctrl.sched_mat = [...
 
 %%
 
-if(mp.Nsbp==1)
+if mp.Nsbp == 1
     lambdaFacs = 1;
+elseif mp.Nwpsbp == 1
+    lambdaFacs = linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
 else
-    lambdaFacs = linspace(1-mp.fracBW/2,1+mp.fracBW/2,mp.Nsbp);
+    DeltaBW = mp.fracBW/(mp.Nsbp)*(mp.Nsbp-1)/2;
+    lambdaFacs = linspace(1-DeltaBW, 1+DeltaBW, mp.Nsbp);
 end
 
 lam_occ = lambdaFacs*mp.lambda0;
@@ -179,6 +165,10 @@ for si=1:mp.Nsbp
 
 
 end
+
+% Don't double count the pupil amplitude with the phase retrieval and a model-based mask
+mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
+
 %% After getting input E-field, add back HLC DM shapes
 % mp.dm1.V = fitsread('hlc_dm1.fits')./mp.dm1.VtoH;
 % mp.dm2.V = fitsread('hlc_dm2.fits')./mp.dm2.VtoH;
@@ -202,11 +192,15 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 [mp, out] = falco_flesh_out_workspace(mp);
 
+
+figure; imagesc(mp.P1.compact.mask); axis xy equal tight; colorbar; drawnow;
+
 [mp, out] = falco_wfsc_loop(mp, out);
 
 
 %%
 return
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FLUX RATIO NOISE (FRN) ANALYSIS SECTIONS

@@ -6,27 +6,30 @@
 classdef TestJacWeights < matlab.unittest.TestCase
 %% Properties
 %
-% A presaved file with FALCO parameters was saved and is lodaded to be used
-% by methods. In this case we only use the mp.path.falco + lib/utils to
-% addpath to utils functions to be tested.
-    properties
-        mp=Parameters();
-    end
+% % A presaved file with FALCO parameters was saved and is lodaded to be used
+% % by methods. In this case we only use the mp.path.falco + lib/utils to
+% % addpath to utils functions to be tested.
+%     properties
+%         mp=Parameters();
+%     end
+% 
 
 %% Setup and Teardown Methods
 %
-%  Add and remove path to utils functions to be tested.
-%
+%  Add and remove path to library functions to be tested.
+
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            addpath(genpath([pathToFalco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'lib']))
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            rmpath(genpath([pathToFalco filesep 'lib']));
         end
-    end    
+    end
     
 %% Tests
 %
@@ -67,7 +70,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
     methods (Test)
         function testJacWeightserror1(testCase)
             import matlab.unittest.constraints.Throws
-            mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = [1, 1, 3];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
@@ -77,7 +79,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
         end
         function testJacWeightserror2(testCase)
             import matlab.unittest.constraints.Throws
-            mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = [1, 2, 3, 4];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
@@ -86,12 +87,12 @@ classdef TestJacWeights < matlab.unittest.TestCase
             testCase.verifyThat(@() falco_set_jacobian_modal_weights(mp),Throws(?MException))
         end       
         function testJacWeightsinputs1(testCase)
-            mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = 1;
             mp.jac.Zcoef = 1e-9;
             mp.Nsbp = 1;
             mp.si_ref = ceil(mp.Nsbp/2);
+            mp.compact.star.count = 1;
             mp = falco_set_jacobian_modal_weights(mp);
 
             testCase.verifyEqual(1,mp.jac.Nzern);  
@@ -104,12 +105,12 @@ classdef TestJacWeights < matlab.unittest.TestCase
             testCase.verifyEqual(1,mp.jac.zern_inds);
         end
         function testJacWeightsinputs2(testCase)
-            mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = [1, 5, 6];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
             mp.Nsbp = 3;
             mp.si_ref = ceil(mp.Nsbp/2);
+            mp.compact.star.count = 1;
             mp = falco_set_jacobian_modal_weights(mp);
             % Expected Outputs:    
             actSolution1= 3;
@@ -131,12 +132,12 @@ classdef TestJacWeights < matlab.unittest.TestCase
             testCase.verifyEqual(actSolution8,mp.jac.zern_inds);
         end
         function testJacWeightsinputs3(testCase)
-            mp=testCase.mp;
             mp.estimator = 'pwp-bp' ;
             mp.jac.zerns = [1, 5, 6];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
             mp.Nsbp = 3;
             mp.si_ref = ceil(mp.Nsbp/2);
+            mp.compact.star.count = 1;
             mp = falco_set_jacobian_modal_weights(mp);
             % Expected Outputs:    
             actSolution1= 3;

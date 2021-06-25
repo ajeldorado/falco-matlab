@@ -30,6 +30,12 @@ lambda = mp.sbp_centers(modvar.sbpIndex);
 NdmPad = mp.compact.NdmPad;
 surfIntoPhase = 2;
 
+if mp.flagRotation
+    NrelayFactor = 1;
+else
+    NrelayFactor = 0; % zero out the number of relays
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-field
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,14 +46,16 @@ xiOffset = mp.compact.star.xiOffsetVec(iStar);
 etaOffset = mp.compact.star.etaOffsetVec(iStar);
 starWeight = mp.compact.star.weights(iStar);
 TTphase = (-1)*(2*pi*(xiOffset*mp.P2.compact.XsDL + etaOffset*mp.P2.compact.YsDL));
-Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ett = exp(1j*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex);
+
+EttUndoAtP2 = 1./propcustom_relay(Ett, NrelayFactor*mp.Nrelay1to2);
 
 %--Apply a Zernike (in amplitude) at input pupil
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat, mp.P1.compact.Narr);
+    zernMat = pad_crop(zernMat, mp.P1.compact.Narr);
     Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
@@ -55,21 +63,40 @@ end
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pupil = padOrCropEven(mp.P1.compact.mask,NdmPad);
-Ein = padOrCropEven(Ein,NdmPad);
-if(mp.useGPU)
-    pupil = gpuArray(pupil);
-    Ein = gpuArray(Ein);
+if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
+    if ~isfield(mp.P4.compact, 'maskAtP1res')
+        error(['For peak Jacobian calculation, there must be a Lyot stop named mp.P4.compact.maskAtP1res'
+            'that is sampled at the same resolution as the input pupil.'])
+    else
+        lyotStopReimaged = propcustom_relay(pad_crop(mp.P4.compact.maskAtP1res, NdmPad), NrelayFactor*(mp.Nrelay2to3+mp.Nrelay3to4));
+    end
+    
+else
+    lyotStopReimaged = propcustom_relay(pad_crop(mp.P4.compact.mask, NdmPad), NrelayFactor*(mp.Nrelay2to3+mp.Nrelay3to4));
 end
 
-if mp.flagDM1stop; DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
-if mp.flagDM2stop; DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
+pupil = pad_crop(mp.P1.compact.mask, NdmPad);
+Ein = pad_crop(Ein, NdmPad);
 
-if any(mp.dm_ind == 1); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
-if any(mp.dm_ind == 2); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
+if mp.flagDM1stop; DM1stop = pad_crop(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
+if mp.flagDM2stop; DM2stop = pad_crop(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
+
+if any(mp.dm_ind == 1); DM1surf = pad_crop(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
+if any(mp.dm_ind == 2); DM2surf = pad_crop(mp.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
+
 if mp.useGPU
+    pupil = gpuArray(pupil);
+    Ein = gpuArray(Ein);
     if any(mp.dm_ind == 1); DM1surf = gpuArray(DM1surf); end
     if any(mp.dm_ind == 2); DM2surf = gpuArray(DM2surf); end
+end
+
+%--Re-image the apodizer from pupil P3 back to pupil P2.
+if mp.flagApod
+    apodReimaged = pad_crop(mp.P3.compact.mask, NdmPad);
+    apodReimaged = propcustom_relay(apodReimaged, -NrelayFactor*mp.Nrelay2to3, mp.centering);
+else
+    apodReimaged = ones(NdmPad); 
 end
 
 % Define the complex transmission of the outer part of the FPM
@@ -87,37 +114,59 @@ switch upper(mp.coro)
         transOuterFPM = 1;
 end
 
+scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
+switch upper(mp.coro)
+    case{'HLC'}
+        switch mp.layout
+            case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
+                scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+        end
+end
+
+
 %--For including DM surface errors (quilting, scalloping, etc.)
 if mp.flagDMwfe
-    if any(mp.dm_ind == 1); Edm1WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm1.compact.wfe,NdmPad,'extrapval',0)); else; Edm1WFE = ones(NdmPad); end
-    if any(mp.dm_ind == 2); Edm2WFE = exp(2*pi*1i/lambda.*padOrCropEven(mp.dm2.compact.wfe,NdmPad,'extrapval',0)); else; Edm2WFE = ones(NdmPad); end
+    if any(mp.dm_ind == 1); Edm1WFE = exp(2*pi*1j/lambda.*pad_crop(mp.dm1.compact.wfe, NdmPad, 'extrapval', 0)); else; Edm1WFE = ones(NdmPad); end
+    if any(mp.dm_ind == 2); Edm2WFE = exp(2*pi*1j/lambda.*pad_crop(mp.dm2.compact.wfe, NdmPad, 'extrapval', 0)); else; Edm2WFE = ones(NdmPad); end
 else
     Edm1WFE = ones(NdmPad);
     Edm2WFE = ones(NdmPad);
 end
 
+% % For interpolating beam if Lyot plane has different resolution
+% if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
+%     N1 = mp.P1.compact.Nbeam; %length(EP4);
+%     % mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
+%     N4 = mp.P4.compact.Narr; %ceil_even(mag*N1);
+%     if strcmpi(mp.centering, 'pixel')
+%         x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;
+%         x4 = (-N4/2:(N4/2-1)) / mp.P4.compact.Nbeam;
+%     elseif strcmpi(mp.centering, 'interpixel')
+%         x1 = (-(N1-1)/2:(N1-1)/2) / mp.P1.compact.Nbeam;
+%         x4 = (-(N4-1)/2:(N4-1)/2) / mp.P4.compact.Nbeam;
+%     end
+%     [X1, Y1] = meshgrid(x1);
+%     [X4, Y4] = meshgrid(x4);
+% end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Get the unocculted peak E-field and coronagraphic E-field
-if mp.jac.minimizeNI
-    modvar.whichSource = 'star';
-    Eunocculted = model_compact(mp, modvar, 'nofpm');
-    [~, indPeak] = max(abs(Eunocculted(:)));
-end
+% % Get the unocculted peak E-field and coronagraphic E-field
+% if mp.jac.minimizeNI
+%     modvar.whichSource = 'star';
+%     Eunocculted = model_compact(mp, modvar, 'nofpm');
+%     [~, indPeak] = max(abs(Eunocculted(:)));
+% end
 
 %--Define pupil P1 and Propagate to pupil P2
-EP1 = pupil.*Ein; %--E-field at pupil plane P1
-EP2 = propcustom_relay(EP1,mp.Nrelay1to2,mp.centering); %--Forward propagate to the next pupil plane (P2) by rotating 180 degrees mp.Nrelay1to2 times.
+EP1 = pupil .* Ein;
+EP2 = propcustom_relay(EP1, NrelayFactor*mp.Nrelay1to2, mp.centering);
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
-if abs(mp.d_P2_dm1) ~= 0
-    Edm1 = propcustom_PTP(EP2,mp.P2.compact.dx*NdmPad,lambda,mp.d_P2_dm1);
-else
-    Edm1 = EP2; %--E-field arriving at DM1
-end
-Edm1 = Edm1WFE .* DM1stop .* exp(surfIntoPhase*2*pi*1i*DM1surf/lambda) .* Edm1; %--E-field leaving DM1
+Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
+Edm1 = Edm1WFE .* DM1stop .* exp(surfIntoPhase*2*pi*1j*DM1surf/lambda) .* Edm1;
 
 %--DM1---------------------------------------------------------
 if whichDM == 1 
@@ -128,73 +177,53 @@ if whichDM == 1
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
     if any(mp.dm_ind == 2)
-        DM2surf = padOrCropEven(DM2surf,mp.dm1.compact.NdmPad);
+        DM2surf = pad_crop(DM2surf, mp.dm1.compact.NdmPad);
     else
         DM2surf = zeros(mp.dm1.compact.NdmPad);
     end
     
-    if(mp.flagDM2stop)
-        DM2stop = padOrCropEven(DM2stop,mp.dm1.compact.NdmPad);
+    if mp.flagDM2stop
+        DM2stop = pad_crop(DM2stop, mp.dm1.compact.NdmPad);
     else
         DM2stop = ones(mp.dm1.compact.NdmPad);
     end
     
-    Edm1pad = padOrCropEven(Edm1, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
-    Edm2WFEpad = padOrCropEven(Edm2WFE, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
-    
+    Edm1pad = pad_crop(Edm1, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
+    Edm2WFEpad = pad_crop(Edm2WFE, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
+    apodReimaged = pad_crop(apodReimaged, mp.dm1.compact.NdmPad);
+    lyotStopReimaged = pad_crop(lyotStopReimaged, mp.dm1.compact.NdmPad);
+    EttUndoAtP2 = pad_crop(EttUndoAtP2, mp.dm1.compact.NdmPad);
+
     %--Propagate each actuator from DM1 through the optical system
     Gindex = 1; % initialize index counter
     for iact = mp.dm1.act_ele(:).'  %--MUST BE A COLUMN VECTOR
         
-        if any(any(mp.dm1.compact.inf_datacube(:,:,iact)))
+        if any(any(mp.dm1.compact.inf_datacube(:, :, iact)))
             %--influence function indices of the padded influence function in the full padded pupil
-            x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1,iact):mp.dm1.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
-            y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2,iact):mp.dm1.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
+            x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1, iact):...
+                mp.dm1.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
+            y_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(2, iact):...
+                mp.dm1.compact.xy_box_lowerLeft_AS(2, iact)+NboxPad1AS-1; % y-indices in pupil arrays for the box
             
             %--Propagate from DM1 to DM2, and then back to P2
-            dEbox = (surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:,:,iact), NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
-            dEbox = propcustom_PTP_inf_func(dEbox.*Edm1pad(y_box_AS_ind, x_box_AS_ind),mp.P2.compact.dx*NboxPad1AS,lambda,mp.d_dm1_dm2,mp.dm1.dm_spacing,mp.propMethodPTP); % forward propagate to DM2 and apply DM2 E-field
-            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind, x_box_AS_ind).*DM2stop(y_box_AS_ind, x_box_AS_ind).*exp(surfIntoPhase*2*pi*1j/lambda*DM2surf(y_box_AS_ind,x_box_AS_ind)),mp.P2.compact.dx*NboxPad1AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm1.dm_spacing,mp.propMethodPTP ); % back-propagate to DM1
+            dEbox = (surfIntoPhase*2*pi*1j/lambda)*pad_crop(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:, :, iact), NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
+            dEbox = propcustom_PTP_inf_func(dEbox.*Edm1pad(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad1AS, lambda, mp.d_dm1_dm2, mp.dm1.dm_spacing, mp.propMethodPTP); % forward propagate to DM2 and apply DM2 E-field
+            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind, x_box_AS_ind).*DM2stop(y_box_AS_ind, x_box_AS_ind).*exp(surfIntoPhase*2*pi*1j/lambda*DM2surf(y_box_AS_ind, x_box_AS_ind)), mp.P2.compact.dx*NboxPad1AS, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1), mp.dm1.dm_spacing, mp.propMethodPTP ); % back-propagate to DM1
             
-            EP2eff = zeros(mp.dm1.compact.NdmPad);
-            EP2eff(y_box_AS_ind, x_box_AS_ind) = dEP2box;
+            % Apply the reimaged apodizer at P2
+            dEP2box = apodReimaged(y_box_AS_ind, x_box_AS_ind) .* dEP2box;
             
-            EP3 = propcustom_relay(EP2eff, mp.Nrelay2to3, mp.centering);
+            % Put the star back on-axis (if it isn't already)
+            dEP2box = EttUndoAtP2(y_box_AS_ind, x_box_AS_ind) .* dEP2box;
             
-            if mp.flagApod
-                EP3 = pad_crop(mp.P3.compact.mask, mp.dm1.compact.NdmPad) .* EP3;
-            end
+            % Apply the reimaged Lyot stop at P2
+            dEP2box = lyotStopReimaged(y_box_AS_ind, x_box_AS_ind) .* dEP2box;
             
-            EP4 = propcustom_relay(EP3, mp.Nrelay3to4, mp.centering);
-            EP4 = transOuterFPM * EP4;
-                
-            % Interpolate beam if Lyot plane has different resolution
-            if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
-                N1 = length(EP4);
-                mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
-                N4 = ceil_even(mag*N1);
-                if strcmpi(mp.centering, 'pixel')
-                    x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;
-                    x4 = (-N4/2:(N4/2-1)) / mp.P4.compact.Nbeam;
-                elseif strcmpi(mp.centering, 'interpixel')
-                    x1 = (-(N1-1)/2:(N1-1)/2) / mp.P1.compact.Nbeam;
-                    x4 = (-(N4-1)/2:(N4-1)/2) / mp.P4.compact.Nbeam;
-                end
-                [X1, Y1] = meshgrid(x1);
-                [X4, Y4] = meshgrid(x4);
-                EP4 = interp2(X1, Y1, EP4, X4, Y4);
-            end
-
-            % Apply Lyot stop
-            EP4 = mp.P4.compact.croppedMask .* pad_crop(EP4, mp.P4.compact.Narr);
+            dEFendPeak = sum(dEP2box(:)) * transOuterFPM *...
+                sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
+                scaleFac * sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
             
-            %--MFT to final focal plane
-            EP4 = propcustom_relay(EP4, mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
-            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend); end
-
-            Gmode(:, Gindex) = EFend(indPeak) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
-            % mp.dm1.weight is applied outside this function
+            Gmode(:, Gindex) = dEFendPeak / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         
         Gindex = Gindex + 1;
@@ -208,64 +237,43 @@ elseif whichDM == 2
     NboxPad2AS = mp.dm2.compact.NboxAS; 
     mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
     
-    DM2stopPad = padOrCropEven(DM2stop,mp.dm2.compact.NdmPad);
-    Edm2WFEpad = padOrCropEven(Edm2WFE,mp.dm2.compact.NdmPad);
+    DM2stopPad = pad_crop(DM2stop, mp.dm2.compact.NdmPad);
+    Edm2WFEpad = pad_crop(Edm2WFE, mp.dm2.compact.NdmPad);
+    apodReimaged = pad_crop(apodReimaged, mp.dm2.compact.NdmPad);
+    lyotStopReimaged = pad_crop(lyotStopReimaged, mp.dm2.compact.NdmPad);
+    EttUndoAtP2 = pad_crop(EttUndoAtP2, mp.dm2.compact.NdmPad);
     
     %--Propagate full field to DM2 before back-propagating in small boxes
-    Edm2inc = padOrCropEven( propcustom_PTP(Edm1,mp.compact.NdmPad*mp.P2.compact.dx,lambda,mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
-    Edm2inc = padOrCropEven(Edm2inc,mp.dm2.compact.NdmPad);
-    Edm2 = Edm2WFEpad.*DM2stopPad.*Edm2inc.*exp(surfIntoPhase*2*pi*1j/lambda*padOrCropEven(DM2surf,mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
+    Edm2inc = pad_crop(propcustom_PTP(Edm1, mp.compact.NdmPad*mp.P2.compact.dx, lambda, mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
+    Edm2inc = pad_crop(Edm2inc, mp.dm2.compact.NdmPad);
+    Edm2 = Edm2WFEpad.*DM2stopPad.*Edm2inc.*exp(surfIntoPhase*2*pi*1j/lambda*pad_crop(DM2surf, mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
     
     %--Propagate each actuator from DM2 through the rest of the optical system
     Gindex = 1; % Initialize index counter
     for iact = mp.dm2.act_ele(:).'  %--Only compute for acutators specified %--MUST BE A COLUMN VECTOR
         
-        if any(any(mp.dm2.compact.inf_datacube(:,:,iact)))
+        if any(any(mp.dm2.compact.inf_datacube(:, :, iact)))
             %--influence function indices of the padded influence function in the full padded pupil
-            x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1,iact):mp.dm2.compact.xy_box_lowerLeft_AS(1,iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
-            y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2,iact):mp.dm2.compact.xy_box_lowerLeft_AS(2,iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
+            x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1, iact):mp.dm2.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
+            y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2, iact):mp.dm2.compact.xy_box_lowerLeft_AS(2, iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
 
-            dEbox = mp.dm2.VtoH(iact)*(surfIntoPhase*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:,:,iact),NboxPad2AS); %--the padded influence function at DM2
-            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2(y_box_AS_ind,x_box_AS_ind),mp.P2.compact.dx*NboxPad2AS,lambda,-1*(mp.d_dm1_dm2 + mp.d_P2_dm1),mp.dm2.dm_spacing,mp.propMethodPTP); % back-propagate to pupil P2
+            dEbox = mp.dm2.VtoH(iact)*(surfIntoPhase*2*pi*1j/lambda)*pad_crop(mp.dm2.compact.inf_datacube(:, :, iact), NboxPad2AS); %--the padded influence function at DM2
+            dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad2AS, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1), mp.dm2.dm_spacing, mp.propMethodPTP); % back-propagate to pupil P2
 
-            EP2eff = zeros(mp.dm1.compact.NdmPad);
-            EP2eff(y_box_AS_ind, x_box_AS_ind) = dEP2box;
+            % Apply the reimaged apodizer at P2
+            dEP2box = apodReimaged(y_box_AS_ind, x_box_AS_ind) .* dEP2box;
             
-            EP3 = propcustom_relay(EP2eff, mp.Nrelay2to3, mp.centering);
-            if mp.flagApod
-                EP3 = pad_crop(mp.P3.compact.mask, mp.dm1.compact.NdmPad) .* EP3;
-            end
+            % Put the star back on-axis (if it isn't already)
+            dEP2box = EttUndoAtP2(y_box_AS_ind, x_box_AS_ind) .* dEP2box;
             
-            EP4 = propcustom_relay(EP3, mp.Nrelay3to4, mp.centering);
-            EP4 = transOuterFPM * EP4;
-                
-            % Interpolate beam if Lyot plane has different resolution
-            if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
-                N1 = length(EP4);
-                mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
-                N4 = ceil_even(mag*N1);
-                if strcmpi(mp.centering, 'pixel')
-                    x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;
-                    x4 = (-N4/2:(N4/2-1)) / mp.P4.compact.Nbeam;
-                elseif strcmpi(mp.centering, 'interpixel')
-                    x1 = (-(N1-1)/2:(N1-1)/2) / mp.P1.compact.Nbeam;
-                    x4 = (-(N4-1)/2:(N4-1)/2) / mp.P4.compact.Nbeam;
-                end
-                [X1, Y1] = meshgrid(x1);
-                [X4, Y4] = meshgrid(x4);
-                EP4 = interp2(X1, Y1, EP4, X4, Y4);
-            end
-
-            % Apply Lyot stop
-            EP4 = mp.P4.compact.croppedMask .* pad_crop(EP4, mp.P4.compact.Narr);
+            % Apply the reimaged Lyot stop at P2
+            dEP2box = lyotStopReimaged(y_box_AS_ind, x_box_AS_ind) .* dEP2box;
             
-            %--MFT to final focal plane
-            EP4 = propcustom_relay(EP4,mp.NrelayFend,mp.centering); %--Rotate the final image 180 degrees if necessary
-            EFend = propcustom_mft_PtoF(EP4,mp.fl,lambda,mp.P4.compact.dx,mp.Fend.dxi,mp.Fend.Nxi,mp.Fend.deta,mp.Fend.Neta,mp.centering);
-            if(mp.useGPU); EFend = gather(EFend); end
-
-            Gmode(:, Gindex) = EFend(indPeak) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
-            % mp.dm2.weight is applied outside this function
+            dEFendPeak = sum(dEP2box(:)) * transOuterFPM *...
+                sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
+                scaleFac * sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
+            
+            Gmode(:, Gindex) = dEFendPeak / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
         
         Gindex = Gindex + 1;

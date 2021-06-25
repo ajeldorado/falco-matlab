@@ -22,19 +22,18 @@ function jacStruct = model_Jacobian(mp)
     if(any(mp.dm_ind==1)); mp.dm1.compact.surfM = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.NdmPad); else; mp.dm1.compact.surfM = zeros(2); end
     if(any(mp.dm_ind==2)); mp.dm2.compact.surfM = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.NdmPad); else; mp.dm2.compact.surfM = zeros(2); end
     switch upper(mp.coro)
-        case{'EHLC'}
-            [mp.FPMcube, mp.dm8.surf, mp.dm9.surf] = falco_gen_EHLC_FPM_complex_trans_cube(mp,'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
-            %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
-            mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
-            mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
         case{'HLC'}
-            switch lower(mp.layout)
-                case{'fourier'}
-                    [mp.FPMcube, mp.dm8.surf, mp.dm9.surf] = falco_gen_HLC_FPM_complex_trans_cube(mp,'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
-                    %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
-                    mp.dm8 = rmfield(mp.dm8,'inf_datacube'); 
-                    mp.dm9 = rmfield(mp.dm9,'inf_datacube'); 
+            if strcmpi(mp.layout, 'fourier')
+                [mp.FPMcube, mp.dm8.surf, mp.dm9.surf] = falco_gen_HLC_FPM_complex_trans_cube(mp, 'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
+                %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
+                mp.dm8 = rmfield(mp.dm8, 'inf_datacube'); 
+                mp.dm9 = rmfield(mp.dm9, 'inf_datacube'); 
             end
+        case{'EHLC'}
+            [mp.FPMcube, mp.dm8.surf, mp.dm9.surf] = falco_gen_EHLC_FPM_complex_trans_cube(mp, 'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
+            %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
+            mp.dm8 = rmfield(mp.dm8, 'inf_datacube'); 
+            mp.dm9 = rmfield(mp.dm9, 'inf_datacube'); 
     end
 
     %--Initialize the Jacobian cubes for each DM.
@@ -81,7 +80,7 @@ function jacStruct = model_Jacobian(mp)
         end        
         
         %--Re-organize the structure
-        for ii=1:Nvals
+        for ii = 1:Nvals
             iMode = vals_list(1, ii); % index for Zernike-wavelength-star mode
             whichDM = vals_list(2, ii); % number of the specified DM
 
@@ -99,9 +98,9 @@ function jacStruct = model_Jacobian(mp)
 
     %--Serial calculation
     else 
-        for ii=1:Nvals
-            iMode = vals_list(1,ii); %--index for Zernike-wavelength-star mode
-            whichDM = vals_list(2,ii); %--number of the specified DM
+        for ii = 1:Nvals
+            iMode = vals_list(1, ii); %--index for Zernike-wavelength-star mode
+            whichDM = vals_list(2, ii); %--number of the specified DM
             fprintf('mode%ddm%d ', iMode, whichDM)
                         
             if(whichDM==1); jacStruct.G1(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
@@ -117,7 +116,7 @@ function jacStruct = model_Jacobian(mp)
         fprintf('\n')
     end    
 
-    fprintf('...done.  Time = %.2f\n',toc);
+    fprintf('...done.  Time = %.2f\n', toc);
 
     
     %% TIED ACTUATORS
@@ -126,44 +125,44 @@ function jacStruct = model_Jacobian(mp)
     %the first actuator's column, and then zeroing out the 2nd actuator's column.
     if(any(mp.dm_ind==1))
         mp.dm1 = falco_enforce_dm_constraints(mp.dm1); %-Update the sets of tied actuators
-        for ti=1:size(mp.dm1.tied,1)
-            Index1all = mp.dm1.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm1.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+        for ti=1:size(mp.dm1.tied, 1)
+            Index1all = mp.dm1.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm1.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
             Index1subset = find(mp.dm1.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
             Index2subset = find(mp.dm1.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G1(:,Index1subset,:) = jacStruct.G1(:,Index1subset,:) + jacStruct.G1(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G1(:,Index2subset,:) = 0*jacStruct.G1(:,Index2subset,:); % zero out the 2nd actuator's column.
+            jacStruct.G1(:, Index1subset, :) = jacStruct.G1(:, Index1subset, :) + jacStruct.G1(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G1(:, Index2subset, :) = 0*jacStruct.G1(:, Index2subset, :); % zero out the 2nd actuator's column.
         end
     end
     if(any(mp.dm_ind==2))
         mp.dm2 = falco_enforce_dm_constraints(mp.dm2); %-Update the sets of tied actuators
-        for ti=1:size(mp.dm2.tied,1)
-            Index1all = mp.dm2.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm2.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+        for ti=1:size(mp.dm2.tied, 1)
+            Index1all = mp.dm2.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm2.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
             Index1subset = find(mp.dm2.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
             Index2subset = find(mp.dm2.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G2(:,Index1subset,:) = jacStruct.G2(:,Index1subset,:) + jacStruct.G2(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G2(:,Index2subset,:) = 0*jacStruct.G2(:,Index2subset,:); % zero out the 2nd actuator's column.
+            jacStruct.G2(:, Index1subset, :) = jacStruct.G2(:, Index1subset, :) + jacStruct.G2(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G2(:, Index2subset, :) = 0*jacStruct.G2(:, Index2subset, :); % zero out the 2nd actuator's column.
         end
     end
     if(any(mp.dm_ind==8))
-        for ti=1:size(mp.dm8.tied,1)
-            Index1all = mp.dm8.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm8.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+        for ti=1:size(mp.dm8.tied, 1)
+            Index1all = mp.dm8.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm8.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
             Index1subset = find(mp.dm8.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
             Index2subset = find(mp.dm8.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G8(:,Index1subset,:) = jacStruct.G8(:,Index1subset,:) + jacStruct.G8(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G8(:,Index2subset,:) = 0*jacStruct.G8(:,Index2subset,:); % zero out the 2nd actuator's column.
+            jacStruct.G8(:, Index1subset, :) = jacStruct.G8(:, Index1subset, :) + jacStruct.G8(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G8(:, Index2subset, :) = 0*jacStruct.G8(:, Index2subset, :); % zero out the 2nd actuator's column.
         end
     end
     if(any(mp.dm_ind==9))
-        for ti=1:size(mp.dm9.tied,1)
-            Index1all = mp.dm9.tied(ti,1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm9.tied(ti,2); %--Index of second tied actuator in whole actuator set. 
+        for ti=1:size(mp.dm9.tied, 1)
+            Index1all = mp.dm9.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+            Index2all = mp.dm9.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
             Index1subset = find(mp.dm9.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
             Index2subset = find(mp.dm9.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G9(:,Index1subset,:) = jacStruct.G9(:,Index1subset,:) + jacStruct.G9(:,Index2subset,:); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G9(:,Index2subset,:) = 0*jacStruct.G9(:,Index2subset,:); % zero out the 2nd actuator's column.
+            jacStruct.G9(:, Index1subset, :) = jacStruct.G9(:, Index1subset, :) + jacStruct.G9(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+            jacStruct.G9(:, Index2subset, :) = 0*jacStruct.G9(:, Index2subset, :); % zero out the 2nd actuator's column.
         end
     end
        
@@ -171,6 +170,7 @@ end %--END OF FUNCTION model_Jacobian.m
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Select which optical layout's Jacobian model to use and get the output E-field
 % INPUTS
 % ------
 % mp : structure of model parameters
@@ -181,59 +181,25 @@ end %--END OF FUNCTION model_Jacobian.m
 % OUTPUTS
 % -------
 % -jacMode = Jacobian for the specified combo of DM, wavelength, and Zernike mode.
-
+%
 function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
 
     iModeCopy = vals_list(1, jj); %--index for Zernike-&-subbandpass pair
     whichDMCopy = vals_list(2, jj); %--number of the specified DM
 
-    %--Select which optical layout's Jacobian model to use and get the output E-field
-    switch lower(mp.layout)
-        case{'fourier'}
-            switch upper(mp.coro) 
-                case{'LC', 'APLC', 'SPLC', 'FLC', 'HLC'}
-                    jacMode = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
-                case{'VORTEX','VC','AVC'}
-                    jacMode = model_Jacobian_VC(mp, iModeCopy, whichDMCopy); 
-                case{'RODDIER'} %--DMs, optional apodizer, Roddier (or Zernike) FPM, LS
-                    jacMode = model_Jacobian_Roddier(mp, iModeCopy, whichDMCopy);
-                case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-                    jacMode = model_Jacobian_EHLC(mp, iModeCopy, whichDMCopy); 
-                otherwise
-                    error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
-            end  
-
-        case{'fpm_scale'}
-            switch upper(mp.coro) 
-                case{'HLC'}
-                    jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy); 
-            end
+    switch upper(mp.coro)
+        
+        case{'LC', 'APLC', 'SPLC', 'FLC', 'HLC'}
+            jacMode = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
             
-        case{'proper'}
-            switch upper(mp.coro) 
-                case{'LC', 'APLC', 'SPLC', 'FLC'}
-                    jacMode = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
-                case{'VORTEX','VC','AVC'}
-                    jacMode = model_Jacobian_VC(mp, iModeCopy, whichDMCopy);
-                case{'HLC'}
-                    jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy);
-                otherwise
-                    error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
-            end  
+        case{'VORTEX', 'VC'}
+            jacMode = model_Jacobian_VC(mp, iModeCopy, whichDMCopy);
             
-        case{'roman_phasec_proper', 'wfirst_phaseb_simple', 'wfirst_phaseb_proper'} %--Roman CGI
-            switch upper(mp.coro) 
-                case{'HLC'}
-                    jacMode = model_Jacobian_HLC_scale(mp, iModeCopy, whichDMCopy); 
-                case{'SPLC','FLC'}
-                    jacMode  = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
-                otherwise
-                    error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');        
-            end
-
+        case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
+            jacMode = model_Jacobian_EHLC(mp, iModeCopy, whichDMCopy);
+            
         otherwise
-            error('model_Jacobian_middle_layer: CASE NOT RECOGNIZED.m');  
-
+            error('No Jacobian function for the value of mp.coro');        
     end
 
 end %--END OF FUNCTION model_Jacobian_middle_layer.m    

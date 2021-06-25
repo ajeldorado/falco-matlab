@@ -6,23 +6,7 @@
 %
 % Generate the LUVOIR Design B telescope pupil in Matlab using PROPER.
 %
-function pupil = falco_gen_pupil_LUVOIR_B(inputs,varargin)
-
-%--Set default values of input parameters
-flagRot180deg = false;
-
-%--Look for Optional Keywords
-icav = 0;                     % index in cell array varargin
-while icav < size(varargin, 2)
-    icav = icav + 1;
-    switch lower(varargin{icav})
-        case {'rot180'}
-            flagRot180deg = true; % For even arrays, beam center is in between pixels.
-        otherwise
-            error('falco_gen_pupil_LUVOIR_A_5_mag_trans: Unknown keyword: %s\n', ...
-            varargin{icav});
-    end
-end
+function pupil = falco_gen_pupil_LUVOIR_B(inputs)
 
 %--Centering of array: 'pixel' or 'interpixel'
 if(isfield(inputs,'centering'))
@@ -41,6 +25,7 @@ end
 %--Gap between primary mirror segments [meters]
 if(isfield(inputs,'wGap_m')); hexGap0 = inputs.wGap_m; else; hexGap0 = 6e-3; end %--Default of 6.0 millimeters
 if(isfield(inputs,'clock_deg')); clockDeg = inputs.clock_deg; else; clockDeg = 0; end
+if(isfield(inputs,'flagRot180deg')); flagRot180deg = inputs.flagRot180deg; else; flagRot180deg = false; end
 if(isfield(inputs,'xShear')); xShear = inputs.xShear; else; xShear = 0; end % [pupil diameters]
 if(isfield(inputs,'yShear')); yShear = inputs.yShear; else; yShear = 0; end % [pupil diameters]
 shearMax = max(abs([xShear, yShear])); % [pupil diameters]
@@ -88,6 +73,7 @@ end
 
 % Use PROPER to generate the hexagonal mirrors
 bm = prop_begin(Dap, wl_dummy, Narray,'beam_diam_fraction',bdf);
+prop_set_antialiasing(33)
 [ap] = falco_hex_aperture_LUVOIR_B(bm, nrings, hexRadius, hexSep, 'XC', cShift+xShearM, 'YC', cShift+yShearM, 'ROTATION', clockDeg);
 
 pupil = ifftshift(abs(bm.wf)).*ap;

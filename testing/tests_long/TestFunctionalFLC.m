@@ -20,11 +20,13 @@ classdef TestFunctionalFLC < matlab.unittest.TestCase
     methods (TestClassSetup)
         function addPath(testCase)
             addpath(genpath([testCase.mp.path.falco filesep 'setup']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
             rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end    
     
@@ -64,9 +66,7 @@ classdef TestFunctionalFLC < matlab.unittest.TestCase
             testCase.verifyGreaterThan(Iinco,1.0e-5)
             testCase.verifyLessThan(Iinco,1.2e-2)
             
-            %0.71 < out.complexProjection(2,1) && out.complexProjection(2,1) < 0.72 % 0.7135
-            testCase.verifyGreaterThan(out.complexProjection(2,1),0.71)
-            testCase.verifyLessThan(out.complexProjection(2,1),0.72)
+            testCase.verifyGreaterThan(out.complexProjection(2,1), 0.99)
             
             dm1pv = out.dm1.Spv(end); % 5.8077e-08
             %5.80e-8 < dm1pv && dm1pv < 5.82e-8

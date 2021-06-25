@@ -35,13 +35,6 @@ mp.flagPlot = true;
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
 
-%%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-% fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
-% temp = load(fn_prev,'out');
-% mp.dm1.V = temp.out.DM1V;
-% mp.dm2.V = temp.out.DM2V;
-% clear temp
-
 % %--DEBUGGING
 % mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control

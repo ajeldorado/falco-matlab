@@ -7,7 +7,6 @@
 % Get a simulated image from the full model at the specified
 % wavelength and polarization state and for the specified star.
 %
-% ---------------
 % INPUTS
 % ------
 % ic : index in list of combinations
@@ -21,13 +20,12 @@
 
 function Iout = falco_get_single_sim_image(ic, inds_list, mp)
 
-%--Get the starlight image
-modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 1);
-modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 2);
-modvar.starIndex = inds_list(3, ic);
-mp.full.polaxis = mp.full.pol_conds(inds_list(2, ic));
-modvar.whichSource = 'star';
-Estar = model_full(mp, modvar);
-Iout = abs(Estar).^2; %--Apply spectral and stellar weighting outside this function
+    modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 1);
+    modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 2);
+    modvar.starIndex = inds_list(3, ic);
+    mp.full.polaxis = mp.full.pol_conds(inds_list(2, ic));
+    modvar.whichSource = 'star';
+    Estar = model_full(mp, modvar);
+    Iout = abs(Estar).^2; %--Apply spectral and stellar weighting outside this function
     
-end %--END OF FUNCTION
+end

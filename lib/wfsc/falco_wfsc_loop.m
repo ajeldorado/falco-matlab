@@ -9,6 +9,7 @@
 function [mp, out] = falco_wfsc_loop(mp, out)
 
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
+mp.thput_vec = zeros(mp.Nitr+1, 1);
 
 for Itr = 1:mp.Nitr
     
@@ -16,11 +17,14 @@ for Itr = 1:mp.Nitr
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
     
     if mp.flagSim
-        fprintf('Zernike modes used in this Jacobian:\t');fprintf('%d ',mp.jac.zerns); fprintf('\n');
+        fprintf('Zernike modes used in this Jacobian:\t');
+        fprintf('%d ', mp.jac.zerns);
+        fprintf('\n');
     end
     
     ev.Itr = Itr;
     cvar.Itr = Itr;
+    out.Itr = Itr;
     
     % Updated DM info
     if strcmpi(mp.controller, 'plannedefc')
@@ -32,11 +36,13 @@ for Itr = 1:mp.Nitr
     end
     fprintf(' ]\n')
     
+    out.serialDateVec(Itr) = now;
+    out.datetimeArray = datetime(out.serialDateVec,'ConvertFrom','datenum');
     out = store_dm_command_history(mp, out, Itr);
 
     %% Normalization and throughput calculations
     
-    mp = falco_compute_PSF_norm_factor(mp);
+    mp = falco_compute_psf_norm_factor(mp);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr) = thput;
@@ -87,8 +93,6 @@ for Itr = 1:mp.Nitr
         
     %% Wavefront Control
     
-    jacStruct = falco_apply_spatial_weighting_to_Jacobian(mp, jacStruct);
-
     cvar.Eest = ev.Eest;
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
