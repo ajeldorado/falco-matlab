@@ -50,6 +50,7 @@ mp.runLabel = 'testing_label';
 % This section generates parameters required to run the full wfsc
 % calculation.
 [mp, out] = falco_flesh_out_workspace(mp);
+mp = falco_compute_psf_norm_factor(mp);
 % timerValEnd = toc;
 % disp(['Time Elapsed:  ' num2str(timerValEnd)])
 end

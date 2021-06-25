@@ -80,6 +80,6 @@ function out = falco_init_storage_arrays(mp)
     out.Fend.corr.maskBool = mp.Fend.corr.maskBool;
     out.Fend.score.maskBool = mp.Fend.score.maskBool;
     
-    out.serialDate = zeros(mp.Nitr, 1); % start time of each iteration as a serial date number
+    out.serialDateVec = zeros(mp.Nitr, 1); % start time of each iteration as a serial date number
 
 end

@@ -24,6 +24,7 @@ for Itr = 1:mp.Nitr
     
     ev.Itr = Itr;
     cvar.Itr = Itr;
+    out.Itr = Itr;
     
     % Updated DM info
     if strcmpi(mp.controller, 'plannedefc')
@@ -35,7 +36,8 @@ for Itr = 1:mp.Nitr
     end
     fprintf(' ]\n')
     
-    out.serialDate(Itr) = now;
+    out.serialDateVec(Itr) = now;
+    out.datetimeArray = datetime(out.serialDateVec,'ConvertFrom','datenum');
     out = store_dm_command_history(mp, out, Itr);
 
     %% Normalization and throughput calculations
@@ -184,7 +186,7 @@ if mp.flagSaveWS
     mp.dm8.inf_datacube = 0;
     mp.dm9.inf_datacube = 0;
 
-    fnAll = [mp.path.ws mp.runLabel, '_all.mat'];
+    fnAll = fullfile(mp.path.ws,[mp.runLabel, '_all.mat']);
     disp(['Saving entire workspace to file ' fnAll '...'])
     save(fnAll);
     fprintf('done.\n\n')

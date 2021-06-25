@@ -5,11 +5,12 @@
 %   PROPER developed at Jet Propulsion Laboratory/California Inst. Technology
 %   Original IDL version by John Krist
 %   Matlab translation by Gary Gutt
-%   Modified from prop_dm by A.J. Riggs to fit the actuator commands to a given surface. 
+%   Modified to take accept influence function by G. Ruane 
 
-function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit, dx, Nact, dmcx, dmcy, spcg, varargin)
+function [bm, map] = propcustom_dm_quilting(bm, dmz0, dmcx, dmcy, spcg, varargin)
 
-% Derotate and resize a surface to the size and alignment of the actuator grid.
+% Simulate a deformable mirror of specified actuator spacing,
+% including the effects of the DM influence function.
 %
 % Outputs:
 % bm   = beam structure
@@ -28,6 +29,24 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
 %        must not be used when n_act_acroos_pupil is specified.
 %
 % Optional inputs:
+% 'fit'               : switch that tells routine that the values in dmz0
+%                       are the desired surface heights rather than the
+%                       commanded actuator heights, and so the routine
+%                       should fit this map, accounting for actuator
+%                       influence functions, to determine the necessary
+%                       actuator heights.  An iterative error-minimizing
+%                       loop is used for the fit.
+% 'no_apply'          : if set, the DM pattern is not added to the
+%                       wavefront.  Useful if the DM surface map is
+%                       needed but should not be applied to the wavefront.
+% 'n_act_across_pupil'= specifies the number of actuators that span the
+%                       x-axis beam diameter.  If it is a whole number,
+%                       the left edge of the left pixel is aligned with
+%                       the left edge of the beam, and the right edge of
+%                       the right pixel with the right edge of the beam.
+%                       This determines the spacing and size of the
+%                       actuators.  Should not be used when spcg value
+%                       is specified.
 % 'xtilt'             = specify the rotation of the DM surface with
 % 'ytilt'               respect to the wavefront plane, with the origin
 % 'ztilt'               at the center of the wavefront.  The DM surface
@@ -68,36 +87,33 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
 % 2019 Feb 15  a r  Added two new keyword/value pairs as optional inputs:
 %                   -Accept any influence function from a FITS file
 %                   -Allow the sign of the influence function to be + or -
-% 2019 Nov 20  a r  Changed to de-rotate and resize a surface to the size 
-%                   of the DM command array. To get the voltages, call 
-%                   falco_fit_dm using the result of this function.
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  dmz = eye(Nact); %--Only used for its size. The actual values are thrown away.
-%   if ischar(dmz0)               % then open 2D FITS image file
-%     dmz  = fitsread(dmz0);
-%   else
-%     dmz  = dmz0;
-%   end
 
-%   Fit  = 0;             % values in dmz0 are commanded actuator heights
-%   nAct = 0;             % number of actuators across pupil
-%   NoAp = 0;             % the DM pattern is added to the wavefront
+  if ischar(dmz0)               % then open 2D FITS image file
+    dmz  = fitsread(dmz0);
+  else
+    dmz  = dmz0;
+  end
+
+  Fit  = 0;             % values in dmz0 are commanded actuator heights
+  nAct = 0;             % number of actuators across pupil
+  NoAp = 0;             % the DM pattern is added to the wavefront
   tlt  = zeros(1, 3);   % set default tilts to 0 degrees
   zyx  = 0;             % rotation order is X, Y, then Z rotations
-  DMInfFuncFileName = 'influence_dm5v2.fits'; % default influence function, Xinetics
+  DMinf_name = 'influence_dm5v2.fits'; % default influence function, Xinetics
   sign_factor = 1;      % positive or negative sign multiplied with influence function
 
   icav = 0;             % index in cell array varargin
   while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
-%       case {'fit'}
-%         Fit  = 1;       % values in dmz0 are desired surface heights
-%       case {'noap', 'no_apply'}
-%         NoAp = 1;       % the DM pattern is not added to the wavefront
-%       case {'nact', 'n_act_across_pupil'}
-%         icav = icav + 1;
-%         nAct = varargin{icav};  % number of actuators across pupil
+      case {'fit'}
+        Fit  = 1;       % values in dmz0 are desired surface heights
+      case {'noap', 'no_apply'}
+        NoAp = 1;       % the DM pattern is not added to the wavefront
+      case {'nact', 'n_act_across_pupil'}
+        icav = icav + 1;
+        nAct = varargin{icav};  % number of actuators across pupil
       case {'tltx', 'xtilt'}
         icav = icav + 1;
         tlt(1) = varargin{icav};% X rotation of the DM surface (deg)
@@ -113,7 +129,7 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
         zyx  = 1;       % rotation order is Z, Y, then X rotations
       case{'inf_fn','inf_file'} % name of FITS file for influence function
         icav = icav + 1;
-        DMInfFuncFileName = varargin{icav};
+        DMinf_name = varargin{icav};
       case{'inf_sign'} % + or - sign for influence function
         icav = icav + 1;
         sign_char = varargin{icav};
@@ -123,17 +139,17 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
             case{'-','n','m'} % negative or minus sign
                 sign_factor = -1;
             otherwise
-                error('Chosen inf_sign value not allowed.')
+                error('propcustom_dm: Chosen inf_sign value not allowed.')
         end
             
       otherwise
-        error('Unknown keyword: %s\n', varargin{icav});
+        error('prop_dm: Unknown keyword: %s\n', varargin{icav});
     end
   end
 
     % Read the influence function data from the specified FITS file
-    info = fitsinfo(DMInfFuncFileName);
-    inf  = fitsread(DMInfFuncFileName);
+    info = fitsinfo(DMinf_name);
+    inf  = fitsread(DMinf_name);
     
     %--Multiply by +1 or -1
     inf = sign_factor*inf; 
@@ -161,46 +177,43 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
   raix = round(acdx / ifdx);            % ratio actuator / inf func dx
   raiy = round(acdy / ifdy);            % ratio actuator / inf func dy
 
-%   if spcg ~=  0.0 & nAct ~=  0
-%     error('Proper:PROP_DM', ...
-%           'User cannot specify both actuator spacing and number of actuators across pupil.\n');
-%   end
-% 
-%   if (spcg ==  0.0 & nAct ==  0)
-%     error('Proper:PROP_DM', ...
-%           'User must specify either actuator spacing or number of actuators across pupil.\n');
-%   end
+  if spcg ~=  0.0 & nAct ~=  0
+    error('Proper:PROP_DM', ...
+          'User cannot specify both actuator spacing and number of actuators across pupil.\n');
+  end
+
+  if (spcg ==  0.0 & nAct ==  0)
+    error('Proper:PROP_DM', ...
+          'User must specify either actuator spacing or number of actuators across pupil.\n');
+  end
 
 % Set the real DM actuator spacing
-%   if nAct ~= 0
-%     actd = 2.0 * prop_get_beamradius(bm) / nAct;
-%   else
+  if nAct ~= 0
+    actd = 2.0 * prop_get_beamradius(bm) / nAct;
+  else
     actd = spcg;
-%   end
+  end
 
 % Scale the influence function sampling to the specified DM actuator spacing
   ifdx = ifdx * actd / acdx;            % actual inf func spacing x (m)
   ifdy = ifdy * actd / acdy;            % actual inf func spacing y (m)
 
-%   if Fit == 1
-% % Then calculate the actuator positions to fit the given DM surface
-% % Create the meshgrids for the influence function inf
-%     [cfx, cfy] = meshgrid([ 1 : ifnx], [ 1 : ifny]);
-% % Create the meshgrids for the interpolated influence function infk
-%     [ckx, cky] = meshgrid([-2 :  2  ], [-2 :  2  ]);
-%     ckx  = ckx * actd;
-%     cky  = cky * actd;
-% % Calculate the interpolated influence function infk
-%     infk = interp2(cfx, cfy, inf, ckx/ifdx + ifcx, cky/ifdy + ifcy, 'cubic');
-% % Calculate the actuator positions to fit the given DM surface
-%     dmcz = prop_fit_dm(dmz, infk);
-%   else
-% % Use the given actuator positions
-%     dmcz = dmz;
-%   end
-  
-  % Use the given actuator positions
+  if Fit == 1
+% Then calculate the actuator positions to fit the given DM surface
+% Create the meshgrids for the influence function inf
+    [cfx, cfy] = meshgrid([ 1 : ifnx], [ 1 : ifny]);
+% Create the meshgrids for the interpolated influence function infk
+    [ckx, cky] = meshgrid([-2 :  2  ], [-2 :  2  ]);
+    ckx  = ckx * actd;
+    cky  = cky * actd;
+% Calculate the interpolated influence function infk
+    infk = interp2(cfx, cfy, inf, ckx/ifdx + ifcx, cky/ifdy + ifcy, 'cubic');
+% Calculate the actuator positions to fit the given DM surface
+    dmcz = prop_fit_dm(dmz, infk);
+  else
+% Use the given actuator positions
     dmcz = dmz;
+  end
 
   [acny, acnx] = size(dmz);             % number of actuators in y and x
 % Create subsampled DM grid
@@ -212,31 +225,46 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
   lgy1 = fix(raiy/2) + mrgy + 1;        % index of  1st actuator center y
   lgx2 = lgx1 + raix * (acnx-1);        % index of last actuator center x
   lgy2 = lgy1 + raiy * (acny-1);        % index of last actuator center y
-  dmg0  = zeros(dmny, dmnx);             % initialize subsampled DM grid
+  dmg  = zeros(dmny, dmnx);             % initialize subsampled DM grid
 % Fill the subsampled DM grid with the actuator amplitudes
-  dmg0(lgy1 : raiy : lgy2, lgx1 : raix : lgx2) = dmcz;
+  dmg(lgy1 : raiy : lgy2, lgx1 : raix : lgx2) = dmcz;
 % Do the convolution of the actuator amplitudes with the influence function
-  dmg  = conv2(dmg0, inf, 'same');
+  dmg  = conv2(dmg, inf, 'same');
+  
+  
+	% Convolve with a window in order to avoid aliasing of the quilting
+    mag = ifdx / bm.dx;
+    if mag < 1
+        dxIn = 1.0;
+        dxOut = 1.0 / mag;
+        nMaskIn = ceil_odd(2 / mag);
+        x0 = (-(nMaskIn-1.)/2.:(nMaskIn-1)/2.)*dxIn;
+        [X0, Y0] = meshgrid(x0, x0);
+        R0 = sqrt(X0.^2 + Y0.^2); clear X0 Y0
+        Window = 0*R0;
+        Window(R0 <= dxOut/2.) = 1;
+        Window = Window/sum(Window(:));
+        dmg  = conv2(dmg, Window, 'same');
+    end
 
-  [ny, nx] = size(surfaceToFit);       % number of points in wavefront array
-%   [ny, nx] = size(bm.wf);       % number of points in wavefront array
+  [ny, nx] = size(bm.wf);       % number of points in wavefront array
 
 % 3D rotate DM grid and project orthogonally onto wavefront
 
 % Calculate grid dimensions (pix) projected onto wavefront
-  xdim = round(sqrt(2.0) * dmnx * ifdx / dx);
+  xdim = round(sqrt(2.0) * dmnx * ifdx / bm.dx);
   if xdim > nx
     xdim = nx;
   end
   xd2  = fix(xdim / 2) + 1;
-  ydim = round(sqrt(2.0) * dmny * ifdy / dx);
+  ydim = round(sqrt(2.0) * dmny * ifdy / bm.dx);
   if ydim > ny
     ydim = ny;
   end
   yd2  = fix(ydim / 2) + 1;
 
-  cx   = ([1 : xdim] - xd2) * dx;
-  cy   = ([1 : ydim] - yd2) * dx;
+  cx   = ([1 : xdim] - xd2) * bm.dx;
+  cy   = ([1 : ydim] - yd2) * bm.dx;
   [cxm, cym] = meshgrid(cx, cy);
 
   sa   = sind(tlt(1));
@@ -257,30 +285,7 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
             -sb,      sa * cb,                ca * cb,                0.0; ...
                  0.0,                    0.0,                    0.0, 1.0];
   end
-  
-  %% Compute xdm0 and ydm0 for use in de-rotating the DM surface
-  % Forward project a square
-  edge = [-1.0, -1.0,  0.0,  0.0; ...
-           1.0, -1.0,  0.0,  0.0; ...
-           1.0,  1.0,  0.0,  0.0; ...
-          -1.0,  1.0,  0.0,  0.0];
-  xyzn = edge;% * rotm;   % had to reverse matrix mult. order to match IDL
 
-% Determine backwards projection for screen-raster-to-DM-surface computation
-% Had to reverse and increment indices to match IDL
-  dxdx = (xyzn(1, 1) - xyzn(2, 1)) / (edge(1, 1) - edge(2, 1));
-  dxdy = (xyzn(2, 1) - xyzn(3, 1)) / (edge(2, 2) - edge(3, 2));
-  dydx = (xyzn(1, 2) - xyzn(2, 2)) / (edge(1, 1) - edge(2, 1));
-  dydy = (xyzn(2, 2) - xyzn(3, 2)) / (edge(2, 2) - edge(3, 2));
-
-  xs   = (cxm/dxdx - cym*dxdy / (dxdx*dydy)) / (1.0 - dydx*dxdy / (dxdx*dydy));
-  ys   = (cym/dydy - cxm*dydx / (dxdx*dydy)) / (1.0 - dydx*dxdy / (dxdx*dydy));
-
-  xdm0  = (xs + dmcx * actd) / ifdx + lgx1;
-  ydm0  = (ys + dmcy * actd) / ifdy + lgy1;
-  
-  %% Compute xdm and ydm for use in de-rotating the DM surface
- 
 % Forward project a square
   edge = [-1.0, -1.0,  0.0,  0.0; ...
            1.0, -1.0,  0.0,  0.0; ...
@@ -301,48 +306,41 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
   xdm  = (xs + dmcx * actd) / ifdx + lgx1;
   ydm  = (ys + dmcy * actd) / ifdy + lgy1;
 
-  %% Derotate the DM surface
-  grid = pad_crop(surfaceToFit,size(xdm,1));
-  gridDerot = griddata(xdm, ydm, grid, xdm0, ydm0, 'cubic');
-  gridDerot(isnan(gridDerot)) = 0;
+% Calculate the interpolated DM grid (set extrapolated values to 0.0)
+  grid = interp2(dmg, xdm, ydm, 'cubic', 0.0);
 
-%   figure(10); imagesc(gridDerot); axis xy equal tight; colorbar;
-%   figure(11); imagesc(dmg(2:end,2:end)-rot90(dmg(2:end,2:end),2)); axis xy equal tight; colorbar;
-%   figure(12); imagesc(gridDerot(2:end,2:end)-rot90(gridDerot(2:end,2:end),2)); axis xy equal tight; colorbar;
-
-%% Resize and decimate the DM surface to get it at the same size as the DM actuator command array.
-%  The result will be fed to falco_fit_dm_surf() for deconvolution with the
-%  influence function.
-
-  xOffsetInAct = ((Nact/2 - 1/2) - dmcx);
-  yOffsetInAct = ((Nact/2 - 1/2) - dmcy);
-
-  multipleOfCommandGrid = ceil_odd(spcg/dx);
-  N1 = Nact*multipleOfCommandGrid;
-  N2 = size(grid,1);
-  xs1 = (-(N1-1)/2:(N1-1)/2)/N1 ; %--interpixel centered
-  if(mod(N2,2)==0)
-    xs2 = (-N2/2:(N2/2)-1)/N2*(N2*dx/(Nact*spcg));
-  else
-    xs2 = (-(N2-1)/2:(N2-1)/2)/N2*(N2*dx/(Nact*spcg));
+% Create the limits for the map
+  icx  = fix(nx / 2) + 1;       % wf array center index x
+  icy  = fix(ny / 2) + 1;       % wf array center index y
+  isx1 = icx  - xd2  + 1;       %  1st point index in wf subgrid x
+  isy1 = icy  - yd2  + 1;       %  1st point index in wf subgrid y
+  isx2 = isx1 + xdim - 1;       % last point index in wf subgrid x
+  isy2 = isy1 + ydim - 1;       % last point index in wf subgrid y
+  igx1 = 1;                     %  1st point index in DM grid x
+  igy1 = 1;                     %  1st point index in DM grid y
+  igx2 = xdim;                  % last point index in DM grid x
+  igy2 = ydim;                  % last point index in DM grid y
+  if isx1 < 1           % clip interpolated DM grid at wf array bounds
+    igx1 = 1 + (1 - isx1);
+    isx1 = 1;
   end
-  [XS1,YS1] = meshgrid(xs1);
-  [XS2,YS2] = meshgrid(xs2);
+  if isy1 < 1           % clip interpolated DM grid at wf array bounds
+    igy1 = 1 + (1 - isy1);
+    isy1 = 1;
+  end
+  if isx2 > nx          % clip interpolated DM grid at wf array bounds
+    igx2 = xdim - (isx2 - nx);
+    isx2 = nx;
+  end
+  if isy2 > ny          % clip interpolated DM grid at wf array bounds
+    igy2 = ydim - (isy2 - ny);
+    isy2 = ny;
+  end
 
-  gridDerotResize = interp2(XS2,YS2,gridDerot,XS1+xOffsetInAct/Nact,YS1+yOffsetInAct/Nact,'cubic', 0.0);
-  
-  gridDerotAtActRes = gridDerotResize(ceil(multipleOfCommandGrid/2):multipleOfCommandGrid:end,ceil(multipleOfCommandGrid/2):multipleOfCommandGrid:end); % decimate
+  map  = zeros(ny, nx);
+  map(isy1 : isy2, isx1 : isx2) = grid(igy1 : igy2, igx1 : igx2);
 
-%   dm.dm_spacing = spcg;
-%   dm.dx_inf0 = 1e-4;%dx;%1e-4;
-%   dm.inf0 = inf;
-%   dm.Nact = Nact;
-%   Vout = falco_fit_dm_surf(dm,gridDerotAtActRes);
-%   
-%   figure(19); imagesc(gridDerotResize); axis xy equal tight; colorbar;
-%   figure(20); imagesc(dmz); axis xy equal tight; colorbar;
-%   figure(21); imagesc(gridDerotAtActRes); axis xy equal tight; colorbar;
-%   figure(22); imagesc(Vout); axis xy equal tight; colorbar;
-% %   figure(23); imagesc(dmz0 - Vout); axis xy equal tight; colorbar;
-
-end % END OF FUNCTION
+  if NoAp == 0
+    bm   = prop_add_phase(bm, 2.0 * map);
+  end
+end % function prop_dm

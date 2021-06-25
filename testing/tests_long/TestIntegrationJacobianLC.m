@@ -32,6 +32,7 @@ classdef TestIntegrationJacobianLC < matlab.unittest.TestCase
             mp = testCase.mp;
             mp.runLabel = 'test_LC';
             [mp, out] = falco_flesh_out_workspace(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             
             %% Fast Jacobian calculation
             mp.dm1.V = zeros(mp.dm1.Nact);
@@ -93,6 +94,7 @@ classdef TestIntegrationJacobianLC < matlab.unittest.TestCase
             mp.runLabel = 'test_LC';
             mp.propMethodPTP = 'mft';
             [mp, out] = falco_flesh_out_workspace(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             
             %% Fast Jacobian calculation
             mp.dm1.V = zeros(mp.dm1.Nact);
@@ -155,6 +157,7 @@ classdef TestIntegrationJacobianLC < matlab.unittest.TestCase
             
             mp.runLabel = 'test_LC';
             [mp, out] = falco_flesh_out_workspace(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             mp.dm1.V = zeros(mp.dm1.Nact);
             mp.dm2.V = zeros(mp.dm2.Nact);
 

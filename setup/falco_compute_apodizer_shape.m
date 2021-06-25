@@ -4,7 +4,7 @@
 % of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Compute the array size at the apodizer.
+% ﻿Make the apodizer array square and store its shape.
 %
 % INPUTS
 % ------
@@ -14,7 +14,7 @@
 % -------
 % mp : structure of model parameters
 
-function mp = falco_compute_apodizer_coordinates(mp)
+function mp = falco_compute_apodizer_shape(mp)
 
     if isfield(mp.P3.compact, 'mask')
         mp.P3.compact.mask = pad_to_even_square(mp.P3.compact.mask); % force to be square array

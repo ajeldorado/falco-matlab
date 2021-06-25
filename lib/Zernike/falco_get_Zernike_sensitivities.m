@@ -31,7 +31,6 @@ for ni = 1:Nannuli
     maskStruct.rhoOuter = Rsens(ni,2) ; %--lambda0/D
     maskStruct.angDeg = mp.Fend.corr.ang; %--degrees
     maskStruct.centering = mp.centering;
-    maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
     maskStruct.pixresFP = mp.Fend.res;
     maskStruct.whichSide = mp.Fend.sides; %--which (sides) of the dark hole have open
     if(isfield(mp.Fend,'shape'));  maskStruct.shape = mp.Fend.shape;  end
@@ -176,6 +175,7 @@ if(mp.full.flagPROPER)
         mp.full.zindex = [mp.full.zindex(:),indsZnoll(izern)];
         mp.full.zval_m = [zval_m0(:), mp.full.ZrmsVal]; % [meters]
     end
+    mp.full.zval = mp.full.zval_m; % account for different names in different PROPER models
     
 else %--Include the Zernike map at the input pupil for the FALCO full model
     ZernMap = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam,mp.centering,indsZnoll(izern)); %--2-D map of the normalized (RMS = 1) Zernike mode
