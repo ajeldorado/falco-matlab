@@ -182,7 +182,7 @@ if mp.flagSaveWS
     mp.dm8.inf_datacube = 0;
     mp.dm9.inf_datacube = 0;
 
-    fnAll = [mp.path.ws mp.runLabel, '_all.mat'];
+    fnAll = fullfile(mp.path.ws,[mp.runLabel, '_all.mat']);
     disp(['Saving entire workspace to file ' fnAll '...'])
     save(fnAll);
     fprintf('done.\n\n')
