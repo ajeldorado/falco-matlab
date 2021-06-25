@@ -41,6 +41,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             mp.runLabel = 'test_VC';
             mp.jac.mftToVortex = false;
             [mp, out] = falco_flesh_out_workspace(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             
             %% Fast Jacobian calculation
             mp.dm1.V = zeros(mp.dm1.Nact);
@@ -117,6 +118,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             mp.P4.compact.maskAtP1res = falco_gen_pupil_Simple(inputs);
             
             [mp, out] = falco_flesh_out_workspace(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             
             %% Fast Jacobian calculation
             mp.dm1.V = zeros(mp.dm1.Nact);
@@ -179,6 +181,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
 
             mp.runLabel = 'test_VC';
             [mp, out] = falco_flesh_out_workspace(mp);
+            mp = falco_compute_psf_norm_factor(mp);
             mp.dm1.V = zeros(mp.dm1.Nact);
             mp.dm2.V = zeros(mp.dm2.Nact);
 
