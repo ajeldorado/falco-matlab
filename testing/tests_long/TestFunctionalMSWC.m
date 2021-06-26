@@ -62,36 +62,30 @@ classdef TestFunctionalMSWC < matlab.unittest.TestCase
             end
             
             [mp, out] = falco_wfsc_loop(mp, out);
-            save('/Users/ajriggs/Downloads/out_file.mat', 'out')
 
             %% Tests:
-            Iraw = out.IrawCorrHist(end); % 7.8173e-07
-            testCase.verifyGreaterThan(Iraw, 7.7e-7)
-            testCase.verifyLessThan(Iraw, 7.9e-7)           
+            Iraw = out.IrawCorrHist(1); % 1.5640e-06
+            testCase.verifyGreaterThan(Iraw, 1.55e-6)
+            testCase.verifyLessThan(Iraw, 1.57e-6)           
             
-            Iest = out.IestScoreHist(end); % 1.1147e-07
-            testCase.verifyGreaterThan(Iest, 1.0e-7)
-            testCase.verifyLessThan(Iest, 1.2e-7)
+            Iest = out.IestScoreHist(1); % 3.4768e-07
+            testCase.verifyGreaterThan(Iest, 3.46e-7)
+            testCase.verifyLessThan(Iest, 3.49e-7)
             
-            Iinco = out.IincoCorrHist(end); % 1.7943e-06
-            testCase.verifyGreaterThan(Iinco, 1.75e-6)
-            testCase.verifyLessThan(Iinco, 1.8e-6)
-
-            import matlab.unittest.constraints.EveryElementOf
-            import matlab.unittest.constraints.IsGreaterThan
-            testCase.verifyThat(EveryElementOf(out.complexProjection(:)), IsGreaterThan(0.99))
+            Iinco = out.IincoCorrHist(1); % 2.7803e-6
+            testCase.verifyGreaterThan(Iinco, 2.77e-6)
+            testCase.verifyLessThan(Iinco, 2.79e-6)
             
-            dm1pv = out.dm1.Spv(end); % 1.8171e-08
-            testCase.verifyGreaterThan(dm1pv, 1.7e-8)
-            testCase.verifyLessThan(dm1pv, 1.9e-8)
+            dm1pv = out.dm1.Spv(1); % 5.5979e-09
+            testCase.verifyGreaterThan(dm1pv, 5.5e-9)
+            testCase.verifyLessThan(dm1pv, 5.7e-9)
             
-            thput = out.thput(end); % 0.2834
-            testCase.verifyGreaterThan(thput, 0.28)
-            testCase.verifyLessThan(thput, 0.29)
+            thput = out.thput(end); % 0.2843
+            testCase.verifyGreaterThan(thput, 0.2842)
+            testCase.verifyLessThan(thput, 0.2844)
             
-            import matlab.unittest.constraints.EveryElementOf
-            import matlab.unittest.constraints.IsEqualTo
-            testCase.verifyThat(EveryElementOf(out.log10regHist), IsEqualTo([-2])) % [-2; -2; -2]
+            testCase.verifyEqual(out.log10regHist(1), -2)
+            
         end       
     end    
 end

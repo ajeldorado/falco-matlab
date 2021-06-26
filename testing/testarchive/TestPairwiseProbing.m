@@ -74,7 +74,6 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             mp.P1.compact.mask = falco_gen_pupil_Simple(inputs); 
 
             [mp, out] = falco_flesh_out_workspace(mp);
-            mp = falco_compute_psf_norm_factor(mp);
             N = size(mp.P1.full.E, 1);
             alpha = 2.5;
             mirror_figure = 1e-9;
