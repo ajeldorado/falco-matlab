@@ -19,7 +19,7 @@ function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
             dEsim = squeeze(Esim(:, si) - EsimPrev(:, si));
             dEsim2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
             dEsim2D(mp.Fend.corr.maskBool) = dEsim;  % 2-D for plotting
-            dEsimNonzero = dEmeas(indsNonzero);
+            dEsimNonzero = dEsim(indsNonzero);
             
             dEmax = max(abs(dEsim)); % max value in plots
             out.complexProjection(Itr-1, si) = abs(dEsimNonzero'*dEmeasNonzero) / abs(dEsimNonzero'*dEsimNonzero);
