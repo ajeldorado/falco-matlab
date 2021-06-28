@@ -64,8 +64,8 @@ mp.estimator = 'pwp-bp';
 %--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 2;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.probe.est.width = [4, 4]; % Width of probed rectangular region. Units of lambda/D.
-mp.probe.est.height = [4, 4]; % Height of probed rectangular region. Units of lambda/D.
+mp.est.probe.width = [4, 4]; % Width of probed rectangular region. Units of lambda/D.
+mp.est.probe.height = [4, 4]; % Height of probed rectangular region. Units of lambda/D.
 mp.est.probe.xiOffset = [6, 6]; % xi (horizontal) offset of probed region's center in focal plane. Units of lambda/D.
 mp.est.probe.etaOffset = [0, 6]; % eta (horizontal) offset of probed region's center in focal plane. Units of lambda/D.
 mp.est.probe.xOffset = 0;   % offset of probe center in x at DM [actuators]. Use to avoid central obscurations.
