@@ -66,7 +66,9 @@ classdef TestFunctionalFLC < matlab.unittest.TestCase
             testCase.verifyGreaterThan(Iinco,1.0e-5)
             testCase.verifyLessThan(Iinco,1.2e-2)
             
-            testCase.verifyGreaterThan(out.complexProjection(2,1), 0.99)
+            complexProj = out.complexProjection(2,1); % 0.7668
+            testCase.verifyGreaterThan(complexProj, 0.76)
+            testCase.verifyLessThan(complexProj, 0.77)
             
             dm1pv = out.dm1.Spv(end); % 5.8077e-08
             %5.80e-8 < dm1pv && dm1pv < 5.82e-8

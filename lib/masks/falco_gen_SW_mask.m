@@ -48,8 +48,8 @@ if(isfield(inputs,'etaOffset')); etaOffset = inputs.etaOffset; else; etaOffset =
 
 % minimum +/- field of view along both axes
 if isfield(inputs,'FOV'); FOV = inputs.FOV; else; FOV = inputs.rhoOuter; end
-if isfield(inputs,'xiFOV'); minFOVxi = inputs.xiFOV; else; minFOVxi = FOV + abs(xiOffset); end % minimum field of view along horizontal (xi) axis
-if isfield(inputs,'etaFOV'); minFOVeta = inputs.etaFOV; else; minFOVeta = FOV + abs(etaOffset); end % minimum field of view along vertical (eta) axis
+if isfield(inputs,'xiFOV'); minFOVxi = inputs.xiFOV; else; minFOVxi = FOV; end % minimum field of view along horizontal (xi) axis
+if isfield(inputs,'etaFOV'); minFOVeta = inputs.etaFOV; else; minFOVeta = FOV; end % minimum field of view along vertical (eta) axis
     
 if isfield(inputs,'centering'); centering = inputs.centering; else; centering = 'pixel'; end %--Default to pixel centering if it is not specified.
 

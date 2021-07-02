@@ -34,7 +34,6 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
             %% Step 3: Perform the Wavefront Sensing and Control
             mp.runLabel = 'test_FLC';          
             [mp, out] = falco_flesh_out_workspace(mp);
-            mp = falco_compute_psf_norm_factor(mp);
             mp.dm1.V = zeros(mp.dm1.Nact);
             mp.dm2.V = zeros(mp.dm2.Nact);
             jacStruct = model_Jacobian(mp); %--Get structure containing Jacobians
@@ -94,7 +93,6 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
             mp.jac.minimizeNI = true;
             mp.runLabel = 'test_FLC';
             [mp, out] = falco_flesh_out_workspace(mp);
-            mp = falco_compute_psf_norm_factor(mp);
             
             mp.dm1.V = zeros(mp.dm1.Nact);
             mp.dm2.V = zeros(mp.dm2.Nact);

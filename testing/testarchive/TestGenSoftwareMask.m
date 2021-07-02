@@ -71,6 +71,7 @@ classdef TestGenSoftwareMask < matlab.unittest.TestCase
             inputs.pixresFP = 9;
             inputs.rhoInner = 2.5;
             inputs.rhoOuter = 10;
+            inputs.FOV = 15;
             inputs.angDeg = 160;
             inputs.whichSide = 't';
             inputs.centering = 'pixel';

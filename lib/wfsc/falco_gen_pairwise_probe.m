@@ -29,8 +29,8 @@
 % in focal plane. Units of lambda/D.
 % mp.est.probe.etaOffset : eta (horizontal) offset of probed region's
 % center in focal plane. Units of lambda/D.
-% mp.probe.est.width : Width of probed rectangular region. Units of lambda/D.
-% mp.probe.est.height : Height of probed rectangular region. Units of lambda/D. 
+% mp.est.probe.width : Width of probed rectangular region. Units of lambda/D.
+% mp.est.probe.height : Height of probed rectangular region. Units of lambda/D. 
 %
 % RETURNS
 % -------
@@ -60,8 +60,8 @@ ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.yOffset)/Nact;
 lamDIntoAct = Nact / NactPerBeam;
 xiOffset = mp.est.probe.xiOffset(starIndex) * lamDIntoAct; 
 etaOffset = mp.est.probe.etaOffset(starIndex) * lamDIntoAct;
-width = mp.probe.est.width(starIndex) * lamDIntoAct;
-height = mp.probe.est.height(starIndex) * lamDIntoAct;
+width = mp.est.probe.width(starIndex) * lamDIntoAct;
+height = mp.est.probe.height(starIndex) * lamDIntoAct;
 
 maxSpatialFreq = Nact / 2;
 if (xiOffset + width/2) > maxSpatialFreq || (etaOffset + height/2) > maxSpatialFreq
