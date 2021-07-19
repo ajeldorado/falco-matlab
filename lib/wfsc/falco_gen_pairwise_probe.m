@@ -38,7 +38,7 @@
 
 function probeCmd = falco_gen_pairwise_probe(mp, InormDes, phaseShift, starIndex)
 
-if mp.est.probe.xiOffset(starIndex) == 0 && mp.est.probe.xiOffset(starIndex) == 0
+if mp.est.probe.xiOffset(starIndex) == 0 && mp.est.probe.etaOffset(starIndex) == 0
     error("Probed region's center must be offset from the star location.")
 end
 
