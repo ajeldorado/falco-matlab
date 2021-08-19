@@ -26,7 +26,7 @@ InormSMFHist = zeros(mp.Nitr,1);
 if mp.flagFiber
     [Im, Ifiber,Ifiber_arr] = falco_get_summed_image(mp);
 else
-    Im = falco_get_summed_image(mp);
+    [Im,~,Imean_arr] = falco_get_summed_image(mp);
 end
 
 %%
@@ -41,9 +41,6 @@ for Itr=1:mp.Nitr
     %--Start of new estimation+control iteration
     fprintf(['Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
     
-    if(any(mp.fineAlignment_it==Itr))
-        bench = hcstr_realignFPMAndRecenter(bench,mp);
-    end
     if(~mp.flagSim && any(mp.search4OffaxisSMF_it==Itr))
         [ x_smf_out, y_smf_out ] = hcst_fiu_findOffaxisSMFwProbe(bench, mp);
         mp.est.probe.Xloc = x_smf_out;
@@ -120,6 +117,7 @@ for Itr=1:mp.Nitr
             InormHist_tb.Inorm_arr = Ifiber_arr;
         else
             InormHist_tb.total = InormHist; 
+            InormHist_tb.Inorm_arr = Imean_arr;
         end
         
         Im_tb.Im = Im;
@@ -213,6 +211,11 @@ for Itr=1:mp.Nitr
     end
 
     %% Wavefront Estimation
+    % First do a fine alignment of the FPM if necesary
+    if(any(mp.fineAlignment_it==Itr))
+        bench = hcstr_realignFPMAndRecenter(bench,mp);
+    end
+
     switch lower(mp.estimator)
         case{'perfect'}
             EfieldVec  = falco_est_perfect_Efield_with_Zernikes(mp);
@@ -405,7 +408,7 @@ if mp.flagFiber
     [Im, Ifiber,Ifiber_arr] = falco_get_summed_image(mp);
     if(~mp.flagSim);bench.Femto.averageNumReads =  hcst_fiu_computeNumReadsNeeded(bench,Ifiber);end
 else
-    Im = falco_get_summed_image(mp);
+    [Im,~,Imean_arr] = falco_get_summed_image(mp);
 end
 fprintf('done. Time = %.1f s\n',toc);
 
@@ -418,7 +421,7 @@ fprintf('\n\n');
 
 if mp.flagFiber
     InormSMFHist(Itr+1) = Ifiber;%mean(Im(mp.Fend.corr.maskBool));
-    if ~mp.flagSim
+    if false%~mp.flagSim
         % Increase the exp time if needed
         peakInCounts = Ifiber*(bench.info.SMFInt0s(1)/mp.peakPSFtint*bench.andor.tint);
         if mp.flagUseCamera4EFCSMF && peakInCounts<2e3
@@ -497,6 +500,9 @@ if(isfield(mp,'testbed'))
     Im_tb.E(mp.Fend.corr.mask) = EfieldVec(:,ceil(mp.Nsbp/2));
     InormHist_tb.beta(Itr-1) = out.log10regHist(Itr-1);
     hProgress = falco_plot_progress_hcst(hProgress,mp,Itr,InormHist_tb,Im_tb,DM1surf,DM2surf);
+    
+    if isfield(mp,'bench');mp = rmfield(mp,'bench');end
+
 else
     if(mp.flagFiber)
         InormHist_show = InormSMFHist; 

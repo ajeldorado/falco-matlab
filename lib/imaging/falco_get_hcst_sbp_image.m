@@ -56,13 +56,16 @@ function [normI,varargout] = falco_get_hcst_sbp_image(mp,si)
 
     end
     
-    
-    map = (mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
+    if true
+        map = (mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
+        if ~mp.flagFiber;map = fliplr(map);end
+    end
+%     map = rot90(mp.dm1.V,3); % There's a transpose between Matlab and BMC indexing
 %     map = fliplr(mp.dm1.V); % There's a transpose between Matlab and BMC indexing
 %     map = flipud(mp.dm1.V'); % There's a transpose between Matlab and BMC indexing
     
 %     map = flipud(map);
-    if ~mp.flagFiber;map = fliplr(map);end
+%     
     % Send the commands to the DM. 
     % Notes: bench.DM.flatvec contains the commands to flatten the DM. 
     %        mp.dm1.V is added to the flat commands inside
@@ -76,7 +79,7 @@ function [normI,varargout] = falco_get_hcst_sbp_image(mp,si)
         if sbp_texp~=bench.andor.tint;hcst_andor_setExposureTime(bench,sbp_texp);end
     end
 
-    if(isfield(bench.info,'source') && strcmpi(bench.info.source,'nkt'))
+    if(isfield(bench.info,'source') && strcmpi(bench.info.source,'nkt')) && mp.Nsbp~=1
         %----- Get image from the testbed -----
         disp(['Getting image from testbed in band ',num2str(si)])
     
@@ -90,53 +93,59 @@ function [normI,varargout] = falco_get_hcst_sbp_image(mp,si)
         disp('Getting image from testbed (using laser source)')
     end
 
-    % Load the dark with the correct tint. It must exist in the dark
-    % library. 
-    dark = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
-    
-    % Scale the PSF photometry by the current integration time
-    peakPSF = PSFpeak/mp.peakPSFtint(si)*bench.andor.tint*NDfilter_cal; 
-    
-    if true
-        % Take image
-        if mp.flagFiber && mp.flagUseCamera4EFCSMF
-            hcst_andor_setSubwindow(bench,bench.andor.FocusRow,...
-                bench.andor.FocusCol,bench.andor.AOIHeight,false);
-            % Move FEU out
-            resPos = hcst_FEUzaber_move(bench,bench.FEUzaber.posOut);
-        end
-    end
-    if mp.flagFiber
-        hcst_andor_setExposureTime(bench,bench.andor.tint/10);
-        disp('Taking Camera Image')
-    end
-   
-    
-    Im = hcst_andor_getImage(bench);
-    
-    if mp.flagFiber;hcst_andor_setExposureTime(bench,bench.andor.tint);end
+    if mp.flag_smf_takeCamIms || ~mp.flagFiber
+        % Load the dark with the correct tint. It must exist in the dark
+        % library. 
+        dark = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
 
-    % Get normalized intensity (dark subtracted and normalized by peakPSF)
-    normI = (Im-dark)/peakPSF; 
-%     normI = fliplr((hcst_andor_getImage(bench)-dark)/peakPSF); 
-        
-    % Check exposure time
-    dh = Im(mp.Fend.corr.maskBool);
-    if bench.andor.tint<3 && min(normI(:))<2e-8 && ~mp.flagFiber && ~mp.efc_imageSharpening  
-        if median(dark(:))>min(dh(:))
-            disp('Exposure time is too low')
-            if false
-                disp('Exposure time is too low; adding 0.5 sec')
-                hcst_andor_setExposureTime(bench,bench.andor.tint+0.5);
-                dark = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
-                bench.info.sbp_texp(si) = bench.info.sbp_texp(si)+0.5;
-                peakPSF = PSFpeak/mp.peakPSFtint(si)*bench.andor.tint*NDfilter_cal; 
-                Im = hcst_andor_getImage(bench);
-                normI = (Im-dark)/peakPSF;
+        % Scale the PSF photometry by the current integration time
+        peakPSF = PSFpeak/mp.peakPSFtint(si)*bench.andor.tint*NDfilter_cal; 
+
+        if true
+            % Take image
+            if mp.flagFiber && mp.flagUseCamera4EFCSMF
+                hcst_andor_setSubwindow(bench,bench.andor.FocusRow,...
+                    bench.andor.FocusCol,bench.andor.AOIHeight,false);
+                % Move FEU out
+                resPos = hcst_FEUzaber_move(bench,bench.FEUzaber.posOut);
             end
-            % We have to change the mp.est.fudge:
-%             mp.est.probe.gainFudge = interp1([0.5,3],[1,0.5],bench.andor.tint); % empirically found for the 780nm laser
         end
+        if mp.flagFiber
+            tint0 = bench.andor.tint;
+            hcst_andor_setExposureTime(bench,bench.andor.tint/2);
+            peakPSF = peakPSF/2;
+            disp('Taking Camera Image')
+        end
+
+
+        Im = hcst_andor_getImage(bench);
+
+        if mp.flagFiber;hcst_andor_setExposureTime(bench,tint0);end
+
+        % Get normalized intensity (dark subtracted and normalized by peakPSF)
+        normI = (Im-dark)/peakPSF; 
+    %     normI = fliplr((hcst_andor_getImage(bench)-dark)/peakPSF); 
+    
+    % Check exposure time
+        dh = Im(mp.Fend.corr.maskBool);
+        if bench.andor.tint<3 && min(normI(:))<2e-8 && ~mp.flagFiber && ~mp.efc_imageSharpening  
+            if median(dark(:))>min(dh(:))
+                disp('Exposure time is too low')
+                if false
+                    disp('Exposure time is too low; adding 0.5 sec')
+                    hcst_andor_setExposureTime(bench,bench.andor.tint+0.5);
+                    dark = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
+                    bench.info.sbp_texp(si) = bench.info.sbp_texp(si)+0.5;
+                    peakPSF = PSFpeak/mp.peakPSFtint(si)*bench.andor.tint*NDfilter_cal; 
+                    Im = hcst_andor_getImage(bench);
+                    normI = (Im-dark)/peakPSF;
+                end
+                % We have to change the mp.est.fudge:
+    %             mp.est.probe.gainFudge = interp1([0.5,3],[1,0.5],bench.andor.tint); % empirically found for the 780nm laser
+            end
+        end
+    else
+        normI = zeros(bench.andor.AOIHeight);
     end
     
     %% Fiber
@@ -171,6 +180,7 @@ function [normI,varargout] = falco_get_hcst_sbp_image(mp,si)
             hcst_andor_setSubwindow(bench,bench.andor.FEURow,...
                 bench.andor.FEUCol,128,false);
             dark4EFCSMF = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
+            
             im = hcst_andor_getImage(bench)-dark4EFCSMF;
             Vsmf = hcst_fiu_aperturePhotometryOnAndor(bench,im,true);%max(im(:));
             Ifiber = Vsmf/(SMFInt0/mp.peakPSFtint(si)*bench.andor.tint*NDfilter_cal);
@@ -180,27 +190,39 @@ function [normI,varargout] = falco_get_hcst_sbp_image(mp,si)
             imagesc(im)
             axis image
             colorbar
-            title(['Wvl: ',num2str(si),'/',num2str(mp.Nsbp)])
+            title(['Eval NI - Wvl: ',num2str(si),'/',num2str(mp.Nsbp)])
             drawnow
         end
-
-        
-
-
         varargout{1} = Ifiber;
     else
             figure(113)
+            close
+            figure(113)
+            normI_avg = mean(normI(mp.Fend.corr.maskBool));
             dh_sub = dh - dark(mp.Fend.corr.maskBool);
             num_neg = numel(find(dh_sub<0));
-            subplot(1,2,1);
+            num_sat = numel(find(dh>4e4));
+            subplot(2,2,1);
+            axis off
+            if mp.est.flag_performingEst
+                text(0.1,0.8,['Estimation - Wvl: ',num2str(si),'/',num2str(mp.Nsbp)]);
+            else
+                text(0.1,0.8,['Control - Wvl: ',num2str(si),'/',num2str(mp.Nsbp)]);
+            end
+            text(0.1,0.7,sprintf('I_{norm} = %.2e',normI_avg));
+            text(0.1,0.6,sprintf('# negative = %.0f',num_neg));
+            text(0.1,0.5,sprintf('# above 40k = %.0f',num_sat));
+            text(0.1,0.4,sprintf('# median (subtracted) = %.0f',median(dh_sub)));
+
+            subplot(2,2,3);
             imagesc((Im-dark))
             axis image
             colorbar
-            title(['Wvl: ',num2str(si),'/',num2str(mp.Nsbp)])
-            text(8,128-25,['# negative: ',num2str(num_neg)],'Color','w','FontSize',16);
+            title('Linear')
+%             text(8,128-25,['# negative: ',num2str(num_neg)],'Color','w','FontSize',16);
             set(gca,'ydir','normal');
 
-            subplot(1,2,2); 
+            subplot(2,2,4); 
             imagesc(log10(Im))
             axis image
             colorbar

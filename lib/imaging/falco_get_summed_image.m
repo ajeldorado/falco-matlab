@@ -57,6 +57,8 @@ function [Imean,varargout] = falco_get_summed_image(mp)
         if mp.flagFiber
             Ifibmean = 0;
             Ifibmean_arr = zeros(1,mp.Nsbp);
+        else
+            Imean_arr = zeros(1,mp.Nsbp);
         end
         for si=1:mp.Nsbp  
             if mp.flagFiber
@@ -65,12 +67,16 @@ function [Imean,varargout] = falco_get_summed_image(mp)
                 Ifibmean_arr(si) = Ifiber;
             else
                 Imsbp = falco_get_sbp_image(mp,si);
+                Imean_arr(si) = mean(Imsbp(mp.Fend.corr.maskBool));
             end
             Imean = Imean +  mp.sbp_weights(si)*Imsbp;
         end
         if mp.flagFiber
             varargout{1} = Ifibmean; 
             varargout{2} = Ifibmean_arr; 
+        else
+            varargout{1} = []; 
+            varargout{2} = Imean_arr; 
         end
     end
 

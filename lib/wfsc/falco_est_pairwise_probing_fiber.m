@@ -177,7 +177,7 @@ for si=1:mp.Nsbp
     iOdd=1; iEven=1; %--Initialize index counters
     %--Change exp time to the one chosen to perform the sensing
     if ~mp.flagSim && mp.flagUseCamera4EFCSMF
-        hcst_andor_setExposureTime(bench,mp.tint_est);
+        hcst_andor_setExposureTime(bench,mp.tint_est(si));
         mp.est.flag_performingEst = true;
     end
     for iProbe=1:2*Npairs
@@ -205,6 +205,7 @@ for si=1:mp.Nsbp
 
         %--Take probed image
         Im = max(max(falco_get_sbp_image_fiber(mp,si)));
+
         whichImg = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im)/(2*Npairs); %--Inorm averaged over all the probed images
 
