@@ -130,21 +130,26 @@ end
 mp.flagSaveEachItr = false;
 
 mp.flagJitter = true;
-mp.Fend.jitt_amp = 0.05;
+jitt_arr = 0.01:0.01:0.07;
+numtry = numel(jitt_arr);
 
-label = 'EFCSMF_forJitter';
-mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
-    mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-    '_xfiber',num2str(mp.Fend.x_fiber),'_yfiber',num2str(mp.Fend.y_fiber),...
-    '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller,'_',num2str(mp.Fend.jitt_amp),'jittAmp_',label];
+for jitt_amp = jitt_arr
+    mp.Fend.jitt_amp = jitt_amp;
+
+    label = 'EFCSMF_forJitter';
+    mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
+        mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
+        '_xfiber',num2str(mp.Fend.x_fiber),'_yfiber',num2str(mp.Fend.y_fiber),...
+        '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
+        '_',mp.controller,'_',num2str(mp.Fend.jitt_amp),'jittAmp_',label];
 
 
-%% Step 5: Perform the Wavefront Sensing and Control
-% [out, data_train] = falco_adaptive_wfsc_loop(mp);
-[mp, out] = falco_flesh_out_workspace(mp);
-
-[mp, out] = falco_wfsc_loop(mp, out);
+    %% Step 5: Perform the Wavefront Sensing and Control
+    % [out, data_train] = falco_adaptive_wfsc_loop(mp);
+    [mp, out] = falco_flesh_out_workspace(mp);
+    mp.dm1.V = zeros(mp.dm1.Nact,mp.dm1.Nact);
+    [~, out] = falco_wfsc_loop(mp, out);
+end
 if(mp.flagPlot)
     figure; semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
 end

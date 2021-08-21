@@ -54,10 +54,9 @@ for Itr=1:mp.Nitr
     
     % new evaluation of jitter instance (1/2 pre-estimation)
     if mp.flagSim && mp.flagJitter && Itr~=1
-        mp_newFiberMode = mp;
-        mp_newFiberMode.Fend.x_fiber = mp.Fend.x_fiber + randn(1,1)*mp.Fend.jitt_amp;
-        mp_newFiberMode.Fend.y_fiber = [mp.Fend.y_fiber] + randn(1,1)*mp.Fend.jitt_amp;
-        mp = falco_configure_fiber_dark_hole(mp_newFiberMode);
+        mp.Fend.x_fiber = mp.Fend.x_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+        mp.Fend.y_fiber = mp.Fend.y_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+        mp = falco_configure_fiber_dark_hole(mp);
     end
     
     %--Re-compute the starlight normalization factor for the compact and full models (to convert images to normalized intensity). No tip/tilt necessary.
@@ -248,11 +247,10 @@ for Itr=1:mp.Nitr
     end
     
     % new evaluation of jitter instance (2/2 post-estimation)
-    if mp.flagSim && mp.flagJitter && Itr~=1
-        mp_newFiberMode = mp;
-        mp_newFiberMode.Fend.x_fiber = mp.Fend.x_fiber + randn(1,1)*mp.Fend.jitt_amp;
-        mp_newFiberMode.Fend.y_fiber = [mp.Fend.y_fiber] + randn(1,1)*mp.Fend.jitt_amp;
-        mp = falco_configure_fiber_dark_hole(mp_newFiberMode);
+    if mp.flagSim && mp.flagJitter %&& Itr~=1
+        mp.Fend.x_fiber = mp.Fend.x_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+        mp.Fend.y_fiber = mp.Fend.y_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+        mp = falco_configure_fiber_dark_hole(mp);
     end
 
     %% Compute and Plot the Singular Mode Spectrum of the Control Jacobian
