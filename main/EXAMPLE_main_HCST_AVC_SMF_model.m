@@ -64,11 +64,11 @@ mp.TrialNum = 2;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 5; %--Number of estimation+control iterations to perform
+mp.Nitr = 45; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
-mp.use_lastJacStruc = false;
+mp.use_lastJacStruc = true;
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -86,8 +86,8 @@ mp.flagLenslet = false;  %--whether to go through a lenslet array before using t
 % clear temp
 
 %--DEBUGGING IN MONOCHROMATIC LIGHT
-mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.2;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 11;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 if mp.Nsbp==1
     mp.fracBW = 0.01;
@@ -127,12 +127,15 @@ end
 
 mp.flagSaveEachItr = false;
 
-label = 'EFCSMF_forTTanalysis';
+mp.flagJitter = true;
+mp.Fend.jitt_amp = 0.05;
+
+label = 'EFCSMF_forJitter';
 mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
     mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
     '_xfiber',num2str(mp.Fend.x_fiber),'_yfiber',num2str(mp.Fend.y_fiber),...
     '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller,'_',label];
+    '_',mp.controller,'_',num2str(mp.Fend.jitt_amp),'jittAmp_',label];
 
 
 %% Step 5: Perform the Wavefront Sensing and Control

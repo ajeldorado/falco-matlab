@@ -103,7 +103,8 @@ mp.dm1.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] 
 mp.dm2.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
 mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 1 and 2 [volts] %--NOT ENFORCED YET
 
-
+mp.flagJitter = false;
+mp.Fend.jitt_amp = 0;
 %% Wavefront Control: Controller Specific
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
@@ -227,7 +228,7 @@ mp.P4.full.Nbeam = 256;  % P4 must be the same as P1 for Vortex.
 %% Mask Definitions
 
 mp.apodType = 'grayscale';%[mp.path.mask,'ApodizedPupil_500.fits'];
-maskaux = fitsread('/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/segmentedPupil_noApod.fits');%   ApodizedPupil_HCST
+maskaux = fitsread('/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/ApodizedPupil_HCST_Jul152019.fits');%   ApodizedPupil_HCST
 mp.P3.full.mask = imresize(maskaux,[mp.P1.full.Nbeam mp.P1.full.Nbeam]); 
 mp.P3.compact.mask = mp.P3.full.mask;
 % mp.P3.apodType = 'HCST_AVC';%[mp.path.mask,'ApodizedPupil_500.fits'];
