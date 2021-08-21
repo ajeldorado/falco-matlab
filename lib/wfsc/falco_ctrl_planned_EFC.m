@@ -138,7 +138,7 @@ function [dDM,cvar] = falco_ctrl_planned_EFC(mp, cvar)
         cvar.latestBestDMfac = vals_list(2,indBest);
         %   fprintf('Empirical grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
         
-        val = vals_list(1,indBest)-mp.aux.betaMinusOne;
+        val = max([vals_list(1,1),vals_list(1,indBest)-mp.aux.betaMinusOne]);
         if(mp.ctrl.flagUseModel)
             fprintf('Model-based grid search gives log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
         else
