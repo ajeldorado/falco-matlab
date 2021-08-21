@@ -170,3 +170,4 @@ docs/**
 HLCLSplotter.m
 PMGIplotter.m
 *.pyc
+dm_struct.mat

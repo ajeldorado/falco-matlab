@@ -87,9 +87,10 @@ elseif strcmpi(modvar.whichSource,'offaxis') %--Use for throughput calculations
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.compact.XsDL + modvar.y_offset*mp.P2.compact.YsDL));
     Ett = exp(1i*TTphase*mp.lambda0/lambda);
     Ein = Ett.*mp.P1.compact.E(:,:,modvar.sbpIndex); 
-    
+    flag_offaxis = true; %JLlop
 else %--Backward compatible with code without tip/tilt offsets in the Jacobian
     Ein = mp.P1.compact.E(:,:,modvar.sbpIndex);  
+    flag_offaxis = false; %JLlop
 end
 
 %--Shift the source off-axis to compute the intensity normalization value.
@@ -139,7 +140,7 @@ switch lower(mp.layout)
             [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval);
             varargout{1} = Efiber;
         else
-            Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval);
+            Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval,flag_offaxis);
         end
         
     case{'wfirst_phaseb_simple','wfirst_phaseb_proper'} %--Use compact model as the full model, and the general FALCO model as the compact model, or %--Use the actual Phase B compact model as the compact model.
