@@ -228,7 +228,7 @@ mp.P4.full.Nbeam = 256;  % P4 must be the same as P1 for Vortex.
 %% Mask Definitions
 
 mp.apodType = 'grayscale';%[mp.path.mask,'ApodizedPupil_500.fits'];
-maskaux = fitsread('/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/ApodizedPupil_HCST_Jul152019.fits');%   ApodizedPupil_HCST
+maskaux = fitsread('C:\Users\jdllop\Documents\GitHub\falco-matlab\lib\masks\ApodizedPupil_HCST_Jul152019.fits');%   ApodizedPupil_HCST
 mp.P3.full.mask = imresize(maskaux,[mp.P1.full.Nbeam mp.P1.full.Nbeam]); 
 mp.P3.compact.mask = mp.P3.full.mask;
 % mp.P3.apodType = 'HCST_AVC';%[mp.path.mask,'ApodizedPupil_500.fits'];

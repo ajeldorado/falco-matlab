@@ -37,6 +37,12 @@
 
 function [Eout, varargout] = model_full(mp,modvar,varargin)
 
+if mp.flagSim && mp.flagJitter %&& Itr~=1
+    mp.Fend.x_fiber = mp.Fend.x_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+    mp.Fend.y_fiber = mp.Fend.y_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+    mp = falco_configure_fiber_dark_hole(mp);
+end
+
 % Set default values of input parameters
 if(isfield(modvar,'sbpIndex'))
     normFac = mp.Fend.full.I00(modvar.sbpIndex,modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor

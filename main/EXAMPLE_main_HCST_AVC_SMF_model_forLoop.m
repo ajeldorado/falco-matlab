@@ -25,15 +25,15 @@ clear all;
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '/Users/jllopsay/Documents/GitHub/falco-matlab/';  %--Location of FALCO
-mp.path.proper = '/Users/jllopsay/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
+mp.path.falco = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\';  %--Location of FALCO
+mp.path.proper = 'C:\Users\jdllop\Documents\MATLAB\PROPER'; %--Location of the MATLAB PROPER library
 % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-mp.path.mask = '/Users/jllopsay/Documents/GitHub/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-mp.path.ws_inprogress = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws_inprogress/';
+mp.path.config = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\brief\'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\ws\'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.mask = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\lib\masks\'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.ws_inprogress = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\ws_inprogress\';
 
 % %--Library locations. FALCO and PROPER are required. CVX is optional.
 % mp.path.falco = 'C:\Lab\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
@@ -64,11 +64,11 @@ mp.TrialNum = 2;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 45; %--Number of estimation+control iterations to perform
+mp.Nitr = 25; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
-mp.use_lastJacStruc = true;
+mp.use_lastJacStruc = false;
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -130,7 +130,7 @@ end
 mp.flagSaveEachItr = false;
 
 mp.flagJitter = true;
-jitt_arr = 0.01:0.01:0.07;
+jitt_arr = 0.001:0.002:0.04;
 numtry = numel(jitt_arr);
 
 for jitt_amp = jitt_arr
@@ -144,6 +144,9 @@ for jitt_amp = jitt_arr
         '_',mp.controller,'_',num2str(mp.Fend.jitt_amp),'jittAmp_',label];
 
 
+    if jitt_amp~=jitt_arr(1)
+        mp.use_lastJacStruc = true;
+    end
     %% Step 5: Perform the Wavefront Sensing and Control
     % [out, data_train] = falco_adaptive_wfsc_loop(mp);
     [mp, out] = falco_flesh_out_workspace(mp);

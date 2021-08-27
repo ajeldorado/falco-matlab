@@ -34,6 +34,12 @@
 
 function [Eout, varargout] = model_compact(mp, modvar,varargin)
 
+if mp.flagSim && mp.flagJitter %&& Itr~=1
+    mp.Fend.x_fiber = mp.Fend.x_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+    mp.Fend.y_fiber = mp.Fend.y_fiber0 + randn(1,1)*mp.Fend.jitt_amp;
+    mp = falco_configure_fiber_dark_hole(mp);
+end
+
 modvar.wpsbpIndex = 0; %--Dummy index since not needed in compact model
 
 % Set default values of input parameters
