@@ -15,9 +15,6 @@ mp.flagPlot = false;
 %--General
 mp.centering = 'pixel';
 
-%--Whether to include planet in the images
-mp.planetFlag = false;
-
 %--Method of computing core throughput:
 % - 'HMI' for energy within half-max isophote divided by energy at telescope pupil
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
@@ -198,7 +195,7 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
-mp.layout = 'wfirst_phaseb_proper';  %--Which optical layout to use. 'wfirst_phaseb_proper' or 'wfirst_phaseb_simple'
+mp.layout = 'wfirst_phaseb_proper';  %--Which optical layout to use. 'wfirst_phaseb_proper'
 mp.coro = 'HLC';
 mp.flagApod = false;    %--Whether to use an apodizer or not
 mp.flagDMwfe = false;  %--Whether to use BMC DM quilting maps
@@ -298,22 +295,6 @@ mp.whichPupil = 'WFIRST180718';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-
-% %--Lyot stop shape
-% mp.P4.IDnorm = 0.50; %--Lyot stop ID [Dtelescope]
-% mp.P4.ODnorm = 0.80; %--Lyot stop OD [Dtelescope]
-% % mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
-% mp.P4.wStrut = 0.036;    %--Lyot stop strut width [pupil diameters]
-
-% %--FPM size
-% mp.F3.Rin = 2.8;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-% mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
-% mp.F3.ang = 180;    % on each side, opening angle [degrees]
-
-%--Whether to generate or load various masks: compact model
-mp.compact.flagGenPupil = false;  
-mp.compact.flagGenFPM = false;  
-mp.compact.flagGenLS = false;
 
 mp.P1.compact.mask = fitsread([mp.full.data_dir 'hlc_20190210/' 'run461_pupil.fits']);
 mp.P1.compact.mask = padOrCropEven(mp.P1.compact.mask,310);

@@ -15,9 +15,6 @@ mp.flagPlot = false;
 %--General
 mp.centering = 'pixel';
 
-%--Whether to include planet in the images
-mp.planetFlag = false;
-
 %--Method of computing core throughput:
 % - 'HMI' for energy within half-max isophote divided by energy at telescope pupil
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
@@ -219,9 +216,9 @@ mp.P3.D = 46.3e-3; %46.2987e-3;
 mp.P4.D = 46.3e-3; %46.2987e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 386;
-mp.P2.compact.Nbeam = 386;
-mp.P3.compact.Nbeam = 386;
+mp.P1.compact.Nbeam = 300;
+mp.P2.compact.Nbeam = 300;
+mp.P3.compact.Nbeam = 300;
 mp.P4.compact.Nbeam = 60;
 
 %--Shaped Pupil Mask: Load and downsample.
@@ -311,10 +308,10 @@ x1 = (-(N1-1)/2:(N1-1)/2)*dx1;
 FPM1 = interp2(X0,Y0,FPM0,X1,Y1,'cubic',0); %--Downsample by interpolation
 switch lower(mp.centering)
     case{'pixel'}
-        mp.F3.compact.mask.amp = zeros(N1+1,N1+1);
-        mp.F3.compact.mask.amp(2:end,2:end) = FPM1;
+        mp.F3.compact.mask = zeros(N1+1,N1+1);
+        mp.F3.compact.mask(2:end,2:end) = FPM1;
     otherwise
-        mp.F3.compact.mask.amp = FPM1;
+        mp.F3.compact.mask = FPM1;
 end
 % figure(2); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
 % figure(3); imagesc(FPM1); axis xy equal tight; colormap jet; colorbar;
@@ -404,10 +401,10 @@ mp.full.dm2.flatmap = 0;
 % FPM1 = interp2(X0,Y0,FPM0,X1,Y1,'cubic',0); %--Downsample by interpolation
 % switch lower(mp.centering)
 %     case{'pixel'}
-%         mp.F3.full.mask.amp = zeros(N1+1,N1+1);
-%         mp.F3.full.mask.amp(2:end,2:end) = FPM1;
+%         mp.F3.full.mask = zeros(N1+1,N1+1);
+%         mp.F3.full.mask(2:end,2:end) = FPM1;
 %     otherwise
-%         mp.F3.full.mask.amp = FPM1;
+%         mp.F3.full.mask = FPM1;
 % end
 % % figure(2); imagesc(FPM0); axis xy equal tight; colormap jet; colorbar;
 % % figure(3); imagesc(FPM1); axis xy equal tight; colormap jet; colorbar;
@@ -415,20 +412,25 @@ mp.full.dm2.flatmap = 0;
 
 %% Mask Definitions
 
-mp.compact.flagGenFPM = false;
-
 %--Pupil definition
 mp.whichPupil = 'WFIRST180718';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
+mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
+mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
 
 %--Lyot stop shape
 mp.LSshape = 'bowtie';
 mp.P4.IDnorm = 0.38; %--Lyot stop ID [Dtelescope]
 mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
 mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
-mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
+inputs.ID = mp.P4.IDnorm; % (pupil diameters)
+inputs.OD = mp.P4.ODnorm; % (pupil diameters)
+inputs.ang = mp.P4.ang; % (degrees)
+inputs.centering = mp.centering; % 'interpixel' or 'pixel'
+inputs.Nbeam = mp.P4.compact.Nbeam; 
+mp.P4.compact.mask = falco_gen_bowtie_LS(inputs);
 
 % %--FPM size
 % mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 

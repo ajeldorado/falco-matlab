@@ -32,7 +32,9 @@ function pupil = falco_gen_pupil_Simple(inputs)
     if(isfield(inputs, 'xShear')); xShear = inputs.xShear; else; xShear = 0; end % x-shear [pupil diameters]
     if(isfield(inputs, 'yShear')); yShear = inputs.yShear; else; yShear = 0; end % y-shear [pupil diameters]
     if(isfield(inputs, 'flagHG')); flagHG = inputs.flagHG; else; flagHG = false; end % whether to use hyper-Gaussians to generate the pupil instead. (Old behavior)
-
+    if ID > OD
+        error('Inner diameter cannot be larger than outer diameter.');
+    end
     
     if ~flagHG % By default, don't use hyger-gaussians for anti-aliasing the edges.
     
@@ -58,8 +60,6 @@ function pupil = falco_gen_pupil_Simple(inputs)
             inpInner.xShear = xShear;
             inpInner.yShear = yShear;
             apInner = 1 - falco_gen_ellipse(inpInner);
-        elseif ID > OD
-            error('Pupil generation error: Inner diameter cannot be larger than outer diameter.');
         else
             apInner = 1;
         end
@@ -117,7 +117,7 @@ function pupil = falco_gen_pupil_Simple(inputs)
         [THETA,RHO] = cart2pol(X/xStretch,Y); 
         
         % Create inner and outer circles
-        if(ID > 0 && ID < OD)
+        if ID > 0
             pupil = exp(-(RHO/(apRad*OD)).^hg_expon) - exp(-(RHO/(apRad*ID)).^hg_expon);
         else
             pupil = exp(-(RHO/(apRad*OD)).^hg_expon);

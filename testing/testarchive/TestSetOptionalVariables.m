@@ -38,7 +38,7 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
 %     folder running FALCO's tests.
 % # *testBooleanFlags:* verify that the output from
 %     falco_set_optional_variables.m contains the boolean fields
-%     flagSaveWS, flagSaveEachItr, flagSVD, flagUseLearnedJac, flagUseJac,
+%     flagSaveWS, flagSVD, flagUseLearnedJac, flagUseJac,
 %     and flagUseModel. In addition we verify that the value of all these
 %     fields is false.
 %
@@ -56,7 +56,6 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
             testCase.verifyThat(mp.path.jac,IsFolder)
             testCase.verifyThat(mp.path.images,IsFolder)
             testCase.verifyThat(mp.path.dm,IsFolder)
-            %testCase.verifyThat(mp.path.wsInProgress,IsFolder)
             
             testCase.verifyThat(mp.path, HasField('falco'))
 %             testCase.verifyThat(mp.path, HasField('proper'))
@@ -66,20 +65,17 @@ classdef TestSetOptionalVariables < matlab.unittest.TestCase
             testCase.verifyThat(mp.path, HasField('jac'))
             testCase.verifyThat(mp.path, HasField('images'))
             testCase.verifyThat(mp.path, HasField('dm'))
-            %testCase.verifyThat(mp.path, HasField('wsInProgress'))
         end
         function testBooleanFlags(testCase)            
             import matlab.unittest.constraints.HasField
             mp = falco_set_optional_variables(testCase.mp);
             testCase.verifyThat(mp, HasField('flagSaveWS'))
-            testCase.verifyThat(mp, HasField('flagSaveEachItr'))
             testCase.verifyThat(mp, HasField('flagSVD'))
             testCase.verifyThat(mp, HasField('flagUseLearnedJac'))
             testCase.verifyThat(mp.est, HasField('flagUseJac'))
             testCase.verifyThat(mp.ctrl, HasField('flagUseModel'))
             
             testCase.verifyFalse(mp.flagSaveWS,false)
-            testCase.verifyFalse(mp.flagSaveEachItr,false)
             testCase.verifyFalse(mp.flagSVD,false)
             testCase.verifyFalse(mp.flagUseLearnedJac,false)
             testCase.verifyFalse(mp.est.flagUseJac,false)

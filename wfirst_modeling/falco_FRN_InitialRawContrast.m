@@ -78,6 +78,7 @@ else
         modvar.y_offset = coords(ic,2); 
         modvar.sbpIndex = mp.si_ref; 
         modvar.wpsbpIndex = mp.wi_ref;
+        modvar.starIndex = 1;
         E2D = model_compact(mp, modvar);
         peakVals(ic) = max(abs(E2D(:)).^2);
     end  

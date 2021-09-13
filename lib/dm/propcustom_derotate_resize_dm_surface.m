@@ -302,7 +302,7 @@ function gridDerotAtActRes = propcustom_derotate_resize_dm_surface(surfaceToFit,
   ydm  = (ys + dmcy * actd) / ifdy + lgy1;
 
   %% Derotate the DM surface
-  grid = padOrCropEven(surfaceToFit,size(xdm,1));
+  grid = pad_crop(surfaceToFit,size(xdm,1));
   gridDerot = griddata(xdm, ydm, grid, xdm0, ydm0, 'cubic');
   gridDerot(isnan(gridDerot)) = 0;
 

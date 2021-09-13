@@ -14,25 +14,29 @@ classdef TestGenAnnularFPM < matlab.unittest.TestCase
 % A presaved file with FALCO parameters was saved and is lodaded to be used
 % by methods. In this case we only use the mp.path.falco + lib/utils to
 % addpath to utils functions to be tested.
-    properties
-        mp=Parameters();
-    end
+%     properties
+%         mp=Parameters();
+%     end
 
 %% Setup and Teardown Methods
 %
-%  Add and remove path to utils functions to be tested.
-%
+%  Add and remove path to library functions to be tested.
+
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            addpath(genpath([pathToFalco filesep 'lib']));
+            addpath(genpath([pathToFalco filesep 'lib_external']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'lib']))
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            rmpath(genpath([pathToFalco filesep 'lib']));
+            addpath(genpath([pathToFalco filesep 'lib_external']));
         end
     end
-    
+
 %% Tests
 %
 %  Creates four tests:
@@ -58,8 +62,24 @@ classdef TestGenAnnularFPM < matlab.unittest.TestCase
             inputs.yOffset = -10;
             spotOffset = falco_gen_annular_FPM(inputs);
             
-            % Area test for circle
             areaExpected = pi*inputs.rhoInner^2*(inputs.pixresFPM^2);
+            area = sum(1-spotOffset(:));
+            
+            import matlab.unittest.constraints.IsEqualTo
+            import matlab.unittest.constraints.RelativeTolerance
+            testCase.verifyThat(area, IsEqualTo(areaExpected,'Within', RelativeTolerance(0.001)))
+        end
+        function testPartiallyTransmissiveOccSpotArea(testCase)
+            inputs.pixresFPM = 6; %--pixels per lambda_c/D
+            inputs.rhoInner = 3; % radius of inner FPM amplitude spot (in lambda_c/D)
+            inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
+            inputs.centering = 'pixel';
+            inputs.xOffset = 5.5;
+            inputs.yOffset = -10;
+            inputs.FPMampFac = 0.2;
+            spotOffset = falco_gen_annular_FPM(inputs);
+            
+            areaExpected = (1-inputs.FPMampFac)*pi*inputs.rhoInner^2*(inputs.pixresFPM^2);
             area = sum(1-spotOffset(:));
             
             import matlab.unittest.constraints.IsEqualTo

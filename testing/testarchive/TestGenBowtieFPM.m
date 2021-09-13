@@ -14,24 +14,29 @@ classdef TestGenBowtieFPM < matlab.unittest.TestCase
 % A presaved file with FALCO parameters was saved and is lodaded to be used
 % by methods. In this case we only use the mp.path.falco + lib/utils to
 % addpath to utils functions to be tested.
-    properties
-        mp=Parameters();
-    end
+%     properties
+%         mp=Parameters();
+%     end
 
 %% Setup and Teardown Methods
 %
-%  Add and remove path to utils functions to be tested.
-%
+%  Add and remove path to library functions to be tested.
+
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            addpath(genpath([pathToFalco filesep 'lib']));
+            addpath(genpath([pathToFalco filesep 'lib_external']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'lib']))
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            rmpath(genpath([pathToFalco filesep 'lib']));
+            addpath(genpath([pathToFalco filesep 'lib_external']));
         end
-    end    
+    end
+    
 %% Tests
 %
 %  Creates four tests:

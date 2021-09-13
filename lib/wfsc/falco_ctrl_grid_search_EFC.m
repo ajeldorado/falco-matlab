@@ -4,10 +4,19 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function for regularized linear least-squares control (EFC).
-% -This function performs an empirical grid search over these parameters:
-%  a) a scalar coefficient for the regularization matrix
-%  b) a scalar gain for the final DM command.
+% Peform EFC. The regularization and DM gain are chosen empirically each
+% iteration as the combination that provides the best normalized intensity.
+%
+% INPUTS
+% ------
+% mp : structure of model parameters
+% cvar : structure of controller variables
+%
+% OUTPUTS
+% -------
+% dDM : structure of the delta control commands separated by DM number.
+%       Also contains the updated array of tied actuator pairs
+% cvar : structure of controller variables
 
 function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 

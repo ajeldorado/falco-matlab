@@ -1,4 +1,4 @@
-%% Test falco_set_jacobian_weights.m
+%% Test falco_set_spectral_properties.m
 %
 % We define some tests for falco_set_spectral_properties.m to test  
 % responses to different input parameters. 
@@ -8,24 +8,26 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
 % A presaved file with FALCO parameters was saved and is lodaded to be used
 % by methods. In this case we only use the mp.path.falco + lib/utils to
 % addpath to utils functions to be tested.
-    properties
-        mp=Parameters();
-    end
+%     properties
+%         mp=Parameters();
+%     end
 
 %% Setup and Teardown Methods
 %
-%  Add and remove path to utils functions to be tested.
-%
+%  Add and remove path to library functions to be tested.
+
     methods (TestClassSetup)
         function addPath(testCase)
-            addpath(genpath([testCase.mp.path.falco filesep 'setup']));
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            addpath(genpath([pathToFalco filesep 'setup']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
-            rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
+            pathToFalco = fileparts(fileparts(fileparts(mfilename('fullpath')))); % falco-matlab directory;
+            rmpath(genpath([pathToFalco filesep 'setup']));
         end
-    end    
+    end
     
 %% *Tests*
 %
@@ -73,7 +75,7 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
 %
     methods (Test)     
         function testSetSpectralPropertiesInput1(testCase)
-            mp=testCase.mp;
+%             mp=testCase.mp;
             mp.lambda0 = 1e-6;
             mp.flagSim = false; 
             mp.Nsbp = 1;
@@ -88,7 +90,7 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
         function testSetSpectralPropertiesInput2(testCase)
             import matlab.unittest.constraints.IsEqualTo;
             import matlab.unittest.constraints.RelativeTolerance;
-            mp=testCase.mp;
+%             mp=testCase.mp;
             mp.lambda0 = 1e-6;
             mp.flagSim = false; 
             mp.Nsbp = 1;
@@ -103,7 +105,7 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
         function testSetSpectralPropertiesInput3(testCase)
             import matlab.unittest.constraints.IsEqualTo;
             import matlab.unittest.constraints.RelativeTolerance;
-            mp=testCase.mp;
+%             mp=testCase.mp;
             mp.lambda0 = 1e-6;
             mp.flagSim = true;
             mp.Nsbp = 5;
@@ -118,7 +120,7 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
         function testSetSpectralPropertiesInput4(testCase)
             import matlab.unittest.constraints.IsEqualTo;
             import matlab.unittest.constraints.RelativeTolerance;
-            mp=testCase.mp;
+%             mp=testCase.mp;
             mp.lambda0 = 1e-6;
             mp.flagSim = false;
             mp.Nsbp = 5;
@@ -133,9 +135,9 @@ classdef TestSetSpectralProperties < matlab.unittest.TestCase
         function testSetSpectralPropertiesInput5(testCase)
             import matlab.unittest.constraints.IsEqualTo;
             import matlab.unittest.constraints.RelativeTolerance;
-            mp=testCase.mp;
+%             mp=testCase.mp;
             mp.lambda0 = 1e-6;
-            mp.flagSim = false;
+            mp.flagSim = true;
             mp.Nsbp = 5;
             mp.Nwpsbp = 3;
             mp.fracBW = 0.20;

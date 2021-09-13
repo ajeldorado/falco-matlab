@@ -6,7 +6,7 @@
 %
 % Plot relevant data for pairwise probing.
 
-function falco_plot_pairwise_probes(mp, ev, dDMVplus, ampSq2Dcube)
+function falco_plot_pairwise_probes(mp, ev, dDMVplus, ampSq2Dcube, iSubband)
 
 if(mp.flagPlot)
     
@@ -36,7 +36,7 @@ if(mp.flagPlot)
     
 
     %--Plot the raw images for each + probe
-    IcubeNonNeg = ev.Icube;
+    IcubeNonNeg = ev.imageArray(:, :, :, iSubband);
     IcubeNonNeg(IcubeNonNeg<0) = 0;
     for iProbe=1:Npairs
         subplot(4,Npairs,iProbe + Npairs*1); % Save the handle of the subplot
@@ -47,7 +47,7 @@ if(mp.flagPlot)
     end
     
     %--Plot the raw images for each - probe
-    IcubeNonNeg = ev.Icube;
+    IcubeNonNeg = ev.imageArray(:, :, :, iSubband);
     IcubeNonNeg(IcubeNonNeg<0) = 0;
     for iProbe=1:Npairs
         subplot(4,Npairs,iProbe + Npairs*2); % Save the handle of the subplot
