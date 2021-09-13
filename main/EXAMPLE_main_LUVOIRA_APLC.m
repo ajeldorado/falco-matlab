@@ -22,8 +22,12 @@ clear
 
 %% Step 2: Load default model parameters
 
+% Choose one of the following configurations 
 EXAMPLE_defaults_LUVOIRA_APLC_smallFPM
-
+% EXAMPLE_defaults_LUVOIRA_APLC_mediumFPM
+% EXAMPLE_defaults_LUVOIRA_APLC_largeFPM
+% CAUTION: The medium and large FPM versions require more actuators than
+% the default settings in these examples, which are meant to provide quick results. 
 
 %% Step 3: Overwrite default values as desired
 
