@@ -244,8 +244,8 @@ mp.P1.D = 15.0; %--telescope diameter [meters]. Used only for converting milliar
 
 %% FPM (F3) Definition and Generation
 
-mp.F3.compact.res = 3; % sampling of FPM for compact model [pixels per lambda0/D]
-mp.F3.full.res = 4;    % sampling of FPM for full model [pixels per lambda0/D]
+mp.F3.compact.res = 10; % sampling of FPM for compact model [pixels per lambda0/D]
+mp.F3.full.res = 10;    % sampling of FPM for full model [pixels per lambda0/D]
 
 mp.F3.Rin = 3.5;    % maximum radius of inner part of the focal plane mask [lambda0/D]
 mp.F3.Rout = Inf;   % radius of outer opaque edge of FPM [lambda0/D]
