@@ -85,6 +85,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
         case 'staircase'
             Nsteps = inputs.Nsteps;
             mask = exp(1j*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi);
+%             mask = exp(1j*falco_gen_spiral_staircase(inputs));
 
         otherwise
             validOptions = "Valid options are 'vortex', 'cos', 'sectors', and 'staircase.";
