@@ -9,7 +9,7 @@
 
 clear
 
-inputs.type = 'staircase';  % 'vortex', 'cos', 'sectors', and 'staircase.'
+inputs.type = 'staircase';  % Options are 'vortex', 'cos', 'sectors', and 'staircase'.
 inputs.N = 200; % pixels across the 
 inputs.charge = 4; % charge of the mask (makes most sense for vortex)
 inputs.Nsteps = 6; % number of steps per 2*pi radians. For 'staircase' only

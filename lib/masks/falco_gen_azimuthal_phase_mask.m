@@ -1,4 +1,4 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -35,7 +35,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     % Required inputs
     maskType = inputs.type; 
     charge = inputs.charge; 
-    N = inputs.N; 
+    N = inputs.N;
 
     % OPTIONAL INPUTS
     centering = 'pixel';  %--Default to pixel centering
@@ -87,7 +87,8 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = exp(1j*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi);
 
         otherwise
-            error('%s not a valid option for inputs.type.', inputs.type)
+            validOptions = "Valid options are 'vortex', 'cos', 'sectors', and 'staircase.";
+            error('%s is not a valid option for inputs.type. \n%s', inputs.type, validOptions)
     end
 
 end

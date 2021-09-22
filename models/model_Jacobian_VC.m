@@ -157,26 +157,37 @@ if(whichDM == 1)
             xis = (-(Nxi-1)/2:(Nxi-1)/2)*dxi;
         end
         etas = xis.';
-        
-        vortex = falco_gen_vortex_mask(charge, Nxi);
+                
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nxi;
+        inputs.charge = charge;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
     else % Use FFTs
         % Generate central opaque spot
-        if mp.F3.VortexSpotDiam > 0
+        if (mp.F3.VortexSpotDiam > 0) && strcmpi(mp.F3.phaseMaskType, 'vortex')
             inputs.pixresFPM = Nfft1/mp.P1.compact.Nbeam; %--pixels per lambda/D
             inputs.rhoInner = mp.F3.VortexSpotDiam/2*(mp.lambda0/lambda); % radius of inner FPM amplitude spot (in lambda_c/D)
             inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
             inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
             inputs.centering = 'pixel';
-            spot = falco_gen_annular_FPM(inputs);
+            spot = falco_gen_annular_FPM(inputs); clear inputs;
             spot = pad_crop(spot, Nfft1, 'extrapval', 1);
         else
             spot = 1;
         end
         
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nfft1;
+        inputs.charge = charge;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+                
         % Generate FPM with fftshift already applied
-        vortex = falco_gen_vortex_mask(charge, Nfft1);
-        fftshiftVortex = fftshift(spot.*vortex);    
+        fftshiftVortex = fftshift(spot.*fpm);    
     end
     
     if any(mp.dm_ind == 2)
@@ -233,7 +244,7 @@ if(whichDM == 1)
 
                 %--MFT from pupil P3 to FPM
                 EF3inc = rect_mat_pre * dEP3box * rect_mat_post; % MFT to FPM
-                EF3 = vortex .* EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
+                EF3 = fpm .* EF3inc;
                 
                 %--MFT to LS
                 EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);                
@@ -349,25 +360,37 @@ if(whichDM==2)
             xis = (-(Nxi-1)/2:(Nxi-1)/2)*dxi;
         end
         etas = xis.';
-        
-        vortex = falco_gen_vortex_mask(charge, Nxi);
+                
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nxi;
+        inputs.charge = charge;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+
     else        
         % Generate central opaque spot
-        if mp.F3.VortexSpotDiam > 0
+        if (mp.F3.VortexSpotDiam > 0) && strcmpi(mp.F3.phaseMaskType, 'vortex')
             inputs.pixresFPM = Nfft2/mp.P1.compact.Nbeam; %--pixels per lambda/D
             inputs.rhoInner = mp.F3.VortexSpotDiam/2*(mp.lambda0/lambda); % radius of inner FPM amplitude spot (in lambda_c/D)
             inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
             inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
             inputs.centering = 'pixel';
-            spot = falco_gen_annular_FPM(inputs);
+            spot = falco_gen_annular_FPM(inputs); clear inputs;
             spot = pad_crop(spot, Nfft2, 'extrapval', 1);
         else
             spot = 1;
         end
         
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nfft2;
+        inputs.charge = charge;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+        
         % Generate FPM with fftshift already applied
-        vortex = falco_gen_vortex_mask(charge, Nfft2);
-        fftshiftVortex = fftshift(spot.*vortex);        
+        fftshiftVortex = fftshift(spot.*fpm);        
     end
     
     apodReimaged = padOrCropEven( apodReimaged, mp.dm2.compact.NdmPad);
@@ -415,7 +438,7 @@ if(whichDM==2)
 
                 %--MFT from pupil P3 to FPM
                 EF3inc = rect_mat_pre * dEP3box * rect_mat_post; % MFT to FPM
-                EF3 = vortex.*EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
+                EF3 = fpm.*EF3inc;
                 
                 %--MFT to LS
                 EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);  

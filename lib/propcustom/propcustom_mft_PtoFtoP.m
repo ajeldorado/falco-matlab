@@ -15,7 +15,7 @@
 % ------
 % IN: 2-D E-field at the pupil from which to propagate
 % FPM: 2-D, complex-valued array representing the FPM to use.
-% apRad: radius of the beam at the starting pupil
+% apRad: radius of the beam at the starting pupil. Units of pixels.
 % inVal: radial separation in lambda/D at which to start the Tukey window
 %        transition between coarse and fine resolution.
 % outVal: radial separation in lambda/D at which to end the Tukey window
@@ -29,33 +29,32 @@
 %
 % WARNINGS
 % --------
-% 1. Use this only with infinite-extent focal plane masks. (That is,
-%    with no outer cutoff within the field of view of the array.)
-% 2. Use this only with azimuthal-only masks. Radial variation will cause
+% 1. Use this only with azimuthal-only masks. Radial variation will cause
 %    problems because the same FPM array is used at both the coarse and
 %    fine resolutions.
+% 2. The sampling of the coarse DFT is set as the width of the FPM array
+%    divided by the beam diameter in pixels.
 
-function OUT = propcustom_mft_PtoFtoP(IN, FPM, apRad, inVal, outVal, useGPU )
+function OUT = propcustom_mft_PtoFtoP(IN, FPM, apRad, inVal, outVal, useGPU)
 
     showPlots2debug = false; 
 
-    D = 2*apRad;
-    lambdaOverD = 4; % [samples per lambda/D]
-    
+    D = 2*apRad;    
     [NA, ~] = size(IN);
-    NB = lambdaOverD*D; 
+    NB = size(FPM, 1);
+    pixPerLamD = NB/D; % [samples per lambda/D at coarse resolution]
     
     [X,Y] = meshgrid(-NB/2:NB/2-1);
     RHO = sqrt(X.^2 + Y.^2);
    
     windowKnee = 1-inVal/outVal;
     
-    windowMASK1 = falco_gen_Tukey4vortex(2*outVal*lambdaOverD, RHO, windowKnee) ;
+    windowMASK1 = falco_gen_Tukey4vortex(2*outVal*pixPerLamD, RHO, windowKnee) ;
     windowMASK2 = falco_gen_Tukey4vortex(NB, RHO, windowKnee) ;
 
     % DFT vectors 
     x = (-NA/2:NA/2-1)/D;
-    u1 = (-NB/2:NB/2-1)/lambdaOverD;
+    u1 = (-NB/2:NB/2-1)/pixPerLamD;
     u2 = (-NB/2:NB/2-1)*2*outVal/NB;
         
     if useGPU
@@ -70,10 +69,10 @@ function OUT = propcustom_mft_PtoFtoP(IN, FPM, apRad, inVal, outVal, useGPU )
     if showPlots2debug; figure; imagesc(abs(IN)); axis image; colorbar; title('pupil'); end
 
     % Full FOV, lower sampling DFT
-    FP1 = 1/(1*D*lambdaOverD)*exp(-1i*2*pi*u1'*x)*IN*exp(-1i*2*pi*x'*u1); 
+    FP1 = 1/(1*D*pixPerLamD)*exp(-1i*2*pi*u1'*x)*IN*exp(-1i*2*pi*x'*u1); 
     if showPlots2debug; figure; imagesc(log10(abs(FP1).^2)); axis image; colorbar; title('Large scale DFT'); end
 
-    LP1 = 1/(1*D*lambdaOverD)*exp(-1i*2*pi*x'*u1)*(FP1.*FPM.*(1-windowMASK1))*exp(-1i*2*pi*u1'*x);
+    LP1 = 1/(1*D*pixPerLamD)*exp(-1i*2*pi*x'*u1)*(FP1.*FPM.*(1-windowMASK1))*exp(-1i*2*pi*u1'*x);
     if showPlots2debug; figure; imagesc(abs(FP1.*(1-windowMASK1))); axis image; colorbar; title('Large scale DFT (windowed)'); end
     
     % Smaller FOV, finer sampling DFT

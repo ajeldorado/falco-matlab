@@ -130,7 +130,25 @@ switch upper(mp.coro)
             % represents a chromatic vortex FPM
             charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
         end
-        EP4 = propcustom_mft_Pup2Vortex2Pup(EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda), mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));  %--MFTs
+        
+        
+        inVal = 0.3;
+        outVal = 5;
+        switch mp.F3.phaseMaskType
+            case 'vortex'
+                EP4 = propcustom_mft_Pup2Vortex2Pup(EP3, charge, mp.P1.full.Nbeam/2, inVal, outVal, ...
+                    mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda), mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));
+
+            otherwise
+                inputs.type = mp.F3.phaseMaskType;
+                inputs.N = ceil_even(4*mp.P1.full.Nbeam);
+                inputs.charge = charge;
+                inputs.clocking = mp.F3.clocking;
+                inputs.Nsteps = mp.F3.NstepStaircase;
+                fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+                EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU);
+        end
+        
         % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
         if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
         

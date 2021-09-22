@@ -25,10 +25,10 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
     showPlots2debug = false; 
 
     D = 2*apRad;
-    pixres = 4;%samples per lambda/D
+    pixres = 4; % samples per lambda/D in coarse-resolution DFT
     
     [NA, ~] = size(IN);
-    NB = pixres*D; 
+    NB = ceil_even(pixres*D); 
     
     [X, Y] = meshgrid(-NB/2:NB/2-1);
     RHO = sqrt(X.^2 + Y.^2);
