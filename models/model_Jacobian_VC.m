@@ -74,8 +74,8 @@ else
     apodReimaged = ones(NdmPad); 
 end
 
-if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
-if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
+if mp.flagDM1stop; DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
+if mp.flagDM2stop; DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
 
 if any(mp.dm_ind == 1); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad); else; DM1surf = 0; end 
 if any(mp.dm_ind == 2); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad); else; DM2surf = 0; end 
@@ -83,9 +83,23 @@ if any(mp.dm_ind == 2); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad); e
 if mp.useGPU
     pupil = gpuArray(pupil);
     Ein = gpuArray(Ein);
-    if(any(mp.dm_ind==1))
+    if any(mp.dm_ind == 1)
         DM1surf = gpuArray(DM1surf);
     end
+end
+
+%--Minimum FPM resolution for Jacobian calculations (in pixels per lambda/D)
+minPadFacVortex = 8; 
+
+%--Get phase scale factor for the FPM. 
+if numel(mp.F3.VortexCharge) == 1
+    % Single value indicates fully achromatic mask
+    phaseScaleFac = mp.F3.phaseScaleFac;
+else
+    % Passing an array for mp.F3.phaseScaleFac with corresponding
+    % wavelengthsin mp.F3.phaseScaleFacLambdas represents a
+    % chromatic phase FPM.
+    phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -113,13 +127,10 @@ Edm1 = DM1stop .* exp(mirrorFac*2*pi*1j*DM1surf/lambda) .* Edm1; %--E-field leav
 % Propagation: 2 DMs, apodizer, binary-amplitude FPM, LS, and final focal plane
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%--Minimum FPM resolution for Jacobian calculations (in pixels per lambda/D)
-minPadFacVortex = 8; 
-
 %--DM1---------------------------------------------------------
-if(whichDM == 1) 
-    if (mp.flagFiber)
-        if(mp.flagLenslet)
+if whichDM == 1
+    if mp.flagFiber
+        if mp.flagLenslet
             Gmode = zeros(mp.Fend.Nlens, mp.dm1.Nele);
         else
             Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele);
@@ -130,12 +141,6 @@ if(whichDM == 1)
 
     %--Array size for planes P3, F3, and P4
     Nfft1 = 2^(ceil(log2(max([mp.dm1.compact.NdmPad, minPadFacVortex*mp.dm1.compact.Nbox])))); %--Don't crop--but do pad if necessary.
-    
-    if numel(mp.F3.VortexCharge) == 1
-        charge = mp.F3.VortexCharge;
-    else
-        charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
-    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS; %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
@@ -157,8 +162,14 @@ if(whichDM == 1)
             xis = (-(Nxi-1)/2:(Nxi-1)/2)*dxi;
         end
         etas = xis.';
-        
-        vortex = falco_gen_vortex_mask(charge, Nxi);
+                
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nxi;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
     else % Use FFTs
         % Generate central opaque spot
@@ -168,15 +179,22 @@ if(whichDM == 1)
             inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
             inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
             inputs.centering = 'pixel';
-            spot = falco_gen_annular_FPM(inputs);
+            spot = falco_gen_annular_FPM(inputs); clear inputs;
             spot = pad_crop(spot, Nfft1, 'extrapval', 1);
         else
             spot = 1;
         end
         
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nfft1;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+                
         % Generate FPM with fftshift already applied
-        vortex = falco_gen_vortex_mask(charge, Nfft1);
-        fftshiftVortex = fftshift(spot.*vortex);    
+        fftshiftVortex = fftshift(spot.*fpm);    
     end
     
     if any(mp.dm_ind == 2)
@@ -185,7 +203,7 @@ if(whichDM == 1)
         DM2surf = zeros(mp.dm1.compact.NdmPad);
     end
     
-    if(mp.flagDM2stop)
+    if mp.flagDM2stop
         DM2stop = padOrCropEven(DM2stop, mp.dm1.compact.NdmPad);
     else
         DM2stop = ones(mp.dm1.compact.NdmPad);
@@ -197,7 +215,7 @@ if(whichDM == 1)
     %--Propagate each actuator from DM2 through the optical system
     Gindex = 1; % initialize index counter
     for iact = mp.dm1.act_ele(:).'
-        if(any(any(mp.dm1.compact.inf_datacube(:, :, iact))))  %--Only compute for acutators specified for use or for influence functions that are not zeroed out
+        if any(any(mp.dm1.compact.inf_datacube(:, :, iact)))  %--Only compute for acutators specified for use or for influence functions that are not zeroed out
         
             %--x- and y- coordinates of the padded influence function in the full padded pupil
             x_box_AS_ind = mp.dm1.compact.xy_box_lowerLeft_AS(1, iact):mp.dm1.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad1AS-1; % x-indices in pupil arrays for the box
@@ -233,14 +251,14 @@ if(whichDM == 1)
 
                 %--MFT from pupil P3 to FPM
                 EF3inc = rect_mat_pre * dEP3box * rect_mat_post; % MFT to FPM
-                EF3 = vortex .* EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
+                EF3 = fpm .* EF3inc;
                 
                 %--MFT to LS
                 EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);                
                 
             else % Use FFTs to go to/from the vortex
                 %--Re-insert the window around the influence function back into the full beam array.
-                if(isa(dEP2boxEff, 'gpuArray'))
+                if isa(dEP2boxEff, 'gpuArray')
                     EP2eff = gpuArray.zeros(mp.dm1.compact.NdmPad);
                 else
                     EP2eff = zeros(mp.dm1.compact.NdmPad);
@@ -268,8 +286,8 @@ if(whichDM == 1)
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
 
             %--MFT to detector
-            if(mp.flagFiber)
-                if(mp.flagLenslet)
+            if mp.flagFiber
+                if mp.flagLenslet
                     for nlens = 1:mp.Fend.Nlens
                         EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
                         Elenslet = EFend.*mp.Fend.lenslet.mask;
@@ -289,7 +307,7 @@ if(whichDM == 1)
             else    
                 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
-                if(mp.useGPU)
+                if mp.useGPU
                     EFend = gather(EFend);
                 end
             
@@ -310,9 +328,9 @@ if(whichDM == 1)
 end    
 
 %--DM2---------------------------------------------------------
-if(whichDM==2)
-    if(mp.flagFiber)
-        if(mp.flagLenslet)
+if whichDM == 2
+    if mp.flagFiber
+        if mp.flagLenslet
             Gmode = zeros(mp.Fend.Nlens, mp.dm2.Nele);
         else
             Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele);
@@ -323,12 +341,6 @@ if(whichDM==2)
     
     %--Array size for planes P3, F3, and P4
     Nfft2 = 2^(ceil(log2(max([mp.dm2.compact.NdmPad, minPadFacVortex*mp.dm2.compact.Nbox])))); %--Don't crop--but do pad if necessary.
-    
-    if(numel(mp.F3.VortexCharge)==1)
-        charge = mp.F3.VortexCharge;
-    else
-        charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
-    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS; 
@@ -349,8 +361,15 @@ if(whichDM==2)
             xis = (-(Nxi-1)/2:(Nxi-1)/2)*dxi;
         end
         etas = xis.';
-        
-        vortex = falco_gen_vortex_mask(charge, Nxi);
+                
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nxi;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+
     else        
         % Generate central opaque spot
         if mp.F3.VortexSpotDiam > 0
@@ -359,15 +378,22 @@ if(whichDM==2)
             inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
             inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
             inputs.centering = 'pixel';
-            spot = falco_gen_annular_FPM(inputs);
+            spot = falco_gen_annular_FPM(inputs); clear inputs;
             spot = pad_crop(spot, Nfft2, 'extrapval', 1);
         else
             spot = 1;
         end
         
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = Nfft2;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+        
         % Generate FPM with fftshift already applied
-        vortex = falco_gen_vortex_mask(charge, Nfft2);
-        fftshiftVortex = fftshift(spot.*vortex);        
+        fftshiftVortex = fftshift(spot.*fpm);        
     end
     
     apodReimaged = padOrCropEven( apodReimaged, mp.dm2.compact.NdmPad);
@@ -380,8 +406,8 @@ if(whichDM==2)
     
     %--Propagate each actuator from DM2 through the rest of the optical system
     Gindex = 1; % initialize index counter
-    for iact=mp.dm2.act_ele(:).'
-        if(any(any(mp.dm2.compact.inf_datacube(:, :, iact))) ) 
+    for iact = mp.dm2.act_ele(:).'
+        if any(any(mp.dm2.compact.inf_datacube(:, :, iact)))
             
             %--x- and y- coordinates of the padded influence function in the full padded pupil
             x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1, iact):mp.dm2.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
@@ -389,7 +415,7 @@ if(whichDM==2)
 
             dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:, :, iact), NboxPad2AS); %--the padded influence function at DM2
             
-            if(mp.useGPU)
+            if mp.useGPU
                 dEbox = gpuArray(dEbox);
             end
             
@@ -415,14 +441,14 @@ if(whichDM==2)
 
                 %--MFT from pupil P3 to FPM
                 EF3inc = rect_mat_pre * dEP3box * rect_mat_post; % MFT to FPM
-                EF3 = vortex.*EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
+                EF3 = fpm.*EF3inc;
                 
                 %--MFT to LS
                 EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxi, deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);  
                 
             else % Use FFTs to go to/from the vortex
             
-                if(isa(dEP2boxEff, 'gpuArray'))
+                if isa(dEP2boxEff, 'gpuArray')
                     EP2eff = gpuArray.zeros(mp.dm2.compact.NdmPad);
                 else
                     EP2eff = zeros(mp.dm2.compact.NdmPad);
@@ -449,8 +475,8 @@ if(whichDM==2)
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
 
             %--MFT to detector
-            if(mp.flagFiber)
-                if(mp.flagLenslet)
+            if mp.flagFiber
+                if mp.flagLenslet
                     for nlens = 1:mp.Fend.Nlens
                         EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
                         Elenslet = EFend.*mp.Fend.lenslet.mask;

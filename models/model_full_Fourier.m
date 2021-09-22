@@ -120,17 +120,33 @@ switch upper(mp.coro)
         if mp.flagApod == false
             EP3 = pad_crop(EP3, 2^nextpow2(mp.P1.full.Narr)); %--Crop down if there isn't an apodizer mask
         end
-        % Get FPM charge 
-        if(numel(mp.F3.VortexCharge)==1)
-            % single value indicates fully achromatic mask
-            charge = mp.F3.VortexCharge;
+
+        % Get phase scale factor for FPM. 
+        if numel(mp.F3.VortexCharge) == 1
+            % Single value indicates fully achromatic mask
+            phaseScaleFac = mp.F3.phaseScaleFac;
         else
-            % Passing an array for mp.F3.VortexCharge with
-            % corresponding wavelengths mp.F3.VortexCharge_lambdas
-            % represents a chromatic vortex FPM
-            charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
+            % Passing an array for mp.F3.phaseScaleFac with corresponding
+            % wavelengthsin mp.F3.phaseScaleFacLambdas represents a
+            % chromatic phase FPM.
+            phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
         end
-        EP4 = propcustom_mft_Pup2Vortex2Pup(EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda), mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));  %--MFTs
+        
+        inVal = 0.3;
+        outVal = 5;
+        spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
+        spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
+        pixPerLamD = 4;
+        
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+        EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
+        
         % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
         if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
         
