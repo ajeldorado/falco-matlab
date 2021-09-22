@@ -16,6 +16,8 @@
 %   - inputs.charge: number of 2-pi phase progressions over the 360
 %     degrees of the mask). Must be an integer.
 %   - inputs.N: width and height of the output array
+%   - inputs.phaseScaleFac: Factor to apply uniformly to the phase.
+%                           Used to add chromaticity.
 %   - inputs.Nsteps: (required for 'staircase') number of steps per
 %                    2*pi radians in the staircase
 %   - inputs.clocking: (optional) clocking of the phase mask in degrees
@@ -34,7 +36,8 @@ function mask = falco_gen_spiral_staircase(inputs)
     % Required inputs
     NarrayFinal = inputs.N;
     Nsteps = inputs.Nsteps;
-    charge = inputs.charge; 
+    charge = inputs.charge;
+    phaseScaleFac = inputs.phaseScaleFac;
 
     % OPTIONAL INPUTS
     centering = 'pixel';  %--Default to pixel centering
@@ -91,6 +94,8 @@ function mask = falco_gen_spiral_staircase(inputs)
     end
 
     mask = mask - (2*pi)/Nsteps; % Set minimum to zero.
+    
+    mask = mask * phaseScaleFac;
 
     mask = pad_crop(mask, NarrayFinal);
 

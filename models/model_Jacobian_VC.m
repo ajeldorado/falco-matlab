@@ -88,6 +88,20 @@ if mp.useGPU
     end
 end
 
+%--Minimum FPM resolution for Jacobian calculations (in pixels per lambda/D)
+minPadFacVortex = 8; 
+
+%--Get phase scale factor for the FPM. 
+if numel(mp.F3.VortexCharge) == 1
+    % Single value indicates fully achromatic mask
+    phaseScaleFac = mp.F3.phaseScaleFac;
+else
+    % Passing an array for mp.F3.phaseScaleFac with corresponding
+    % wavelengthsin mp.F3.phaseScaleFacLambdas represents a
+    % chromatic phase FPM.
+    phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -113,9 +127,6 @@ Edm1 = DM1stop .* exp(mirrorFac*2*pi*1j*DM1surf/lambda) .* Edm1; %--E-field leav
 % Propagation: 2 DMs, apodizer, binary-amplitude FPM, LS, and final focal plane
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%--Minimum FPM resolution for Jacobian calculations (in pixels per lambda/D)
-minPadFacVortex = 8; 
-
 %--DM1---------------------------------------------------------
 if(whichDM == 1) 
     if (mp.flagFiber)
@@ -130,12 +141,6 @@ if(whichDM == 1)
 
     %--Array size for planes P3, F3, and P4
     Nfft1 = 2^(ceil(log2(max([mp.dm1.compact.NdmPad, minPadFacVortex*mp.dm1.compact.Nbox])))); %--Don't crop--but do pad if necessary.
-    
-    if numel(mp.F3.VortexCharge) == 1
-        charge = mp.F3.VortexCharge;
-    else
-        charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
-    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS; %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
@@ -160,7 +165,8 @@ if(whichDM == 1)
                 
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nxi;
-        inputs.charge = charge;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
@@ -181,7 +187,8 @@ if(whichDM == 1)
         
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nfft1;
-        inputs.charge = charge;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
@@ -335,12 +342,6 @@ if(whichDM==2)
     %--Array size for planes P3, F3, and P4
     Nfft2 = 2^(ceil(log2(max([mp.dm2.compact.NdmPad, minPadFacVortex*mp.dm2.compact.Nbox])))); %--Don't crop--but do pad if necessary.
     
-    if(numel(mp.F3.VortexCharge)==1)
-        charge = mp.F3.VortexCharge;
-    else
-        charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
-    end
-    
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS; 
     mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
@@ -363,7 +364,8 @@ if(whichDM==2)
                 
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nxi;
-        inputs.charge = charge;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
@@ -384,7 +386,8 @@ if(whichDM==2)
         
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nfft2;
-        inputs.charge = charge;
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;

@@ -17,6 +17,8 @@
 %   - inputs.charge: number of 2-pi phase progressions over the 360
 %     degrees of the mask)
 %   - inputs.N: width and height of the output array
+%   - inputs.phaseScaleFac: Factor to apply uniformly to the phase.
+%                           Used to add chromaticity.
 %   - inputs.Nsteps: (required for 'staircase') number of steps per
 %                    2*pi radians in the staircase
 %   - inputs.clocking: (optional) clocking of the phase mask in degrees
@@ -36,6 +38,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     maskType = inputs.type; 
     charge = inputs.charge; 
     N = inputs.N;
+    phaseScaleFac = inputs.phaseScaleFac;
 
     % OPTIONAL INPUTS
     centering = 'pixel';  %--Default to pixel centering
@@ -47,6 +50,9 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     if(isfield(inputs, 'yOffset')); yOffset = inputs.yOffset; end % [pixels]
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
 
+    % Input checks
+    check_scalar_integer(charge);
+    
     % make coordinate system 
     if strcmpi(centering, 'pixel')
         xs = -N/2:(N/2-1);
@@ -72,20 +78,20 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     % make mask 
     switch lower(maskType)
         case 'vortex'
-            mask = exp(1j*charge*THETA);
+            mask = exp(phaseScaleFac*1j*charge*THETA);
 
         case{'cos'}
             z_m = besselzero(0,1);
             z_m = z_m(end);
-            mask = exp(1j*z_m*cos(charge*THETA));
+            mask = exp(phaseScaleFac*1j*z_m*cos(charge*THETA));
 
         case 'sectors'
-            mask = exp(1j*pi/2*sign(cos(charge*THETA)));
+            mask = exp(phaseScaleFac*1j*pi/2*sign(cos(charge*THETA)));
 
         case 'staircase'
             Nsteps = inputs.Nsteps;
-            mask = exp(1j*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi);
-%             mask = exp(1j*falco_gen_spiral_staircase(inputs));
+            mask = exp(phaseScaleFac*1j*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi);
+            % mask = exp(1j*falco_gen_spiral_staircase(inputs)); % Uses antialiased edges.
 
         otherwise
             validOptions = "Valid options are 'vortex', 'cos', 'sectors', and 'staircase.";

@@ -9,12 +9,14 @@
 
 clear
 
+% Required Inputs
 inputs.type = 'staircase';  % Options are 'vortex', 'cos', 'sectors', and 'staircase'.
 inputs.N = 200; % pixels across the 
 inputs.charge = 4; % charge of the mask (makes most sense for vortex)
 inputs.Nsteps = 6; % number of steps per 2*pi radians. For 'staircase' only
+inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
 
-%--Optional Inputs
+% % Optional Inputs
 % inputs.centering = 'pixel';
 % inputs.xOffset = 5.5; % [pixels]
 % inputs.yOffset = -10; % [pixels]
@@ -36,6 +38,11 @@ inputs.yOffset = -14.5; % [pixels]
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(3); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
+% Generate staircase with PROPER to get non-binary edges
+phase = falco_gen_spiral_staircase(inputs);
+mask = exp(1j*phase);
+figure(13); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+
 %%
 clear inputs
 
@@ -43,6 +50,7 @@ clear inputs
 inputs.type = 'vortex';  % 'vortex', 'cos', 'sectors', and 'staircase.'
 inputs.N = 200; % pixels across the 
 inputs.charge = 6; % charge of the mask (makes most sense for vortex)
+inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(4); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
