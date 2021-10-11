@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Check if a variable is an real-valued scalar integer.
+% Check if a variable is a finite, real-valued scalar.
 %
 % INPUTS
 % x: variable to check
@@ -14,26 +14,22 @@
 % None
 %
 
-function check_scalar_integer(x)
+function check_real_scalar(x)
     
     if ~isnumeric(x)
-        error('check_scalar_integer:InputMustBeNumeric', 'input value is not numeric')
+        error('check_real_scalar:InputMustBeNumeric', 'input value is not numeric')
     end
     
     if numel(x) ~= 1
-        error('check_scalar_integer:InputMustBeScalar', 'input is not a scalar')
+        error('check_real_scalar:InputMustBeScalar', 'input is not a scalar')
     end
     
     if isinf(x)
-        error('check_scalar_integer:InputMustBeFinite', 'input is infinite')
+        error('check_real_scalar:InputMustBeFinite', 'input is infinite')
     end
     
     if ~isreal(x)
-        error('check_scalar_integer:InputMustBeReal', 'input is not real-valued')
-    end
-    
-    if x ~= floor(x)
-        error('check_scalar_integer:InputMustBeIntegral', 'input is not a integer')
+        error('check_real_scalar:InputMustBeReal', 'input is not real-valued')
     end
     
 end

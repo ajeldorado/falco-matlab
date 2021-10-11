@@ -9,10 +9,11 @@ function [mp] = Parameters()
 
 % In this section we define and add necessary paths to FALCO.
 mp.path.falco = fileparts(fileparts(fileparts(fileparts(mfilename('fullpath'))))); % falco-matlab directory;
-addpath(genpath([mp.path.falco filesep 'setup']))
-addpath(genpath([mp.path.falco filesep 'lib']))
 addpath(genpath([mp.path.falco filesep 'config']))
+addpath(genpath([mp.path.falco filesep 'lib']))
 addpath(genpath([mp.path.falco filesep 'lib_external']))
+addpath(genpath([mp.path.falco filesep 'models']))
+addpath(genpath([mp.path.falco filesep 'setup']))
 
 %% Load default model parameters
 %
