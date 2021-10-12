@@ -13,6 +13,7 @@ mp.thput_vec = zeros(mp.Nitr+1, 1);
 
 for Itr = 1:mp.Nitr
     
+    
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
     
@@ -275,7 +276,7 @@ function out = store_intensities(mp, out, ev, Itr)
         out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
         
         out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
-        out.normIntModScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+        out.normIntUnModScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
     end
     
 end

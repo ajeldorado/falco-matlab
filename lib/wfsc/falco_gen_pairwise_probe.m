@@ -38,7 +38,7 @@
 
 function probeCmd = falco_gen_pairwise_probe(mp, InormDes, phaseShift, starIndex)
 
-if mp.est.probe.xiOffset(starIndex) == 0 && mp.est.probe.xiOffset(starIndex) == 0
+if mp.est.probe.xiOffset(starIndex) == 0 && mp.est.probe.etaOffset(starIndex) == 0
     error("Probed region's center must be offset from the star location.")
 end
 
@@ -60,8 +60,8 @@ ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.yOffset)/Nact;
 lamDIntoAct = Nact / NactPerBeam;
 xiOffset = mp.est.probe.xiOffset(starIndex) * lamDIntoAct; 
 etaOffset = mp.est.probe.etaOffset(starIndex) * lamDIntoAct;
-width = mp.probe.est.width(starIndex) * lamDIntoAct;
-height = mp.probe.est.height(starIndex) * lamDIntoAct;
+width = mp.est.probe.width(starIndex) * lamDIntoAct;
+height = mp.est.probe.height(starIndex) * lamDIntoAct;
 
 maxSpatialFreq = Nact / 2;
 if (xiOffset + width/2) > maxSpatialFreq || (etaOffset + height/2) > maxSpatialFreq
