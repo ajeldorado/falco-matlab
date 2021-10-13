@@ -24,32 +24,32 @@ classdef TestCheckScalarInteger < matlab.unittest.TestCase
         
         function testNonNumeric(testCase)
             var = 'asdf';
-            identifier = 'scalar_integer:InputMustBeNumeric';
+            identifier = 'ValueError:InputMustBeNumeric';
             verifyError(testCase, @() Check.scalar_integer(var), identifier)
         end
         function testEmpty(testCase)
             var = [];
-            identifier = 'scalar_integer:InputMustBeScalar';
+            identifier = 'ValueError:InputMustBeScalar';
             verifyError(testCase, @() Check.scalar_integer(var), identifier)
         end
         function testArray(testCase)
             var = eye(2);
-            identifier = 'scalar_integer:InputMustBeScalar';
+            identifier = 'ValueError:InputMustBeScalar';
             verifyError(testCase, @() Check.scalar_integer(var), identifier)
         end
         function testFinite(testCase)
             var = -Inf;
-            identifier = 'scalar_integer:InputMustBeFinite';
+            identifier = 'ValueError:InputMustBeFinite';
             verifyError(testCase, @() Check.scalar_integer(var), identifier)
         end
         function testReal(testCase)
             var = 1 + 2j;
-            identifier = 'scalar_integer:InputMustBeReal';
+            identifier = 'ValueError:InputMustBeReal';
             verifyError(testCase, @() Check.scalar_integer(var), identifier)
         end
         function testInteger(testCase)
             var = 1.2;
-            identifier = 'scalar_integer:InputMustBeIntegral';
+            identifier = 'ValueError:InputMustBeIntegral';
             verifyError(testCase, @() Check.scalar_integer(var), identifier)
         end
         

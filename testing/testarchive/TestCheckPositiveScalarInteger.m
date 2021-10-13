@@ -24,37 +24,37 @@ classdef TestCheckPositiveScalarInteger < matlab.unittest.TestCase
         
         function testNonNumeric(testCase)
             var = 'asdf';
-            identifier = 'positive_scalar_integer:InputMustBeNumeric';
+            identifier = 'ValueError:InputMustBeNumeric';
             verifyError(testCase, @() Check.positive_scalar_integer(var), identifier)
         end
         function testEmpty(testCase)
             var = [];
-            identifier = 'positive_scalar_integer:InputMustBeScalar';
+            identifier = 'ValueError:InputMustBeScalar';
             verifyError(testCase, @() Check.positive_scalar_integer(var), identifier)
         end
         function testArray(testCase)
             var = eye(2);
-            identifier = 'positive_scalar_integer:InputMustBeScalar';
+            identifier = 'ValueError:InputMustBeScalar';
             verifyError(testCase, @() Check.positive_scalar_integer(var), identifier)
         end
         function testFinite(testCase)
             var = -Inf;
-            identifier = 'positive_scalar_integer:InputMustBeFinite';
+            identifier = 'ValueError:InputMustBeFinite';
             verifyError(testCase, @() Check.positive_scalar_integer(var), identifier)
         end
         function testReal(testCase)
             var = 1 + 2j;
-            identifier = 'positive_scalar_integer:InputMustBeReal';
+            identifier = 'ValueError:InputMustBeReal';
             verifyError(testCase, @() Check.positive_scalar_integer(var), identifier)
         end
         function testInteger(testCase)
             var = 1.2;
-            identifier = 'positive_scalar_integer:InputMustBeIntegral';
+            identifier = 'ValueError:InputMustBeIntegral';
             verifyError(testCase, @() Check.positive_scalar_integer(var), identifier)
         end
         function testPositive(testCase)
             var = 0;
-            identifier = 'positive_scalar_integer:InputMustBePositive';
+            identifier = 'ValueError:InputMustBePositive';
             verifyError(testCase, @() Check.positive_scalar_integer(var), identifier)
         end
         

@@ -24,27 +24,22 @@ classdef TestCheckRealScalar < matlab.unittest.TestCase
                 
         function testNonNumeric(testCase)
             var = 'asdf';
-            identifier = 'real_scalar:InputMustBeNumeric';
+            identifier = 'ValueError:InputMustBeNumeric';
             verifyError(testCase, @() Check.real_scalar(var), identifier)
         end
         function testEmpty(testCase)
             var = [];
-            identifier = 'real_scalar:InputMustBeScalar';
+            identifier = 'ValueError:InputMustBeScalar';
             verifyError(testCase, @() Check.real_scalar(var), identifier)
         end
         function testArray(testCase)
             var = eye(2);
-            identifier = 'real_scalar:InputMustBeScalar';
-            verifyError(testCase, @() Check.real_scalar(var), identifier)
-        end
-        function testFinite(testCase)
-            var = -Inf;
-            identifier = 'real_scalar:InputMustBeFinite';
+            identifier = 'ValueError:InputMustBeScalar';
             verifyError(testCase, @() Check.real_scalar(var), identifier)
         end
         function testReal(testCase)
             var = 1 + 2j;
-            identifier = 'real_scalar:InputMustBeReal';
+            identifier = 'ValueError:InputMustBeReal';
             verifyError(testCase, @() Check.real_scalar(var), identifier)
         end
         

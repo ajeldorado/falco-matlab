@@ -24,27 +24,27 @@ classdef TestCheckTwoDimSquareArray < matlab.unittest.TestCase
         
         function testNonNumeric(testCase)
             var = 'asdf';
-            identifier = 'two_dim_square_array:InputMustBeNumeric';
+            identifier = 'ValueError:InputMustBeNumeric';
             verifyError(testCase, @() Check.two_dim_square_array(var), identifier)
         end
         function testEmpty(testCase)
             var = [];
-            identifier = 'two_dim_square_array:InputMustBeArray';
+            identifier = 'ValueError:InputMustBeArray';
             verifyError(testCase, @() Check.two_dim_square_array(var), identifier)
         end
         function testScalar(testCase)
             var = 2.5;
-            identifier = 'two_dim_square_array:InputMustBeArray';
+            identifier = 'ValueError:InputMustBeArray';
             verifyError(testCase, @() Check.two_dim_square_array(var), identifier)
         end
         function testTwoDim(testCase)
             var = ones(3, 2, 4);
-            identifier = 'two_dim_square_array:InputMustBeTwoDim';
+            identifier = 'ValueError:InputMustBeTwoDim';
             verifyError(testCase, @() Check.two_dim_square_array(var), identifier)
         end
         function testSquare(testCase)
             var = ones(3, 2);
-            identifier = 'two_dim_square_array:InputMustBeSquare';
+            identifier = 'ValueError:InputMustBeSquare';
             verifyError(testCase, @() Check.two_dim_square_array(var), identifier)
         end
         
