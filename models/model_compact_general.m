@@ -131,26 +131,39 @@ if flagUseFPM
     switch upper(mp.coro)
 
         case{'VORTEX', 'VC'}
-            % Get or compute FPM charge.
-            % Single value indicates fully achromatic mask.
-            % Passing an array for mp.F3.VortexCharge with
-            % corresponding wavelengths mp.F3.VortexCharge_lambdas
-            % represents a chromatic vortex FPM
+
+            % Get phase scale factor for the FPM. 
             if numel(mp.F3.VortexCharge) == 1
-                charge = mp.F3.VortexCharge;
+                % Single value indicates fully achromatic mask
+                phaseScaleFac = mp.F3.phaseScaleFac;
             else
-                charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
+                % Passing an array for mp.F3.phaseScaleFac with corresponding
+                % wavelengthsin mp.F3.phaseScaleFacLambdas represents a
+                % chromatic phase FPM.
+                phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
             end
-            EP4 = propcustom_mft_Pup2Vortex2Pup( EP3, charge, mp.P1.compact.Nbeam/2, 0.3, 5, ...
-                mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda), mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));
+            
+            inVal = 0.3;
+            outVal = 5;
+            spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
+            spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
+            pixPerLamD = mp.F3.compact.res;
+            
+            inputs.type = mp.F3.phaseMaskType;
+            inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);
+            inputs.charge = mp.F3.VortexCharge;
+            inputs.phaseScaleFac = phaseScaleFac;
+            inputs.clocking = mp.F3.clocking;
+            inputs.Nsteps = mp.F3.NstepStaircase;
+            fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+            EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
+            
             % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
             if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
 
             % Resize beam if Lyot plane has different resolution
             if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
                 N1 = length(EP4);
-%                 mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
-%                 N4 = ceil_even(mag*N1);
                 N4 = ceil_even(1.1*mp.P4.compact.Narr);
                 if strcmpi(mp.centering, 'pixel')
                     x1 = (-N1/2:(N1/2-1))/mp.P1.compact.Nbeam;
@@ -240,12 +253,10 @@ else % No FPM in beam path, so relay directly from P3 to P4.
     
     EP4 = propcustom_relay(EP3, NrelayFactor*mp.Nrelay3to4, mp.centering);
     EP4 = transOuterFPM * EP4;
-%     figure(551); imagesc(abs(EP4)); axis xy equal tight; colorbar; drawnow;
+
     % Interpolate beam if Lyot plane has different resolution
     if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
         N1 = length(EP4);
-%         mag = mp.P4.compact.Nbeam / mp.P1.compact.Nbeam;
-%         N4 = ceil_even(mag*N1);
         N4 = ceil_even(1.1*mp.P4.compact.Narr);
         if strcmpi(mp.centering, 'pixel')
             x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;

@@ -125,8 +125,8 @@ for iSubband = 1:mp.Nsbp
 
     %% Measure current contrast level average, and on each side of Image Plane
     % Reset DM commands to the unprobed state:
-    mp.dm1.V = DM1Vnom;
-    mp.dm2.V = DM2Vnom;
+    if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom); end
+    if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom); end
     
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     Iplus  = zeros([mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
@@ -187,8 +187,11 @@ for iSubband = 1:mp.Nsbp
             dDM1Vprobe = 0;        
             dDM2Vprobe = probeCmd ./ mp.dm2.VtoH; % Now in volts
         end
-        if whichDM == 1;  mp.dm1.V = DM1Vnom + dDM1Vprobe;  end
-        if whichDM == 2;  mp.dm2.V = DM2Vnom + dDM2Vprobe;  end
+        if whichDM == 1
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom + dDM1Vprobe); 
+        elseif whichDM == 2
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom + dDM2Vprobe);
+        end        
 
         %--Take probed image
         if mp.flagFiber
@@ -262,9 +265,10 @@ for iSubband = 1:mp.Nsbp
     else %--Get the probe phase from the model and the probe amplitude from the measurements
 
         % For unprobed field based on model:
-        if any(mp.dm_ind == 1); mp.dm1.V = DM1Vnom; end
-        if any(mp.dm_ind == 2); mp.dm2.V = DM2Vnom; end
-        if(mp.flagFiber)
+        if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom); end
+        if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom); end
+
+        if mp.flagFiber
             [~, E0] = model_compact(mp, modvar);
         else
             E0 = model_compact(mp, modvar);
@@ -276,8 +280,11 @@ for iSubband = 1:mp.Nsbp
         Eminus = zeros(size(Iminus));
         for iProbe=1:Npairs
             % For plus probes:
-            if whichDM == 1; mp.dm1.V = DM1Vplus(:, :, iProbe); end 
-            if whichDM == 2; mp.dm2.V = DM2Vplus(:, :, iProbe); end
+            if whichDM == 1
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vplus(:, :, iProbe));
+            elseif whichDM == 2
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vplus(:, :, iProbe));
+            end
             if(mp.flagFiber)
                 [~, Etemp] = model_compact(mp, modvar);
             else
@@ -285,9 +292,12 @@ for iSubband = 1:mp.Nsbp
             end
             Eplus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             % For minus probes:
-            if whichDM == 1;  mp.dm1.V = DM1Vminus(:, :, iProbe); end 
-            if whichDM == 2;  mp.dm2.V = DM2Vminus(:, :, iProbe); end
-            if(mp.flagFiber)
+            if whichDM == 1
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vminus(:, :, iProbe));
+            elseif whichDM == 2
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vminus(:, :, iProbe));
+            end
+            if mp.flagFiber
                 [~, Etemp] = model_compact(mp, modvar);
             else
                 Etemp = model_compact(mp, modvar);
@@ -384,8 +394,8 @@ if strcmpi(mp.estimator, 'pwp-kf') && (ev.Itr >= mp.est.ItrStartKF)
         % difference the output of model_compact rather than using the
         % Jacobian.
         %--Previous unprobed field based on model:
-        if whichDM == 1;  mp.dm1.V = DM1Vnom - mp.dm1.dV;  end
-        if whichDM == 2;  mp.dm2.V = DM2Vnom - mp.dm2.dV;  end
+        if whichDM == 1;  mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom - mp.dm1.dV); end
+        if whichDM == 2;  mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom - mp.dm2.dV); end
         if mp.flagFiber
             [~, Eprev] = model_compact(mp, modvar);
         else

@@ -55,6 +55,22 @@ if(any(mp.dm_ind==9))
     end
 end
 
+%--Combine the delta command with the previous command
+if(any(mp.dm_ind==1));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, cvar.DM1Vnom + dDM.dDM1V);  end
+if(any(mp.dm_ind==2));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, cvar.DM2Vnom + dDM.dDM2V);  end
+if(any(mp.dm_ind==3));  mp.dm3.V = cvar.DM3Vnom + dDM.dDM3V;  end
+if(any(mp.dm_ind==4));  mp.dm4.V = cvar.DM4Vnom + dDM.dDM4V;  end
+if(any(mp.dm_ind==5));  mp.dm5.V = cvar.DM5Vnom + dDM.dDM5V;  end
+if(any(mp.dm_ind==6));  mp.dm6.V = cvar.DM6Vnom + dDM.dDM6V;  end
+if(any(mp.dm_ind==7));  mp.dm7.V = cvar.DM7Vnom + dDM.dDM7V;  end
+if(any(mp.dm_ind==8));  mp.dm8.V = cvar.DM8Vnom + dDM.dDM8V;  end
+if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
+
+
+% Re-compute delta V for DM1 and DM2 in case constraints changed them
+dDM.dDM1V = mp.dm1.V - cvar.DM1Vnom;
+dDM.dDM2V = mp.dm2.V - cvar.DM2Vnom;
+
 if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end % Store the delta DM command
 if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end % Store the delta DM command
 if(any(mp.dm_ind==3));  mp.dm3.dV = dDM.dDM3V;  end % Store the delta DM command
@@ -65,15 +81,5 @@ if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end % Store the delta DM command
 if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end % Store the delta DM command
 if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end % Store the delta DM command
 
-%--Combine the delta command with the previous command
-if(any(mp.dm_ind==1));  mp.dm1.V = cvar.DM1Vnom + dDM.dDM1V;  end
-if(any(mp.dm_ind==2));  mp.dm2.V = cvar.DM2Vnom + dDM.dDM2V;  end
-if(any(mp.dm_ind==3));  mp.dm3.V = cvar.DM3Vnom + dDM.dDM3V;  end
-if(any(mp.dm_ind==4));  mp.dm4.V = cvar.DM4Vnom + dDM.dDM4V;  end
-if(any(mp.dm_ind==5));  mp.dm5.V = cvar.DM5Vnom + dDM.dDM5V;  end
-if(any(mp.dm_ind==6));  mp.dm6.V = cvar.DM6Vnom + dDM.dDM6V;  end
-if(any(mp.dm_ind==7));  mp.dm7.V = cvar.DM7Vnom + dDM.dDM7V;  end
-if(any(mp.dm_ind==8));  mp.dm8.V = cvar.DM8Vnom + dDM.dDM8V;  end
-if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
 
 end %--END OF FUNCTION

@@ -276,7 +276,7 @@ function out = store_intensities(mp, out, ev, Itr)
         out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
         
         out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
-        out.normIntUnModScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+        out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
     end
     
 end

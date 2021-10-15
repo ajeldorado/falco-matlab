@@ -29,8 +29,8 @@
 % in focal plane. Units of lambda/D.
 % mp.est.probe.etaOffset : eta (horizontal) offset of probed region's
 % center in focal plane. Units of lambda/D.
-% mp.probe.est.width : Width of probed rectangular region. Units of lambda/D.
-% mp.probe.est.height : Height of probed rectangular region. Units of lambda/D. 
+% mp.est.probe.width : Width of probed rectangular region. Units of lambda/D.
+% mp.est.probe.height : Height of probed rectangular region. Units of lambda/D. 
 %
 % RETURNS
 % -------

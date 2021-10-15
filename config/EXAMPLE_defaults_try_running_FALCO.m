@@ -264,3 +264,6 @@ mp.P4.compact.mask = falco_gen_pupil_Simple(inputs);
 %% Vortex Specific Values %%
 
 mp.F3.VortexCharge = 6; %--Charge of the vortex mask
+
+mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+mp.F3.full.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m

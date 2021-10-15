@@ -77,14 +77,13 @@ classdef TestConfigureDarkHole < matlab.unittest.TestCase
             mp.Fend.corr.Rout  = [5, 5];  % outer radius of dark hole correction region [lambda0/D]
             mp.Fend.corr.ang  = [150, 180];  % angular opening of dark hole correction region [degrees]
             mp.Fend.score = mp.Fend.corr;
+            mp.Fend.FOV = 30;
             
             mp.centering = 'pixel';
             mp.Fend.sides = {'lr', 'lr'};
             mp.Fend.shape = {'circle', 'square'};
             mp.Fend.res = 10;
             mp.Fend.xiOffset = [0, 20];
-%             mp.Fend.xiFOV = 30;
-%             mp.Fend.etaFOV = 30;
             
             mp.Fend.eval.res = 20;
             mp.flagFiber = false;
