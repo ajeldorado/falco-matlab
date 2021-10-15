@@ -59,6 +59,29 @@ end
 
 heightMap = falco_calc_act_height_from_voltage(dm);
 
+if isfield(dm, 'orientation')
+    switch lower(dm.orientation)
+        case 'rot0'
+            % no change
+        case 'rot90'
+            heightMap = rot90(heightMap, 1);
+        case 'rot180'
+            heightMap = rot90(heightMap, 2);
+        case 'rot270'
+            heightMap = rot90(heightMap, 3);
+        case 'flipxrot0'
+            heightMap = flipx(heightMap);
+        case 'flipxrot90'
+            heightMap = rot90(flipx(heightMap), 1);
+        case 'flipxrot180'
+            heightMap = rot90(flipx(heightMap), 2);
+        case 'flipxrot270'
+            heightMap = rot90(flipx(heightMap), 3);
+        otherwise
+            error('invalid value of dm.orientation');
+    end
+end
+
 %--Generate the DM surface
 [~, DMsurf] = propcustom_dm(bm, heightMap, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,...
     'XTILT', dm.xtilt, 'YTILT', dm.ytilt, 'ZTILT', dm.zrot,orderOfOps, ...
