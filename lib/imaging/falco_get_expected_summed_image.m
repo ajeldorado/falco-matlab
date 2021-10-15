@@ -35,8 +35,8 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
     end
     
     %--Revert to the previous DM commands
-    if(any(mp.dm_ind==1));  mp.dm1.V = mp.dm1.V - mp.dm1.dV;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = mp.dm2.V - mp.dm2.dV;  end
+    if(any(mp.dm_ind==1));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V - mp.dm1.dV);  end
+    if(any(mp.dm_ind==2));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V - mp.dm2.dV);  end
     if(any(mp.dm_ind==3));  mp.dm3.V = mp.dm3.V - mp.dm3.dV;  end
     if(any(mp.dm_ind==4));  mp.dm4.V = mp.dm4.V - mp.dm4.dV;  end
     if(any(mp.dm_ind==5));  mp.dm5.V = mp.dm5.V - mp.dm5.dV;  end

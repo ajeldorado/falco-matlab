@@ -51,7 +51,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
 
     % Input checks
-    check_scalar_integer(charge);
+    Check.scalar_integer(charge);
     
     % make coordinate system 
     if strcmpi(centering, 'pixel')

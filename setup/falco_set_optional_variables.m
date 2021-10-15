@@ -111,32 +111,35 @@ if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 
 %--Deformable mirror settings
 if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
-if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = zeros(mp.dm1.Nact, mp.dm1.Nact);  end %--For testbeds. Starting voltage map unseen in FALCO model.
 if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
-if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
-if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of tied actuator pairs. Two indices per row
+%if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if mp.flagSim
-    if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = -1000;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed absolute voltage command
 else
     if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 100;  end %--Max allowed absolute voltage command
 end
+if(isfield(mp.dm1,'dVnbr')==false); mp.dm1.dVnbr = mp.dm1.Vmax; end % max delta voltage between neighboring actuators
+if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = mp.dm1.Vmax/2*ones(mp.dm1.Nact, mp.dm1.Nact);  end  %--Bias voltage map added to DM. Total voltage is mp.dm1.biasMap + mp.dm1.V
 
 if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
-if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = zeros(mp.dm2.Nact, mp.dm2.Nact);  end %--For testbeds. Starting voltage map unseen in FALCO model.
 if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
 if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
-if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+%if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if mp.flagSim
-    if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = -1000;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed absolute voltage command
 else
     if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 100;  end %--Max allowed absolute voltage command
 end
+if(isfield(mp.dm2,'dVnbr')==false); mp.dm2.dVnbr = mp.dm2.Vmax; end % max delta voltage between neighboring actuators
+if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = mp.dm2.Vmax/2*ones(mp.dm2.Nact, mp.dm2.Nact);  end %--Bias voltage map added to DM. Total voltage is mp.dm2.biasMap + mp.dm2.V
+
 
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian

@@ -50,7 +50,7 @@ function mask = falco_gen_spiral_staircase(inputs)
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
 
     % Input checks
-    check_scalar_integer(charge);
+    Check.scalar_integer(charge);
     
     % minimum radius  of circle centered at (x, y) = (xOffset, yOffset) to contain the full array.
     maxOffset = max(abs(xOffset), abs(yOffset));
