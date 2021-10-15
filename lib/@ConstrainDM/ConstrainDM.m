@@ -41,14 +41,7 @@ methods (Static)
         % These expectations will be enforced.
         % 
         % NOTE: this function assumes that the minimum commandable voltage is equal
-        % to the dead actuator voltage == 0V, and this also corresponds to 0x0000 in
-        % the DAC (so exactly the bottom value).  All of these things are true for
-        % CGI in its current implementation, but if this were to be revisited in
-        % another use case where these assumptions are not valid, then the logic here
-        % needs to be revisited.  (In particular, dead actuator voltage < minimum
-        % commandable voltage makes strange edge effects, as does the case where the
-        % voltage corresponding to the DAC value 0x0000 at the lower edge is not 0V
-        % but a dead actuator is.)
+        % to the dead actuator voltage == 0V.
         % 
         % Arguments:
         %  volts: a 2D array of floating-point voltages.  This is the set of voltages
@@ -60,19 +53,15 @@ methods (Static)
         % 
         % Keyword Arguments:
         %  vmax: maximum commandable voltage, in volts.  Floating-point scalar, must
-        %   be > 0. Defaults to 100V, which is the max voltage
-        %   for CGI.
+        %   be > 0.
         %  vlat: maximum allowable voltage differential between laterally-adjacent
-        %   actuators, in volts.  Floating-point scalar > 0.  Defaults to 50V, which
-        %   is the CGI requirement.
+        %   actuators, in volts.  Floating-point scalar > 0.
         %  vdiag: maximum allowable voltage differential between diagonally-adjacent
-        %   actuators, in volts.  Floating-point scalar > 0.  Defaults to 75V, which
-        %   is the CGI requirement.
-        %  vquant: smallest voltage step (1 LSB) which the DME electronics can
+        %   actuators, in volts.  Floating-point scalar > 0.
+        %  vquant: smallest voltage step (1 LSB) which the DM electronics can
         %   produce.  Used to keep the constraints from being broken after EU->DN
         %   conversion. Floating-point scalar >= 0; using 0 is equivalent to not
-        %   accounting for DAC discretization effects at all.  Defaults to 110/2^16,
-        %   the CGI LSB.
+        %   accounting for DAC discretization effects at all.
         %  maxiter: number of times to iterate between smoothing and tying before
         %   giving up.  Smoothing and tying are both convergent and we do not
         %   expect to need this, but it seemed a reasonable safety measure
@@ -152,14 +141,7 @@ methods (Static)
         %     function.
         % 
         %     NOTE: this function assumes that the minimum commandable voltage is equal
-        %     to the dead actuator voltage == 0V, and this also corresponds to 0x0000 in
-        %     the DAC (so exactly the bottom value).  All of these things are true for
-        %     CGI in its current implementation, but if this were to be revisited in
-        %     another use case where these assumptions are not valid, then the logic here
-        %     needs to be revisited.  (In particular, dead actuator voltage < minimum
-        %     commandable voltage makes strange edge effects, as does the case where the
-        %     voltage corresponding to the DAC value 0x0000 at the lower edge is not 0V
-        %     but a dead actuator is.)
+        %     to the dead actuator voltage == 0V.
         % 
         %     Arguments:
         %      dmin: 2D square array of actuator settings to be fixed, in floating-point
@@ -177,9 +159,9 @@ methods (Static)
         %       floating-point volts.  Must be >= 0.
         % 
         %     Keyword Arguments:
-        %      dmflat: 2D array of the same size as dmin, or None. Defines the phase-flat
-        %       voltages for neighbor rule checking.  If None, assumes 0V, consistent
-        %       with unpowered polish (CGI baseline).  Neighbor rule must only be
+        %      dmflat: 2D array of the same size as dmin, or empty. Defines the phase-flat
+        %       voltages for neighbor rule checking.  If empty, assumes 0V, consistent
+        %       with unpowered polish.  Neighbor rule must only be
         %       maintained with respect to a phase-flat array.  dmflat must be <= vmax,
         %       >= vmin at all points.
         % 

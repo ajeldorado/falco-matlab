@@ -147,7 +147,7 @@ if flagUseFPM
             outVal = 5;
             spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
             spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
-            pixPerLamD = 4;
+            pixPerLamD = mp.F3.compact.res;
             
             inputs.type = mp.F3.phaseMaskType;
             inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);

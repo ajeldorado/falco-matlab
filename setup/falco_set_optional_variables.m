@@ -114,7 +114,7 @@ if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type o
 if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = zeros(mp.dm1.Nact, mp.dm1.Nact);  end %--For testbeds. Starting voltage map unseen in FALCO model.
 if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
-if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
+if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of tied actuator pairs. Two indices per row
 if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if mp.flagSim
     if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = -1000;  end %--Min allowed absolute voltage command

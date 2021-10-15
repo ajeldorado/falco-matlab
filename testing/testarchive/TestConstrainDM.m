@@ -1,6 +1,6 @@
-%% Test input checks
+%% Test DM Constraint Functions
 %
-% Unit tests of the methods in the Check class.
+% Unit tests of the methods in the ConstrainDM class.
 %
 classdef TestConstrainDM < matlab.unittest.TestCase
 %% Setup and Teardown Methods
