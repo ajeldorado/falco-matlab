@@ -45,12 +45,12 @@ if(isfield(mp, 'full'))
     if(isfield(mp.full, 'dm1'))
         if(isfield(mp.full.dm1, 'xc'));  mp.dm1.xc = mp.full.dm1.xc;  end % x-center location of DM1 surface [actuator widths]
         if(isfield(mp.full.dm1, 'yc'));  mp.dm1.yc = mp.full.dm1.yc;  end % y-center location of DM1 surface [actuator widths]
-        if(isfield(mp.full.dm1, 'V0'));  mp.dm1.V = mp.dm1.V + mp.full.dm1.V0;  end % Add some extra starting command to the voltages  [volts]
+        if(isfield(mp.full.dm1, 'V0'));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V + mp.full.dm1.V0);  end % Add some extra starting command to the voltages  [volts]
     end
     if(isfield(mp.full, 'dm2'))
         if(isfield(mp.full.dm2, 'xc'));  mp.dm2.xc = mp.full.dm2.xc;  end % x-center location of DM2 surface [actuator widths]
         if(isfield(mp.full.dm2, 'yc'));  mp.dm2.yc = mp.full.dm2.yc;  end % y-center location of DM2 surface [actuator widths]
-        if(isfield(mp.full.dm2, 'V0'));  mp.dm2.V = mp.dm2.V + mp.full.dm2.V0;  end % Add some extra starting command to the voltages  [volts]
+        if(isfield(mp.full.dm2, 'V0'));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V + mp.full.dm2.V0); end % Add some extra starting command to the voltages  [volts]
     end
 end
 

@@ -18,8 +18,8 @@
 function mp = falco_ctrl_update_dm_commands(mp, dDM)
 
     %--Update the DM commands by adding the delta control signal
-    if(any(mp.dm_ind==1));  mp.dm1.V = mp.dm1.V + dDM.dDM1V;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = mp.dm2.V + dDM.dDM2V;  end
+    if(any(mp.dm_ind==1));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V + dDM.dDM1V);  end
+    if(any(mp.dm_ind==2));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V + dDM.dDM2V);  end
     if(any(mp.dm_ind==3));  mp.dm3.V = mp.dm3.V + dDM.dDM3V;  end
     if(any(mp.dm_ind==4));  mp.dm4.V = mp.dm4.V + dDM.dDM4V;  end
     if(any(mp.dm_ind==5));  mp.dm5.V = mp.dm5.V + dDM.dDM5V;  end
