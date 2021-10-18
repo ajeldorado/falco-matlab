@@ -3,16 +3,12 @@
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
-%
-% REVISION HISTORY:
-% --------------
-% Modified on 2019-06-13 by A.J. Riggs from falco_setup_FPM_HLC_3foldZern.m
-% to falco_setup_FPM_HLC_cosine.m
-% Created by A.J. Riggs on 2018-10-01 by extracting material from
-% falco_init_ws.m.
-% ---------------
 
 function mp = falco_setup_FPM_HLC_cosine(mp)
+
+if mp.F3.full.res ~= mp.F3.compact.res
+    error('Resolution must be same in both compact and full models.')
+end
 
 %% DM8 and DM9 (Optimizable FPM) Setup
 
@@ -24,18 +20,17 @@ mp.dm9.compact = mp.dm9;
 
 %% DM9 as Cosine Rings
 
-% <<< DEBUGGING: HARD-CODED VALUES FOR TESTING
-mp.dm9.actres = 5;
-mp.F3.Rin = 2.8;
-mp.F3.compact.res = 100;
-mp.F3.full.res = 50;
-mp.centering = 'pixel';
-mp.dm9.VtoHavg = 1e-9;
-mp.fl = 1;
-mp.lambda0 = 1;
-mp.P2.D = 1;
-% >>>DEBUGGING
-
+% % <<< DEBUGGING: HARD-CODED VALUES FOR TESTING
+% % mp.dm9.actres = 5;
+% % mp.F3.Rin = 2.8;
+% mp.F3.compact.res = 20;
+% mp.F3.full.res = 20;
+% % mp.centering = 'pixel';
+% mp.dm9.VtoHavg = 1e-9;
+% % mp.fl = 1;
+% % mp.lambda0 = 1;
+% % mp.P2.D = 1;
+% % >>>DEBUGGING
 
 %--Pixel size [meters]
 mp.dm9.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.full.res; % width of a pixel at the FPM in the full model (meters)
@@ -43,13 +38,14 @@ mp.dm9.compact.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.compact.res; % width of a 
 
 
 drCos = 1/mp.dm9.actres; %--Width and double-separation of the cosine rings [lambda0/D]
-mp.dm9.NactTotal = ceil(2*mp.dm9.actres*mp.F3.Rin);
+Nrad = ceil(2*mp.dm9.actres*mp.F3.Rin); %--number of ring actuators
 
 %--Generate datacube of influence functions, which are rings with radial cosine profile
 %--Compact model
-NbeamCompact = mp.F3.compact.res*mp.F3.Rin*2;
 % mp.dm9.compact.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamCompact,mp.dm9.maxRadialOrder,mp.centering,'SymmAxis','y');
 mp.dm9.compact.NdmPad = ceil_even(1+2*mp.F3.Rin*mp.F3.compact.res);% size(mp.dm9.compact.inf_datacube,1);
+NbeamCompact = mp.dm9.compact.NdmPad;%mp.F3.compact.res*mp.F3.Rin*2;
+mp.dm9.NdmPad = NbeamCompact;
 mp.dm9.compact.Nbox = mp.dm9.compact.NdmPad; %--the modes take up the full array.
 %--Normalized coordinates: Compact model
 if(strcmpi(mp.centering,'pixel')  ) 
@@ -59,7 +55,6 @@ else
 end
 [Xc,Yc] = meshgrid(xc);
 Rc = sqrt(Xc.^2 + Yc.^2);
-mp.dm9.compact.inf_datacube = zeros(mp.dm9.compact.NdmPad,mp.dm9.compact.NdmPad,mp.dm9.NactTotal);
 
 hg_expon = 44; %--Found empirically
 apRad = mp.F3.Rin/(mp.F3.Rin+0.1); %--Found empirically
@@ -68,8 +63,28 @@ mask = Rc<=mp.F3.Rin;
 windowFull = mask.*exp(-(Rc/mp.F3.Rin/(apRad*OD)).^hg_expon);
 
 drSep = drCos/2;
+max_azimSize = mp.max_azimSize_dm9;%um (5)
+pow_arr = (2:2:60)*6;
+numdiv = 2;
+count_act = 0;
+start_rad = floor(mp.dm9.actres/2)+1;
+%
+% Here we're just counting the number of actuators
+%
+for ri=start_rad:Nrad
+    rMin = drSep*(ri - 1);
+    rMax = drSep*(ri + 1);
+    numdiv0 = 2*pi*rMin/max_azimSize;
+    numdiv = (numdiv0-mod(numdiv0,3))+3;
+
+    numact_per_rad = numdiv/3;
+    count_act = count_act + numact_per_rad*2;
+end
+mp.dm9.NactTotal = Nrad + count_act;
+mp.dm9.compact.inf_datacube = zeros(mp.dm9.compact.NdmPad,mp.dm9.compact.NdmPad,mp.dm9.NactTotal);
+
 %--Compute the ring influence functions
-for ri = 1:mp.dm9.NactTotal
+for ri = 1:Nrad
     modeTemp = windowFull.*(1+(-1)^(mod(ri+1,2))*cos(2*pi*(Rc*mp.dm9.actres-0.5)))/2;
     rMin = drSep*(ri - 1);
     rMax = drSep*(ri + 1);
@@ -80,30 +95,93 @@ for ri = 1:mp.dm9.NactTotal
     end
     modeTemp(Rc>rMax) = 0;
     mp.dm9.compact.inf_datacube(:,:,ri) = modeTemp;
-    figure(10); imagesc(xc,xc,mp.dm9.compact.inf_datacube(:,:,ri)); axis xy equal tight; colorbar; drawnow;
-    figure(11); plot(xc,mp.dm9.compact.inf_datacube(:,mp.dm9.compact.NdmPad/2+1,ri)); xlim([0,mp.F3.Rin]); drawnow;
-    pause(0.1);
+%     figure(10); imagesc(xc,xc,mp.dm9.compact.inf_datacube(:,:,ri)); axis xy equal tight; colorbar; drawnow;
+%     figure(11); plot(xc,mp.dm9.compact.inf_datacube(:,mp.dm9.compact.NdmPad/2+1,ri)); xlim([0,mp.F3.Rin]); drawnow;
+%     pause(0.1);
 end
 figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
 
+% Compute sine basis
+beamRad = NbeamCompact/2;
+[X,Y] = meshgrid(-beamRad:beamRad-1,-beamRad:beamRad-1);
+[THETA0,~] = cart2pol(double(X),double(Y));
+numdiv = 2;
+count = 1;
+for ri=start_rad:Nrad
+    modeTemp = windowFull.*(1+(-1)^(mod(ri+1,2))*cos(2*pi*(Rc*mp.dm9.actres-0.5)))/2;
+    rMin = drSep*(ri - 1);
+    rMax = drSep*(ri + 1);
+    if(ri==1) %--Fill in the center
+        modeTemp(Rc<drSep) = 1; 
+    else
+        modeTemp(Rc<rMin) = 0;
+    end
+    modeTemp(Rc>rMax) = 0;
+    % Choose number of lobes
+    numdiv0 = 2*pi*rMin/max_azimSize;
+    numdiv = (numdiv0-mod(numdiv0,3))+3;
 
 
-% for ri = 1:mp.dm9.NactTotal/2   
-%     Rcenter = drCos*(ri - 0.25);
-%     modeTemp = windowFull.*(1+cos(2*pi.*(Rc*mp.dm9.actres-1/2)));
-%     rMin = drCos*(ri - 1.);
-%     rMax = drCos*(ri - 0);
-%     modeTemp(Rc<rMin) = 0;
-%     modeTemp(Rc>rMax) = 0;
-%     mp.dm9.compact.inf_datacube(:,:,ri) = modeTemp;
-%     figure(10); imagesc(xc,xc,mp.dm9.compact.inf_datacube(:,:,ri)); axis xy equal tight; colorbar; drawnow;
-% %     figure(11); plot(xc,mp.dm9.compact.inf_datacube(:,mp.dm9.compact.NdmPad/2+1,ri)); xlim([0,mp.F3.Rin]); drawnow;
-%     pause(0.1);
-% end
-% 
-%     figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
+    dth = 2*pi/numdiv;
+    ang_mat = linspace(-180,180,numdiv+1);
+    ang_mat = [ang_mat;linspace(-180,180,numdiv+1)+dth*180/pi/2];
 
+    numact_per_rad = numdiv/3;
+    %%
+    for II=1:2
+        if II==1;cosFull = cos(THETA0*numdiv+pi+pi*(1-mod(numdiv,2)))+1;end
+        if II==2;cosFull = cos(THETA0*numdiv+pi*(1-mod(numdiv,2)))+1;end
+        ang_arr = ang_mat(II,:);
+        for JJ=1:numact_per_rad
+            ind_rad = zeros(NbeamCompact);
+            for KK=1:numact_per_rad:numdiv
+                ang = ang_arr(KK +(JJ-1));
+                ang_rad = ang/180*pi;
 
+                ang1 = ang_rad+dth/2;
+                ang2 = ang_rad-dth/2;
+
+                if ang1>pi 
+                    THETA = fliplr(THETA0);
+                    ang1 = (pi-ang_rad)+dth/2;
+                    ang2 = (pi-ang_rad)-dth/2;
+                elseif ang2<-pi
+                    THETA = fliplr(THETA0);
+                    ang1 = -(pi+ang_rad)+dth/2;
+                    ang2 = -(pi+ang_rad)-dth/2;
+                else
+                    THETA = THETA0;
+                end
+                ind_ang = and(THETA<=(ang1), THETA>(ang2));
+                ind_rad = ind_rad + ind_ang;
+            end
+            cosII = cosFull.*ind_rad.*modeTemp;
+            mp.dm9.compact.inf_datacube(:,:,Nrad+count) = cosII;
+            count = count+1;
+%             figure(100)
+% %             imagesc(cosII)
+%             imagesc(cosFull)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             figure(101)
+%             imagesc(ind_rad)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             figure(102)
+%             imagesc(cosII)
+%             axis image
+%             title(num2str(II))
+%             drawnow
+%             if ri>=6
+%                 pause(0.1)
+%             end
+        end
+    end
+end
+mp.dm9.inf_datacube = mp.dm9.compact.inf_datacube;
+% figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tight; colorbar; drawnow;
 %%
 
 
@@ -124,12 +202,14 @@ figure(12); imagesc(xc,xc,sum(mp.dm9.compact.inf_datacube,3)); axis xy equal tig
 % 
 % mp.dm9.inf_datacube = zeros(mp.dm9.NdmPad,mp.dm9.NdmPad,mp.dm9.NactTotal);
 
-mp.dm9.NactTotal = size(mp.dm9.inf_datacube,3);
+% mp.dm9.NactTotal = size(mp.dm9.inf_datacube, 3);
 mp.dm9.VtoH = mp.dm9.VtoHavg*ones(mp.dm9.NactTotal,1);
 
 %--Lower-left pixel coordinates are all (1,1) since the Zernikes take up the full array.
 mp.dm9.xy_box_lowerLeft = ones(2,mp.dm9.NactTotal);
 mp.dm9.compact.xy_box_lowerLeft = ones(2,mp.dm9.NactTotal);
+mp.dm9.compact.Nbox = NbeamCompact;
+mp.dm9.Nbox = NbeamCompact;
 
 %--Coordinates for the full FPM array
 if(strcmpi(mp.centering,'pixel')  ) 
@@ -142,10 +222,10 @@ mp.dm9.compact.y_pupPad = mp.dm9.compact.x_pupPad;
 %%
 %--Initial DM9 voltages
 if(isfield(mp.dm9,'V')==false)
-    inf1 = mp.dm9.inf_datacube(:,:,1);
-    meanVal = mean(inf1(inf1~=0));
+%     inf1 = mp.dm9.inf_datacube(:,:,1);
+%     meanVal = mean(inf1(inf1~=0));
     mp.dm9.V = zeros(mp.dm9.NactTotal,1); 
-    mp.dm9.V(1) = mp.dm9.V0coef/meanVal; 
+    mp.dm9.V(1:Nrad) = mp.dm9.V0coef;%/meanVal; 
 else
     mp.dm9.V = mp.DM9V0; 
 end 
@@ -211,7 +291,7 @@ mp.dm8.xy_box_lowerLeft = [1;1];
 mp.dm8.compact = mp.dm8;
 if(isfield(mp.dm8,'V')==false); mp.dm8.V = mp.dm8.V0coef*ones(mp.dm8.NactTotal,1); else; mp.dm8.V = mp.DM8V0; end %--Initial DM voltages
 % Don't define extra actuators and time:
-if(mp.F3.Rin~=mp.F3.RinA); error('falco_init_ws.m: Change mp.F3.Rin and mp.F3.RinA to be equal to avoid wasting time.'); end
+if(mp.F3.Rin~=mp.F3.RinA); error('Change mp.F3.Rin and mp.F3.RinA to be equal to avoid wasting time.'); end
 
 % Copy over some common values from DM9:
 mp.dm8.dxi = mp.dm9.dxi; %--Width of a pixel at the FPM in full model (meters)
@@ -227,10 +307,10 @@ FPMgenInputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lamb
 FPMgenInputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
 FPMgenInputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
 FPMgenInputs.centering = mp.centering;
-mp.dm8.inf_datacube = padOrCropEven(1-falco_gen_annular_FPM(FPMgenInputs),mp.dm8.NdmPad);
+mp.dm8.inf_datacube = round(pad_crop(1-falco_gen_annular_FPM(FPMgenInputs),mp.dm8.NdmPad));
 %--Make or read in DM8 disk for the compact model
 FPMgenInputs.pixresFPM = mp.F3.compact.res; %--pixels per lambda_c/D
-mp.dm8.compact.inf_datacube = padOrCropEven(1-falco_gen_annular_FPM(FPMgenInputs),mp.dm8.compact.NdmPad);
+mp.dm8.compact.inf_datacube = round(pad_crop(1-falco_gen_annular_FPM(FPMgenInputs),mp.dm8.compact.NdmPad));
 
 %%
 

@@ -1,0 +1,1 @@
+Place functional and integration tests in this subdirectory. These tests each take many seconds to run.

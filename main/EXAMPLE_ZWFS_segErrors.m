@@ -1,10 +1,10 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 
-clear;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -27,7 +27,7 @@ EXAMPLE_defaults_DST_LC_design
 mp.flagWFS = true; % Activate the WFS mode 
 mp.wfs.flagSim = true; % Simulates WFS images, if true 
 
-%%-- Pupil definitions
+%% Pupil definitions
 
 mp.flagApod = false;
 mp.whichPupil = 'LUVOIR_B_offaxis';
@@ -39,16 +39,16 @@ mp.P4.full.Nbeam = mp.P1.full.Nbeam; % P4 must be the same as P1 for Vortex.
 
 mp.P1.compact.Nbeam = 500;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam; % P4 must be the same as P1 for Vortex.
-
 mp.P1.wGap = 0.01; % Fractional gap width
 mp.P4.padFacPct = 0; 
+mp = falco_gen_pupil_LUVOIR_B_with_phase(mp);
 
 %%- segmented mirror errors
 numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
 % LUVOIR B has four rings, but ignores some corner segments 
 
 
-%%--ZWFS Mask Properties
+%% ZWFS Mask Properties
 mp.wfs.lambda0 = 425e-9;%--Central wavelength of the whole spectral bandpass [meters]
 mp.wfs.fracBW = 0.10; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.wfs.Nsbp = 3; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
@@ -69,7 +69,9 @@ mp.wfs.mask.res = 20;
 %%- ZWFS camera properties 
 mp.wfs.cam.Nbeam = mp.P1.full.Nbeam;% beam size at WFS camera 
 mp.wfs.cam.Narr = 512; % array size at WFS camera 
-mp.wfs.cam.dx = mp.P4.D/mp.wfs.cam.Nbeam;
+
+mp.wfs.cam.Npix = 512; % Number of camera pixels across the Narr samples 
+mp.wfs.cam.centerPixOffset = [0,0];% Offset of camera wrt beam center (pixels) 
 
 
 %% Generate the label associated with this trial
@@ -105,7 +107,9 @@ mp.P1.pistons = randn(1,numSegments)/100;% Segment piston in waves
 mp.P1.tiltxs  = randn(1,numSegments)/50;% %Tilts on segments in horiz direction (waves/apDia)
 mp.P1.tiltys  = randn(1,numSegments)/50;% %Tilts on segments in vert direction (waves/apDia)
 
-mp = falco_gen_chosen_pupil(mp);
+% mp = falco_gen_chosen_pupil(mp);
+mp = falco_gen_pupil_LUVOIR_B_with_phase(mp);
+mp = falco_compute_entrance_pupil_coordinates(mp);
 
 actual_phz1 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 
@@ -118,7 +122,9 @@ mp.P1.pistons = mp.P1.pistons + randn(1,numSegments)/2000;% Segment piston in wa
 mp.P1.tiltxs  = mp.P1.tiltxs + randn(1,numSegments)/1000;% %Tilts on segments in horiz direction (waves/apDia)
 mp.P1.tiltys  = mp.P1.tiltys + randn(1,numSegments)/1000;% %Tilts on segments in vert direction (waves/apDia)
 
-mp = falco_gen_chosen_pupil(mp);
+% mp = falco_gen_chosen_pupil(mp);
+mp = falco_gen_pupil_LUVOIR_B_with_phase(mp);
+mp = falco_compute_entrance_pupil_coordinates(mp);
 
 actual_phz2 = angle(mp.P1.compact.E(:,:,ceil(mp.Nsbp/2)));
 
@@ -129,8 +135,8 @@ IZ2 = falco_zwfs_sim_image(mp);
 
 disp('Reconstructing the wavefront...');
 theta = 2*pi*mp.wfs.mask.depth*(mp.wfs.mask.n(mp.wfs.lambda0)-1)/mp.wfs.lambda0;
-phz1 = falco_zwfs_reconstructor(Ical, IZ1, mask, b, theta, 'f');
-phz2 = falco_zwfs_reconstructor(Ical, IZ2, mask, b, theta, 'f');
+phz1 = falco_zwfs_reconstructor(Ical, IZ1, mask, b, theta, 'f','subbias');
+phz2 = falco_zwfs_reconstructor(Ical, IZ2, mask, b, theta, 'f','subbias');
 
 phz1 = circshift(rot90(phz1,2),[1 1]);
 phz2 = circshift(rot90(phz2,2),[1 1]);

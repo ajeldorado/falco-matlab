@@ -46,20 +46,12 @@ else
     yOffset = 0;
 end
 
-
-% %--DEBUGGING ONLY: HARD-CODED INPUTS
-% clear all
-% inputs.pixresFPM = 6; %--pixels per lambda_c/D
-% inputs.rhoInner = 2.8; % radius of inner FPM amplitude spot (in lambda_c/D)
-% inputs.rhoOuter = 10.1; % radius of outer opaque FPM ring (in lambda_c/D)
-% inputs.FPMampFac = 0.4; % amplitude transmission of inner FPM spot
-% inputs.centering = 'interpixel';
+if(isfield(inputs, 'FPMampFac')); FPMampFac = inputs.FPMampFac; else; FPMampFac = 0; end % amplitude transmission of inner FPM spot
+if(isfield(inputs,'centering')); centering = inputs.centering; else; centering = "pixel"; end
 
 pixresFPM = inputs.pixresFPM; %--pixels per lambda_c/D
 rhoInner = inputs.rhoInner; % radius of inner FPM amplitude spot (in lambda_c/D)
 rhoOuter = inputs.rhoOuter; % radius of outer opaque FPM ring (in lambda_c/D)
-FPMampFac = inputs.FPMampFac; % amplitude transmission of inner FPM spot
-centering = inputs.centering; % Centering of array: 'pixel' or 'interpixel'
 
 dx = 1/pixresFPM; %--lambda_c/D per pixel.
 maxAbsOffset = max([abs(xOffset), abs(yOffset)]);

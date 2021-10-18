@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,24 +6,26 @@
 %
 % Script to perform a DM-apodized VC (DMVC) simple design run.
 
-clear all;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Required packages are FALCO and PROPER. 
-% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); savepath;
-% Add PROPER to the MATLAB path with the command:  addpath(full_path_to_proper); savepath;
+full_path_to_falco = '/Users/jllopsay/Documents/GitHub/falco-matlab';
+full_path_to_proper = '/Users/jllopsay/Documents/MATLAB/PROPER';
+addpath(genpath(full_path_to_falco)); savepath;
+addpath(full_path_to_proper); savepath;
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-% mp.path.config = ; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
-% mp.path.ws = ; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
-% mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
+mp.path.config = '/Users/jllopsay/Documents/GitHub/falco-matlab/config'; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws'; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
+mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
 
 
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_LUVOIRB_VC_design
-
+mp.flagJitter = false;
 
 %% Step 3: Overwrite default values as desired
 
@@ -34,17 +36,6 @@ mp.flagPlot = true;
 %--Record Keeping
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
-
-%%-- segmented mirror errors
-mp.numSegments = hexSegMirror_numSegments(4); % Number of segments in "full" hex aperture
-% LUVOIR B has four rings, but ignores some corner segmentes 
-
-%%--[OPTIONAL] Start from a previous FALCO trial's DM settings
-fn_prev = 'Series0867_Trial5309_Vortex_LUVOIR_B_offaxis_2DM64_z0.8_IWA2_OWA26_1lams400nm_BW2.5_gridsearchEFC_snippet.mat';
-temp = load(fn_prev,'out');
-mp.dm1.V = temp.out.DM1V;
-mp.dm2.V = temp.out.DM2V;
-clear temp
 
 % %--DEBUGGING
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)

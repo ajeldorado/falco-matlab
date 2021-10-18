@@ -6,15 +6,16 @@
 %
 % Function to find neighboring actuators that exceed a specified difference
 % in voltage and to scale down those voltages until the rule is met.
+% Also returns the index pairs of the violating actuators. 
 %
 % INPUTS:
 % - Vin = 2-D map of initial DM voltage commands
 % - Vlim = maximum difference in voltages between neighbors
+% - Nact = Number of actuators across the DM 
 %
 % OUTPUTS
 % - Vout = 2-D map of adjusted DM voltage commands
-% - indn = indices (act numbers) of the above
-% - delv = values of differential voltages of the actuators violating the neighboring rule
+% - indPair = the paired indices list [Npairs x 2]
 %
 % REVISION HISTORY
 % - Created on 2015-11-23 by Erkin Sidick.

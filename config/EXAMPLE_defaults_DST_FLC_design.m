@@ -15,9 +15,6 @@ mp.flagPlot = false;
 %--General
 mp.centering = 'pixel';
 
-%--Whether to include planet in the images
-mp.planetFlag = false;
-
 %--Method of computing core throughput:
 % - 'HMI' for energy within half-max isophote divided by energy at telescope pupil
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
@@ -45,29 +42,21 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 
 %--Estimator Options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing with batch process estimation
+% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+%    one or more stars
+% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
+% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-% - 'pwp-iekf' for pairwise probing with iterated extended Kalman filter  [NOT AVAILABLE YET]
-mp.estimator = 'pwp-bp';
+mp.estimator = 'pwp-bp-square';
 
 %--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.est.probe.radius = 12;    % Max x/y extent of probed region [actuators].
-mp.est.probe.offsetX = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
-mp.est.probe.offsetY = 10;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
+mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
+mp.est.probe.xOffset = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
+mp.est.probe.yOffset = 10;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
 mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
-
-%--New variables for pairwise probing with a Kalman filter
-% mp.est.ItrStartKF = 2 %Which correction iteration to start recursive estimate
-% mp.est.tExp =
-% mp.est.num_im =
-% mp.readNoiseStd =
-% mp.peakCountsPerPixPerSec =
-% mp.est.Qcoef =
-% mp.est.Rcoef =
-% mp.est.Pcoef0 = 
 
 %% Wavefront Control: General
 
@@ -193,7 +182,6 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 mp.flagSim = true;      %--Simulation or not
 mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'FLC';
-mp.flagApod = false;    %--Whether to use an apodizer or not
 
 %--Final Focal Plane Properties
 mp.Fend.res = 3; %--Sampling [ pixels per lambda0/D]
@@ -210,8 +198,7 @@ mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees
 
 mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
-%% Optical Layout: Compact Model (and Jacobian Model)
-% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
+%% Optical Layout
 
 %--Focal Lengths
 mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
@@ -221,11 +208,18 @@ mp.P2.D = 46.3e-3;
 mp.P3.D = 46.3e-3;
 mp.P4.D = 46.3e-3;
 
+% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 300;
 mp.P2.compact.Nbeam = 300;
 mp.P3.compact.Nbeam = 300;
-mp.P4.compact.Nbeam = 300;
+mp.P4.compact.Nbeam = 180;
+
+%--Pupil Plane Resolutions
+mp.P1.full.Nbeam = 300;
+mp.P2.full.Nbeam = 300;
+mp.P3.full.Nbeam = 300;
+mp.P4.full.Nbeam = 180;
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -236,48 +230,71 @@ mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
+
+%% Entrance Pupil (P1) Definition and Generation
+
+mp.whichPupil = 'simple'; % Used only for run label
+mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+
+% Both full and compact models
+inputs.OD = 1.00;
+
+% Full model
+inputs.Nbeam = mp.P1.full.Nbeam; % number of points across the pupil diameter
+inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
+mp.P1.full.mask = falco_gen_pupil_Simple(inputs);
+
+% Compact model
+inputs.Nbeam = mp.P1.compact.Nbeam; % number of points across usable pupil   
+inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); % number of points across usable pupil 
+mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
+
+
+%% "Apodizer" (P3) Definition and Generation
+mp.flagApod = false;    %--Whether to use an apodizer or not in the FALCO models.
+
+
+%% Lyot stop (P4) Definition and Generation
+
+% Inputs common to both the compact and full models
+inputs.ID = 47.36/227.86;
+inputs.OD = 156.21/227.86;
+inputs.angStrut = [90 210 330]; % Array of angles of the radial struts (deg)
+inputs.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
+
+% Full model
+inputs.Nbeam = mp.P4.full.Nbeam;
+inputs.Npad = 2^(nextpow2(mp.P4.full.Nbeam));
+mp.P4.full.mask = falco_gen_pupil_Simple(inputs); 
+
+% Compact model
+inputs.Nbeam = mp.P4.compact.Nbeam;
+inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
+mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
+
+
+%% FPM (F3) Definition and Generation
+
 mp.F3.compact.res = 6; % sampling of FPM for compact model [pixels per lambda0/D]
-
-%% Optical Layout: Full Model 
-
-%--Focal Lengths
-% mp.fl = 1; 
-
-%--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 300;
-mp.P2.full.Nbeam = 300;
-mp.P3.full.Nbeam = 300;
-mp.P4.full.Nbeam = 300;
-
 mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
-%% Mask Definitions
-
-%--Pupil definition
-mp.whichPupil = 'Simple';
-mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
-mp.P1.ODnorm = 1.00;% Outer diameter of the telescope [diameter]
-mp.P1.stretch = 1.00; % factor that stretches the horizontal axis to create elliptical beam 
-mp.P1.D = 4; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.Nstrut = 0;% Number of struts 
-mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
-mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
-
-%--Lyot stop padding
-mp.P4.IDnorm = 47.36/227.86; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 156.21/227.86; %--Lyot stop OD [Dtelescope]
-mp.P4.Nstrut = 3;% Number of struts 
-mp.P4.angStrut = [90 210 330];%Array of angles of the radial struts (deg)
-mp.P4.wStrut = 0.005; % Width of the struts (fraction of pupil diam.)
-
-%--FPM size
 mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0/D]
 mp.F3.Rout = 30;   % radius of outer opaque edge of FPM [lambda0/D]
 mp.F3.ang = 180;    % on each side, opening angle [degrees]
-mp.FPMampFac = 10^(-3.7); % amplitude transmission of the FPM
+mp.F3.clocking = 0;
+mp.F3.Rfillet = 0;
+mp.FPMampFac = 0; % amplitude transmission of the FPM
 
-
-%% LC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
+% Both models
+inputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+inputs.rhoOuter = mp.F3.Rout; % radius of outer opaque FPM ring (in lambda_c/D)
+inputs.ang = mp.F3.ang;  % [degrees]
+inputs.centering = mp.centering;
+inputs.clocking = mp.F3.clocking;
+inputs.Rfillet = mp.F3.Rfillet;
+% Full model
+inputs.pixresFPM = mp.F3.full.res;
+mp.F3.full.mask = falco_gen_bowtie_FPM(inputs);
+% Compact model
+inputs.pixresFPM = mp.F3.compact.res;
+mp.F3.compact.mask = falco_gen_bowtie_FPM(inputs);

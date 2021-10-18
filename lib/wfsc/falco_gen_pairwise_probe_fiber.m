@@ -14,9 +14,9 @@
 %    -mp.est.probe.whichDM:      Which DM # to use for probing. 1 or 2. Default is 1
 %    -mp.est.probe.radius:  Max x/y extent of probed region [actuators].
 %    [Equivalent to lambda_central/D if DM is fully illuminated]
-%    -mp.est.probe.offsetX: offset of probe center in x [actuators]. Use
+%    -mp.est.probe.xOffset: offset of probe center in x [actuators]. Use
 %     to avoid central obscurations.
-%    -mp.est.probe.offsetY: offset of probe center in y [actuators]. Use
+%    -mp.est.probe.yOffset: offset of probe center in y [actuators]. Use
 %     to avoid central obscurations.
 %    -mp.lambda0:       central wavelength of bandpass [meters]
 %    -mp.est.probe.axis:    which axis to have the phase discontinuity
@@ -35,8 +35,8 @@
 %--New variables
 %    -mp.est.probe.whichDM:      Which DM # to use for probing. 1 or 2. Default is 1
 %    -mp.est.probe.radius:  Max x/y extent of probed region [actuators].
-%    -mp.est.probe.offsetX: offset of probe center in x [actuators]. Use to avoid central obscurations.
-%    -mp.est.probe.offsetY: offset of probe center in y [actuators]. Use to avoid central obscurations.
+%    -mp.est.probe.xOffset: offset of probe center in x [actuators]. Use to avoid central obscurations.
+%    -mp.est.probe.yOffset: offset of probe center in y [actuators]. Use to avoid central obscurations.
 %    -mp.lambda0:       central wavelength of bandpass [meters]
 %    -mp.est.probe.axis:    which axis to have the phase discontinuity along [x or y]
 
@@ -53,8 +53,8 @@ elseif(mp.est.probe.whichDM==2)
     dm = mp.dm2;
 end
 %--Coordinates in actuator space
-xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.offsetX)/Nact;
-ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.offsetY)/Nact;
+xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.xOffset)/Nact;
+ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.yOffset)/Nact;
 [XS,YS] = meshgrid(xs,ys);
 
 NactAcrossbeam = Nact*mp.P4.ODnorm;
