@@ -28,7 +28,7 @@ mp = falco_compute_fpm_coordinates(mp);
 %--Final focal plane
 mp = falco_compute_Fend_resolution(mp); 
 mp = falco_configure_dark_hole_region(mp);
-% mp = falco_set_jacobian_spatial_weights(mp);
+mp = falco_set_jacobian_spatial_weights(mp);
 
 %--Wavefront sensor
 mp = falco_configure_wfs(mp);
