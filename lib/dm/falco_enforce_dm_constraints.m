@@ -42,12 +42,10 @@ dm.V(dm.pinned) = dm.Vpinned;
 % 3) Enforce neighbor rule and tied actuators at same time (actually
 % iterated between the two).
 tieMat = falco_convert_dm_tie_pairs_into_matrix(dm.tied, dm.Nact);
-vlat = dm.dVnbr;
-vdiag = dm.dVnbr;
 maxiter = 1000;
 vquant = 0; % LSB in volts
 Vtotal = dm.V + dm.biasMap;
-Vtotal = ConstrainDM.constrain_dm(Vtotal, dm.biasMap, tieMat, dm.Vmax, vlat, vdiag, vquant, maxiter);
+Vtotal = ConstrainDM.constrain_dm(Vtotal, dm.facesheetFlatmap, tieMat, dm.Vmax, dm.dVnbrLat, dm.dVnbrDiag, vquant, maxiter);
 dm.V = Vtotal - dm.biasMap;
 
 % % 3) Find which actuators violate the DM neighbor rule. (This restricts 
