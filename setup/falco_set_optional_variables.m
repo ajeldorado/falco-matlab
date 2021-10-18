@@ -114,7 +114,6 @@ if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type o
 if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
 if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of tied actuator pairs. Two indices per row
-%if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if mp.flagSim
     if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed absolute voltage command
@@ -122,14 +121,15 @@ else
     if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 100;  end %--Max allowed absolute voltage command
 end
-if(isfield(mp.dm1,'dVnbr')==false); mp.dm1.dVnbr = mp.dm1.Vmax; end % max delta voltage between neighboring actuators
-if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = mp.dm1.Vmax/2*ones(mp.dm1.Nact, mp.dm1.Nact);  end  %--Bias voltage map added to DM. Total voltage is mp.dm1.biasMap + mp.dm1.V
+if(isfield(mp.dm1,'dVnbrLat')==false); mp.dm1.dVnbrLat = mp.dm1.Vmax; end % max voltage difference allowed between laterally-adjacent DM actuators
+if(isfield(mp.dm1,'dVnbrDiag')==false); mp.dm1.dVnbrDiag = mp.dm1.Vmax; end % max voltage difference allowed between diagonally-adjacent DM actuators
+if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = mp.dm1.Vmax/2*ones(mp.dm1.Nact, mp.dm1.Nact);  end  %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
+if(isfield(mp.dm1,'facesheetFlatmap')==false);  mp.dm1.facesheetFlatmap = mp.dm1.biasMap;  end %--Voltage map that produces a flat DM1 surface. Used when enforcing the neighbor rule.
 
 if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
 if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
 if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
-%if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
 if mp.flagSim
     if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed absolute voltage command
@@ -137,8 +137,10 @@ else
     if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 100;  end %--Max allowed absolute voltage command
 end
-if(isfield(mp.dm2,'dVnbr')==false); mp.dm2.dVnbr = mp.dm2.Vmax; end % max delta voltage between neighboring actuators
-if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = mp.dm2.Vmax/2*ones(mp.dm2.Nact, mp.dm2.Nact);  end %--Bias voltage map added to DM. Total voltage is mp.dm2.biasMap + mp.dm2.V
+if(isfield(mp.dm2,'dVnbrLat')==false); mp.dm2.dVnbrLat = mp.dm2.Vmax; end % max voltage difference allowed between laterally-adjacent DM actuators
+if(isfield(mp.dm2,'dVnbrDiag')==false); mp.dm2.dVnbrDiag = mp.dm2.Vmax; end % max voltage difference allowed between diagonally-adjacent DM actuators
+if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = mp.dm2.Vmax/2*ones(mp.dm2.Nact, mp.dm2.Nact);  end %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
+if(isfield(mp.dm2,'facesheetFlatmap')==false);  mp.dm2.facesheetFlatmap = mp.dm2.biasMap;  end %--Voltage map that produces a flat DM2 surface. Used when enforcing the neighbor rule.
 
 
 %--Control
