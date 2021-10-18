@@ -28,8 +28,15 @@ lib/PROPER/**
 ##--PROPER manual
 #**/PROPER_manual*.pdf
 
+TestingResults*.txt
+**/TestingResults*.txt
+
 #--CVX license
 **/LICENSE.txt
+
+#
+wfirst_modeling/defaults_*.m
+wfirst_modeling/main_*.m
 
 #--Don't store saved data
 data/configs/**
@@ -57,6 +64,11 @@ data/frn/**
 !data/ws/placeholder.txt
 !data/ws_inprogress/placeholder.txt
 !data/frn/placeholder.txt
+
+
+demo/**
+!demo/demo_*.m
+
 
 FRN/**
 #wfirst_modeling/FRN/calculateFRN/*
@@ -111,16 +123,12 @@ main/**
 config/**
 !config/EXAMPLE_*
 
-#--Sync only example tesing files
-testing/**
-!testing/EXAMPLE_*
 
 #--Documentation intermediate files
 docs/**
 #docs/*.pptx
 **/*.pptx~
 !docs/**/*.pdf
-
 
 #--Core latex/pdflatex auxiliary files:
 *.aux
@@ -179,6 +187,6 @@ PMGIplotter.m
 
 
 !lib/masks/**/*.png
-
+!docs/falco_logo.png
 
 

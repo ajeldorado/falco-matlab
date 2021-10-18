@@ -32,4 +32,12 @@ function [mp] = falco_gen_FPM_HLC(mp)
             figure(9); imagesc(DM9surf); axis xy equal tight; colorbar; title('FPM Dielectric Thickness','Fontsize',20); set(gca,'Fontsize',20); drawnow; 
         end
 
+%         for ii = 1:mp.dm9.NactTotal
+%             mp.dm9.V = 0*mp.dm9.V;
+%             mp.dm9.V(ii) = 1;
+%             DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9, 'full');
+%             figure(201); imagesc(DM9surf); axis xy equal tight; colorbar; title(sprintf('%04d', ii), 'Fontsize', 20); drawnow;
+%             pause(1/25);
+%         end
+
 end %--END OF FUNCTION

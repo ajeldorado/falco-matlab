@@ -1,4 +1,4 @@
-% Copyright 2018-2020, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -169,8 +169,8 @@ end
 
 %% INITIALIZE PROPER Wave Structure for Struts
 bm = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
-global antialias_subsampling
-antialias_subsampling = int16(101);
+nSubsamples = 101;
+prop_set_antialiasing(nSubsamples)
 
 %--Struts
 for iStrut=1:6
@@ -244,6 +244,7 @@ if(flagLyot == false)
 
         % Full ellipse to be multiplied by the mask to get just tabs
         bm2 = prop_begin(Dbeam, wl, Narray,'beam_diam_fraction',bdf);
+        prop_set_antialiasing(nSubsamples)
         cx_tab = magFac*tabCenterVecX(iTab);
         cy_tab = magFac*tabCenterVecY(iTab);
         cxy = rotMat*[cx_tab; cy_tab];

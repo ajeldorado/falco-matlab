@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,7 +6,7 @@
 %
 % Script to perform a DMLC design run.
 
-clear all;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -48,13 +48,6 @@ mp.SeriesNum = 1;
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 
-mp.F3.Rin = 2.7;    % maximum radius of inner part of the focal plane mask [lambda0/D]
-mp.F3.RinA = mp.F3.Rin;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-mp.Fend.corr.Rin = mp.F3.Rin;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.score.Rin = mp.F3.Rin;  % inner radius of dark hole scoring region [lambda0/D]
-
-mp.P4.IDnorm = 0.45; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.78; %--Lyot stop OD [Dtelescope]
 
 %% Step 4: Generate the label associated with this trial
 

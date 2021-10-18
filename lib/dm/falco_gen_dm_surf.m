@@ -1,31 +1,20 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
-%
-% function DMsurf = falco_gen_dm_surf(dm,dx,N)
 % 
-%--Function to generate a deformable mirror (DM) surface using PROPER.
+% Generate a deformable mirror(DM) surface using PROPER.
 %
-%--INPUTS
+% INPUTS
+% ------
 % dm: structure of DM parameters
 %
-%--OUTPUT
-% DMsurf: DM surface in meters
-% 
-%--VERSION HISTORY
-% - Modified on 2019-02-14 by G. Ruane and D. Echeverri to allow for custom
-% infuence functions and quantizing the DM commands. 
-% - Modified on 2018-02-06 by A.J. Riggs to have dx and N be inputs as well 
-% in order to avoid having to define a few variables (such as the DM 
-% commands) twice for the compact and full models.
-% - Created falco_gen_dm_poke_cube_PROPER.m on 2017-11-17 by A.J. Riggs.
-%
-% Need to fix:
-% - Don't allow both dm.dx and dx to be used.
+% OUTPUTS
+% -------
+% DMsurf: 2-D DM surface in meters
 
-function DMsurf = falco_gen_dm_surf(dm,dx,N)
+function DMsurf = falco_gen_dm_surf(dm, dx, N)
 
 %--Set the order of operations
 orderOfOps = 'XYZ';
@@ -35,13 +24,11 @@ if(isfield(dm,'flagZYX'))
     end
 end
 
-%--Adjust the centering of the output DM surface. The shift needs to be in
-%units of actuators, not meters, for prop_dm.m.
-Darray = dm.NdmPad*dm.dx;
-Narray = dm.NdmPad;
-switch dm.centering % 0 shift for pixel-centered pupil, or -Darray/2/Narray shift for inter-pixel centering
+% Adjust the centering of the output DM surface. The shift needs to be in
+% units of actuators, not meters, for prop_dm.m.
+switch dm.centering % 0 shift for pixel-centered pupil, or -dx/2 shift for inter-pixel centering
     case {'interpixel'}
-        cshift = -Darray/2/Narray/dm.dm_spacing; 
+        cshift = -dx/2/dm.dm_spacing; 
     case {'pixel'}
         cshift = 0;
     otherwise
@@ -51,7 +38,7 @@ end
 %--PROPER initialization
 pupil_ratio = 1; % beam diameter fraction
 wl_dummy = 1e-6; %--dummy value needed to initialize wavelength in PROPER (meters)
-bm  = prop_begin(N*dx, wl_dummy, N, pupil_ratio);
+bm = prop_begin(N*dx, wl_dummy, N, pupil_ratio);
 
 %--Apply various constraints to DM commands
 dm = falco_enforce_dm_constraints(dm);
@@ -67,14 +54,37 @@ if(isfield(dm,'HminStep') && ~any(isnan(dm.HminStep(:))))
 
     % Discretize/Quantize the DM voltages (creates dm.Vquantized)
 	dm = falco_discretize_dm_surf(dm, dm.HminStepMethod);
-    H = dm.VtoH.*dm.Vquantized;
-else
-    % Quantization not desired; send raw, continuous voltages
-    H = dm.VtoH.*dm.V;
+    dm.V = dm.Vquantized;
+end
+
+heightMap = falco_calc_act_height_from_voltage(dm);
+
+if isfield(dm, 'orientation')
+    switch lower(dm.orientation)
+        case 'rot0'
+            % no change
+        case 'rot90'
+            heightMap = rot90(heightMap, 1);
+        case 'rot180'
+            heightMap = rot90(heightMap, 2);
+        case 'rot270'
+            heightMap = rot90(heightMap, 3);
+        case 'flipxrot0'
+            heightMap = flipx(heightMap);
+        case 'flipxrot90'
+            heightMap = rot90(flipx(heightMap), 1);
+        case 'flipxrot180'
+            heightMap = rot90(flipx(heightMap), 2);
+        case 'flipxrot270'
+            heightMap = rot90(flipx(heightMap), 3);
+        otherwise
+            error('invalid value of dm.orientation');
+    end
 end
 
 %--Generate the DM surface
-[~,DMsurf] = propcustom_dm(bm, H, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,'XTILT',dm.xtilt,'YTILT',dm.ytilt,'ZTILT',dm.zrot,orderOfOps,...
-    'inf_sign',dm.inf_sign, 'inf_fn', dm.inf_fn);
+[~, DMsurf] = propcustom_dm(bm, heightMap, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,...
+    'XTILT', dm.xtilt, 'YTILT', dm.ytilt, 'ZTILT', dm.zrot,orderOfOps, ...
+    'inf_sign', dm.inf_sign, 'inf_fn', dm.inf_fn);
 
 end %--END OF FUNCTION

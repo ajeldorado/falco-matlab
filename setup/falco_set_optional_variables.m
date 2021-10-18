@@ -1,20 +1,34 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
+%
+% Define necessary, lesser-used variables if not already defined.
+% This function exists to enable backwards compatibility when adding new
+% features.
+%
+% INPUTS
+% mp : structure of model parameters
+%
+% OUTPUTS
+% mp : structure of model parameters
 
 function mp = falco_set_optional_variables(mp)
 
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 mp.est.dummy = 1;
-mp.compact.dummy = 1;
+mp.est.probe.dummy = 1;
+mp.star.dummy = 1;
+mp.compact.star.dummy = 1;
+mp.jac.star.dummy = 1;
 mp.full.dummy = 1;
 mp.dm1.dummy = 1;
 mp.dm2.dummy = 1;
 mp.Fend.eval.dummy = 1;
 mp.path.dummy = 1;
+mp.detector.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
@@ -25,20 +39,22 @@ mp.path.falco = fileparts(fileparts(mfilename('fullpath')));
 if(isfield(mp.path,'config')==false);  mp.path.config = [mp.path.falco filesep 'data' filesep 'brief' filesep];  end
 
 %--Entire final workspace from FALCO gets saved here.
-if(isfield(mp.path,'ws')==false);  mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];  end
-
-if(isfield(mp.path,'ws')==false); mp.path.ws = [mp.path.falco 'data' filesep 'ws' filesep]; end % Store final workspace data here
-if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco 'maps' filesep]; end % Maps go here
-if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
-if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco 'data' filesep 'images' filesep]; end % Store all full, reduced images here
-if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco 'data' filesep 'DM' filesep]; end % Store DM command maps here
-if(isfield(mp.path,'wsInProgress')==false); mp.path.wsInProgress = [mp.path.falco 'data' filesep 'wsInProgress' filesep]; end % Store in progress workspace data here
+if(isfield(mp.path,'ws')==false);  mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];  end % Store final workspace data here
+if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco filesep 'maps' filesep]; end % Maps go here
+if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco filesep 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
+if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco filesep 'data' filesep 'images' filesep]; end % Store all full, reduced images here
+if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' filesep 'DM' filesep]; end % Store DM command maps here
 
 %% Optional/hidden boolean flags
+
 %--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
-if(isfield(mp,'flagSaveEachItr')==false);  mp.flagSaveEachItr = false;  end  %--Whether to save out the performance at each iteration. Useful for long trials in case it crashes or is stopped early.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
+
+%--Optical model/layout
+if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
+if(isfield(mp,'flagRotation')==false);  mp.flagRotation = true;  end %--Whether to have the E-field rotate 180 degrees from one pupil to the next. Does not apply to PROPER full models.
+
 %--Jacobian or controller related
 if(isfield(mp,'flagTrainModel')==false);  mp.flagTrainModel = false;  end  %--Whether to call the Expectation-Maximization (E-M) algorithm to improve the linearized model. 
 if(isfield(mp,'flagUseLearnedJac')==false);  mp.flagUseLearnedJac = false;  end  %--Whether to load and use an improved Jacobian from the Expectation-Maximization (E-M) algorithm 
@@ -51,28 +67,42 @@ if(isfield(mp,'flagLenslet')==false); mp.flagLenslet = false; end %--Flag to pro
 if(isfield(mp,'flagDMwfe')==false);  mp.flagDMwfe = false;  end  %--Temporary for BMC quilting study. Adds print-through to the DM surface.
 if(isfield(mp,'flagWFS')==false);  mp.flagWFS = false;  end  %--Whether to activate the WFS mode 
 
-%--Whether to generate or load various masks: compact model
-if(isfield(mp.compact,'flagGenPupil')==false);  mp.compact.flagGenPupil = true;  end
-if(isfield(mp.compact,'flagGenApod')==false);  mp.compact.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
-if(isfield(mp.compact,'flagGenFPM')==false);  mp.compact.flagGenFPM = true;  end
-if(isfield(mp.compact,'flagGenLS')==false);  mp.compact.flagGenLS = true;  end
-%--Whether to generate or load various masks: full model
-if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
-if(mp.full.flagPROPER)
-    mp.full.flagGenPupil = false;
-    mp.full.flagGenApod = false;
-    mp.full.flagGenFPM = false;
-    mp.full.flagGenLS = false;
-end
-if(isfield(mp.full,'flagGenPupil')==false);  mp.full.flagGenPupil = true;  end
-if(isfield(mp.full,'flagGenApod')==false);  mp.full.flagGenApod = false;  end %--Different! Apodizer generation defaults to false.
-if(isfield(mp.full,'flagGenFPM')==false);  mp.full.flagGenFPM = true;  end
-if(isfield(mp.full,'flagGenLS')==false);  mp.full.flagGenLS = true;  end
+%--Whether to use an apodizer at all
+if(isfield(mp,'flagApod')==false);  mp.flagApod = false;  end
+
+%--Lyot stop symmetry (for WFIRST/Roman only)
+if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end
 
 %% Optional/hidden variables
+
+if ~isfield(mp, 'runLabel');  mp.runLabel = 'default_label_';  end
+
+% How many stars to use and their positions
+% mp.star is for the full model, and mp.compact.star is for the compact and
+% Jacobian models.
+if ~isfield(mp.star, 'count');  mp.star.count = 1;  end
+if ~isfield(mp.star, 'xiOffsetVec');  mp.star.xiOffsetVec = 0;  end
+if ~isfield(mp.star, 'etaOffsetVec');  mp.star.etaOffsetVec = 0;  end
+if ~isfield(mp.star, 'weights');  mp.star.weights = 1;  end
+if ~isfield(mp.compact.star, 'count');  mp.compact.star.count = 1;  end
+if ~isfield(mp.compact.star, 'xiOffsetVec');  mp.compact.star.xiOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'etaOffsetVec');  mp.compact.star.etaOffsetVec = 0;  end
+if ~isfield(mp.compact.star, 'weights');  mp.compact.star.weights = 1;  end
+if ~isfield(mp.jac.star, 'weights');  mp.jac.star.weights = ones(1, mp.compact.star.count);  end % Spatial weighting in the Jacobian by star
+
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
+
+%--Propagation method
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
-if(isfield(mp,'apodType')==false);  mp.apodType = 'none';  end %--Type of apodizer. Only use this variable when generating the apodizer. Currently only binary-ring or grayscale apodizers can be generated.
+
+%--Vortex or other azithumal, phase-only FPMs
+if(isfield(mp.jac, 'mftToVortex')==false);  mp.jac.mftToVortex = false;  end  %--Whether to use MFTs to propagate to/from the vortex FPM
+if(isfield(mp.F3, 'VortexSpotDiam')==false);  mp.F3.VortexSpotDiam = 0;  end  %--Diameter of the opaque spot at the center of the vortex. [lambda0/D]
+if(isfield(mp.F3, 'VortexSpotOffsets')==false);  mp.F3.VortexSpotOffsets = [0 0];  end  %--Offsets for the opaque spot at the center of the vortex. [lambda0/D]
+if(isfield(mp.F3, 'phaseMaskType')==false);  mp.F3.phaseMaskType = 'vortex';  end  % Type of phase FPMs allowed: 'vortex', 'cos', 'sectors', and 'staircase'.
+if(isfield(mp.F3, 'NstepStaircase')==false);  mp.F3.NstepStaircase = 6;  end  % Number of discrete steps per 2*pi radians of phase for a staircase phase mask at F3.
+if(isfield(mp.F3, 'clocking')==false);  mp.F3.clocking = 0;  end  % Counterclockwise clocking of the phase FPM [degrees].
+if(isfield(mp.F3, 'phaseScaleFac')==false);  mp.F3.phaseScaleFac = 1;  end  % Factor to apply to the phase in the phase FPM. Use a vector to add chromaticity to the model. 
 
 %--Sensitivities to Zernike-Mode Perturbations
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
@@ -80,31 +110,51 @@ if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
 if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 
 %--Deformable mirror settings
-if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = -1000;  end %--Min allowed voltage command
-if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed voltage command
-if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned actuators
-if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = [];  end %--(Fixed) voltage commands of pinned actuators
-if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
-if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
-if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = -1000;  end %--Min allowed voltage command
-if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed voltage command
-if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned actuators
-if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = [];  end %--(Fixed) voltage commands of pinned actuators
-if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
-if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned/railed actuators
+if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
+if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of tied actuator pairs. Two indices per row
+%if(isfield(mp.dm1,'flagNbrRule')==false);  mp.dm1.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if mp.flagSim
+    if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed absolute voltage command
+else
+    if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 100;  end %--Max allowed absolute voltage command
+end
+if(isfield(mp.dm1,'dVnbr')==false); mp.dm1.dVnbr = mp.dm1.Vmax; end % max delta voltage between neighboring actuators
+if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = mp.dm1.Vmax/2*ones(mp.dm1.Nact, mp.dm1.Nact);  end  %--Bias voltage map added to DM. Total voltage is mp.dm1.biasMap + mp.dm1.V
 
-%--Off-axis, incoherent point source (exoplanet). Used if modvar.whichSource = 'exoplanet'
-if(isfield(mp,'c_planet')==false);  mp.c_planet = 1e-10;  end % flux ratio of of exoplanet to star
-if(isfield(mp,'x_planet')==false);  mp.x_planet = 5;  end % xi position of exoplanet in lambda0/D
-if(isfield(mp,'y_planet')==false);  mp.y_planet = 1;  end % eta position of exoplanet in lambda0/D
+if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned/railed actuators
+if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
+if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
+%if(isfield(mp.dm2,'flagNbrRule')==false);  mp.dm2.flagNbrRule = false;  end %--Whether to set constraints on neighboring actuator voltage differences. If set to true, need to define mp.dm1.dVnbr
+if mp.flagSim
+    if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed absolute voltage command
+else
+    if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
+    if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 100;  end %--Max allowed absolute voltage command
+end
+if(isfield(mp.dm2,'dVnbr')==false); mp.dm2.dVnbr = mp.dm2.Vmax; end % max delta voltage between neighboring actuators
+if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = mp.dm2.Vmax/2*ones(mp.dm2.Nact, mp.dm2.Nact);  end %--Bias voltage map added to DM. Total voltage is mp.dm2.biasMap + mp.dm2.V
+
 
 %--Control
-if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; else; mp.jac.zerns = 1; end %--Zernike modes in Jacobian
+if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
+if(isfield(mp.jac,'minimizeNI')==false); mp.jac.minimizeNI = false; end %--Have EFC minimize normalized intensity instead of intensity
+    
+%--Estimation
+if(isfield(mp.est.probe,'whichDM')==false); mp.est.probe.whichDM = 1; end %--Which DM to use for probing
+if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max probe intensity
+if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Lower estimated intensities to this value if they exceed this (probably due to a bad inversion)
 
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
 mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %% Conversion factor: milliarcseconds (mas) to lambda0/D
+if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Needed for computing RMS DM surface actuation
 
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
@@ -112,6 +162,18 @@ mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %% Conversion factor: mi
 %--Quantization of DM actuation steps based on least significant bit of the
 % DAC (digital-analog converter). In height, so called HminStep. If HminStep (minimum step in H) is defined, then quantize the DM voltages
 % Variables to define if wanted: mp.dm1.HminStep, mp.dm2.HminStep
+
+%% Detector properties for adding noise to images
+
+% Default values are for the Andor Neo sCMOS detector and testbed flux
+if ~isfield(mp, 'flagImageNoise'); mp.flagImageNoise = false; end % whether to include noise in the images
+if ~isfield(mp.detector, 'gain'); mp.detector.gain = 1.0; end % [e-/count]
+if ~isfield(mp.detector, 'darkCurrentRate'); mp.detector.darkCurrentRate = 0.015; end % [e-/pixel/second]
+if ~isfield(mp.detector, 'readNoiseStd'); mp.detector.readNoiseStd = 1.7; end % [e-/count]
+if ~isfield(mp.detector, 'wellDepth'); mp.detector.wellDepth = 3e4; end % [e-]
+if ~isfield(mp.detector, 'peakFluxVec'); mp.detector.peakFluxVec = 1e8 * ones(mp.Nsbp, 1); end % [counts/pixel/second]
+if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % [seconds]
+if ~isfield(mp.detector, 'Nexp'); mp.detector.Nexp = 1; end % number of exposures to stack
 
 %% Initialize some basic attributes for all DMs (which include hybrid FPMs).
 mp.dm1.NactTotal=0; mp.dm2.NactTotal=0; mp.dm3.NactTotal=0; mp.dm4.NactTotal=0; mp.dm5.NactTotal=0; mp.dm6.NactTotal=0; mp.dm7.NactTotal=0; mp.dm8.NactTotal=0; mp.dm9.NactTotal=0; 

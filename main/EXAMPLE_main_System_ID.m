@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -13,8 +13,8 @@
 % sensing and control is found here: https://arxiv.org/pdf/1806.10992.pdf 
 % -------------------------------------------------------------------------------------- %
 
-clear all;
-% clc
+clear
+
 %% Tell Matlab which Python to use from where. Needed for the E-M algorithm.
 setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin') %--Put the parent directory of the python version you want Matlab to use.
 pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the python version you want Matlab to use.

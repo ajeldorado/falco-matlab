@@ -96,6 +96,9 @@ if(mp.flagPlot)
 
             switch lower(mp.layout)
                 case 'fourier'
+                    mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
+                    mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
+                    
                     h_dm8 = subplot(2,3,3);
                     set(h_dm8, 'OuterPosition', [0.67, 0.46, subplotbox])
                     imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM8surf*1e9); axis xy equal tight; colormap parula; colorbar;

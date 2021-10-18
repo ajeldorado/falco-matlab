@@ -1,4 +1,4 @@
-% Copyright 2018-2020 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -6,7 +6,7 @@
 %
 % Script to perform a DM-apodized LC simple design run.
 
-clear all;
+clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -42,11 +42,12 @@ mp.TrialNum = 1;
 % mp.dm2.V = temp.out.DM2V;
 % clear temp
 
-% % %--DEBUGGING
+% %--DEBUGGING
 % mp.fracBW = 0.01;     %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 % mp.Nsbp = 1;          %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-% % mp.estimator = 'perfect'; 
+% mp.estimator = 'perfect'; 
 % % mp.est.flagUseJac = true; %--Whether to use the Jacobian or not for estimation. (If not using Jacobian, model is called and differenced.)
 
 

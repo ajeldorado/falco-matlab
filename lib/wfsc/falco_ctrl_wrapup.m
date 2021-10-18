@@ -1,29 +1,22 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to handle the output command vectors from the controller.
+% Modify the output command vectors from the controller.
 %
-% ---------------
-% INPUTS:
-% - mp = structure of model parameters
-% - cvar = structure of controller variables
-% - duVec = the vector of delta commands computed by the controller
+% INPUTS
+% ------
+% mp : structure of model parameters
+% cvar : structure of controller variables
+% duVec : vector of delta commands computed by the controller
 %
 % OUTPUTS
-% - mp = structure of model parameters
-% - dDM = structure of the delta control commands separated by DM number.
-%         Also contains the updated array of tied actuator pairs
-%
-% REVISION HISTORY
-% - Created on 2019-02-13 by A.J. Riggs.
-% - Modified on 2019-02-25 by A.J. Riggs to save the delta steps.
-% - Modified on 2019-03-26 by A.J. Riggs to include tied actuators.
-% - Modified on 2019-06-25 by A.J. Riggs to tie actuators that violate the neighbor rule.
-% - Modified on 2019-09-26 by A.J. Riggs to handle DM1 and DM2 actuator 
-% constraints outside this function in a more user-robust way.
+% -------
+% mp : structure of model parameters
+% dDM : structure of the delta control commands separated by DM number.
+%       Also contains the updated array of tied actuator pairs
 
 function [mp,dDM] = falco_ctrl_wrapup(mp,cvar,duVec)
 
@@ -62,6 +55,22 @@ if(any(mp.dm_ind==9))
     end
 end
 
+%--Combine the delta command with the previous command
+if(any(mp.dm_ind==1));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, cvar.DM1Vnom + dDM.dDM1V);  end
+if(any(mp.dm_ind==2));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, cvar.DM2Vnom + dDM.dDM2V);  end
+if(any(mp.dm_ind==3));  mp.dm3.V = cvar.DM3Vnom + dDM.dDM3V;  end
+if(any(mp.dm_ind==4));  mp.dm4.V = cvar.DM4Vnom + dDM.dDM4V;  end
+if(any(mp.dm_ind==5));  mp.dm5.V = cvar.DM5Vnom + dDM.dDM5V;  end
+if(any(mp.dm_ind==6));  mp.dm6.V = cvar.DM6Vnom + dDM.dDM6V;  end
+if(any(mp.dm_ind==7));  mp.dm7.V = cvar.DM7Vnom + dDM.dDM7V;  end
+if(any(mp.dm_ind==8));  mp.dm8.V = cvar.DM8Vnom + dDM.dDM8V;  end
+if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
+
+
+% Re-compute delta V for DM1 and DM2 in case constraints changed them
+dDM.dDM1V = mp.dm1.V - cvar.DM1Vnom;
+dDM.dDM2V = mp.dm2.V - cvar.DM2Vnom;
+
 if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end % Store the delta DM command
 if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end % Store the delta DM command
 if(any(mp.dm_ind==3));  mp.dm3.dV = dDM.dDM3V;  end % Store the delta DM command
@@ -72,15 +81,5 @@ if(any(mp.dm_ind==7));  mp.dm7.dV = dDM.dDM7V;  end % Store the delta DM command
 if(any(mp.dm_ind==8));  mp.dm8.dV = dDM.dDM8V;  end % Store the delta DM command
 if(any(mp.dm_ind==9));  mp.dm9.dV = dDM.dDM9V;  end % Store the delta DM command
 
-%--Combine the delta command with the previous command
-if(any(mp.dm_ind==1));  mp.dm1.V = cvar.DM1Vnom + dDM.dDM1V;  end
-if(any(mp.dm_ind==2));  mp.dm2.V = cvar.DM2Vnom + dDM.dDM2V;  end
-if(any(mp.dm_ind==3));  mp.dm3.V = cvar.DM3Vnom + dDM.dDM3V;  end
-if(any(mp.dm_ind==4));  mp.dm4.V = cvar.DM4Vnom + dDM.dDM4V;  end
-if(any(mp.dm_ind==5));  mp.dm5.V = cvar.DM5Vnom + dDM.dDM5V;  end
-if(any(mp.dm_ind==6));  mp.dm6.V = cvar.DM6Vnom + dDM.dDM6V;  end
-if(any(mp.dm_ind==7));  mp.dm7.V = cvar.DM7Vnom + dDM.dDM7V;  end
-if(any(mp.dm_ind==8));  mp.dm8.V = cvar.DM8Vnom + dDM.dDM8V;  end
-if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
 
 end %--END OF FUNCTION

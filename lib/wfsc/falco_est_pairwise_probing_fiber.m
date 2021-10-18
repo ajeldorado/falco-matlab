@@ -4,43 +4,16 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Function to estimate the final focal plane electric field via 
-%  pair-wise probing and batch process estimation.
+% Estimate the final focal plane electric field (as measured through a
+% fiber) via pair-wise probing. 
 %
-%--References for the algorithms and their usage:
-% A. Give'on, B. Kern, and S. Shaklan, "Pair-wise, deformable mirror, 
-% image plane-based diversity electric field estimation for high contrast 
-% coronagraphy," in Proceedings of SPIE, vol. 8151, p. 815110, 2011.
+% INPUTS
+% mp : structure of model parameters
 %
-% T. D. Groff and N. J. Kasdin, "Kalman filtering techniques for focal plane 
-% electric field estimation," Journal of the Optical Society of America A, 
-% vol. 30, no. 1, pp. 128-139, 2013.
-%
-%
-%--INPUTS
-% x_in: Scalar value.
-%
-%--OUTPUTS
-%  x_out: even-valued integer value
-%
-%--REVISION HISTORY
-% Modified on 2019-02-25 by A.J. Riggs to include the batch process
-%   estimator and Kalman filter in the same file since their setup is the same.
-% Modified on 2019-02-06 by A.J. Riggs for the updated FALCO syntax.
-% Modified on 2018-04-23 by A.J. Riggs from the Princeton HCIL lab code.
-% Created on 2015-02-19 by A.J. Riggs at Princeton University.
-%
-%
-%--New variables for Kalman filter
-%  - mp.est.ItrStartKF:  Which correction iteration to start recursive estimate
-%  - mp.est.tExp
-%  - mp.est.num_im
-%  - mp.readNoiseStd
-%  - mp.peakCountsPerPixPerSec
-%  - mp.est.Qcoef
-%  - mp.est.Rcoef
+% OUTPUTS
+% ev : structure of estimation variables
 
-function [ev] = falco_est_pairwise_probing_fiber(mp,varargin)
+function [ev] = falco_est_pairwise_probing_fiber(mp, varargin)
 
 %--If there is a second input, it is the Jacobian structure
 if(size(varargin, 2)==1)
@@ -106,7 +79,7 @@ else
     ev.Est = zeros(mp.Fend.Nfiber, mp.Nsbp);
     ev.IincoEst = zeros(mp.Fend.Nfiber, mp.Nsbp);
 end
-ev.I0mean = 0;
+ev.Im = 0;
 ev.IprobedMean = 0;
 
 %% Save exp time from ctrl
@@ -128,8 +101,9 @@ for si=1:mp.Nsbp
 
     %% Measure current contrast level average, and on each side of Image Plane
     % Reset DM commands to the unprobed state:
-    mp.dm1.V = DM1Vnom;
-    mp.dm2.V = DM2Vnom;
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom);
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom);
+    
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     if(mp.flagLenslet)
         Iplus  = zeros([mp.Fend.Nlens, Npairs]); % Pixels of plus probes' intensities
@@ -152,7 +126,7 @@ for si=1:mp.Nsbp
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImg = 1;
     I0 = max(max(falco_get_sbp_image_fiber(mp,si)));
-    ev.I0mean = ev.I0mean+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
+    ev.Im = ev.Im+I0/mp.Nsbp; %--Getting the sub-bandpass-averaged Inorm
 
     %--Store values for first image and its DM commands
     ev.Icube(:,:, whichImg) = I0;
@@ -197,10 +171,10 @@ for si=1:mp.Nsbp
             dDM2Vprobe = probeCmd./mp.dm1.VtoH; % Now in volts
         end
         if(any(mp.dm_ind==1))
-            mp.dm1.V = DM1Vnom+dDM1Vprobe;
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom+dDM1Vprobe);
         end
         if(any(mp.dm_ind==2))
-            mp.dm2.V = DM2Vnom+dDM2Vprobe;
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom+dDM2Vprobe);
         end
 
         %--Take probed image
@@ -262,10 +236,10 @@ for si=1:mp.Nsbp
 
         % For unprobed field based on model:
         if(any(mp.dm_ind==1))
-            mp.dm1.V = DM1Vnom;
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom);
         end
         if(any(mp.dm_ind==2))
-            mp.dm2.V = DM2Vnom;
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom);
         end
         
         [~,E0] = max(max(model_compact(mp, modvar)));
@@ -276,19 +250,19 @@ for si=1:mp.Nsbp
         for iProbe=1:Npairs
             % For plus probes:
             if(any(mp.dm_ind==1))
-                mp.dm1.V = squeeze(DM1Vplus(:,:,iProbe));
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, squeeze(DM1Vplus(:,:,iProbe)));
             end
             if(any(mp.dm_ind==2))
-                mp.dm2.V = squeeze(DM2Vplus(:,:,iProbe));
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, squeeze(DM2Vplus(:,:,iProbe)));
             end
             [~,Etemp] = max(max(model_compact(mp, modvar)));
             Eplus(:,iProbe) = Etemp;
             % For minus probes:
             if(any(mp.dm_ind==1))
-                mp.dm1.V = squeeze(DM1Vminus(:,:,iProbe));
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, squeeze(DM1Vminus(:,:,iProbe)));
             end
             if(any(mp.dm_ind==2))
-                mp.dm2.V = squeeze(DM2Vminus(:,:,iProbe));
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, squeeze(DM2Vminus(:,:,iProbe)));
             end
             [~,Etemp] = max(max(model_compact(mp, modvar)));
             Eminus(:,iProbe) = Etemp;

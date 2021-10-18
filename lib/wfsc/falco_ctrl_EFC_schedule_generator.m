@@ -1,18 +1,24 @@
-% Copyright 2018, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function for 
-% -This function 
+% Decode the controller scheduling matrix into its components.
 %
-%
-%
-% REVISION HISTORY:
-%--Heavily modified on 2018-07-24 by A.J. Riggs to change how the inputs
-%are done.
-%--Created on 2018-05-09 by A.J. Riggs.
+% CONTROL SCHEDULE. Columns of sched_mat are: 
+% Column 1: # of iterations, 
+% Column 2: log10(regularization), 
+% Column 3: which DMs to use (12, 128, 129, or 1289) for control
+% Column 4: flag (0 = false, 1 = true), whether to re-linearize
+%   at that iteration.
+% Column 5: flag (0 = false, 1 = true), whether to perform an
+%   EFC parameter grid search to find the set giving the best
+%   contrast .
+% The imaginary part of the log10(regularization) in column 2 is
+%  replaced for that iteration with the optimal log10(regularization)
+% A row starting with [0, 0, 0, 1...] is for relinearizing only at that time
+
 
 function [Nitr, relinItrVec, gridSearchItrVec, log10regSched, dm_ind_sched] = falco_ctrl_EFC_schedule_generator(sched_mat)
 
@@ -57,4 +63,4 @@ function [Nitr, relinItrVec, gridSearchItrVec, log10regSched, dm_ind_sched] = fa
         dm_ind_sched{Itr} = dm_ind;
     end
 
-end %--END OF FUNCTION
+end
