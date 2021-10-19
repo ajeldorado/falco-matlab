@@ -21,17 +21,8 @@
 function Eout = propcustom_relay(Ein, Nrelay, varargin)
 
     % Error checks on inputs
-    if length(size(Ein)) ~= 2
-        error('Ein must be a 2-D array.')
-    elseif size(Ein, 1) ~= size(Ein, 2)
-        error('Ein must be a square array.')
-    end
-    
-    if(Nrelay - round(Nrelay) ~= 0)
-        error('propcustom_relay: The variable Nrelay must be an integer')
-    end
-    
-    
+    Check.two_dim_square_array(Ein)
+    Check.scalar_integer(Nrelay)
 
     % Set default values of input parameters
     centering = 'pixel';
