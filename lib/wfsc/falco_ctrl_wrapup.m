@@ -68,8 +68,8 @@ if(any(mp.dm_ind==9));  mp.dm9.V = cvar.DM9Vnom + dDM.dDM9V;  end
 
 
 % Re-compute delta V for DM1 and DM2 in case constraints changed them
-dDM.dDM1V = mp.dm1.V - cvar.DM1Vnom;
-dDM.dDM2V = mp.dm2.V - cvar.DM2Vnom;
+if(any(mp.dm_ind==1));  dDM.dDM1V = mp.dm1.V - cvar.DM1Vnom;  end
+if(any(mp.dm_ind==2));  dDM.dDM2V = mp.dm2.V - cvar.DM2Vnom;  end
 
 if(any(mp.dm_ind==1));  mp.dm1.dV = dDM.dDM1V;  end % Store the delta DM command
 if(any(mp.dm_ind==2));  mp.dm2.dV = dDM.dDM2V;  end % Store the delta DM command
