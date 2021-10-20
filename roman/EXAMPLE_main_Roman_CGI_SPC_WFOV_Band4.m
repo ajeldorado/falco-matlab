@@ -23,7 +23,7 @@ addpath(genpath('~/Documents/Sim/cgi/public/roman_phasec_v1.2.4/matlab/'));
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_Roman_CGI_PROPER_SPC_WFOV()
+EXAMPLE_config_Roman_CGI_SPC_WFOV_Band4()
 
 
 %% Step 3: Overwrite default values as desired
