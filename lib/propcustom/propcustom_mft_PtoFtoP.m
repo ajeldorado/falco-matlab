@@ -89,7 +89,7 @@ function OUT = propcustom_mft_PtoFtoP(IN, FPM, apRad, inVal, outVal, useGPU, var
     
     % Generate low-resolution central opaque spot
     if diamSpotLamD > 0
-        inputs.pixresFPM = pixres; %--pixels per lambda/D
+        inputs.pixresFPM = pixPerLamD; %--pixels per lambda/D
         inputs.rhoInner = diamSpotLamD/2; % radius of inner FPM amplitude spot (in lambda_c/D)
         inputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
         inputs.FPMampFac = 0; % amplitude transmission of inner FPM spot

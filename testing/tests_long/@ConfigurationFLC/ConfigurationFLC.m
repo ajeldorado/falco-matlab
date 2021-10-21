@@ -103,12 +103,6 @@ mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annu
 mp.dm1.weight = 1;
 mp.dm2.weight = 1;
 
-%--Voltage range restrictions
-mp.dm1.maxAbsV = 1000;
-mp.dm2.maxAbsV = 1000;
-mp.maxAbsdV = 1000;  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
-
-
 %% Wavefront Control: Controller Specific
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters

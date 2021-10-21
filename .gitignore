@@ -34,7 +34,10 @@ TestingResults*.txt
 #--CVX license
 **/LICENSE.txt
 
-#
+#--Sync only example files
+roman/**
+!roman/EXAMPLE_*
+
 wfirst_modeling/defaults_*.m
 wfirst_modeling/main_*.m
 

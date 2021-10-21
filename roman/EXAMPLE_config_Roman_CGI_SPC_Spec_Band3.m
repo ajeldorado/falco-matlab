@@ -1,5 +1,9 @@
-
 % %--Initialize some structures if they don't already exist
+
+%% Path to data needed by PROPER model
+
+mp.full.data_dir = '/Users/ajriggs/Documents/Sim/cgi/public/roman_phasec_v1.2.4/phasec_data/';
+
 
 %% Misc
 
@@ -16,7 +20,7 @@ mp.flagPlot = false;
 mp.centering = 'pixel';
 
 %--Method of computing core throughput:
-% - 'HMI' for energy within half-max isophote(s) divided by energy at telescope pupil
+% - 'HMI' for energy within half-max isophote divided by energy at telescope pupil
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
 mp.thput_metric = 'HMI'; 
 mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY for 'EE' method.
@@ -29,7 +33,7 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters]
+mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters].
 mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
@@ -56,7 +60,7 @@ mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe a
 
 %% Wavefront Control: General
 
-mp.ctrl.flagUseModel = true; %--Use the compact model for the grid search
+mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
 
 %--Threshold for culling weak actuators from the Jacobian:
 mp.logGmin = -6;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
@@ -66,12 +70,12 @@ mp.jac.zerns = 1;  %--Which Zernike modes to include in Jacobian. Given as the m
 mp.jac.Zcoef = 1e-9*[1]; %1e-9*ones(size(mp.jac.zerns)); %--meters RMS of Zernike aberrations. (piston value is not used; it is a placeholder for correct indexing of other modes.)
     
 %--Zernikes to compute sensitivities for
-mp.eval.indsZnoll = 2:6; %--Noll indices of Zernikes to compute values for
+mp.eval.indsZnoll = [];%2:3;%2:6; %--Noll indices of Zernikes to compute values for
 %--Annuli to compute 1nm RMS Zernike sensitivities over. Columns are [inner radius, outer radius]. One row per annulus.
-mp.eval.Rsens = [3., 4.;
-                4., 5.;
-                5., 8.;
-                8., 9.];  
+mp.eval.Rsens = [];%...
+%                 [3., 4.;...
+%                 4., 8.;
+%                 8., 9.];  
 
 %--Grid- or Line-Search Settings
 mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
@@ -89,17 +93,15 @@ mp.dm2.weight = 1.;
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
-%  - 'SM-CVX' for constrained EFC using CVX. --> DEVELOPMENT ONLY
+mp.controller = 'gridsearchEFC';
 
 % % % GRID SEARCH EFC DEFAULTS     
 %--WFSC Iterations and Control Matrix Relinearization
-mp.controller = 'gridsearchEFC';
 mp.Nitr = 5; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2]; %--Which DMs to use
 
-% % % PLANNED SEARCH EFC DEFAULTS  
-% mp.controller = 'plannedEFC';
+% % % PLANNED SEARCH EFC DEFAULTS     
 % mp.dm_ind = [1 2 ]; % vector of DMs used in controller at ANY time (not necessarily all at once or all the time). 
 % mp.ctrl.dmfacVec = 1;
 % %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
@@ -116,10 +118,15 @@ mp.dm_ind = [1 2]; %--Which DMs to use
 %     % A row starting with [0, 0, 0, 1...] is for relinearizing only at that time
 % 
 % mp.ctrl.sched_mat = [...
-%     repmat([1,1j,12,1,1],[4,1]);...
-%     repmat([1,1j-1,12,1,1],[25,1]);...
-%     repmat([1,1j,12,1,1],[1,1]);...
+%     [0,0,0,1,0];
+%     repmat([1,1j,12,0,1],[10,1]);...
 %     ];
+% 
+% % mp.ctrl.sched_mat = [...
+% %     repmat([1,1j,12,1,1],[4,1]);...
+% %     repmat([1,1j-1,12,1,1],[25,1]);...
+% %     repmat([1,1j,12,1,1],[1,1]);...
+% %     ];
 % [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 
@@ -141,30 +148,42 @@ mp.dm2.inf_sign = '+';
 %% Deformable Mirrors: Optical Layout Parameters
 
 %--DM1 parameters
+mp.dm1.orientation = 'rot180'; % Change to mp.dm1.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 mp.dm1.Nact = 48;               % # of actuators across DM array
-mp.dm1.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
+mp.dm1.VtoH = 4e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm1.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm1.ytilt = 5.7;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm1.ytilt = 9.65;               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
-mp.dm1.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
-mp.dm1.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
+mp.dm1.xc = 23.5;%(48/2 - 1/2);       % x-center location of DM surface [actuator widths]
+mp.dm1.yc = 23.5;%(48/2 - 1/2);       % y-center location of DM surface [actuator widths]
 mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
+mp.dm1.Vmin = 0; %--Min allowed absolute voltage command
+mp.dm1.Vmax = 100; %--Max allowed absolute voltage command
+mp.dm1.dVnbrLat = 50; % max voltage difference allowed between laterally-adjacent DM actuators
+mp.dm1.dVnbrDiag = 75; % max voltage difference allowed between diagonally-adjacent DM actuators
+mp.dm1.facesheetFlatmap = 50 * ones(mp.dm1.Nact, mp.dm1.Nact); %--Voltage map that produces a flat DM2 surface. Used when enforcing the neighbor rule.
 
 %--DM2 parameters
+mp.dm2.orientation = 'rot180'; % Change to mp.dm2.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 mp.dm2.Nact = 48;               % # of actuators across DM array
-mp.dm2.VtoH = 1e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
+mp.dm2.VtoH = 4e-9*ones(48);  % gains of all actuators [nm/V of free stroke]
 mp.dm2.xtilt = 0;               % for foreshortening. angle of rotation about x-axis [degrees]
-mp.dm2.ytilt = 5.7;               % for foreshortening. angle of rotation about y-axis [degrees]
+mp.dm2.ytilt = 9.65;%               % for foreshortening. angle of rotation about y-axis [degrees]
 mp.dm2.zrot = 0;              % clocking of DM surface [degrees]
-mp.dm2.xc = (48/2 - 1/2);       % x-center location of DM surface [actuator widths]
-mp.dm2.yc = (48/2 - 1/2);       % y-center location of DM surface [actuator widths]
+mp.dm2.xc = 23.5;%(48/2 - 1/2);       % x-center location of DM surface [actuator widths]
+mp.dm2.yc = 23.5;%(48/2 - 1/2);       % y-center location of DM surface [actuator widths]
 mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
+mp.dm2.Vmin = 0; %--Min allowed absolute voltage command
+mp.dm2.Vmax = 100; %--Max allowed absolute voltage command
+mp.dm2.dVnbrLat = 50; % max voltage difference allowed between laterally-adjacent DM actuators
+mp.dm2.dVnbrDiag = 75; % max voltage difference allowed between diagonally-adjacent DM actuators
+mp.dm2.facesheetFlatmap = 50 * ones(mp.dm2.Nact, mp.dm2.Nact); %--Voltage map that produces a flat DM2 surface. Used when enforcing the neighbor rule.
 
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = false;  %--Whether to apply an iris or not
-mp.dm2.Dstop = 50e-3;   %--Diameter of iris [meters]
+mp.flagDM2stop = true;  %--Whether to apply an iris or not
+mp.dm2.Dstop = 51.5596e-3;   %--Diameter of iris [meters]
 
 %--DM separations
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
@@ -175,139 +194,113 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
-mp.layout = 'Fourier';  %--Which optical layout to use
+mp.layout = 'roman_phasec_proper';  %--Which optical layout to use
 mp.coro = 'SPLC';
+mp.flagRotation = false;
+mp.flagApod = true;    %--Whether to use an apodizer or not
+mp.flagDMwfe = false;  %--Whether to apply DM aberration maps in FALCO models
 
 %--Final Focal Plane Properties
-mp.Fend.res = 6;%(730/660)*2.; %--Sampling [ pixels per lambda0/D]
-mp.Fend.FOV = 11.; %--half-width of the field of view in both dimensions [lambda0/D]
+mp.Fend.res = 2.92; %--Sampling [ pixels per lambda0/D]
+mp.Fend.FOV = 12.; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 2.6;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 9.0;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 9.4;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 65;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = 3;  % inner radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.Rout = 9;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rin = 3.0;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = 9.0;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'lr'; %--Which side(s) for correction: 'left', 'right', 'top', 'up', 'bottom', 'down', 'lr', 'rl', 'leftright', 'rightleft', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'
+mp.Fend.clockAngDeg = 0; %--Amount to rotate the dark hole location
 
-%% Optical Layout
+
+%% Optical Layout: Full Model 
+
+mp.full.cor_type = 'spc-spec_band3';
+
+mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
+
+% %--Pupil Plane Resolutions
+mp.P1.full.Nbeam = 1000;
+mp.P1.full.Narr = 1002;
+
+mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
+mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
+
+mp.full.pol_conds = 10;% [-2,-1,1,2]; %--Which polarization states to use when creating an image.
+mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
+mp.full.use_errors = true;
+
+mp.full.dm1.flatmap = fitsread('spc_spec_band3_flattened_dm1.fits');
+mp.full.dm2.flatmap = fitsread('spc_spec_band3_flattened_dm2.fits');
+
+mp.dm1.biasMap = 50 + mp.full.dm1.flatmap./mp.dm1.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
+mp.dm2.biasMap = 50 + mp.full.dm2.flatmap./mp.dm2.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
+
+%% Optical Layout: Compact Model (and Jacobian Model)
 
 %--Focal Lengths
 mp.fl = 1.; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
 %--Pupil Plane Diameters
-mp.P2.D = 46.2987e-3;
-mp.P3.D = 46.2987e-3;
-mp.P4.D = 46.2987e-3;
+mp.P2.D = 46.3e-3;
+mp.P3.D = 46.3e-3;
+mp.P4.D = 46.3e-3;
 
-% NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 386;%1000;%386;
-mp.P2.compact.Nbeam = 386;%1000;%386;
-mp.P3.compact.Nbeam = 386;%1000;%386;
+mp.P1.compact.Nbeam = 300;
+mp.P2.compact.Nbeam = 300;
+mp.P3.compact.Nbeam = 300;
 mp.P4.compact.Nbeam = 60;
 
-%--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 1000;
-mp.P2.full.Nbeam = 1000;
-mp.P3.full.Nbeam = 1000;
-mp.P4.full.Nbeam = 200;
+%--Shaped Pupil Mask: Load and downsample.
+% mp.SPname = 'SPC-20190130';
+SP0 = fitsread([mp.full.data_dir filesep 'spc_20200617_spec' filesep 'SPM_SPC-20200617_1000_rounded9.fits']);
+SP0 = pad_crop(SP0, 1001);
+SP0 = rot90(SP0, 2);
+
+SP1 = falco_filtered_downsample(SP0, mp.P3.compact.Nbeam/mp.P1.full.Nbeam, mp.centering);
+mp.P3.compact.mask = pad_crop(SP1, ceil_even(max(size(SP1))));
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
 %full model, which probably has extra collimated beams compared to the
 %compact model.
+% NOTE: All these relays are ignored if mp.flagRotation == false.
 mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
-mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
+mp.NrelayFend = 1; %--How many times to rotate the final image by 180 degrees
 
-%% Entrance Pupil (P1) Definition and Generation
 
-mp.whichPupil = 'WFIRST180718'; % Used only for run label
+%% Mask Definitions
+
+%--Pupil definition
+% mp.whichPupil = 'Roman';
 mp.P1.IDnorm = 0.303; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
 mp.P1.D = 2.3631; %--telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
 mp.P1.Dfac = 1; %--Factor scaling inscribed OD to circumscribed OD for the telescope pupil.
-mp.P1.full.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.full.Nbeam, mp.centering);
-mp.P1.compact.mask = falco_gen_pupil_WFIRST_CGI_180718(mp.P1.compact.Nbeam, mp.centering);
+changes.flagRot180 = true;
+mp.P1.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.centering, changes);
 
-%% "Apodizer" (P3) Definition and Generation
-
-mp.flagApod = true;    %--Whether to use an apodizer or not
-mp.P3.full.mask = fitsread('SPM_SPC-20190130.fits');
-mp.SPname = 'SPC-20190130';
-
-% Downsample for compact model
-SP0 = mp.P3.full.mask;
-if(mp.P1.compact.Nbeam==1000)
-    mp.P3.compact.mask = SP0;
-else
-    SP0 = SP0(2:end,2:end);
-    % figure(1); imagesc(SP0); axis xy equal tight; colormap jet; colorbar;
-    % figure(11); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
-    dx0 = 1/1000;
-    dx1 = 1/mp.P3.compact.Nbeam;
-    N0 = size(SP0,1);
-    switch lower(mp.centering)
-        case{'pixel'}
-            N1 = ceil_odd(N0*dx0/dx1);
-        case{'interpixel'}
-            N1 = ceil_even(N0*dx0/dx1);
-    end
-    x0 = (-(N0-1)/2:(N0-1)/2)*dx0;
-    [X0,Y0] = meshgrid(x0);
-    R0 = sqrt(X0.^2+Y0.^2);
-    Window = 0*R0;
-    Window(R0<=dx1) = 1; Window = Window/sum(sum(Window));
-    % figure(10); imagesc(Window); axis xy equal tight; colormap jet; colorbar;
-    SP0 = ifftshift(  ifft2( fft2(fftshift(Window)).*fft2(fftshift(SP0)) )); %--To get good grayscale edges, convolve with the correct window before downsampling.
-    SP0 = circshift(SP0,[1 1]); %--Undo a centering shift
-    x1 = (-(N1-1)/2:(N1-1)/2)*dx1;
-    [X1,Y1] = meshgrid(x1);
-    SP1 = interp2(X0,Y0,SP0,X1,Y1,'cubic',0); %--Downsample by interpolation
-
-    switch lower(mp.centering)
-        case{'pixel'}
-            mp.P3.compact.mask = zeros(N1+1,N1+1);
-            mp.P3.compact.mask(2:end,2:end) = SP1;
-        otherwise
-            mp.P3.compact.mask = SP1;
-    end
-    figure(2); imagesc(SP0); axis xy equal tight; colormap jet; colorbar;
-    figure(3); imagesc(SP1); axis xy equal tight; colormap jet; colorbar;
-    % figure(12); imagesc(SP0-fliplr(SP0)); axis xy equal tight; colormap jet; colorbar;
-    % figure(13); imagesc(SP1-fliplr(SP1)); axis xy equal tight; colormap jet; colorbar;
-end
-
-%% Lyot stop shape
+%--Lyot stop shape
 mp.LSshape = 'bowtie';
-mp.P4.IDnorm = 0.38; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.92; %--Lyot stop OD [Dtelescope]
-mp.P4.ang = 90;      %--Lyot stop opening angle [degrees]
-mp.P4.wStrut = 0;    %--Lyot stop strut width [pupil diameters]
+mp.P4.IDnorm = 0.41; %--Lyot stop ID [Dtelescope]
+mp.P4.ODnorm = 0.89; %--Lyot stop OD [Dtelescope]
+mp.P4.ang = 88;      %--Lyot stop opening angle [degrees]
+rocLS = 0.03; % fillet radii [fraction of pupil diameter]
+clockDegLS = 0; % [degrees]
+upsampleFactor = 100; %--Lyot and FPM anti-aliasing value
+mp.P4.compact.mask = falco_gen_rounded_bowtie_LS(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, rocLS, upsampleFactor, mp.P4.ang, clockDegLS, mp.centering);
 
-rocFilletLS = 0.1/100; % [pupil diameters]
-upsampleFactor = 100;
-clockDeg = 0;
-mp.P4.compact.mask = falco_gen_rounded_bowtie_LS(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, rocFilletLS, upsampleFactor, mp.P4.ang, clockDeg, mp.centering);
-mp.P4.full.mask = falco_gen_rounded_bowtie_LS(mp.P4.full.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, rocFilletLS, upsampleFactor, mp.P4.ang, clockDeg, mp.centering);
-% mp.P4.compact.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, mp.P4.wStrut, rocFilletLS, upsampleFactor, mp.centering);
-% mp.P4.full.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.full.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, mp.P4.wStrut, rocFilletLS, upsampleFactor, mp.centering);
-
-
-%% FPM (F3) Definition and Generation
-
+% FPM parameters
 mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda0/D]
-mp.F3.full.res = 20;    % sampling of FPM for full model [pixels per lambda0/D]
-
-mp.F3.Rin = 2.6;   % inner hard-edge radius of the focal plane mask [lambda0/D]. Needs to be <= mp.F3.Rin 
-mp.F3.Rout = 9;   % radius of outer opaque edge of FPM [lambda0/D]
-mp.F3.ang = 65;    % on each side, opening angle [degrees]
-rocFillet = 0.25;
-clockDeg = 0;
-upsampleFactor = 100;
-mp.F3.compact.mask = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.compact.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
-mp.F3.full.mask = falco_gen_rounded_bowtie_FPM(mp.F3.Rin, mp.F3.Rout, rocFillet, mp.F3.full.res, mp.F3.ang, clockDeg, upsampleFactor, mp.centering);
+Rmask0 = 2.6; % [lambda/D]
+Rmask1 = 9.4; % [lambda/D]
+rocFPM = 0.25; % [lambda/D]
+angDegFPM = 65; % [degrees]
+clockDegFPM = 0; % [degrees]
+mp.F3.compact.mask = falco_gen_rounded_bowtie_FPM(Rmask0, Rmask1, rocFPM, mp.F3.compact.res, angDegFPM, clockDegFPM, upsampleFactor, mp.centering);
