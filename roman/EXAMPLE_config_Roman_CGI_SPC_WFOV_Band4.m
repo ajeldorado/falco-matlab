@@ -232,6 +232,7 @@ mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions o
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
 mp.full.pol_conds = [-2, -1, 1, 2]; %--Which polarization states to use when creating an image.
+mp.full.polaxis = 10; % Pol state to use when making a single call to the Roman CGI PROPER model  
 mp.full.use_errors = true;
 
 mp.full.dm1.flatmap = fitsread('spc_wide_band4_flattened_dm1.fits');

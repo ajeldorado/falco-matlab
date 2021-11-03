@@ -22,10 +22,16 @@ addpath(genpath('~/Documents/Sim/cgi/public/roman_phasec_v1.2.4/matlab/'));
 
 %% Uncomment the config file for the mask configuration that you want
 
+% %--Officially supported mask configs:
 EXAMPLE_config_Roman_CGI_HLC_NFOV_Band1()
-% EXAMPLE_config_Roman_CGI_SPC_Spec_Band3()
+% % % EXAMPLE_config_Roman_CGI_SPC_Bowtie_Band2()
+% EXAMPLE_config_Roman_CGI_SPC_Bowtie_Band3()
 % EXAMPLE_config_Roman_CGI_SPC_WFOV_Band4()
 
+% %--Unsupported but included mask configs:
+% EXAMPLE_config_Roman_CGI_HLC_NFOV_Band2()
+% EXAMPLE_config_Roman_CGI_HLC_NFOV_Band3()
+% EXAMPLE_config_Roman_CGI_HLC_NFOV_Band4()
 
 %% Overwrite default values as desired
 
@@ -68,7 +74,8 @@ mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 %% Keep only the central bandpass's FPM if using just one wavelength with HLC
 
 if (mp.Nsbp == 1) && strcmpi(mp.coro, 'HLC')
-    mp.compact.FPMcube = mp.compact.FPMcube(:, :, 2);
+    nSlices = size(mp.compact.FPMcube, 3);
+    mp.compact.FPMcube = mp.compact.FPMcube(:, :, ceil(nSlices/2));
 end
 
 
@@ -80,11 +87,14 @@ optval.use_dm1 = true;
 optval.dm1_m = mp.full.dm1.flatmap;
 optval.use_dm2 = true;
 optval.dm2_m = mp.full.dm2.flatmap;
-optval.end_at_fpm_exit_pupil = 1;
-optval.use_fpm = 0;
 nout = 1024;
 optval.output_dim = 1024;
 optval.use_pupil_mask = false;  % No SPM for getting initial phase
+optval.use_fpm = false;
+optval.use_lyot_stop = false;
+optval.use_field_stop = false;
+optval.use_pupil_lens = true;
+optval = rmfield(optval, 'final_sampling_lam0');
 
 if mp.Nsbp == 1
     lambdaFacs = 1;
@@ -95,17 +105,33 @@ end
 %--Get the Input Pupil's E-field and downsample for the compact model
 nCompact = ceil_even(mp.P1.compact.Nbeam+1);
 mp.P1.compact.E = ones(nCompact, nCompact, mp.Nsbp);
-for si = 1:mp.Nsbp
+for iSubband = 1:mp.Nsbp
     
-    lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
-    fldFull = prop_run('roman_phasec', lambda_um, nout, 'quiet', 'passvalue', optval);
-    fldC = falco_filtered_downsample(fldFull, mp.P1.compact.Nbeam/mp.P1.full.Nbeam, mp.centering);
-    fldC = pad_crop(fldC, nCompact);
-    mp.P1.compact.E(:, :, si) = propcustom_relay(fldC, 1, mp.centering); % Assign to initial E-field in compact model
+    lambda_um = 1e6*mp.lambda0*lambdaFacs(iSubband);
+    
+    % Get aberrations for the full optical train
+    optval.pinhole_diam_m = 0; % 0 means don't use the pinhole at FPAM
+    fieldFullAll = prop_run('roman_phasec', lambda_um, nout, 'quiet', 'passvalue', optval);
+    
+    % Put pinhole at FPM to get back-end optical aberrations
+    optval.pinhole_diam_m = mp.F3.pinhole_diam_m;
+    fieldFullBackEnd = prop_run('roman_phasec', lambda_um, nout, 'quiet', 'passvalue', optval);
+    optval.pinhole_diam_m = 0; % 0 means don't use the pinhole at FPAM
+
+    % Subtract off back-end phase aberrations from the phase retrieval estimate    
+    phFrontEnd = angle(fieldFullAll) - angle(fieldFullBackEnd);
+    swMask = logical(ampthresh(fieldFullAll));
+    [phFrontEnd, ~] = removeZernikes(phFrontEnd, [0 1 1], [0 1 -1], swMask); % Remove tip/tilt/piston
+    
+    % Put front-end E-field into compact model
+    fieldFull = abs(fieldFullAll).*exp(1j*phFrontEnd);
+    fieldCompact = falco_filtered_downsample(fieldFull, mp.P1.compact.Nbeam/mp.P1.full.Nbeam, mp.centering);
+    fieldCompact = pad_crop(fieldCompact, nCompact);
+    mp.P1.compact.E(:, :, iSubband) = propcustom_relay(fieldCompact, 1, mp.centering); % Assign to initial E-field in compact model
 
     if mp.flagPlot
-        figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv; drawnow;
-        figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula; drawnow;
+        figure(607); imagesc(angle(fieldCompact)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+        figure(608); imagesc(abs(fieldCompact)); axis xy equal tight; colorbar; colormap parula; drawnow;
     end
     
 end

@@ -37,6 +37,7 @@ TestingResults*.txt
 #--Sync only example files
 roman/**
 !roman/EXAMPLE_*
+!roman/flatmaps/dm*.fits
 
 wfirst_modeling/defaults_*.m
 wfirst_modeling/main_*.m
