@@ -57,12 +57,19 @@ mp.ctrl.sched_mat = repmat([1, 1j, 12, 0, 1], [5, 1]);
 
 %% SETTINGS FOR QUICK RUN: SINGLE WAVELENGTH, SINGLE POLARIZATION, AND NO PROBING
 
-% mp.fracBW = 0.01; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-% mp.Nsbp = 1; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-% mp.Nwpsbp = 1; %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.fracBW = 0.01; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1; %--Number of wavelengths to used to approximate an image in each sub-bandpass
 mp.full.pol_conds = 10;% [-2,-1,1,2]; %--Which polarization states to use when creating an image.
-% mp.estimator = 'perfect';
-% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.estimator = 'perfect';
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+
+
+%% Keep only the central bandpass's FPM if using just one wavelength with HLC
+
+if (mp.Nsbp == 1) && strcmpi(mp.coro, 'HLC')
+    mp.compact.FPMcube = mp.compact.FPMcube(:, :, 2);
+end
 
 
 %% Perform an idealized phase retrieval (get the E-field directly)
