@@ -147,7 +147,7 @@ switch upper(mp.coro)
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         
-        % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
+        % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
         if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
         
         EP4 = pad_crop(EP4, mp.P4.full.Narr);

@@ -47,7 +47,7 @@ mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image
 % - 'pwp-bp-square' for pairwise probing with batch process estimation in a
 % square region for one star [original functionality of 'pwp-bp' prior to January 2021]
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-mp.estimator = 'perfect';
+mp.estimator = 'pwp-bp-square';
 
 %--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
@@ -60,6 +60,7 @@ mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe a
 
 %% Wavefront Control: General
 
+mp.jac.minimizeNI = true; %--Have EFC minimize normalized intensity instead of intensity
 mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
 
 %--Threshold for culling weak actuators from the Jacobian:
@@ -230,8 +231,7 @@ mp.P1.full.Narr = 1002;
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
-mp.full.pol_conds = 10;% [-2,-1,1,2]; %--Which polarization states to use when creating an image.
-mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
+mp.full.pol_conds = [-2, -1, 1, 2]; %--Which polarization states to use when creating an image.
 mp.full.use_errors = true;
 
 mp.full.dm1.flatmap = fitsread('spc_wide_band4_flattened_dm1.fits');
@@ -261,7 +261,6 @@ mp.P4.compact.Nbeam = 120;
 SP0 = fitsread([mp.full.data_dir filesep 'spc_20200610_wfov' filesep 'SPM_SPC-20200610_1000_rounded9_gray.fits']);
 SP0 = pad_crop(SP0, 1001);
 SP0 = rot90(SP0, 2);
-% % SP0(2:end,2:end) = rot90(SP0(2:end,2:end),2);
 
 SP1 = falco_filtered_downsample(SP0, mp.P3.compact.Nbeam/mp.P1.full.Nbeam, mp.centering);
 mp.P3.compact.mask = pad_crop(SP1, ceil_even(max(size(SP1))));
@@ -293,6 +292,7 @@ wStrut = 3.2/100; % Lyot stop strut width [pupil diameters]
 rocFilletLS = 0.02; % [pupil diameters]
 upsampleFactor = 100; %--Lyot anti-aliasing value
 mp.P4.compact.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, wStrut, rocFilletLS, upsampleFactor, mp.centering);
+mp.P4.compact.maskAtP1res = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P1.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, wStrut, rocFilletLS, upsampleFactor, mp.centering);
 
 % FPM parameters
 mp.F3.compact.res = 3;
