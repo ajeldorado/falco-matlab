@@ -47,7 +47,7 @@ mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image
 % - 'pwp-bp-square' for pairwise probing with batch process estimation in a
 % square region for one star [original functionality of 'pwp-bp' prior to January 2021]
 % - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-mp.estimator = 'perfect';
+mp.estimator = 'pwp-bp-square';
 
 %--New variables for pairwise probing estimation:
 mp.est.probe.Npairs = 3;%2;     % Number of pair-wise probe PAIRS to use.
@@ -60,6 +60,7 @@ mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe a
 
 %% Wavefront Control: General
 
+mp.jac.minimizeNI = false; %--Have EFC minimize normalized intensity instead of intensity
 mp.ctrl.flagUseModel = true; %--Whether to perform a model-based (vs empirical) grid search for the controller
 
 %--Threshold for culling weak actuators from the Jacobian:
@@ -236,8 +237,7 @@ mp.P1.full.Narr = 310;
 mp.full.output_dim = ceil_even(1 + mp.Fend.res*(2*mp.Fend.FOV)); %  dimensions of output in pixels (overrides output_dim0)
 mp.full.final_sampling_lam0 = 1/mp.Fend.res;	%   final sampling in lambda0/D
 
-mp.full.pol_conds = 10;% [-2,-1,1,2]; %--Which polarization states to use when creating an image.
-mp.full.polaxis = 10;                %   polarization condition (only used with input_field_rootname)
+mp.full.pol_conds = [-2, -1, 1, 2]; %--Which polarization states to use when creating an image.
 mp.full.use_errors = true;
 
 mp.full.dm1.flatmap = fitsread('hlc_flattened_with_pattern_dm1.fits');

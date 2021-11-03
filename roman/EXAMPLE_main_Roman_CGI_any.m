@@ -4,14 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Script to run the high-order wavefront correction with the Roman CGI's
-% SPC-Spec mode for Phase C.
+% Script to run high-order WFSC with any of the Roman CGI's mask configurations.
 %
 % Requires the Roman CGI Phase C model and data from https://sourceforge.net/projects/cgisim/
 
 clear
 
-%% Step 1: Define Necessary Paths on Your Computer System
+%% Define Necessary Paths on Your Computer System
 
 %--Tell Matlab where to find the PROPER model prescription and FITS files
 addpath(genpath('~/Documents/Sim/cgi/public/roman_phasec_v1.2.4/matlab/'));
@@ -21,12 +20,14 @@ addpath(genpath('~/Documents/Sim/cgi/public/roman_phasec_v1.2.4/matlab/'));
 % mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 
 
-%% Step 2: Load default model parameters
+%% Uncomment the config file for the mask configuration that you want
 
-EXAMPLE_config_Roman_CGI_SPC_Spec_Band3()
+EXAMPLE_config_Roman_CGI_HLC_NFOV_Band1()
+% EXAMPLE_config_Roman_CGI_SPC_Spec_Band3()
+% EXAMPLE_config_Roman_CGI_SPC_WFOV_Band4()
 
 
-%% Step 3: Overwrite default values as desired
+%% Overwrite default values as desired
 
 % %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
@@ -53,13 +54,18 @@ mp.ctrl.sched_mat = repmat([1, 1j, 12, 0, 1], [5, 1]);
 %     ];
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
-%--QUICK CHECK WITH MONOCHROMATIC LIGHT
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
-%% Step 3b: Perform an idealized phase retrieval (get the E-field directly)
+%% SETTINGS FOR QUICK RUN: SINGLE WAVELENGTH, SINGLE POLARIZATION, AND NO PROBING
+
+% mp.fracBW = 0.01; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1; %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.full.pol_conds = 10;% [-2,-1,1,2]; %--Which polarization states to use when creating an image.
+% mp.estimator = 'perfect';
+% mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+
+
+%% Perform an idealized phase retrieval (get the E-field directly)
 
 optval = mp.full;
 optval.source_x_offset = 0;
@@ -100,12 +106,12 @@ end
 % Don't double count the pupil amplitude with the phase retrieval and a model-based mask
 mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
 
-%% Step 4: Generate the label associated with this trial
+%% Generate the label associated with this trial
 
-mp.runLabel = sprintf('Series%04d_Trial%04d_Roman_CGI_SPC_Spec_', mp.SeriesNum, mp.TrialNum);
+mp.runLabel = sprintf('Series%04d_Trial%04d_Roman_CGI_SPC_WFOV_', mp.SeriesNum, mp.TrialNum);
 
 
-%% Step 5: Perform the Wavefront Sensing and Control
+%% Perform the Wavefront Sensing and Control
 
 [mp, out] = falco_flesh_out_workspace(mp);
 

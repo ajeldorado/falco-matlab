@@ -65,8 +65,7 @@ end
 
 if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
     if ~isfield(mp.P4.compact, 'maskAtP1res')
-        error(['For peak Jacobian calculation, there must be a Lyot stop named mp.P4.compact.maskAtP1res'
-            'that is sampled at the same resolution as the input pupil.'])
+        error('For peak Jacobian calculation, there must be a Lyot stop named mp.P4.compact.maskAtP1res that is sampled at the same resolution as the input pupil.')
     else
         lyotStopReimaged = propcustom_relay(pad_crop(mp.P4.compact.maskAtP1res, NdmPad), NrelayFactor*(mp.Nrelay2to3+mp.Nrelay3to4));
     end
