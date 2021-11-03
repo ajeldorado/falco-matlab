@@ -35,8 +35,12 @@ TestingResults*.txt
 **/LICENSE.txt
 
 #--Sync only example files
-roman/**
-!roman/EXAMPLE_*
+roman/*.m
+roman/*.mat
+roman/*.fits
+roman/*.txt
+roman/flatmaps/*.fits
+!roman/EXAMPLE_*.m
 !roman/flatmaps/dm*.fits
 
 wfirst_modeling/defaults_*.m
