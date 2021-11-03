@@ -313,8 +313,8 @@ mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
-    fn_p_r = [mp.full.data_dir filesep 'hlc_20190210b/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_' 'real.fits'];
-    fn_p_i = [mp.full.data_dir filesep 'hlc_20190210b/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_' 'imag.fits']; 
+    fn_p_r = [mp.full.data_dir filesep 'hlc_20190210b/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_real.fits'];
+    fn_p_i = [mp.full.data_dir filesep 'hlc_20190210b/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_imag.fits']; 
     fpm = complex(fitsread(fn_p_r), fitsread(fn_p_i));
     mp.compact.FPMcube(:,:,si) = pad_crop(fpm, mp.F3.compact.Nxi);
 end
