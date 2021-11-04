@@ -302,7 +302,7 @@ lyot = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, mp.P4.IDno
 mp.P4.compact.mask = pad_crop(lyot, max(size(lyot)));
 
 %--Pinhole used during back-end calibration
-mp.F3.pinhole_diam_m = 0.5*32.22*825e-9;
+mp.F3.pinhole_diam_m = 0.5*32.22*730e-9;
 
 %--Load the HLC FPM
 if mp.Nsbp == 1

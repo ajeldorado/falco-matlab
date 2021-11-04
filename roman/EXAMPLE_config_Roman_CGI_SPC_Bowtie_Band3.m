@@ -34,7 +34,7 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters].
-mp.fracBW = 0.15;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.fracBW = 0.1671232876712329;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
