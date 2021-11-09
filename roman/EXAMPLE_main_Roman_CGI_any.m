@@ -12,9 +12,6 @@ clear
 
 %% Define Necessary Paths on Your Computer System
 
-%--Tell Matlab where to find the PROPER model prescription and FITS files
-addpath(genpath('~/Documents/Sim/cgi/public/roman_phasec_v1.2.4/matlab/'));
-
 % %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
 % mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
 % mp.path.ws = '~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
