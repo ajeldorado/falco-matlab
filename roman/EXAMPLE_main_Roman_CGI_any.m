@@ -19,16 +19,17 @@ clear
 
 %% Uncomment the config file for the mask configuration that you want
 
-% %--Officially supported mask configs:
+% %--Officially SUPPORTED mask configurations:
 EXAMPLE_config_Roman_CGI_HLC_NFOV_Band1()
-% % % EXAMPLE_config_Roman_CGI_SPC_Bowtie_Band2()
+% EXAMPLE_config_Roman_CGI_SPC_Bowtie_Band2()
 % EXAMPLE_config_Roman_CGI_SPC_Bowtie_Band3()
 % EXAMPLE_config_Roman_CGI_SPC_WFOV_Band4()
 
-% %--Unsupported but included mask configs:
+% %--UNSUPPORTED but included mask configurations:
 % EXAMPLE_config_Roman_CGI_HLC_NFOV_Band2()
 % EXAMPLE_config_Roman_CGI_HLC_NFOV_Band3()
 % EXAMPLE_config_Roman_CGI_HLC_NFOV_Band4()
+% EXAMPLE_config_Roman_CGI_SPC_WFOV_Band1()
 
 %% Overwrite default values as desired
 
@@ -76,22 +77,33 @@ if (mp.Nsbp == 1) && strcmpi(mp.coro, 'HLC')
 end
 
 
-%% Perform an idealized phase retrieval (get the E-field directly)
+%% Perform an idealized phase retrieval (get the E-field directly) of the entrance pupil
 
 optval = mp.full;
 optval.source_x_offset = 0;
 optval.use_dm1 = true;
-optval.dm1_m = mp.full.dm1.flatmap;
 optval.use_dm2 = true;
-optval.dm2_m = mp.full.dm2.flatmap;
 nout = 1024;
 optval.output_dim = 1024;
-optval.use_pupil_mask = false;  % No SPM for getting initial phase
+optval.use_pupil_mask = false;  % No SPM for getting entrance pupil phase
 optval.use_fpm = false;
 optval.use_lyot_stop = false;
 optval.use_field_stop = false;
 optval.use_pupil_lens = true;
 optval = rmfield(optval, 'final_sampling_lam0');
+
+% Use non-SPC flat maps for SPC since SPM has separate aberrations
+% downstream that can't be fully captured at entrance pupil with the SPM in
+% place. The SPM aberrations are flattened in a separate step not included
+% here.
+is_spc = strfind(lower(mp.coro), 'sp');
+if is_spc
+    optval.dm1_m = mp.full.dm1.flatmapNoSPM;
+    optval.dm2_m = mp.full.dm2.flatmapNoSPM;
+else
+    optval.dm1_m = mp.full.dm1.flatmap;
+    optval.dm2_m = mp.full.dm2.flatmap;
+end
 
 if mp.Nsbp == 1
     lambdaFacs = 1;
@@ -114,8 +126,8 @@ for iSubband = 1:mp.Nsbp
     optval.pinhole_diam_m = mp.F3.pinhole_diam_m;
     fieldFullBackEnd = prop_run('roman_phasec', lambda_um, nout, 'quiet', 'passvalue', optval);
     optval.pinhole_diam_m = 0; % 0 means don't use the pinhole at FPAM
-
-    % Subtract off back-end phase aberrations from the phase retrieval estimate    
+    
+    % Subtract off back-end phase aberrations from the phase retrieval estimate
     phFrontEnd = angle(fieldFullAll) - angle(fieldFullBackEnd);
     swMask = logical(ampthresh(fieldFullAll));
     [phFrontEnd, ~] = removeZernikes(phFrontEnd, [0 1 1], [0 1 -1], swMask); % Remove tip/tilt/piston

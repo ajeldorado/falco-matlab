@@ -202,7 +202,7 @@ mp.flagApod = true;    %--Whether to use an apodizer or not
 mp.flagDMwfe = false;  %--Whether to apply DM aberration maps in FALCO models
 
 %--Final Focal Plane Properties
-mp.Fend.res = 3.30; %--Sampling [ pixels per lambda0/D]. 825/500*2
+mp.Fend.res = mp.lambda0/(500e-9)*2; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 22.0; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
@@ -235,8 +235,10 @@ mp.full.pol_conds = [-2, -1, 1, 2]; %--Which polarization states to use when cre
 mp.full.polaxis = 10; % Pol state to use when making a single call to the Roman CGI PROPER model  
 mp.full.use_errors = true;
 
-mp.full.dm1.flatmap = fitsread('spc_wide_band4_flattened_dm1.fits');
-mp.full.dm2.flatmap = fitsread('spc_wide_band4_flattened_dm2.fits');
+mp.full.dm1.flatmap = fitsread('dm1_m_spc-wide_band4.fits');
+mp.full.dm2.flatmap = fitsread('dm2_m_spc-wide_band4.fits');
+mp.full.dm1.flatmapNoSPM = fitsread('dm1_m_flat_hlc_band4.fits');
+mp.full.dm2.flatmapNoSPM = fitsread('dm2_m_flat_hlc_band4.fits');
 
 mp.dm1.biasMap = 50 + mp.full.dm1.flatmap./mp.dm1.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
 mp.dm2.biasMap = 50 + mp.full.dm2.flatmap./mp.dm2.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
@@ -294,6 +296,9 @@ rocFilletLS = 0.02; % [pupil diameters]
 upsampleFactor = 100; %--Lyot anti-aliasing value
 mp.P4.compact.mask = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, wStrut, rocFilletLS, upsampleFactor, mp.centering);
 mp.P4.compact.maskAtP1res = falco_gen_Roman_CGI_lyot_stop_symm_fillet(mp.P1.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, wStrut, rocFilletLS, upsampleFactor, mp.centering);
+
+%--Pinhole used during back-end calibration
+mp.F3.pinhole_diam_m = 0.5*32.22*825e-9;
 
 % FPM parameters
 mp.F3.compact.res = 3;
