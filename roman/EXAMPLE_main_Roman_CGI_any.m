@@ -7,6 +7,9 @@
 % Script to run high-order WFSC with any of the Roman CGI's mask configurations.
 %
 % Requires the Roman CGI Phase C model and data from https://sourceforge.net/projects/cgisim/
+%
+% Refer to Figure 2 in the paper at https://arxiv.org/abs/2108.05986 to see
+% all the flight mask configurations that can be modeled with this script.
 
 clear
 
@@ -26,10 +29,14 @@ EXAMPLE_config_Roman_CGI_HLC_NFOV_Band1()
 % EXAMPLE_config_Roman_CGI_SPC_WFOV_Band4()
 
 % %--UNSUPPORTED but included mask configurations:
+% EXAMPLE_config_Roman_CGI_SPC_RotatedBowtie_Band2()
+% EXAMPLE_config_Roman_CGI_SPC_RotatedBowtie_Band3()
 % EXAMPLE_config_Roman_CGI_HLC_NFOV_Band2()
 % EXAMPLE_config_Roman_CGI_HLC_NFOV_Band3()
 % EXAMPLE_config_Roman_CGI_HLC_NFOV_Band4()
 % EXAMPLE_config_Roman_CGI_SPC_WFOV_Band1()
+% EXAMPLE_config_Roman_CGI_SPC_Multistar_Band1()
+% EXAMPLE_config_Roman_CGI_SPC_Multistar_Band4()
 
 %% Overwrite default values as desired
 

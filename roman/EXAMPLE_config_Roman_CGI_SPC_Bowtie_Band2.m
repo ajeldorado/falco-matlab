@@ -267,10 +267,10 @@ SP0 = rot90(SP0, 2);
 SP1 = falco_filtered_downsample(SP0, mp.P3.compact.Nbeam/mp.P1.full.Nbeam, mp.centering);
 mp.P3.compact.mask = pad_crop(SP1, ceil_even(max(size(SP1))));
 
-%--Number of re-imaging relays between pupil planesin compact model. Needed
-%to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
-%full model, which probably has extra collimated beams compared to the
-%compact model.
+%--Number of re-imaging relays between pupil planes in compact model. 
+% Needed to keep track of 180-degree rotations compared to the
+% full model, which probably has extra collimated beams compared
+% to the compact model.
 % NOTE: All these relays are ignored if mp.flagRotation == false.
 mp.Nrelay1to2 = 1;
 mp.Nrelay2to3 = 1;

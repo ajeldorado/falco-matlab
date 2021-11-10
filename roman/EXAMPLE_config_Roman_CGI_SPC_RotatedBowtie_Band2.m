@@ -24,19 +24,19 @@ mp.centering = 'pixel';
 % - 'EE' for encircled energy within a radius (mp.thput_radius) divided by energy at telescope pupil
 mp.thput_metric = 'HMI'; 
 mp.thput_radius = 0.7; %--photometric aperture radius [lambda_c/D]. Used ONLY for 'EE' method.
-mp.thput_eval_x = 7; % x location [lambda_c/D] in dark hole at which to evaluate throughput
-mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
+mp.thput_eval_x = 7*cosd(60); % x location [lambda_c/D] in dark hole at which to evaluate throughput
+mp.thput_eval_y = 7*sind(60); % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
-mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 7*cosd(60);  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_y_offset_norm = 7*sind(60);  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 730e-9;   %--Central wavelength of the whole spectral bandpass [meters].
-mp.fracBW = 0.1671232876712329;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.lambda0 = 660e-9; %--Central wavelength of the whole spectral bandpass [meters].
+mp.fracBW = 0.169696969696967; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 5; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3; %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -215,12 +215,12 @@ mp.Fend.score.Rout = 9.0;  % outer radius of dark hole scoring region [lambda0/D
 mp.Fend.score.ang = 65;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'lr'; %--Which side(s) for correction: 'left', 'right', 'top', 'up', 'bottom', 'down', 'lr', 'rl', 'leftright', 'rightleft', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'
-mp.Fend.clockAngDeg = 0; %--Amount to rotate the dark hole location
+mp.Fend.clockAngDeg = 60; %--Amount to rotate the dark hole location
 
 
 %% Optical Layout: Full Model 
 
-mp.full.cor_type = 'spc-spec_band3';
+mp.full.cor_type = 'spc-spec_rotated_band2';
 
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
@@ -235,10 +235,10 @@ mp.full.pol_conds = [-2, -1, 1, 2]; %--Which polarization states to use when cre
 mp.full.polaxis = 10; % Pol state to use when making a single call to the Roman CGI PROPER model  
 mp.full.use_errors = true;
 
-mp.full.dm1.flatmap = fitsread('dm1_m_spc-spec_band3.fits');
-mp.full.dm2.flatmap = fitsread('dm2_m_spc-spec_band3.fits');
-mp.full.dm1.flatmapNoSPM = fitsread('dm1_m_flat_hlc_band3.fits');
-mp.full.dm2.flatmapNoSPM = fitsread('dm2_m_flat_hlc_band3.fits');
+mp.full.dm1.flatmap = fitsread('dm1_m_spc-spec_rotated_band2.fits');
+mp.full.dm2.flatmap = fitsread('dm2_m_spc-spec_rotated_band2.fits');
+mp.full.dm1.flatmapNoSPM = fitsread('dm1_m_flat_hlc_band2.fits');
+mp.full.dm2.flatmapNoSPM = fitsread('dm2_m_flat_hlc_band2.fits');
 
 mp.dm1.biasMap = 50 + mp.full.dm1.flatmap./mp.dm1.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
 mp.dm2.biasMap = 50 + mp.full.dm2.flatmap./mp.dm2.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
@@ -260,7 +260,7 @@ mp.P3.compact.Nbeam = 300;
 mp.P4.compact.Nbeam = 60;
 
 %--Shaped Pupil Mask: Load and downsample.
-SP0 = fitsread([mp.full.data_dir filesep 'spc_20200617_spec' filesep 'SPM_SPC-20200617_1000_rounded9.fits']);
+SP0 = fitsread([mp.full.data_dir filesep 'spc_20200628_specrot' filesep 'SPM_SPC-20200628_1000_derotated.fits']);
 SP0 = pad_crop(SP0, 1001);
 SP0 = rot90(SP0, 2);
 
@@ -291,16 +291,16 @@ mp.P1.compact.mask = falco_gen_pupil_Roman_CGI_20200513(mp.P1.compact.Nbeam, mp.
 %--Lyot stop shape
 mp.LSshape = 'bowtie';
 mp.P4.IDnorm = 0.41; %--Lyot stop ID [Dtelescope]
-mp.P4.ODnorm = 0.89; %--Lyot stop OD [Dtelescope]
-mp.P4.ang = 88;      %--Lyot stop opening angle [degrees]
+mp.P4.ODnorm = 0.87; %--Lyot stop OD [Dtelescope]
+mp.P4.ang = 89;      %--Lyot stop opening angle [degrees]
 rocLS = 0.03; % fillet radii [fraction of pupil diameter]
-clockDegLS = 0; % [degrees]
+clockDegLS = 60; % [degrees]
 upsampleFactor = 100; %--Lyot and FPM anti-aliasing value
 mp.P4.compact.mask = falco_gen_rounded_bowtie_LS(mp.P4.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, rocLS, upsampleFactor, mp.P4.ang, clockDegLS, mp.centering);
 mp.P4.compact.maskAtP1res = falco_gen_rounded_bowtie_LS(mp.P1.compact.Nbeam, mp.P4.IDnorm, mp.P4.ODnorm, rocLS, upsampleFactor, mp.P4.ang, clockDegLS, mp.centering);
 
 %--Pinhole used during back-end calibration
-mp.F3.pinhole_diam_m = 0.5*32.22*730e-9;
+mp.F3.pinhole_diam_m = 0.5*32.22*575e-9;
 
 % FPM parameters
 mp.F3.compact.res = 6;    % sampling of FPM for compact model [pixels per lambda0/D]
@@ -308,5 +308,5 @@ Rmask0 = 2.6; % [lambda/D]
 Rmask1 = 9.4; % [lambda/D]
 rocFPM = 0.25; % [lambda/D]
 angDegFPM = 65; % [degrees]
-clockDegFPM = 0; % [degrees]
+clockDegFPM = 60; % [degrees]
 mp.F3.compact.mask = falco_gen_rounded_bowtie_FPM(Rmask0, Rmask1, rocFPM, mp.F3.compact.res, angDegFPM, clockDegFPM, upsampleFactor, mp.centering);

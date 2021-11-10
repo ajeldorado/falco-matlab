@@ -240,16 +240,24 @@ elseif ( strcmp(cor_type,'spc-spec') || strcmp(cor_type,'spc-spec_band2') || str
 	n = 2048;
     end
     n_mft = 1400;
-elseif ( strcmp(cor_type,'spc-spec_rotated') )
+elseif contains(cor_type, 'spc-spec_rotated')
     is_spc = 1;
     file_dir = [data_dir '/spc_20200628_specrot/'];    % must have trailing "/"
     pupil_diam_pix = 1000;	% Y axis pupil diameter in pixels
     pupil_file = [file_dir  'pupil_SPC-20200628_1000.fits'];
-    pupil_mask_file = [file_dir  'SPM_SPC-20200628_1000_derotated.fits'];
+    pupil_mask_file = [file_dir  'SPM_SPC-20200628_1000_derotated_rotated.fits'];
     fpm_sampling_lam0divD = 0.05; 	% sampling in lambda0/D of FPM mask
     fpm_file = [file_dir 'FPM_SPC-20200628_res20.fits'];
-    fpm_lam0_m = 0.73e-6;
-    lambda0_m = fpm_lam0_m;
+%     fpm_lam0_m = 0.73e-6;
+%     lambda0_m = fpm_lam0_m;
+    if strcmp(cor_type, 'spc-spec_rotated_band2')
+        fpm_lam0_m = 0.660e-6;
+    elseif strcmp(cor_type, 'spc-spec_rotated_band3') || strcmp(cor_type, 'spc-spec_rotated_band')
+        fpm_lam0_m = 0.730e-6;
+    else
+        error('Bad value of cor_type')
+    end
+    lambda0_m = fpm_lam0_m; % FPM scaled for this central wavelength
     lyot_stop_file = [file_dir  'LS_SPC-20200628_1000.fits'];
     if use_pupil_lens ~= 0 || use_defocus_lens ~= 0
 	n = 4096; 
