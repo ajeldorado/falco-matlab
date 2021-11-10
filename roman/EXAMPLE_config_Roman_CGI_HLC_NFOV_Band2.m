@@ -33,10 +33,10 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 
 %% Bandwidth and Wavelength Specs
 
-mp.lambda0 = 575e-9;   %--Central wavelength of the whole spectral bandpass [meters].
-mp.fracBW = 0.1000;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+mp.lambda0 = 660e-9; %--Central wavelength of the whole spectral bandpass [meters].
+mp.fracBW = 0.169696969696967; %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 5; %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 3; %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -208,7 +208,7 @@ mp.flagApod = false;    %--Whether to use an apodizer or not
 mp.flagDMwfe = false;  %--Whether to apply DM aberration maps in FALCO models
 
 %--Final Focal Plane Properties
-mp.Fend.res = 2.30; %--Sampling [ pixels per lambda0/D]
+mp.Fend.res = mp.lambda0/(500e-9)*2; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 12.; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
@@ -226,7 +226,7 @@ mp.Fend.clockAngDeg = 0; %--Amount to rotate the dark hole location
 
 %% Optical Layout: Full Model 
 
-mp.full.cor_type = 'hlc_band1';
+mp.full.cor_type = 'hlc_band2';
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 
 % Pupil Plane Resolutions
@@ -245,10 +245,10 @@ mp.full.polaxis = 10; % Pol state to use when making a single call to the Roman 
 mp.full.use_errors = true;
 
 % DM starting voltages (in the PROPER model only)
-mp.full.dm1.flatmap = fitsread('dm1_m_flat_hlc_band1.fits') + fitsread('dm1_m_design_hlc_band1.fits');
-mp.full.dm2.flatmap = fitsread('dm2_m_flat_hlc_band1.fits') + fitsread('dm2_m_design_hlc_band1.fits');
-% mp.full.dm1.flatmap = fitsread('dm1_m_flat_hlc_band1.fits');
-% mp.full.dm2.flatmap = fitsread('dm2_m_flat_hlc_band1.fits');
+mp.full.dm1.flatmap = fitsread('dm1_m_flat_hlc_band2.fits') + fitsread('dm1_m_design_hlc_band2.fits');
+mp.full.dm2.flatmap = fitsread('dm2_m_flat_hlc_band2.fits') + fitsread('dm2_m_design_hlc_band2.fits');
+% mp.full.dm1.flatmap = fitsread('dm1_m_flat_hlc_band2.fits');
+% mp.full.dm2.flatmap = fitsread('dm2_m_flat_hlc_band2.fits');
 
 mp.dm1.biasMap = 50 + mp.full.dm1.flatmap./mp.dm1.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
 mp.dm2.biasMap = 50 + mp.full.dm2.flatmap./mp.dm2.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
@@ -317,8 +317,8 @@ mp.F3.compact.Neta = mp.F3.compact.Nxi;
 mp.compact.FPMcube = zeros(mp.F3.compact.Nxi,mp.F3.compact.Nxi,mp.Nsbp);
 for si=1:mp.Nsbp
     lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
-    fn_p_r = [mp.full.data_dir filesep 'hlc_20190210b/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_real.fits'];
-    fn_p_i = [mp.full.data_dir filesep 'hlc_20190210b/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_imag.fits']; 
+    fn_p_r = [mp.full.data_dir filesep 'hlc_20200617c_band2/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_real.fits'];
+    fn_p_i = [mp.full.data_dir filesep 'hlc_20200617c_band2/hlc_jacobian_fpm_trans_' sprintf('%.8f', lamUmVec(si)) 'um_imag.fits']; 
     fpm = complex(fitsread(fn_p_r), fitsread(fn_p_i));
     mp.compact.FPMcube(:,:,si) = pad_crop(fpm, mp.F3.compact.Nxi);
 end
@@ -327,5 +327,6 @@ mp.F3.compact.res = 2048/309; % sampling of FPM for compact model [pixels per la
 %--Visually check the FPM cropping
 for si = 1:mp.Nsbp
    figure(100); imagesc(angle(mp.compact.FPMcube(:,:,si))); axis xy equal tight; colorbar; colormap hsv; drawnow; 
+   figure(101); imagesc(abs(mp.compact.FPMcube(:,:,si))); axis xy equal tight; colorbar; colormap parula; drawnow; 
    pause(0.5); 
 end

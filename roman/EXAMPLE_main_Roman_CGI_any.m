@@ -7,13 +7,13 @@
 % Script to run high-order WFSC with any of the Roman CGI's mask configurations.
 %
 % Requires the Roman CGI Phase C model and data from https://sourceforge.net/projects/cgisim/
+%
+% Refer to Figure 2 in the paper at https://arxiv.org/abs/2108.05986 to see
+% all the flight mask configurations that can be modeled with this script.
 
 clear
 
 %% Define Necessary Paths on Your Computer System
-
-%--Tell Matlab where to find the PROPER model prescription and FITS files
-addpath(genpath('~/Documents/Sim/cgi/public/roman_phasec_v1.2.4/matlab/'));
 
 % %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
 % mp.path.config = '~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
@@ -22,10 +22,21 @@ addpath(genpath('~/Documents/Sim/cgi/public/roman_phasec_v1.2.4/matlab/'));
 
 %% Uncomment the config file for the mask configuration that you want
 
+% %--Officially SUPPORTED mask configurations:
 EXAMPLE_config_Roman_CGI_HLC_NFOV_Band1()
-% EXAMPLE_config_Roman_CGI_SPC_Spec_Band3()
+% EXAMPLE_config_Roman_CGI_SPC_Bowtie_Band2()
+% EXAMPLE_config_Roman_CGI_SPC_Bowtie_Band3()
 % EXAMPLE_config_Roman_CGI_SPC_WFOV_Band4()
 
+% %--UNSUPPORTED but included mask configurations:
+% EXAMPLE_config_Roman_CGI_SPC_RotatedBowtie_Band2()
+% EXAMPLE_config_Roman_CGI_SPC_RotatedBowtie_Band3()
+% EXAMPLE_config_Roman_CGI_HLC_NFOV_Band2()
+% EXAMPLE_config_Roman_CGI_HLC_NFOV_Band3()
+% EXAMPLE_config_Roman_CGI_HLC_NFOV_Band4()
+% EXAMPLE_config_Roman_CGI_SPC_WFOV_Band1()
+% EXAMPLE_config_Roman_CGI_SPC_Multistar_Band1()
+% EXAMPLE_config_Roman_CGI_SPC_Multistar_Band4()
 
 %% Overwrite default values as desired
 
@@ -68,23 +79,38 @@ mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 %% Keep only the central bandpass's FPM if using just one wavelength with HLC
 
 if (mp.Nsbp == 1) && strcmpi(mp.coro, 'HLC')
-    mp.compact.FPMcube = mp.compact.FPMcube(:, :, 2);
+    nSlices = size(mp.compact.FPMcube, 3);
+    mp.compact.FPMcube = mp.compact.FPMcube(:, :, ceil(nSlices/2));
 end
 
 
-%% Perform an idealized phase retrieval (get the E-field directly)
+%% Perform an idealized phase retrieval (get the E-field directly) of the entrance pupil
 
 optval = mp.full;
 optval.source_x_offset = 0;
 optval.use_dm1 = true;
-optval.dm1_m = mp.full.dm1.flatmap;
 optval.use_dm2 = true;
-optval.dm2_m = mp.full.dm2.flatmap;
-optval.end_at_fpm_exit_pupil = 1;
-optval.use_fpm = 0;
 nout = 1024;
 optval.output_dim = 1024;
-optval.use_pupil_mask = false;  % No SPM for getting initial phase
+optval.use_pupil_mask = false;  % No SPM for getting entrance pupil phase
+optval.use_fpm = false;
+optval.use_lyot_stop = false;
+optval.use_field_stop = false;
+optval.use_pupil_lens = true;
+optval = rmfield(optval, 'final_sampling_lam0');
+
+% Use non-SPC flat maps for SPC since SPM has separate aberrations
+% downstream that can't be fully captured at entrance pupil with the SPM in
+% place. The SPM aberrations are flattened in a separate step not included
+% here.
+is_spc = strfind(lower(mp.coro), 'sp');
+if is_spc
+    optval.dm1_m = mp.full.dm1.flatmapNoSPM;
+    optval.dm2_m = mp.full.dm2.flatmapNoSPM;
+else
+    optval.dm1_m = mp.full.dm1.flatmap;
+    optval.dm2_m = mp.full.dm2.flatmap;
+end
 
 if mp.Nsbp == 1
     lambdaFacs = 1;
@@ -95,17 +121,33 @@ end
 %--Get the Input Pupil's E-field and downsample for the compact model
 nCompact = ceil_even(mp.P1.compact.Nbeam+1);
 mp.P1.compact.E = ones(nCompact, nCompact, mp.Nsbp);
-for si = 1:mp.Nsbp
+for iSubband = 1:mp.Nsbp
     
-    lambda_um = 1e6*mp.lambda0*lambdaFacs(si);
-    fldFull = prop_run('roman_phasec', lambda_um, nout, 'quiet', 'passvalue', optval);
-    fldC = falco_filtered_downsample(fldFull, mp.P1.compact.Nbeam/mp.P1.full.Nbeam, mp.centering);
-    fldC = pad_crop(fldC, nCompact);
-    mp.P1.compact.E(:, :, si) = propcustom_relay(fldC, 1, mp.centering); % Assign to initial E-field in compact model
+    lambda_um = 1e6*mp.lambda0*lambdaFacs(iSubband);
+    
+    % Get aberrations for the full optical train
+    optval.pinhole_diam_m = 0; % 0 means don't use the pinhole at FPAM
+    fieldFullAll = prop_run('roman_phasec', lambda_um, nout, 'quiet', 'passvalue', optval);
+    
+    % Put pinhole at FPM to get back-end optical aberrations
+    optval.pinhole_diam_m = mp.F3.pinhole_diam_m;
+    fieldFullBackEnd = prop_run('roman_phasec', lambda_um, nout, 'quiet', 'passvalue', optval);
+    optval.pinhole_diam_m = 0; % 0 means don't use the pinhole at FPAM
+    
+    % Subtract off back-end phase aberrations from the phase retrieval estimate
+    phFrontEnd = angle(fieldFullAll) - angle(fieldFullBackEnd);
+    swMask = logical(ampthresh(fieldFullAll));
+    [phFrontEnd, ~] = removeZernikes(phFrontEnd, [0 1 1], [0 1 -1], swMask); % Remove tip/tilt/piston
+    
+    % Put front-end E-field into compact model
+    fieldFull = abs(fieldFullAll).*exp(1j*phFrontEnd);
+    fieldCompact = falco_filtered_downsample(fieldFull, mp.P1.compact.Nbeam/mp.P1.full.Nbeam, mp.centering);
+    fieldCompact = pad_crop(fieldCompact, nCompact);
+    mp.P1.compact.E(:, :, iSubband) = propcustom_relay(fieldCompact, 1, mp.centering); % Assign to initial E-field in compact model
 
     if mp.flagPlot
-        figure(607); imagesc(angle(fldC)); axis xy equal tight; colorbar; colormap hsv; drawnow;
-        figure(608); imagesc(abs(fldC)); axis xy equal tight; colorbar; colormap parula; drawnow;
+        figure(607); imagesc(angle(fieldCompact)); axis xy equal tight; colorbar; colormap hsv; drawnow;
+        figure(608); imagesc(abs(fieldCompact)); axis xy equal tight; colorbar; colormap parula; drawnow;
     end
     
 end
