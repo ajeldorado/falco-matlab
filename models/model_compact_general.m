@@ -215,7 +215,7 @@ if flagUseFPM
                     t_Ni_vec = 0;
                     t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
                     pol = 2;
-                    [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                    [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
                     transOuterFPM = tCoef;
                     scaleFac = 1; % Focal plane sampling does not vary with wavelength
                 case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}

@@ -104,6 +104,11 @@ if(isfield(mp.F3, 'NstepStaircase')==false);  mp.F3.NstepStaircase = 6;  end  % 
 if(isfield(mp.F3, 'clocking')==false);  mp.F3.clocking = 0;  end  % Counterclockwise clocking of the phase FPM [degrees].
 if(isfield(mp.F3, 'phaseScaleFac')==false);  mp.F3.phaseScaleFac = 1;  end  % Factor to apply to the phase in the phase FPM. Use a vector to add chromaticity to the model. 
 
+%--HLC FPM materials
+if(isfield(mp.F3, 'substrate')==false);  mp.F3.substrate = 'FS';  end % name of substrate material  [FS or N-BK7]
+if(isfield(mp.F3, 'metal')==false);  mp.F3.metal = 'nickel';  end % name of the metal used in the FPM  ['nickel']
+if(isfield(mp.F3, 'dielectric')==false);  mp.F3.dielectric = 'PMGI';  end % name of the dielectric used in the FPM  ['PMGI' or 'MgF2']
+
 %--Sensitivities to Zernike-Mode Perturbations
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
 if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
@@ -147,6 +152,7 @@ if(isfield(mp.dm2,'facesheetFlatmap')==false);  mp.dm2.facesheetFlatmap = mp.dm2
 
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
+if(isfield(mp.jac,'Zcoef')==false); mp.jac.Zcoef = 1; end %--coefficients (i.e., weights) of Zernike modes in Jacobian. Weight for piston is always 1.
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
 if(isfield(mp.jac,'minimizeNI')==false); mp.jac.minimizeNI = false; end %--Have EFC minimize normalized intensity instead of intensity
     

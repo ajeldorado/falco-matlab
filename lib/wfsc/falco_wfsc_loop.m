@@ -53,8 +53,8 @@ for Itr = 1:mp.Nitr
 
     mp = falco_set_jacobian_modal_weights(mp); 
     
-    relinearizeThisIter = any(mp.relinItrVec == Itr);
-    if (Itr == 1) || relinearizeThisIter
+    cvar.flagRelin = (Itr == 1) || any(mp.relinItrVec == Itr);
+    if  cvar.flagRelin
         jacStruct =  model_Jacobian(mp);
     end
     

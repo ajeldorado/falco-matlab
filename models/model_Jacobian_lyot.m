@@ -101,9 +101,9 @@ switch upper(mp.coro)
                 %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
                 t_Ti_base = 0;
                 t_Ni_vec = 0;
-                t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+                t_diel_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
                 pol = 2;
-                [transOuterFPM, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                [transOuterFPM, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_diel_vec, lambda*mp.FPM.d0fac, pol);
                 fpm = squeeze(mp.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM. Calculated in model_Jacobian.m
             case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
                 fpm = squeeze(mp.compact.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM.
