@@ -4,43 +4,54 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% function [tCoef] = falco_thin_film_material_def(lam, aoi, t_Ni, t_PMGI, pol)
+% function [tCoef, rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_diel_vec, d0, pol, varargin)
 %
 % Calculates the thin-film complex transmission for the provided
 % combinations of metal and dielectric thicknesses and list of wavelengths.
 %
 % INPUTS:
+%   substrate: name of the substrate material [FS or N-BK7]
+%   metal: name of the metal used in the mask ['nickel']
+%   dielectric: name of the dielectric used in the mask ['PMGI' or 'MgF2']
 %   lam: Wavelength [m]
 %   aoi:    Angle of incidense [deg]
-%   t_Ti_base: Ti base layer thickness [m]
-%   t_Ni:   Nickel layer thickness [m]
-%   t_PMGI: PMGI layer thickness [m]
+%   t_Ti_base: Ti base layer thickness underneath the nickel [m]
+%   t_Ni_vec:   vector of Nickel layer thicknesses [m]
+%   t_diel_vec: vector of dielectric layer thicknesses [m]
 %   pol: = 0 for TE(s) polarization, = 1 for TM(p) polarization, 2 for mean
-%   of s and p polarizations
+%     of s and p polarizations
 %
 % OUTPUTS:
-%   cMask(t_PMGI,t_ni): complex field transmission coeffient. Scalar,
-%   complex value.
+%   tCoef: complex field transmission coeffient
+%   rCoef: complex field reflection coeffient
 % -------------------------------------------------------------------------
 
-function [tCoef, rCoef] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol, varargin)
+function [tCoef, rCoef] = falco_thin_film_material_def(substrate, metal, dielectric, lam, aoi, t_Ti_base, t_Ni_vec, t_diel_vec, d0, pol, varargin)
 
 %% Optional Keyword Inputs
 
 flagOPD = false; %--Default value for OPD phase sign convention is false.
-substrate = 'FS'; % material name of the mask substrate [FS or N-BK7]
+% substrate = 'FS'; % name of the substrate material [FS or N-BK7]
+% metal = 'nickel'; % name of the metal used in the mask
+% dielectric = 'pmgi'; % name of the dielectric used in the mask
 
 icav = 0;             % index in cell array varargin
 while icav < size(varargin, 2)
     icav = icav + 1;
     switch lower(varargin{icav})
-      case {'opd'}
-        flagOPD  = true;       % Use the OPD phase sign convention.
-      case {'substrate','sub','glass'}
-        icav = icav + 1;
-        substrate = varargin{icav}; % material name of the mask substrate [FS or N-BK7]
-      otherwise
-        error('falco_thin_film_material_def: Unknown keyword: %s\n', varargin{icav});
+        case {'opd'}
+            flagOPD  = true;       % Use the OPD phase sign convention.
+%         case {'substrate', 'sub', 'glass'}
+%             icav = icav + 1;
+%             substrate = varargin{icav}; % name of substrate material [FS or N-BK7]
+%         case {'dielectric', 'diel'}
+%             icav = icav + 1;
+%             dielectric = varargin{icav}; % name of dielectric material used in the mask
+%         case {'metal'}
+%             icav = icav + 1;
+%             metal = varargin{icav}; % name of metal material used in the mask
+        otherwise
+            error('falco_thin_film_material_def: Unknown keyword: %s\n', varargin{icav});
     end
 end
 
@@ -51,9 +62,9 @@ lam_u = lam*1.0e6; % m --> microns
 wvl_um = lam*1.0e6; % m --> microns
 theta  = aoi*pi/180;     % deg --> rad
 
-% ---------------------------------------------
 %--Substrate properties
 switch lower(substrate)
+
     case{'fs','fusedsilica','fused_silica'}   % Fused Silica
         % ----------- Fused Silica from Dwight Moody------------------
 %         lamm = [.4e-6,  .5e-6, .51e-6, .52e-6, .53e-6, .54e-6, .55e-6, .56e-6, .57e-6, .58e-6, .59e-6, .6e-6, .72e-6, .76e-6,   .8e-6,  .88e-6,  .90e-6 1.04e-6]*1d9;
@@ -85,20 +96,57 @@ switch lower(substrate)
         wvl_um = lam_u;
         n_substrate = sqrt(1 + (B1*(wvl_um).^2./((wvl_um).^2 - C1)) + (B2*(wvl_um).^2./((wvl_um).^2 - C2)) + (B3*(wvl_um).^2./((wvl_um).^2 - C3)));
     
+    otherwise
+        error('Invalid value of substrate.')
+    
 end
 
-% ---------------------------------------------
 %--Dielectric properties
-npmgi = 1.524 + 5.176e-03./lam_u.^2 + 2.105e-4./lam_u.^4;
-Ndiel  = length(t_PMGI_vec);
+switch lower(dielectric)
 
-% ---------------------------------------------
+    case{'pmgi'} 
+        n_diel = 1.524 + 5.176e-03./lam_u.^2 + 2.105e-4./lam_u.^4;
+        k_diel = zeros(size(n_diel));
+        
+    case{'mgf2'}
+        
+        dataMgF2 = load('MgF2_data_from_Rodriguez-deMarcos_wvlUM_n_k.txt');
+
+        lamUM_mgf2_0 = dataMgF2(:,1);  % [microns]
+        lam_mgf2_0 = lamUM_mgf2_0 * 1e3; % [nm]
+        n_mgf2_0 = dataMgF2(:,2);
+        k_mgf2_0 = dataMgF2(:,3);
+        n_diel = interp1(lam_mgf2_0, n_mgf2_0, lam_nm, 'linear');
+        k_diel = interp1(lam_mgf2_0, k_mgf2_0, lam_nm, 'linear');
+        
+    otherwise
+        error('Invalid value of dielectric.')
+        
+end
+lenDiel  = length(t_diel_vec);
+
+
+
 %--Metal layer properties
+lenMetal = length(t_Ni_vec);
+switch lower(metal)
 
+    case{'nickel', 'ni'} 
+        t_Ti_vec = t_Ti_base*ones(lenMetal, 1);
+        t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no Ni
 
-Nmetal = length(t_Ni_vec);
-t_Ti_vec = t_Ti_base*ones(Nmetal, 1);
-t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no Ni
+        vnickel = load('nickel_data_from_Palik_via_Bala_wvlNM_n_k.txt');
+
+        lam_nickel = vnickel(:,1);  % nm
+        n_nickel   = vnickel(:,2);
+        k_nickel   = vnickel(:,3);
+        nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
+        knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');
+
+    otherwise
+        error('Invalid value of metal.')
+        
+end        
 
 % %--New logic: Titanium layer goes beneath Nickel only. Always include them
 % %together. Subtract off the thickness of the Ti layer from the intended Ni
@@ -150,14 +198,6 @@ t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no Ni
 %     1000       2.80976       4.99537
 %     1040       2.85933       5.12178];
 
-vnickel = load('nickel_data_from_Palik_via_Bala_wvlNM_n_k.txt');
-
-lam_nickel = vnickel(:,1);  % nm
-n_nickel   = vnickel(:,2);
-k_nickel   = vnickel(:,3);
-nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
-knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');
-
 % ---------------------------------------------
 % from D Moody
 titanium =[...  
@@ -188,16 +228,16 @@ kti    = interp1(lam_ti, k_ti, lam_nm, 'linear');
 % ---------------------------------------------
 
 %% Compute the complex transmission
-tCoef = zeros(Ndiel,Nmetal); %--initialize
-rCoef = zeros(Ndiel,Nmetal); %--initialize
-for jj = 1:Ndiel
-    dpm = t_PMGI_vec(jj);
+tCoef = zeros(lenDiel,lenMetal); %--initialize
+rCoef = zeros(lenDiel,lenMetal); %--initialize
+for jj = 1:lenDiel
+    dpm = t_diel_vec(jj);
     
-    for ii = 1:Nmetal
+    for ii = 1:lenMetal
         dni = t_Ni_vec(ii);
         dti = t_Ti_vec(ii);
         
-        nvec = [1 1 npmgi nnickel-1i*knickel nti-1i*kti n_substrate];
+        nvec = [1, 1, n_diel-1j*k_diel, nnickel-1j*knickel, nti-1j*kti, n_substrate];
         dvec = [d0-dpm-dni-dti, dpm, dni, dti];
         
         %--Choose polarization

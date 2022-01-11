@@ -133,7 +133,7 @@ if(mp.flagPlot)
                     h_dm9 = subplot(2,3,6);
                     set(h_dm9, 'OuterPosition', [0.67, 0.02, subplotbox])
                     imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM9surf*1e9,1e9*[cutoffFloor,max(mp.DM9surf(:))]); axis xy equal tight; colormap parula; colorbar;
-                    title('FPM PMGI (nm)','Fontsize',16,'Fontweight','Bold');
+                    title('FPM Dielectric (nm)','Fontsize',16,'Fontweight','Bold');
         %             xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
                     ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
         %             ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');

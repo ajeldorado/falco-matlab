@@ -49,7 +49,7 @@ function [mp, jacStruct] = falco_ctrl_cull_weak_actuators(mp, cvar, jacStruct)
         
     %% Cull Weak Actuators
     %--Reduce the number of actuators used based on their relative strength in the Jacobian
-    if cvar.flagCullAct && any(mp.relinItrVec == cvar.Itr)
+    if cvar.flagCullAct && cvar.flagRelin
         fprintf('Weeding out weak actuators from the control Jacobian...\n'); 
         if any(mp.dm_ind == 1)
             %--Crop out very weak-effect actuators. Need mp.dm1.act_ele to be a column vector

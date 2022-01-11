@@ -147,7 +147,7 @@ switch upper(mp.coro)
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         
-        % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
+        % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
         if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
         
         EP4 = pad_crop(EP4, mp.P4.full.Narr);
@@ -180,8 +180,9 @@ switch upper(mp.coro)
                 t_Ni_vec = 0;
                 t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
                 pol = 2;
-                [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
                 transOuterFPM = tCoef;
+                scaleFac = 1;
             case{'fpm_scale'}
                 transOuterFPM = mp.FPM.mask(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
                 scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength

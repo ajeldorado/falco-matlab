@@ -140,11 +140,34 @@ else
 end
 
 %--Compute the actuator center coordinates in units of actuator spacings
-for iact=1:dm.NactTotal
-    xyzVals = [x_vec(iact); y_vec(iact); 0; 1];
+actIndMat = reshape(1:dm.Nact^2, [dm.Nact, dm.Nact]);
+switch lower(dm.orientation)
+    case 'rot0'
+        % no change
+    case 'rot90'
+        actIndMat = rot90(actIndMat, 1);
+    case 'rot180'
+        actIndMat = rot90(actIndMat, 2);
+    case 'rot270'
+        actIndMat = rot90(actIndMat, 3);
+    case 'flipxrot0'
+        actIndMat = flipx(actIndMat);
+    case 'flipxrot90'
+        actIndMat = rot90(flipx(actIndMat), 1);
+    case 'flipxrot180'
+        actIndMat = rot90(flipx(actIndMat), 2);
+    case 'flipxrot270'
+        actIndMat = rot90(flipx(actIndMat), 3);
+    otherwise
+        error('invalid value of dm.orientation');
+end
+for iact = 1:dm.NactTotal
+    iIndex = actIndMat(iact);
+    xyzVals = [x_vec(iIndex); y_vec(iIndex); 0; 1];
     xyzValsRot = Mrot*xyzVals;
     dm.xy_cent_act(:,iact) = xyzValsRot(1:2);
 end
+
 
 N0 = max(size(dm.inf0));
 Npad = ceil_odd( sqrt(2)*max(size(dm.inf0)) );
@@ -230,6 +253,8 @@ dm.y_pupPad = dm.x_pupPad;
 
 %% DM: (use NboxPad-sized postage stamps)
 
+dm.act_ele = (1:dm.NactTotal).'; 
+
 if(flagGenCube)
     if(dm.flag_hex_array==false)
         fprintf('  Influence function padded from %d to %d points for A.S. propagation.\n',Nbox,dm.NboxAS);
@@ -252,21 +277,19 @@ if(flagGenCube)
     [dm.Xbox0,dm.Ybox0] = meshgrid(dm.x_box0); %--meters, interpixel-centered coordinates for the master influence function
 
     %--Limit the actuators used to those within 1 actuator width of the pupil
-    r_cent_act_box_inM = sqrt(dm.xy_cent_act_box_inM(1,:).^2 + dm.xy_cent_act_box_inM(2,:).^2);
+    % r_cent_act_box_inM = sqrt(dm.xy_cent_act_box_inM(1,:).^2 + dm.xy_cent_act_box_inM(2,:).^2);
     %--Compute and store all the influence functions:
     dm.inf_datacube = zeros(Nbox,Nbox,dm.NactTotal); %--initialize array of influence function "postage stamps"
-    dm.act_ele = []; % Indices of nonzero-ed actuators
+    % dm.act_ele = []; % Indices of nonzero-ed actuators
     for iact=1:dm.NactTotal
-       dm.act_ele = [dm.act_ele; iact]; % Add actuator index to the keeper list
+       % dm.act_ele = [dm.act_ele; iact]; % Add actuator index to the keeper list
        dm.Xbox = dm.Xbox0 - (dm.xy_cent_act_inPix(1,iact)-dm.xy_cent_act_box(1,iact))*dx_dm; % X = X0 -(x_true_center-x_box_center)
        dm.Ybox = dm.Ybox0 - (dm.xy_cent_act_inPix(2,iact)-dm.xy_cent_act_box(2,iact))*dx_dm; % Y = Y0 -(y_true_center-y_box_center)
        dm.inf_datacube(:,:,iact) = interp2(Xinf0,Yinf0,dm.infMaster,dm.Xbox,dm.Ybox,'spline',0);
     end
     
     fprintf('done.  Time = %.1fs\n',toc);
-
-else
-    dm.act_ele = (1:dm.NactTotal).';    
+       
 end
 
 end %--END OF FUNCTION
