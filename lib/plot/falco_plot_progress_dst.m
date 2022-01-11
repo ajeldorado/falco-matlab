@@ -8,6 +8,17 @@ function handles = falco_plot_progress_dst(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM
 
 tb = mp.tb;
 
+if(Itr==10 || Itr==40)
+    % Clear the dark 
+    disp('Clearing the dark ...');
+    sbp_texp = tb.info.sbp_texp(mp.si_ref);
+    [~,flnm] = sciCam_loadDark(tb,sbp_texp);
+    delete(flnm);
+else
+    disp('Keeping dark ...');
+end
+
+
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
 Icbmin = -10;
@@ -115,7 +126,7 @@ if(mp.flagPlot)
     xlabel('Iteration')
 %     ylabel('Norm. I');
     %if(Itr>2); legend([hl1(mp.si_ref), hl2(mp.si_ref)],'Modulated','Unmodulated');end
-	title('Mean Probed Intensity')
+	title('Mean Mod Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
 
@@ -130,7 +141,7 @@ if(mp.flagPlot)
 %     hold off;
     xlabel('Wavelength (nm)')
 %     legend('Mean Total','Modulated','location','best');
-	title('Mean Probed Intensity')
+	title('Mean Mod Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
 
