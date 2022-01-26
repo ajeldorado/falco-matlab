@@ -70,13 +70,13 @@ if isfield(dm, 'orientation')
         case 'rot270'
             heightMap = rot90(heightMap, 3);
         case 'flipxrot0'
-            heightMap = flipx(heightMap);
+            heightMap = fliplr(heightMap);
         case 'flipxrot90'
-            heightMap = rot90(flipx(heightMap), 1);
+            heightMap = rot90(fliplr(heightMap), 1);
         case 'flipxrot180'
-            heightMap = rot90(flipx(heightMap), 2);
+            heightMap = rot90(fliplr(heightMap), 2);
         case 'flipxrot270'
-            heightMap = rot90(flipx(heightMap), 3);
+            heightMap = rot90(fliplr(heightMap), 3);
         otherwise
             error('invalid value of dm.orientation');
     end
