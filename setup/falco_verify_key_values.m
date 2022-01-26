@@ -37,5 +37,10 @@ function mp = falco_verify_key_values(mp)
     if ~any(strcmp(mp.allowedLayouts, mp.layout))
         error('Error: %s is not an allowed value of mp.layout.', mp.layout)
     end
+    
+    %--Check valid combinations of coronagraph type and layout
+    if strcmpi(mp.layout, 'fpm_scale') && ~strcmpi(mp.coro, 'HLC')
+        error("Error: mp.layout is only allowed as 'fpm_scale' when mp.coro = 'HLC'.")
+    end
 
 end
