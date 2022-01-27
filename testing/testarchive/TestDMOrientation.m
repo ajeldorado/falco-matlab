@@ -11,11 +11,13 @@ classdef TestDMOrientation < matlab.unittest.TestCase
     methods (TestClassSetup)
         function addPath(testCase)
             addpath(genpath('../../lib'));
+            addpath(genpath('../../lib_external'));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
             rmpath(genpath('../../lib'));
+            rmpath(genpath('../../lib_external'));
         end
     end
     
