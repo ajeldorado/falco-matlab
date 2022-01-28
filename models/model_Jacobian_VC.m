@@ -128,13 +128,13 @@ Edm1 = DM1stop .* exp(mirrorFac*2*pi*1j*DM1surf/lambda) .* Edm1; %--E-field leav
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %--DM1---------------------------------------------------------
-if whichDM == 1
-    if mp.flagFiber
-        if mp.flagLenslet
-            Gmode = zeros(mp.Fend.Nlens, mp.dm1.Nele);
-        else
-            Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele);
-        end
+if(whichDM==1) 
+    if (mp.flagFiber)
+%         if(mp.flagLenslet)
+            Gzdl = zeros(mp.Fend.Nlens,mp.dm1.Nele);
+%         else
+%             Gzdl = zeros(mp.Fend.corr.Npix,mp.dm1.Nele);
+%         end
     else
         Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele); %--Initialize the Jacobian
     end
@@ -297,12 +297,15 @@ if whichDM == 1
                 else
                     EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
-                    Gmodetemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+%                     Gzdltemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
                     for i=1:mp.Fend.Nfiber
-                        Eonefiber = mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*conj(EFend)));
-                        Gmodetemp = Gmodetemp + Eonefiber;
+%                         auxEonefiber = mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*conj(EFend)));
+                        auxEonefiber = sum(sum(mp.Fend.fiberMode(:,:,modvar.sbpIndex,i).*(EFend)));
+                        Eonefiber = sum(auxEonefiber(:));
+%                         Gzdltemp = Gzdltemp + Eonefiber;
+                        Gzdl(i,Gindex) = Eonefiber;
                     end
-                    Gmode(:, Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
+%                     Gzdl(:,Gindex) = Gzdltemp(mp.Fend.corr.inds);
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);

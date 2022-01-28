@@ -1,4 +1,6 @@
 
+clear all;
+
 flagPlot = true; %--Plot results
 flagSave = false;%true;%false; %--Save FITS files
 
@@ -22,7 +24,8 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 fn_prefix = 'C:\CoronagraphSims\falco-matlab\data\brief\';
 
 %% Define file names to load
-runLabel = 'C:\CoronagraphSims\falco-matlab\data\brief\Series0010_Trial0003_vortex_LUVOIR_B_offaxis_1DM32_z1_IWA2_OWA15_12lams690nm_BW40_gridsearchEFC';
+% runLabel = 'C:\CoronagraphSims\falco-matlab\data\brief\Series0001_Trial0001_Vortex_LUVOIR_B_offaxis_2DM64_z0.8_IWA2_OWA26_1lams400nm_BW2.5_gridsearchEFC';
+runLabel = 'C:\CoronagraphSims\falco-matlab\data\brief\Series0012_Trial0001_vortex_LUVOIR_B_offaxis_1DM34_z1_IWA2_OWA15_12lams690nm_BW40_gridsearchEFC';
 
 fn_init_ws = [runLabel, '_config.mat']; %--configuration file
 fn_snippet_ws = [runLabel, '_snippet.mat']; %--post-trial data in structure named 'out'
@@ -44,6 +47,10 @@ mp.dm2.V = out.DM2V;
 mp.Nsbp = 150;
 mp.fracBW = 0.65;
 
+%Add in fiber parameters for stuff done using the old hard-coded V
+%calculations
+if(~isfield(mp.fiber,'a_phys')); mp.fiber.a_phys = 1.75e-6; end
+if(~isfield(mp.fiber,'NA')); mp.fiber.NA = 0.12; end
 %% Save to new config file that includes the final DM settings as the new starting point
 fn_config_updated = [fn_init_ws(1:end-4) '_updated.mat'];
 save(fn_config_updated)
@@ -91,7 +98,7 @@ end
 rawcontrast = [];
 thput = [];
 
-for fiberloc = [[6.1888; 0], [-3.0944; 5.3597], [-3.0944; -5.3597]]%[[5.3405; 0], [-2.6702; 4.625], [-2.6702; -4.625]]%[[6; 0], [-3; 5.1962], [-3; -5.1962]]
+for fiberloc = [[6.1888; 0-1.2], [-3.0944; 5.3597-1.2], [-3.0944; -5.3597-1.2], [6.1888; 10.719-1.2]]
     for wi = 1:mp.Nsbp
         modvar.wpsbpIndex = 1;
         modvar.whichSource = 'star';
@@ -132,7 +139,7 @@ ylabel('Contrast', 'FontSize', 18, 'Interpreter', 'Latex');
 xlim([550 830]);
 ylim([-12 -6]);
 yticks(-12:1:-6);
-legend({'(6.2, 0) $\lambda_0/D$', '(-3.0, 5.4) $\lambda_0/D$', '(-3.0, -5.4) $\lambda_0/D$'}, 'Location', 'North', 'Interpreter', 'Latex');
+legend({'(6.2, -1.2) $\lambda_0/D$', '(-3.0, 3.2) $\lambda_0/D$', '(-3.0, -6.6) $\lambda_0/D$', '(6.2, 9.5) $\lambda_0/D$'}, 'Location', 'North', 'Interpreter', 'Latex');
 legend('boxoff');
 
 %% Plot throughput in each fiber
@@ -149,3 +156,21 @@ xlabel('$\lambda$ (nm)', 'FontSize', 18, 'Interpreter', 'Latex');
 ylabel('Throughput', 'FontSize', 18, 'Interpreter', 'Latex');
 xlim([550 830]);
 ylim([0 0.6]);
+
+%% Get image of field showing fiber locations
+% sbpind = 1;%mp.Nsbp/2;
+% IFend = falco_get_sbp_image(mp, sbpind);
+% 
+% figure;
+% hold on;
+% imagesc(mp.Fend.xisDL, mp.Fend.etasDL, log10(IFend)); axis equal tight; colorbar;
+% viscircles([[6.1888, -3.0944, -3.0944]; [0, 5.3597, -5.3597]].', 0.507*ones([1 mp.Fend.Nfiber]), 'Color', 'w', 'LineWidth', 1.0, 'EnhanceVisibility', false);
+% viscircles([[-12.3776, 6.1888, -3.0944, -12.3776]; [0, 10.719, 16.079, 10.719]].', 0.507*ones([1 4]),'Color', 'r', 'LineWidth', 1.0, 'EnhanceVisibility', false);
+% viscircles([0; 0].', 16, 'Color', 'k', 'Linewidth', 1.0, 'EnhanceVisibility', false);
+% viscircles([0; 0].', 12, 'Color', 'k', 'Linewidth', 1.0, 'Linestyle', '--', 'EnhanceVisibility', false);
+% hold off;
+% set(gca,'FontSize',14);
+% xlabel('$\lambda_0/D$', 'Fontsize', 18, 'Interpreter', 'Latex');
+% ylabel('$\lambda_0/D$', 'Fontsize', 18, 'Interpreter', 'Latex');
+% set(gcf, 'color', 'white');
+% drawnow;

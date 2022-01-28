@@ -78,7 +78,7 @@ if(mp.flagApod)
             else
                 disp('*** Grayscale apodizer loaded instead of generated for full and compact models. ***')
             end
-            if(mp.flagPlot);  figure(504); imagesc(padOrCropEven(mp.P3.full.mask,length(mp.P1.full.mask)).*mp.P1.full.mask); axis xy equal tight; colorbar; drawnow;  end
+%             if(mp.flagPlot);  figure(504); imagesc(padOrCropEven(mp.P3.full.mask,length(mp.P1.full.mask)).*mp.P1.full.mask); axis xy equal tight; colorbar; drawnow;  end
             
             
         otherwise

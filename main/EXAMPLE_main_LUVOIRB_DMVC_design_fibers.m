@@ -11,36 +11,37 @@ clear
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Required packages are FALCO and PROPER. 
-% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); savepath;
-% Add PROPER to the MATLAB path with the command:  addpath(full_path_to_proper); savepath;
+full_path_to_falco = '/Users/jllopsay/Documents/GitHub/falco-matlab';
+full_path_to_proper = '/Users/jllopsay/Documents/MATLAB/PROPER';
+addpath(genpath(full_path_to_falco)); savepath;
+addpath(full_path_to_proper); savepath;
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-% mp.path.config = ; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
-% mp.path.ws = ; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
-% mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
+mp.path.config = '/Users/jllopsay/Documents/GitHub/falco-matlab/config'; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws'; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
+mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
 
 
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_LUVOIRB_VC_design_fibers
+mp.flagJitter = false;
 
 %% Step 3: Overwrite default values as desired
 
 %--Special Computational Settings
 mp.flagParfor = true;%false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
-mp.flagFiber = true;  %--whether to go place single-mode fibers in the focal plane
-mp.flagLenslet = false;  %--whether to go through a lenslet array before using the fibers
 
 %--Record Keeping
-mp.SeriesNum = 10;
-mp.TrialNum = 4;
+mp.SeriesNum = 99;%10;
+mp.TrialNum = 99;%4;
 
 mp.lambda0 = 690e-9;
-mp.fracBW = 0.40;
-mp.Nsbp = 12;
+mp.fracBW = 0.03;%0.40;
+mp.Nsbp = 1;%12;
 mp.Nitr = 6;
-mp.estimator = 'pwp-bp-square';
+mp.estimator = 'perfect';
 mp.est.flagUseJac = false;
 
 mp.fineAlignment_it = 0;
@@ -120,9 +121,9 @@ if(mp.flagFiber)
         mp.Fend.res = 5;
         
         %--Fiber locations and number
-        mp.Fend.Nfiber = 3;
-        mp.Fend.x_fiber = [6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
-        mp.Fend.y_fiber = [0 5.3597 -5.3597];%[0 4.625 -4.625];
+        mp.Fend.Nfiber = 1;
+        mp.Fend.x_fiber = [7];%[6.1888 -3.0944 -3.0944];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+        mp.Fend.y_fiber = [0];%[0 5.3597 -5.3597];%[0 4.625 -4.625];
         
         %--Off-axis, incoherent point source (exoplanet)
         mp.x_planet = mp.Fend.x_fiber(1); %Position of the exoplanet in lambda_0/D

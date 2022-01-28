@@ -81,7 +81,7 @@ end
 %%
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
-NdmPad = mp.compact.NdmPad;
+NdmPad = mp.full.NdmPad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
@@ -89,14 +89,14 @@ NdmPad = mp.compact.NdmPad;
 
 %--Compute the DM surfaces for the current DM commands
 
-if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, NdmPad); else; DM1surf = 0; end %--Pre-compute the starting DM1 surface
-if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, NdmPad); else; DM2surf = 0; end %--Pre-compute the starting DM2 surface
+if(any(mp.dm_ind==1)); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.dx, NdmPad); else; DM1surf = 0; end %--Pre-compute the starting DM1 surface
+if(any(mp.dm_ind==2)); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.dx, NdmPad); else; DM2surf = 0; end %--Pre-compute the starting DM2 surface
 
 pupil = padOrCropEven(mp.P1.compact.mask, NdmPad);
 Ein = padOrCropEven(Ein, mp.compact.NdmPad);
 
-if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = 1; end
-if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = 1; end
+if(mp.flagDM1stop); DM1stop = padOrCropEven(mp.dm1.full.mask, NdmPad); else; DM1stop = 1; end
+if(mp.flagDM2stop); DM2stop = padOrCropEven(mp.dm2.full.mask, NdmPad); else; DM2stop = 1; end
 
 if(mp.useGPU)
     pupil = gpuArray(pupil);
@@ -140,7 +140,7 @@ else % otherwise, go through the mask and on to the next pupil.
 
     %--Apply apodizer mask.
     if(mp.flagApod)
-        EP3 = mp.P3.compact.mask.*padOrCropEven(EP3, mp.P3.compact.Narr); 
+        EP3 = mp.P3.full.mask.*padOrCropEven(EP3, mp.P3.full.Narr); 
     end
 
     %--MFT from SP to FPM (i.e., P3 to F3)
