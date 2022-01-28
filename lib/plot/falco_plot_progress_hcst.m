@@ -8,12 +8,11 @@ function handles = falco_plot_progress_hcst(handles,mp,Itr,Inorm,Im_tb,DM1surf,D
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
-Icbmin = -8.5;
-Icbmax = -4.5;
+Icbmin = -8;
+Icbmax = -4;
 Im = Im_tb.Im;
 if(Itr>1)
     Imod = Inorm.mod(Itr-1);
-    Im_prev = Im_tb.Im_prev;
 else
     Imod = NaN;
 end
@@ -38,7 +37,7 @@ if(mp.flagPlot)
     end
 
     
-    subplot(3,3,1); % Save the handle of the subplot
+    subplot(2,3,1); % Save the handle of the subplot
     axis off
     handles.tb1 = text(0.1,0.8,sprintf('%s: Iteration %d',mp.coro,Itr-1));
     handles.tb2 = text(0.1,0.7,sprintf('%.1f%% BW @ %dnm',(100*mp.fracBW),round(mp.lambda0*1e9)));
@@ -51,7 +50,7 @@ if(mp.flagPlot)
             handles.tb5 = text(0.1,0.4,sprintf('T_{E.E.} =   %.2f%%',100*mp.thput_vec(Itr)));
     end
 
-    subplot(3,3,2); % Save the handle of the subplot
+    subplot(2,3,2); % Save the handle of the subplot
     imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[Icbmin Icbmax]); 
     axis xy equal tight; 
     colorbar; 
@@ -64,20 +63,20 @@ if(mp.flagPlot)
 %       title(sprintf('PSF at Iter=%03d,   NI=%.2e',Itr,contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
 
 
-	subplot(3,3,3); % Save the handle of the subplot
+	subplot(2,3,3); % Save the handle of the subplot
     imagesc(1e9*DM1surf);  axis xy equal tight; axis off;
     colorbar;
     colormap(gca,gray);
     title('DM1 Surface (nm)');
 
-    subplot(3,3,4);
+    subplot(2,3,4);
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
     if(Itr>1)
         semilogy(0:Itr-2,Inorm.mod,'-o');
         semilogy(0:Itr-2,Inorm.unmod,'--o');
     end
     hold off;
-%     xlim([0 length(Inorm.total)])
+    xlim([0 length(Inorm.total)])
     xlabel('Iteration')
 %     ylabel('Norm. I');
     legend('Total','Modulated','Unmodulated');
@@ -85,7 +84,7 @@ if(mp.flagPlot)
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
     
-	subplot(3,3,5); % Save the handle of the subplot
+	subplot(2,3,5); % Save the handle of the subplot
     imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E).^2),[Icbmin Icbmax]); 
     axis xy equal tight;
     colorbar;
@@ -94,7 +93,7 @@ if(mp.flagPlot)
 %     ylabel('\lambda_0/D');
     title('Modulated (previous)');
     
-	subplot(3,3,6); % Save the handle of the subplot
+	subplot(2,3,6); % Save the handle of the subplot
     imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E),[-pi pi]); 
     axis xy equal tight; 
     colorbar; 
@@ -103,44 +102,15 @@ if(mp.flagPlot)
 %     ylabel('\lambda_0/D');
     title('Phase (previous)');
     
-    if(Itr>1)
-    subplot(3,3,7);
-    plot(0:Itr-2,Inorm.beta,'-r*');
-%     xlim([0 length(Inorm.total)])
-    xlabel('Iteration')
-%     ylabel('Norm. I');
-%     legend('Total','Modulated','Unmodulated');
-	title('Beta History')
-    grid on;axis square;
-% 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
-    end
-    
-    if(Itr>1)
-        imaux = Im_prev - abs(Im_tb.E).^2;
-        imaux = imaux+abs(min(imaux(:)));
-        
-        subplot(3,3,8); % Save the handle of the subplot
-        imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(imaux),[Icbmin Icbmax]); 
-        axis xy equal tight; 
-    %     colorbar; 
-        colormap(gca,parula);
-    %     xlabel('\lambda_0/D'); 
-    %     ylabel('\lambda_0/D');
-        title('Im - Modulated Irradiance');
-    end
- 
-    if(isfield(Inorm,'Inorm_arr'))
-        subplot(3,3,9); % Save the handle of the subplot
-        plot(mp.sbp_centers*1e9,Inorm.Inorm_arr,'d','color','b'); 
-%         title('Normalized Intensity in Sub-Bandpasses');
-        xlabel('Wavelength [nm]');
-    end
-    
    drawnow;
-
+   
 end
 
-out_dir = mp.path.ws_inprogress;
+out_dir = [mp.bench.info.OUT_DATA_DIR,mp.runLabel,'/'];
+% Directory to save dat
+if(~exist(out_dir, 'dir'))
+    mkdir(out_dir);
+end
 
 hcst_andor_fitswrite(mp.bench,Im,[out_dir,'normI_it',num2str(Itr-1),'.fits'],false);
 hcst_andor_fitswrite(mp.bench,mp.dm1.V,[out_dir,'dmV_it',num2str(Itr-1),'.fits'],false);

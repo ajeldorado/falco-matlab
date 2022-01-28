@@ -67,8 +67,6 @@ switch lower(mp.est.probe.axis)
         badAxisVec(4:4:end) = 'y';
     case 'multi'
         badAxisVec = repmat('m',[2*Npairs,1]);
-    case 'm'
-        badAxisVec = repmat('m',[2*Npairs,1]);
 end
 
 %% Initialize output arrays
@@ -82,16 +80,10 @@ end
 ev.Im = 0;
 ev.IprobedMean = 0;
 
-%% Save exp time from ctrl
-if ~mp.flagSim && mp.flagUseCamera4EFCSMF
-    bench = mp.bench;
-    tint_efc = bench.andor.tint;
-end
 %% Get images and perform estimates in each sub-bandpass
 
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
-Iesttot = 0;
 for si=1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ',si,mp.Nsbp);
 
@@ -118,10 +110,6 @@ for si=1:mp.Nsbp
     DM2Vminus = zeros([Nact,Nact, Npairs]);
 
     %% Compute probe shapes and take probed images:
-    if ~mp.flagSim && mp.flagUseCamera4EFCSMF
-        hcst_andor_setExposureTime(bench,tint_efc);
-        mp.est.flag_performingEst = false;
-    end
 
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImg = 1;
@@ -143,24 +131,18 @@ for si=1:mp.Nsbp
 
     % Set (approximate) probe intensity based on current measured Inorm
     ev.InormProbeMax = 1e-6;
-    InormProbe0 = min([sqrt(max(I0)*1e-12), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
-    InormProbe = max([1e-10,InormProbe0]);
+    InormProbe = min([sqrt(max(I0)*1e-12), ev.InormProbeMax]); %--Change this to a high percentile value (e.g., 90%) instead of the max to avoid being tricked by noise
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);
     
     %--Perform the probing
     iOdd=1; iEven=1; %--Initialize index counters
-    %--Change exp time to the one chosen to perform the sensing
-    if ~mp.flagSim && mp.flagUseCamera4EFCSMF
-        hcst_andor_setExposureTime(bench,mp.tint_est(si));
-        mp.est.flag_performingEst = true;
-    end
     for iProbe=1:2*Npairs
 
         %--Generate the command map for the probe
         probeCmd = falco_gen_pairwise_probe_fiber(mp,InormProbe,probePhaseVec(iProbe),badAxisVec(iProbe));
 
         figure(901);
-        imagesc(probeCmd); axis equal tight; colorbar
+        imagesc(probeCmd); axis equal tight;
         
         %--Select which DM to use for probing. Allocate probe to that DM
         if(mp.est.probe.whichDM == 1)
@@ -179,7 +161,6 @@ for si=1:mp.Nsbp
 
         %--Take probed image
         Im = max(max(falco_get_sbp_image_fiber(mp,si)));
-
         whichImg = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im)/(2*Npairs); %--Inorm averaged over all the probed images
 
@@ -311,7 +292,7 @@ if(strcmpi(mp.estimator,'pwp-bp'))
         Epix = pinv(H)*zAll(:,ipix); %--Batch process estimation
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
-%     Eest(abs(Eest).^2 > 1e-4) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
+    Eest(abs(Eest).^2 > 1e-4) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
     fprintf('%d of %d pixels were given zero probe amplitude. \n',zerosCounter,mp.Fend.corr.Npix); 
     Eest(abs(Eest).^2 < 0) = 1e-12;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
 
@@ -322,9 +303,7 @@ ev.Eest(:,si) = Eest;
 
 ev.IincoEst(:,si) =  I0-abs(Eest).^2; %--Compute the incoherent light
 
-Iesttot = Iesttot+abs(Eest).^2/mp.Nsbp;
 end %--End of loop over the wavelengths
-disp(['Modulated Intensity measured: ',num2str(Iesttot)])
 
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
@@ -334,11 +313,6 @@ ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
 % wavelengths.
 ev.Iest = abs(ev.Eest).^2;
 ev.InormEst = mean(ev.Iest(:));
-
-if ~mp.flagSim && mp.flagUseCamera4EFCSMF
-    hcst_andor_setExposureTime(bench,tint_efc);
-    mp.est.flag_performingEst = false;
-end
 
 fprintf(' done. Time: %.3f\n',toc);
 

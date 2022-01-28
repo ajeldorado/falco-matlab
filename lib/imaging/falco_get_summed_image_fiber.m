@@ -21,12 +21,15 @@
 
 function IfiberTotal = falco_get_summed_image_fiber(mp)
 
+    %--Compute the DM surfaces outside the full model to save some time
+    if(any(mp.dm_ind==1)); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
+    if(any(mp.dm_ind==2)); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.NdmPad); end
+    if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
 
     IfiberTotal = 0; % Initialize image
 
     for si=1:mp.Nsbp
-        Ifiber = falco_get_sbp_image_fiber(mp,si);
-        IfiberTotal = IfiberTotal +  mp.sbp_weights(si)*Ifiber;
+        IfiberTotal = IfiberTotal +  mp.sbp_weights(si)*falco_get_sbp_image_fiber(mp,si);
     end
 
 end %--END OF FUNCTION

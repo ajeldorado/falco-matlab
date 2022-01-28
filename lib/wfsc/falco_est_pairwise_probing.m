@@ -108,11 +108,6 @@ ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IprobedMean = 0;
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 
-%% Save exp time from ctrl
-if ~mp.flagSim
-    bench = mp.bench;
-end
-
 %% Get images and perform estimates in each sub-bandpass
 
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
@@ -142,9 +137,6 @@ for iSubband = 1:mp.Nsbp
     DM2Vminus = zeros([Nact, Nact, Npairs]);
 
     %% Compute probe shapes and take probed images:
-    if ~mp.flagSim
-        mp.est.flag_performingEst = false;
-    end
 
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImage = 1;
@@ -177,13 +169,8 @@ for iSubband = 1:mp.Nsbp
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 
     %--Perform the probing
-    iOdd=1; iEven=1; %--Initialize index counters
-    %--Change exp time to the one chosen to perform the sensing
-    if ~mp.flagSim
-        hcst_andor_setExposureTime(bench,mp.tint_est);
-        mp.est.flag_performingEst = true;
-    end
-    for iProbe=1:2*Npairs           
+    iOdd = 1; iEven = 1; % Initialize index counters
+    for iProbe = 1:2*Npairs           
 
         %--Generate the DM command map for the probe
         switch lower(mp.estimator)
@@ -214,7 +201,6 @@ for iSubband = 1:mp.Nsbp
         end
         whichImage = 1+iProbe; %--Increment image counter
         ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
-        if(mp.flagPlot);  figure(203); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(ImNonneg),[-8 -3]); title(['Probed Image ',num2str(iProbe),'/',num2str(2*Npairs)]);axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
 
         %--Store probed image and its DM settings
         ev.imageArray(:, :, whichImage, iSubband) = Im;
@@ -250,7 +236,6 @@ for iSubband = 1:mp.Nsbp
         ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
         ampSq2Dcube(:, :, iProbe) = ampSq2D;
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
-        if(mp.flagPlot);  figure(201); imagesc(mp.Fend.xisDL,mp.Fend.etasDL,ampSq2D);title(['ampSq2D Pair ',num2str(iProbe),'/',num2str(Npairs)]); axis xy equal tight; colorbar; set(gca,'Fontsize',20); drawnow;  end
     end
 
     %% Plot relevant data for all the probes
@@ -510,10 +495,6 @@ ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
 
 mp.isProbing = false;
-
-if ~mp.flagSim
-    mp.est.flag_performingEst = false;
-end
 
 fprintf(' done. Time: %.3f\n',toc);
 

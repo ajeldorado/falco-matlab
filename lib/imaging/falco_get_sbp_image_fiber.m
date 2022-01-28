@@ -20,7 +20,7 @@ function ImNI = falco_get_sbp_image_fiber(mp, si)
     if(mp.flagSim) %--Generate simulated image
         ImNI = falco_get_sim_sbp_image_fiber(mp, si);
     else
-        ImNI = falco_get_hcst_sbp_image_fiber(mp,si);
+        error('Testbed functionality not implemented for fibers yet.')
     end
 
 end

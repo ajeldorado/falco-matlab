@@ -34,6 +34,7 @@ pyversion('/usr/local/opt/python3/bin/python3.6'); %--Put the location of the py
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_VC_simple
+systemID_mod = py.importlib.import_module('falco_systemID');
 
 %% Step 3: Overwrite default values as desired
 
@@ -43,20 +44,19 @@ mp.TrialNum = 2;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 10; %--Number of estimation+control iterations to perform
+mp.Nitr = 20; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1 2]; %--Which DMs to use
-mp.ctrl.log10regVec = -1;%--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)
 
 %--Training the model
-mp.flagTrainModel = true;%false;%
-mp.est.flagUseJac = true;%false;%
-mp.NitrTrain = mp.Nitr; %--How many iterations to use per training set.
+mp.flagTrainModel = true;
+mp.est.flagUseJac = true; 
+mp.NitrTrain = 5; %--How many iterations to use per training set.
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
-mp.flagUseLearnedJac = true;
 
 %--Record Keeping
 mp.SeriesNum = 1;
@@ -72,41 +72,23 @@ mp.TrialNum = 1;%k_runTrial;%
 %--DEBUGGING IN MONOCHROMATIC LIGHT
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 
 %% Tuning parameters for System Identification
-flagUseTensorflow = true;
-if flagUseTensorflow
-    mp.est.lr  = 5e-8; % learning rate
-    mp.est.lr2 = 1e-2; % learning rate2
-    mp.est.epoch = 10; % 
-    mp.est.Q0 = 1e-9;
-    mp.est.Q1 = 0.4;
-    mp.est.R0 = 1e-25;
-    mp.est.R1 = 1e-25;
-    mp.est.R2 = 0.4;
-%     setenv('PATH', '/home/hcst/anaconda3/envs/py35/bin')
-%     pyversion('/home/hcst/anaconda3/envs/py35/bin/python3.5')
-%     systemID_mod = py.importlib.import_module('falco_systemID');
-else
-    mp.est.EMitr = 2;
-    mp.est.Q = 3e-9;
-    mp.est.R = 3e-14;
-    mp.est.delta1 = 1e-1;
-    mp.est.delta2 = 1e-2;
-end
-mp.est.flagUseTensorflow = flagUseTensorflow;
+mp.est.lr  = 1e-9; % learning rate
+mp.est.lr2 = 1e-3; % learning rate2
+mp.est.epoch = 10; % 
+
 %% Sources of model mismatch to include in full model
 
 % %--Generate and save the errors the first time.
 % DM1V = 2*randn(34);
 % DM2V = 2*randn(34);
-% save('/home/hcst/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
+% save('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
 
 %--Load the errors the following times
-% load('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
-load('/home/hcst/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
+load('/Users/ajriggs/Repos/falco-matlab/data/maps/dm_errors.mat','DM1V','DM2V')
 mp.full.dm1.V0 = DM1V;
 mp.full.dm2.V0 = DM2V;
 
@@ -134,6 +116,5 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 if(mp.flagPlot)
     figure; semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
 end
-
 
 

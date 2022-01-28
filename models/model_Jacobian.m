@@ -37,17 +37,21 @@ function jacStruct = model_Jacobian(mp)
     end
 
     %--Initialize the Jacobian cubes for each DM.
-%     if(mp.flagLenslet && mp.flagFiber)
     if(mp.flagFiber)
-        if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.Nlens,mp.dm1.Nele,mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM1
-        if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.Nlens,mp.dm2.Nele,mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM2
-        if(any(mp.dm_ind==3)); jacStruct.G3 = zeros(mp.Fend.Nlens,mp.dm3.Nele,mp.jac.Nmode);  else;  jacStruct.G3 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM3
-        if(any(mp.dm_ind==4)); jacStruct.G4 = zeros(mp.Fend.Nlens,mp.dm4.Nele,mp.jac.Nmode);  else;  jacStruct.G4 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM4
-        if(any(mp.dm_ind==5)); jacStruct.G5 = zeros(mp.Fend.Nlens,mp.dm5.Nele,mp.jac.Nmode);  else;  jacStruct.G5 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM5
-        if(any(mp.dm_ind==6)); jacStruct.G6 = zeros(mp.Fend.Nlens,mp.dm6.Nele,mp.jac.Nmode);  else;  jacStruct.G6 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM6
-        if(any(mp.dm_ind==7)); jacStruct.G7 = zeros(mp.Fend.Nlens,mp.dm7.Nele,mp.jac.Nmode);  else;  jacStruct.G7 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM7
-        if(any(mp.dm_ind==8)); jacStruct.G8 = zeros(mp.Fend.Nlens,mp.dm8.Nele,mp.jac.Nmode);  else;  jacStruct.G8 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM8
-        if(any(mp.dm_ind==9)); jacStruct.G9 = zeros(mp.Fend.Nlens,mp.dm9.Nele,mp.jac.Nmode);  else;  jacStruct.G9 = zeros(0,0,mp.jac.Nmode);  end % control Jacobian for DM9
+        if(mp.flagLenslet)
+            if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.Nlens, mp.dm1.Nele, mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM1
+            if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.Nlens, mp.dm2.Nele, mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM2
+        else
+        	if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.corr.Npix, mp.dm1.Nele, mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM1
+            if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.corr.Npix, mp.dm2.Nele, mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM2
+        end
+        jacStruct.G3 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G4 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G5 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G6 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G7 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G8 = zeros(0, 0, mp.jac.Nmode);
+        jacStruct.G9 = zeros(0, 0, mp.jac.Nmode);
     else
         if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.corr.Npix, mp.dm1.Nele, mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM1
         if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.corr.Npix, mp.dm2.Nele, mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM2

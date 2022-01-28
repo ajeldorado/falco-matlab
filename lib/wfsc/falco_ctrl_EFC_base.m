@@ -52,7 +52,7 @@ else %--Perform an empirical grid search with actual images
         if(mp.flagLenslet)
             InormMean = mean(max(max(IfiberTotal)));
         else
-            InormAvg = IfiberTotal;%mean(IfiberTotal(mp.Fend.corr.maskBool));
+            InormMean = mean(IfiberTotal(mp.Fend.corr.maskBool));
         end
 
     end

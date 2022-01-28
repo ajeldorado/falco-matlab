@@ -11,26 +11,24 @@ clear
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Required packages are FALCO and PROPER. 
-full_path_to_falco = '/Users/jllopsay/Documents/GitHub/falco-matlab';
-full_path_to_proper = '/Users/jllopsay/Documents/MATLAB/PROPER';
-addpath(genpath(full_path_to_falco)); savepath;
-addpath(full_path_to_proper); savepath;
+% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); savepath;
+% Add PROPER to the MATLAB path with the command:  addpath(full_path_to_proper); savepath;
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '/Users/jllopsay/Documents/GitHub/falco-matlab/config'; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '/Users/jllopsay/Documents/GitHub/falco-matlab/data/ws'; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
-mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
+% mp.path.config = ; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
+% mp.path.ws = ; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
+% mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
 
 
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_LUVOIRB_VC_design
-mp.flagJitter = false;
+
 
 %% Step 3: Overwrite default values as desired
 
 %%--Special Computational Settings
-mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
+mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 
 %--Record Keeping
@@ -38,9 +36,8 @@ mp.SeriesNum = 1;
 mp.TrialNum = 1;
 
 % %--DEBUGGING
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.lambda0 = 400e-9;
+% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 % mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 
 

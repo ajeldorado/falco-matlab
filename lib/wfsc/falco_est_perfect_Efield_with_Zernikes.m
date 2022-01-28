@@ -50,8 +50,7 @@ function ev = falco_est_perfect_Efield_with_Zernikes(mp)
                 [I, J] = ind2sub(size(mp.F5.RHOS), find(~mp.F5.RHOS));
                 Eest(:, iMode) = EfiberCompact(I, J, :);
             else
-%                 Emat(:,im) = EfibCompact(mp.Fend.corr.inds);
-                Emat(:,im) = EfibCompact;
+                Eest(:, iMode) = EfiberCompact(mp.Fend.corr.inds);
             end
         end
 

@@ -22,16 +22,11 @@
 % - Silent failure if no testbed case sepcified removed by C. Coker
 % (2019-04-11)
 
-function [normI,varargout] = falco_get_testbed_sbp_image(mp,si)
+function normI = falco_get_testbed_sbp_image(mp,si)
     
     switch upper(mp.testbed)
         case 'HCST'
-            if mp.flagFiber
-                [normI,Ifiber] = falco_get_hcst_sbp_image(mp,si);
-                varargout{1} = Ifiber;
-            else
-                normI = falco_get_hcst_sbp_image(mp,si);
-            end
+            normI = falco_get_hcst_sbp_image(mp,si);
         case 'GPCT'
             normI = falco_get_gpct_sbp_image(mp,si); 
         case 'DST'
