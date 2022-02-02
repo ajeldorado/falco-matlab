@@ -92,7 +92,7 @@ end
 minPadFacVortex = 8; 
 
 %--Get phase scale factor for the FPM. 
-if numel(mp.F3.VortexCharge) == 1
+if numel(mp.F3.phaseScaleFac) == 1
     % Single value indicates fully achromatic mask
     phaseScaleFac = mp.F3.phaseScaleFac;
 else
