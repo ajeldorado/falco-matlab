@@ -26,14 +26,14 @@ mp.use_lastJacStruc = false;
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Library locations. FALCO and PROPER are required. CVX is optional.
-mp.path.falco = '/Users/niyatid/falco-matlab-master/';  %--Location of FALCO
-mp.path.proper = '/Users/niyatid/falco-matlab-master/lib_external/proper/'; %--Location of the MATLAB PROPER library
+mp.path.falco = '/Users/niyatid/falco-matlab/';  %--Location of FALCO
+mp.path.proper = '/Users/niyatid/falco-matlab/lib_external/proper/'; %--Location of the MATLAB PROPER library
 % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-mp.path.config = '/Users/niyatid/falco-matlab-master/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-mp.path.ws = '/Users/niyatid/falco-matlab-master/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-mp.path.mask = '/Users/niyatid/falco-matlab-master/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.config = '/Users/niyatid/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+mp.path.ws = '/Users/niyatid/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+mp.path.mask = '/Users/niyatid/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
 mp.path.ws_inprogress = mp.path.ws;
 
 % %--Library locations. FALCO and PROPER are required. CVX is optional.
@@ -54,18 +54,19 @@ addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_HCST_SVC
+% EXAMPLE_defaults_HCST_SVC
+defaults_SVC
 
-mp.flagSaveWS = true;
+mp.flagSaveWS = false;
 %% Step 3: Overwrite default values as desired
 
 %--Record Keeping
-mp.SeriesNum = 4;
-mp.TrialNum = 4;
+mp.SeriesNum = 1;
+mp.TrialNum = 1;
 
 %--WFSC Iterations and Control Matrix Relinearization
 mp.controller = 'gridsearchEFC';
-mp.Nitr = 100; %--Number of estimation+control iterations to perform
+mp.Nitr = 3; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 mp.ctrl.log10regVec = -5:1:2; %--log10 of the regularization exponents (often called Beta values)

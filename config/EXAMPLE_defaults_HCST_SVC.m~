@@ -193,10 +193,10 @@ mp.fl = 779e-3; %--[meters] Focal length value used for all FTs in the compact m
 
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 500; %256;
-mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
-mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
-mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
+mp.P1.compact.Nbeam = 256;
+mp.P2.compact.Nbeam = 256;
+mp.P3.compact.Nbeam = 256;
+mp.P4.compact.Nbeam = 256;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -215,19 +215,18 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 500; %256;
-mp.P2.full.Nbeam = mp.P1.full.Nbeam;
-mp.P3.full.Nbeam = mp.P1.full.Nbeam;
-mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
+mp.P1.full.Nbeam = 256;
+mp.P2.full.Nbeam = 256;
+mp.P3.full.Nbeam = 256;
+mp.P4.full.Nbeam = 256;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
 %% Mask Definitions
 
 mp.apodType = 'grayscale';%[mp.path.mask,'ApodizedPupil_500.fits'];
-% maskaux = fitsread('/Users/niyatid/falco-matlab/lib/masks/segmentedPupil_noApod.fits');%   ApodizedPupil_HCST
-% mp.P3.full.mask = imresize(maskaux,[mp.P1.full.Nbeam mp.P1.full.Nbeam]); 
-mp.P3.full.mask = falco_gen_pupil_Simple(inputs);
+maskaux = fitsread('/Users/niyatid/falco-matlab/lib/masks/segmentedPupil_noApod.fits');%   ApodizedPupil_HCST
+mp.P3.full.mask = imresize(maskaux,[mp.P1.full.Nbeam mp.P1.full.Nbeam]); 
 mp.P3.compact.mask = mp.P3.full.mask;
 % mp.P3.apodType = 'HCST_AVC';%[mp.path.mask,'ApodizedPupil_500.fits'];
 
@@ -262,7 +261,7 @@ mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
 
 %--Aperture stop definition
-mp.flagApod = false;    %--Whether to use an apodizer or not. Can be a simple aperture stop
+mp.flagApod = true;    %--Whether to use an apodizer or not. Can be a simple aperture stop
 
 %--Lyot stop padding
 mp.P4.IDnorm = 0; %--Lyot stop ID [Dtelescope]
