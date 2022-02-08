@@ -16,8 +16,8 @@ function [Iout, varargout] = falco_sim_image_compact_offaxis(mp,x_offset,y_offse
     
 flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 modvar.whichSource = 'offaxis';
-modvar.x_offset = x_offset; % mp.thput_eval_x;
-modvar.y_offset = y_offset; % mp.thput_eval_y;
+modvar.x_offset = x_offset;
+modvar.y_offset = y_offset;
   
 icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
@@ -48,7 +48,7 @@ for iStar = 1:mp.star.count
     for si=1:mp.Nsbp
         modvar.sbpIndex = si; 
         modvar.zernIndex = 1;
-        modvar.wpsbpIndex = mp.wi_ref;
+        % modvar.wpsbpIndex = mp.wi_ref;
 
         if(mp.flagFiber)
             [E2D, Efiber] = model_compact(mp, modvar);

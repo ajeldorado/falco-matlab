@@ -21,8 +21,10 @@
 function [Eout, varargout] = model_full(mp, modvar, varargin)
 
 % Set default values of input parameters
-if(isfield(modvar, 'sbpIndex'))
+if isfield(modvar, 'sbpIndex') && isfield(modvar, 'wpsbpIndex')
     normFac = mp.Fend.full.I00(modvar.sbpIndex, modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
+else
+    error("modvar must have fields 'sbpIndex' and 'wpsbpIndex'.")
 end
 
 %--Enable different arguments values by using varargin
@@ -64,12 +66,12 @@ xiOffset = mp.star.xiOffsetVec(iStar);
 etaOffset = mp.star.etaOffsetVec(iStar);
 starWeight = mp.star.weights(iStar);
 TTphase = (-1)*(2*pi*(xiOffset*mp.P2.full.XsDL + etaOffset*mp.P2.full.YsDL));
-Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ett = exp(1j*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
 
 if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
-    Ett = exp(1i*TTphase*mp.lambda0/lambda);
+    Ett = exp(1j*TTphase*mp.lambda0/lambda);
     Ein = Ett .* Ein; 
 end
 
@@ -79,20 +81,20 @@ if normFac == 0
     source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
     source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
     TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.full.XsDL + source_y_offset*mp.P2.full.YsDL));
-    Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.full.E(:, :, modvar.sbpIndex); 
+    Ett = exp(1j*TTphase*mp.lambda0/lambda);
+    Ein = Ett .* Ein; 
 end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
-if isfield(modvar, 'zernIndex') == false
-    modvar.zernIndex = 1;
-end
+% if isfield(modvar, 'zernIndex') == false
+%     modvar.zernIndex = 1;
+% end
 
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat, mp.P1.full.Narr);
-    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
+    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns ==  modvar.zernIndex);
 end
 
 %% Pre-compute the FPM first for HLC as mp.FPM.mask

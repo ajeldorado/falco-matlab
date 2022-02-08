@@ -12,7 +12,7 @@
 % INPUTS
 % ------
 % mp : structure of model parameters
-% iMode : index of the pair of sub-bandpass index and Zernike mode index
+% iMode : index of the subband, Zernike mode, and star combinations
 % whichDM : which DM number
 %
 % OUTPUTS
@@ -56,7 +56,7 @@ Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex);
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat, mp.P1.compact.Narr);
+    zernMat = pad_crop(zernMat, mp.P1.compact.Narr);
     Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 

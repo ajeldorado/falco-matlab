@@ -12,7 +12,7 @@
 
 function [mp,thput,varargout] = falco_compute_thput(mp)
 
-if(mp.flagFiber)
+if mp.flagFiber
     
     [~, ImSimCompact] = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y);
     thput = sum(sum(ImSimCompact))/mp.sumPupil;
@@ -20,7 +20,7 @@ if(mp.flagFiber)
     
 else
 
-    ImSimCompact = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y,'eval');
+    ImSimCompact = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y, 'eval');
 %     if(mp.flagPlot); figure(324); imagesc(mp.Fend.eval.xisDL,mp.Fend.eval.etasDL,ImSimCompact); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 
     switch lower(mp.thput_metric)
