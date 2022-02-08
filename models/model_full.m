@@ -86,9 +86,9 @@ if normFac == 0
 end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
-% if isfield(modvar, 'zernIndex') == false
-%     modvar.zernIndex = 1;
-% end
+if isfield(modvar, 'zernIndex') == false
+    modvar.zernIndex = 1;
+end
 
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
