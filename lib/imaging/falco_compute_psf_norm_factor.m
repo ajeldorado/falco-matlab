@@ -27,9 +27,9 @@ function mp = falco_compute_psf_norm_factor(mp)
 mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2));
 
 %--Initialize Model Normalizations
-mp.Fend.compact.I00 = ones(1,mp.Nsbp); % Initial input before computing
-mp.Fend.eval.I00 = ones(1,mp.Nsbp); % Initial input before computing
-mp.Fend.full.I00 = ones(mp.Nsbp,mp.Nwpsbp); % Initial input before computing
+mp.Fend.compact.I00 = ones(1, mp.Nsbp); % Initial input before computing
+mp.Fend.eval.I00 = ones(1, mp.Nsbp); % Initial input before computing
+mp.Fend.full.I00 = ones(mp.Nsbp, mp.Nwpsbp); % Initial input before computing
 
 modvar.zernIndex = 1;
 modvar.whichSource = 'star';  

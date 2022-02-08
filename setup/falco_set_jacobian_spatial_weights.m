@@ -28,7 +28,7 @@ function mp = falco_set_jacobian_spatial_weights(mp)
         end
     end
 
-    %--Spatial weighting vector
+    %--Spatial weighting vector (for each star)
     Npix = sum(sum(mp.Fend.corr.maskBool));
 %     mp.WspatialVec = zeros(Npix, mp.jac.Nmode);
 %     for iMode = 1:mp.jac.Nmode
