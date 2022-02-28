@@ -151,13 +151,13 @@ switch lower(dm.orientation)
     case 'rot270'
         actIndMat = rot90(actIndMat, 3);
     case 'flipxrot0'
-        actIndMat = flipx(actIndMat);
+        actIndMat = fliplr(actIndMat);
     case 'flipxrot90'
-        actIndMat = rot90(flipx(actIndMat), 1);
+        actIndMat = rot90(fliplr(actIndMat), 1);
     case 'flipxrot180'
-        actIndMat = rot90(flipx(actIndMat), 2);
+        actIndMat = rot90(fliplr(actIndMat), 2);
     case 'flipxrot270'
-        actIndMat = rot90(flipx(actIndMat), 3);
+        actIndMat = rot90(fliplr(actIndMat), 3);
     otherwise
         error('invalid value of dm.orientation');
 end

@@ -17,6 +17,11 @@ for Itr = 1:mp.Nitr
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
     
+    % update subdir for scicam images
+    if isfield(mp, 'tb')
+        mp.tb.sciCam.subdir = ['series_' num2str(mp.SeriesNum) '_It_' num2str(Itr)];
+    end
+    
     if mp.flagSim
         fprintf('Zernike modes used in this Jacobian:\t');
         fprintf('%d ', mp.jac.zerns);

@@ -14,11 +14,11 @@
 %
 % INPUTS
 % ------
-% dm : structure of DM parameters
+% dm : structure of DM parameters, dm.V is relative to dm.biasMap
 %
 % OUTPUTS
 % -------
-% dm : structure of DM parameters
+% dm : structure of DM parameters, dm.V is relative to dm.biasMap
 
 function dm = falco_enforce_dm_constraints(dm)
 

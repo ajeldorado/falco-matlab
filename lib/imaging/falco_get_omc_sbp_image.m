@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to set DMs and get an image in the specified sub-bandpass from the DST. 
+% Function to set DMs and get an image in the specified sub-bandpass from the OMC. 
 %
 % ---------------
 % INPUTS:
@@ -21,11 +21,14 @@
 % - Modified from falco_get_hcst_sbp_image on 2019-03-22 by G. Ruane
 % - Created on 2019-03-22 by G. Ruane 
 
-function normI = falco_get_dst_sbp_image(mp,si)
+function normI = falco_get_omc_sbp_image(mp,si)
 
+    % convenience:
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
-    tb.sciCam.subdir = 'falco';
+    % already set in config: tb.sciCam.subdir = 'falco';
+    if isfield(mp,'debug'), debug = mp.debug; else, debug = false; end
+    NM = 1e-9;
     
     if(mp.isProbing)
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
@@ -43,6 +46,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
     
     %----- Send commands to the DM -----
     %disp('Sending current DM voltages to testbed') 
+    % dm.V is relative to flatmap or biasMap
     if(mp.dm1.transp)
         dm1_map = mp.dm1.V'; % There's a transpose between Matlab and DM indexing
     else
@@ -53,18 +57,37 @@ function normI = falco_get_dst_sbp_image(mp,si)
     else
         dm2_map = mp.dm2.V;
     end
-    
-%     figure(700)
-%     subplot(1,2,1)
-%     imagesc(dm1_map+tb.DM1.flatmap);
-%     axis image; 
-%     colorbar;
-% 
-%     subplot(1,2,2)
-%     imagesc(dm1_map);
-%     axis image; 
-%     colorbar;
-%     drawnow; 
+
+    if debug,
+        hfig = figure(700);
+        figure_mxn(hfig, 2, 2);
+
+        subplot(2,2,1)
+        imagesc(dm1_map+tb.DM1.flatmap);
+        axis image;
+        colorbar;
+        title('DM1 Total')
+        
+        subplot(2,2,2)
+        imagesc(dm1_map);
+        axis image;
+        colorbar;
+        title('DM1 - flatmap')
+        drawnow;
+
+        subplot(2,2,3)
+        imagesc(dm2_map+tb.DM2.flatmap);
+        axis image;
+        colorbar;
+        title('DM2 Total')
+        
+        subplot(2,2,2)
+        imagesc(dm2_map);
+        axis image;
+        colorbar;
+        title('DM2 - flatmap')
+        drawnow;
+    end
 
     % Send the commands to the DM. 
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
@@ -99,9 +122,16 @@ function normI = falco_get_dst_sbp_image(mp,si)
     lam0 = mp.sbp_centers(si);
     lam1 = lam0 - sbp_width/2;
     lam2 = lam0 + sbp_width/2;
-    if(strcmpi(tb.info.source,'nkt'))
-        NKT_setWvlRange(tb,lam1*1e9,lam2*1e9); % DST/gruane_DST/tb_lib/NKT/NKT_setWvlRange
+    tb.nkt.lower = lam1/NM;
+    tb.nkt.upper = lam2/NM;
+    
+    if debug
+        disp(tb.nkt);
     end
+    
+    %     if(strcmpi(tb.info.source,'nkt'))
+    %         NKT_setWvlRange(tb,lam1*1e9,lam2*1e9); % DST/gruane_DST/tb_lib/NKT/NKT_setWvlRange
+    %     end
     
     % Load a dark
     dark = sciCam_loadDark(tb,sbp_texp); % DST/gruane_DST/tb_lib/scicam/sciCam_loadDark

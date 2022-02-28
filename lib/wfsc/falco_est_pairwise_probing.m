@@ -164,7 +164,7 @@ for iSubband = 1:mp.Nsbp
     if mp.flagFiber
         InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
     else
-        InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
+        InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); % probe amp = between 1e-5 and current dark hole
     end
     fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 

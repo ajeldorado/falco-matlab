@@ -31,6 +31,7 @@
 % center in focal plane. Units of lambda/D.
 % mp.est.probe.width : Width of probed rectangular region. Units of lambda/D.
 % mp.est.probe.height : Height of probed rectangular region. Units of lambda/D. 
+% mp.est.probe.gainFudge : empirical fudge factor to make average probe amplitude match desired value.
 %
 % RETURNS
 % -------
