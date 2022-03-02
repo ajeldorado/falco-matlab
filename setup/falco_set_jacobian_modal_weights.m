@@ -26,13 +26,13 @@ function mp = falco_set_jacobian_modal_weights(mp)
     else
         mp.jac.Zcoef(mp.jac.zerns==1) = 1; % [meters] reset coefficient for piston to 1
     end
+    
     mp.jac.weightMat = zeros(mp.Nsbp, mp.jac.Nzern); %--Initialize weighting matrix of each Zernike-wavelength mode for the controller
-
     for izern = 1:mp.jac.Nzern
         whichZern = mp.jac.zerns(izern);
-        if(whichZern==1)
+        if whichZern == 1
             mp.jac.weightMat(:, 1) = ones(mp.Nsbp, 1);
-        else
+        else % Include just middle and end wavelengths for non-piston
             mp.jac.weightMat(1, izern) = 1;
             mp.jac.weightMat(mp.si_ref, izern) = 1;
             mp.jac.weightMat(mp.Nsbp, izern) = 1;

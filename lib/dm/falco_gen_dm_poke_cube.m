@@ -145,11 +145,11 @@ switch lower(dm.orientation)
     case 'rot0'
         % no change
     case 'rot90'
-        actIndMat = rot90(actIndMat, 1);
+        actIndMat = rot90(actIndMat, -1);
     case 'rot180'
-        actIndMat = rot90(actIndMat, 2);
+        actIndMat = rot90(actIndMat, -2);
     case 'rot270'
-        actIndMat = rot90(actIndMat, 3);
+        actIndMat = rot90(actIndMat, -3);
     case 'flipxrot0'
         actIndMat = fliplr(actIndMat);
     case 'flipxrot90'

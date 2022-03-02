@@ -4,8 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to produce a DM surface (in meters). Uses linear superposition
-% of a datacube of influence functions.
+% Produce a DM surface (in meters). Uses linear superposition
+% of influence functions stored in a datacube.
 
 function DMsurf = falco_dm_surf_from_cube(dm,dmFullOrCompact)
 
@@ -18,17 +18,4 @@ function DMsurf = falco_dm_surf_from_cube(dm,dmFullOrCompact)
         end
     end
     
-    %--Adjust the orientation if specified
-    if(isfield(dm,'fliplr'))
-        if(dm.fliplr)
-            DMsurf = fliplr(DMsurf);
-        end
-    end
-    
-    if(isfield(dm,'flipud'))
-        if(dm.flipud)
-            DMsurf = flipud(DMsurf);
-        end
-    end
-
 end

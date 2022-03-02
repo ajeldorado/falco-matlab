@@ -160,10 +160,12 @@ out = store_dm_command_history(mp, out, Itr);
 out.thput(Itr) = thput;
 mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true
 
-if isfield(cvar, 'Im')
+% Update progress plot using image from controller (if new image was taken)
+if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
     ev.Im = cvar.Im;
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
 end
+
 %% Save out an abridged workspace
 
 fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
@@ -272,7 +274,7 @@ function out = store_intensities(mp, out, ev, Itr)
     end
     
     % estimated
-    for iMode = 1:(mp.Nsbp*mp.compact.star.count)
+    for iMode = 1:mp.jac.Nmode
         
         imageModVec = abs(ev.Eest(:, iMode)).^2;
         imageUnmodVec = ev.IincoEst(:, iMode);
