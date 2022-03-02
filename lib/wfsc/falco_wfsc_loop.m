@@ -19,7 +19,7 @@ for Itr = 1:mp.Nitr
     
     % update subdir for scicam images
     if isfield(mp, 'tb')
-        mp.tb.sciCam.subdir = ['series_' num2str(mp.SeriesNum) '_It_' num2str(Itr)];
+        mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
     end
     
     if mp.flagSim
