@@ -31,8 +31,8 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 550e-9;    %--Central wavelength of the whole spectral bandpass [meters]
-mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
@@ -93,7 +93,7 @@ mp.controller = 'gridsearchEFC';
 
 % % % GRID SEARCH EFC DEFAULTS     
 %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 5; %--Number of estimation+control iterations to perform
+mp.Nitr = 1; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;%1:mp.Nitr;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 
@@ -159,13 +159,13 @@ mp.Fend.FOV = 11;%15; %--half-width of the field of view in both dimensions [lam
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 3.0;%2.0;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.ang  = 120;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
 mp.Fend.score.Rin = 3.0;%2.0;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.ang = 120;  % angular opening of dark hole scoring region [degrees]
+mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'right'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -210,7 +210,7 @@ mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex.
 
 %% Entrance Pupil (P1) Definition and Generation
 
-mp.whichPupil = 'Simple';%'LUVOIR_B'; % Used only for run label
+mp.whichPupil = 'LUVOIR_B'; %'Simple';% Used only for run label
 
 %%FROM AVC_defaults
 mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
@@ -221,7 +221,7 @@ mp.P1.Nstrut = 0;% Number of struts
 mp.P1.angStrut = [];%Array of angles of the radial struts (deg)
 mp.P1.wStrut = []; % Width of the struts (fraction of pupil diam.)
 
-mp.P4.ODnorm = 0.99; %95; %--Lyot stop OD [Dtelescope]
+mp.P4.ODnorm = 0.83; %95; %--Lyot stop OD [Dtelescope]
 mp.P1.D = 4;%15.2e-3/mp.P4.ODnorm;
 
 
@@ -239,24 +239,24 @@ inputs.Nbeam = mp.P1.compact.Nbeam; % number of points across usable pupil
 inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); % number of points across usable pupil 
 mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
-%%COMMENTED THIS PART OUT FOR SIMPLE PUPIL
-% mp.P1.D = 7.989; %--circumscribed telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-% 
-% %--Generate the entrance pupil aperture
-% inputs.centering = mp.centering;
-% % Full model:
-% inputs.Nbeam = mp.P1.full.Nbeam;
-% mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
-% % Compact model
-% inputs.Nbeam = mp.P1.compact.Nbeam;
-% mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
+%COMMENTED THIS PART OUT FOR SIMPLE PUPIL
+mp.P1.D = 7.989; %--circumscribed telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+
+%--Generate the entrance pupil aperture
+inputs.centering = mp.centering;
+% Full model:
+inputs.Nbeam = mp.P1.full.Nbeam;
+mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
+% Compact model
+inputs.Nbeam = mp.P1.compact.Nbeam;
+mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
 
 %% "Apodizer" (P3) Definition and Generation
-mp.flagApod = false;%true;    %--Whether to use an apodizer or not in the FALCO models.
+mp.flagApod = true;    % false;%--Whether to use an apodizer or not in the FALCO models.
 
 % Inputs common to both the compact and full models
 inputs.ID = 0;
-inputs.OD =1;%0.9;%0.84;
+inputs.OD =0.84;%1;%0.9;%
 inputs.Nstrut = 0;
 inputs.angStrut = []; %Angles of the struts 
 inputs.wStrut = 0; % spider width (fraction of the pupil diameter)
@@ -292,7 +292,7 @@ mp.P4.compact.mask = falco_gen_pupil_Simple(inputs);
 %% VC-Specific Values %%%%%
 
 mp.F3.VortexCharge = -8; %--Charge of the vortex mask
-mp.F3.phaseMaskType = 'classicalwrapped';
+mp.F3.phaseMaskType = 'vortex';
 
 mp.F3.NstepStaircase = 6;
 mp.F3.clocking = 45;
@@ -301,7 +301,7 @@ mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
 mp.F3.full.res = 16; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
 
 %For chromaticity (Needs to be cleaned up still)
-chromatic = false;
+chromatic = true;
 
 if(chromatic)
     mp.sbp_weights = ones(mp.Nsbp,1);
@@ -323,4 +323,3 @@ if(chromatic)
 
     mp.F3.phaseScaleFac = mp.lambda0./ mp.F3.phaseScaleFacLambdas
 end
-
