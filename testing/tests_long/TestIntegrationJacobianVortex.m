@@ -252,8 +252,3 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
         
     end    
 end
-
-
-
-
-

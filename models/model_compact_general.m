@@ -289,7 +289,7 @@ EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);
 
 %--Don't apply FPM if normalization value is being found
-if(normFac==0)
+if normFac == 0
     Eout = EFend; %--Don't normalize if normalization value is being found
 else
     Eout = EFend/sqrt(normFac); %--Apply normalization
