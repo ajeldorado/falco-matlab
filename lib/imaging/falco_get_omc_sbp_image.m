@@ -125,7 +125,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
     tb.nkt.lower = lam1/NM;
     tb.nkt.upper = lam2/NM;
     
-    if debug
+    if false %debug
         disp(tb.nkt);
     end
     

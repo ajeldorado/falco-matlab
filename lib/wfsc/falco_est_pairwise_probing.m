@@ -493,6 +493,7 @@ end %--End of loop over stars
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
+ev.maskBool = mp.Fend.corr.maskBool; %--for resizing Eest and IincoEst for plotting
 
 mp.isProbing = false;
 

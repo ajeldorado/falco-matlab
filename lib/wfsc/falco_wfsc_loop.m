@@ -36,11 +36,7 @@ for Itr = 1:mp.Nitr
     if strcmpi(mp.controller, 'plannedefc')
         mp.dm_ind = mp.dm_ind_sched{Itr}; % Change which DMs are used
     end
-    fprintf('DMs to be used in this iteration = [')
-    for jj = 1:length(mp.dm_ind)
-        fprintf(' %d', mp.dm_ind(jj)); 
-    end
-    fprintf(' ]\n')
+    disp(['DMs to be used in this iteration = [' num2str(mp.dm_ind(:)') ']']);
     
     out.serialDateVec(Itr) = now;
     out.datetimeArray = datetime(out.serialDateVec,'ConvertFrom','datenum');

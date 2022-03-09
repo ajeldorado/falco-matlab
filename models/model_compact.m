@@ -12,13 +12,24 @@
 % mp : structure of model parameters
 % modvar : structure of model variables
 %
+% modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
+% modvar.sbpIndex
+% modvar.sbpIndex
+% modvar.lambda % optional, default = mp.sbp_centers(modvar.sbpIndex)
+% modvar.starIndex
+% modvar.whichSource
+% modvar.y_offset
+% modvar.x_offset
+% modvar.zernIndex % optional, default = 1;
+%
 % OUTPUTS
 % -------
 % Eout : 2-D electric field at final focus
 
 function [Eout, varargout] = model_compact(mp, modvar, varargin)
 
-modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
+% validate modvar
+modvar = ValidateModvar(modvar);
 
 % Set default values of input parameters
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
@@ -50,11 +61,7 @@ if ~flagNewNorm && flagEval
 end
 
 %--Set the wavelength
-if isfield(modvar, 'lambda')
-    lambda = modvar.lambda;
-else
-    lambda = mp.sbp_centers(modvar.sbpIndex);
-end
+lambda = modvar.lambda;
 
 %--Include the star position and weight in the starting wavefront
 iStar = modvar.starIndex;
@@ -118,3 +125,19 @@ else
 end
     
 end %--END OF FUNCTION
+
+function modvar = ValidateModvar(modvar_in)
+
+modvar_in.wpsbpIndex = -1; %--Dummy index since not needed in compact model
+modvar = modvar_in;
+
+if ~isfield(modvar, 'sbpIndex'), error('sbpIndex missing from modvar'); end
+if ~isfield(modvar, 'sbpIndex'), error('sbpIndex missing from modvar'); end
+if ~isfield(modvar, 'lambda'), modvar.lambda = mp.sbp_centers(modvar.sbpIndex); end
+if ~isfield(modvar, 'starIndex'), error('starIndex missing from modvar'); end
+if ~isfield(modvar, 'whichSource'), error('whichSource missing from modvar'); end
+if ~isfield(modvar, 'y_offset'), error('y_offset missing from modvar'); end
+if ~isfield(modvar, 'x_offset'), error('x_offset missing from modvar'); end
+if ~isfield(modvar, 'zernIndex'), modvar.zernIndex = 1; end
+
+end % ValidateModvar
