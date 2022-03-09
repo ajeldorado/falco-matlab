@@ -36,9 +36,14 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
     if(any(mp.dm_ind==8)); dDM8V_store = zeros(mp.dm8.NactTotal,Nvals); end
     if(any(mp.dm_ind==9)); dDM9V_store = zeros(mp.dm9.NactTotal,Nvals); end
 
+    % Make more obvious names for conditions:
+    relinearizeNow = any(mp.gridSearchItrVec == cvar.Itr);
+    useBestLog10Reg = (imag(mp.ctrl.log10regSchedIn(cvar.Itr)) ~= 0);
+    realLog10RegIsZero = (real(mp.ctrl.log10regSchedIn(cvar.Itr)) == 0);
+    
     %% Step 1: Empirically find the "optimal" regularization value (if told to for this iteration)
     
-    if(any(mp.gridSearchItrVec==cvar.Itr))
+    if relinearizeNow
         
         %--Loop over all the settings to check empirically
         ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
@@ -89,7 +94,7 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
     
     %% Skip steps 2 and 3 if the schedule for this iteration is just to use the "optimal" regularization AND if the grid search was performed this iteration
     
-    if( (imag(mp.ctrl.log10regSchedIn(cvar.Itr)) ~= 0) && (real(mp.ctrl.log10regSchedIn(cvar.Itr)) == 0) && any(mp.gridSearchItrVec==cvar.Itr) )
+    if useBestLog10Reg && realLog10RegIsZero && relinearizeNow
         %--delta voltage commands
         if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:,:,indBest); end
         if(any(mp.dm_ind==2)); dDM.dDM2V = dDM2V_store(:,:,indBest); end
@@ -116,7 +121,7 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
         [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
         cvar.Im = dDM.Itotal;
         dDM = rmfield(dDM, 'Itotal'); % reduce amount of memory used since image moved to cvar structure
-        if(mp.ctrl.flagUseModel)
+        if mp.ctrl.flagUseModel
             fprintf('Model says scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
         else
             fprintf('Scheduled log10reg = %.1f\t gives %4.2e contrast.\n',log10regSchedOut,cvar.cMin)
