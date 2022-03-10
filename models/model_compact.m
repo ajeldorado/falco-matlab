@@ -15,12 +15,12 @@
 % modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
 % modvar.sbpIndex
 % modvar.sbpIndex
-% modvar.lambda % optional, default = mp.sbp_centers(modvar.sbpIndex)
+% modvar.lambda           % optional, default = mp.sbp_centers(modvar.sbpIndex)
 % modvar.starIndex
 % modvar.whichSource
-% modvar.y_offset
-% modvar.x_offset
-% modvar.zernIndex % optional, default = 1;
+% modvar.y_offset         % required if modvar.whichSource == 'offaxis'
+% modvar.x_offset         % required if modvar.whichSource == 'offaxis'
+% modvar.zernIndex        % optional, default = 1;
 %
 % OUTPUTS
 % -------
@@ -29,7 +29,7 @@
 function [Eout, varargout] = model_compact(mp, modvar, varargin)
 
 % validate modvar
-modvar = ValidateModvar(modvar);
+modvar = ValidateModvar(modvar, mp);
 
 % Set default values of input parameters
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
@@ -126,7 +126,7 @@ end
     
 end %--END OF FUNCTION
 
-function modvar = ValidateModvar(modvar_in)
+function modvar = ValidateModvar(modvar_in, mp)
 
 modvar_in.wpsbpIndex = -1; %--Dummy index since not needed in compact model
 modvar = modvar_in;
@@ -136,8 +136,10 @@ if ~isfield(modvar, 'sbpIndex'), error('sbpIndex missing from modvar'); end
 if ~isfield(modvar, 'lambda'), modvar.lambda = mp.sbp_centers(modvar.sbpIndex); end
 if ~isfield(modvar, 'starIndex'), error('starIndex missing from modvar'); end
 if ~isfield(modvar, 'whichSource'), error('whichSource missing from modvar'); end
-if ~isfield(modvar, 'y_offset'), error('y_offset missing from modvar'); end
-if ~isfield(modvar, 'x_offset'), error('x_offset missing from modvar'); end
+if strcmpi(modvar.whichSource, 'offaxis')
+    if ~isfield(modvar, 'y_offset'), error('y_offset missing from modvar'); end
+    if ~isfield(modvar, 'x_offset'), error('x_offset missing from modvar'); end
+end
 if ~isfield(modvar, 'zernIndex'), modvar.zernIndex = 1; end
 
 end % ValidateModvar
