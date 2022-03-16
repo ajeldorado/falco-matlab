@@ -55,6 +55,9 @@ while icav < size(varargin, 2)
     end
 end
 
+%--Initialize output args
+varargout = {};
+
 %--Normalization factor for compact evaluation model
 if ~flagNewNorm && flagEval
     normFac = mp.Fend.eval.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
@@ -118,7 +121,8 @@ end
 
 %--Select which optical layout's compact model to use and get the output E-field
 if ~mp.flagFiber
-    Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    if mp.debug, varargout{end+1} = sDebug; end
 else
     [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
     varargout{1} = Efiber;

@@ -4,11 +4,15 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to set DMs and get an image in the specified sub-bandpass from the OMC. 
+% Function to:
+%    set DMs
+%    set wavelength band
+%    get an image in the specified sub-bandpass
 %
 % ---------------
 % INPUTS:
 % - mp = structure of model parameters
+%      uses: mp.dm1.V, mp.dm2.V, mp.tb, .debug, .isProbing, .sbp_centers
 % - si = index of sub-bandpass for which to take the image
 %
 % OUTPUTS
@@ -20,12 +24,15 @@
 % - Modified from falco_get_gpct_sbp_image on 2019-06-26 by G. Ruane
 % - Modified from falco_get_hcst_sbp_image on 2019-03-22 by G. Ruane
 % - Created on 2019-03-22 by G. Ruane 
+% - Copied from falco_get_dst_sbp_image.m and modified 2022-02 by D. Marx
 
 function normI = falco_get_omc_sbp_image(mp,si)
 
     % convenience:
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
+    nkt_power = tb.info.nkt_power(si); %--nkt setting
+    
     % already set in config: tb.sciCam.subdir = 'falco';
     if isfield(mp,'debug'), debug = mp.debug; else, debug = false; end
     NM = 1e-9;
@@ -81,7 +88,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
         colorbar;
         title('DM2 Total')
         
-        subplot(2,2,2)
+        subplot(2,2,4)
         imagesc(dm2_map);
         axis image;
         colorbar;
@@ -93,11 +100,11 @@ function normI = falco_get_omc_sbp_image(mp,si)
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
     if(tb.DM1.installed && tb.DM1.CONNECTED)
-        DM_apply2Dmap(tb.DM1,dm1_map);
+        DM_apply2Dmap(tb.DM1,dm1_map); % relative to DM.flatmap
     end
     if(tb.DM2.installed && tb.DM2.CONNECTED)
         try
-            DM_apply2Dmap(tb.DM2,dm2_map);
+            DM_apply2Dmap(tb.DM2,dm2_map); % relative to DM.flatmap
         catch ME
             error(ME);
     
@@ -124,6 +131,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
     lam2 = lam0 + sbp_width/2;
     tb.nkt.lower = lam1/NM;
     tb.nkt.upper = lam2/NM;
+    tb.nkt.power = nkt_power; 
     
     if false %debug
         disp(tb.nkt);

@@ -7,6 +7,8 @@
 % Compute the model-based delta E-field for the given delta DM voltages at
 % the specified wavelength.
 %
+% deltaE = falco_deltaE_from_deltaV(mp, dV1, dV2, lambda)
+%
 % INPUTS
 % ------
 % mp : structure of model parameters
