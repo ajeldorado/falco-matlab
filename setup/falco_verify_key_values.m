@@ -19,6 +19,7 @@ function mp = falco_verify_key_values(mp)
     mp.allowedCenterings = {'pixel', 'interpixel'};
     mp.allowedCoronagraphTypes = {'VC', 'VORTEX', 'LC', 'APLC', 'FLC', 'SPLC', 'HLC'};
     mp.allowedLayouts = {'fourier', 'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'};
+    mp.allowedEstimators = {'perfect', 'pairwise-square', 'pwp-bp-square', 'pairwise-rect', 'pwp-bp', 'pwp-kf'};
 
     %--Check centering
     mp.centering = lower(mp.centering);
@@ -42,5 +43,10 @@ function mp = falco_verify_key_values(mp)
     if strcmpi(mp.layout, 'fpm_scale') && ~strcmpi(mp.coro, 'HLC')
         error("Error: mp.layout is only allowed as 'fpm_scale' when mp.coro = 'HLC'.")
     end
-
+    
+    %--Check estimator
+    mp.estimator = lower(mp.estimator);
+    if ~any(strcmp(mp.allowedEstimators, mp.estimator))
+        error('Error: %s is not an allowed value of mp.estimator.', mp.estimator)
+    end
 end
