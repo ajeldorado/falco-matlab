@@ -115,7 +115,9 @@ ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
 for iStar = 1:mp.compact.star.count
+    modvar = ModelVariables;
     modvar.starIndex = iStar;
+
 for iSubband = 1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ', iSubband, mp.Nsbp);
     modeIndex = (iStar-1)*mp.Nsbp + iSubband;

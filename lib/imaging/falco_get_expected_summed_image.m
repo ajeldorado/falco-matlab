@@ -16,7 +16,7 @@
 % OUTPUTS
 % Ibandavg : band-averaged image in units of normalized intensity
 
-function Ibandavg = falco_get_expected_summed_image(mp,cvar)
+function Ibandavg = falco_get_expected_summed_image(mp, cvar)
 
     %--Initialize variables
     Ibandavg = 0;
@@ -24,6 +24,7 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
     EoldTempVecArray = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
 
     %--Generate the model-based E-field with the new DM setting
+    modvar = ModelVariables;
     for iMode = 1:mp.jac.Nmode    
         modvar.sbpIndex = mp.jac.sbp_inds(iMode);
         modvar.zernIndex = mp.jac.zern_inds(iMode);
@@ -66,5 +67,4 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
         Ibandavg = Ibandavg +  mp.sbp_weights(sbpIndex)*abs(Eexpected2D).^2;
     end
     
-
 end %--END OF FUNCTION

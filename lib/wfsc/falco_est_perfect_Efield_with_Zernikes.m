@@ -39,6 +39,7 @@ function ev = falco_est_perfect_Efield_with_Zernikes(mp)
         end
         
         for iMode=1:mp.jac.Nmode
+            modvar = ModelVariables;
             modvar.sbpIndex = mp.jac.sbp_inds(iMode);
             modvar.zernIndex = mp.jac.zern_inds(iMode);
             modvar.wpsbpIndex = mp.wi_ref;
@@ -95,6 +96,7 @@ function ev = falco_est_perfect_Efield_with_Zernikes(mp)
             
         else %--Not done in parallel
             for iMode = 1:mp.jac.Nmode
+                modvar = ModelVariables;
                 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
                 modvar.zernIndex = mp.jac.zern_inds(iMode);
                 modvar.starIndex = mp.jac.star_inds(iMode);

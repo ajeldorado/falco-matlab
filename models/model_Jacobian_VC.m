@@ -25,6 +25,7 @@ function Gmode = model_Jacobian_VC(mp, iMode, whichDM)
 % Setup
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+modvar = ModelVariables;
 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
 modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);

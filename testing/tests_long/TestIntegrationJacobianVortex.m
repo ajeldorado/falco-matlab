@@ -61,6 +61,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             G2fast = G2fastAll(:, indG2subset);
 
             %% Compute Jacobian via differencing (slower)
+            modvar = ModelVariables;
             modvar.whichSource = 'star';
             modvar.sbpIndex = 1;
             modvar.starIndex = 1;

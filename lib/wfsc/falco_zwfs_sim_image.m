@@ -7,6 +7,7 @@ function Isum = falco_zwfs_sim_image(mp)
     Isum = 0; % Initialize image
 
     for si=1:mp.wfs.Nsbp
+        modvar = ModelVariables;
         modvar.sbpIndex = si;
 
         for wi=1:mp.wfs.Nwpsbp

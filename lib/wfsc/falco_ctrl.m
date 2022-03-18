@@ -42,6 +42,7 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
 
         %--The G^*E part changes each iteration because the E-field changes.
         if mp.jac.minimizeNI
+            modvar = ModelVariables;
             modvar.whichSource = 'star';
             modvar.sbpIndex = mp.jac.sbp_inds(iMode);
             modvar.zernIndex = mp.jac.zern_inds(iMode);

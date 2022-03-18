@@ -20,6 +20,7 @@
 
 function Iout = falco_get_single_sim_image(ic, inds_list, mp)
 
+    modvar = ModelVariables;
     modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 1);
     modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 2);
     modvar.starIndex = inds_list(3, ic);

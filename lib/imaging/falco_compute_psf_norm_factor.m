@@ -31,6 +31,7 @@ mp.Fend.compact.I00 = ones(1, mp.Nsbp); % Initial input before computing
 mp.Fend.eval.I00 = ones(1, mp.Nsbp); % Initial input before computing
 mp.Fend.full.I00 = ones(mp.Nsbp, mp.Nwpsbp); % Initial input before computing
 
+modvar = ModelVariables;
 modvar.zernIndex = 1;
 modvar.whichSource = 'star';  
 modvar.starIndex = 1; % Always use first star for image normalization
