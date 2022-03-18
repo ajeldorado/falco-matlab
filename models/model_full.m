@@ -20,12 +20,12 @@
 
 function [Eout, varargout] = model_full(mp, modvar, varargin)
 
-% Set default values of input parameters
-if isfield(modvar, 'sbpIndex') && isfield(modvar, 'wpsbpIndex')
-    normFac = mp.Fend.full.I00(modvar.sbpIndex, modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
-else
-    error("modvar must have fields 'sbpIndex' and 'wpsbpIndex'.")
+if ~isa(modvar, 'ModelVariables')
+    error('modvar must be an instance of class ModelVariables')
 end
+
+% Set default values of input parameters
+normFac = mp.Fend.full.I00(modvar.sbpIndex, modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
 
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
@@ -48,12 +48,10 @@ if(any(mp.dm_ind==8)); mp.dm8 = rmfield(mp.dm8, 'compact'); end
 if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9, 'compact'); end
 
 %--Set the wavelength
-if(isfield(modvar, 'lambda')) %--For FALCO or for evaluation without WFSC
+if ~isempty(modvar.lambda) %--For FALCO or for evaluation without WFSC
     lambda = modvar.lambda;
-elseif(isfield(modvar, 'sbpIndex')) %--For use in FALCO
-    lambda = mp.full.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 else
-    error('model_full: Need to specify a value or indices for a wavelength.')
+    lambda = mp.full.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,9 +84,9 @@ if normFac == 0
 end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
-if isfield(modvar, 'zernIndex') == false
-    modvar.zernIndex = 1;
-end
+% if isfield(modvar, 'zernIndex') == false
+%     modvar.zernIndex = 1;
+% end
 
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
@@ -135,7 +133,7 @@ switch lower(mp.layout)
                     ilam = modvar.sbpIndex;
                 end
                 %fprintf('si=%d, wi=%d, ilam=%d\n', modvar.sbpIndex, modvar.wpsbpIndex, ilam);
-                mp.FPM.mask = mp.full.FPMcube(:, :, ilam);%modvar.sbpIndex, modvar.wpsbpIndex);
+                mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
         end
 end
 

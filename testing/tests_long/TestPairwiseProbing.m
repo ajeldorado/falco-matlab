@@ -50,7 +50,6 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
     methods (Test)    
         function testPairwiseProbing(testCase)
             
-%             EXAMPLE_defaults_try_running_FALCO
             mp = testCase.mp;
             
             mp.flagParfor = false; %--whether to use parfor for Jacobian calculation

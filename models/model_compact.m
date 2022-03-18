@@ -18,7 +18,9 @@
 
 function [Eout, varargout] = model_compact(mp, modvar, varargin)
 
-modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
+if ~isa(modvar, 'ModelVariables')
+    error('modvar must be an instance of class ModelVariables')
+end
 
 % Set default values of input parameters
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
@@ -50,7 +52,7 @@ if ~flagNewNorm && flagEval
 end
 
 %--Set the wavelength
-if isfield(modvar, 'lambda')
+if ~isempty(modvar.lambda)
     lambda = modvar.lambda;
 else
     lambda = mp.sbp_centers(modvar.sbpIndex);
@@ -80,10 +82,11 @@ if normFac == 0
     % Ein = Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
 end
 
-%--Apply a Zernike (in amplitude) at input pupil if specified
-if ~isfield(modvar, 'zernIndex')
-    modvar.zernIndex = 1;
-end
+% %--Apply a Zernike (in amplitude) at input pupil if specified
+% if ~isfield(modvar, 'zernIndex')
+%     modvar.zernIndex = 1;
+% end
+
 %--Only used for Zernike sensitivity control, which requires the perfect 
 % E-field of the differential Zernike term.
 if modvar.zernIndex ~= 1
