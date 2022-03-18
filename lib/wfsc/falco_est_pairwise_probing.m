@@ -49,7 +49,7 @@ end
 %--"ev" is passed in only for the Kalman filter. Clear it for the batch
 % process to avoid accidentally using old data.
 switch lower(mp.estimator)
-    case{'pwp-bp', 'pwp-bp-square'}
+    case{'pairwise', 'pairwise-square', 'pwp-bp-square', 'pairwise-rect', 'pwp-bp', }
         clear ev
 end
 
@@ -87,19 +87,21 @@ for k = 1:Npairs-1
 end
 probePhaseVec = probePhaseVec * pi / Npairs;
 
-if strcmpi(mp.estimator, 'pwp-bp-square')
-    switch lower(mp.est.probe.axis)
-        case 'y'
-            badAxisVec = repmat('y', [2*Npairs, 1]);
-        case 'x'
-            badAxisVec = repmat('x', [2*Npairs, 1]);
-        case{'alt','xy','alternate'}
-            badAxisVec = repmat('x', [2*Npairs, 1]);
-            badAxisVec(3:4:end) = 'y';
-            badAxisVec(4:4:end) = 'y';
-        case 'multi'
-            badAxisVec = repmat('m', [2*Npairs, 1]);
-    end
+switch mp.estimator
+    case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
+        
+        switch lower(mp.est.probe.axis)
+            case 'y'
+                badAxisVec = repmat('y', [2*Npairs, 1]);
+            case 'x'
+                badAxisVec = repmat('x', [2*Npairs, 1]);
+            case{'alt', 'xy', 'alternate'}
+                badAxisVec = repmat('x', [2*Npairs, 1]);
+                badAxisVec(3:4:end) = 'y';
+                badAxisVec(4:4:end) = 'y';
+            case 'multi'
+                badAxisVec = repmat('m', [2*Npairs, 1]);
+        end
 end
 
 %% Initialize output arrays
@@ -113,7 +115,9 @@ ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
 for iStar = 1:mp.compact.star.count
+    modvar = ModelVariables;
     modvar.starIndex = iStar;
+
 for iSubband = 1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ', iSubband, mp.Nsbp);
     modeIndex = (iStar-1)*mp.Nsbp + iSubband;
@@ -174,9 +178,9 @@ for iSubband = 1:mp.Nsbp
 
         %--Generate the DM command map for the probe
         switch lower(mp.estimator)
-            case{'pwp-bp', 'pwp-kf'} 
+            case{'pairwise-rect', 'pwp-bp', 'pwp-kf'} 
                 probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar);
-            case{'pwp-bp-square'}
+            case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
                 probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe));
         end
         %--Select which DM to use for probing. Allocate probe to that DM
@@ -317,7 +321,9 @@ for iSubband = 1:mp.Nsbp
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
-if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp-square') || (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
+if strcmpi(mp.estimator, 'pwp-bp') || strcmpi(mp.estimator, 'pairwise-rect') || ...
+        strcmpi(mp.estimator,'pwp-bp-square') || strcmpi(mp.estimator, 'pairwise') || strcmpi(mp.estimator, 'pairwise-square') ||...
+        (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
     Eest = zeros(mp.Fend.corr.Npix, 1);
     zerosCounter = 0;
     for ipix = 1:mp.Fend.corr.Npix

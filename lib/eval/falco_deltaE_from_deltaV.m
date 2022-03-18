@@ -27,6 +27,7 @@ function deltaE = falco_deltaE_from_deltaV(mp, dV1, dV2, lambda)
     V2init = mp.dm2.V;
 
     % Populate modvar structure, which is needed for model_compact()
+    modvar = ModelVariables;
     modvar.lambda = lambda;
     modvar.whichSource = 'star';
     modvar.starIndex = 1; % ignored because of modvar.lambda

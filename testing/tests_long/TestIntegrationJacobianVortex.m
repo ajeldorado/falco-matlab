@@ -61,6 +61,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             G2fast = G2fastAll(:, indG2subset);
 
             %% Compute Jacobian via differencing (slower)
+            modvar = ModelVariables;
             modvar.whichSource = 'star';
             modvar.sbpIndex = 1;
             modvar.starIndex = 1;
@@ -137,6 +138,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             G2fast = G2fastAll(:, indG2subset);
 
             %% Compute Jacobian via differencing (slower)
+            modvar = ModelVariables;
             modvar.whichSource = 'star';
             modvar.sbpIndex = 1;
             modvar.starIndex = 1;
@@ -207,6 +209,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
 
             % Get the unocculted peak E-field and coronagraphic E-field
             if mp.jac.minimizeNI
+                modvar = ModelVariables;
                 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
                 modvar.zernIndex = mp.jac.zern_inds(iMode);
                 modvar.starIndex = mp.jac.star_inds(iMode);
@@ -215,6 +218,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
                 [~, indPeak] = max(abs(Eunocculted(:)));
             end
 
+            modvar = ModelVariables;
             modvar.whichSource = 'star';
             modvar.sbpIndex = 1;
             modvar.starIndex = 1;

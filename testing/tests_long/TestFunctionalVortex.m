@@ -6,7 +6,7 @@
 classdef TestFunctionalVortex < matlab.unittest.TestCase
 %% Properties
 %
-% A presaved file with FALCO parameters was saved and is lodaded to be used
+% A presaved file with FALCO parameters was saved and is loaded to be used
 % by methods. In this case we use the mp.path.falco to addpath to the
 % function being tested.
     properties

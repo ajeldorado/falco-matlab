@@ -88,6 +88,7 @@ for si=1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ',si,mp.Nsbp);
 
     % Valid for all calls to model_compact.m:
+    modvar = ModelVariables;
     modvar.sbpIndex = si;
     modvar.whichSource = 'star';
 

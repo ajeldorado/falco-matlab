@@ -61,6 +61,7 @@ function tableKrist = falco_FRN_Krist_table(mp)
         si = vals_list(2,jj); %--sub-bandpass index
         wi = vals_list(3,jj); %--wavelength index within a sub-bandpass
         
+        modvar = ModelVariables;
         modvar.whichSource = 'offaxis';
         mp.full.source_x_offset = offsetVal;
         mp.full.source_y_offset = 0;

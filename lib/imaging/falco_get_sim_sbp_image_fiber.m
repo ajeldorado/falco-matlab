@@ -25,6 +25,7 @@ if(any(mp.dm_ind==2)); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.
 if(any(mp.dm_ind==9)); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
 
 Isum = 0; % Initialize image
+modvar = ModelVariables;
 modvar.sbpIndex = si;
 
 %--Get the starlight image

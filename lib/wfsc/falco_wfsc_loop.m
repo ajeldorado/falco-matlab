@@ -215,6 +215,7 @@ end
 function Esim = compute_simulated_efield_for_delta_efield_plot(mp)
 
     %--Model-based estimate for comparing Delta E (1st star only)
+    modvar = ModelVariables;
     modvar.whichSource = 'star';
     modvar.starIndex = 1; % 1ST STAR ONLY
     for si = mp.Nsbp:-1:1
