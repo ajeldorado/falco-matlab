@@ -39,9 +39,9 @@ Nact = dm.Nact;
 NactPerBeam = mp.P2.D / dm.dm_spacing;
 
 %--Coordinates in actuator space
-xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.xOffset)/Nact;
-ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.yOffset)/Nact;
-[XS,YS] = meshgrid(xs,ys);
+xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - double(round(mp.est.probe.xOffset))/Nact;
+ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - double(round(mp.est.probe.yOffset))/Nact;
+[XS, YS] = meshgrid(xs, ys);
 
 % Probed region extend in dark hole
 lamDIntoAct = Nact / NactPerBeam; % Convert units from lambda/D to actuators
