@@ -19,7 +19,6 @@ function mp = falco_set_optional_variables(mp)
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 mp.est.dummy = 1;
-mp.est.probe.dummy = 1;
 mp.star.dummy = 1;
 mp.compact.star.dummy = 1;
 mp.jac.star.dummy = 1;
@@ -157,9 +156,9 @@ if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weig
 if(isfield(mp.jac,'minimizeNI')==false); mp.jac.minimizeNI = false; end %--Have EFC minimize normalized intensity instead of intensity
     
 %--Estimation
-if(isfield(mp.est.probe,'whichDM')==false); mp.est.probe.whichDM = 1; end %--Which DM to use for probing
-if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max probe intensity
-if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Lower estimated intensities to this value if they exceed this (probably due to a bad inversion)
+if ~isfield(mp.est, 'probeSchedule'); mp.est.probeSchedule = ProbeSchedule; end %--Schedule of per-iteration values for pairwise probing. Default is empty vectors, meaning they aren't used.
+if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max allowed probe intensity
+if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Reduce estimated intensities to this value if they exceed this (probably due to a bad inversion)
 
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
@@ -177,13 +176,14 @@ if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Needed for computing
 
 % Default values are for the Andor Neo sCMOS detector and testbed flux
 if ~isfield(mp, 'flagImageNoise'); mp.flagImageNoise = false; end % whether to include noise in the images
-if ~isfield(mp.detector, 'gain'); mp.detector.gain = 1.0; end % [e-/count]
+if ~isfield(mp.detector, 'gain'); mp.detector.gain = 1.0; end % detector gain [e-/count]
 if ~isfield(mp.detector, 'darkCurrentRate'); mp.detector.darkCurrentRate = 0.015; end % [e-/pixel/second]
-if ~isfield(mp.detector, 'readNoiseStd'); mp.detector.readNoiseStd = 1.7; end % [e-/count]
-if ~isfield(mp.detector, 'wellDepth'); mp.detector.wellDepth = 3e4; end % [e-]
+if ~isfield(mp.detector, 'readNoiseStd'); mp.detector.readNoiseStd = 1.7; end % standard deviation of Gaussian read noise [e-]
+if ~isfield(mp.detector, 'wellDepth'); mp.detector.wellDepth = 3e4; end % well depth of the detector [e-]
 if ~isfield(mp.detector, 'peakFluxVec'); mp.detector.peakFluxVec = 1e8 * ones(mp.Nsbp, 1); end % [counts/pixel/second]
-if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % [seconds]
-if ~isfield(mp.detector, 'Nexp'); mp.detector.Nexp = 1; end % number of exposures to stack
+if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for regular (unprobed images) in each subband [seconds]
+if ~isfield(mp.detector, 'tExpProbedVec'); mp.detector.tExpUnprobedVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for probed images in each subband [seconds]
+if ~isfield(mp.detector, 'Nexp'); mp.detector.Nexp = 1; end % number of exposures to stack for each combined frame
 
 %% Initialize some basic attributes for all DMs (which include hybrid FPMs).
 mp.dm1.NactTotal=0; mp.dm2.NactTotal=0; mp.dm3.NactTotal=0; mp.dm4.NactTotal=0; mp.dm5.NactTotal=0; mp.dm6.NactTotal=0; mp.dm7.NactTotal=0; mp.dm8.NactTotal=0; mp.dm9.NactTotal=0; 

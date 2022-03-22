@@ -102,7 +102,7 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             mp.est.probe.yOffset = 0;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
             mp.est.probe.axis = 'alternate';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
             mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
-            ev.dummy = 1;
+            ev.Itr = 1;
             ev = falco_est_pairwise_probing(mp, ev);
             Eest = ev.Eest;
             Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
@@ -130,7 +130,7 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             mp.est.probe.etaOffset = 0;
             mp.est.probe.width = 12;        
             mp.est.probe.height = 24;   
-            ev.dummy = 1;
+            ev.Itr = 1;
             ev = falco_est_pairwise_probing(mp, ev);
             Eest = ev.Eest;
             Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);

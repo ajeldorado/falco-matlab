@@ -36,17 +36,17 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 
 %% Wavefront Estimation
 
-%--Estimator Options:
+% mp.estimator options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+% - 'pairwise' or 'pairwise-square' for pairwise probing in a square region
+% centered on the star
+% - 'pairwise-rect' for pairwise probing in the specified rectangular regions for
 %    one or more stars
-% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
-% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
-% - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-mp.estimator = 'pwp-bp-square';
+mp.estimator = 'pairwise';
 
 %--Variables for pairwise probing estimation:
-mp.est.flagUseJac = true;    % Whether to use the Jacobian to compute the delta electric fields. If false, the outputs of model_compact are differenced instead.
+mp.est.probe = Probe; % initialize object
+% mp.est.flagUseJac = true;    % Whether to use the Jacobian to compute the delta electric fields. If false, the outputs of model_compact are differenced instead.
 mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
