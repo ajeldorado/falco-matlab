@@ -179,7 +179,7 @@ mp.P3.D = 0.4*32e-3;%mp.P2.D;
 mp.P4.D = 0.4*32e-3;%mp.P2.D;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 500;%250;%256;%500; %INCREASE SAMPLING RES HERE
+% mp.P1.compact.Nbeam = 500;%250;%256;%500; %INCREASE SAMPLING RES HERE
 mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -201,7 +201,7 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 500;%350;%500; %mp.P1.compact.Nbeam; 
+% mp.P1.full.Nbeam = 500;%350;%500; %mp.P1.compact.Nbeam; %INCREASE SAMPLING RES HERE
 mp.P2.full.Nbeam = mp.P1.full.Nbeam;
 mp.P3.full.Nbeam = mp.P1.full.Nbeam;
 mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -210,7 +210,7 @@ mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex.
 
 %% Entrance Pupil (P1) Definition and Generation
 
-mp.whichPupil = 'LUVOIR_B'; %'Simple';% Used only for run label
+mp.whichPupil =  'Simple';% 'LUVOIR_B'; Used only for run label
 
 %%FROM AVC_defaults
 mp.P1.IDnorm = 0.00; %--ID of the central obscuration [diameter]. Used only for computing the RMS DM surface from the ID to the OD of the pupil. OD is assumed to be 1.
@@ -240,16 +240,16 @@ inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam)); % number of points across usabl
 mp.P1.compact.mask = falco_gen_pupil_Simple(inputs);
 
 %COMMENTED THIS PART OUT FOR SIMPLE PUPIL
-mp.P1.D = 7.989; %--circumscribed telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
-
-%--Generate the entrance pupil aperture
-inputs.centering = mp.centering;
-% Full model:
-inputs.Nbeam = mp.P1.full.Nbeam;
-mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
-% Compact model
-inputs.Nbeam = mp.P1.compact.Nbeam;
-mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
+% mp.P1.D = 7.989; %--circumscribed telescope diameter [meters]. Used only for converting milliarcseconds to lambda0/D or vice-versa.
+% 
+% %--Generate the entrance pupil aperture
+% inputs.centering = mp.centering;
+% % Full model:
+% inputs.Nbeam = mp.P1.full.Nbeam;
+% mp.P1.full.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
+% % Compact model
+% inputs.Nbeam = mp.P1.compact.Nbeam;
+% mp.P1.compact.mask = pad_crop(falco_gen_pupil_LUVOIR_B(inputs), 2^(nextpow2(inputs.Nbeam)));
 
 %% "Apodizer" (P3) Definition and Generation
 mp.flagApod = true;    % false;%--Whether to use an apodizer or not in the FALCO models.

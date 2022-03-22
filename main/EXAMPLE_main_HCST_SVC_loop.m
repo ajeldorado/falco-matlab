@@ -16,13 +16,18 @@ clear all;
 close all;
 
 
+
 bws = [0.01,0.05,0.1,0.15,0.2];
 nsbps = [1,3,5,7,9];
 vals = [];
+ims = [];
+res = [100,200,300,400,500,600,700];
 
+filename = 'testAnimated2.gif';
+% gifim(1,1,1,length(res))=0;
 
-for index = 1:2 %length(bws)
-    clearvars -except vals bws index nsbps
+for index = 1:length(bws) %length(res)
+    clearvars -except vals bws index nsbps ims res filename
     mp.use_lastJacStruc = false;
     
     %% Step 1: Define Necessary Paths on Your Computer System
@@ -55,6 +60,8 @@ for index = 1:2 %length(bws)
     disp(index);
     mp.fracBW = bws(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.Nsbp = nsbps(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.P1.full.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.P1.compact.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.F3.phaseMaskType = 'vortex';
     EXAMPLE_defaults_HCST_SVC_chromatic
    
@@ -70,11 +77,6 @@ for index = 1:2 %length(bws)
     mp.SeriesNum = 1;
     mp.TrialNum = 1;
 
-    %--Use just 1 wavelength for initial debugging/testing of code
-
-    %FOR BROADBAND, change frac to 10% and nsbp 5 or 3
-%     mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-%     mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
     mp.Nwpsbp = 1;          %--Number of wavelengths to be used to approximate an image in each sub-bandpass
 
     mp.Nitr = 1; %--Number of wavefront control iterations
@@ -92,11 +94,50 @@ for index = 1:2 %length(bws)
 
     [mp, out] = falco_flesh_out_workspace(mp);
 
-    [mp, out] = falco_wfsc_loop(mp, out);
-
-
-    val = out.InormHist(end);
+    
+%     [mp, out] = falco_wfsc_loop(mp, out);
+    %     val = out.InormHist(end);
+    
+    
+    %For 0 wavefront control iterations
+    outSingle = falco_eval_without_control(mp);
+    
+    Im = falco_get_summed_image(mp);
+    ims = cat(3,ims,Im);
+    
+    val = outSingle.InormHist(1);
     vals = [vals;val]
-%       val = 2
+    
+    
+%     h = figure;
+%     imagesc(log10(Im/2^16));
+%     axis image; colorbar; title(append('No WFSC at Res: ',num2str(res(index))));
+%     frame = getframe(h); 
+%     gifim = frame2im(frame); 
+% %     [gifim,map] = rgb2ind(frame.cdata,256,'nodither');
+% %     gifim(:,:,1,index) = rgb2ind(frame.cdata,map,'nodither');
+    
+    
+    
+%     [imind,cm] = rgb2ind(gifim,256); 
+%     if index == 1 
+%         imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
+%     else 
+%         imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',1); 
+%     end
+
 end
 
+% imwrite(gifim,map,filename,'DelayTime',0,'LoopCount',inf)
+
+% [gifImage cmap] = imread(filename, 'Frames', 'all');
+% size(gifImage)
+% implay(gifImage);
+
+% [imind,cm] = rgb2ind(im,256); 
+%     % Write to the GIF File 
+%     if n == 1 
+%         imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
+%     else 
+%         imwrite(imind,cm,filename,'gif','WriteMode','append'); 
+%     end 

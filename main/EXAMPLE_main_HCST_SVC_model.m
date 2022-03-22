@@ -17,6 +17,7 @@
 % ---------------
 
 clear all;
+close all;
 
 mp.use_lastJacStruc = false;
 %% Tell Matlab which Python to use from where. Needed for the E-M algorithm.
@@ -104,9 +105,13 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 %% Step 5: Perform the Wavefront Sensing and Control
 % [out, data_train] = falco_adaptive_wfsc_loop(mp);
+
 [mp, out] = falco_flesh_out_workspace(mp);
 
-[mp, out] = falco_wfsc_loop(mp, out);
+outSingle = falco_eval_without_control(mp);
+
+% [mp, out] = falco_wfsc_loop(mp, out);
+
 if(mp.flagPlot)
     figure; semilogy(0:mp.Nitr,out.InormHist,'Linewidth',3); grid on; set(gca,'Fontsize',20);
 end
