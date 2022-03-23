@@ -7,6 +7,12 @@
 % Peform EFC. The regularization and DM gain are chosen empirically each
 % iteration as the combination that provides the best normalized intensity.
 %
+% STEPS:
+% Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
+% Step 1: If re-linearizing this iteration, empirically find the best regularization value.
+% Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
+% Step 3: Compute the EFC command to use.
+%
 % INPUTS
 % ------
 % mp : structure of model parameters
@@ -20,13 +26,7 @@
 
 function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
-    % STEPS:
-    % Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
-    % Step 1: If re-linearizing this iteration, empirically find the best regularization value.
-    % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
-    % Step 3: Compute the EFC command to use.
-    
-    %% Initializations    
+    % Initializations    
     vals_list = allcomb(mp.ctrl.log10regVec, mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
     Nvals = max(size(vals_list,2));
     Inorm_list = zeros(Nvals,1);
@@ -94,11 +94,11 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:, indBest); end
 
     cvarOut.log10regUsed = vals_list(1,indBest);
-    dmfacBest = vals_list(2,indBest);
+    cvarOut.dmfacUsed = vals_list(2,indBest);
     if(mp.ctrl.flagUseModel)
-        fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, cvarOut.dmfacUsed, cvarOut.cMin)
     else
-        fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, cvarOut.dmfacUsed, cvarOut.cMin)
     end
     
     %% Plot the grid search results

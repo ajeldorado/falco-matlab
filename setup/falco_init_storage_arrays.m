@@ -18,7 +18,10 @@ function out = falco_init_storage_arrays(mp)
 
     %--EFC regularization history
     out.Nitr = mp.Nitr;
-    out.log10regHist = zeros(mp.Nitr, 1);
+    out.log10regHist = zeros(mp.Nitr, 1);  % Keeping for backwards compatibility
+    out.ctrl.log10regHist = zeros(mp.Nitr, 1);
+    out.ctrl.dmfacHist = zeros(mp.Nitr, 1);    
+    out.ctrl.relinHist = logical(zeros(mp.Nitr, 1));
 
     %--Peak-to-Valley DM voltages
     out.dm1.Vpv = zeros(mp.Nitr, 1);

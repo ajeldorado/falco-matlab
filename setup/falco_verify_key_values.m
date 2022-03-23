@@ -20,7 +20,8 @@ function mp = falco_verify_key_values(mp)
     mp.allowedCoronagraphTypes = {'VC', 'VORTEX', 'LC', 'APLC', 'FLC', 'SPLC', 'HLC'};
     mp.allowedLayouts = {'fourier', 'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'};
     mp.allowedEstimators = {'perfect', 'pairwise', 'pairwise-square', 'pwp-bp-square', 'pairwise-rect', 'pwp-bp', 'pwp-kf'};
-
+    mp.allowedControllers = {'gridsearchefc', 'plannedefc'};
+    
     %--Check centering
     mp.centering = lower(mp.centering);
     if ~any(strcmp(mp.allowedCenterings, mp.centering))
@@ -49,4 +50,11 @@ function mp = falco_verify_key_values(mp)
     if ~any(strcmp(mp.allowedEstimators, mp.estimator))
         error('Error: %s is not an allowed value of mp.estimator.', mp.estimator)
     end
+    
+    %--Check controller
+    mp.controller = lower(mp.controller);
+    if ~any(strcmp(mp.allowedControllers, mp.controller))
+        error('Error: %s is not an allowed value of mp.controller.', mp.controller)
+    end
+    
 end

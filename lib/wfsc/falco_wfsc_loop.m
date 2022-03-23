@@ -55,6 +55,7 @@ for Itr = 1:mp.Nitr
     
     cvar.flagRelin = (Itr == 1) || any(mp.relinItrVec == Itr);
     if  cvar.flagRelin
+        out.ctrl.relinHist(Itr) = true;
         jacStruct =  model_Jacobian(mp);
     end
     
@@ -99,12 +100,7 @@ for Itr = 1:mp.Nitr
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
     % Save data to 'out'
-    out.log10regHist(Itr) = cvar.log10regUsed;
-    if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
-        out.IrawScoreHist(Itr+1) = mean(cvar.Im(mp.Fend.score.maskBool));
-        out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
-        out.InormHist(Itr+1) = out.IrawCorrHist(Itr+1);
-    end
+    out = falco_store_controller_data(mp, out, cvar, Itr);
     
     %--Enforce constraints on DM commands 
     if any(mp.dm_ind == 1); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
@@ -205,10 +201,31 @@ end %--END OF main FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function out = store_dm_command_history(mp, out, Itr)
+
     if isfield(mp, 'dm1'); if(isfield(mp.dm1,'V'));  out.dm1.Vall(:,:,Itr) = mp.dm1.V;  end;  end
     if isfield(mp, 'dm2'); if(isfield(mp.dm2,'V'));  out.dm2.Vall(:,:,Itr) = mp.dm2.V;  end;  end
     if isfield(mp, 'dm8'); if(isfield(mp.dm8,'V'));  out.dm8.Vall(:,Itr) = mp.dm8.V(:);  end;  end
     if isfield(mp, 'dm9'); if(isfield(mp.dm9,'V'));  out.dm9.Vall(:,Itr) = mp.dm9.V(:);  end;  end
+
+end
+
+
+function out = falco_store_controller_data(mp, out, cvar, Itr)
+    
+    if any(strcmp({'plannedefc', 'gridsearchefc'}, mp.controller))
+        out.ctrl.dmfacHist(Itr) = cvar.dmfacUsed;
+        out.ctrl.log10regHist(Itr) = cvar.log10regUsed;
+        out.log10regHist(Itr) = out.ctrl.log10regHist(Itr); % kept for backwards compatibility
+    end
+
+    % If the unprobed image for the next WFSC iteration was already taken,
+    % then use it to compute the NI for the next iteration.
+    if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
+        out.IrawScoreHist(Itr+1) = mean(cvar.Im(mp.Fend.score.maskBool));
+        out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
+        out.InormHist(Itr+1) = out.IrawCorrHist(Itr+1);
+    end
+    
 end
 
 
