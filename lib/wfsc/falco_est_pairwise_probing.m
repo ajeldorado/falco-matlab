@@ -78,7 +78,6 @@ if whichDM == 1 && ~any(mp.dm_ind == 1)
 elseif whichDM == 2 && ~any(mp.dm_ind == 2)
     mp.dm_ind = [mp.dm_ind(:); 2];
 end
-    
 
 %--Select number of actuators across based on chosen DM for the probing
 if whichDM == 1
@@ -91,9 +90,13 @@ end
 if any(mp.dm_ind == 1);  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
 if any(mp.dm_ind == 2);  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
-% Definitions:
+% Initialize output arrays
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1+2*Npairs, mp.Nsbp);
+ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+ev.IprobedMean = 0;
+ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, mp.Nsbp);  end
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, mp.Nsbp);  end
 
@@ -123,28 +126,23 @@ switch mp.estimator
         end
 end
 
-%% Initialize output arrays
-ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
-ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
-ev.IprobedMean = 0;
-ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 
 %% Get images and perform estimates in each sub-bandpass
 
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
 for iStar = 1:mp.compact.star.count
+
     modvar = ModelVariables;
     modvar.starIndex = iStar;
+    modvar.whichSource = 'star';
 
 for iSubband = 1:mp.Nsbp
+
+    modvar.sbpIndex = iSubband;
     fprintf('Wavelength: %u/%u ... ', iSubband, mp.Nsbp);
     modeIndex = (iStar-1)*mp.Nsbp + iSubband;
-    fprintf('Mode: %u/%u ... ', modeIndex, mp.jac.Nmode);
-    
-    % Valid for all calls to model_compact.m:
-    modvar.sbpIndex = iSubband;
-    modvar.whichSource = 'star';
+    fprintf('Mode: %u/%u ... ', modeIndex, mp.jac.Nmode);    
 
     %% Measure current contrast level average, and on each side of Image Plane
     % Reset DM commands to the unprobed state:
@@ -168,13 +166,13 @@ for iSubband = 1:mp.Nsbp
     mp.isProbing = true;
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     
-    if iStar == 1 % Already includes all stars, so don't sum over star loop
+    if iStar == 1 % Image already includes all stars, so don't sum over star loop
         ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
 
         %--Store values for first image and its DM commands
         ev.imageArray(:, :, whichImage, iSubband) = I0;
-        if whichDM == 1;  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
-        if whichDM == 2;  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
+        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
+        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
     end
     
     %--Compute the average Inorm in the scoring and correction regions
@@ -216,11 +214,13 @@ for iSubband = 1:mp.Nsbp
             dDM1Vprobe = 0;        
             dDM2Vprobe = probeCmd ./ mp.dm2.VtoH; % Now in volts
         end
-        if whichDM == 1
+
+        if any(mp.dm_ind == 1)
             mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom + dDM1Vprobe); 
-        elseif whichDM == 2
+        end
+        if any(mp.dm_ind == 2)
             mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom + dDM2Vprobe);
-        end        
+        end
 
         %--Take probed image
         if mp.flagFiber
@@ -233,8 +233,8 @@ for iSubband = 1:mp.Nsbp
 
         %--Store probed image and its DM settings
         ev.imageArray(:, :, whichImage, iSubband) = Im;
-        if whichDM == 1;  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
-        if whichDM == 2;  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
+        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
+        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
 
         %--Report results
         probeSign = ['-', '+'];
