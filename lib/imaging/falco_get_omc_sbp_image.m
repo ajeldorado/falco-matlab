@@ -65,7 +65,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
         dm2_map = mp.dm2.V;
     end
 
-    if debug,
+    if false,
         hfig = figure(700);
         figure_mxn(hfig, 2, 2);
 

@@ -84,13 +84,17 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     fprintf('\n')
 
     % print rms ddmv
-    fprintf('rms dDM1V: \t')
-    for ni=1:Nvals; dtmp = dDM1V_store(:,:,ni); fprintf('%.2e\t', rms(dtmp(:))); end
-    fprintf('\n');
+    if(any(mp.dm_ind==1));
+        fprintf('rms dDM1V: \t')
+        for ni=1:Nvals; dtmp = dDM1V_store(:,:,ni); fprintf('%.2e\t', rms(dtmp(:))); end
+        fprintf('\n');
+    end
 
-    fprintf('rms dDM2V: \t')
-    for ni=1:Nvals; dtmp = dDM2V_store(:,:,ni); fprintf('%.2e\t', rms(dtmp(:))); end
-    fprintf('\n');
+	if(any(mp.dm_ind==2));
+        fprintf('rms dDM2V: \t')
+        for ni=1:Nvals; dtmp = dDM2V_store(:,:,ni); fprintf('%.2e\t', rms(dtmp(:))); end
+        fprintf('\n');
+    end
 
 
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.

@@ -9,6 +9,8 @@
 % INPUTS
 % ------
 % dm: structure of DM parameters
+% dx: desired pixel size (m)
+% N:  size of beam array
 %
 % OUTPUTS
 % -------
