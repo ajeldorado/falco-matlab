@@ -65,15 +65,11 @@ if ~flagNewNorm && flagEval
 end
 
 %--Set the wavelength
-<<<<<<< HEAD
-lambda = modvar.lambda;
-=======
 if ~isempty(modvar.lambda)
     lambda = modvar.lambda;
 else
     lambda = mp.sbp_centers(modvar.sbpIndex);
 end
->>>>>>> master
 
 %--Include the star position and weight in the starting wavefront
 iStar = modvar.starIndex;
