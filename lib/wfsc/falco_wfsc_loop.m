@@ -56,6 +56,7 @@ for Itr = 1:mp.Nitr
     
     cvar.flagRelin = (Itr == 1) || any(mp.relinItrVec == Itr);
     if  cvar.flagRelin
+        out.ctrl.relinHist(Itr) = true;
         jacStruct =  model_Jacobian(mp);
     end
     
@@ -73,7 +74,7 @@ for Itr = 1:mp.Nitr
     if (Itr > 1); EestPrev = ev.Eest; end % save previous estimate for Delta E plot
     ev = falco_est(mp, ev, jacStruct);
     
-    out = store_intensities(mp, out, ev, Itr);
+    out = falco_store_intensities(mp, out, ev, Itr);
     
     %% Progress plots (PSF, NI, and DM surfaces)
 
@@ -100,12 +101,7 @@ for Itr = 1:mp.Nitr
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
     % Save data to 'out'
-    out.log10regHist(Itr) = cvar.log10regUsed;
-    if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
-        out.InormHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
-        out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
-        out.IrawScoreHist(Itr+1) = mean(cvar.Im(mp.Fend.score.maskBool));
-    end
+    out = falco_store_controller_data(mp, out, cvar, Itr);
     
     %--Enforce constraints on DM commands 
     if any(mp.dm_ind == 1); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
@@ -125,7 +121,7 @@ for Itr = 1:mp.Nitr
     end
 
     %--REPORTING NORMALIZED INTENSITY
-    if isfield(cvar, 'cMin') && mp.ctrl.flagUseModel == false
+    if out.InormHist(Itr+1) ~= 0
         fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
             out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
         if ~mp.flagSim
@@ -206,16 +202,38 @@ end %--END OF main FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function out = store_dm_command_history(mp, out, Itr)
+
     if isfield(mp, 'dm1'); if(isfield(mp.dm1,'V'));  out.dm1.Vall(:,:,Itr) = mp.dm1.V;  end;  end
     if isfield(mp, 'dm2'); if(isfield(mp.dm2,'V'));  out.dm2.Vall(:,:,Itr) = mp.dm2.V;  end;  end
     if isfield(mp, 'dm8'); if(isfield(mp.dm8,'V'));  out.dm8.Vall(:,Itr) = mp.dm8.V(:);  end;  end
     if isfield(mp, 'dm9'); if(isfield(mp.dm9,'V'));  out.dm9.Vall(:,Itr) = mp.dm9.V(:);  end;  end
+
+end
+
+
+function out = falco_store_controller_data(mp, out, cvar, Itr)
+    
+    if any(strcmp({'plannedefc', 'gridsearchefc'}, mp.controller))
+        out.ctrl.dmfacHist(Itr) = cvar.dmfacUsed;
+        out.ctrl.log10regHist(Itr) = cvar.log10regUsed;
+        out.log10regHist(Itr) = out.ctrl.log10regHist(Itr); % kept for backwards compatibility
+    end
+
+    % If the unprobed image for the next WFSC iteration was already taken,
+    % then use it to compute the NI for the next iteration.
+    if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
+        out.IrawScoreHist(Itr+1) = mean(cvar.Im(mp.Fend.score.maskBool));
+        out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
+        out.InormHist(Itr+1) = out.IrawCorrHist(Itr+1);
+    end
+    
 end
 
 
 function Esim = compute_simulated_efield_for_delta_efield_plot(mp)
 
     %--Model-based estimate for comparing Delta E (1st star only)
+    modvar = ModelVariables;
     modvar.whichSource = 'star';
     modvar.starIndex = 1; % 1ST STAR ONLY
     for si = mp.Nsbp:-1:1
@@ -223,65 +241,6 @@ function Esim = compute_simulated_efield_for_delta_efield_plot(mp)
         Etemp = model_compact(mp, modvar);
         Esim(:, si) = Etemp(mp.Fend.corr.maskBool);
     end
-end
-
-
-function out = store_intensities(mp, out, ev, Itr)
-
-    %% Calculate the average measured, coherent, and incoherent intensities
-    
-    % Apply subband weights and then sum over subbands
-    Iest = abs(ev.Eest).^2;
-    Iinco = ev.IincoEst;
-    for iMode = 1:mp.jac.Nmode
-        iSubband = mp.jac.sbp_inds(iMode);
-        Iest(:, iMode) = mp.sbp_weights(iSubband) * Iest(:, iMode);
-        Iinco(:, iMode) = mp.sbp_weights(iSubband) * Iinco(:, iMode);
-    end
-    IestAllBands = sum(Iest, 2);
-    IincoAllBands = sum(Iinco, 2);
-    
-    
-    % Put intensities back into 2-D arrays to use correct indexing of scoring region.
-    % Modulated
-    Iest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    Iest2D(mp.Fend.corr.maskBool) = IestAllBands(:);
-    out.IestScoreHist(Itr) = mean(Iest2D(mp.Fend.score.maskBool));
-    out.IestCorrHist(Itr) = mean(Iest2D(mp.Fend.corr.maskBool));
-    % Unmodulated
-    Iinco2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    Iinco2D(mp.Fend.corr.maskBool) = IincoAllBands(:);
-    out.IincoScoreHist(Itr) = mean(Iinco2D(mp.Fend.score.maskBool));
-    out.IincoCorrHist(Itr) = mean(Iinco2D(mp.Fend.corr.maskBool));
-
-    % Measured
-    out.IrawScoreHist(Itr) = mean(ev.Im(mp.Fend.score.maskBool));
-    out.IrawCorrHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
-    out.InormHist(Itr) = out.IrawCorrHist(Itr); % InormHist is a vestigial variable
-    
-    %% Calculate the measured, coherent, and incoherent intensities by subband
-    
-    % measured intensities
-    for iSubband = 1:mp.Nsbp
-        imageMeas = squeeze(ev.imageArray(:, :, 1, iSubband));
-        out.normIntMeasCorr(Itr, iSubband) = mean(imageMeas(mp.Fend.corr.maskBool));
-        out.normIntMeasScore(Itr, iSubband) = mean(imageMeas(mp.Fend.score.maskBool));
-        clear im        
-    end
-    
-    % estimated
-    for iMode = 1:mp.jac.Nmode
-        
-        imageModVec = abs(ev.Eest(:, iMode)).^2;
-        imageUnmodVec = ev.IincoEst(:, iMode);
-        
-        out.normIntModCorr(Itr, iMode) = mean(imageModVec);
-        out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
-        
-        out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
-        out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
-    end
-    
 end
 
 

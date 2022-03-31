@@ -24,6 +24,7 @@
 
 function Gmode = model_Jacobian_lyot(mp, iMode, whichDM)
 
+modvar = ModelVariables;
 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
 modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);

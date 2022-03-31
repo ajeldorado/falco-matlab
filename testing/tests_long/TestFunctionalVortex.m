@@ -6,7 +6,7 @@
 classdef TestFunctionalVortex < matlab.unittest.TestCase
 %% Properties
 %
-% A presaved file with FALCO parameters was saved and is lodaded to be used
+% A presaved file with FALCO parameters was saved and is loaded to be used
 % by methods. In this case we use the mp.path.falco to addpath to the
 % function being tested.
     properties
@@ -19,14 +19,18 @@ classdef TestFunctionalVortex < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
+            addpath(genpath([testCase.mp.path.falco filesep 'models']));
             addpath(genpath([testCase.mp.path.falco filesep 'setup']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
+            rmpath(genpath([testCase.mp.path.falco filesep 'models']))
             rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
-    end    
+    end  
     
 %% *Tests*
 

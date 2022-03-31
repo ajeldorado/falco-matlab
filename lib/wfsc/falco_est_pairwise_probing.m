@@ -4,8 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Estimate the final focal plane electric field via 
-% pair-wise probing and batch process estimation.
+% Estimate the final focal plane electric field via pair-wise probing.
+% The estimator itself can be a batch process or a Kalman filter.
 %
 % INPUTS
 % ------
@@ -38,7 +38,12 @@
 
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
-mp.isProbing = true;
+if ~isa(mp.est.probe, 'Probe')
+    error('mp.est.probe must be an instance of class Probe')
+end
+
+mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
+Itr = ev.Itr;
 whichDM = mp.est.probe.whichDM;
 
 %--If there is a third input, it is the Jacobian structure
@@ -49,8 +54,22 @@ end
 %--"ev" is passed in only for the Kalman filter. Clear it for the batch
 % process to avoid accidentally using old data.
 switch lower(mp.estimator)
-    case{'pwp-bp', 'pwp-bp-square'}
+    case{'pairwise', 'pairwise-square', 'pwp-bp-square', 'pairwise-rect', 'pwp-bp', }
         clear ev
+end
+
+% If scheduled, change the probe's center location on the DM.
+% Empty values mean they are not scheduled.
+if ~isempty(mp.est.probeSchedule.xOffsetVec) && ~isempty(mp.est.probeSchedule.yOffsetVec)
+    
+    if length(mp.est.probeSchedule.xOffsetVec) ~= length(mp.est.probeSchedule.yOffsetVec)
+        error('mp.est.probeSchedule.xOffsetVec and mp.est.probeSchedule.yOffsetVec must have the same length')
+    end
+    
+    mp.est.probe.xOffset = mp.est.probeSchedule.xOffsetVec(Itr);
+    mp.est.probe.yOffset = mp.est.probeSchedule.yOffsetVec(Itr);
+    fprintf('Setting probe offsets at the DM as (x=%d, y=%d) actuators.\n', mp.est.probe.xOffset, mp.est.probe.yOffset);
+    
 end
 
 % Augment which DMs are used if the probing DM isn't used for control.
@@ -87,19 +106,21 @@ for k = 1:Npairs-1
 end
 probePhaseVec = probePhaseVec * pi / Npairs;
 
-if strcmpi(mp.estimator, 'pwp-bp-square')
-    switch lower(mp.est.probe.axis)
-        case 'y'
-            badAxisVec = repmat('y', [2*Npairs, 1]);
-        case 'x'
-            badAxisVec = repmat('x', [2*Npairs, 1]);
-        case{'alt','xy','alternate'}
-            badAxisVec = repmat('x', [2*Npairs, 1]);
-            badAxisVec(3:4:end) = 'y';
-            badAxisVec(4:4:end) = 'y';
-        case 'multi'
-            badAxisVec = repmat('m', [2*Npairs, 1]);
-    end
+switch mp.estimator
+    case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
+        
+        switch lower(mp.est.probe.axis)
+            case 'y'
+                badAxisVec = repmat('y', [2*Npairs, 1]);
+            case 'x'
+                badAxisVec = repmat('x', [2*Npairs, 1]);
+            case{'alt', 'xy', 'alternate'}
+                badAxisVec = repmat('x', [2*Npairs, 1]);
+                badAxisVec(3:4:end) = 'y';
+                badAxisVec(4:4:end) = 'y';
+            case 'multi'
+                badAxisVec = repmat('m', [2*Npairs, 1]);
+        end
 end
 
 %% Initialize output arrays
@@ -113,7 +134,9 @@ ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
 for iStar = 1:mp.compact.star.count
+    modvar = ModelVariables;
     modvar.starIndex = iStar;
+
 for iSubband = 1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ', iSubband, mp.Nsbp);
     modeIndex = (iStar-1)*mp.Nsbp + iSubband;
@@ -160,13 +183,18 @@ for iSubband = 1:mp.Nsbp
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
-    ev.InormProbeMax = mp.est.InormProbeMax;
-    if mp.flagFiber
-        InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
+    if isempty(mp.est.probeSchedule.InormProbeVec)
+        ev.InormProbeMax = mp.est.InormProbeMax;
+        if mp.flagFiber
+            InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
+        else
+            InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
+        end
+        fprintf('Chosen probe intensity: %.2e \n', InormProbe);
     else
-        InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]); % probe amp = between 1e-5 and current dark hole
+        InormProbe = mp.est.probeSchedule.InormProbeVec(Itr);
+        fprintf('Scheduled probe intensity: %.2e \n', InormProbe);
     end
-    fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 
     %--Perform the probing
     iOdd = 1; iEven = 1; % Initialize index counters
@@ -174,9 +202,9 @@ for iSubband = 1:mp.Nsbp
 
         %--Generate the DM command map for the probe
         switch lower(mp.estimator)
-            case{'pwp-bp', 'pwp-kf'} 
+            case{'pairwise-rect', 'pwp-bp', 'pwp-kf'} 
                 probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar);
-            case{'pwp-bp-square'}
+            case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
                 probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe));
         end
         %--Select which DM to use for probing. Allocate probe to that DM
@@ -249,7 +277,7 @@ for iSubband = 1:mp.Nsbp
 
     %% Perform the estimation
     
-    if(mp.est.flagUseJac) %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
+    if mp.est.flagUseJac %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
         
         dEplus  = zeros(size(Iplus ));
         for iProbe=1:Npairs
@@ -319,7 +347,9 @@ for iSubband = 1:mp.Nsbp
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
-if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp-square') || (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
+if strcmpi(mp.estimator, 'pwp-bp') || strcmpi(mp.estimator, 'pairwise-rect') || ...
+        strcmpi(mp.estimator,'pwp-bp-square') || strcmpi(mp.estimator, 'pairwise') || strcmpi(mp.estimator, 'pairwise-square') ||...
+        (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
     Eest = zeros(mp.Fend.corr.Npix, 1);
     zerosCounter = 0;
     for ipix = 1:mp.Fend.corr.Npix

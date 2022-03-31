@@ -93,6 +93,7 @@ thput = [];
 
 for fiberloc = [[6.1888; 0], [-3.0944; 5.3597], [-3.0944; -5.3597]]%[[5.3405; 0], [-2.6702; 4.625], [-2.6702; -4.625]]%[[6; 0], [-3; 5.1962], [-3; -5.1962]]
     for wi = 1:mp.Nsbp
+        modvar = ModelVariables;
         modvar.wpsbpIndex = 1;
         modvar.whichSource = 'star';
         modvar.sbpIndex = wi;
