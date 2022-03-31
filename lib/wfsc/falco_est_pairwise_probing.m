@@ -38,18 +38,51 @@
 
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
+mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
+Itr = ev.Itr;
+whichDM = mp.est.probe.whichDM;
+
+%% Input checks
 if ~isa(mp.est.probe, 'Probe')
     error('mp.est.probe must be an instance of class Probe')
 end
 
-mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
-Itr = ev.Itr;
-whichDM = mp.est.probe.whichDM;
+% If scheduled, change some aspects of the probe.
+% Empty values mean they are not scheduled.
+if ~isempty(mp.est.probeSchedule.xOffsetVec)
+    if length(mp.est.probeSchedule.xOffsetVec) < mp.Nitr
+        error('mp.est.probeSchedule.xOffsetVec must have enough values for all WFSC iterations.')
+    end
+    mp.est.probe.xOffset = mp.est.probeSchedule.xOffsetVec(Itr);
+end
+
+if ~isempty(mp.est.probeSchedule.yOffsetVec)
+    if length(mp.est.probeSchedule.yOffsetVec) < mp.Nitr
+        error('mp.est.probeSchedule.yOffsetVec must have enough values for all WFSC iterations.')
+    end
+    mp.est.probe.yOffset = mp.est.probeSchedule.yOffsetVec(Itr);
+end
+fprintf('Probe offsets at the DM are (x=%.2f, y=%.2f) actuators.\n', mp.est.probe.xOffset, mp.est.probe.yOffset);
+
+if ~isempty(mp.est.probeSchedule.rotationVec)
+    if length(mp.est.probeSchedule.rotationVec) < mp.Nitr
+        error('mp.est.probeSchedule.rotationVec must have enough values for all WFSC iterations.')
+    end
+    mp.est.probe.rotation = mp.est.probeSchedule.rotationVec(Itr);
+end
+
+if ~isempty(mp.est.probeSchedule.InormProbeVec)
+    if length(mp.est.probeSchedule.InormProbeVec) < mp.Nitr
+        error('mp.est.probeSchedule.InormProbeVec must have enough values for all WFSC iterations.')
+    end
+end
 
 %--If there is a third input, it is the Jacobian structure
 if size(varargin, 2) == 1
     jacStruct = varargin{1};
 end
+
+%%
 
 %--"ev" is passed in only for the Kalman filter. Clear it for the batch
 % process to avoid accidentally using old data.
@@ -58,19 +91,7 @@ switch lower(mp.estimator)
         clear ev
 end
 
-% If scheduled, change the probe's center location on the DM.
-% Empty values mean they are not scheduled.
-if ~isempty(mp.est.probeSchedule.xOffsetVec) && ~isempty(mp.est.probeSchedule.yOffsetVec)
-    
-    if length(mp.est.probeSchedule.xOffsetVec) ~= length(mp.est.probeSchedule.yOffsetVec)
-        error('mp.est.probeSchedule.xOffsetVec and mp.est.probeSchedule.yOffsetVec must have the same length')
-    end
-    
-    mp.est.probe.xOffset = mp.est.probeSchedule.xOffsetVec(Itr);
-    mp.est.probe.yOffset = mp.est.probeSchedule.yOffsetVec(Itr);
-    fprintf('Setting probe offsets at the DM as (x=%d, y=%d) actuators.\n', mp.est.probe.xOffset, mp.est.probe.yOffset);
-    
-end
+
 
 % Augment which DMs are used if the probing DM isn't used for control.
 if whichDM == 1 && ~any(mp.dm_ind == 1)
@@ -118,9 +139,18 @@ switch mp.estimator
             case 'x'
                 badAxisVec = repmat('x', [2*Npairs, 1]);
             case{'alt', 'xy', 'alternate'}
-                badAxisVec = repmat('x', [2*Npairs, 1]);
-                badAxisVec(3:4:end) = 'y';
-                badAxisVec(4:4:end) = 'y';
+                % Change probe ordering for odd- vs even-numbered
+                % WFSC iterations.
+                if mod(Itr, 2) == 1
+                    badAxisVec = repmat('x', [2*Npairs, 1]);
+                    badAxisVec(3:4:end) = 'y';
+                    badAxisVec(4:4:end) = 'y';
+                else
+                    badAxisVec = repmat('y', [2*Npairs, 1]);
+                    badAxisVec(3:4:end) = 'x';
+                    badAxisVec(4:4:end) = 'x';
+                end
+
             case 'multi'
                 badAxisVec = repmat('m', [2*Npairs, 1]);
         end
@@ -202,9 +232,9 @@ for iSubband = 1:mp.Nsbp
         %--Generate the DM command map for the probe
         switch lower(mp.estimator)
             case{'pairwise-rect', 'pwp-bp', 'pwp-kf'} 
-                probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar);
+                probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar, mp.est.probe.rotation);
             case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
-                probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe));
+                probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe), mp.est.probe.rotation);
         end
         %--Select which DM to use for probing. Allocate probe to that DM
         if whichDM == 1

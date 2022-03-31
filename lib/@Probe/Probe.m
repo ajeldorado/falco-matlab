@@ -11,8 +11,9 @@ classdef Probe
     properties
         Npairs (1, 1) double {mustBePositive} = 3; % Number of pair-wise probe pairs to use.
         whichDM (1, 1) int16 {mustBePositive} = 1; % Which DM to use for probing. 1 or 2.
-        xOffset (1, 1) int16 = 0; % x-offset of the probe center from the DM grid center [actuators]. Use to avoid obscurations.
-        yOffset (1, 1) int16 = 0; % y-offset of the probe center from the DM grid center [actuators]. Use to avoid obscurations.
+        xOffset (1, 1) double = 0; % x-offset of the probe center from the DM grid center [actuators]. Use to avoid obscurations.
+        yOffset (1, 1) double = 0; % y-offset of the probe center from the DM grid center [actuators]. Use to avoid obscurations.
+        rotation (1, 1) double = 0; % rotation angle applied to the probe command [degrees]
         gainFudge = 1; % empirical fudge factor to make average probe amplitude match desired value.
 
         radius (1, 1) double {mustBePositive} = 12; % Half-width of the square probed region in the image plane [lambda/D]. (NOTE: Only used for square probes.)
