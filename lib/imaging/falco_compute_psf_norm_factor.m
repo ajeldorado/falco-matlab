@@ -112,6 +112,7 @@ end %--END OF FUNCTION
 %--Extra function needed to use parfor (because parfor can have only a
 %  single changing input argument).
 function I00 = model_full_norm_wrapper(li, mp)
+    modvar = ModelVariables;
     modvar.sbpIndex = mp.full.indsLambdaMat(li,1);
     modvar.wpsbpIndex = mp.full.indsLambdaMat(li,2);
     modvar.zernIndex = 1;
