@@ -82,7 +82,9 @@ classdef TestPairwiseProbing < matlab.unittest.TestCase
             mirror_figure = 1e-10;
             errormap = falco_gen_simple_PSD_errormap(N, alpha, mirror_figure);
             mp.P1.full.E = exp(2*pi*1j/mp.lambda0*errormap);
-            mp.P1.compact.E = exp(2*pi*1j/mp.lambda0*errormap);
+            % Compact and full models have different resolutions, so do not
+            % re-use the full model's errormap in the compact model.
+            % mp.P1.compact.E = exp(2*pi*1j/mp.lambda0*errormap);
             Im = falco_get_summed_image(mp);
             mp = falco_compute_psf_norm_factor(mp);
             

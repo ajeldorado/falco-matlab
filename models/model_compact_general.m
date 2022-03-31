@@ -256,8 +256,11 @@ else % No FPM in beam path, so relay directly from P3 to P4.
 
     % Interpolate beam if Lyot plane has different resolution
     if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
+        %Make sure array is oversized before downsampling
+        padFac = 1.2;
+        EP4 = pad_crop(EP4, ceil_even(padFac*mp.P1.compact.Nbeam));
         N1 = length(EP4);
-        N4 = ceil_even(1.1*mp.P4.compact.Narr);
+        N4 = ceil_even(padFac*mp.P4.compact.Narr);
         if strcmpi(mp.centering, 'pixel')
             x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;
             x4 = (-N4/2:(N4/2-1)) / mp.P4.compact.Nbeam;
