@@ -27,6 +27,7 @@ modvar = ModelVariables;
 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
 modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);
+
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 NdmPad = mp.compact.NdmPad;
 surfIntoPhase = 2;
@@ -114,13 +115,13 @@ switch upper(mp.coro)
 end
 
 scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
-switch upper(mp.coro)
-    case{'HLC'}
-        switch mp.layout
-            case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
-                scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
-        end
-end
+% switch upper(mp.coro)
+%     case{'HLC'}
+%         switch mp.layout
+%             case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
+%                 scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+%         end
+% end
 
 
 %--For including DM surface errors (quilting, scalloping, etc.)

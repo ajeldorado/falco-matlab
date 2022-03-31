@@ -77,7 +77,8 @@ function pupil = falco_gen_pupil_Simple(inputs)
             wl_dummy = 1e-6; %--dummy value
             bdf = Dbeam/Darray; %--beam diameter fraction
             bm = prop_begin(Dbeam, wl_dummy, Narray, 'beam_diam_fraction', bdf);
-
+            prop_set_antialiasing(101);
+            
             switch centering % 0 shift for pixel-centered pupil, or -diam/Narray shift for inter-pixel centering
                 case {'interpixel'}
                     cshift = -dx/2; % [pupil diameters]  
