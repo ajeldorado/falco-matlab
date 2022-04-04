@@ -26,7 +26,8 @@ function deltaE = falco_deltaE_from_deltaV(mp, dV1, dV2, lambda)
     % if not defined, set to zero
     if isfield(mp.dm1, 'V'), V1init = mp.dm1.V; else V1init = zeros(size(dV1)); end
     if isfield(mp.dm2, 'V'), V2init = mp.dm2.V; else V2init = zeros(size(dV2)); end
- 
+    
+    modvar = ModelVariables;
     modvar.lambda = lambda;
     modvar.whichSource = 'star';
     modvar.starIndex = 1; % ignored because of modvar.lambda

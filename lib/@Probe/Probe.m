@@ -23,6 +23,38 @@ classdef Probe
         height double {mustBePositive} = 24; % Height of rectangular probe in focal plane [lambda/D].  (NOTE: Only used for rectangular probes. radius is used instead for a square probed region)
         etaOffset double = 0; % Vertical offset from star of rectangular probe in focal plane [lambda/D].  (NOTE: Only used for rectangular probes. No offset for square probed region.)
 
-   end
+    end
    
+   methods
+       
+       function S = Probe(varargin)
+            % init Probe object
+            %
+            % S = Probe
+            % S = Probe(struct_probe) % where modvar is a struct
+            % S = Probe('property', value, 'property', value, ...)
+            
+            if length(varargin) == 1 && isstruct(varargin{1})
+                % input is a modvar struct to initialize properties
+                modvar = varargin{1}; % for convenience
+                fnames = fieldnames(modvar);
+                for ii = 1:length(fnames)
+                    if isprop(S, fnames{ii})
+                        S.(fnames{ii}) = modvar.(fnames{ii});
+                    end
+                end
+            end % if init with modvar struct
+            
+            if length(varargin) > 1
+                % varargin is property, value pairs
+                for ii = 1:2:length(varargin)
+                    S.(varargin{ii}) = varargin{ii+1};
+                end                 
+            end % explicit property, value
+           
+           
+           
+       end % class init
+       
+   end % methods
 end
