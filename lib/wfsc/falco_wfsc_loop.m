@@ -11,6 +11,8 @@ function [mp, out] = falco_wfsc_loop(mp, out)
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
+flagBreak = false;
+
 for Itr = 1:mp.Nitr
     
     
@@ -139,6 +141,11 @@ for Itr = 1:mp.Nitr
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
+    
+    %% end early? you can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
+    if flagBreak
+        break;
+    end
 
 end %--END OF ESTIMATION + CONTROL LOOP
 
