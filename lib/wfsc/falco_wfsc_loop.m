@@ -98,6 +98,11 @@ for Itr = 1:mp.Nitr
         
     %% Wavefront Control
     
+    % control strategy
+    if isfield(mp, 'funCtrlStrategy')
+        mp = mp.funCtrlStrategy(mp, out, Itr);
+    end
+    
     cvar.Eest = ev.Eest;
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
