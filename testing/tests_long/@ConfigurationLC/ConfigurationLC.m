@@ -233,7 +233,7 @@ mp.Nrelay2to3 = 1;
 mp.Nrelay3to4 = 1;
 mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 
-mp.F3.compact.res = 3;    % sampling of FPM for full model [pixels per lambda0/D]
+mp.F3.compact.res = 3;    % sampling of FPM for compact model [pixels per lambda0/D]
 
 %% Optical Layout: Full Model 
 
