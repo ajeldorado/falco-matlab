@@ -14,6 +14,7 @@ mp.thput_vec = zeros(mp.Nitr+1, 1);
 
 for Itr = 1:mp.Nitr
     
+    
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
     
