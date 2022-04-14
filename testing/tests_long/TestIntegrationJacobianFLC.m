@@ -174,8 +174,3 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
         
     end    
 end
-
-
-
-
-

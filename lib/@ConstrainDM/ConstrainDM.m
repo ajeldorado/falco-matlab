@@ -16,18 +16,13 @@ methods (Static)
         % Given a DM setting, return one consistent with physical and user
         % mandated constraints.
         % 
-        % Constrains each individual voltage to be in 0 <= v <= `vmax`.  Use of
-        % defaults (min voltage=0V, `vmax`=100V) enforces clip requirements in DNG
-        % 884740 and 884741.
+        % Constrains each individual voltage to be in 0 <= v <= `vmax`.
         % 
         % Constrains each pair of laterally-adjacent actuators to be <= `vlat` after
-        % subtraction of the DM flat map in `flatmap`. Use of default (`vlat`=50V)
-        % enforces neighbor-rule requirements in DNG 884742 and 884743.
+        % subtraction of the DM flat map in `flatmap`.
         % 
         % Constrains each pair of diagonally-adjacent actuators to be <= `vdiag`
-        % after subtraction of the DM flat map in `flatmap`. Use of default
-        % (`vdiag`=75V) enforces neighbor-rule requirements in DNG 1073291 and
-        % 1073292.
+        % after subtraction of the DM flat map in `flatmap`.
         % 
         % Constrains all tied actuators (groups in the `tie` matrix with value > 0)
         % to have the same voltage.  Constrains all dead actuators (groups in the
@@ -103,7 +98,6 @@ methods (Static)
                     'actuators tied already, and have all dead ' 
                      'actuators = 0V'])
         end
-
 
         % Run initial smoothing
         dmflat = flatmap;

@@ -23,7 +23,7 @@ switch upper(mp.coro)
             mp.F3.compact.Nxi = size(mp.F3.compact.mask, 2);
         end
         if ~isfield(mp.F3.compact, 'Neta')
-            mp.F3.compact.Neta= size(mp.F3.compact.mask, 1);
+            mp.F3.compact.Neta = size(mp.F3.compact.mask, 1);
         end
         
         % Resolution in compact model
