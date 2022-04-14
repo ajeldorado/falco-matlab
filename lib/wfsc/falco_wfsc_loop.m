@@ -8,6 +8,7 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
+flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
@@ -47,7 +48,7 @@ for Itr = 1:mp.Nitr
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr) = thput;
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
-
+    
     %% Control Jacobian
 
     mp = falco_set_jacobian_modal_weights(mp); 
@@ -100,12 +101,18 @@ for Itr = 1:mp.Nitr
     
     % Save data to 'out'
     out = falco_store_controller_data(mp, out, cvar, Itr);
-    
+        
     %--Enforce constraints on DM commands 
     if any(mp.dm_ind == 1); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
     if any(mp.dm_ind == 2); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
+
+    % Update the dynamic map of pinned actuators and tied actuators.
+    % Actuators can be tied electrically (have same voltage) or by the
+    % neighbor rule (have a constant offset).
+    if any(mp.dm_ind == 1); mp.dm1 = falco_update_dm_constraints(mp.dm1); end
+    if any(mp.dm_ind == 2); mp.dm2 = falco_update_dm_constraints(mp.dm2); end
     
-    %--Update DM actuator gains for new voltages
+    %--Update DM actuator gains for new voltages (stays same if 'fitType' == linear)
     if any(mp.dm_ind == 1); mp.dm1 = falco_update_dm_gain_map(mp.dm1); end
     if any(mp.dm_ind == 2); mp.dm2 = falco_update_dm_gain_map(mp.dm2); end
     
@@ -138,8 +145,13 @@ for Itr = 1:mp.Nitr
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
 
+    if flagBreak
+        break
+    end
+
 end %--END OF ESTIMATION + CONTROL LOOP
 
+Itr = mp.Nitr;
 
 %% Update 'out' structure and progress plot one last time
 Itr = Itr + 1;

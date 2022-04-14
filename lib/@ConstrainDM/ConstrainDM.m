@@ -84,16 +84,16 @@ methods (Static)
         Check.real_nonnegative_scalar(vquant)
         Check.positive_scalar_integer(maxiter)
 
-        VMIN = 0;
-        if vmax <= VMIN
-            error('VMIN must be < vmax')
+        vmin = 0;
+        if vmax <= vmin
+            error('vmin must be < vmax')
         end
 
         % enforce tie and flat formatting
         if ~ConstrainDM.checktie(tie)
             error('tie must have values 0, -1, or consecutive integers 1 to N')
         end
-        if ~ConstrainDM.checkflat(flatmap, VMIN, vmax, tie)
+        if ~ConstrainDM.checkflat(flatmap, vmin, vmax, tie)
             error(['flatmap must be <= vmax, >= VMIN, have all tied ' 
                     'actuators tied already, and have all dead ' 
                      'actuators = 0V'])
