@@ -59,7 +59,12 @@ maxiter = 1000;
 vquant = 0; % LSB in volts
 Vtotal = dm.V + dm.biasMap;
 Vtotal(dm.dead) = 0;
+VtotalbeforeNR = Vtotal;
 Vtotal = ConstrainDM.constrain_dm(Vtotal, dm.facesheetFlatmap, tieMat, dm.Vmax, dm.dVnbrLat, dm.dVnbrDiag, vquant, maxiter);
+numOfChangedActs = nnz(Vtotal(:) - VtotalbeforeNR(:));
+if(numOfChangedActs>0)
+    disp(['     NR violation detected. ',num2str(numOfChangedActs),' actuators involved.'])
+end
 dm.V = Vtotal - dm.biasMap;
 
 % % 3) Find which actuators violate the DM neighbor rule. (This restricts 

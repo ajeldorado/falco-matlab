@@ -73,7 +73,18 @@ function normI = falco_get_dst_sbp_image(mp,si)
         DM_apply2Dmap(tb.DM1,dm1_map);
     end
     if(tb.DM2.installed && tb.DM2.CONNECTED)
-        DM_apply2Dmap(tb.DM2,dm2_map);
+        try
+            DM_apply2Dmap(tb.DM2,dm2_map);
+        catch 
+            %try; cleanUpDMs(tb); end
+            disp('Error setting DM2. Reseting electronics. Trying again.')
+            FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
+            pause(5);
+            setUpDMs(tb);
+            DM_apply2Dmap(tb.DM1,dm1_map);
+            DM_apply2Dmap(tb.DM2,dm2_map);
+        end
+            
     end
     
     %----- Get image from the testbed -----
