@@ -62,12 +62,49 @@ end
 if any(mp.dm_ind == 1)
     out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
     out.dm1.Srms(Itr) = falco_rms(DM1surf(rmsSurfInd));
-    fprintf('RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
+    fprintf(' RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
 end
 if any(mp.dm_ind == 2)
     out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
     out.dm2.Srms(Itr) = falco_rms(DM2surf(rmsSurfInd));
-    fprintf('RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
+    fprintf(' RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
+end
+
+%--Report pinned and comoving actuators
+if any(mp.dm_ind == 1)
+    
+    Npinned = length(mp.dm1.pinned);
+    if Npinned > 0
+        fprintf(' DM1 has %d pinned actuators.\n', Npinned)
+    end
+    
+    Ngroups = length(mp.dm1.comovingGroups);
+    Ncomoving = 0;
+    for iGroup = 1:Ngroups
+        Ncomoving = Ncomoving + length(mp.dm1.comovingGroups{iGroup});
+    end
+    if Ncomoving > 0
+        fprintf(' DM1 has %d co-moving actuators in %d groups.\n', Ncomoving, Ngroups)
+    end
+    
+end
+
+if any(mp.dm_ind == 2)
+    
+    Npinned = length(mp.dm2.pinned);
+    if Npinned > 0
+        fprintf(' DM2 has %d pinned actuators.\n', Npinned)
+    end
+    
+    Ngroups = length(mp.dm2.comovingGroups);
+    Ncomoving = 0;
+    for iGroup = 1:Ngroups
+        Ncomoving = Ncomoving + length(mp.dm2.comovingGroups{iGroup});
+    end
+    if Ncomoving > 0
+        fprintf(' DM2 has %d co-moving actuators in %d groups.\n', Ncomoving, Ngroups)
+    end
+    
 end
 
 end

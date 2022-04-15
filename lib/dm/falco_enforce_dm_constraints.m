@@ -25,16 +25,27 @@ function dm = falco_enforce_dm_constraints(dm)
 % 1) Find actuators that below min value or above max value.
 % Any actuators reaching those limits are added to the pinned actuator list.
 
-% Min voltage limit
 Vtotal = dm.V+dm.biasMap;
-indVoltageTooLow = find(Vtotal < dm.Vmin);
-dm.pinned = [dm.pinned; indVoltageTooLow]; % augment the column vector of pinned actuators' linear indices
-dm.Vpinned = [dm.Vpinned; (dm.Vmin*ones(size(indVoltageTooLow))-dm.biasMap(indVoltageTooLow))];
+
+% dead actuators
+Vtotal(dm.dead) = 0;
+dm.pinned = [dm.pinned(:).', dm.dead(:).']; % augment the column vector of pinned actuators' linear indices
+dm.Vpinned = [dm.Vpinned(:).', (dm.Vmin*ones(size(dm.dead))-dm.biasMap(dm.dead))];
+
+
+% Min voltage limit
+indVoltageTooLow = find(Vtotal < dm.Vmin).';
+dm.pinned = [dm.pinned(:).', indVoltageTooLow]; % augment the column vector of pinned actuators' linear indices
+dm.Vpinned = [dm.Vpinned(:).', (dm.Vmin*ones(size(indVoltageTooLow))-dm.biasMap(indVoltageTooLow))];
 
 % Max voltage limit
-indVoltageTooHigh = find(Vtotal > dm.Vmax);
-dm.pinned = [dm.pinned; indVoltageTooHigh]; % augment the column vector of pinned actuators' linear indices
-dm.Vpinned = [dm.Vpinned; (dm.Vmax*ones(size(indVoltageTooHigh))-dm.biasMap(indVoltageTooHigh))];
+indVoltageTooHigh = find(Vtotal > dm.Vmax).';
+dm.pinned = [dm.pinned(:).', indVoltageTooHigh]; % augment the column vector of pinned actuators' linear indices
+dm.Vpinned = [dm.Vpinned(:).', (dm.Vmax*ones(size(indVoltageTooHigh))-dm.biasMap(indVoltageTooHigh))];
+
+% eliminate redundant entries
+[dm.pinned, inds] = unique(dm.pinned);
+dm.Vpinned = dm.Vpinned(inds);
 
 % 2) Enforce bounds at pinned actuators
 dm.V(dm.pinned) = dm.Vpinned; 
@@ -42,9 +53,13 @@ dm.V(dm.pinned) = dm.Vpinned;
 % 3) Enforce neighbor rule and tied actuators at same time (actually
 % iterated between the two).
 tieMat = falco_convert_dm_tie_pairs_into_matrix(dm.tied, dm.Nact);
+tieMat(dm.dead) = -1; % -1 for dead actuators
+dm.facesheetFlatmap(dm.dead) = 0; % Must be 0V for dead actuators.
 maxiter = 1000;
 vquant = 0; % LSB in volts
-Vtotal = dm.V + dm.biasMap; VtotalbeforeNR = Vtotal;
+Vtotal = dm.V + dm.biasMap;
+Vtotal(dm.dead) = 0;
+VtotalbeforeNR = Vtotal;
 Vtotal = ConstrainDM.constrain_dm(Vtotal, dm.facesheetFlatmap, tieMat, dm.Vmax, dm.dVnbrLat, dm.dVnbrDiag, vquant, maxiter);
 numOfChangedActs = nnz(Vtotal(:) - VtotalbeforeNR(:));
 if(numOfChangedActs>0)

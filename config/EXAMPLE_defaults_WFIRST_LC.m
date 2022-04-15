@@ -5,7 +5,7 @@
 
 %--Record Keeping
 mp.SeriesNum = 1;
-mp.TrialNum = 34;
+mp.TrialNum = 1;
 
 %--Special Computational Settings
 mp.flagParfor = true;

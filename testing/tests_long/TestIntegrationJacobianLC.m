@@ -236,8 +236,3 @@ classdef TestIntegrationJacobianLC < matlab.unittest.TestCase
         
     end    
 end
-
-
-
-
-
