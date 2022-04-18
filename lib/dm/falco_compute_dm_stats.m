@@ -87,6 +87,12 @@ if any(mp.dm_ind == 1)
         fprintf(' DM1 has %d co-moving actuators in %d groups.\n', Ncomoving, Ngroups)
     end
     
+    out.dm1.pinned{Itr} = mp.dm1.pinned;
+    out.dm1.Vpinned{Itr} = mp.dm1.Vpinned;
+    out.dm1.comovingGroups{Itr} = mp.dm1.comovingGroups;
+    out.dm1.Npinned(Itr) = Npinned;
+    out.dm1.Ncomoving(Itr) = Ncomoving;
+    
 end
 
 if any(mp.dm_ind == 2)
@@ -105,6 +111,12 @@ if any(mp.dm_ind == 2)
         fprintf(' DM2 has %d co-moving actuators in %d groups.\n', Ncomoving, Ngroups)
     end
     
+    out.dm2.pinned{Itr} = mp.dm2.pinned;
+    out.dm2.Vpinned{Itr} = mp.dm2.Vpinned;
+    out.dm2.comovingGroups{Itr} = mp.dm2.comovingGroups;
+    out.dm2.Npinned(Itr) = Npinned;
+    out.dm2.Ncomoving(Itr) = Ncomoving;
+
 end
 
 end
