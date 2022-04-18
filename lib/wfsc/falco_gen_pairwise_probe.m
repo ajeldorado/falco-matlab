@@ -14,6 +14,7 @@
 % InormDes: desired normalized intensity of the probes in the image
 % phaseShift: phase shift of the cosine wave [radians]
 % starIndex : index of star, in range from 1 to mp.compact.star.count
+% rotation: CCW rotation angle of the probe shape at the DM [degrees]
 % 
 % INPUTS IN mp
 % ------------
@@ -37,7 +38,12 @@
 % -------
 % probeCmd: Nact x Nact array of DM actuator commands to make a probe [volts]
 
-function probeCmd = falco_gen_pairwise_probe(mp, InormDes, phaseShift, starIndex)
+function probeCmd = falco_gen_pairwise_probe(mp, InormDes, phaseShift, starIndex, rotation)
+
+% Input checks
+if ~isa(mp.est.probe, 'Probe')
+    error('mp.est.probe must be an instance of class Probe')
+end
 
 if mp.est.probe.xiOffset(starIndex) == 0 && mp.est.probe.etaOffset(starIndex) == 0
     error("Probed region's center must be offset from the star location.")
@@ -53,9 +59,17 @@ Nact = dm.Nact;
 NactPerBeam = mp.P2.D / dm.dm_spacing;
 
 % Coordinates in actuator space
-xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - double(round(mp.est.probe.xOffset))/Nact;
-ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - double(round(mp.est.probe.yOffset))/Nact;
+xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - mp.est.probe.xOffset/Nact;
+ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - mp.est.probe.yOffset/Nact;
 [XS, YS] = meshgrid(xs, ys);
+
+%--Rotate the coordinates
+if rotation ~= 0
+    RS = sqrt(XS.^2 + YS.^2);
+    THETAS = atan2(YS, XS);
+    XS = RS.*cos(THETAS - rotation*(pi/180));
+    YS = RS.*sin(THETAS - rotation*(pi/180));
+end
 
 % Convert units from lambda/D to actuators
 lamDIntoAct = Nact / NactPerBeam;
@@ -75,4 +89,4 @@ probeHeight = surfMax * sinc(width*XS) .* sinc(height*YS) .* cos(2*pi*(xiOffset*
 probeCmd = falco_fit_dm_surf(dm, probeHeight);
 probeCmd = mp.est.probe.gainFudge(starIndex) * probeCmd; % Scale the probe amplitude empirically if needed
 
-end %--END OF FUNCTION
+end

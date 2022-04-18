@@ -1,4 +1,3 @@
-open 
 % %--Initialize some structures if they don't already exist
 
 %% Misc

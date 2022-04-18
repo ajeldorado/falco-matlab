@@ -43,9 +43,9 @@ classdef TestDMOrientation < matlab.unittest.TestCase
             mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
             mp.dm1.xc = (mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
             mp.dm1.yc = (mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
-            mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
             
             mp.dm1.fitType = 'linear';
+            mp.dm1.dead = [];
             mp.dm1.pinned = [];
             mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));
             mp.dm1.tied = zeros(0,2);
@@ -135,9 +135,9 @@ classdef TestDMOrientation < matlab.unittest.TestCase
             mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
             mp.dm1.xc = (mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
             mp.dm1.yc = (mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
-            mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
             
             mp.dm1.fitType = 'linear';
+            mp.dm1.dead = [];
             mp.dm1.pinned = [];
             mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));
             mp.dm1.tied = zeros(0,2);
