@@ -14,6 +14,7 @@
 % InormDes: desired normalized intensity of the probes in the image
 % phaseShift: phase shift of the cosine wave [radians]
 % starIndex : index of star, in range from 1 to mp.compact.star.count
+% rotation: CCW rotation angle of the probe shape at the DM [degrees]
 % 
 % INPUTS IN mp
 % ------------

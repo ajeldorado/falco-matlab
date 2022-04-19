@@ -116,9 +116,10 @@ if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 %--Deformable mirror settings
 if(isfield(mp.dm1,'orientation')==false);  mp.dm1.orientation = 'rot0';  end %--Change to mp.dm1.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm1,'dead')==false); mp.dm1.dead = []; end % Vector of linear indices of all dead actuators (those stuck at 0V absolute). This should stay fixed.
 if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
-if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of tied actuator pairs. Two indices per row
+if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0, 2);  end %--Indices of tied actuator pairs sharing the same voltage. Two indices per row.
 if mp.flagSim
     if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed absolute voltage command
@@ -130,12 +131,15 @@ if(isfield(mp.dm1,'dVnbrLat')==false); mp.dm1.dVnbrLat = mp.dm1.Vmax; end % max 
 if(isfield(mp.dm1,'dVnbrDiag')==false); mp.dm1.dVnbrDiag = mp.dm1.Vmax; end % max voltage difference allowed between diagonally-adjacent DM actuators
 if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = mp.dm1.Vmax/2*ones(mp.dm1.Nact, mp.dm1.Nact);  end  %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
 if(isfield(mp.dm1,'facesheetFlatmap')==false);  mp.dm1.facesheetFlatmap = mp.dm1.biasMap;  end %--Voltage map that produces a flat DM1 surface. Used when enforcing the neighbor rule.
+if(isfield(mp.dm1,'comovingGroups')==false);  mp.dm1.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
+if(isfield(mp.dm1,'tolNbrRule')==false); mp.dm1.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
 if(isfield(mp.dm2,'orientation')==false);  mp.dm2.orientation = 'rot0';  end %--Change to mp.dm2.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm2,'dead')==false); mp.dm2.dead = []; end % Vector of linear indices of all dead actuators (those stuck at 0V absolute). This should stay fixed.
 if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
-if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
+if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0, 2);  end %--Indices of tied actuator pairs sharing the same voltage. Two indices per row.
 if mp.flagSim
     if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed absolute voltage command
@@ -147,6 +151,8 @@ if(isfield(mp.dm2,'dVnbrLat')==false); mp.dm2.dVnbrLat = mp.dm2.Vmax; end % max 
 if(isfield(mp.dm2,'dVnbrDiag')==false); mp.dm2.dVnbrDiag = mp.dm2.Vmax; end % max voltage difference allowed between diagonally-adjacent DM actuators
 if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = mp.dm2.Vmax/2*ones(mp.dm2.Nact, mp.dm2.Nact);  end %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
 if(isfield(mp.dm2,'facesheetFlatmap')==false);  mp.dm2.facesheetFlatmap = mp.dm2.biasMap;  end %--Voltage map that produces a flat DM2 surface. Used when enforcing the neighbor rule.
+if(isfield(mp.dm2,'comovingGroups')==false);  mp.dm2.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
+if(isfield(mp.dm2,'tolNbrRule')==false); mp.dm2.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
 
 %--Control
@@ -181,8 +187,9 @@ if ~isfield(mp.detector, 'darkCurrentRate'); mp.detector.darkCurrentRate = 0.015
 if ~isfield(mp.detector, 'readNoiseStd'); mp.detector.readNoiseStd = 1.7; end % standard deviation of Gaussian read noise [e-]
 if ~isfield(mp.detector, 'wellDepth'); mp.detector.wellDepth = 3e4; end % well depth of the detector [e-]
 if ~isfield(mp.detector, 'peakFluxVec'); mp.detector.peakFluxVec = 1e8 * ones(mp.Nsbp, 1); end % [counts/pixel/second]
-if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for regular (unprobed images) in each subband [seconds]
-if ~isfield(mp.detector, 'tExpProbedVec'); mp.detector.tExpUnprobedVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for probed images in each subband [seconds]
+if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for images in each subband. Set to the unprobed or probed values depending on the situation. [seconds]
+if ~isfield(mp.detector, 'tExpUnprobedVec'); mp.detector.tExpUnprobedVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for unprobed images in each subband [seconds]
+if ~isfield(mp.detector, 'tExpProbedVec'); mp.detector.tExpProbedVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for probed images in each subband [seconds]
 if ~isfield(mp.detector, 'Nexp'); mp.detector.Nexp = 1; end % number of exposures to stack for each combined frame
 
 %% Initialize some basic attributes for all DMs (which include hybrid FPMs).

@@ -8,8 +8,11 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
+flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
+
+flagBreak = false;
 
 for Itr = 1:mp.Nitr
     
@@ -49,7 +52,7 @@ for Itr = 1:mp.Nitr
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr) = thput;
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
-
+    
     %% Control Jacobian
 
     mp = falco_set_jacobian_modal_weights(mp); 
@@ -96,18 +99,29 @@ for Itr = 1:mp.Nitr
         
     %% Wavefront Control
     
+    % control strategy
+    if isfield(mp, 'funCtrlStrategy')
+        mp = mp.funCtrlStrategy(mp, out, Itr);
+    end
+    
     cvar.Eest = ev.Eest;
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
     % Save data to 'out'
     out = falco_store_controller_data(mp, out, cvar, Itr);
-    
+        
     %--Enforce constraints on DM commands 
     if any(mp.dm_ind == 1); mp.dm1 = falco_enforce_dm_constraints(mp.dm1); end
     if any(mp.dm_ind == 2); mp.dm2 = falco_enforce_dm_constraints(mp.dm2); end
+
+    % Update the dynamic map of pinned actuators and tied actuators.
+    % Actuators can be tied electrically (have same voltage) or by the
+    % neighbor rule (have a constant offset).
+    if any(mp.dm_ind == 1); mp.dm1 = falco_update_dm_constraints(mp.dm1); end
+    if any(mp.dm_ind == 2); mp.dm2 = falco_update_dm_constraints(mp.dm2); end
     
-    %--Update DM actuator gains for new voltages
+    %--Update DM actuator gains for new voltages (stays same if 'fitType' == linear)
     if any(mp.dm_ind == 1); mp.dm1 = falco_update_dm_gain_map(mp.dm1); end
     if any(mp.dm_ind == 2); mp.dm2 = falco_update_dm_gain_map(mp.dm2); end
     
@@ -139,9 +153,15 @@ for Itr = 1:mp.Nitr
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
+    
+    %% end early? you can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
+    if flagBreak
+        break;
+    end
 
 end %--END OF ESTIMATION + CONTROL LOOP
 
+Itr = mp.Nitr;
 
 %% Update 'out' structure and progress plot one last time
 Itr = Itr + 1;

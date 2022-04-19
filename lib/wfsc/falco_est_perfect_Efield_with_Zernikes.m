@@ -89,8 +89,8 @@ function ev = falco_est_perfect_Efield_with_Zernikes(mp)
                 isPiston = (iZernike == 1);
                 if isPiston
                     imageTemp = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-                    imageTemp(mp.Fend.corr.maskBool) = EsubbandMean;
-                    ev.imageArray(:, :, 1, iSubband) = imageTemp;
+                    imageTemp(mp.Fend.corr.maskBool) = abs(EsubbandMean).^2;
+                    ev.imageArray(:, :, 1, iSubband) = imageTemp + ev.imageArray(:, :, 1, iSubband);
                 end
             end
             

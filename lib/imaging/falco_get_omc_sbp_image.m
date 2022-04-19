@@ -31,7 +31,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
     % convenience:
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
-    nkt_power = tb.info.nkt_power(si); %--nkt setting
+    star_power = tb.info.star_power(si); %--star setting
     
     % already set in config: tb.sciCam.subdir = 'falco';
     if isfield(mp,'debug'), debug = mp.debug; else, debug = false; end
@@ -129,12 +129,12 @@ function normI = falco_get_omc_sbp_image(mp,si)
     lam0 = mp.sbp_centers(si);
     lam1 = lam0 - sbp_width/2;
     lam2 = lam0 + sbp_width/2;
-    tb.nkt.lower = lam1/NM;
-    tb.nkt.upper = lam2/NM;
-    tb.nkt.power = nkt_power; 
+    tb.star.lower = lam1/NM;
+    tb.star.upper = lam2/NM;
+    tb.star.power = star_power; 
     
     if false %debug
-        disp(tb.nkt);
+        disp(tb.star);
     end
     
     %     if(strcmpi(tb.info.source,'nkt'))

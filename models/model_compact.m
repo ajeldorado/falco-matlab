@@ -10,7 +10,7 @@
 % INPUTS
 % ------
 % mp : structure of model parameters
-% modvar : structure of model variables
+% modvar : an instance of class ModelVariables
 %
 % modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
 % modvar.sbpIndex
