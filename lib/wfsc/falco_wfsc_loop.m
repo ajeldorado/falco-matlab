@@ -23,6 +23,7 @@ for Itr = 1:mp.Nitr
     % update subdir for scicam images
     if isfield(mp, 'tb')
         mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
+        mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
     end
     
     if mp.flagSim
@@ -100,7 +101,7 @@ for Itr = 1:mp.Nitr
     %% Wavefront Control
     
     % control strategy
-    if isfield(mp, 'funCtrlStrategy')
+    if isfield(mp, 'funCtrlStrategy') && ~isempty(mp.funCtrlStrategy)
         mp = mp.funCtrlStrategy(mp, out, Itr);
     end
     
