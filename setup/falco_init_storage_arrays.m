@@ -43,6 +43,12 @@ function out = falco_init_storage_arrays(mp)
     out.dm8.Srms = zeros(mp.Nitr, 1);
     out.dm9.Srms = zeros(mp.Nitr, 1);
     
+    %--Delta DM Surface Metrics
+    out.dm1.DeltaSpv = zeros(mp.Nitr, 1);
+    out.dm2.DeltaSpv = zeros(mp.Nitr, 1);
+    out.dm1.DeltaSrms = zeros(mp.Nitr, 1);
+    out.dm2.DeltaSrms = zeros(mp.Nitr, 1);
+    
     %--DM constraints
     % pinned is the vector of linear indices for dead, railed, or otherwise stuck actuators.
     % Vpinned is the vector of relative voltages for all pinned actuators.
