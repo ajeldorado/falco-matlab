@@ -81,6 +81,7 @@ for Itr = 1:mp.Nitr
     out = falco_store_intensities(mp, out, ev, Itr);
     
     %% Progress plots (PSF, NI, and DM surfaces)
+    % plot_wfsc_progress also saves images and saves ev probe data
 
     if Itr == 1; hProgress.master = 1; end % initialize the handle
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
