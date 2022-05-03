@@ -215,7 +215,7 @@ if flagUseFPM
                     t_Ni_vec = 0;
                     t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
                     pol = 2;
-                    [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                    [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
                     transOuterFPM = tCoef;
                     scaleFac = 1; % Focal plane sampling does not vary with wavelength
                 case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
@@ -256,8 +256,11 @@ else % No FPM in beam path, so relay directly from P3 to P4.
 
     % Interpolate beam if Lyot plane has different resolution
     if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
+        %Make sure array is oversized before downsampling
+        padFac = 1.2;
+        EP4 = pad_crop(EP4, ceil_even(padFac*mp.P1.compact.Nbeam));
         N1 = length(EP4);
-        N4 = ceil_even(1.1*mp.P4.compact.Narr);
+        N4 = ceil_even(padFac*mp.P4.compact.Narr);
         if strcmpi(mp.centering, 'pixel')
             x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;
             x4 = (-N4/2:(N4/2-1)) / mp.P4.compact.Nbeam;
@@ -289,7 +292,7 @@ EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);
 
 %--Don't apply FPM if normalization value is being found
-if(normFac==0)
+if normFac == 0
     Eout = EFend; %--Don't normalize if normalization value is being found
 else
     Eout = EFend/sqrt(normFac); %--Apply normalization

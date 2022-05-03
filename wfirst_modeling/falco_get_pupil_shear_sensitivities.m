@@ -133,6 +133,7 @@ ishear  = inds_list_shear(3,ni);
 %--Get the stellar E-field
 si = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),1);
 wi = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),2);
+modvar = ModelVariables;
 modvar.sbpIndex   = si;
 modvar.wpsbpIndex = wi;
 mp.full.polaxis = mp.full.pol_conds(ipol);
@@ -165,6 +166,7 @@ ilam = inds_list(1,ni);
 ipol = inds_list(2,ni);
 
 %--Get the stellar E-field
+modvar = ModelVariables;
 modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),1);
 modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),2);
 mp.full.polaxis = mp.full.pol_conds(ipol);

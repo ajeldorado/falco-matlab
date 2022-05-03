@@ -62,6 +62,7 @@ function Iout = falco_compute_subband_image_component(mp, indexComboArray, iComb
     iStar = indexComboArray(3, iCombo);
 
     % Compute E-field
+    modvar = ModelVariables;
     modvar.whichSource = 'star';
     modvar.sbpIndex = iSubband;
     modvar.wpsbpIndex = iWavelength;

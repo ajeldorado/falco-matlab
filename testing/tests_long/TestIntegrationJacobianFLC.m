@@ -15,14 +15,18 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
+            addpath(genpath([testCase.mp.path.falco filesep 'models']));
             addpath(genpath([testCase.mp.path.falco filesep 'setup']));
+            addpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
+            rmpath(genpath([testCase.mp.path.falco filesep 'models']))
             rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
+            rmpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
-    end    
+    end
     
 %% *Tests*
 
@@ -53,6 +57,7 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
             G2fast = G2fastAll(:, indG2subset);
             
             %% Compute Jacobian via differencing with the compact model (slower)
+            modvar = ModelVariables;
             modvar.whichSource = 'star';
             modvar.sbpIndex = 1;
             modvar.starIndex = 1;
@@ -122,6 +127,7 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
 
             % Get the unocculted peak E-field and coronagraphic E-field
             if mp.jac.minimizeNI
+                modvar = ModelVariables;
                 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
                 modvar.zernIndex = mp.jac.zern_inds(iMode);
                 modvar.starIndex = mp.jac.star_inds(iMode);
@@ -130,6 +136,7 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
                 [~, indPeak] = max(abs(Eunocculted(:)));
             end
 
+            modvar = ModelVariables;
             modvar.whichSource = 'star';
             modvar.sbpIndex = 1;
             modvar.starIndex = 1;
@@ -167,8 +174,3 @@ classdef TestIntegrationJacobianFLC < matlab.unittest.TestCase
         
     end    
 end
-
-
-
-
-

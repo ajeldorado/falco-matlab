@@ -19,7 +19,6 @@ function mp = falco_set_optional_variables(mp)
 %% Intializations of structures (if they don't exist yet)
 mp.jac.dummy = 1;
 mp.est.dummy = 1;
-mp.est.probe.dummy = 1;
 mp.star.dummy = 1;
 mp.compact.star.dummy = 1;
 mp.jac.star.dummy = 1;
@@ -104,6 +103,11 @@ if(isfield(mp.F3, 'NstepStaircase')==false);  mp.F3.NstepStaircase = 6;  end  % 
 if(isfield(mp.F3, 'clocking')==false);  mp.F3.clocking = 0;  end  % Counterclockwise clocking of the phase FPM [degrees].
 if(isfield(mp.F3, 'phaseScaleFac')==false);  mp.F3.phaseScaleFac = 1;  end  % Factor to apply to the phase in the phase FPM. Use a vector to add chromaticity to the model. 
 
+%--HLC FPM materials
+if(isfield(mp.F3, 'substrate')==false);  mp.F3.substrate = 'FS';  end % name of substrate material  [FS or N-BK7]
+if(isfield(mp.F3, 'metal')==false);  mp.F3.metal = 'nickel';  end % name of the metal used in the FPM  ['nickel']
+if(isfield(mp.F3, 'dielectric')==false);  mp.F3.dielectric = 'PMGI';  end % name of the dielectric used in the FPM  ['PMGI' or 'MgF2']
+
 %--Sensitivities to Zernike-Mode Perturbations
 if(isfield(mp.full,'ZrmsVal')==false);  mp.full.ZrmsVal = 1e-9;  end %--Amount of RMS Zernike mode used to calculate aberration sensitivities [meters]. WFIRST CGI uses 1e-9, and LUVOIR and HabEx use 1e-10. 
 if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
@@ -112,9 +116,10 @@ if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 %--Deformable mirror settings
 if(isfield(mp.dm1,'orientation')==false);  mp.dm1.orientation = 'rot0';  end %--Change to mp.dm1.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm1,'dead')==false); mp.dm1.dead = []; end % Vector of linear indices of all dead actuators (those stuck at 0V absolute). This should stay fixed.
 if(isfield(mp.dm1,'pinned')==false);  mp.dm1.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm1,'Vpinned')==false);  mp.dm1.Vpinned = zeros(size(mp.dm1.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
-if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0,2);  end %--Indices of tied actuator pairs. Two indices per row
+if(isfield(mp.dm1,'tied')==false);  mp.dm1.tied = zeros(0, 2);  end %--Indices of tied actuator pairs sharing the same voltage. Two indices per row.
 if mp.flagSim
     if(isfield(mp.dm1,'Vmin')==false);  mp.dm1.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm1,'Vmax')==false);  mp.dm1.Vmax = 1000;  end %--Max allowed absolute voltage command
@@ -126,12 +131,15 @@ if(isfield(mp.dm1,'dVnbrLat')==false); mp.dm1.dVnbrLat = mp.dm1.Vmax; end % max 
 if(isfield(mp.dm1,'dVnbrDiag')==false); mp.dm1.dVnbrDiag = mp.dm1.Vmax; end % max voltage difference allowed between diagonally-adjacent DM actuators
 if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = mp.dm1.Vmax/2*ones(mp.dm1.Nact, mp.dm1.Nact);  end  %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
 if(isfield(mp.dm1,'facesheetFlatmap')==false);  mp.dm1.facesheetFlatmap = mp.dm1.biasMap;  end %--Voltage map that produces a flat DM1 surface. Used when enforcing the neighbor rule.
+if(isfield(mp.dm1,'comovingGroups')==false);  mp.dm1.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
+if(isfield(mp.dm1,'tolNbrRule')==false); mp.dm1.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
 if(isfield(mp.dm2,'orientation')==false);  mp.dm2.orientation = 'rot0';  end %--Change to mp.dm2.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
+if(isfield(mp.dm2,'dead')==false); mp.dm2.dead = []; end % Vector of linear indices of all dead actuators (those stuck at 0V absolute). This should stay fixed.
 if(isfield(mp.dm2,'pinned')==false);  mp.dm2.pinned = [];  end %--Indices of pinned/railed actuators
 if(isfield(mp.dm2,'Vpinned')==false);  mp.dm2.Vpinned = zeros(size(mp.dm2.pinned));  end %--(Fixed) relative voltage commands of pinned/railed actuators
-if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0,2);  end %--Indices of paired actuators. Two indices per row
+if(isfield(mp.dm2,'tied')==false);  mp.dm2.tied = zeros(0, 2);  end %--Indices of tied actuator pairs sharing the same voltage. Two indices per row.
 if mp.flagSim
     if(isfield(mp.dm2,'Vmin')==false);  mp.dm2.Vmin = 0;  end %--Min allowed absolute voltage command
     if(isfield(mp.dm2,'Vmax')==false);  mp.dm2.Vmax = 1000;  end %--Max allowed absolute voltage command
@@ -143,17 +151,20 @@ if(isfield(mp.dm2,'dVnbrLat')==false); mp.dm2.dVnbrLat = mp.dm2.Vmax; end % max 
 if(isfield(mp.dm2,'dVnbrDiag')==false); mp.dm2.dVnbrDiag = mp.dm2.Vmax; end % max voltage difference allowed between diagonally-adjacent DM actuators
 if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = mp.dm2.Vmax/2*ones(mp.dm2.Nact, mp.dm2.Nact);  end %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
 if(isfield(mp.dm2,'facesheetFlatmap')==false);  mp.dm2.facesheetFlatmap = mp.dm2.biasMap;  end %--Voltage map that produces a flat DM2 surface. Used when enforcing the neighbor rule.
+if(isfield(mp.dm2,'comovingGroups')==false);  mp.dm2.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
+if(isfield(mp.dm2,'tolNbrRule')==false); mp.dm2.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
 
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
+if(isfield(mp.jac,'Zcoef')==false); mp.jac.Zcoef = 1; end %--coefficients (i.e., weights) of Zernike modes in Jacobian. Weight for piston is always 1.
 if(isfield(mp,'WspatialDef')==false);  mp.WspatialDef = [];  end %--spatial weights for the Jacobian
 if(isfield(mp.jac,'minimizeNI')==false); mp.jac.minimizeNI = false; end %--Have EFC minimize normalized intensity instead of intensity
     
 %--Estimation
-if(isfield(mp.est.probe,'whichDM')==false); mp.est.probe.whichDM = 1; end %--Which DM to use for probing
-if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max probe intensity
-if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Lower estimated intensities to this value if they exceed this (probably due to a bad inversion)
+if ~isfield(mp.est, 'probeSchedule'); mp.est.probeSchedule = ProbeSchedule; end %--Schedule of per-iteration values for pairwise probing. Default is empty vectors, meaning they aren't used.
+if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max allowed probe intensity
+if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Reduce estimated intensities to this value if they exceed this (probably due to a bad inversion)
 
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
@@ -171,13 +182,15 @@ if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Needed for computing
 
 % Default values are for the Andor Neo sCMOS detector and testbed flux
 if ~isfield(mp, 'flagImageNoise'); mp.flagImageNoise = false; end % whether to include noise in the images
-if ~isfield(mp.detector, 'gain'); mp.detector.gain = 1.0; end % [e-/count]
+if ~isfield(mp.detector, 'gain'); mp.detector.gain = 1.0; end % detector gain [e-/count]
 if ~isfield(mp.detector, 'darkCurrentRate'); mp.detector.darkCurrentRate = 0.015; end % [e-/pixel/second]
-if ~isfield(mp.detector, 'readNoiseStd'); mp.detector.readNoiseStd = 1.7; end % [e-/count]
-if ~isfield(mp.detector, 'wellDepth'); mp.detector.wellDepth = 3e4; end % [e-]
+if ~isfield(mp.detector, 'readNoiseStd'); mp.detector.readNoiseStd = 1.7; end % standard deviation of Gaussian read noise [e-]
+if ~isfield(mp.detector, 'wellDepth'); mp.detector.wellDepth = 3e4; end % well depth of the detector [e-]
 if ~isfield(mp.detector, 'peakFluxVec'); mp.detector.peakFluxVec = 1e8 * ones(mp.Nsbp, 1); end % [counts/pixel/second]
-if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % [seconds]
-if ~isfield(mp.detector, 'Nexp'); mp.detector.Nexp = 1; end % number of exposures to stack
+if ~isfield(mp.detector, 'tExpVec'); mp.detector.tExpVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for images in each subband. Set to the unprobed or probed values depending on the situation. [seconds]
+if ~isfield(mp.detector, 'tExpUnprobedVec'); mp.detector.tExpUnprobedVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for unprobed images in each subband [seconds]
+if ~isfield(mp.detector, 'tExpProbedVec'); mp.detector.tExpProbedVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for probed images in each subband [seconds]
+if ~isfield(mp.detector, 'Nexp'); mp.detector.Nexp = 1; end % number of exposures to stack for each combined frame
 
 %% Initialize some basic attributes for all DMs (which include hybrid FPMs).
 mp.dm1.NactTotal=0; mp.dm2.NactTotal=0; mp.dm3.NactTotal=0; mp.dm4.NactTotal=0; mp.dm5.NactTotal=0; mp.dm6.NactTotal=0; mp.dm7.NactTotal=0; mp.dm8.NactTotal=0; mp.dm9.NactTotal=0; 

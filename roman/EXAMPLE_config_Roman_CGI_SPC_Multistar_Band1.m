@@ -220,7 +220,7 @@ mp.Fend.clockAngDeg = 0; %--Amount to rotate the dark hole location
 
 %% Optical Layout: Full Model 
 
-mp.full.cor_type = 'spc-wide_band1';
+mp.full.cor_type = 'spc-mswc_band1';
 
 mp.full.flagPROPER = true; %--Whether the full model is a PROPER prescription
 

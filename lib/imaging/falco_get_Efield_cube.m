@@ -13,18 +13,12 @@
 % mp = structure of all model parameters
 %
 %--OUTPUTS
-% Ecube = 2-D stellar complex field at each wavelength
-%
-%--REVISION HISTORY
-% - Modified from falco_get_summed_image.m on 2020-12-23 by G. Ruane 
-% - Modified on 2019-05-06 by A.J. Riggs to include a different option for
-% looping over a full model in PROPER.
-% - Simplified on 2019-03-01 by A.J. Riggs to loop over falco_get_sbp_image.m 
-%--------------------------------------------------------------------------
+% Ecube = Cube of the 2-D stellar complex field at each wavelength
 
 function Ecube = falco_get_Efield_cube(mp)
 
-    for si=1:mp.Nsbp    
+    for si = mp.Nsbp:-1:1 
+        modvar = ModelVariables;
         modvar.sbpIndex   = si;
         modvar.wpsbpIndex = mp.wi_ref;
         modvar.whichSource = 'star';
@@ -32,4 +26,4 @@ function Ecube = falco_get_Efield_cube(mp)
         Ecube(:,:,si) = model_full(mp, modvar);
     end
 
-end %--END OF FUNCTION
+end

@@ -1,20 +1,20 @@
-function dm = falco_discretize_dm_surf(dm,flagMethod,varargin)
+function dm = falco_discretize_dm_surf(dm, flagMethod, varargin)
 
 % optional flag to use testbed instead of simulation  
-% if(nargin>0)
-%     flag_tb = varargin{1}; % The first variable argument defines which testbed type
-% 
-%     switch flag_tb
-%         case 'tb'
-%             HminStep = dm.HminStep_tb;
-%         otherwise
-%             HminStep = dm.HminStep;
-%             disp('Silent error: HminStep_tb not defined. Using HminStep for testbed.');
-%     end
-% else
+if nargin > 2
+    flag_tb = varargin{1}; % The first variable argument defines which testbed type
+
+    switch flag_tb
+        case 'tb'
+            HminStep = dm.HminStep_tb;
+        otherwise
+            HminStep = dm.HminStep;
+            disp('Silent error: HminStep_tb not defined. Using HminStep for testbed.');
+    end
+else
     % Use HminStep for dm model 
     HminStep = dm.HminStep;
-% end
+end
 
 % Calculate surface heights to maximum precision
 h_cont = dm.VtoH.*dm.V;

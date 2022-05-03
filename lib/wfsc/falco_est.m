@@ -25,7 +25,7 @@ function ev = falco_est(mp, ev, jacStruct)
             ev  = falco_est_perfect_Efield_with_Zernikes(mp);
             ev.Im = falco_get_summed_image(mp);
             
-        case{'pwp-bp-square', 'pwp-bp', 'pwp-kf'}
+        case{'pwp-bp-square', 'pwp-bp', 'pwp-kf', 'pairwise', 'pairwise-square', 'pairwise-rect'}
             if(mp.flagFiber && mp.flagLenslet)
 				if mp.est.flagUseJac
 					ev = falco_est_pairwise_probing_fiber(mp, jacStruct);
