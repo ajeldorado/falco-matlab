@@ -5,7 +5,7 @@
 % -------------------------------------------------------------------------
 % function OUT = propcustom_mft_PtoFtoP(IN, FPM, charge, apRad, inVal, outVal, useGPU ) 
 %
-% Generate a 
+% Generate a scalar vortex mask
 %
 % FPM must be an array with dimensions MxM, where M = lambdaOverD*(beam diameter)
 %
@@ -13,7 +13,7 @@
 % ------
 % inputs: structure of inputs parameters
 %   - inputs.type: type of mask. Valid options are 'vortex', 'cos',
-%   'sectors', and 'staircase', 'wrapped'.
+%   'sectors', 'staircase', 'frenchwrapped', 'classicalwrapped', 'mcmc6'.
 %   - inputs.charge: number of 2-pi phase progressions over the 360
 %     degrees of the mask)
 %   - inputs.N: width and height of the output array
@@ -89,7 +89,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             radpts = rmax;    % Number of points to interpolate on in radius
             angpts = 360;     % Number of points to interpolate on in angle
             [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
-%             figure(65); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Vortex Phase Profile'); xlabel('\Theta / \pi'); ylabel('G_{0}/ \pi');
+%             figure(65); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Vortex Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
 
 
         case{'cos'}
@@ -103,7 +103,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             radpts = rmax;    % Number of points to interpolate on in radius
             angpts = 360;     % Number of points to interpolate on in angle
             [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
-            figure(66); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Cos Phase Profile'); xlabel('\Theta / \pi'); ylabel('G_{0}/ \pi');
+            figure(66); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Cos Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
 
              % Display vortex as a function of radius
              % Each row in the vortRad matrix represents a radius
@@ -120,7 +120,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             radpts = rmax;    % Number of points to interpolate on in radius
             angpts = 360;     % Number of points to interpolate on in angle
             [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
-            figure(67); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Sectors Phase Profile'); xlabel('\Theta / \pi'); ylabel('G_{0}/ \pi');
+            figure(67); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Sectors Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
                     
         case 'frenchwrapped'
             
@@ -146,7 +146,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
             %  Display
             % Plot the vortex 
-            figure(); imagesc(fancyVort); axis image; colorbar; title(' French Wrapped Vortex Phase Map');
+%             figure(); imagesc(fancyVort); axis image; colorbar; title(' French Wrapped Vortex Phase Map');
 
             % Compute the radial profile
             cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
@@ -156,14 +156,20 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             [vortRad, rvec, qvec] = polarTransform(fancyVort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
 
             % Since the vortex phase is radially symmetric, plot a radial average   
-            figure(); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('French Wrapped Phase Profile'); xlabel('\Theta / \pi'); ylabel('G_{0}/ \pi');
+%             figure(); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('French Wrapped Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
             mask = exp(phaseScaleFac*1j*fancyVort);
             
-            
+            f
         case 'classicalwrapped'
             
-            vort = phaseScaleFac*charge*rem(THETA,pi./4);
-            mask = exp(1j*vort);
+%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+            mask = exp(phaseScaleFac*1j*vort);
             
                         
             cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
@@ -171,65 +177,60 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             radpts = rmax;    % Number of points to interpolate on in radius
             angpts = 360;     % Number of points to interpolate on in angle
             [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
-            figure(78); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Classical Wrapped Phase Profile'); xlabel('\Theta / \pi'); ylabel('G_{0}/ \pi');
-
-            
-%             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
-%             %
-%             fancyVort = 0.* coords.THETA;
-%             
-%             domain = (coords.THETA > 0) & (coords.THETA < pi);
-%             vara = floor(coords.THETA(domain)./ (pi./8));
-%             fancyVort(domain) = 8*coords.THETA(domain) - vara*2*pi;
-%             domain = (coords.THETA > -pi) & (coords.THETA < 0);
-%             vara = floor(coords.THETA(domain)./ (pi./8));
-%             fancyVort(domain) = 8*coords.THETA(domain) - vara*2*pi;
-%             domain = (coords.THETA > 0) & (coords.THETA < pi/8);
-%             fancyVort(domain) = 8*coords.THETA(domain);
-% 
-%             domain = (coords.THETA > pi/2) & (coords.THETA < 5*pi/8);
-%             fancyVort(domain) = 8*coords.THETA(domain) - 4*pi;
-%             domain = (coords.THETA > 5*pi/8) & (coords.THETA < pi);
-%             fancyVort(domain) = 8*coords.THETA(domain) - 6*pi;
-%             domain = (coords.THETA > -pi) & (coords.THETA < -5*pi/8);
-%             fancyVort(domain) = 8*(coords.THETA(domain)+pi);
-%             domain = (coords.THETA > -pi+3*pi/8) & (coords.THETA < -pi/2);
-%             fancyVort(domain) = 8*(coords.THETA(domain)+pi) - 2*pi;
-%             domain = (coords.THETA > -pi/2) & (coords.THETA < -3*pi/8);
-%             fancyVort(domain) = 8*(coords.THETA(domain)+pi) - 4*pi;
-%             domain = (coords.THETA > -3*pi/8) & (coords.THETA < 0);
-%             fancyVort(domain) = 8*(coords.THETA(domain)+pi) - 6*pi;
-
-%             %  Display
-%             % Plot the vortex 
-%             figure(); imagesc(fancyVort); axis image; colorbar; title('Classical Wrapped Vortex Phase Map');
-% 
-%             % Compute the radial profile
-%             cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
-%             rmax = min([size(fancyVort)-max(cent), cent]);  % Maximum radius to which transform should be computed
-%             radpts = rmax;    % Number of points to interpolate on in radius
-%             angpts = 360;     % Number of points to interpolate on in angle
-%             [vortRad, rvec, qvec] = polarTransform(fancyVort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
-% 
-%             % Since the vortex phase is radially symmetric, plot a radial average   
-%             figure(); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Classical Wrapped Phase Profile'); xlabel('\Theta / \pi'); ylabel('G_{0}/ \pi');
-%             mask = exp(phaseScaleFac*1j*fancyVort);
+            figure(78); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Classical Wrapped Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
 
         case 'staircase'
             Nsteps = inputs.Nsteps;
-            vort = phaseScaleFac*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi;
+            vort = phaseScaleFac*floor(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi;
             mask = exp(1j*vort);
-%             figure(68); plot(THETA/pi,mask); axis xy equal tight; title('staircase phase function');drawnow;
-            % mask = exp(1j*falco_gen_spiral_staircase(inputs)); % Uses antialiased edges.
             
+            % mask = exp(1j*falco_gen_spiral_staircase(inputs)); % Uses antialiased edges.
+            figure(); imagesc(vort); axis image; colorbar; title(' Staircase Vortex Phase Map');
+
             
             cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
-            rmax = min([size(vort)-max(cent), cent]);  % Maximum radius to which transform should be computed
+            rmax = min([size(vort)-max(cent), cent])  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 7200;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+            figure(69); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Staircase Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+        
+        case 'mcmc6'
+            
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            %
+            fancyVort = 0.* coords.THETA;
+            domain = (coords.THETA > 0) & (coords.THETA < 1.84799568);
+            fancyVort(domain) = 6*coords.THETA(domain);
+            domain = (coords.THETA > 1.84799568) & (coords.THETA < 2.52559409);
+            fancyVort(domain) = 6*coords.THETA(domain) - 2*pi;
+            domain = (coords.THETA > 2.52559409) & (coords.THETA < pi);
+            fancyVort(domain) = 6*coords.THETA(domain) - 4*pi;
+%             domain = (coords.THETA > pi) & (coords.THETA < pi);
+%             fancyVort(domain) = 6*coords.THETA(domain) - 6*pi;
+%             domain = (coords.THETA > -pi) & (coords.THETA < -5*pi/8);
+%             fancyVort(domain) = 6*(coords.THETA(domain)+pi);
+            domain = (coords.THETA > -pi+2.52559409) & (coords.THETA < 0);
+            fancyVort(domain) = 6*(coords.THETA(domain)+pi) - 4*pi;
+            domain = (coords.THETA > -pi+1.84799568) & (coords.THETA < -pi+2.52559409);
+            fancyVort(domain) = 6*(coords.THETA(domain)) - 2*pi;
+            domain = (coords.THETA > -pi) & (coords.THETA < -pi+1.84799568);
+            fancyVort(domain) = 6*(coords.THETA(domain));
+
+            %  Display
+            % Plot the vortex 
+            figure(); imagesc(fancyVort); axis image; colorbar; title(' MCMC6 Vortex Phase Map');
+
+            % Compute the radial profile
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(fancyVort)-max(cent), cent]);  % Maximum radius to which transform should be computed
             radpts = rmax;    % Number of points to interpolate on in radius
             angpts = 360;     % Number of points to interpolate on in angle
-            [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
-            figure(69); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Staircase Phase Profile'); xlabel('\Theta / \pi'); ylabel('G_{0}/ \pi');
+            [vortRad, rvec, qvec] = polarTransform(fancyVort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
 
+            % Since the vortex phase is radially symmetric, plot a radial average   
+            figure(); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('MCMC6 Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+            mask = exp(phaseScaleFac*1j*fancyVort);
 
         otherwise
             validOptions = "Valid options are 'vortex', 'cos', 'sectors', 'staircase' and 'wrapped'.";

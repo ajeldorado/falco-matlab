@@ -5,66 +5,74 @@
 % -------------------------------------------------------------------------
 %
 %--Script to perform a loop of SVC simulation runs.
+%
+% Can be used for Contrast measurements or Zernike analysis
+% for varying bandwidths, RMSs, and resolutions
 
 
 % REVISION HISTORY:
 % --------------
-% Modified on 2022-02-23 by Niyati Desai.
+% Created on 2022-02-23 by Niyati Desai.
 
 
 clear all;
 close all;
 
 
-
-bws = [0.01,0.05,0.1,0.15,0.2];
-nsbps = [1,3,5,7,9];
+RMSs = [0.01,0.1,0.5,1,5,10,15,20]; %in nm
+bws = [0.01,0.01,0.05,0.1,0.15,0.2];
+nsbps = [1,3,3,5,7,9];
 vals = [];
-ims = [];
-res = [100,200,300,400,500,600,700];
+res = [100,200,300,400,500,600,700]; %found 600 is sufficient
+zernords = [2,3,4,5,6,7,8];
 
-filename = 'testAnimated2.gif';
-% gifim(1,1,1,length(res))=0;
 
-for index = 1:length(bws) %length(res)
-    clearvars -except vals bws index nsbps ims res filename
+for index = 1:2;%length(RMSs) %length(res)
+    clearvars -except vals bws index nsbps res RMSs zernords
     mp.use_lastJacStruc = false;
     
     %% Step 1: Define Necessary Paths on Your Computer System
+    slowpoke = false;
+    
+    if ~slowpoke
+        %--Library locations. FALCO and PROPER are required. CVX is optional.
+        mp.path.falco = '/Users/niyatid/falco-matlab/';  %--Location of FALCO
+        mp.path.proper = '/Users/niyatid/falco-matlab/lib_external/proper/'; %--Location of the MATLAB PROPER library
+        % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
-    %--Library locations. FALCO and PROPER are required. CVX is optional.
-    mp.path.falco = '/Users/niyatid/falco-matlab/';  %--Location of FALCO
-    mp.path.proper = '/Users/niyatid/falco-matlab/lib_external/proper/'; %--Location of the MATLAB PROPER library
-    % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
+        %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+        mp.path.config = '/Users/niyatid/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+        mp.path.ws = '/Users/niyatid/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+        mp.path.mask = '/Users/niyatid/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+        mp.path.ws_inprogress = mp.path.ws;
+    else
+    %for slowpoke
 
-    %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-    mp.path.config = '/Users/niyatid/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-    mp.path.ws = '/Users/niyatid/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-    mp.path.mask = '/Users/niyatid/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-    mp.path.ws_inprogress = mp.path.ws;
+        % % %--Library locations. FALCO and PROPER are required. CVX is optional.
+        mp.path.falco = 'C:\Users\jdllop\Documents\GitHub\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
+        mp.path.proper = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\proper';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
 
-    % % %--Library locations. FALCO and PROPER are required. CVX is optional.
-    % mp.path.falco = 'C:\Users\jdllop\Documents\GitHub\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
-    % mp.path.proper = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\proper';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
-
-    % %%--Output Data Directories ( Comment these lines out to use defaults within falco-matlab/data/ directory.)
-    % mp.path.config = 'C:\Lab\falco-matlab\data\configs';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-    % mp.path.ws = 'C:\Lab\falco-matlab\data\ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-
+        % %%--Output Data Directories ( Comment these lines out to use defaults within falco-matlab/data/ directory.)
+        mp.path.config = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\brief';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+        mp.path.ws = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+    end
+ 
     %%--Add to the MATLAB Path
     addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
     addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
+
     %% Step 2: Load default model parameters
 
     disp(index);
-    mp.fracBW = bws(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
-    mp.Nsbp = nsbps(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.fracBW = bws(1);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.Nsbp = nsbps(1);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.full.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.compact.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
-    mp.F3.phaseMaskType = 'vortex';
+    mp.F3.phaseMaskType = 'frenchwrapped';
+%     mp.F3.VortexCharge = -8;
+%     mp.F3.NstepStaircase = 6;
     EXAMPLE_defaults_HCST_SVC_chromatic
-   
 
 
     %% Step 3: Overwrite default values as desired
@@ -78,7 +86,6 @@ for index = 1:length(bws) %length(res)
     mp.TrialNum = 1;
 
     mp.Nwpsbp = 1;          %--Number of wavelengths to be used to approximate an image in each sub-bandpass
-
     mp.Nitr = 1; %--Number of wavefront control iterations
 
     %% Step 4: Generate the label associated with this trial
@@ -95,49 +102,25 @@ for index = 1:length(bws) %length(res)
     [mp, out] = falco_flesh_out_workspace(mp);
 
     
+%     %For Zernike Analysis
+%     mp.eval.indsZnoll = zernords; %which Zernikes (tip tilt, etc)
+%     mp.eval.Rsens = [2,4]; %radii to evaluate over
+%     mp.full.ZrmsVal = RMSs(index)*1E-9;
+%     sensout = falco_get_Zernike_sensitivities(mp);
+%     val = sensout;
+    
+    
+    %For Contrasts with WFSC
 %     [mp, out] = falco_wfsc_loop(mp, out);
-    %     val = out.InormHist(end);
+%     val = out.InormHist(end);
     
     
-    %For 0 wavefront control iterations
-    outSingle = falco_eval_without_control(mp);
-    
-    Im = falco_get_summed_image(mp);
-    ims = cat(3,ims,Im);
-    
-    val = outSingle.InormHist(1);
-    vals = [vals;val]
-    
-    
-%     h = figure;
-%     imagesc(log10(Im/2^16));
-%     axis image; colorbar; title(append('No WFSC at Res: ',num2str(res(index))));
-%     frame = getframe(h); 
-%     gifim = frame2im(frame); 
-% %     [gifim,map] = rgb2ind(frame.cdata,256,'nodither');
-% %     gifim(:,:,1,index) = rgb2ind(frame.cdata,map,'nodither');
-    
-    
-    
-%     [imind,cm] = rgb2ind(gifim,256); 
-%     if index == 1 
-%         imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
-%     else 
-%         imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',1); 
-%     end
+    %For Contrast w/o WFSC (0 wavefront control iterations)
+%     outSingle = falco_eval_without_control(mp);
+%     val = outSingle.InormHist(1);
+      
+      vals = [vals val];
+
 
 end
-
-% imwrite(gifim,map,filename,'DelayTime',0,'LoopCount',inf)
-
-% [gifImage cmap] = imread(filename, 'Frames', 'all');
-% size(gifImage)
-% implay(gifImage);
-
-% [imind,cm] = rgb2ind(im,256); 
-%     % Write to the GIF File 
-%     if n == 1 
-%         imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
-%     else 
-%         imwrite(imind,cm,filename,'gif','WriteMode','append'); 
-%     end 
+% save frenchwrappedzernikes.mat vals bws zernords RMSs
