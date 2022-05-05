@@ -25,66 +25,49 @@
 function normI = falco_get_iact_sbp_image(mp,si)
 
     tb = mp.tb;
+    sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     tb.sciCam.subdir = 'falco';
     
-    if(mp.isProbing)
+    if(mp.isProbing) % use these values if you're probing 
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
-    else
+        numCoadds = tb.info.sbp_numCoadds_probe(si);% Number of coadds to use for each sub-bandpass
+    else % use these values for dark hole images 
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
-    end
+        numCoadds = tb.info.sbp_numCoadds(si);% Number of coadds to use for each sub-bandpass
+    end    
+    tb.sciCam.numCoadds = numCoadds; % This sets the camera to use coadds 
     
+    % PSF photometry 
     PSFpeak   = tb.info.PSFpeaks(si);% counts per second 
     
     
-%     %----- Send commands to the DM -----
-%     %disp('Sending current DM voltages to testbed') 
-%     if(mp.dm1.transp)
-%         dm1_map = mp.dm1.V'; % There's a transpose between Matlab and DM indexing
-%     else
-%         dm1_map = mp.dm1.V;
-%     end
-%     if(mp.dm2.transp)
-%         dm2_map = mp.dm2.V'; % There's a transpose between Matlab and DM indexing
-%     else
-%         dm2_map = mp.dm2.V;
-%     end
-    
-%     figure(700)
-%     subplot(1,2,1)
-%     imagesc(dm1_map+tb.DM1.flatmap);
-%     axis image; 
-%     colorbar;
-% 
-%     subplot(1,2,2)
-%     imagesc(dm1_map);
-%     axis image; 
-%     colorbar;
-%     drawnow; 
+	%----- Send commands to the DM -----
 
-    % Send the commands to the DM. 
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
     if(tb.DM.installed && tb.DM.CONNECTED)
         DM_apply2Dmap(tb.DM,mp.dm1.V);
     end
 
-%     %----- Get image from the testbed -----
+    
+	%----- Get image from the testbed -----
 %     disp(['Getting image from testbed in band ',num2str(si),'. texp = ',num2str(sbp_texp)])
-%     
-%     % Set wavelength
-%     %disp(['Setting varia to bandpass',num2str(si)])
-%     lam0 = mp.sbp_centers(si);
-%     lam1 = lam0 - sbp_width/2;
-%     lam2 = lam0 + sbp_width/2;
-%     if(strcmpi(tb.info.source,'nkt'))
-%         NKT_setWvlRange(tb,lam1*1e9,lam2*1e9);
-%     end
+    disp(['Getting image from testbed. texp=',num2str(sbp_texp),'s. numCoadds=',num2str(numCoadds)])
+    
+    % Set wavelength
+    %disp(['Setting varia to bandpass',num2str(si)])
+    lam0 = mp.sbp_centers(si);
+    lam1 = lam0 - sbp_width/2;
+    lam2 = lam0 + sbp_width/2;
+    if(strcmpi(tb.info.source,'nkt'))
+        NKT_setWvlRange(tb,lam1*1e9,lam2*1e9);
+    end
     
     % Load a dark
     dark = sciCam_loadDark(tb,sbp_texp);
     
     % Scale the PSF photometry by the current integration time
-    PSFpeak_counts = PSFpeak*sbp_texp; 
+    PSFpeak_counts = PSFpeak*sbp_texp*numCoadds; 
     
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; 

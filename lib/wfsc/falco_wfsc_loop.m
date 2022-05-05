@@ -21,6 +21,7 @@ for Itr = 1:mp.Nitr
     
     ev.Itr = Itr;
     cvar.Itr = Itr;
+    out.Itr = Itr;
     
     % Updated DM info
     if strcmpi(mp.controller, 'plannedefc')
@@ -31,7 +32,9 @@ for Itr = 1:mp.Nitr
         fprintf(' %d', mp.dm_ind(jj)); 
     end
     fprintf(' ]\n')
-    
+
+	out.serialDateVec(Itr) = now;
+    out.datetimeArray = datetime(out.serialDateVec,'ConvertFrom','datenum');
     out = store_dm_command_history(mp, out, Itr);
 
     %% Normalization and throughput calculations
@@ -271,7 +274,7 @@ function out = store_intensities(mp, out, ev, Itr)
         out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
         
         out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
-        out.normIntModScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+        out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
     end
     
 end
