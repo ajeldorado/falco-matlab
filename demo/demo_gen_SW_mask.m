@@ -61,11 +61,11 @@ inputs.FOV = 15;
 inputs.whichSide = 'ud';
 inputs.shape = 'rectangle';
 
-[mask5, xis5, etas5] = falco_gen_SW_mask(inputs);
-figure(5); imagesc(xis5, etas5, mask5); axis xy equal tight; colormap gray; drawnow;
+[mask4, xis4, etas4] = falco_gen_SW_mask(inputs);
+figure(4); imagesc(xis4, etas4, mask4); axis xy equal tight; colormap gray; drawnow;
 
 
-% Check shifting the pupil and having a rectangular array. 
+% Check shifting the mask and having a rectangular array. 
 inputs.xiFOV = 30;
 inputs.etaFOV = 11;
 inputs.xiOffset = 10;
@@ -75,5 +75,23 @@ inputs.clockAngDeg = 0;
 inputs.whichSide = 't';
 inputs.shape = 'square';
 
-[mask4, xis4, etas4] = falco_gen_SW_mask(inputs);
-figure(4); imagesc(xis4, etas4, mask4); axis xy equal tight; colormap gray; drawnow;
+[mask5, xis5, etas5] = falco_gen_SW_mask(inputs);
+figure(5); imagesc(xis5, etas5, mask5); axis xy equal tight; colormap gray; drawnow;
+
+
+% Check making a square offset from the star 
+clear inputs
+inputs.pixresFP = 9;
+inputs.rhoInner = 0;
+inputs.rhoOuter = 2.5;
+inputs.xiFOV = 16;
+inputs.etaFOV = 20;
+inputs.xiOffset = 4;
+inputs.etaOffset = 0;
+inputs.angDeg = 180;
+inputs.clockAngDeg = 0;
+inputs.whichSide = 'lr';
+inputs.shape = 'square';
+
+[mask6, xis6, etas6] = falco_gen_SW_mask(inputs);
+figure(6); imagesc(xis6, etas6, mask6); axis xy equal tight; colormap gray; drawnow;

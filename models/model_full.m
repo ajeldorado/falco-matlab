@@ -20,10 +20,12 @@
 
 function [Eout, varargout] = model_full(mp, modvar, varargin)
 
-% Set default values of input parameters
-if(isfield(modvar, 'sbpIndex'))
-    normFac = mp.Fend.full.I00(modvar.sbpIndex, modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
+if ~isa(modvar, 'ModelVariables')
+    error('modvar must be an instance of class ModelVariables')
 end
+
+% Set default values of input parameters
+normFac = mp.Fend.full.I00(modvar.sbpIndex, modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
 
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
@@ -46,12 +48,10 @@ if(any(mp.dm_ind==8)); mp.dm8 = rmfield(mp.dm8, 'compact'); end
 if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9, 'compact'); end
 
 %--Set the wavelength
-if(isfield(modvar, 'lambda')) %--For FALCO or for evaluation without WFSC
+if ~isempty(modvar.lambda) %--For FALCO or for evaluation without WFSC
     lambda = modvar.lambda;
-elseif(isfield(modvar, 'sbpIndex')) %--For use in FALCO
-    lambda = mp.full.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 else
-    error('model_full: Need to specify a value or indices for a wavelength.')
+    lambda = mp.full.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,12 +64,12 @@ xiOffset = mp.star.xiOffsetVec(iStar);
 etaOffset = mp.star.etaOffsetVec(iStar);
 starWeight = mp.star.weights(iStar);
 TTphase = (-1)*(2*pi*(xiOffset*mp.P2.full.XsDL + etaOffset*mp.P2.full.YsDL));
-Ett = exp(1i*TTphase*mp.lambda0/lambda);
+Ett = exp(1j*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
 
 if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
     TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
-    Ett = exp(1i*TTphase*mp.lambda0/lambda);
+    Ett = exp(1j*TTphase*mp.lambda0/lambda);
     Ein = Ett .* Ein; 
 end
 
@@ -79,20 +79,20 @@ if normFac == 0
     source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
     source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
     TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.full.XsDL + source_y_offset*mp.P2.full.YsDL));
-    Ett = exp(1i*TTphase*mp.lambda0/lambda);
-    Ein = Ett.*mp.P1.full.E(:, :, modvar.sbpIndex); 
+    Ett = exp(1j*TTphase*mp.lambda0/lambda);
+    Ein = Ett .* Ein; 
 end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
-if isfield(modvar, 'zernIndex') == false
-    modvar.zernIndex = 1;
-end
+% if isfield(modvar, 'zernIndex') == false
+%     modvar.zernIndex = 1;
+% end
 
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
     zernMat = padOrCropEven(zernMat, mp.P1.full.Narr);
-    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
+    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns ==  modvar.zernIndex);
 end
 
 %% Pre-compute the FPM first for HLC as mp.FPM.mask
@@ -133,7 +133,7 @@ switch lower(mp.layout)
                     ilam = modvar.sbpIndex;
                 end
                 %fprintf('si=%d, wi=%d, ilam=%d\n', modvar.sbpIndex, modvar.wpsbpIndex, ilam);
-                mp.FPM.mask = mp.full.FPMcube(:, :, ilam);%modvar.sbpIndex, modvar.wpsbpIndex);
+                mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
         end
 end
 
@@ -194,7 +194,7 @@ switch lower(mp.layout)
             case 'wfirst_phaseb_proper'
                 Eout = prop_run('model_full_wfirst_phaseb', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval ); %--wavelength needs to be in microns instead of meters for PROPER
             case 'roman_phasec_proper'
-                Eout = prop_run('roman_phasec_efc_jpl', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval ); %--wavelength needs to be in microns instead of meters for PROPER
+                Eout = prop_run('roman_phasec', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval ); %--wavelength needs to be in microns instead of meters for PROPER
         end
         
         if normFac ~= 0

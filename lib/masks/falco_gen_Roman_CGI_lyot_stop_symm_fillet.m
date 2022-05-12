@@ -1,12 +1,10 @@
-% Generate, plot, and write etching coordinates and bitmap for the Roman CGI SPC-WFOV Lyot Stop.
+% Generate, plot, and write etching coordinates and bitmap for the Roman
+% CGI Lyot Stops with 6 struts
 % Use pupil CGI-20200513 as the starting point.
 %
 % Note: The strut width specified by wStrut is the width before
 % symmetrizing the pupil. The actual strut width is larger because of the
 % symmetrization.
-%
-% Written by A.J. Riggs on June 2, 2020.
-
 
 function lyot = falco_gen_Roman_CGI_lyot_stop_symm_fillet(Nbeam, ID, OD, wStrut, rocFillet, upsampleFactor, centering)
 
@@ -837,7 +835,7 @@ end
 %     end
 %     hold off;
 % 
-%     % export_fig('fig_flight_hlc_ls_plotting.png', '-dpng', '-r400');
+%     % export_fig('fig_ls_plotting.png', '-dpng', '-r400');
 % end
 
 %% Plot the dropouts that will be etched out.
@@ -862,7 +860,7 @@ end
 %     end
 %     hold off;
 % 
-%     % export_fig('fig_flight_hlc_ls_etching.png', '-dpng', '-r400');
+%     % export_fig('fig_ls_etching.png', '-dpng', '-r400');
 % end
 
 end % EOF

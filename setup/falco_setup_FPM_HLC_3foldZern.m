@@ -4,11 +4,6 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% REVISION HISTORY:
-% --------------
-% Created by A.J. Riggs on 2018-10-01 by extracting material from
-% falco_init_ws.m.
-% ---------------
 
 function mp = falco_setup_FPM_HLC_3foldZern(mp)
 
@@ -28,12 +23,12 @@ mp.dm9.compact.dxi = (mp.fl*mp.lambda0/mp.P2.D)/mp.F3.compact.res; % width of a 
 
 %--Generate datacube of influence functions, which are Zernikes
 NbeamCompact = mp.F3.compact.res*mp.F3.Rin*2;
-mp.dm9.compact.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamCompact,mp.dm9.maxRadialOrder,mp.centering,'SymmAxis','y');
+mp.dm9.compact.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamCompact, mp.dm9.maxRadialOrder, mp.centering, 'SymmAxis', 'y');
 mp.dm9.compact.NdmPad = size(mp.dm9.compact.inf_datacube,1);
 mp.dm9.compact.Nbox = mp.dm9.compact.NdmPad; %--the Zernikes take up the full array.
 
 NbeamFull = mp.F3.full.res*mp.F3.Rin*2;
-mp.dm9.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamFull,mp.dm9.maxRadialOrder,mp.centering,'SymmAxis','y');
+mp.dm9.inf_datacube = falco_3fold_symmetry_Zernikes(NbeamFull, mp.dm9.maxRadialOrder, mp.centering, 'SymmAxis','y');
 mp.dm9.NdmPad = size(mp.dm9.inf_datacube,1);
 mp.dm9.Nbox = mp.dm9.NdmPad; %--the Zernikes take up the full array.
 
@@ -41,8 +36,8 @@ mp.dm9.NactTotal = size(mp.dm9.inf_datacube,3);
 mp.dm9.VtoH = mp.dm9.VtoHavg*ones(mp.dm9.NactTotal,1);
 
 %--Lower-left pixel coordinates are all (1,1) since the Zernikes take up the full array.
-mp.dm9.xy_box_lowerLeft = ones(2,mp.dm9.NactTotal);
-mp.dm9.compact.xy_box_lowerLeft = ones(2,mp.dm9.NactTotal);
+mp.dm9.xy_box_lowerLeft = ones(2, mp.dm9.NactTotal);
+mp.dm9.compact.xy_box_lowerLeft = ones(2, mp.dm9.NactTotal);
 
 %--Coordinates for the full FPM array
 if(strcmpi(mp.centering,'pixel')  ) 
@@ -68,45 +63,45 @@ mp.dm9.Vmax = max(mp.t_diel_nm_vec); % maximum thickness (from one actuator, not
 
 %% Apply window to DM9 influence functions
 
-hg_expon = 44; %--Found empirically
-apRad = mp.F3.Rin/(mp.F3.Rin+0.1); %--Found empirically
-OD = 1;
-
-%--Full Model
-Narray = mp.dm9.NdmPad;
-Nbeam = NbeamFull;
-%--Coordinates normalized to the beam radius (not diameter)
-switch mp.centering
-    case 'interpixel'
-        xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
-    case 'pixel'
-        xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
-end
-[XS,YS] = meshgrid(xs);
-RS = sqrt(XS.^2+YS.^2); 
-mask = RS<=1;
-windowFull = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
-
-%--Compact Model
-Narray = mp.dm9.compact.NdmPad;
-Nbeam = NbeamCompact;
-%--Coordinates normalized to the beam radius (not diameter)
-switch mp.centering
-    case 'interpixel'
-        xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
-    case 'pixel'
-        xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
-end
-[XS,YS] = meshgrid(xs);
-RS = sqrt(XS.^2+YS.^2); 
-mask = RS<=1;
-windowCompact = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
-
-
-for di = 1:mp.dm9.NactTotal
-    mp.dm9.inf_datacube(:,:,di) = windowFull.*mp.dm9.inf_datacube(:,:,di);
-    mp.dm9.compact.inf_datacube(:,:,di) = windowCompact.*mp.dm9.compact.inf_datacube(:,:,di);
-end
+% hg_expon = 44; %--Found empirically
+% apRad = mp.F3.Rin/(mp.F3.Rin+0.1); %--Found empirically
+% OD = 1;
+% 
+% %--Full Model
+% Narray = mp.dm9.NdmPad;
+% Nbeam = NbeamFull;
+% %--Coordinates normalized to the beam radius (not diameter)
+% switch mp.centering
+%     case 'interpixel'
+%         xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
+%     case 'pixel'
+%         xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
+% end
+% [XS,YS] = meshgrid(xs);
+% RS = sqrt(XS.^2+YS.^2); 
+% mask = RS<=1;
+% windowFull = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
+% 
+% %--Compact Model
+% Narray = mp.dm9.compact.NdmPad;
+% Nbeam = NbeamCompact;
+% %--Coordinates normalized to the beam radius (not diameter)
+% switch mp.centering
+%     case 'interpixel'
+%         xs = (-(Narray-1)/2:(Narray-1)/2)/Nbeam*2;
+%     case 'pixel'
+%         xs = (-Narray/2:(Narray/2-1))/Nbeam*2;
+% end
+% [XS,YS] = meshgrid(xs);
+% RS = sqrt(XS.^2+YS.^2); 
+% mask = RS<=1;
+% windowCompact = mask.*exp(-(RS/(apRad*OD)).^hg_expon);
+% 
+% 
+% for di = 1:mp.dm9.NactTotal
+%     mp.dm9.inf_datacube(:,:,di) = windowFull.*mp.dm9.inf_datacube(:,:,di);
+%     mp.dm9.compact.inf_datacube(:,:,di) = windowCompact.*mp.dm9.compact.inf_datacube(:,:,di);
+% end
 
 %% DM8 as a disk (piston as only influence function)
 
@@ -123,8 +118,8 @@ mp.dm8.VtoH = mp.dm8.VtoHavg*ones(mp.dm8.NactTotal,1); % Gains: volts to meters 
 mp.dm8.xy_box_lowerLeft = [1;1];
 mp.dm8.compact = mp.dm8;
 if(isfield(mp.dm8,'V')==false); mp.dm8.V = mp.dm8.V0coef*ones(mp.dm8.NactTotal,1); else; mp.dm8.V = mp.DM8V0; end %--Initial DM voltages
-% Don't define extra actuators and time:
-if(mp.F3.Rin~=mp.F3.RinA); error('falco_init_ws.m: Change mp.F3.Rin and mp.F3.RinA to be equal to avoid wasting time.'); end
+% % Don't define extra actuators and time:
+% if(mp.F3.Rin~=mp.F3.RinA); error('falco_init_ws.m: Change mp.F3.Rin and mp.F3.RinA to be equal to avoid wasting time.'); end
 
 % Copy over some common values from DM9:
 mp.dm8.dxi = mp.dm9.dxi; %--Width of a pixel at the FPM in full model (meters)
@@ -136,7 +131,7 @@ mp.dm8.compact.Nbox = mp.dm8.compact.NdmPad;
 
 %--Make or read in DM8 disk for the full model
 FPMgenInputs.pixresFPM = mp.F3.full.res; %--pixels per lambda_c/D
-FPMgenInputs.rhoInner = mp.F3.Rin; % radius of inner FPM amplitude spot (in lambda_c/D)
+FPMgenInputs.rhoInner = mp.F3.RinMetal; % radius of inner FPM amplitude spot (in lambda_c/D)
 FPMgenInputs.rhoOuter = inf; % radius of outer opaque FPM ring (in lambda_c/D)
 FPMgenInputs.FPMampFac = 0; % amplitude transmission of inner FPM spot
 FPMgenInputs.centering = mp.centering;

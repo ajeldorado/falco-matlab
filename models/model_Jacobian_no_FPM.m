@@ -23,9 +23,11 @@
 
 function Gmode = model_Jacobian_no_FPM(mp, iMode, whichDM)
 
+modvar = ModelVariables;
 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
 modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);
+
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 NdmPad = mp.compact.NdmPad;
 surfIntoPhase = 2;
@@ -65,8 +67,7 @@ end
 
 if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
     if ~isfield(mp.P4.compact, 'maskAtP1res')
-        error(['For peak Jacobian calculation, there must be a Lyot stop named mp.P4.compact.maskAtP1res'
-            'that is sampled at the same resolution as the input pupil.'])
+        error('For peak Jacobian calculation, there must be a Lyot stop named mp.P4.compact.maskAtP1res that is sampled at the same resolution as the input pupil.')
     else
         lyotStopReimaged = propcustom_relay(pad_crop(mp.P4.compact.maskAtP1res, NdmPad), NrelayFactor*(mp.Nrelay2to3+mp.Nrelay3to4));
     end
@@ -108,20 +109,19 @@ switch upper(mp.coro)
         t_Ni_vec = 0;
         t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
         pol = 2;
-        [transOuterFPM, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-        
+        [transOuterFPM, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);        
     otherwise
         transOuterFPM = 1;
 end
 
 scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
-switch upper(mp.coro)
-    case{'HLC'}
-        switch mp.layout
-            case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
-                scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
-        end
-end
+% switch upper(mp.coro)
+%     case{'HLC'}
+%         switch mp.layout
+%             case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
+%                 scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+%         end
+% end
 
 
 %--For including DM surface errors (quilting, scalloping, etc.)

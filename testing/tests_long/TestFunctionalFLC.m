@@ -6,11 +6,11 @@
 classdef TestFunctionalFLC < matlab.unittest.TestCase
 %% Properties
 %
-% A presaved file with FALCO parameters was saved and is lodaded to be used
+% A presaved file with FALCO parameters was saved and is loaded to be used
 % by methods. In this case we use the mp.path.falco to addpath to the
 % function being tested.
     properties
-        mp=ConfigurationFLC();
+        mp = ConfigurationFLC();
     end
 
 %% Setup and Teardown Methods
@@ -19,12 +19,14 @@ classdef TestFunctionalFLC < matlab.unittest.TestCase
 %
     methods (TestClassSetup)
         function addPath(testCase)
+            addpath(genpath([testCase.mp.path.falco filesep 'models']));
             addpath(genpath([testCase.mp.path.falco filesep 'setup']));
             addpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
     end
     methods (TestClassTeardown)
         function removePath(testCase)
+            rmpath(genpath([testCase.mp.path.falco filesep 'models']))
             rmpath(genpath([testCase.mp.path.falco filesep 'setup']))
             rmpath(genpath([testCase.mp.path.falco filesep 'lib']));
         end
@@ -40,55 +42,38 @@ classdef TestFunctionalFLC < matlab.unittest.TestCase
 % performs the Wavefront Sensing and Control first, then it test verifies
 % Iraw, Iest, Iinco, out.complexProjection, dm1vp, thput, and
 % out.log10regHist against defined constraints respectively.
-%
+
     methods (Test)     
         function testFunctionalFLC(testCase)
             mp=testCase.mp;
            
             % Perform the Wavefront Sensing and Control
-            mp.runLabel = 'test_FLC';
+            mp.runLabel = 'test_FLC_WFSC';
             [mp, out] = falco_flesh_out_workspace(mp);
             [mp, out] = falco_wfsc_loop(mp, out);
             
             % Tests:
-            Iraw = out.IrawCorrHist(end); % 9.9421e-06
-            %9.9e-6 < Iraw &&  Iraw < 1e-5
-            testCase.verifyGreaterThan(Iraw,9.9e-6)
-            testCase.verifyLessThan(Iraw,1e-5)
+            Iraw = out.IrawCorrHist(end);
+            testCase.verifyTrue(isalmost(Iraw, 1.1157e-05, 3e-7))
             
-            Iest = out.IestScoreHist(end); % 8.3500e-06
-            %8.3e-6 < Iest && Iest < 8.4e-6
-            testCase.verifyGreaterThan(Iest,8.3e-6)
-            testCase.verifyLessThan(Iest,8.4e-6)
+            Iest = out.IestScoreHist(end);
+            testCase.verifyTrue(isalmost(Iest, 8.1474e-06, 3e-7))
             
-            Iinco = out.IincoCorrHist(end); % 1.1000e-05
-            %1.0e-5 < Iinco && Iinco < 1.2e-5
-            testCase.verifyGreaterThan(Iinco,1.0e-5)
-            testCase.verifyLessThan(Iinco,1.2e-2)
+            Iinco = out.IincoCorrHist(end);
+            testCase.verifyTrue(isalmost(Iinco, 1.2834e-05, 3e-7))
             
-            complexProj = out.complexProjection(2,1); % 0.7668
-            testCase.verifyGreaterThan(complexProj, 0.76)
-            testCase.verifyLessThan(complexProj, 0.77)
+            complexProj = out.complexProjection(2, 1);
+            testCase.verifyTrue(isalmost(complexProj, 0.7420, 1e-2))
             
-            dm1pv = out.dm1.Spv(end); % 5.8077e-08
-            %5.80e-8 < dm1pv && dm1pv < 5.82e-8
-            testCase.verifyGreaterThan(dm1pv,5.80e-8)
-            testCase.verifyLessThan(dm1pv,5.82e-8)
+            dm1pv = out.dm1.Spv(end);
+            testCase.verifyTrue(isalmost(dm1pv, 5.6956e-08, 1e-9))
+
+            thput = out.thput(end);
+            testCase.verifyTrue(isalmost(thput, 0.1493, 1e-3))
             
-            thput = out.thput(end); % 0.1496
-            %0.149 < thput && thput < 0.15
-            testCase.verifyGreaterThan(thput,0.149)
-            testCase.verifyLessThan(thput,0.15);
-            
-            %all(out.log10regHist == [-2; -2; -2])
             import matlab.unittest.constraints.EveryElementOf
             import matlab.unittest.constraints.IsEqualTo
             testCase.verifyThat(EveryElementOf(out.log10regHist), IsEqualTo(-2))            
         end       
     end    
 end
-
-
-
-
-

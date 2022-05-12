@@ -72,7 +72,8 @@ if(mp.flagParfor)
         peakVals(ic) = falco_get_offset_peak(mp,coords,ic);
     end
 else
-   for ic = 1:Nc
+    for ic = 1:Nc
+        modvar = ModelVariables;
         modvar.whichSource = 'offaxis';
         modvar.x_offset = coords(ic,1); 
         modvar.y_offset = coords(ic,2); 

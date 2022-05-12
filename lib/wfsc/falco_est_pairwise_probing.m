@@ -4,8 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Estimate the final focal plane electric field via 
-% pair-wise probing and batch process estimation.
+% Estimate the final focal plane electric field via pair-wise probing.
+% The estimator itself can be a batch process or a Kalman filter.
 %
 % INPUTS
 % ------
@@ -38,20 +38,60 @@
 
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
-mp.isProbing = true;
+mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
+Itr = ev.Itr;
 whichDM = mp.est.probe.whichDM;
+
+%% Input checks
+if ~isa(mp.est.probe, 'Probe')
+    error('mp.est.probe must be an instance of class Probe')
+end
+
+% If scheduled, change some aspects of the probe.
+% Empty values mean they are not scheduled.
+if ~isempty(mp.est.probeSchedule.xOffsetVec)
+    if length(mp.est.probeSchedule.xOffsetVec) < mp.Nitr
+        error('mp.est.probeSchedule.xOffsetVec must have enough values for all WFSC iterations.')
+    end
+    mp.est.probe.xOffset = mp.est.probeSchedule.xOffsetVec(Itr);
+end
+
+if ~isempty(mp.est.probeSchedule.yOffsetVec)
+    if length(mp.est.probeSchedule.yOffsetVec) < mp.Nitr
+        error('mp.est.probeSchedule.yOffsetVec must have enough values for all WFSC iterations.')
+    end
+    mp.est.probe.yOffset = mp.est.probeSchedule.yOffsetVec(Itr);
+end
+fprintf('Probe offsets at the DM are (x=%.2f, y=%.2f) actuators.\n', mp.est.probe.xOffset, mp.est.probe.yOffset);
+
+if ~isempty(mp.est.probeSchedule.rotationVec)
+    if length(mp.est.probeSchedule.rotationVec) < mp.Nitr
+        error('mp.est.probeSchedule.rotationVec must have enough values for all WFSC iterations.')
+    end
+    mp.est.probe.rotation = mp.est.probeSchedule.rotationVec(Itr);
+end
+
+if ~isempty(mp.est.probeSchedule.InormProbeVec)
+    if length(mp.est.probeSchedule.InormProbeVec) < mp.Nitr
+        error('mp.est.probeSchedule.InormProbeVec must have enough values for all WFSC iterations.')
+    end
+end
 
 %--If there is a third input, it is the Jacobian structure
 if size(varargin, 2) == 1
     jacStruct = varargin{1};
 end
 
+%%
+
 %--"ev" is passed in only for the Kalman filter. Clear it for the batch
 % process to avoid accidentally using old data.
 switch lower(mp.estimator)
-    case{'pwp-bp', 'pwp-bp-square'}
+    case{'pairwise', 'pairwise-square', 'pwp-bp-square', 'pairwise-rect', 'pwp-bp', }
         clear ev
 end
+
+
 
 % Augment which DMs are used if the probing DM isn't used for control.
 if whichDM == 1 && ~any(mp.dm_ind == 1)
@@ -59,7 +99,6 @@ if whichDM == 1 && ~any(mp.dm_ind == 1)
 elseif whichDM == 2 && ~any(mp.dm_ind == 2)
     mp.dm_ind = [mp.dm_ind(:); 2];
 end
-    
 
 %--Select number of actuators across based on chosen DM for the probing
 if whichDM == 1
@@ -72,9 +111,13 @@ end
 if any(mp.dm_ind == 1);  DM1Vnom = mp.dm1.V;  else; DM1Vnom = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
 if any(mp.dm_ind == 2);  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
-% Definitions:
+% Initialize output arrays
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1+2*Npairs, mp.Nsbp);
+ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+ev.IprobedMean = 0;
+ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, mp.Nsbp);  end
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, mp.Nsbp);  end
 
@@ -87,46 +130,54 @@ for k = 1:Npairs-1
 end
 probePhaseVec = probePhaseVec * pi / Npairs;
 
-if strcmpi(mp.estimator, 'pwp-bp-square')
-    switch lower(mp.est.probe.axis)
-        case 'y'
-            badAxisVec = repmat('y', [2*Npairs, 1]);
-        case 'x'
-            badAxisVec = repmat('x', [2*Npairs, 1]);
-        case{'alt','xy','alternate'}
-            badAxisVec = repmat('x', [2*Npairs, 1]);
-            badAxisVec(3:4:end) = 'y';
-            badAxisVec(4:4:end) = 'y';
-        case 'multi'
-            badAxisVec = repmat('m', [2*Npairs, 1]);
-    end
+switch mp.estimator
+    case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
+        
+        switch lower(mp.est.probe.axis)
+            case 'y'
+                badAxisVec = repmat('y', [2*Npairs, 1]);
+            case 'x'
+                badAxisVec = repmat('x', [2*Npairs, 1]);
+            case{'alt', 'xy', 'alternate'}
+                % Change probe ordering for odd- vs even-numbered
+                % WFSC iterations.
+                if mod(Itr, 2) == 1
+                    badAxisVec = repmat('x', [2*Npairs, 1]);
+                    badAxisVec(3:4:end) = 'y';
+                    badAxisVec(4:4:end) = 'y';
+                else
+                    badAxisVec = repmat('y', [2*Npairs, 1]);
+                    badAxisVec(3:4:end) = 'x';
+                    badAxisVec(4:4:end) = 'x';
+                end
+
+            case 'multi'
+                badAxisVec = repmat('m', [2*Npairs, 1]);
+        end
 end
 
-%% Initialize output arrays
-ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
-ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
-ev.IprobedMean = 0;
-ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 
 %% Get images and perform estimates in each sub-bandpass
 
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
 for iStar = 1:mp.compact.star.count
+
+    modvar = ModelVariables;
     modvar.starIndex = iStar;
+    modvar.whichSource = 'star';
+
 for iSubband = 1:mp.Nsbp
+
+    modvar.sbpIndex = iSubband;
     fprintf('Wavelength: %u/%u ... ', iSubband, mp.Nsbp);
     modeIndex = (iStar-1)*mp.Nsbp + iSubband;
-    fprintf('Mode: %u/%u ... ', modeIndex, mp.jac.Nmode);
-    
-    % Valid for all calls to model_compact.m:
-    modvar.sbpIndex = iSubband;
-    modvar.whichSource = 'star';
+    fprintf('Mode: %u/%u ... ', modeIndex, mp.jac.Nmode);    
 
     %% Measure current contrast level average, and on each side of Image Plane
     % Reset DM commands to the unprobed state:
-    mp.dm1.V = DM1Vnom;
-    mp.dm2.V = DM2Vnom;
+    if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom); end
+    if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom); end
     
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     Iplus  = zeros([mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
@@ -145,13 +196,13 @@ for iSubband = 1:mp.Nsbp
     mp.isProbing = true;
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     
-    if iStar == 1 % Already includes all stars, so don't sum over star loop
+    if iStar == 1 % Image already includes all stars, so don't sum over star loop
         ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
 
         %--Store values for first image and its DM commands
         ev.imageArray(:, :, whichImage, iSubband) = I0;
-        if whichDM == 1;  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
-        if whichDM == 2;  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
+        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
+        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
     end
     
     %--Compute the average Inorm in the scoring and correction regions
@@ -160,13 +211,19 @@ for iSubband = 1:mp.Nsbp
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
-    ev.InormProbeMax = mp.est.InormProbeMax;
-    if mp.flagFiber
-        InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
+    if isempty(mp.est.probeSchedule.InormProbeVec)
+        ev.InormProbeMax = mp.est.InormProbeMax;
+        if mp.flagFiber
+            InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
+        else
+            InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
+        end
+        fprintf('Chosen probe intensity: %.2e \n', InormProbe);
     else
-        InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
+        InormProbe = mp.est.probeSchedule.InormProbeVec(Itr);
+        fprintf('Scheduled probe intensity: %.2e \n', InormProbe);
+
     end
-    fprintf('Chosen probe intensity: %.2e \n',InormProbe);    
 
     %--Perform the probing
     iOdd = 1; iEven = 1; % Initialize index counters
@@ -174,10 +231,10 @@ for iSubband = 1:mp.Nsbp
 
         %--Generate the DM command map for the probe
         switch lower(mp.estimator)
-            case{'pwp-bp', 'pwp-kf'} 
-                probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar);
-            case{'pwp-bp-square'}
-                probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe));
+            case{'pairwise-rect', 'pwp-bp', 'pwp-kf'} 
+                probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar, mp.est.probe.rotation);
+            case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
+                probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe), mp.est.probe.rotation);
         end
         %--Select which DM to use for probing. Allocate probe to that DM
         if whichDM == 1
@@ -187,8 +244,13 @@ for iSubband = 1:mp.Nsbp
             dDM1Vprobe = 0;        
             dDM2Vprobe = probeCmd ./ mp.dm2.VtoH; % Now in volts
         end
-        if whichDM == 1;  mp.dm1.V = DM1Vnom + dDM1Vprobe;  end
-        if whichDM == 2;  mp.dm2.V = DM2Vnom + dDM2Vprobe;  end
+
+        if any(mp.dm_ind == 1)
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom + dDM1Vprobe); 
+        end
+        if any(mp.dm_ind == 2)
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom + dDM2Vprobe);
+        end
 
         %--Take probed image
         if mp.flagFiber
@@ -201,8 +263,8 @@ for iSubband = 1:mp.Nsbp
 
         %--Store probed image and its DM settings
         ev.imageArray(:, :, whichImage, iSubband) = Im;
-        if whichDM == 1;  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
-        if whichDM == 2;  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
+        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
+        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
 
         %--Report results
         probeSign = ['-', '+'];
@@ -246,7 +308,7 @@ for iSubband = 1:mp.Nsbp
 
     %% Perform the estimation
     
-    if(mp.est.flagUseJac) %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
+    if mp.est.flagUseJac %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
         
         dEplus  = zeros(size(Iplus ));
         for iProbe=1:Npairs
@@ -262,9 +324,10 @@ for iSubband = 1:mp.Nsbp
     else %--Get the probe phase from the model and the probe amplitude from the measurements
 
         % For unprobed field based on model:
-        if any(mp.dm_ind == 1); mp.dm1.V = DM1Vnom; end
-        if any(mp.dm_ind == 2); mp.dm2.V = DM2Vnom; end
-        if(mp.flagFiber)
+        if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom); end
+        if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom); end
+
+        if mp.flagFiber
             [~, E0] = model_compact(mp, modvar);
         else
             E0 = model_compact(mp, modvar);
@@ -276,8 +339,11 @@ for iSubband = 1:mp.Nsbp
         Eminus = zeros(size(Iminus));
         for iProbe=1:Npairs
             % For plus probes:
-            if whichDM == 1; mp.dm1.V = DM1Vplus(:, :, iProbe); end 
-            if whichDM == 2; mp.dm2.V = DM2Vplus(:, :, iProbe); end
+            if whichDM == 1
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vplus(:, :, iProbe));
+            elseif whichDM == 2
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vplus(:, :, iProbe));
+            end
             if(mp.flagFiber)
                 [~, Etemp] = model_compact(mp, modvar);
             else
@@ -285,9 +351,12 @@ for iSubband = 1:mp.Nsbp
             end
             Eplus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             % For minus probes:
-            if whichDM == 1;  mp.dm1.V = DM1Vminus(:, :, iProbe); end 
-            if whichDM == 2;  mp.dm2.V = DM2Vminus(:, :, iProbe); end
-            if(mp.flagFiber)
+            if whichDM == 1
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vminus(:, :, iProbe));
+            elseif whichDM == 2
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vminus(:, :, iProbe));
+            end
+            if mp.flagFiber
                 [~, Etemp] = model_compact(mp, modvar);
             else
                 Etemp = model_compact(mp, modvar);
@@ -307,7 +376,9 @@ for iSubband = 1:mp.Nsbp
     
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
 
-if strcmpi(mp.estimator,'pwp-bp') || strcmpi(mp.estimator,'pwp-bp-square') || (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
+if strcmpi(mp.estimator, 'pwp-bp') || strcmpi(mp.estimator, 'pairwise-rect') || ...
+        strcmpi(mp.estimator,'pwp-bp-square') || strcmpi(mp.estimator, 'pairwise') || strcmpi(mp.estimator, 'pairwise-square') ||...
+        (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
     Eest = zeros(mp.Fend.corr.Npix, 1);
     zerosCounter = 0;
     for ipix = 1:mp.Fend.corr.Npix
@@ -384,8 +455,8 @@ if strcmpi(mp.estimator, 'pwp-kf') && (ev.Itr >= mp.est.ItrStartKF)
         % difference the output of model_compact rather than using the
         % Jacobian.
         %--Previous unprobed field based on model:
-        if whichDM == 1;  mp.dm1.V = DM1Vnom - mp.dm1.dV;  end
-        if whichDM == 2;  mp.dm2.V = DM2Vnom - mp.dm2.dV;  end
+        if whichDM == 1;  mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom - mp.dm1.dV); end
+        if whichDM == 2;  mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom - mp.dm2.dV); end
         if mp.flagFiber
             [~, Eprev] = model_compact(mp, modvar);
         else
@@ -471,10 +542,10 @@ ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
 if mp.flagPlot
     Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
     Eest2D(mp.Fend.corr.maskBool) = Eest;
-    figure(701); imagesc(real(Eest2D)); title('real(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
-    figure(702); imagesc(imag(Eest2D)); title('imag(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
-    figure(703); imagesc(log10(abs(Eest2D).^2)); title('abs(Eest)^2', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
-    drawnow;
+    %figure(701); imagesc(real(Eest2D)); title('real(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
+    %figure(702); imagesc(imag(Eest2D)); title('imag(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
+    %figure(703); imagesc(log10(abs(Eest2D).^2)); title('abs(Eest)^2', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
+    %drawnow;
 end
 
 end %--End of loop over the wavelengths

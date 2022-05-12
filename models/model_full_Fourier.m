@@ -45,12 +45,12 @@ if(isfield(mp, 'full'))
     if(isfield(mp.full, 'dm1'))
         if(isfield(mp.full.dm1, 'xc'));  mp.dm1.xc = mp.full.dm1.xc;  end % x-center location of DM1 surface [actuator widths]
         if(isfield(mp.full.dm1, 'yc'));  mp.dm1.yc = mp.full.dm1.yc;  end % y-center location of DM1 surface [actuator widths]
-        if(isfield(mp.full.dm1, 'V0'));  mp.dm1.V = mp.dm1.V + mp.full.dm1.V0;  end % Add some extra starting command to the voltages  [volts]
+        if(isfield(mp.full.dm1, 'V0'));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V + mp.full.dm1.V0);  end % Add some extra starting command to the voltages  [volts]
     end
     if(isfield(mp.full, 'dm2'))
         if(isfield(mp.full.dm2, 'xc'));  mp.dm2.xc = mp.full.dm2.xc;  end % x-center location of DM2 surface [actuator widths]
         if(isfield(mp.full.dm2, 'yc'));  mp.dm2.yc = mp.full.dm2.yc;  end % y-center location of DM2 surface [actuator widths]
-        if(isfield(mp.full.dm2, 'V0'));  mp.dm2.V = mp.dm2.V + mp.full.dm2.V0;  end % Add some extra starting command to the voltages  [volts]
+        if(isfield(mp.full.dm2, 'V0'));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V + mp.full.dm2.V0); end % Add some extra starting command to the voltages  [volts]
     end
 end
 
@@ -120,18 +120,34 @@ switch upper(mp.coro)
         if mp.flagApod == false
             EP3 = pad_crop(EP3, 2^nextpow2(mp.P1.full.Narr)); %--Crop down if there isn't an apodizer mask
         end
-        % Get FPM charge 
-        if(numel(mp.F3.VortexCharge)==1)
-            % single value indicates fully achromatic mask
-            charge = mp.F3.VortexCharge;
+
+        % Get phase scale factor for FPM. 
+        if numel(mp.F3.VortexCharge) == 1
+            % Single value indicates fully achromatic mask
+            phaseScaleFac = mp.F3.phaseScaleFac;
         else
-            % Passing an array for mp.F3.VortexCharge with
-            % corresponding wavelengths mp.F3.VortexCharge_lambdas
-            % represents a chromatic vortex FPM
-            charge = interp1(mp.F3.VortexCharge_lambdas, mp.F3.VortexCharge, lambda, 'linear', 'extrap');
+            % Passing an array for mp.F3.phaseScaleFac with corresponding
+            % wavelengthsin mp.F3.phaseScaleFacLambdas represents a
+            % chromatic phase FPM.
+            phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
         end
-        EP4 = propcustom_mft_Pup2Vortex2Pup(EP3, charge, mp.P1.full.Nbeam/2, 0.3, 5, mp.useGPU, mp.F3.VortexSpotDiam*(mp.lambda0/lambda), mp.F3.VortexSpotOffsets*(mp.lambda0/lambda));  %--MFTs
-        % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
+        
+        inVal = 0.3;
+        outVal = 5;
+        spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
+        spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
+        pixPerLamD = mp.F3.full.res;
+        
+        inputs.type = mp.F3.phaseMaskType;
+        inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
+        inputs.charge = mp.F3.VortexCharge;
+        inputs.phaseScaleFac = phaseScaleFac;
+        inputs.clocking = mp.F3.clocking;
+        inputs.Nsteps = mp.F3.NstepStaircase;
+        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+        EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
+        
+        % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
         if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
         
         EP4 = pad_crop(EP4, mp.P4.full.Narr);
@@ -164,8 +180,9 @@ switch upper(mp.coro)
                 t_Ni_vec = 0;
                 t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
                 pol = 2;
-                [tCoef, ~] = falco_thin_film_material_def(lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
                 transOuterFPM = tCoef;
+                scaleFac = 1;
             case{'fpm_scale'}
                 transOuterFPM = mp.FPM.mask(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
                 scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength

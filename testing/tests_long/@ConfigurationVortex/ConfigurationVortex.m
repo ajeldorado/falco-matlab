@@ -52,16 +52,16 @@ mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image
 
 %% Wavefront Estimation
 
-%--Estimator Options:
+% mp.estimator options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+% - 'pairwise' or 'pairwise-square' for pairwise probing in a square region
+% centered on the star
+% - 'pairwise-rect' for pairwise probing in the specified rectangular regions for
 %    one or more stars
-% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
-% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
-% - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
 mp.estimator = 'perfect';
 
 %--New variables for pairwise probing estimation:
+mp.est.probe = Probe; % initialize object
 mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
@@ -95,12 +95,6 @@ mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annu
 %--DM weighting
 mp.dm1.weight = 1;
 mp.dm2.weight = 1;
-
-%--Voltage range restrictions
-mp.dm1.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
-mp.dm2.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
-mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 1 and 2 [volts] %--NOT ENFORCED YET
-
 
 %% Wavefront Control: Controller Specific
 % Controller options: 
@@ -284,5 +278,8 @@ mp.P4.compact.mask = falco_gen_pupil_Simple(inputs);
 %% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 mp.F3.VortexCharge = 6; %--Charge of the vortex mask
+
+mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+mp.F3.full.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
 
 end

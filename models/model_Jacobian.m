@@ -119,32 +119,85 @@ function jacStruct = model_Jacobian(mp)
     fprintf('...done.  Time = %.2f\n', toc);
 
     
-    %% TIED ACTUATORS
+    %% Adjust Jacobian for Pinned and Tied Actuators
+
+    % DM1
+    if any(mp.dm_ind == 1)
+
+        mp.dm1 = falco_enforce_dm_constraints(mp.dm1);
+        mp.dm1 = falco_update_dm_constraints(mp.dm1);
+        
+        % Zero out the influence of pinned actuators since they can't move.
+        indsPinned = find(ismember(mp.dm1.act_ele, mp.dm1.pinned)); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+        jacStruct.G1(:, indsPinned, :) = 0 * jacStruct.G1(:, indsPinned, :);
+        
+        % Average out the influence of co-moving actuators since they all have to move the same amount. 
+        for iGroup = 1:length(mp.dm1.comovingGroups)
+            
+            indsGroup = find(ismember(mp.dm1.act_ele, mp.dm1.comovingGroups{iGroup})); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+            nGroup = length(indsGroup);
+            meanEffect = mean(jacStruct.G1(:, indsGroup, :), 2);
+            
+            % Assign mean effect to each actuator in the comoving group
+            for iAct = 1:nGroup
+                jacStruct.G1(:, indsGroup(iAct), :) = meanEffect;
+            end
+            
+        end
+
+    end
+
+    % DM2
+    if any(mp.dm_ind == 2)
+
+        mp.dm2 = falco_enforce_dm_constraints(mp.dm2);
+        mp.dm2 = falco_update_dm_constraints(mp.dm2);
+        
+        % Zero out the influence of pinned actuators since they can't move.
+        indsPinned = find(ismember(mp.dm2.act_ele, mp.dm2.pinned)); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+        jacStruct.G2(:, indsPinned, :) = 0 * jacStruct.G2(:, indsPinned, :);
+        
+        % Average out the influence of co-moving actuators since they all have to move the same amount. 
+        for iGroup = 1:length(mp.dm2.comovingGroups)
+            
+            indsGroup = find(ismember(mp.dm2.act_ele, mp.dm2.comovingGroups{iGroup})); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+            nGroup = length(indsGroup);
+            meanEffect = mean(jacStruct.G2(:, indsGroup, :), 2);
+            
+            % Assign mean effect to each actuator in the comoving group
+            for iAct = 1:nGroup
+                jacStruct.G2(:, indsGroup(iAct), :) = meanEffect;
+            end
+            
+        end
+
+    end
     
-    %--Handle tied actuators by adding the 2nd actuator's Jacobian column to
-    %the first actuator's column, and then zeroing out the 2nd actuator's column.
-    if(any(mp.dm_ind==1))
-        mp.dm1 = falco_enforce_dm_constraints(mp.dm1); %-Update the sets of tied actuators
-        for ti=1:size(mp.dm1.tied, 1)
-            Index1all = mp.dm1.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm1.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
-            Index1subset = find(mp.dm1.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
-            Index2subset = find(mp.dm1.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G1(:, Index1subset, :) = jacStruct.G1(:, Index1subset, :) + jacStruct.G1(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G1(:, Index2subset, :) = 0*jacStruct.G1(:, Index2subset, :); % zero out the 2nd actuator's column.
-        end
-    end
-    if(any(mp.dm_ind==2))
-        mp.dm2 = falco_enforce_dm_constraints(mp.dm2); %-Update the sets of tied actuators
-        for ti=1:size(mp.dm2.tied, 1)
-            Index1all = mp.dm2.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm2.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
-            Index1subset = find(mp.dm2.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
-            Index2subset = find(mp.dm2.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G2(:, Index1subset, :) = jacStruct.G2(:, Index1subset, :) + jacStruct.G2(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G2(:, Index2subset, :) = 0*jacStruct.G2(:, Index2subset, :); % zero out the 2nd actuator's column.
-        end
-    end
+%     %--Handle tied actuators by adding the 2nd actuator's Jacobian column to
+%     %the first actuator's column, and then zeroing out the 2nd actuator's column.
+%     if(any(mp.dm_ind==1))
+%         mp.dm1 = falco_enforce_dm_constraints(mp.dm1); %-Update the sets of tied actuators
+%         for ti=1:size(mp.dm1.tied, 1)
+%             Index1all = mp.dm1.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+%             Index2all = mp.dm1.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
+%             Index1subset = find(mp.dm1.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+%             Index2subset = find(mp.dm1.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+%             jacStruct.G1(:, Index1subset, :) = jacStruct.G1(:, Index1subset, :) + jacStruct.G1(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+%             jacStruct.G1(:, Index2subset, :) = 0*jacStruct.G1(:, Index2subset, :); % zero out the 2nd actuator's column.
+%         end
+%     end
+%     if(any(mp.dm_ind==2))
+%         mp.dm2 = falco_enforce_dm_constraints(mp.dm2); %-Update the sets of tied actuators
+%         for ti=1:size(mp.dm2.tied, 1)
+%             Index1all = mp.dm2.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+%             Index2all = mp.dm2.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
+%             Index1subset = find(mp.dm2.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+%             Index2subset = find(mp.dm2.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+%             jacStruct.G2(:, Index1subset, :) = jacStruct.G2(:, Index1subset, :) + jacStruct.G2(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+%             jacStruct.G2(:, Index2subset, :) = 0*jacStruct.G2(:, Index2subset, :); % zero out the 2nd actuator's column.
+%         end
+%     end
+
     if(any(mp.dm_ind==8))
         for ti=1:size(mp.dm8.tied, 1)
             Index1all = mp.dm8.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
