@@ -18,7 +18,7 @@ for Itr = 1:mp.Nitr
     
     
     %% Bookkeeping
-    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
+    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
     
     % update subdir for scicam images
     if isfield(mp, 'tb')
@@ -79,13 +79,7 @@ for Itr = 1:mp.Nitr
     ev = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
-    
-    %% Progress plots (PSF, NI, and DM surfaces)
-    % plot_wfsc_progress also saves images and saves ev probe data
 
-    if Itr == 1; hProgress.master = 1; end % initialize the handle
-    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
-    
     %% Plot the expected and measured delta E-fields
     
     if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
@@ -93,7 +87,15 @@ for Itr = 1:mp.Nitr
     if Itr > 1
         out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
     end
+    % add model E-field to ev for saving
+    ev.Esim = Esim;
+
+    %% Progress plots (PSF, NI, and DM surfaces)
+    % plot_wfsc_progress also saves images and ev probe data
     
+    if Itr == 1; hProgress.master = 1; end % initialize the handle
+    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
+        
     %% Compute and Plot the Singular Mode Spectrum of the Electric Field
     if mp.flagSVD
         out = falco_plot_singular_mode_spectrum_of_Efield(mp, out, jacStruct, ev.Eest, Itr);
