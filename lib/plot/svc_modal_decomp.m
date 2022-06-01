@@ -4,12 +4,13 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to plot phase maps and profiles for various svc designs.
+%--Script to plot phase profiles for various svc designs
+%--and perform modal decompositions.
 
 
 % REVISION HISTORY:
 % --------------
-% Modified on 2022-04-11 by Niyati Desai.
+% Created on 2022-04-11 by Niyati Desai.
 
 %% Demo
 %%Time specifications:
@@ -34,14 +35,14 @@ title('Magnitude Response');
 
 %% Set Parameters
 clear all
-L = 10000;
-N = 2000;
+L = 1E7;
+
 N = 2^nextpow2(L)
 THETA = linspace(-pi,pi,N);
 prof = 0.*THETA;
 scale = 1;
 linVec = {'--',':','-'};
-lambda = 1.05;
+lambda = 1.0;
 
 if lambda < 1
     i = 1;
@@ -88,7 +89,7 @@ title("FFT of Sinusoid")
 
 
 %% vortex
-charge1 = 6;
+charge1 = 8;
 phase1 = charge1*THETA;
 type1 = "Vortex";
 
@@ -126,7 +127,7 @@ myfftvortex = abs(fftshift(fft(t1)))/N;
 
 % classical wrapped
 
-charge2 = 6;
+charge2 = 8;
 domain = (THETA >= 0) & (THETA <= pi);
 phase2(domain) = charge2*rem(THETA(domain),2*pi./charge2);
 domain = (THETA >= -pi) & (THETA < 0);
@@ -263,9 +264,9 @@ myfftmcmc = abs(fftshift(fft(t4)))/N;
 
 
 % staircase
-Nsteps = 6;
-charge5 = 6;
-phase5 = floor(mod((THETA+pi)/(2*pi)*charge5, 1)*Nsteps)/Nsteps*2*pi;
+Nsteps = 8;
+charge5 = 8;
+phase5 = ceil(mod((THETA+pi)/(2*pi)*charge5, 1)*Nsteps)/Nsteps*2*pi;
 
 
 type5 = "Staircase Vortex";
@@ -299,24 +300,27 @@ myfftstaircase = abs(fftshift(fft(t5)))/N;
 
 % plot
 % close all
+
 % figure(12)
-subplot(2,2,1)
+% subplot(2,2,1)
+figure(N+1)
 hold on
 xdata = (0:1:N-1);
 % plot(f,myfftvortex,'LineStyle',linVec{i},'LineWidth',1,'Color',[0 0.5 0.8]);
 plot(f,myfftstaircase,'LineStyle',linVec{i},'LineWidth',1,'Color',[0 0.5 0.8]);
 plot(f,myfftclassical,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0 0.8]);
-% plot(f,myfftfrench,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
-plot(f,myfftmcmc,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
+plot(f,myfftfrench,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
+% plot(f,myfftmcmc,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
 if lambda == 1
     plot(f,myfftvortex,'LineStyle',linVec{i},'LineWidth',1,'Color','k');
 end
 ax = gca;
 xlim([-10 20]);
-ylim([1E-6 10])
+ylim([1E-9 10])
 ax.FontSize = 12;
 ax.LineWidth = 2;
-legend(type5,type2,type4)
+%type1-vortex,type2-classicalwrapped,type3-frenchwrapped,type4-mcmc,type5-staircase
+legend(type5,type2,type3)
 legend('Location','northwest')
 
 
@@ -331,5 +335,5 @@ hold off
 set(gca, 'YScale', 'log')
 ylabel('|C_m|^2'); 
 xlabel('Mode');
-title("Modal Decomposition for Charge 6 SVCs")
+title("Modal Decomposition for Charge 8 SVCs")
 

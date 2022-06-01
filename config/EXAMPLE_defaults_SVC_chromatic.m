@@ -298,8 +298,10 @@ mp.P4.compact.mask = falco_gen_pupil_Simple(inputs);
 % mp.F3.NstepStaircase = 6;
 % mp.F3.clocking = 45;
  
-mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
-mp.F3.full.res = 16; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+% mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+% mp.F3.full.res = 16; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+
+
 
 %For chromaticity (Needs to be cleaned up still)
 chromatic = true;

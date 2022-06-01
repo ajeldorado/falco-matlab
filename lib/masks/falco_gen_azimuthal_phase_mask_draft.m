@@ -5,7 +5,7 @@
 % -------------------------------------------------------------------------
 % function OUT = propcustom_mft_PtoFtoP(IN, FPM, charge, apRad, inVal, outVal, useGPU ) 
 %
-% Generate a 
+% Generate a scalar vortex mask
 %
 % FPM must be an array with dimensions MxM, where M = lambdaOverD*(beam diameter)
 %
@@ -13,7 +13,7 @@
 % ------
 % inputs: structure of inputs parameters
 %   - inputs.type: type of mask. Valid options are 'vortex', 'cos',
-%   'sectors','staircase', 'classicalwrapped', 'frenchwrapped', 'mcmc6'.
+%   'sectors', 'staircase', 'frenchwrapped', 'classicalwrapped', 'mcmc6'.
 %   - inputs.charge: number of 2-pi phase progressions over the 360
 %     degrees of the mask)
 %   - inputs.N: width and height of the output array
@@ -74,72 +74,69 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     Y = reshape(xyAll(2, :), [N, N]);
 
     [THETA, ~] = cart2pol(X, Y);
-
+    
+    
+    
     % make mask 
     switch lower(maskType)
         case 'vortex'
-            mask = exp(1j*charge*THETA);
+            vort = phaseScaleFac*charge*THETA;
+            % Plot the vortex 
+            figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',charge*pi.*[-0.99,-.5,0,0.5,1],...
+         'TickLabels',{num2str(-charge)+"\pi",num2str(-charge/2)+"\pi",'0',num2str(charge/2)+"\pi",num2str(charge)+"\pi"},'FontSize',16); title('Vortex Phase Map','FontSize',16);
+
+            
+            mask = exp(1j*vort);
+            
+            
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(vort)-max(cent), cent]);  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 360;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+%             figure(65); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Vortex Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+
 
         case{'cos'}
-            z_m = besselzero(0,1);
+            z_m = besselzero(0,1,1);
             z_m = z_m(end);
-            mask = exp(1j*z_m*cos(charge*THETA));
+            vort = phaseScaleFac*z_m*cos(charge*THETA);
+            
+            figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[-0.5,-0.25,0,0.25,0.5],...
+         'TickLabels',{"-\pi/2","-\pi/4",0,"\pi/4","\pi/2"},'FontSize',16); title('Cosine Vortex Phase Map','FontSize',16);
+
+            
+            mask = exp(1j*vort);
+            
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(vort)-max(cent), cent]);  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 360;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+%             figure(66); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Cos Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+
+             % Display vortex as a function of radius
+             % Each row in the vortRad matrix represents a radius
+             % Each col in the vortRad matrix represents an angle (coordinate angle in the pupil)
+%            figure(); imagesc(rad2deg(qvec), rvec, vortRad);  colorbar; 
+
 
         case 'sectors'
-%             mask = exp(phaseScaleFac*1j*pi/2*sign(cos(charge*THETA)));
-            % Generate 1D phase profile 
-            Nsamps1D = 100*N; 
-            q = linspace(-pi,pi,Nsamps1D);
-            fpmPhz1D = pi/2*sign(cos(charge*q));
-            
-            % Filter out unwanted modes  
-            mask1D = exp(1j*fpmPhz1D);
-            mask1D_FT = fft(mask1D);
-            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/100;
-            mask1D_FT = mask1D_FT.*filter; 
-            mask1D = ifft(mask1D_FT);
+            vort = phaseScaleFac*pi/2*sign(cos(charge*THETA));
+            figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[-0.5,-0.25,0,0.25,0.5],...
+         'TickLabels',{"-\pi/2","-\pi/4",0,"\pi/4","\pi/2"},'FontSize',16);title('Sector Vortex Phase Map','FontSize',16);
 
-            % Convert to 2D mask 
-            mask = interp1(q,mask1D,THETA,'linear');
-            mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
             
-            disp('generating sector mask')
             
-        case 'staircase'
-            Nsteps = inputs.Nsteps;
-
-            % Generate 1D phase profile 
-            Nsamps1D = 100*N; 
-            q = linspace(-pi,pi,Nsamps1D);
-            fpmPhz1D = ceil(mod((q+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi-pi;
+            mask = exp(1j*vort);
             
-            % Filter out unwanted modes  
-            mask1D = exp(1j*fpmPhz1D);
-            mask1D_FT = fft(mask1D);
-            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/100;
-            mask1D_FT = mask1D_FT.*filter; 
-            mask1D = ifft(mask1D_FT);
-
-            % Convert to 2D mask 
-            mask = interp1(q,mask1D,THETA,'linear');
-            mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
-            
-        case 'classicalwrapped'
-            
-%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
-            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
-            vort = 0.* coords.THETA;
-            domain = (coords.THETA >= 0);
-            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
-            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
-            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
-            mask = exp(phaseScaleFac*1j*vort);
-%             mask = vort;
-
-            figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
-         'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',16);title(' Classical Wrapped Vortex Phase Map','FontSize',16);
-
-
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(vort)-max(cent), cent]);  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 360;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+%             figure(67); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Sectors Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+                    
         case 'frenchwrapped'
             
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
@@ -161,12 +158,67 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             fancyVort(domain) = 8*(coords.THETA(domain)+pi) - 4*pi;
             domain = (coords.THETA > -3*pi/8) & (coords.THETA < 0);
             fancyVort(domain) = 8*(coords.THETA(domain)+pi) - 6*pi;
-            mask = exp(phaseScaleFac*1j*fancyVort);
 
+            %  Display
+            % Plot the vortex 
             figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[-0.99,0,1,2,2.99],...
          'TickLabels',{"-\pi",0,"\pi","2\pi","3\pi"},'FontSize',16);title(' French Wrapped Vortex Phase Map','FontSize',16);
 
-     
+            % Compute the radial profile
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(fancyVort)-max(cent), cent]);  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 360;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(fancyVort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+
+            % Since the vortex phase is radially symmetric, plot a radial average   
+%             figure(); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('French Wrapped Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+            mask = exp(phaseScaleFac*1j*fancyVort);
+            
+            
+        case 'classicalwrapped'
+            
+%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+            mask = exp(phaseScaleFac*1j*vort);
+            
+            figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+         'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',16);title(' Classical Wrapped Vortex Phase Map','FontSize',16);
+
+            
+            
+                        
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(vort)-max(cent), cent]);  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 360;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+%             figure(78); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Classical Wrapped Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+
+        case 'staircase'
+            disp('Using old mask gen')
+            Nsteps = inputs.Nsteps;
+
+            vort = phaseScaleFac*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi;
+            mask = exp(1j*vort);
+            
+            % mask = exp(1j*falco_gen_spiral_staircase(inputs)); % Uses antialiased edges.
+            figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+         'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',16);title(' Staircase Vortex Phase Map','FontSize',16);
+
+            
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(vort)-max(cent), cent])  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 7200;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(vort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+            figure(69); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('Staircase Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+        
         case 'mcmc6'
             
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
@@ -184,24 +236,31 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             fancyVort(domain) = 6*(coords.THETA(domain)+pi)-2*pi;
             domain = (coords.THETA >= -pi) & (coords.THETA < -pi+1.84799568);
             fancyVort(domain) = 6*(coords.THETA(domain)+pi);
-%             mask = fancyVort;
-            mask = exp(phaseScaleFac*1j*fancyVort);
             
-            figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[0,1,2,2.99],...
-         'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',16);title('MCMC Vortex Phase Map','FontSize',16);
 
-            
+            %  Display
+            % Plot the vortex 
+            figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[0,1,2,2.99],...
+         'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',16);title(' MCMC Vortex Phase Map','FontSize',16);
+
+            % Compute the radial profile
+            cent = [N/2+1, N/2+1];     % center for polar transform (center of vort in this case)
+            rmax = min([size(fancyVort)-max(cent), cent]);  % Maximum radius to which transform should be computed
+            radpts = rmax;    % Number of points to interpolate on in radius
+            angpts = 360;     % Number of points to interpolate on in angle
+            [vortRad, rvec, qvec] = polarTransform(fancyVort, cent, rmax, radpts, angpts, 'linear');  % Compute polar transform
+
+            % Since the vortex phase is radially symmetric, plot a radial average   
+%             figure(); plot(qvec, mean(vortRad)/pi); xlim([0 2*pi]);LineWidth = 3;title('MCMC6 Phase Profile'); xlabel('\Theta'); ylabel('G_{0}/ \pi');
+            mask = exp(phaseScaleFac*1j*fancyVort);
+
         otherwise
-            validOptions = "Valid options are 'vortex', 'cos', 'sectors', and 'staircase.";
+            validOptions = "Valid options are 'vortex', 'cos', 'sectors', 'staircase' and 'wrapped'.";
             error('%s is not a valid option for inputs.type. \n%s', inputs.type, validOptions)
     end
-
-    % Apply phase scaling factor to account for chromaticity 
-%     mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
     
-end
-
-function coords = generateCoordinates( N )
+        
+    function coords = generateCoordinates( N )
     %[ X,Y,THETA,RHO,xvals,yvals ] = generateCoordinates( N )
     %   Generates sample centered coordinate system (both cartesian and polar)
 
@@ -217,9 +276,9 @@ function coords = generateCoordinates( N )
         coords.RHO = RHO;
         coords.xvals = xvals;
         coords.yvals = yvals;
-end
-
-function [pt,rvec,qvec] = polarTransform(input_image, center_vec, rmax, numRadPts, numAngles,method)
+    end
+    
+    function [pt,rvec,qvec] = polarTransform(input_image, center_vec, rmax, numRadPts, numAngles,method)
     %[pt,rvec,qvec] = polarTransform(input_image, center_vec, rmax, numRadPts, numAngles,method)
     %   Computes the polar transform of input_image.
     %
@@ -250,9 +309,11 @@ function [pt,rvec,qvec] = polarTransform(input_image, center_vec, rmax, numRadPt
 
         % compute polar transform
         pt = interp2(xvals,yvals,double(input_image),xComp,yComp,method);
-end
 
-function x=besselzero(n,k,kind)
+    end
+
+
+    function x=besselzero(n,k,kind)
         k3=3*k;
         x=zeros(k3,1);
         for j=1:k3
@@ -298,4 +359,7 @@ function x=besselzero(n,k,kind)
             x=inf;    
         end
         end
+    end
+        
 end
+
