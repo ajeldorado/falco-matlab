@@ -4,7 +4,9 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to plot Zernike mode analysis.
+%--Script to quickly plot SVC data.
+%--Originally created to plot Zernike mode analysis.
+%--Also used to generate contrast curves from saved mat files.
 
 
 % REVISION HISTORY:

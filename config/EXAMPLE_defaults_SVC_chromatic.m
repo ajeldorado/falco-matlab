@@ -1,5 +1,9 @@
 % Created on 2022-02-23 by Niyati Desai.
 
+%This defaults draft might not be the best, see defaults_VC_simple
+%Note both have some parameters commented out because they are filled in with
+%SVC mains manually defining them
+
 % Initialize some structures if they don't already exist.
 % Generate or load all parameters to run SVC simulation.
 %% Misc

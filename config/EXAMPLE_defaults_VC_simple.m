@@ -1,5 +1,7 @@
 
 % %--Initialize some structures if they don't already exist
+%Note  some parameters are commented out because they are filled in with
+%SVC mains manually defining them
 
 %% Misc
 
@@ -24,14 +26,14 @@ mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 0;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
 mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 550e-9;    %--Central wavelength of the whole spectral bandpass [meters]
-mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
@@ -134,7 +136,7 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = true;  %--Whether to apply an iris or not
+mp.flagDM2stop = false;  %--Whether to apply an iris or not
 mp.dm2.Dstop = 0.4*34e-3;   %--Diameter of iris [meters]
 
 %--DM separations
@@ -176,10 +178,10 @@ mp.P3.D = 0.4*32e-3;
 mp.P4.D = 0.4*32e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 250;
-mp.P2.compact.Nbeam = 250;
-mp.P3.compact.Nbeam = 250;
-mp.P4.compact.Nbeam = 250;  % P4 must be the same as P1 for Vortex. 
+% mp.P1.compact.Nbeam = 250;
+mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
+mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
+mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -198,10 +200,10 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 350;
-mp.P2.full.Nbeam = 350;
-mp.P3.full.Nbeam = 350;
-mp.P4.full.Nbeam = 350;  % P4 must be the same as P1 for Vortex. 
+% mp.P1.full.Nbeam = 350;
+mp.P2.full.Nbeam = mp.P1.full.Nbeam;
+mp.P3.full.Nbeam = mp.P1.full.Nbeam;
+mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
