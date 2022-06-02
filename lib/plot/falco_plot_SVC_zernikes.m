@@ -21,23 +21,13 @@ bws(1) = 0;
 % xaxis = DFTres(1:length(vals));
 
 xaxis = bws;
-
+stairvals = vals;
 figure
 ax = gca;
 ax.FontSize = 12;
 ax.LineWidth = 2;
-% x.YScale = 'log';
-% hold on
 
 plot(xaxis,vals,'Color',[0 0.5 0.8],'LineWidth',2)
-% hold on
-% % 
-% load classicalcontrasts.mat
-% bws(1) = 0;
-% xaxis = bws;
-% plot(xaxis,vals,'Color',[0 0.5 0.8],'LineWidth',2)
-% legend('Staircase','Classically Wrapped')
-% xlabel('Model Resolution [pix per \lambda/D]');
 xlabel('Bandwidth');
 ylabel('Raw Contrast');
 title('Raw Contrasts for Charge 6 Staircase SVC')
@@ -45,7 +35,7 @@ set(gca, 'YScale', 'log')
 
 
 figure
-load mcmcredocontrasts.mat
+load mcmccontrasts.mat
 bws(1) = 0;
 xaxis = bws;
 mcmcvals = vals;
@@ -56,7 +46,7 @@ title('Raw Contrasts for Charge 6 MCMC SVC')
 set(gca, 'YScale', 'log')
 
 figure
-load classicalredocontrasts.mat
+load classicalcontrasts.mat
 bws(1) = 0;
 xaxis = bws;
 classicvals = vals;
@@ -82,6 +72,7 @@ set(gca, 'YScale', 'log')
 figure
 load frenchcontrasts.mat
 bws(1) = 0;
+frenchvals = vals;
 xaxis = bws;
 plot(xaxis,vals,'Color',[0 0.5 0.8],'LineWidth',2)
 xlabel('Bandwidth');
@@ -94,17 +85,39 @@ figure
 hold on
 xaxis = bws;
 mcmcvort = mcmcvals-vortexvals;
-vortclass = vortexvals-classicvals;
+classvort = classicvals-vortexvals;
+stairvort = stairvals - vortexvals;
 
 plot(bws,mcmcvort,'LineWidth',2)
 hold on
-plot(xaxis,vortclass,'LineWidth',2)
-legend('MCMC-Vortex','Classic-Vortex');
+plot(xaxis,classvort,'LineWidth',2)
+hold on
+plot(xaxis,stairvort,'LineWidth',2)
+legend('MCMC-Vortex','Classic-Vortex', 'Staircase-Vortex');
 xlabel('Bandwidth');
 ylabel('Raw Contrast');
 title('Contrast Differences: Charge 6 SVCs')
 % set(gca, 'YScale', 'log')
 
+
+figure
+hold on
+xaxis = bws;
+
+plot(bws,mcmcvals,'LineWidth',2)
+hold on
+plot(xaxis,classicvals,'LineWidth',2)
+hold on
+plot(xaxis,stairvals,'LineWidth',2)
+hold on
+plot(xaxis,vortexvals,'LineWidth',2)
+hold on
+plot(xaxis,frenchvals,'LineWidth',2)
+legend('MCMC','Classic','Staircase','Vortex','French');
+xlabel('Bandwidth');
+ylabel('Raw Contrast');
+title('Contrasts for various SVCs')
+set(gca, 'YScale', 'log')
 
 % figure
 % ax = gca;

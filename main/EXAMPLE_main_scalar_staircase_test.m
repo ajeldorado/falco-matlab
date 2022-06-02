@@ -31,27 +31,23 @@ vals = [];
 
 for index = 1:length(bws)
     clearvars -except vals bws index nsbps
-
-%     defaults_VC_simple
     
     mp.fracBW = bws(index);       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
     mp.Nsbp = nsbps(index);            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-    mp.P1.full.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
-    mp.P1.compact.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.P1.full.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.P1.compact.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
 
     EXAMPLE_defaults_VC_simple
 %     EXAMPLE_defaults_SVC_chromatic
     
-
     mp.F3.full.res = 8; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
     mp.F3.inVal = 10; % radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m
     mp.F3.outVal = 17;% radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m
     
-    
     mp.F3.VortexCharge = 6;
     mp.F3.NstepStaircase = 6;
 
-    mp.F3.phaseMaskType = 'classicalwrapped';
+    mp.F3.phaseMaskType = 'frenchwrapped';
     mp.F3.VortexSpotDiam = 0.1;
 
     [mp, out] = falco_flesh_out_workspace(mp);
@@ -104,4 +100,14 @@ end
 
 %% Save data
 toc;
+
+figure(3)
+bws(1) = 0;
+xaxis = bws;
+plot(xaxis,vals,'Color',[0 0.5 0.8],'LineWidth',2)
+xlabel('Bandwidth');
+ylabel('Raw Contrast');
+title('Raw Contrasts Bandwidth Dependence for SVC')
+set(gca, 'YScale', 'log')
+
 % save classicalredocontrasts.mat vals bws
