@@ -4,20 +4,17 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-%--Script to perform a loop of SVC simulation runs.
+% Script to perform a loop of SVC simulation runs.
 %
 % Can be used for Contrast measurements or Zernike analysis
 % for varying bandwidths, RMSs, and resolutions
-
-
+%
 % REVISION HISTORY:
 % --------------
 % Created on 2022-02-23 by Niyati Desai.
 
-
-clear all;
-close all;
-
+clear
+close all
 
 RMSs = [0.01,0.1,0.5,1,5,10,15,20]; %in nm
 bws = [0.01,0.01,0.05,0.1,0.15,0.2];
@@ -27,7 +24,7 @@ res = [100,200,300,400,500,600,700]; %found 600 is sufficient
 zernords = [2,3,4,5,6,7,8];
 
 
-for index = 1:2;%length(RMSs) %length(res)
+for index = 1:2 %length(RMSs) %length(res)
     clearvars -except vals bws index nsbps res RMSs zernords
     mp.use_lastJacStruc = false;
     
@@ -37,8 +34,6 @@ for index = 1:2;%length(RMSs) %length(res)
     if ~slowpoke
         %--Library locations. FALCO and PROPER are required. CVX is optional.
         mp.path.falco = '/Users/niyatid/falco-matlab/';  %--Location of FALCO
-        mp.path.proper = '/Users/niyatid/falco-matlab/lib_external/proper/'; %--Location of the MATLAB PROPER library
-        % mp.path.cvx = '~/Documents/MATLAB/cvx/'; %--Location of MATLAB CVX
 
         %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
         mp.path.config = '/Users/niyatid/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
@@ -50,7 +45,6 @@ for index = 1:2;%length(RMSs) %length(res)
 
         % % %--Library locations. FALCO and PROPER are required. CVX is optional.
         mp.path.falco = 'C:\Users\jdllop\Documents\GitHub\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
-        mp.path.proper = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\proper';%'~/Documents/MATLAB/PROPER/'; %--Location of the MATLAB PROPER library
 
         % %%--Output Data Directories ( Comment these lines out to use defaults within falco-matlab/data/ directory.)
         mp.path.config = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\brief';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
@@ -59,7 +53,6 @@ for index = 1:2;%length(RMSs) %length(res)
  
     %%--Add to the MATLAB Path
     addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
-    addpath(genpath(mp.path.proper)) %--Add PROPER library to MATLAB path
 
 
     %% Step 2: Load default model parameters
