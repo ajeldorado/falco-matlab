@@ -122,7 +122,7 @@ switch upper(mp.coro)
         end
 
         % Get phase scale factor for FPM. 
-        if numel(mp.F3.VortexCharge) == 1
+        if numel(mp.F3.phaseScaleFac) == 1
             % Single value indicates fully achromatic mask
             phaseScaleFac = mp.F3.phaseScaleFac;
         else
@@ -145,6 +145,13 @@ switch upper(mp.coro)
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+        
+%         figure(2);
+%         imagesc(angle(fpm));
+%         colorbar; 
+%         colormap(hsv);
+%         caxis([-pi pi])
+%         
         EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         
         % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
