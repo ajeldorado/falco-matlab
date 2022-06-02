@@ -96,48 +96,53 @@ if(mp.flagPlot)
 
             switch lower(mp.layout)
                 case 'fourier'
-                    mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
-                    mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
                     
-                    h_dm8 = subplot(2,3,3);
-                    set(h_dm8, 'OuterPosition', [0.67, 0.46, subplotbox])
-                    imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM8surf*1e9); axis xy equal tight; colormap parula; colorbar;
-                    title('FPM Nickel (nm)','Fontsize',16,'Fontweight','Bold');
-%                     xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
-                    ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
-%                     ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
-                    set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+                    if ~isfield(mp.compact, 'FPMcube')
+                        
+                        mp.DM8surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm8,'compact'); %--Metal layer profile [m]
+                        mp.DM9surf = falco_gen_HLC_FPM_surf_from_cube(mp.dm9,'compact'); %--Dielectric layer profile [m]
+
+                        h_dm8 = subplot(2,3,3);
+                        set(h_dm8, 'OuterPosition', [0.67, 0.46, subplotbox])
+                        imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM8surf*1e9); axis xy equal tight; colormap parula; colorbar;
+                        title('FPM Nickel (nm)','Fontsize',16,'Fontweight','Bold');
+    %                     xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+                        ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+    %                     ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
+                        set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
+
+                        %--Don't plot down to zero in order to see the features
+                        % on the dielectric profile.
+                        if( max(mp.DM9surf(:))==0 )
+                            cutoffFloor = max(mp.DM9surf(:)) -1e-9;
+                        else
+
+                            DM9surfNZ = mp.DM9surf(mp.DM9surf~=0);
+                            DM9surfNZsort = sort(DM9surfNZ(:));
+                            cutoffFrac = 0.04;
+                            cutoffInd = ceil(cutoffFrac*length(DM9surfNZsort));
+                            if(cutoffInd<1)
+                                cutoffInd = 1;
+                            elseif(cutoffInd>length(DM9surfNZsort))
+                                cutoffInd = length(DM9surfNZsort);
+                            end
+                            cutoffFloor = DM9surfNZsort( cutoffInd );
+                            if( cutoffFloor >= max(mp.DM9surf(:)) )
+                                cutoffFloor = 0.9*max(mp.DM9surf(:));
+                            end
+
+                        end
+
+                        h_dm9 = subplot(2,3,6);
+                        set(h_dm9, 'OuterPosition', [0.67, 0.02, subplotbox])
+                        imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM9surf*1e9,1e9*[cutoffFloor,max(mp.DM9surf(:))]); axis xy equal tight; colormap parula; colorbar;
+                        title('FPM Dielectric (nm)','Fontsize',16,'Fontweight','Bold');
+            %             xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
+                        ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
+            %             ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
+                        set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
                     
-                    %--Don't plot down to zero in order to see the features
-                    % on the dielectric profile.
-                    if( max(mp.DM9surf(:))==0 )
-                        cutoffFloor = max(mp.DM9surf(:)) -1e-9;
-                    else
-
-                        DM9surfNZ = mp.DM9surf(mp.DM9surf~=0);
-                        DM9surfNZsort = sort(DM9surfNZ(:));
-                        cutoffFrac = 0.04;
-                        cutoffInd = ceil(cutoffFrac*length(DM9surfNZsort));
-                        if(cutoffInd<1)
-                            cutoffInd = 1;
-                        elseif(cutoffInd>length(DM9surfNZsort))
-                            cutoffInd = length(DM9surfNZsort);
-                        end
-                        cutoffFloor = DM9surfNZsort( cutoffInd );
-                        if( cutoffFloor >= max(mp.DM9surf(:)) )
-                            cutoffFloor = 0.9*max(mp.DM9surf(:));
-                        end
-
                     end
-            
-                    h_dm9 = subplot(2,3,6);
-                    set(h_dm9, 'OuterPosition', [0.67, 0.02, subplotbox])
-                    imagesc(mp.F3.compact.xisDL,mp.F3.compact.xisDL,mp.DM9surf*1e9,1e9*[cutoffFloor,max(mp.DM9surf(:))]); axis xy equal tight; colormap parula; colorbar;
-                    title('FPM Dielectric (nm)','Fontsize',16,'Fontweight','Bold');
-        %             xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
-                    ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
-        %             ylabel(ch,'nm','FontSize',16,'Interpreter','LaTeX');
-                    set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
             end
 
         otherwise

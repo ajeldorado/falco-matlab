@@ -103,8 +103,8 @@ switch lower(mp.layout)
             case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-                if(isfield(mp, 'FPMcubeFull')) %--Load it if stored
-                    %mp.FPM.mask = mp.FPMcubeFull(:, :, ilam);
+                if isfield(mp.full, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
                 else
                     mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'full');
                 end
@@ -112,8 +112,8 @@ switch lower(mp.layout)
             case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-                if(isfield(mp, 'FPMcubeFull')) %--Load it if stored
-                   %mp.FPM.mask = mp.FPMcubeFull(:, :, ilam);
+                if isfield(mp.full, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
                 else %--Otherwise generate it
                     mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'full');
                 end
