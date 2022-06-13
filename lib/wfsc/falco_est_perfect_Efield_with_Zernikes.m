@@ -130,7 +130,8 @@ function Evec = falco_est_perfect_Efield_with_Zernikes_parfor(ni, ind_list, mp)
 
     iMode = ind_list(1,ni); %--Index of the Jacobian mode
     wi = ind_list(2,ni); %--Index of the wavelength in the sub-bandpass
-    
+
+    modvar = ModelVariables;
     modvar.sbpIndex = mp.jac.sbp_inds(iMode);
     modvar.zernIndex = mp.jac.zern_inds(iMode);
     modvar.starIndex = mp.jac.star_inds(iMode);

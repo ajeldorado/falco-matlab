@@ -2,7 +2,8 @@
 
 %% Path to data needed by PROPER model
 
-mp.full.data_dir = '/Users/ajriggs/Documents/Sim/cgi/public/roman_phasec_v1.2.4/phasec_data/';
+%mp.full.data_dir = '/Users/ajriggs/Documents/Sim/cgi/public/roman_phasec_v1.2.4/phasec_data/';
+mp.full.data_dir = '../../cgisim/roman_phasec_v1.2.9a/phasec_data/';
 
 
 %% Misc
@@ -235,10 +236,10 @@ mp.full.pol_conds = [-2, -1, 1, 2]; %--Which polarization states to use when cre
 mp.full.polaxis = 10; % Pol state to use when making a single call to the Roman CGI PROPER model  
 mp.full.use_errors = true;
 
-mp.full.dm1.flatmap = fitsread('dm1_m_spc-wide_band1.fits');
-mp.full.dm2.flatmap = fitsread('dm2_m_spc-wide_band1.fits');
-mp.full.dm1.flatmapNoSPM = fitsread('dm1_m_flat_hlc_band1.fits');
-mp.full.dm2.flatmapNoSPM = fitsread('dm2_m_flat_hlc_band1.fits');
+mp.full.dm1.flatmap = fitsread('/flatmaps/dm1_m_spc-wide_band1.fits');
+mp.full.dm2.flatmap = fitsread('/flatmaps/dm2_m_spc-wide_band1.fits');
+mp.full.dm1.flatmapNoSPM = fitsread('/flatmaps/dm1_m_flat_hlc_band1.fits');
+mp.full.dm2.flatmapNoSPM = fitsread('/flatmaps/dm2_m_flat_hlc_band1.fits');
 
 mp.dm1.biasMap = 50 + mp.full.dm1.flatmap./mp.dm1.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
 mp.dm2.biasMap = 50 + mp.full.dm2.flatmap./mp.dm2.VtoH; %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
