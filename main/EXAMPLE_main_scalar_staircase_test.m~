@@ -35,8 +35,8 @@ vals = [];
 for index = 1:length(RMSs) %length(bws)
     clearvars -except vals bws index nsbps zernords RMSs
     
-    mp.fracBW = bws(6);%index);       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-    mp.Nsbp = nsbps(6);%index);            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+    mp.fracBW = bws(1);%index);       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+    mp.Nsbp = nsbps(1);%index);            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
     mp.P1.full.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.compact.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
 
@@ -50,7 +50,7 @@ for index = 1:length(RMSs) %length(bws)
     mp.F3.VortexCharge = 8;
     mp.F3.NstepStaircase = 8;
 
-    mp.F3.phaseMaskType = 'frenchwrapped';
+    mp.F3.phaseMaskType = 'mcmc6';
     mp.F3.VortexSpotDiam = 0.1;
 
     [mp, out] = falco_flesh_out_workspace(mp);
@@ -127,4 +127,4 @@ toc;
 % set(gca, 'YScale', 'log')
 
 % save classical8contrasts.mat vals bws
-save bbfrench8zernikes.mat vals bws zernords RMSs
+save french8zernikes.mat vals bws zernords RMSs

@@ -19,8 +19,8 @@ clear
 
 % Required Inputs
 inputs.type = 'staircase';
-inputs.N = 200; % number of pixels across the array
-inputs.charge = 4; % charge of the mask (makes most sense for vortex)
+inputs.N = 1000; % number of pixels across the array
+inputs.charge = 6; % charge of the mask (makes most sense for vortex)
 inputs.Nsteps = 6; % number of steps per 2*pi radians. For 'staircase' only
 inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
 
@@ -32,6 +32,8 @@ inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add 
 
 % Check staircase
 mask = falco_gen_azimuthal_phase_mask(inputs);
+
+%%
 figure(1); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 % Check clocking
@@ -56,39 +58,39 @@ clear inputs
 
 % Check vortex
 inputs.type = 'vortex';
-inputs.N = 200; % pixels across the 
+inputs.N = 1000; % pixels across the 
 inputs.charge = 6; % charge of the mask (makes most sense for vortex)
 inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
 mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(4); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
-
-% Check frenchwrapped
+% figure(4); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+% 
+% % Check frenchwrapped
 inputs.type = 'frenchwrapped';
 mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(5); imagesc(angle(mask)); axis xy equal tight; colorbar('FontSize',16); title('French Wrapped Phase Mapping');drawnow;
-
-% Check classicalwrapped
+% figure(5); imagesc(angle(mask)); axis xy equal tight; colorbar('FontSize',16); title('French Wrapped Phase Mapping');drawnow;
+% 
+% % Check classicalwrapped
 inputs.type = 'classicalwrapped';
 mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(6); imagesc(angle(mask)); axis xy equal tight; colorbar; title('Classical Wrapped Phase Mapping');drawnow;
-
-% Check mcmc6
+% figure(6); imagesc(angle(mask)); axis xy equal tight; colorbar; title('Classical Wrapped Phase Mapping');drawnow;
+% 
+% % Check mcmc6
 inputs.type = 'mcmc6';
 mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(7); imagesc(angle(mask)); axis xy equal tight; colorbar; title('MCMC6 Phase Mapping');drawnow;
-
-% Check sectors
-inputs.type = 'sectors';
-mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(8); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
-
-% Check cos
-inputs.type = 'cos';
-mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(9); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
-
-% Check rotated cos
-inputs.clocking = 30; % [degrees]
-inputs.type = 'cos';
-mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(10); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+% figure(7); imagesc(angle(mask)); axis xy equal tight; colorbar; title('MCMC6 Phase Mapping');drawnow;
+% 
+% % Check sectors
+% inputs.type = 'sectors';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
+% figure(8); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+% 
+% % Check cos
+% inputs.type = 'cos';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
+% figure(9); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+% 
+% % Check rotated cos
+% inputs.clocking = 30; % [degrees]
+% inputs.type = 'cos';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
+% figure(10); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;

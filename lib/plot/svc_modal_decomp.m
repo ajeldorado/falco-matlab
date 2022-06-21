@@ -42,7 +42,8 @@ THETA = linspace(-pi,pi,N);
 prof = 0.*THETA;
 scale = 1;
 linVec = {'--',':','-'};
-lambda = 1.0;
+
+lambda = 1.05;
 
 if lambda < 1
     i = 1;
@@ -91,24 +92,26 @@ title("FFT of Sinusoid")
 %% vortex
 charge1 = 8;
 phase1 = charge1*THETA;
-type1 = "Vortex";
+type1 = "Classic Vortex";
 
 
-figure(N)
-subplot(2,2,2)
-plot(THETA,phase1,'Color',[0 0.5 0.8],'LineWidth',2)
-ax = gca;
-ax.FontSize = 12;
-ax.LineWidth = 2;
-xlim([-pi pi]);
-axis on
-ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
-ax.YAxis.TickValues = [-8*pi -6*pi -4*pi -2*pi 0 2*pi 4*pi 6*pi 8*pi];
-xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
-yticklabels({'-8\pi','-6\pi','-4\pi','-2\pi','0','2\pi','4\pi','6\pi','8\pi'})
-xlabel('Theta'); 
-ylabel('Phase');
-title("Charge "+charge1+" "+type1 +" Phase Profile")
+% figure(N)
+% subplot(2,2,2)
+% figure(1);
+% plot(THETA,phase1,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
+% ax = gca;
+% ax.FontSize = 20;
+% ax.LineWidth = 3;
+% xlim([-pi pi]);
+% axis on
+% ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+% ax.YAxis.TickValues = [-8*pi -6*pi -4*pi -2*pi 0 2*pi 4*pi 6*pi 8*pi];
+% xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
+% yticklabels({'-8\pi','-6\pi','-4\pi','-2\pi','0','2\pi','4\pi','6\pi','8\pi'})
+% xlabel('Theta'); 
+% ylabel('Phase');
+% % title("Charge "+charge1+" "+type1 +" Phase Profile")
+% title(type1 +" Phase Profile")
 
 t1 = exp(1j/lambda*phase1);
 
@@ -137,21 +140,23 @@ newphase = [phase2 phase2 phase2 phase2];
 newtheta = linspace(-4*pi,4*pi,N);
 
 
-type2 = "Classically Wrapped Vortex";
-subplot(2,2,3)
-plot(THETA,phase2,'Color',[0.5 0 0.8],'LineWidth',2)
-ax = gca;
-ax.FontSize = 12;
-ax.LineWidth = 2;
-xlim([-pi pi]);
-axis on
-ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
-ax.YAxis.TickValues = [-2*pi 0 2*pi ];
-xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
-yticklabels({'-2\pi','0','2\pi'})
-xlabel('Theta'); 
-ylabel('Phase');
-title("Charge "+charge2+" "+type2 +" Phase Profile")
+type2 = "Sawtooth Vortex";
+% subplot(2,2,3)
+% figure(2);
+% plot(THETA,phase2,'Color',[0.5 0 0.8],'LineWidth',2)
+% ax = gca;
+% ax.FontSize = 20;
+% ax.LineWidth = 3;
+% xlim([-pi pi]);
+% axis on
+% ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+% ax.YAxis.TickValues = [-2*pi 0 2*pi ];
+% xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
+% yticklabels({'-2\pi','0','2\pi'})
+% xlabel('Theta'); 
+% ylabel('Phase');
+% % title("Charge "+charge2+" "+type2 +" Phase Profile")
+% title(type2 +" Phase Profile")
 
 
 
@@ -188,21 +193,23 @@ phase3(domain) = 8*(THETA(domain)+pi)-4*pi;
 domain = (THETA > -3*pi/8) & (THETA < 0);
 phase3(domain) = 8*(THETA(domain)+pi)-6*pi;
 
-type3 = "French Wrapped Vortex";
-subplot(2,2,4)
-plot(THETA,phase3,'Color',[0.5 0.8 0],'LineWidth',2)
-ax = gca;
-ax.FontSize = 12;
-ax.LineWidth = 2;
-xlim([-pi pi]);
-axis on
-ax.XAxis.TickValues = [-pi -5*pi/8 -pi/2 -3*pi/8 0 3*pi/8 pi/2 5*pi/8 pi ];
-ax.YAxis.TickValues = [-pi 0 pi 2*pi 3*pi];
-yticklabels({'-\pi','0','\pi','2\pi','3\pi'})
-xticklabels({'-\pi','-5\pi/8', '-\pi/2','-3\pi/8','0','3\pi/8','\pi/2','5\pi/8','\pi'})
-xlabel('Theta'); 
-ylabel('Phase');
-title("Charge 8 "+type3 +" Phase Profile")
+type3 = "Galicher Vortex";
+% subplot(2,2,4)
+% figure(3);
+% plot(THETA,phase3,'Color',[0.4660, 0.6740, 0.1880],'LineWidth',2)
+% ax = gca;
+% ax.FontSize = 20;
+% ax.LineWidth = 3;
+% xlim([-pi pi]);
+% axis on
+% ax.XAxis.TickValues = [-pi -5*pi/8 -pi/2 -3*pi/8 0 3*pi/8 pi/2 5*pi/8 pi ];
+% ax.YAxis.TickValues = [-pi 0 pi 2*pi 3*pi];
+% yticklabels({'-\pi','0','\pi','2\pi','3\pi'})
+% xticklabels({'-\pi','^{-5\pi}/_{8}','^{-\pi}/_{2}' ,'^{-3\pi}/_{8}','0','^{3\pi}/_{8}','^{\pi}/_{2}','^{5\pi}/_{8}','\pi'})
+% xlabel('Theta'); 
+% ylabel('Phase');
+% % title("Charge 8 "+type3 +" Phase Profile")
+% title(type3 +" Phase Profile")
 
 t3 = exp(1j/lambda*phase3);
 
@@ -233,21 +240,23 @@ domain = (THETA >= -pi) & (THETA < -pi+1.84799568);
 phase4(domain) = 6*(THETA(domain)+pi);
 
 
-type4 = "MCMC Vortex";
-subplot(2,2,4)
-plot(THETA,phase4,'Color',[0.5 0.8 0],'LineWidth',2)
-ax = gca;
-ax.FontSize = 12;
-ax.LineWidth = 2;
-xlim([-pi pi]);
-axis on
-ax.XAxis.TickValues = [-pi -2*pi/5 -1*pi/5 0 3*pi/5 4*pi/5 pi ];
-ax.YAxis.TickValues = [-pi 0 pi 2*pi 3*pi];
-yticklabels({'-\pi','0','\pi','2\pi','3\pi'})
-xticklabels({'-\pi','-2\pi/5','-1\pi/5','0','3\pi/5','4\pi/5','\pi'})
-xlabel('Theta'); 
-ylabel('Phase');
-title("Charge 6 "+type4 +" Phase Profile")
+type4 = "Wrapped Vortex";
+% subplot(2,2,4)
+% figure(4);
+% plot(THETA,phase4,'Color',[0.4660, 0.6740, 0.1880],'LineWidth',2)
+% ax = gca;
+% ax.FontSize = 20;
+% ax.LineWidth = 3;
+% xlim([-pi pi]);
+% axis on
+% ax.XAxis.TickValues = [-pi -2*pi/5 -1*pi/5 0 3*pi/5 4*pi/5 pi ];
+% ax.YAxis.TickValues = [-pi 0 pi 2*pi 3*pi];
+% yticklabels({'-\pi','0','\pi','2\pi','3\pi'})
+% xticklabels({'-\pi','^{-2\pi}/_{5}','^{-\pi}/_{5}','0','^{3\pi}/_{5}','^{4\pi}/_{5}','\pi'})
+% xlabel('Theta'); 
+% ylabel('Phase');
+% % title("Charge 6 "+type4 +" Phase Profile")
+% title(type4 +" Phase Profile")
 
 t4 = exp(1j/lambda*phase4);
 
@@ -266,24 +275,28 @@ myfftmcmc = abs(fftshift(fft(t4)))/N;
 % staircase
 Nsteps = 8;
 charge5 = 8;
-phase5 = ceil(mod((THETA+pi)/(2*pi)*charge5, 1)*Nsteps)/Nsteps*2*pi;
+phase5 = floor(mod((THETA+pi)/(2*pi)*charge5, 1)*Nsteps)/Nsteps*2*pi;
 
 
 type5 = "Staircase Vortex";
-subplot(2,2,2)
-plot(THETA,phase5,'Color',[0 0.5 0.8],'LineWidth',2)
-ax = gca;
-ax.FontSize = 12;
-ax.LineWidth = 2;
-xlim([-pi pi]);
-axis on
-ax.XAxis.TickValues = linspace(-pi,pi,7);
-ax.YAxis.TickValues = [-2*pi 0 2*pi ];
-xticklabels({'-\pi','-2\pi/3','-\pi/3','0','\pi/3','2\pi/3','\pi'})
-yticklabels({'-2\pi','0','2\pi'})
-xlabel('Theta'); 
-ylabel('Phase');
-title("Charge 6 "+type5 +" Phase Profile")
+% subplot(2,2,2)
+% figure(5);
+% plot(THETA,phase5,'Color',[0 0.5 0.8],'LineWidth',2)
+% ax = gca;
+% ax.FontSize = 20;
+% ax.LineWidth = 3;
+% xlim([-pi pi]);
+% ylim([0 2*pi*1.03]);
+% axis on
+% ax.XAxis.TickValues = linspace(-pi,pi,7);
+% ax.YAxis.TickValues = [-2*pi 0 2*pi ];
+% xticklabels({'-\pi','-2\pi/3','-\pi/3','0','\pi/3','2\pi/3','\pi'})
+% yticklabels({'-2\pi','0','2\pi'})
+% xlabel('Theta'); 
+% ylabel('Phase');
+% % title("Charge 6 "+type5 +" Phase Profile")
+% title(type5 +" Phase Profile")
+ 
 
 t5 = exp(1j/lambda*phase5);
 
@@ -298,7 +311,49 @@ myfftstaircase = abs(fftshift(fft(t5)))/N;
 % xlabel('Mode');
 % title("Modal Decomposition for Charge 6 Staircase SVC")
 
-% plot
+%% Plot with stem markers 
+% close all
+figure(N+4)
+hold on
+xdata = (0:1:N-1);
+ax = gca;
+ax.FontSize = 20;
+ax.LineWidth = 2;
+stem(f,myfftvortex,'d','MarkerSize',10,'LineWidth',2,'Color',[0.9290, 0.6940, 0.1250]);
+stem(f,myfftclassical,'s','MarkerSize',20,'LineWidth',2,'Color',[0.5 0 0.8]);
+stem(f,myfftfrench,'MarkerSize',10,'LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
+stem(f,myfftstaircase,'*','MarkerSize',10,'LineWidth',2,'Color',[0 0.5 0.8]);
+% plot(f,myfftmcmc,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
+if lambda == 1
+    stem(f,myfftvortex,'.','LineStyle',linVec{i},'LineWidth',1,'Color','k');
+end
+
+xlim([-2 20]);
+ylim([1E-5 10])
+xticks([0:4:18])
+
+%type1-vortex,type2-classicalwrapped,type3-frenchwrapped,type4-mcmc,type5-staircase
+legend(type1,type2,type3,type5)
+legend('Location','northeast')
+
+
+% line_type = ['-',"--", ":"];
+line_type = ['-', ":"];
+
+% line_names = ["design wavelength", "0.95 lambda factor", "1.05 lambda factor"];
+% line_names = ["design wavelength", "1.05 lambda factor"];
+% for j =1:length(line_type)
+%     plot([NaN NaN], [NaN NaN],line_type(j), 'Color', 'k', 'DisplayName', line_names(j))
+% end
+
+hold off
+set(gca, 'YScale', 'log')
+ylabel('|C_m|^2'); 
+xlabel('Mode');
+title("Modal Decomposition for Charge 8 SVCs")
+
+
+%% plot
 % close all
 
 % figure(12)
@@ -320,13 +375,15 @@ ylim([1E-9 10])
 ax.FontSize = 12;
 ax.LineWidth = 2;
 %type1-vortex,type2-classicalwrapped,type3-frenchwrapped,type4-mcmc,type5-staircase
-legend(type5,type2,type3)
+legend(type1,type5,type2,type3)
 legend('Location','northwest')
 
 
-line_type = ['-',"--", ":"];
+% line_type = ['-',"--", ":"];
+line_type = ['-', ":"];
 
-line_names = ["design wavelength", "0.95 lambda factor", "1.05 lambda factor"];
+% line_names = ["design wavelength", "0.95 lambda factor", "1.05 lambda factor"];
+line_names = ["design wavelength", "1.05 lambda factor"];
 for j =1:length(line_type)
     plot([NaN NaN], [NaN NaN],line_type(j), 'Color', 'k', 'DisplayName', line_names(j))
 end

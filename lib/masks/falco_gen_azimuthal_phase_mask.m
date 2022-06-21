@@ -80,6 +80,10 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
         case 'vortex'
             vort = phaseScaleFac*charge*THETA;
             mask = exp(1j*vort);
+%             
+%             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',charge*pi.*[-0.99,-.5,0,0.5,1],...
+%          'TickLabels',{num2str(-charge)+"\pi",num2str(-charge/2)+"\pi",'0',num2str(charge/2)+"\pi",num2str(charge)+"\pi"},'FontSize',20); title('Classical Vortex Phase Map','FontSize',20);
+
 
 
         case{'cos'}
@@ -126,6 +130,13 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = interp1(q,mask1D,THETA,'linear');
             mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
             
+            
+            vort = phaseScaleFac*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi;
+            
+%             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title(' Staircase Vortex Phase Map','FontSize',20);
+
+            
         case 'classicalwrapped'
             
 %             vort = phaseScaleFac*charge*rem(THETA,pi./4);
@@ -138,7 +149,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = exp(phaseScaleFac*1j*vort);
 
 %             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
-%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',16);title(' Classical Wrapped Vortex Phase Map','FontSize',16);
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title(' Sawtooth Vortex Phase Map','FontSize',20);
 
 
         case 'frenchwrapped'
@@ -165,7 +176,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = exp(phaseScaleFac*1j*fancyVort);
 
 %             figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[-0.99,0,1,2,2.99],...
-%          'TickLabels',{"-\pi",0,"\pi","2\pi","3\pi"},'FontSize',16);title(' French Wrapped Vortex Phase Map','FontSize',16);
+%          'TickLabels',{"-\pi",0,"\pi","2\pi","3\pi"},'FontSize',20);title(' Galicher Wrapped Vortex Phase Map','FontSize',20);
 
      
         case 'mcmc6'
@@ -188,7 +199,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = exp(phaseScaleFac*1j*fancyVort);
             
 %             figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[0,1,2,2.99],...
-%          'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',16);title('MCMC Vortex Phase Map','FontSize',16);
+%          'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',20);title('Wrapped Vortex Phase Map','FontSize',20);
 
             
         otherwise
