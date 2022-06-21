@@ -178,7 +178,7 @@ mp.P3.D = 0.4*32e-3;
 mp.P4.D = 0.4*32e-3;
 
 %--Pupil Plane Resolutions
-% mp.P1.compact.Nbeam = 250;
+mp.P1.compact.Nbeam = 300;
 mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -200,7 +200,7 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-% mp.P1.full.Nbeam = 350;
+mp.P1.full.Nbeam = 300;
 mp.P2.full.Nbeam = mp.P1.full.Nbeam;
 mp.P3.full.Nbeam = mp.P1.full.Nbeam;
 mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 

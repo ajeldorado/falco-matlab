@@ -184,7 +184,7 @@ mp.P3.D = 0.4*32e-3;%mp.P2.D;
 mp.P4.D = 0.4*32e-3;%mp.P2.D;
 
 %--Pupil Plane Resolutions
-% mp.P1.compact.Nbeam = 500;%250;%256;%500; %INCREASE SAMPLING RES HERE
+mp.P1.compact.Nbeam = 600; % INCREASE SAMPLING RES HERE
 mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -206,7 +206,7 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-% mp.P1.full.Nbeam = 500;%350;%500; %mp.P1.compact.Nbeam; %INCREASE SAMPLING RES HERE
+mp.P1.full.Nbeam = 600; %INCREASE SAMPLING RES HERE
 mp.P2.full.Nbeam = mp.P1.full.Nbeam;
 mp.P3.full.Nbeam = mp.P1.full.Nbeam;
 mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
