@@ -18,12 +18,13 @@ for Itr = 1:mp.Nitr
     
     
     %% Bookkeeping
-    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
+    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
     
     % update subdir for scicam images
-    if isfield(mp, 'tb')
-        mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
-    end
+%     if isfield(mp, 'tb')
+%         mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
+%         mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
+%     end
     
     if mp.flagSim
         fprintf('Zernike modes used in this Jacobian:\t');
@@ -103,7 +104,7 @@ for Itr = 1:mp.Nitr
     %% Wavefront Control
     
     % control strategy
-    if isfield(mp, 'funCtrlStrategy')
+    if isfield(mp, 'funCtrlStrategy') && ~isempty(mp.funCtrlStrategy)
         mp = mp.funCtrlStrategy(mp, out, Itr);
     end
     

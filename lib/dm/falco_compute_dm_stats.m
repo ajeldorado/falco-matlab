@@ -11,9 +11,26 @@ function out = falco_compute_dm_stats(mp, out, Itr)
 %--ID and OD of pupil used when computing DM actuation stats [units of pupil diameters]
 OD_pup = 1.0;
 
-%--Compute the DM surfaces
-if(any(mp.dm_ind==1)); DM1surf =  falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);  end
-if(any(mp.dm_ind==2)); DM2surf =  falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);  end
+%--Compute the DM surfaces and their change from the last iteration
+if any(mp.dm_ind == 1)
+    Vnow = mp.dm1.V;
+    DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);
+    Vprev = mp.dm1.V - mp.dm1.dV;
+    mp.dm1.V = Vprev;
+    DM1surfPrev = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm);
+    DM1surfDiff = DM1surf - DM1surfPrev;
+    mp.dm1.V = Vnow; % reset        
+end
+
+if any(mp.dm_ind == 2)
+    Vnow = mp.dm2.V;
+    DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);
+    Vprev = mp.dm2.V - mp.dm2.dV;
+    mp.dm2.V = Vprev;
+    DM2surfPrev = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm);
+    DM2surfDiff = DM2surf - DM2surfPrev;
+    mp.dm2.V = Vnow; % reset
+end
 
 %--Compute coordinates
 if any(mp.dm_ind == 1)
@@ -35,17 +52,11 @@ rmsSurfInd = find(RS>=mp.P1.IDnorm/2 & RS<=OD_pup/2);
 %--Calculate and report updated P-V DM voltages.
 if any(mp.dm_ind == 1)
     out.dm1.Vpv(Itr) = max(mp.dm1.V(:)) - min(mp.dm1.V(:));
-    Vtotal1 = mp.dm1.V + mp.dm1.biasMap;
-    Nrail1 = length(find((Vtotal1 <= mp.dm1.Vmin) | (Vtotal1 >= mp.dm1.Vmax)));
-    fprintf(' DM1 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm1.Vpv(Itr), Nrail1, mp.dm1.NactTotal, 100*Nrail1/mp.dm1.NactTotal); 
-    if(size(mp.dm1.tied, 1) > 0);  fprintf(' DM1 has %d pairs of tied actuators.\n', size(mp.dm1.tied,1));  end  
+    fprintf(' DM1 P-V in volts: %.3f \n', out.dm1.Vpv(Itr)); 
 end
 if any(mp.dm_ind == 2)
     out.dm2.Vpv(Itr) = max(mp.dm2.V(:)) - min(mp.dm2.V(:));
-    Vtotal2 = mp.dm2.V + mp.dm2.biasMap;
-    Nrail2 = length(find((Vtotal2 <= mp.dm2.Vmin) | (Vtotal2 >= mp.dm2.Vmax)));
-    fprintf(' DM2 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm2.Vpv(Itr), Nrail2, mp.dm2.NactTotal, 100*Nrail2/mp.dm2.NactTotal); 
-    if(size(mp.dm2.tied , 1) > 0);  fprintf(' DM2 has %d pairs of tied actuators.\n', size(mp.dm2.tied,1));  end 
+    fprintf(' DM2 P-V in volts: %.3f \n', out.dm2.Vpv(Itr)); 
 end
 if any(mp.dm_ind == 8)
     out.dm8.Vpv(Itr) = (max(max(mp.dm8.V))-min(min(mp.dm8.V)));
@@ -58,16 +69,30 @@ if any(mp.dm_ind == 9)
     fprintf(' DM9 P-V in volts: %.3f\t\t%d/%d (%.2f%%) railed actuators \n', out.dm9.Vpv(Itr), Nrail9,mp.dm9.NactTotal,100*Nrail9/mp.dm9.NactTotal); 
 end
 
-%--Calculate and report updated RMS DM surfaces.
+%--Calculate and report updated P-V and RMS DM surfaces, as well as the
+% change (Delta) in those for the current iteration.
 if any(mp.dm_ind == 1)
-    out.dm1.Spv(Itr) = max(DM1surf(:))-min(DM1surf(:));
+    out.dm1.Spv(Itr) = max(DM1surf(:)) - min(DM1surf(:));
     out.dm1.Srms(Itr) = falco_rms(DM1surf(rmsSurfInd));
-    fprintf(' RMS surface of DM1 = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
+    fprintf(' RMS DM1 surface = %.1f nm\n', 1e9*out.dm1.Srms(Itr))
+    
+    out.dm1.DeltaSpv(Itr) = max(DM1surfDiff(:)) - min(DM1surfDiff(:));
+    out.dm1.DeltaSrms(Itr) = falco_rms(DM1surfDiff(rmsSurfInd));
 end
 if any(mp.dm_ind == 2)
-    out.dm2.Spv(Itr) = max(DM2surf(:))-min(DM2surf(:));
+    out.dm2.Spv(Itr) = max(DM2surf(:)) - min(DM2surf(:));
     out.dm2.Srms(Itr) = falco_rms(DM2surf(rmsSurfInd));
-    fprintf(' RMS surface of DM2 = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
+    fprintf(' RMS DM2 surface = %.1f nm\n', 1e9*out.dm2.Srms(Itr))
+    
+    out.dm2.DeltaSpv(Itr) = max(DM2surfDiff(:)) - min(DM2surfDiff(:));
+    out.dm2.DeltaSrms(Itr) = falco_rms(DM2surfDiff(rmsSurfInd));
+end
+
+if any(mp.dm_ind == 1)
+    fprintf(' Delta RMS DM1 surface = %.1f nm this iteration\n', 1e9*out.dm1.DeltaSrms(Itr))
+end
+if any(mp.dm_ind == 2)
+    fprintf(' Delta RMS DM2 surface = %.1f nm this iteration\n', 1e9*out.dm2.DeltaSrms(Itr))
 end
 
 %--Report pinned and comoving actuators
@@ -87,6 +112,12 @@ if any(mp.dm_ind == 1)
         fprintf(' DM1 has %d co-moving actuators in %d groups.\n', Ncomoving, Ngroups)
     end
     
+    out.dm1.pinned{Itr} = mp.dm1.pinned;
+    out.dm1.Vpinned{Itr} = mp.dm1.Vpinned;
+    out.dm1.comovingGroups{Itr} = mp.dm1.comovingGroups;
+    out.dm1.Npinned(Itr) = Npinned;
+    out.dm1.Ncomoving(Itr) = Ncomoving;
+    
 end
 
 if any(mp.dm_ind == 2)
@@ -105,6 +136,12 @@ if any(mp.dm_ind == 2)
         fprintf(' DM2 has %d co-moving actuators in %d groups.\n', Ncomoving, Ngroups)
     end
     
+    out.dm2.pinned{Itr} = mp.dm2.pinned;
+    out.dm2.Vpinned{Itr} = mp.dm2.Vpinned;
+    out.dm2.comovingGroups{Itr} = mp.dm2.comovingGroups;
+    out.dm2.Npinned(Itr) = Npinned;
+    out.dm2.Ncomoving(Itr) = Ncomoving;
+
 end
 
 end
