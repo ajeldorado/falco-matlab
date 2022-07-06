@@ -141,6 +141,11 @@ end
 % if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
 % if(any(mp.dm_ind==2));  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
 
+%% FPM Errors
+if mp.F3.full.flagErrors
+    mp.F3.full.Eab = mp.F3.full.EabArray(:, :, modvar.sbpIndex, modvar.wpsbpIndex);
+end
+
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
     

@@ -111,6 +111,12 @@ if mp.flagApod
     EP3 = mp.P3.full.mask .* pad_crop(EP3, mp.P3.full.Narr); 
 end
 
+%--Apply errors at the FPM plane before applying the mask
+if mp.F3.full.flagErrors
+    EP3 = pad_crop(EP3, NdmPad);
+    EP3 = propcustom_mft_apply_focal_errors_babinet(EP3, mp.F3.full.Eab, mp.F3.full.EabRes, mp.P1.full.Nbeam);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation from P3 to P4 depends on coronagraph type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
