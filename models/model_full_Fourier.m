@@ -114,7 +114,7 @@ end
 %--Apply errors at the FPM plane before applying the mask
 if mp.F3.full.flagErrors
     EP3 = pad_crop(EP3, NdmPad);
-    EP3 = propcustom_mft_apply_focal_errors_babinet(EP3, mp.F3.full.Eab, mp.F3.full.EabRes, mp.P1.full.Nbeam);
+    EP3 = propcustom_mft_apply_focal_errors_babinet(EP3, mp.F3.full.Eab, mp.F3.full.EabRes*(mp.lambda0/lambda), mp.P1.full.Nbeam);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
