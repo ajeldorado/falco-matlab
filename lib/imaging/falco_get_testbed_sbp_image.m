@@ -1,4 +1,4 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -31,6 +31,8 @@ function normI = falco_get_testbed_sbp_image(mp,si)
             normI = falco_get_gpct_sbp_image(mp,si); 
         case 'DST'
             normI = falco_get_dst_sbp_image(mp,si); 
+        case 'IACT'
+            normI = falco_get_iact_sbp_image(mp,si); 
         %Can put other testbeds or fancy models here
         %case 'WHATEVER'
             %normI = falco_get_whatever_sbp_image(mp,si); 
