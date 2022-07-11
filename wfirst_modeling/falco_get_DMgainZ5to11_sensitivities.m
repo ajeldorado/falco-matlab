@@ -158,6 +158,7 @@ mp.dm1.V = mp.dm1.V + dDM1V;
 %--Get the stellar E-field
 si = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),1);
 wi = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(ilam),2);
+modvar = ModelVariables;
 modvar.sbpIndex   = si;
 modvar.wpsbpIndex = wi;
 mp.full.polaxis = mp.full.pol_conds(ipol);

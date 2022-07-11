@@ -88,13 +88,15 @@ for si=1:mp.Nsbp
     fprintf('Wavelength: %u/%u ... ',si,mp.Nsbp);
 
     % Valid for all calls to model_compact.m:
+    modvar = ModelVariables;
     modvar.sbpIndex = si;
     modvar.whichSource = 'star';
 
     %% Measure current contrast level average, and on each side of Image Plane
     % Reset DM commands to the unprobed state:
-    mp.dm1.V = DM1Vnom;
-    mp.dm2.V = DM2Vnom;
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom);
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom);
+    
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     if(mp.flagLenslet)
         Iplus  = zeros([mp.Fend.Nlens, Npairs]); % Pixels of plus probes' intensities
@@ -152,10 +154,10 @@ for si=1:mp.Nsbp
             dDM2Vprobe = probeCmd./mp.dm1.VtoH; % Now in volts
         end
         if(any(mp.dm_ind==1))
-            mp.dm1.V = DM1Vnom+dDM1Vprobe;
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom+dDM1Vprobe);
         end
         if(any(mp.dm_ind==2))
-            mp.dm2.V = DM2Vnom+dDM2Vprobe;
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom+dDM2Vprobe);
         end
 
         %--Take probed image
@@ -216,10 +218,10 @@ for si=1:mp.Nsbp
 
         % For unprobed field based on model:
         if(any(mp.dm_ind==1))
-            mp.dm1.V = DM1Vnom;
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom);
         end
         if(any(mp.dm_ind==2))
-            mp.dm2.V = DM2Vnom;
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom);
         end
         
         [~,E0] = max(max(model_compact(mp, modvar)));
@@ -230,19 +232,19 @@ for si=1:mp.Nsbp
         for iProbe=1:Npairs
             % For plus probes:
             if(any(mp.dm_ind==1))
-                mp.dm1.V = squeeze(DM1Vplus(:,:,iProbe));
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, squeeze(DM1Vplus(:,:,iProbe)));
             end
             if(any(mp.dm_ind==2))
-                mp.dm2.V = squeeze(DM2Vplus(:,:,iProbe));
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, squeeze(DM2Vplus(:,:,iProbe)));
             end
             [~,Etemp] = max(max(model_compact(mp, modvar)));
             Eplus(:,iProbe) = Etemp;
             % For minus probes:
             if(any(mp.dm_ind==1))
-                mp.dm1.V = squeeze(DM1Vminus(:,:,iProbe));
+                mp.dm1 = falco_set_constrained_voltage(mp.dm1, squeeze(DM1Vminus(:,:,iProbe)));
             end
             if(any(mp.dm_ind==2))
-                mp.dm2.V = squeeze(DM2Vminus(:,:,iProbe));
+                mp.dm2 = falco_set_constrained_voltage(mp.dm2, squeeze(DM2Vminus(:,:,iProbe)));
             end
             [~,Etemp] = max(max(model_compact(mp, modvar)));
             Eminus(:,iProbe) = Etemp;

@@ -25,10 +25,10 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
     showPlots2debug = false; 
 
     D = 2*apRad;
-    pixres = 4;%samples per lambda/D
+    pixres = 4; % samples per lambda/D in coarse-resolution DFT
     
     [NA, ~] = size(IN);
-    NB = pixres*D; 
+    NB = ceil_even(pixres*D); 
     
     [X, Y] = meshgrid(-NB/2:NB/2-1);
     RHO = sqrt(X.^2 + Y.^2);
@@ -56,7 +56,7 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
 
     if showPlots2debug; figure;imagesc(abs(IN));axis image;colorbar; title('pupil'); end
 
-    %% Large scale DFT
+    %% Coarse resolution, full FOV DFT
 
     % Generate central opaque spot
     if diamSpotLamD > 0
@@ -67,19 +67,19 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
         inputs.centering = 'pixel';
         inputs.xOffset = offsetsLamD(1);
         inputs.yOffset = offsetsLamD(2);
-        spot1 = falco_gen_annular_FPM(inputs);
-        spot1 = pad_crop(spot1, NB, 'extrapval', 1);
+        spotCoarse = falco_gen_annular_FPM(inputs);
+        spotCoarse = pad_crop(spotCoarse, NB, 'extrapval', 1);
     else
-        spot1 = 1;
+        spotCoarse = 1;
     end
     
     FP1 = 1/(1*D*pixres)*exp(-1i*2*pi*u1'*x)*IN*exp(-1i*2*pi*x'*u1); 
     if showPlots2debug; figure;imagesc(log10(abs(FP1).^2));axis image;colorbar; title('Large scale DFT'); end
 
-    LP1 = 1/(1*D*pixres)*exp(-1i*2*pi*x'*u1)*(FP1.*spot1.*FPM.*(1-windowMASK1))*exp(-1i*2*pi*u1'*x);
+    LP1 = 1/(1*D*pixres)*exp(-1i*2*pi*x'*u1)*(FP1.*spotCoarse.*FPM.*(1-windowMASK1))*exp(-1i*2*pi*u1'*x);
     if showPlots2debug; figure;imagesc(abs(FP1.*(1-windowMASK1)));axis image;colorbar; title('Large scale DFT (windowed)'); end
     
-    %% Fine sampled DFT
+    %% Fine resolution, smaller FOV DFT
 
     % Generate central opaque spot
     if diamSpotLamD > 0
@@ -90,16 +90,16 @@ function OUT = propcustom_mft_Pup2Vortex2Pup(IN, charge, apRad, inVal, outVal, u
         inputs.centering = 'pixel';
         inputs.xOffset = offsetsLamD(1);
         inputs.yOffset = offsetsLamD(2);
-        spot2 = falco_gen_annular_FPM(inputs);
-        spot2 = pad_crop(spot2, NB, 'extrapval', 1);
+        spotFine = falco_gen_annular_FPM(inputs);
+        spotFine = pad_crop(spotFine, NB, 'extrapval', 1);
     else
-        spot2 = 1;
+        spotFine = 1;
     end
     
     FP2 = 2*outVal/(1*D*NB)*exp(-1i*2*pi*u2'*x)*IN*exp(-1i*2*pi*x'*u2); 
     if showPlots2debug; figure;imagesc(log10(abs(FP2).^2));axis image;colorbar; title('Fine sampled DFT'); end
     FPM = falco_gen_vortex_mask(charge, NB);
-    LP2 = 2*outVal/(1*D*NB)*exp(-1i*2*pi*x'*u2)*(FP2.*spot2.*FPM.*windowMASK2)*exp(-1i*2*pi*u2'*x);        
+    LP2 = 2*outVal/(1*D*NB)*exp(-1i*2*pi*x'*u2)*(FP2.*spotFine.*FPM.*windowMASK2)*exp(-1i*2*pi*u2'*x);        
     if showPlots2debug; figure;imagesc(abs(FP2.*windowMASK2));axis image;colorbar; title('Fine sampled DFT (windowed)'); end
     OUT = LP1 + LP2;
     if showPlots2debug; figure;imagesc(abs(OUT));axis image;colorbar; title('Lyot plane'); end

@@ -4,7 +4,7 @@
 % of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Initialize arrays to store data from each WFSC iteration.
+% Initialize arrays to store performance metrics from each WFSC iteration.
 %
 % INPUTS
 % ------
@@ -16,9 +16,14 @@
 
 function out = falco_init_storage_arrays(mp)
 
-    %--EFC regularization history
+    out.Itr = 1;
     out.Nitr = mp.Nitr;
-    out.log10regHist = zeros(mp.Nitr, 1);
+
+    %--EFC regularization history
+    out.log10regHist = zeros(mp.Nitr, 1);  % Keeping for backwards compatibility
+    out.ctrl.log10regHist = zeros(mp.Nitr, 1);
+    out.ctrl.dmfacHist = zeros(mp.Nitr, 1);    
+    out.ctrl.relinHist = logical(zeros(mp.Nitr, 1));
 
     %--Peak-to-Valley DM voltages
     out.dm1.Vpv = zeros(mp.Nitr, 1);
@@ -37,7 +42,30 @@ function out = falco_init_storage_arrays(mp)
     out.dm2.Srms = zeros(mp.Nitr, 1);
     out.dm8.Srms = zeros(mp.Nitr, 1);
     out.dm9.Srms = zeros(mp.Nitr, 1);
-
+    
+    %--Delta DM Surface Metrics
+    out.dm1.DeltaSpv = zeros(mp.Nitr, 1);
+    out.dm2.DeltaSpv = zeros(mp.Nitr, 1);
+    out.dm1.DeltaSrms = zeros(mp.Nitr, 1);
+    out.dm2.DeltaSrms = zeros(mp.Nitr, 1);
+    
+    %--DM constraints
+    % pinned is the vector of linear indices for dead, railed, or otherwise stuck actuators.
+    % Vpinned is the vector of relative voltages for all pinned actuators.
+    % comovingGroups is the cell array of vectors of (linear indices of) comoving actuator
+    % groups, either because of electrical ties or neighbor rule ties. 
+    out.dm1.pinned = {};
+    out.dm1.Vpinned = {};
+    out.dm1.comovingGroups = {};
+    out.dm1.Npinned = zeros(mp.Nitr, 1);
+    out.dm1.Ncomoving = zeros(mp.Nitr, 1);
+    
+    out.dm2.Vpinned = {};    
+    out.dm2.pinned = {};
+    out.dm2.comovingGroups = {};
+    out.dm2.Npinned = zeros(mp.Nitr, 1);
+    out.dm2.Ncomoving = zeros(mp.Nitr, 1);
+    
     %--Sensitivities Zernike-Mode Perturbations
     Nannuli = size(mp.eval.Rsens, 1);
     Nzern = length(mp.eval.indsZnoll);
@@ -71,7 +99,6 @@ function out = falco_init_storage_arrays(mp)
     
     %--Storage array for throughput at each iteration
     out.thput = zeros(mp.Nitr+1, 1);
-    mp.thput_vec = zeros(mp.Nitr+1, 1);
     
     %--Variables related to final image
     out.Fend.res = mp.Fend.res;
@@ -80,5 +107,7 @@ function out = falco_init_storage_arrays(mp)
     out.Fend.scoreInCorr = mp.Fend.scoreInCorr;
     out.Fend.corr.maskBool = mp.Fend.corr.maskBool;
     out.Fend.score.maskBool = mp.Fend.score.maskBool;
+    
+    out.serialDateVec = zeros(mp.Nitr, 1); % start time of each iteration as a serial date number
 
 end

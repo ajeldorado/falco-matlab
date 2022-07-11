@@ -34,7 +34,15 @@ TestingResults*.txt
 #--CVX license
 **/LICENSE.txt
 
-#
+#--Sync only example files
+roman/*.m
+roman/*.mat
+roman/*.fits
+roman/*.txt
+roman/flatmaps/*.fits
+!roman/EXAMPLE_*.m
+!roman/flatmaps/dm*.fits
+
 wfirst_modeling/defaults_*.m
 wfirst_modeling/main_*.m
 
@@ -130,7 +138,6 @@ docs/**
 **/*.pptx~
 !docs/**/*.pdf
 
-
 #--Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
@@ -188,6 +195,6 @@ PMGIplotter.m
 
 
 !lib/masks/**/*.png
-
+!docs/falco_logo.png
 
 

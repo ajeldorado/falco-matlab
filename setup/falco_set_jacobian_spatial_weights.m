@@ -21,14 +21,14 @@ function mp = falco_set_jacobian_spatial_weights(mp)
 
     %--Spatial weighting matrix
     mp.Wspatial = mp.Fend.corr.mask;
-    if(isempty(mp.WspatialDef)==false)
+    if ~isempty(mp.WspatialDef)
         for kk=1:size(mp.WspatialDef,1)
             Wannulus = 1+(sqrt(mp.WspatialDef(kk,3))-1)*((RHOScompact>=mp.WspatialDef(kk,1)) & (RHOScompact<mp.WspatialDef(kk,2)));
             mp.Wspatial = mp.Wspatial.*Wannulus;
         end
     end
 
-    %--Spatial weighting vector
+    %--Spatial weighting vector (for each star)
     Npix = sum(sum(mp.Fend.corr.maskBool));
 %     mp.WspatialVec = zeros(Npix, mp.jac.Nmode);
 %     for iMode = 1:mp.jac.Nmode
@@ -40,6 +40,6 @@ function mp = falco_set_jacobian_spatial_weights(mp)
         mp.WspatialVec(:, iStar) = mp.jac.star.weights(iStar) * mp.Wspatial(mp.Fend.corr.maskBool); 
     end
 %     mp.WspatialVec = mp.Wspatial(mp.Fend.corr.maskBool); 
-    if(mp.flagFiber && mp.flagLenslet);  mp.WspatialVec = ones(mp.Fend.Nlens,1);  end
+    if(mp.flagFiber && mp.flagLenslet);  mp.WspatialVec = ones(mp.Fend.Nlens, 1);  end
 
 end

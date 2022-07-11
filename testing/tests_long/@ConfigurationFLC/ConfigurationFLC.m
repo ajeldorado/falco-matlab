@@ -44,10 +44,6 @@ mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate
 mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
 mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
-%--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
-mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
-
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 550e-9;    %--Central wavelength of the whole spectral bandpass [meters]
@@ -57,16 +53,16 @@ mp.Nwpsbp = 3;          %--Number of wavelengths to used to approximate an image
 
 %% Wavefront Estimation
 
-%--Estimator Options:
+% mp.estimator options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+% - 'pairwise' or 'pairwise-square' for pairwise probing in a square region
+% centered on the star
+% - 'pairwise-rect' for pairwise probing in the specified rectangular regions for
 %    one or more stars
-% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
-% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
-% - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-mp.estimator = 'pwp-bp-square';
+mp.estimator = 'pairwise';
 
 %--New variables for pairwise probing estimation:
+mp.est.probe = Probe; % initialize object
 mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
@@ -102,12 +98,6 @@ mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annu
 %--DM weighting
 mp.dm1.weight = 1;
 mp.dm2.weight = 1;
-
-%--Voltage range restrictions
-mp.dm1.maxAbsV = 1000;
-mp.dm2.maxAbsV = 1000;
-mp.maxAbsdV = 1000;  %--Max +/- delta voltage step for each actuator for DMs 1 and 2
-
 
 %% Wavefront Control: Controller Specific
 % Controller options: 
@@ -302,6 +292,10 @@ inputs.Nbeam = mp.P4.compact.Nbeam;
 inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
 mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
 
+% For peak Jacobian calculation
+inputs.Nbeam = mp.P1.compact.Nbeam;
+inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
+mp.P4.compact.maskAtP1res = falco_gen_pupil_Simple(inputs); 
 
 %% FPM size
 mp.F3.Rin = 2.8;    % radius of inner hard edge of the focal plane mask [lambda0/D]

@@ -141,8 +141,8 @@ if(any(mp.dm_ind==5)); DM5Vnom = mp.dm5.V; end
 if(any(mp.dm_ind==8)); DM8Vnom = mp.dm8.V(:); end
 if(any(mp.dm_ind==9)); DM9Vnom = mp.dm9.V; end
 
-if(any(mp.dm_ind==1)); mp.dm1.V = DM1Vnom + dDM1V; end
-if(any(mp.dm_ind==2)); mp.dm2.V = DM2Vnom + dDM2V; end
+if(any(mp.dm_ind==1)); mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom + dDM1V); end
+if(any(mp.dm_ind==2)); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom + dDM2V); end
 if(any(mp.dm_ind==5)); mp.dm5.V = DM5Vnom + dDM5V;  end
 if(any(mp.dm_ind==8)); mp.dm8.V(:) = DM8Vnom(:) + dDM8V(:);  end
 if(any(mp.dm_ind==8)); mp.dm9.V = DM9Vnom + dDM9V;  end
