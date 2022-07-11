@@ -70,7 +70,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
     methods (Test)
         function testJacWeightserror1(testCase)
             import matlab.unittest.constraints.Throws
-            %mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = [1, 1, 3];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
@@ -80,7 +79,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
         end
         function testJacWeightserror2(testCase)
             import matlab.unittest.constraints.Throws
-            %mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = [1, 2, 3, 4];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
@@ -89,7 +87,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
             testCase.verifyThat(@() falco_set_jacobian_modal_weights(mp),Throws(?MException))
         end       
         function testJacWeightsinputs1(testCase)
-            %mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = 1;
             mp.jac.Zcoef = 1e-9;
@@ -108,7 +105,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
             testCase.verifyEqual(1,mp.jac.zern_inds);
         end
         function testJacWeightsinputs2(testCase)
-            %mp=testCase.mp;
             mp.estimator = 'perfect';
             mp.jac.zerns = [1, 5, 6];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;
@@ -136,7 +132,6 @@ classdef TestJacWeights < matlab.unittest.TestCase
             testCase.verifyEqual(actSolution8,mp.jac.zern_inds);
         end
         function testJacWeightsinputs3(testCase)
-            %mp=testCase.mp;
             mp.estimator = 'pwp-bp' ;
             mp.jac.zerns = [1, 5, 6];
             mp.jac.Zcoef = [1, 1, 1]*1e-9;

@@ -29,6 +29,9 @@ classdef TestThinFilm < matlab.unittest.TestCase
     methods (Test)    
         function testTransmissionPMGI(testCase)
             % From PMGI_transmission_only.xlsx
+            substrate = 'fs';
+            metal = 'nickel';
+            dielectric = 'pmgi';
             lam = 600e-9;
             d0 = 4*lam;
             aoi = 0;
@@ -36,7 +39,7 @@ classdef TestThinFilm < matlab.unittest.TestCase
             t_Ni_vec = 0;
             t_PMGI_vec = 100e-9;
             pol = 2;
-            [tCoef, ~] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
+            [tCoef, ~] = falco_thin_film_material_def(substrate, metal, dielectric, lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
             T_FALCO = abs(tCoef)^2; % Value from Bala: 0.9431006949; Value from FALCO: 0.94313153
             T_Macleod = 0.9431006949;
 
@@ -47,6 +50,9 @@ classdef TestThinFilm < matlab.unittest.TestCase
         
         function testTransmissionNickel(testCase)
             % From PMGIon95nmNi_aoi10deg_T_sPol.xlsx
+            substrate = 'fs';
+            metal = 'nickel';
+            dielectric = 'pmgi';
             lam = 400e-9;
             d0 = 4*lam;
             aoi = 10;
@@ -54,7 +60,7 @@ classdef TestThinFilm < matlab.unittest.TestCase
             t_Ni_vec = 95e-9;
             t_PMGI_vec = 0;
             pol = 0;
-            [tCoef, ~] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
+            [tCoef, ~] = falco_thin_film_material_def(substrate, metal, dielectric, lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
             T_FALCO = abs(tCoef)^2; % Value from Bala: 0.00087848574  Value from FALCO: 0.000878466587
             T_Macleod = 0.00087848574;
 
@@ -65,6 +71,9 @@ classdef TestThinFilm < matlab.unittest.TestCase
         
         function testTransmissionPMGIonNickel1of2(testCase)
             % From PMGIon95nmNi_aoi10deg_T_sPol.xlsx
+            substrate = 'fs';
+            metal = 'nickel';
+            dielectric = 'pmgi';
             lam = 450e-9;
             d0 = 4*lam;
             aoi = 10;
@@ -72,7 +81,7 @@ classdef TestThinFilm < matlab.unittest.TestCase
             t_Ni_vec = 95e-9;
             t_PMGI_vec = 30e-9;
             pol = 1;
-            [tCoef, ~] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
+            [tCoef, ~] = falco_thin_film_material_def(substrate, metal, dielectric, lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
             T_FALCO = abs(tCoef)^2; % Value from Bala: 0.00118382732,   Value from FALCO: 0.00118379
             T_Macleod = 0.00118382732;
 
@@ -83,6 +92,9 @@ classdef TestThinFilm < matlab.unittest.TestCase
         
         function testTransmissionPMGIonNickel2of2(testCase)
             % From PMGIon95nmPMGI_aoi10deg_T_pPol.xlsx
+            substrate = 'fs';
+            metal = 'nickel';
+            dielectric = 'pmgi';
             lam = 550e-9;
             d0 = 4*lam;
             aoi = 10;
@@ -90,7 +102,7 @@ classdef TestThinFilm < matlab.unittest.TestCase
             t_Ni_vec = 95e-9;
             t_PMGI_vec = 600e-9;
             pol = 1;
-            [tCoef, ~] = falco_thin_film_material_def(lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
+            [tCoef, ~] = falco_thin_film_material_def(substrate, metal, dielectric, lam, aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, d0, pol);
             T_FALCO = abs(tCoef)^2; % Value from Bala: 0.00121675706  Value from FALCO: 0.001216750339
             T_Macleod = 0.00121675706;
             

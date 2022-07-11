@@ -1,5 +1,7 @@
 
 % %--Initialize some structures if they don't already exist
+%Note  some parameters are commented out because they are filled in with
+%SVC mains manually defining them
 
 %% Misc
 
@@ -24,29 +26,29 @@ mp.thput_eval_x = 6; % x location [lambda_c/D] in dark hole at which to evaluate
 mp.thput_eval_y = 0; % y location [lambda_c/D] in dark hole at which to evaluate throughput
 
 %--Where to shift the source to compute the intensity normalization value.
-mp.source_x_offset_norm = 7;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
+mp.source_x_offset_norm = 0;  % x location [lambda_c/D] in dark hole at which to compute intensity normalization
 mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to compute intensity normalization
 
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = 550e-9;    %--Central wavelength of the whole spectral bandpass [meters]
-mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 5;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.fracBW = 0.10;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
-%--Estimator Options:
+% mp.estimator options:
 % - 'perfect' for exact numerical answer from full model
-% - 'pwp-bp' for pairwise probing in the specified rectangular regions for
+% - 'pairwise' or 'pairwise-square' for pairwise probing in a square region
+% centered on the star
+% - 'pairwise-rect' for pairwise probing in the specified rectangular regions for
 %    one or more stars
-% - 'pwp-bp-square' for pairwise probing with batch process estimation in a
-% square region for one star [original functionality of 'pwp-bp' prior to January 2021]
-% - 'pwp-kf' for pairwise probing with Kalman filter [NOT TESTED YET]
-mp.estimator = 'pwp-bp-square';
+mp.estimator = 'pairwise';
 
 %--Variables for pairwise probing estimation:
-mp.est.flagUseJac = true;    % Whether to use the Jacobian to compute the delta electric fields. If false, the outputs of model_compact are differenced instead.
+mp.est.probe = Probe; % initialize object
+% mp.est.flagUseJac = true;    % Whether to use the Jacobian to compute the delta electric fields. If false, the outputs of model_compact are differenced instead.
 mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
@@ -80,12 +82,6 @@ mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annu
 %--DM weighting
 mp.dm1.weight = 1;
 mp.dm2.weight = 1;
-
-%--Voltage range restrictions
-mp.dm1.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
-mp.dm2.maxAbsV = 1000;  %--Max absolute voltage (+/-) for each actuator [volts] %--NOT ENFORCED YET
-mp.maxAbsdV = 1000;     %--Max +/- delta voltage step for each actuator for DMs 1 and 2 [volts] %--NOT ENFORCED YET
-
 
 %% Wavefront Control: Controller Specific
 % Controller options: 
@@ -140,7 +136,7 @@ mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of b
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
 mp.dm1.Dstop = 100e-3;  %--Diameter of iris [meters]
-mp.flagDM2stop = true;  %--Whether to apply an iris or not
+mp.flagDM2stop = false;  %--Whether to apply an iris or not
 mp.dm2.Dstop = 0.4*34e-3;   %--Diameter of iris [meters]
 
 %--DM separations
@@ -182,10 +178,10 @@ mp.P3.D = 0.4*32e-3;
 mp.P4.D = 0.4*32e-3;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 250;
-mp.P2.compact.Nbeam = 250;
-mp.P3.compact.Nbeam = 250;
-mp.P4.compact.Nbeam = 250;  % P4 must be the same as P1 for Vortex. 
+mp.P1.compact.Nbeam = 300;
+mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
+mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
+mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
 
 %--Number of re-imaging relays between pupil planesin compact model. Needed
 %to keep track of 180-degree rotations and (1/1j)^2 factors compared to the
@@ -204,10 +200,10 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 350;
-mp.P2.full.Nbeam = 350;
-mp.P3.full.Nbeam = 350;
-mp.P4.full.Nbeam = 350;  % P4 must be the same as P1 for Vortex. 
+mp.P1.full.Nbeam = 300;
+mp.P2.full.Nbeam = mp.P1.full.Nbeam;
+mp.P3.full.Nbeam = mp.P1.full.Nbeam;
+mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
 
 % mp.F3.full.res = 6;    % sampling of FPM for full model [pixels per lambda0/D]
 
@@ -253,3 +249,30 @@ mp.P4.compact.mask = falco_gen_pupil_Simple(inputs);
 %% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 mp.F3.VortexCharge = 6; %--Charge of the vortex mask
+
+mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+mp.F3.full.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+
+%set phasescalefac
+
+mp.sbp_weights = ones(mp.Nsbp,1);
+if(mp.Nwpsbp==1 && mp.flagSim) %--Set ctrl wavelengths evenly between endpoints (inclusive) of the total bandpass.
+    if(mp.Nsbp==1)
+        mp.sbp_centers = mp.lambda0;
+    else
+        mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
+        mp.sbp_weights(1) = 1/2; %--Give end sub-bands half weighting
+        mp.sbp_weights(end) = 1/2; %--Give end sub-bands half weighting
+    end
+else %--For cases with multiple sub-bands: Choose wavelengths to be at subbandpass centers since the wavelength samples will span to the full extent of the sub-bands.
+    mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
+    mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBWcent2cent/2, 1+mp.fracBWcent2cent/2, mp.Nsbp); %--Space evenly at the centers of the subbandpasses.
+end
+
+
+mp.F3.phaseScaleFacLambdas = mp.sbp_centers
+
+mp.F3.phaseScaleFac = mp.lambda0./ mp.F3.phaseScaleFacLambdas
+
+
+

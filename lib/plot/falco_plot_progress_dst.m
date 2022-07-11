@@ -8,6 +8,17 @@ function handles = falco_plot_progress_dst(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM
 
 tb = mp.tb;
 
+if(Itr==10 || Itr==40)
+    % Clear the dark 
+    disp('Clearing the dark ...');
+    sbp_texp = tb.info.sbp_texp(mp.si_ref);
+    [~,flnm] = sciCam_loadDark(tb,sbp_texp);
+    delete(flnm);
+else
+    disp('Keeping dark ...');
+end
+
+
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
 Icbmin = -10;
@@ -115,7 +126,7 @@ if(mp.flagPlot)
     xlabel('Iteration')
 %     ylabel('Norm. I');
     %if(Itr>2); legend([hl1(mp.si_ref), hl2(mp.si_ref)],'Modulated','Unmodulated');end
-	title('Mean Probed Intensity')
+	title('Mean Mod Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
 
@@ -130,7 +141,7 @@ if(mp.flagPlot)
 %     hold off;
     xlabel('Wavelength (nm)')
 %     legend('Mean Total','Modulated','location','best');
-	title('Mean Probed Intensity')
+	title('Mean Mod Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
 
@@ -194,7 +205,7 @@ end
 
 %%-- Save data
 
-out_dir = [tb.info.OUT_DATA_DIR,'efc_progress/',mp.runLabel,'/'];
+out_dir = fullfile(tb.info.OUT_DATA_DIR,mp.runLabel);
 % Directory to save dat
 if(~exist(out_dir, 'dir'))
     mkdir(out_dir);
@@ -207,32 +218,32 @@ else
     tag = '';
 end
 
-sciCam_fitswrite(tb,Im,[out_dir,'normI_it',num2str(Itr-1),tag,'.fits']);
+sciCam_fitswrite(tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
 
 if(any(mp.dm_ind==1) && Itr==1)
-    sciCam_fitswrite(tb,mp.dm1.biasMap,[out_dir,'dm1_Vbias.fits']);
+    sciCam_fitswrite(tb,mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
 end
 if(any(mp.dm_ind==2) && Itr==1)
-    sciCam_fitswrite(tb,mp.dm2.biasMap,[out_dir,'dm2_Vbias.fits']);
+    sciCam_fitswrite(tb,mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits'));
 end
 
 if(any(mp.dm_ind==1))
-    sciCam_fitswrite(tb,mp.dm1.V,[out_dir,'dm1_V_it',num2str(Itr-1),tag,'.fits']);
-    sciCam_fitswrite(tb,DM1surf,[out_dir,'dm1_model_it',num2str(Itr-1),tag,'.fits']);
+    sciCam_fitswrite(tb,mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
+    sciCam_fitswrite(tb,DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
 end
 if(any(mp.dm_ind==2))
-    sciCam_fitswrite(tb,mp.dm2.V,[out_dir,'dm2_V_it',num2str(Itr-1),tag,'.fits']);
-    sciCam_fitswrite(tb,DM2surf,[out_dir,'dm2_model_it',num2str(Itr-1),tag,'.fits']);
+    sciCam_fitswrite(tb,mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
+    sciCam_fitswrite(tb,DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
 end
 
 
-sciCam_fitswrite(tb,abs(Im_tb.E).^2,[out_dir,'normI_Esens_it',num2str(Itr-1),tag,'.fits']);
-sciCam_fitswrite(tb,angle(Im_tb.E),[out_dir,'phz_Esens_it',num2str(Itr-1),tag,'.fits']);
-sciCam_fitswrite(tb,Im_tb.Iinco,[out_dir,'normI_inco_it',num2str(Itr-1),tag,'.fits']);
+sciCam_fitswrite(tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
+sciCam_fitswrite(tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
+sciCam_fitswrite(tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
-    save([out_dir,'probing_data_',num2str(Itr-1),tag,'.mat'],'ev');
+    save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
 end
 
 % Update the diary 

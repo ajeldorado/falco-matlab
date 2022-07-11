@@ -16,7 +16,7 @@
 % OUTPUTS
 % Ibandavg : band-averaged image in units of normalized intensity
 
-function Ibandavg = falco_get_expected_summed_image(mp,cvar)
+function Ibandavg = falco_get_expected_summed_image(mp, cvar)
 
     %--Initialize variables
     Ibandavg = 0;
@@ -24,6 +24,7 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
     EoldTempVecArray = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
 
     %--Generate the model-based E-field with the new DM setting
+    modvar = ModelVariables;
     for iMode = 1:mp.jac.Nmode    
         modvar.sbpIndex = mp.jac.sbp_inds(iMode);
         modvar.zernIndex = mp.jac.zern_inds(iMode);
@@ -35,8 +36,8 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
     end
     
     %--Revert to the previous DM commands
-    if(any(mp.dm_ind==1));  mp.dm1.V = mp.dm1.V - mp.dm1.dV;  end
-    if(any(mp.dm_ind==2));  mp.dm2.V = mp.dm2.V - mp.dm2.dV;  end
+    if(any(mp.dm_ind==1));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V - mp.dm1.dV);  end
+    if(any(mp.dm_ind==2));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V - mp.dm2.dV);  end
     if(any(mp.dm_ind==3));  mp.dm3.V = mp.dm3.V - mp.dm3.dV;  end
     if(any(mp.dm_ind==4));  mp.dm4.V = mp.dm4.V - mp.dm4.dV;  end
     if(any(mp.dm_ind==5));  mp.dm5.V = mp.dm5.V - mp.dm5.dV;  end
@@ -66,5 +67,4 @@ function Ibandavg = falco_get_expected_summed_image(mp,cvar)
         Ibandavg = Ibandavg +  mp.sbp_weights(sbpIndex)*abs(Eexpected2D).^2;
     end
     
-
 end %--END OF FUNCTION

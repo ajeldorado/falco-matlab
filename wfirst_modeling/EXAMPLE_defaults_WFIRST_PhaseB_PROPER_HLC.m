@@ -195,7 +195,7 @@ mp.d_dm1_dm2 = 1.000;   % distance between DM1 and DM2 [meters]
 
 %--Key Optical Layout Choices
 mp.flagSim = true;      %--Simulation or not
-mp.layout = 'wfirst_phaseb_proper';  %--Which optical layout to use. 'wfirst_phaseb_proper' or 'wfirst_phaseb_simple'
+mp.layout = 'wfirst_phaseb_proper';  %--Which optical layout to use. 'wfirst_phaseb_proper'
 mp.coro = 'HLC';
 mp.flagApod = false;    %--Whether to use an apodizer or not
 mp.flagDMwfe = false;  %--Whether to use BMC DM quilting maps

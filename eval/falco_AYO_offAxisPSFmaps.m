@@ -16,6 +16,7 @@ for ti = 1:length(SepVec)
     mp.maskCore  = 0*mp.Fend.RHOS;
     mp.maskCore(mp.Fend.RHOS<=mp.thput_radius) = 1;
     
+    modvar = ModelVariables;
     modvar.x_offset = mp.thput_eval_x;
     modvar.y_offset = mp.thput_eval_y;
     modvar.sbpIndex = mp.si_ref; 

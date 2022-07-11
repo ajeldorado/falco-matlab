@@ -9,6 +9,7 @@
 
 function [Iout, Ifiber] = falco_sim_image_fiber_eval(mp, x_offset, y_offset)
 
+modvar = ModelVariables;
 modvar.flagGetNormVal = false; % False for all cases
 modvar.whichSource = 'offaxis';    
 modvar.x_offset = x_offset; % mp.thput_eval_x;

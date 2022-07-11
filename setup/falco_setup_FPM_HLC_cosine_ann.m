@@ -12,7 +12,7 @@
 % falco_init_ws.m.
 % ---------------
 
-function mp = falco_setup_FPM_HLC_cosine(mp)
+function mp = falco_setup_FPM_HLC_cosine_ann(mp)
 
 %% DM8 and DM9 (Optimizable FPM) Setup
 

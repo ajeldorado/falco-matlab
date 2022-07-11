@@ -27,10 +27,11 @@ function mp = falco_compute_psf_norm_factor(mp)
 mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2));
 
 %--Initialize Model Normalizations
-mp.Fend.compact.I00 = ones(1,mp.Nsbp); % Initial input before computing
-mp.Fend.eval.I00 = ones(1,mp.Nsbp); % Initial input before computing
-mp.Fend.full.I00 = ones(mp.Nsbp,mp.Nwpsbp); % Initial input before computing
+mp.Fend.compact.I00 = ones(1, mp.Nsbp); % Initial input before computing
+mp.Fend.eval.I00 = ones(1, mp.Nsbp); % Initial input before computing
+mp.Fend.full.I00 = ones(mp.Nsbp, mp.Nwpsbp); % Initial input before computing
 
+modvar = ModelVariables;
 modvar.zernIndex = 1;
 modvar.whichSource = 'star';  
 modvar.starIndex = 1; % Always use first star for image normalization
@@ -111,6 +112,7 @@ end %--END OF FUNCTION
 %--Extra function needed to use parfor (because parfor can have only a
 %  single changing input argument).
 function I00 = model_full_norm_wrapper(li, mp)
+    modvar = ModelVariables;
     modvar.sbpIndex = mp.full.indsLambdaMat(li,1);
     modvar.wpsbpIndex = mp.full.indsLambdaMat(li,2);
     modvar.zernIndex = 1;

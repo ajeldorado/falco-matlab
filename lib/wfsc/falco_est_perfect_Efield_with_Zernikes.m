@@ -39,6 +39,7 @@ function ev = falco_est_perfect_Efield_with_Zernikes(mp)
         end
         
         for iMode=1:mp.jac.Nmode
+            modvar = ModelVariables;
             modvar.sbpIndex = mp.jac.sbp_inds(iMode);
             modvar.zernIndex = mp.jac.zern_inds(iMode);
             modvar.wpsbpIndex = mp.wi_ref;
@@ -88,13 +89,14 @@ function ev = falco_est_perfect_Efield_with_Zernikes(mp)
                 isPiston = (iZernike == 1);
                 if isPiston
                     imageTemp = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-                    imageTemp(mp.Fend.corr.maskBool) = EsubbandMean;
-                    ev.imageArray(:, :, 1, iSubband) = imageTemp;
+                    imageTemp(mp.Fend.corr.maskBool) = abs(EsubbandMean).^2;
+                    ev.imageArray(:, :, 1, iSubband) = imageTemp + ev.imageArray(:, :, 1, iSubband);
                 end
             end
             
         else %--Not done in parallel
             for iMode = 1:mp.jac.Nmode
+                modvar = ModelVariables;
                 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
                 modvar.zernIndex = mp.jac.zern_inds(iMode);
                 modvar.starIndex = mp.jac.star_inds(iMode);
@@ -129,6 +131,7 @@ function Evec = falco_est_perfect_Efield_with_Zernikes_parfor(ni, ind_list, mp)
     iMode = ind_list(1,ni); %--Index of the Jacobian mode
     wi = ind_list(2,ni); %--Index of the wavelength in the sub-bandpass
     
+    modvar = ModelVariables;
     modvar.sbpIndex = mp.jac.sbp_inds(iMode);
     modvar.zernIndex = mp.jac.zern_inds(iMode);
     modvar.starIndex = mp.jac.star_inds(iMode);
