@@ -8,7 +8,7 @@ function handles = falco_plot_progress_iact(handles,mp,Itr,Inorm,Im_tb,DM1surf,D
 
 tb = mp.tb;
 
-if(Itr==3)
+if(Itr==5)
     % Clear the dark 
     disp('Clearing the dark ...');
     sbp_texp = tb.info.sbp_texp(mp.si_ref);
