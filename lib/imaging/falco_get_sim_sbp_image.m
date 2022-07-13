@@ -72,6 +72,6 @@ function Iout = falco_compute_subband_image_component(mp, indexComboArray, iComb
 
     % Apply wavelength weight within subband.
     % Assume polarizations are evenly weighted.
-    Iout = mp.full.lambd a_weights(iWavelength) / length(mp.full.pol_conds) * abs(Estar).^2;
+    Iout = mp.full.lambda_weights(iWavelength) / length(mp.full.pol_conds) * abs(Estar).^2;
     
 end %--END OF FUNCTION

@@ -1,13 +1,25 @@
-function ev = falco_est_ekf_maintenance(mp, ev, varargin
+function ev = falco_est_ekf_maintenance(mp, ev, varargin)
 
 %% This stuff has been copy-pasted
 
 Itr = ev.Itr;
+
 whichDM = mp.est.probe.whichDM;
 
 if ~isa(mp.est.probe, 'Probe')
     error('mp.est.probe must be an instance of class Probe')
 end
+%--If there is a third input, it is the Jacobian structure
+if size(varargin, 2) == 1
+    jacStruct = varargin{1};
+end
+
+% Initialize EKF
+if Itr == 1
+    % TODO: jacStruct doesn't get passer to estimators?
+    [mp, ev, jacStruct] = initialize_ekf_maintenance(mp, ev, jacStruct);
+end
+
 
 
 % Augment which DMs are used if the probing DM isn't used for control.
