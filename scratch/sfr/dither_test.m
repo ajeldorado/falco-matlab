@@ -1,9 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Test dithers to find contrast-dither relationship on IACT.
+% Generate dark zone using preferred method and then run this script.
 %
-%
-%
+% sfr 12072022
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dV_mean = mean(mean(abs(out.dm1.Vall(:,:,end) - out.dm1.Vall(:,:,end-1))));
@@ -25,10 +25,6 @@ si = ceil(mp.Nsbp / 2);
 
 contrast = zeros(50,size(dither,1));
 
-% Take image with intial command
-% image = falco_get_sbp_image(mp,si); % this returns image in contrast units
-% 
-% contrast(:,1) = mean(image(mp.Fend.score.mask));
 
 for i = 1:1:size(dither,1)
     
