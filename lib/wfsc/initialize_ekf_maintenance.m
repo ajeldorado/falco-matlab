@@ -8,8 +8,10 @@ ev.peak_psf_counts = zeros(mp.Nsbp);
 for iSubband = 1:mp.Nsbp
     if mp.flagSim
         ev.peak_psf_counts(si) = tb.info.sbp_texp(si)*tb.info.PSFpeaks(si);
+        ev.e_scaling = sqrt(tb.info.PSFpeaks(si));
     else
         ev.peak_psf_counts(si) = falco_get_sim_sbp_peak_counts(mp, iSubband);
+%         ev.e_scaling = abs(E)
     end
 
 end

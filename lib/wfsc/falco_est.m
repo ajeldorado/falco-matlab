@@ -39,6 +39,8 @@ function ev = falco_est(mp, ev, jacStruct)
 					ev = falco_est_pairwise_probing(mp, ev);
 				end
             end
+        case{'ekf_maintenance'}
+            ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
     end
 
 end
