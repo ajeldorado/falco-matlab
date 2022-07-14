@@ -64,8 +64,8 @@ if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,ev.dither,[mp.dm1.Nact mp.dm1.Na
 % TODO: need to save these commands for each iteration separately
 % TODO: what is controller command? - mp.dm1.dV (make sure sign is right)
 
-mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.Vdrift + DM1Vdither + mp.dm1.dV);
-mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.Vdrift + DM2Vdither + mp.dm2.dV);
+mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.dV);
+mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.dV);
 
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 if Itr > 1
@@ -82,7 +82,8 @@ closed_loop_command = dither + efc_command;
 
 y_measured = zeros(length(mp.Fend.score.mask),mp.Nsbp);
 for iSubband = 1:mp.Nsbp
-    I0 = falco_get_sbp_image(mp, iSubband) * ev.peak_psf_counts(iSubband);
+    ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
+    I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
     y_measured(:,iSubband) = I0(mp.Fend.score.mask);
 
 end
@@ -109,6 +110,9 @@ mp.isProbing = false;
 
 fprintf(' done. Time: %.3f\n',toc);
 
+%% Remove control from DM command so that controller images are correct
+mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither);
+mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither);
 
 
 end

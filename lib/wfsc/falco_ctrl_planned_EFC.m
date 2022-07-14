@@ -26,13 +26,17 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
     % Step 3: Compute the EFC command to use.
     
     %% SFR
-    if mp.Itr > mp.controller.start_iteration
-        mp.ctl.dmfacVec = mp.ctl.dmfacVecOn;
-    elseif mp.Itr == 1
-        mp.ctl.dmfacVecOn = mp.ctl.dmfacVec;
-        mp.ctl.dmfacVec = 0;
-    else
-        mp.ctl.dmfacVec = 0;
+    try
+        if mp.Itr > mp.controller.start_iteration
+            mp.ctl.dmfacVec = mp.ctl.dmfacVecOn;
+        elseif mp.Itr == 1
+            mp.ctl.dmfacVecOn = mp.ctl.dmfacVec;
+            mp.ctl.dmfacVec = 0;
+        else
+            mp.ctl.dmfacVec = 0;
+        end
+    catch
+        
     end
 
     %% Initializations    
