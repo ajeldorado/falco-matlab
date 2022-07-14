@@ -29,7 +29,7 @@ EXAMPLE_defaults_DST_LC_design
 
 %%--Special Computational Settings
 mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
-mp.flagPlot = true;
+mp.flagPlot = false;
 
 %--Record Keeping
 mp.SeriesNum = 1;

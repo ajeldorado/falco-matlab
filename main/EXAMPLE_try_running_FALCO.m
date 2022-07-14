@@ -29,7 +29,7 @@ EXAMPLE_defaults_try_running_FALCO
 
 %%--Special Computational Settings
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-mp.flagPlot = true;
+mp.flagPlot = false;
 
 %--Record Keeping
 mp.SeriesNum = 1;
@@ -37,10 +37,10 @@ mp.TrialNum = 1;
 
 %--Use just 1 wavelength for initial debugging/testing of code
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nsbp = 2;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
-mp.Nitr = 3; %--Number of wavefront control iterations
+mp.Nitr = 5; %--Number of wavefront control iterations
 
 %% Step 4: Generate the label associated with this trial
 
