@@ -79,7 +79,7 @@ ev.G_tot = [G1, G2];
 
 end
 
-function [mp, ev] = initialize_ekf_matrices(mp, ev)
+function ev = initialize_ekf_matrices(mp, ev)
 
 % Below are the defnitions of the EKF matrices. There are multiple EKFs 
 % defined in parallel.
