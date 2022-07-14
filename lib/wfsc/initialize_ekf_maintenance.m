@@ -4,6 +4,7 @@ function [mp, ev, jacStruct] = initialize_ekf_maintenance(mp,ev, jacStruct)
 % Find values to convert images back to counts rather than normalized
 % intensity
 ev.peak_psf_counts = zeros(1,mp.Nsbp);
+ev.e_scaling = zeros(1,mp.Nsbp);
 
 %     sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
 %     numCoadds = tb.info.sbp_numCoadds(si);% Number of coadds to use for each sub-bandpass
@@ -15,7 +16,7 @@ for iSubband = 1:mp.Nsbp
     % potentially set mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si) set to mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
     % to have cleaner setup
     ev.peak_psf_counts(iSubband) = mp.tb.info.sbp_texp(iSubband)*mp.tb.info.PSFpeaks(iSubband);
-    ev.e_scaling = sqrt(mp.tb.info.PSFpeaks(iSubband));
+    ev.e_scaling(iSubband) = sqrt(mp.tb.info.PSFpeaks(iSubband));
 
 end
 
@@ -113,11 +114,12 @@ ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
 for iSubband = 1:1:mp.Nsbp
    
     G_reordered = jacStruct.G_tot(:,:,iSubband);
-    dm_drift_covariance = eye(size(G_reordered,1))*(mp.drift.presumed_dm_std^2);
+    dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);
 
     for i = 0:1:floor(ev.SL/ev.BS)-1
-        ind2 = (i)*ev.BS+1:(i+1)*ev.BS
-        ev.Q(:,:,i+1,iSubband) = G_reordered(:,(i)*ev.BS+1:(i+1)*ev.BS).'*dm_drift_covariance*G_reordered(:,i*ev.BS+1:(i+1)*ev.BS)*mp.tb.info.sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
+%         size(dm_drift_covariance)
+%         size(G_reordered((i)*ev.BS+1:(i+1)*ev.BS,:))
+        ev.Q(:,:,i+1,iSubband) = G_reordered((i)*ev.BS+1:(i+1)*ev.BS,:)*dm_drift_covariance*G_reordered(i*ev.BS+1:(i+1)*ev.BS,:).'*mp.tb.info.sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
     end
 end
 

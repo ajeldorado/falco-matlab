@@ -28,7 +28,7 @@ EXAMPLE_defaults_DST_LC_design
 %% Step 3: Overwrite default values as desired
 %%--Special Computational Settings
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
-mp.flagPlot = true;
+mp.flagPlot = false;
 
 %--Record Keeping
 mp.SeriesNum = 1;
