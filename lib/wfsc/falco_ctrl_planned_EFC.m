@@ -25,6 +25,16 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
     % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
     % Step 3: Compute the EFC command to use.
     
+    %% SFR
+    if mp.Itr > mp.controller.start_iteration
+        mp.ctl.dmfacVec = mp.ctl.dmfacVecOn;
+    elseif mp.Itr == 1
+        mp.ctl.dmfacVecOn = mp.ctl.dmfacVec;
+        mp.ctl.dmfacVec = 0;
+    else
+        mp.ctl.dmfacVec = 0;
+    end
+
     %% Initializations    
     vals_list = allcomb(mp.ctrl.log10regVec,mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
     Nvals = max(size(vals_list,2));
