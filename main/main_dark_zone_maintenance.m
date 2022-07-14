@@ -48,6 +48,9 @@ mp.est.probe.Npairs = 1;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.dither = 8e-5; %--std dev of dither command for random dither [V/sqrt(iter)]
 mp.est.flagUseJac = true;
+% TODO: are these stored somehwhere else?
+mp.est.read_noise = 2; % e-
+mp.est.dark_current = 0.005; % e-/s
 
 %--Controller variables
 % TODO: make maint efc controller?
