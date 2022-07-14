@@ -11,17 +11,11 @@ ev.peak_psf_counts = zeros(1,mp.Nsbp);
 %     PSFpeak_counts = PSFpeak*sbp_texp*numCoadds;
 
 for iSubband = 1:mp.Nsbp
-    if ~mp.flagSim
-        % potentially set mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si) set to mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
-        % to have cleaner setup
-        ev.peak_psf_counts(si) = mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
-        ev.e_scaling = sqrt(mp.tb.info.PSFpeaks(si));
-    else
-        % TODO: update this
-        ev.peak_psf_counts(si) = mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si); %[counts/px/s]
-%         ev.peak_psf_counts(si) = falco_get_sim_sbp_peak_counts(mp, iSubband);
-        ev.e_scaling = sqrt(mp.detector.peakFluxVec(si));
-    end
+
+    % potentially set mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si) set to mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
+    % to have cleaner setup
+    ev.peak_psf_counts(si) = mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
+    ev.e_scaling = sqrt(mp.tb.info.PSFpeaks(si));
 
 end
 
@@ -141,7 +135,7 @@ for iSubband = 1:1:mp.Nsbp
     % should do better.
     % If an estimate is availible from stroke minimization in a brighter setting:
     try %paths.E_estimated_filenames(k)
-        E_hat = ev.Eest(:,iSubband); % assuming it is scaled (units: contrast)
+        E_hat = mp.est.Eest(:,iSubband) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)); % assuming it is scaled (units: contrast)
     catch
         E_hat = zeros(ev.SL/ev.BS,mp.Nsbp);
     end
@@ -149,15 +143,15 @@ for iSubband = 1:1:mp.Nsbp
 
     % UPDATE EXPOSURE TIME HERE ? ****************************************
     % Save initial ev state:
-    ev.x_hat0(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(ev.exposure_time_coron);
-    ev.x_hat0(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(ev.exposure_time_coron);
+    ev.x_hat0(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
+    ev.x_hat0(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
 
     % Optional: save initial state for debugging
     % hicat.util.write_fits(x_hat0, os.path.join(initial_path, f"x_hat0_{int(wavelength)}nm.fits"))
 
     % The EKF state is scaled such that the intensity is measured in photons:
-    ev.x_hat(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(ev.exposure_time_coron);
-    ev.x_hat(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(ev.exposure_time_coron);
+    ev.x_hat(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
+    ev.x_hat(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
  end
 
 end

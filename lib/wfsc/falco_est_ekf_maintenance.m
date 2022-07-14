@@ -58,8 +58,8 @@ mp = falco_drift_injection(mp);
 %% Get dither command
 % Is this if else necessary?
 
-if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,ev.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
-if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,ev.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
+if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
 %% Set total command for estimator image
 % TODO: need to save these commands for each iteration separately
@@ -142,10 +142,10 @@ function [ev] = ekf_estimate(mp, ev, y_measured, closed_loop_command)
 for si = 1:1:mp.Nsbp
 
     %--Estimate of the closed loop electric field:
-    x_hat_CL = ev.x_hat(:,si) + (jacStruct.G_tot(:,:,si).'*ev.e_scaling(si))*sqrt(ev.exposure_time_coron)*closed_loop_command;
+    x_hat_CL = ev.x_hat(:,si) + (jacStruct.G_tot(:,:,si).'*ev.e_scaling(si))*sqrt(mp.tb.info.sbp_texp(iSubband))*closed_loop_command;
 
     %--Estimate of the measurement:
-    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.dark_current*ev.exposure_time_coron);
+    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.dark_current*mp.tb.info.sbp_texp(iSubband));
 
     ev.R(ev.R_indices) = reshape(y_hat + (ev.read_noise)^2,size(ev.R(ev.R_indices)));
 
