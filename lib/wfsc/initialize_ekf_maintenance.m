@@ -14,8 +14,8 @@ for iSubband = 1:mp.Nsbp
 
     % potentially set mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si) set to mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
     % to have cleaner setup
-    ev.peak_psf_counts(si) = mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
-    ev.e_scaling = sqrt(mp.tb.info.PSFpeaks(si));
+    ev.peak_psf_counts(iSubband) = mp.tb.info.sbp_texp(iSubband)*mp.tb.info.PSFpeaks(iSubband);
+    ev.e_scaling = sqrt(mp.tb.info.PSFpeaks(iSubband));
 
 end
 
@@ -40,8 +40,8 @@ function jacStruct = rearrange_jacobians(jacStruct,mp)
 % assume we are max using 2 DMs for estimation
 % jacStruct.G_tot = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele*active_dms(1) + mp.dm2.Nele*active_dms(2),Nsbp);
 
-G1 = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele,Nsbp);
-G2 = zeros(2*size(jacStruct.G1,1),mp.dm2.Nele,Nsbp);
+G1 = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele,mp.Nsbp);
+G2 = zeros(2*size(jacStruct.G1,1),mp.dm2.Nele,mp.Nsbp);
 
 % Set up jacobian so real and imag components alternate and jacobian from
 % each DM is stacked
@@ -89,7 +89,7 @@ ev.SS = 2; % Pixel state size. Two for real and imaginary parts of the electric 
 ev.BS = ev.SS*1; % EKF block size - number of pixels per EKF (currently 1). Computation time grows as the cube of BS.
 
 
-ev.SL = ev.SS*sum(n_pix);%Total length of the sate vector (all pixels).
+ev.SL = ev.SS*sum(size(jacStruct.G1,1));%Total length of the sate vector (all pixels).
 
 %3D matrices that include all the 2D EKF matrices for all pixels at once
 ev.H = zeros(floor(ev.BS/ev.SS),ev.BS,floor(ev.SL/ev.BS));
@@ -112,11 +112,12 @@ ev.R_indices = logical(eye(floor(ev.BS/ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev
 ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
 for iSubband = 1:1:mp.Nsbp
    
-    G_reordered = jacStruct.G_tot(:,:,iSubband) ;
-    dm_drift_covariance = eye(size(G_reordered,1))*(drift.presumed_dm_drift_std^2);
+    G_reordered = jacStruct.G_tot(:,:,iSubband);
+    dm_drift_covariance = eye(size(G_reordered,1))*(mp.drift.presumed_dm_std^2);
 
     for i = 0:1:floor(ev.SL/ev.BS)-1
-          ev.Q(:,:,i+1,iSubband) = G_reordered(:,(i)*ev.BS+1:(i+1)*ev.BS).'*dm_drift_covariance*G_reordered(:,i*ev.BS+1:(i+1)*ev.BS)*ev.exposure_time_coron*(ev.e_scaling(iSubband)^2);
+        ind2 = (i)*ev.BS+1:(i+1)*ev.BS
+        ev.Q(:,:,i+1,iSubband) = G_reordered(:,(i)*ev.BS+1:(i+1)*ev.BS).'*dm_drift_covariance*G_reordered(:,i*ev.BS+1:(i+1)*ev.BS)*mp.tb.info.sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
     end
 end
 
