@@ -56,7 +56,7 @@ mp.est.dark_current = 0.005; % e-/s
 % TODO: make maint efc controller?
 % mp.controller = 'maintenanceEFC';
 mp.controller = 'plannedEFC';
-mp.ctrl.start_iteration = 20; % controller start iteration -need to update this somehow
+mp.ctrl.start_iteration = 2; % controller start iteration -need to update this somehow
 mp.ctrl.dmfacVec = [1];
 % Set efc tikhonov parameter
 mp.ctrl.sched_mat = repmat([1, -1, 1, 0, 0],[mp.Nitr,1]); % desciption explaining this can be found here: EXAMPLE_defaults_DST_LC_design.m
