@@ -142,7 +142,7 @@ function [ev] = ekf_estimate(mp, ev, y_measured, closed_loop_command)
 for si = 1:1:mp.Nsbp
 
     %--Estimate of the closed loop electric field:
-    x_hat_CL = ev.x_hat(:,si) + (jacStruct.G_tot(:,:,si).'*ev.e_scaling(si))*sqrt(mp.tb.info.sbp_texp(iSubband))*closed_loop_command;
+    x_hat_CL = ev.x_hat(:,si) + (jacStruct.G_tot(:,:,si)*ev.e_scaling(si))*sqrt(mp.tb.info.sbp_texp(iSubband))*closed_loop_command;
 
     %--Estimate of the measurement:
     y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.dark_current*mp.tb.info.sbp_texp(iSubband));
