@@ -80,32 +80,43 @@ closed_loop_command = dither + efc_command;
 
 %% Get images
 
-image = zeros(length(mp.Fend.score.mask),mp.Nsbp);
+y_measured = zeros(length(mp.Fend.score.mask),mp.Nsbp);
 for iSubband = 1:mp.Nsbp
-    I0 = falco_get_sbp_image(mp, iSubband) * ev.peak_psf;
-    image(:,iSubband) = I0(mp.Fend.score.mask);
-
+    I0 = falco_get_sbp_image(mp, iSubband) * ev.peak_psf_counts(iSubband);
+    y_measured(:,iSubband) = I0(mp.Fend.score.mask);
 
 end
 
 %% Perform the estimation
-ekf_estimate(mp,ev,closed_loop_command);
-% for iSubband = 1:mp.Nsbp
-% 
-% 
-% end
+ev = ekf_estimate(mp,ev,y_measured,closed_loop_command);
+
+
+%% Save out the estimate
+% TODO: add star and wavelength loop?
+for si = 1:1:mp.Nsbp
+    ev.Eest(:,si) = ev.x_hat(:,si) / (ev.e_scaling(si) * sqrt(mp.tb.info.sbp_texp(si)));
+end
+I0vec = y_measured.*ev.peak_psf_counts;
+ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
+
+%--Other data to save out
+% TODO: not sure if this is returning the right thing? do I need to return
+% ampNorm?
+ev.ampSqMean = mean(I0vec(:)); %--Mean probe intensity
+% ev.ampNorm = mean(I0vec(:)); %--Normalized probe amplitude maps
+
+mp.isProbing = false;
+
+fprintf(' done. Time: %.3f\n',toc);
+
+
 
 end
 
-function comm_vector = get_dm_command_vector(mp,command1, command2)
-
-if any(mp.dm_ind == 1);  comm1_arr = command1(:); comm1 = comm1_arr(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
-if any(mp.dm_ind == 2);  comm2_arr = command2(:); comm2 = comm2_arr(mp.dm2.act_ele);  else; comm2 = []; end
-comm_vector = [comm1;comm2];
-end
 
 
-function [ev] = ekf_estimate(mp, ev, closed_loop_command)
+
+function [ev] = ekf_estimate(mp, ev, y_measured, closed_loop_command)
 
 
 % if ev.Itr == 0
@@ -181,6 +192,13 @@ end
 end
 
 
+function comm_vector = get_dm_command_vector(mp,command1, command2)
+
+if any(mp.dm_ind == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
+if any(mp.dm_ind == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
+comm_vector = [comm1;comm2];
+
+end
 
 
 

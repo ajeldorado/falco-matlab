@@ -3,7 +3,7 @@ function [mp, ev, jacStruct] = initialize_ekf_maintenance(mp,ev, jacStruct)
 
 % Find values to convert images back to counts rather than normalized
 % intensity
-ev.peak_psf_counts = zeros(mp.Nsbp);
+ev.peak_psf_counts = zeros(1,mp.Nsbp);
 
 %     sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
 %     numCoadds = tb.info.sbp_numCoadds(si);% Number of coadds to use for each sub-bandpass
