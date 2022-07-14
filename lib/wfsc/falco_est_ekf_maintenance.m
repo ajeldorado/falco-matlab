@@ -95,10 +95,10 @@ ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
 
 %% Save out the estimate
 % TODO: add star and wavelength loop?
-for si = 1:1:mp.Nsbp
-    ev.Eest(:,si) = ev.x_hat(:,si) / (ev.e_scaling(si) * sqrt(mp.tb.info.sbp_texp(si)));
-    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, si) = mp.dm1.V;  end
-    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, si) = mp.dm2.V;  end
+for iSubband = 1:1:mp.Nsbp
+    ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)));
+    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
+    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
 end
 I0vec = y_measured.*ev.peak_psf_counts;
 ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
@@ -139,35 +139,35 @@ function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
 % e_scaling = zeros(mp.Nsbp,1);
 
 
-for si = 1:1:mp.Nsbp
+for iSubband = 1:1:mp.Nsbp
 
     %--Estimate of the closed loop electric field:
-    x_hat_CL = ev.x_hat(:,si) + (jacStruct.G_tot(:,:,si)*ev.e_scaling(si))*sqrt(mp.tb.info.sbp_texp(iSubband))*closed_loop_command;
+    x_hat_CL = ev.x_hat(:,iSubband) + (jacStruct.G_tot(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(mp.tb.info.sbp_texp(iSubband))*closed_loop_command;
 
     %--Estimate of the measurement:
-    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.dark_current*mp.tb.info.sbp_texp(iSubband));
+    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*mp.tb.info.sbp_texp(iSubband));
 
-    ev.R(ev.R_indices) = reshape(y_hat + (ev.read_noise)^2,size(ev.R(ev.R_indices)));
+    ev.R(ev.R_indices) = reshape(y_hat + (mp.est.read_noise)^2,size(ev.R(ev.R_indices)));
 
     ev.H(ev.H_indices) = 2 * x_hat_CL;
 %     H_T = H.transpose(0,2,1);
     % TODO: check that this transpose is correct
     H_T = permute(ev.H,[2,1,3]);
 
-    ev.P(:,:,:,si) = ev.P(:,:,:,si) + ev.Q(:,:,:,si);
+    ev.P(:,:,:,iSubband) = ev.P(:,:,:,iSubband) + ev.Q(:,:,:,iSubband);
    
-    P_H_T = pagemtimes(ev.P(:,:,:,si), H_T);
+    P_H_T = pagemtimes(ev.P(:,:,:,iSubband), H_T);
     S = pagemtimes(ev.H, P_H_T) + ev.R;
     S_inv = pageinv(S) ;%does this need to be a pinv?
 
     % S_inv = np.linalg.pinv(S)
     K = pagemtimes(P_H_T, S_inv);
-    ev.P(:,:,:,si) = ev.P(:,:,:,si) - pagemtimes(P_H_T, permute(K,[2,1,3]));
+    ev.P(:,:,:,iSubband) = ev.P(:,:,:,iSubband) - pagemtimes(P_H_T, permute(K,[2,1,3]));
     
 %     EKF correction:
-%     dx_hat = pagemtimes(K, (y_measured(:,si) - y_hat).reshape((-1,ev.BS/ev.SS,1))).reshape(-1);
-%     dx_hat = permute(K,[1,3,2])*(y_measured(:,si) - y_hat);%.reshape((-1,ev.BS/ev.SS,1))).reshape(-1);
-    dy = (y_measured(:,si) - y_hat);
+%     dx_hat = pagemtimes(K, (y_measured(:,iSubband) - y_hat).reshape((-1,ev.BS/ev.SS,1))).reshape(-1);
+%     dx_hat = permute(K,[1,3,2])*(y_measured(:,iSubband) - y_hat);%.reshape((-1,ev.BS/ev.SS,1))).reshape(-1);
+    dy = (y_measured(:,iSubband) - y_hat);
     
     dy_hat_stacked  = zeros(size(K));
     dy_hat_stacked(1,:,:) = dy.';
@@ -180,10 +180,10 @@ for si = 1:1:mp.Nsbp
     dx_hat(2:ev.SS:end) = dx_hat_stacked(2,:,:);
 
 
-    ev.x_hat(:,si) = ev.x_hat(:,si) + dx_hat;
+    ev.x_hat(:,iSubband) = ev.x_hat(:,iSubband) + dx_hat;
 %     
 %     % Convert E_hat to contrast units:
-%     E_hat = (ev.x_hat(:,si)(::SS) + complex(0,1)*ev.x_hat(wavelength)(1::SS))/(ev.e_scaling(wavelength) * np.sqrt(ev.exposure_time_coron)); %Estimate of the electric field from EKF state estimate
+%     E_hat = (ev.x_hat(:,iSubband)(::SS) + complex(0,1)*ev.x_hat(wavelength)(1::SS))/(ev.e_scaling(wavelength) * np.sqrt(ev.exposure_time_coron)); %Estimate of the electric field from EKF state estimate
 %              
 %     
 %     % Update based on scaling factors
