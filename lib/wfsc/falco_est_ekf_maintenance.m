@@ -42,7 +42,7 @@ end
 % if any(mp.dm_ind == 2);  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
 % Initialize output arrays
-ev.imageArray = zeros(mp.FendNeta, mp.Fend.Nxi, 1, mp.Nsbp);
+ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
 ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IprobedMean = 0;
@@ -81,7 +81,7 @@ closed_loop_command = dither + efc_command;
 
 %% Get images
 
-y_measured = zeros(length(mp.Fend.score.mask),mp.Nsbp);
+y_measured = zeros(mp.Fend.score.Npix,mp.Nsbp);
 for iSubband = 1:mp.Nsbp
     ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
     I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
@@ -90,7 +90,7 @@ for iSubband = 1:mp.Nsbp
 end
 
 %% Perform the estimation
-ev = ekf_estimate(mp,ev,y_measured,closed_loop_command);
+ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
 
 
 %% Save out the estimate
@@ -126,7 +126,7 @@ end
 
 
 
-function [ev] = ekf_estimate(mp, ev, y_measured, closed_loop_command)
+function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
 
 
 % if ev.Itr == 0
