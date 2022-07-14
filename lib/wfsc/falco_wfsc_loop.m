@@ -155,6 +155,9 @@ for Itr = 1:mp.Nitr
     save(fnSnippet, 'out');
     fprintf('...done.\n\n')
 
+    %% Save estimate to mp structure in case it is needed after
+    mp.est.Eest = ev.Eest;
+
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
     

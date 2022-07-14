@@ -27,13 +27,13 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
     
     %% SFR
     try
-        if mp.Itr > mp.controller.start_iteration
-            mp.ctl.dmfacVec = mp.ctl.dmfacVecOn;
+        if mp.Itr > mp.ctrl.start_iteration
+            mp.ctrl.dmfacVec = mp.ctrl.dmfacVecOn;
         elseif mp.Itr == 1
-            mp.ctl.dmfacVecOn = mp.ctl.dmfacVec;
-            mp.ctl.dmfacVec = 0;
+            mp.ctrl.dmfacVecOn = mp.ctrl.dmfacVec;
+            mp.ctrl.dmfacVec = 0;
         else
-            mp.ctl.dmfacVec = 0;
+            mp.ctrl.dmfacVec = 0;
         end
     catch
         
