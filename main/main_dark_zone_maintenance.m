@@ -19,7 +19,6 @@ out_dz = out;
 % need to re-initialize out?
 % rename mp and re-intialize?
 
-
 clear out 
 
 %% set defaults
@@ -47,7 +46,7 @@ mp.Nitr = 10; %--Number of wavefront control iterations
 mp.estimator = 'ekf_maintenance';
 mp.est.probe.Npairs = 1;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
-mp.est.dither = 0.1; %--std dev of dither command for random dither [V/sqrt(iter)]
+mp.est.dither = 8e-5; %--std dev of dither command for random dither [V/sqrt(iter)]
 mp.est.flagUseJac = true;
 
 %--Controller variables
@@ -63,7 +62,7 @@ mp.ctrl.sched_mat = repmat([1, -1, 1, 0, 0],[nItr,1]); % desciption explaining t
 %--Drift variables
 mp.dm_drift_ind = [1]; %--which dms are drifting
 mp.drift.type = 'rand_walk'; %--what type of drift is happening
-mp.drift.magnitude = 0.01; %--std dev of random walk [V/sqrt(iter)]
+mp.drift.magnitude = 7e-6; %--std dev of random walk [V/sqrt(iter)]
 
 %--Initialize tb object to make things cleaner internally in sim mode
 if mp.flagSim
