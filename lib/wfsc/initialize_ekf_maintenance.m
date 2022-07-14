@@ -1,4 +1,4 @@
-function [mp, ev, jacStruct] = initialize_ekf_maintenance(mp,ev, jacStruct)
+function ev = initialize_ekf_maintenance(mp, ev, jacStruct)
 
 
 % Find values to convert images back to counts rather than normalized
@@ -24,17 +24,17 @@ end
 % TODO: need e_scaling
 
 % Rearrange jacobians
-jacStruct = rearrange_jacobians(jacStruct,mp);
+ev = rearrange_jacobians(mp,ev,jacStruct);
 
 
 % Initialize EKF matrices
-[mp, ev] = initialize_ekf_matrices(mp, ev, jacStruct);
+ev = initialize_ekf_matrices(mp, ev);
 
 
 end
 
 
-function jacStruct = rearrange_jacobians(jacStruct,mp)
+function ev = rearrange_jacobians(mp,ev,jacStruct)
 
 % active_dms = ismember([1:9],mp.dm_ind);
 
@@ -74,12 +74,12 @@ for iSubband = 1:mp.Nsbp
     end
 end
 
-jacStruct.G_tot = [G1, G2];
+ev.G_tot = [G1, G2];
 
 
 end
 
-function [mp, ev] = initialize_ekf_matrices(mp, ev, jacStruct)
+function [mp, ev] = initialize_ekf_matrices(mp, ev)
 
 % Below are the defnitions of the EKF matrices. There are multiple EKFs 
 % defined in parallel.
@@ -113,7 +113,7 @@ ev.R_indices = logical(eye(floor(ev.BS/ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev
 ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
 for iSubband = 1:1:mp.Nsbp
    
-    G_reordered = jacStruct.G_tot(:,:,iSubband);
+    G_reordered = ev.G_tot(:,:,iSubband);
     dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);
 
     for i = 0:1:floor(ev.SL/ev.BS)-1
