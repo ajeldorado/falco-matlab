@@ -47,8 +47,9 @@ ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IprobedMean = 0;
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, mp.Nsbp);  end
-if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, mp.Nsbp);  end
+% TODO: do I need to update Vall?
+if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  end
+if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  end
 
 
 %% Get Drift Command
@@ -96,6 +97,8 @@ ev = ekf_estimate(mp,ev,y_measured,closed_loop_command);
 % TODO: add star and wavelength loop?
 for si = 1:1:mp.Nsbp
     ev.Eest(:,si) = ev.x_hat(:,si) / (ev.e_scaling(si) * sqrt(mp.tb.info.sbp_texp(si)));
+    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, si) = mp.dm1.V;  end
+    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, si) = mp.dm2.V;  end
 end
 I0vec = y_measured.*ev.peak_psf_counts;
 ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
@@ -105,6 +108,9 @@ ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
 % ampNorm?
 ev.ampSqMean = mean(I0vec(:)); %--Mean probe intensity
 % ev.ampNorm = mean(I0vec(:)); %--Normalized probe amplitude maps
+
+ev.Im = ev.imageArray(:,:,1,mp.si_ref);
+ev.IprobedMean = mean(mean(ev.imageArray)); 
 
 mp.isProbing = false;
 
