@@ -63,6 +63,7 @@ mp.ctrl.sched_mat = repmat([1, -1, 1, 0, 0],[mp.Nitr,1]); % desciption explainin
 mp.dm_drift_ind = [1]; %--which dms are drifting
 mp.drift.type = 'rand_walk'; %--what type of drift is happening
 mp.drift.magnitude = 7e-6; %--std dev of random walk [V/sqrt(iter)]
+mp.drift.presumed_dm_std = 7e-6;
 
 %--Initialize tb object to make things cleaner internally in sim mode
 if mp.flagSim
