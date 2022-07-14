@@ -43,6 +43,7 @@ function ev = falco_est(mp, ev, jacStruct)
             
             if ev.Itr == 1
                 ev = initialize_ekf_maintenance(mp, ev, jacStruct);
+%                 ev.Itr = 1;
             end
             ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
     end
