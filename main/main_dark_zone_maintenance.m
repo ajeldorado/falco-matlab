@@ -56,7 +56,7 @@ mp.controller = 'plannedEFC';
 mp.ctrl.start_iteration = 20; % controller start iteration -need to update this somehow
 mp.ctrl.dmfacVec = [1];
 % Set efc tikhonov parameter
-mp.ctrl.sched_mat = repmat([1, -1, 1, 0, 0],[nItr,1]); % desciption explaining this can be found here: EXAMPLE_defaults_DST_LC_design.m
+mp.ctrl.sched_mat = repmat([1, -1, 1, 0, 0],[mp.Nitr,1]); % desciption explaining this can be found here: EXAMPLE_defaults_DST_LC_design.m
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 %--Drift variables
@@ -80,13 +80,26 @@ mp = initialize_dm_commands(mp,out_dz);
 
 % TODO: what do I need to clear here?
 
-%% initialize variables
-% ev.dither = 0.1;
-% mp.drift = 0.01;
+
+%% Step 4: Generate the label associated with this trial
+
+mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
+    mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
+    '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
+    '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
+    '_',mp.controller];
+
+%% Initialize out  (maybe not mp, need tb obj)
+% flesh_out_workspace()
+
+[mp, out] = falco_flesh_out_workspace(mp);
+
+%% Step 5: Perform the Wavefront Sensing and Control
+
+[mp, out] = falco_wfsc_loop(mp, out);
 
 
-
-
+%% Functions
 function mp = initialize_dm_commands(mp,out)
 
     %--Initialize delta DM commands
@@ -109,21 +122,3 @@ function mp = initialize_dm_commands(mp,out)
 
 end
 
-
-
-%% Step 4: Generate the label associated with this trial
-
-mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNum,'%04d_'),...
-    mp.coro,'_',mp.whichPupil,'_',num2str(numel(mp.dm_ind)),'DM',num2str(mp.dm1.Nact),'_z',num2str(mp.d_dm1_dm2),...
-    '_IWA',num2str(mp.Fend.corr.Rin),'_OWA',num2str(mp.Fend.corr.Rout),...
-    '_',num2str(mp.Nsbp),'lams',num2str(round(1e9*mp.lambda0)),'nm_BW',num2str(mp.fracBW*100),...
-    '_',mp.controller];
-
-%% Initialize out  (maybe not mp, need tb obj)
-% flesh_out_workspace()
-
-[mp, out] = falco_flesh_out_workspace(mp);
-
-%% Step 5: Perform the Wavefront Sensing and Control
-
-[mp, out] = falco_wfsc_loop(mp, out);
