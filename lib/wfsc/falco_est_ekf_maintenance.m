@@ -65,27 +65,32 @@ if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm
 % TODO: need to save these commands for each iteration separately
 % TODO: what is controller command? - mp.dm1.dV (make sure sign is right)
 
-mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.dV);
-mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.dV);
-
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
+
 if Itr > 1
+    if ~isfield(mp.dm1,'dV'); mp.dm1.dV = zeros(mp.dm1.Nact);end
+    if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact);end
     efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
 else
     efc_command = 0*dither;
     mp.dm1.dV = zeros(size(DM1Vdither));
     mp.dm2.dV = zeros(size(DM1Vdither));
 end
+
+if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.dV); end
+if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.dV); end
+
+
 % TODO: check sign on efc command
 closed_loop_command = dither + efc_command;
 
 %% Get images
 
-y_measured = zeros(mp.Fend.score.Npix,mp.Nsbp);
+y_measured = zeros(mp.Fend.corr.Npix,mp.Nsbp);
 for iSubband = 1:mp.Nsbp
     ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
     I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
-    y_measured(:,iSubband) = I0(mp.Fend.score.mask);
+    y_measured(:,iSubband) = I0(mp.Fend.corr.mask);
 
 end
 
@@ -117,8 +122,8 @@ mp.isProbing = false;
 fprintf(' done. Time: %.3f\n',toc);
 
 %% Remove control from DM command so that controller images are correct
-mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither);
-mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither);
+if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither);end
+if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither);end
 
 
 end
@@ -156,16 +161,16 @@ for iSubband = 1:1:mp.Nsbp
 
     ev.P(:,:,:,iSubband) = ev.P(:,:,:,iSubband) + ev.Q(:,:,:,iSubband);
    
-    P_H_T = pagemtimes(ev.P(:,:,:,iSubband), H_T);
-    S = pagemtimes(ev.H, P_H_T) + ev.R;
-    S_inv = pageinv(S) ;%does this need to be a pinv?
+    P_H_T = mypagemtimes(ev.P(:,:,:,iSubband), H_T);
+    S = mypagemtimes(ev.H, P_H_T) + ev.R;
+    S_inv = mypageinv(S) ;%does this need to be a pinv?
 
     % S_inv = np.linalg.pinv(S)
-    K = pagemtimes(P_H_T, S_inv);
-    ev.P(:,:,:,iSubband) = ev.P(:,:,:,iSubband) - pagemtimes(P_H_T, permute(K,[2,1,3]));
+    K = mypagemtimes(P_H_T, S_inv);
+    ev.P(:,:,:,iSubband) = ev.P(:,:,:,iSubband) - mypagemtimes(P_H_T, permute(K,[2,1,3]));
     
 %     EKF correction:
-%     dx_hat = pagemtimes(K, (y_measured(:,iSubband) - y_hat).reshape((-1,ev.BS/ev.SS,1))).reshape(-1);
+%     dx_hat = mypagemtimes(K, (y_measured(:,iSubband) - y_hat).reshape((-1,ev.BS/ev.SS,1))).reshape(-1);
 %     dx_hat = permute(K,[1,3,2])*(y_measured(:,iSubband) - y_hat);%.reshape((-1,ev.BS/ev.SS,1))).reshape(-1);
     dy = (y_measured(:,iSubband) - y_hat);
     
@@ -214,8 +219,27 @@ end
 
 
 
+function out = mypageinv(in)
 
+dim = size(in,3);
+out = zeros(size(in));
+for i = 1:dim
+    out(:,:,i) = inv(in(:,:,i));
+end
 
+end
+
+function out = mypagemtimes(X,Y) 
+
+dim1 = size(X,3);
+dim2 = size(Y,3);
+if(dim1~=dim2); error('X and Y need to be the same size.'); end
+out = zeros(size(X,1),size(Y,2),dim1);
+for i = 1:dim1
+    out(:,:,i) = X(:,:,i)*Y(:,:,i);
+end
+
+end
 
 
 

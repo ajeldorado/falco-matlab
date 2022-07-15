@@ -180,16 +180,16 @@ fprintf('...done.\n')
 if mp.flagSaveWS
     clear ev cvar G* h* jacStruct; % Save a ton of space when storing the workspace
 
-    % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
-    mp.P1.full.mask=1; mp.P1.compact.mask=1;
-    mp.P3.full.mask=1; mp.P3.compact.mask=1;
-    mp.P4.full.mask=1; mp.P4.compact.mask=1;
-    mp.F3.full.mask=1; mp.F3.compact.mask=1;
-
-    mp.P1.full.E = 1; mp.P1.compact.E = 1; mp.Eplanet = 1; 
-    mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
-    mp.complexTransFull = 1; mp.complexTransCompact = 1;
-
+%     % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
+%     mp.P1.full.mask=1; mp.P1.compact.mask=1;
+%     mp.P3.full.mask=1; mp.P3.compact.mask=1;
+%     mp.P4.full.mask=1; mp.P4.compact.mask=1;
+%     mp.F3.full.mask=1; mp.F3.compact.mask=1;
+% 
+%     mp.P1.full.E = 1; mp.P1.compact.E = 1; mp.Eplanet = 1; 
+%     mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
+%     mp.complexTransFull = 1; mp.complexTransCompact = 1;
+% 
     mp.dm1.compact.inf_datacube = 0;
     mp.dm2.compact.inf_datacube = 0;
     mp.dm8.compact.inf_datacube = 0;
