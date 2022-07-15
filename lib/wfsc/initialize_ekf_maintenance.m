@@ -90,7 +90,7 @@ ev.SS = 2; % Pixel state size. Two for real and imaginary parts of the electric 
 ev.BS = ev.SS*1; % EKF block size - number of pixels per EKF (currently 1). Computation time grows as the cube of BS.
 
 
-ev.SL = ev.SS*mp.Fend.score.Npix;%sum(size(jacStruct.G1,1));%Total length of the sate vector (all pixels).
+ev.SL = ev.SS*mp.Fend.corr.Npix;%sum(size(jacStruct.G1,1));%Total length of the sate vector (all pixels).
 
 %3D matrices that include all the 2D EKF matrices for all pixels at once
 ev.H = zeros(floor(ev.BS/ev.SS),ev.BS,floor(ev.SL/ev.BS));
