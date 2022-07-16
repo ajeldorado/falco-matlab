@@ -51,6 +51,7 @@ mp.est.flagUseJac = true;
 % TODO: are these stored somehwhere else?
 mp.est.read_noise = 2; % e-
 mp.est.dark_current = 0.005; % e-/s
+mp.est.itr_ol = [1:30:mp.Nitr];
 
 %--Controller variables
 % TODO: make maint efc controller?
@@ -125,4 +126,7 @@ function mp = initialize_dm_commands(mp,out)
     end
 
 end
+
+%%
+
 

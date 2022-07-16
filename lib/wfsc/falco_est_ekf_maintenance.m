@@ -119,16 +119,45 @@ ev.IprobedMean = mean(mean(ev.imageArray));
 
 mp.isProbing = false;
 
-fprintf(' done. Time: %.3f\n',toc);
 
+%% If itr = itr_OL get OL data. NOTE THIS SHOULD BE BEFORE THE FOLLOWING BLOCK
+% "Remove control from DM command so that controller images are correct"
+
+
+if any(mp.est.itr_ol,ev.Itr) == true
+    [mp,ev] = get_open_loop_data(mp,ev,DM1dither,DM2dither);
+end
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither);end
 if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither);end
 
+save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 
+fprintf(' done. Time: %.3f\n',toc);
 end
 
 
+function [mp,ev] = get_open_loop_data(mp,ev)
+%% Remove control and dither from DM command 
+if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
+if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);end
+
+
+if ev.Itr == 1
+    IOLScoreHist = zeros(length(mp.est.itr_ol),mp.Nsbp);
+end
+
+I_OL = zeros(size(ev.imageArray(:,:,1,1),1),size(ev.imageArray(:,:,1,1),2),mp.Nsbp);
+for iSubband = 1:mp.Nsbp
+    I0 = falco_get_sbp_image(mp, iSubband);
+    I_OL(:,:,iSubband) = I0;
+    I0 = ev.imageArray(:,:,iSubband) * ev.peak_psf_counts(iSubband);
+    IOLScoreHist(find(mp.est.itr_ol==ev.Itr),iSubband) = mean(I0(mp.Fend.corr.mask));
+end
+
+
+
+end
 
 
 function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
@@ -241,6 +270,37 @@ end
 
 end
 
+
+function save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
+drift = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_drift_ind));
+dither = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
+efc = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
+
+
+if mp.dm_drift_ind(1) == 1; drift(:,:,1) = mp.dm1.V_drift;end
+if mp.dm_drift_ind(1) == 2; drift(:,:,1) = mp.dm2.V_drift ; else drift(:,:,2) = mp.dm2.V_drift; end
+
+
+if mp.dm_ind(1) == 1; dither(:,:,1) = DM1Vdither;end
+if mp.dm_ind(1) == 2; dither(:,:,1) = DM2Vdither ; else dither(:,:,2) = DM2Vdither; end
+
+if mp.dm_ind(1) == 1; efc(:,:,1) = mp.dm1.dV;end
+if mp.dm_ind(1) == 2; efc(:,:,1) = mp.dm2.dV ; else efc(:,:,2) = mp.dm2.dV; end
+
+
+fitswrite(drift,fullfile([mp.path.config,'drift_command_it',num2str(ev.Itr),'.fits']))
+fitswrite(dither,fullfile([mp.path.config,'dither_command_it',num2str(ev.Itr),'.fits']))
+fitswrite(efc,fullfile([mp.path.config,'efc_command_it',num2str(ev.Itr-1),'.fits']))
+
+if ev.Iter == 1
+    dz_init = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
+    if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz;end
+    if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
+
+    fitswrite(dz_init,fullfile([mp.path.config,'dark_zone_command_0_pwp.fits']))
+end
+
+end
 
 
 
