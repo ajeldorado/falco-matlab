@@ -125,7 +125,7 @@ mp.isProbing = false;
 
 
 if any(mp.est.itr_ol,ev.Itr) == true
-    [mp,ev] = get_open_loop_data(mp,ev,DM1dither,DM2dither);
+    [mp,ev] = get_open_loop_data(mp,ev);
 end
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither);end
@@ -137,27 +137,7 @@ fprintf(' done. Time: %.3f\n',toc);
 end
 
 
-function [mp,ev] = get_open_loop_data(mp,ev)
-%% Remove control and dither from DM command 
-if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
-if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);end
 
-
-if ev.Itr == 1
-    IOLScoreHist = zeros(length(mp.est.itr_ol),mp.Nsbp);
-end
-
-I_OL = zeros(size(ev.imageArray(:,:,1,1),1),size(ev.imageArray(:,:,1,1),2),mp.Nsbp);
-for iSubband = 1:mp.Nsbp
-    I0 = falco_get_sbp_image(mp, iSubband);
-    I_OL(:,:,iSubband) = I0;
-    I0 = ev.imageArray(:,:,iSubband) * ev.peak_psf_counts(iSubband);
-    IOLScoreHist(find(mp.est.itr_ol==ev.Itr),iSubband) = mean(I0(mp.Fend.corr.mask));
-end
-
-
-
-end
 
 
 function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
@@ -270,6 +250,33 @@ end
 
 end
 
+function [mp,ev] = get_open_loop_data(mp,ev)
+%% Remove control and dither from DM command 
+if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
+if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);end
+
+
+if ev.Itr == 1
+    IOLScoreHist = zeros(length(mp.est.itr_ol),mp.Nsbp);
+end
+
+I_OL = zeros(size(ev.imageArray(:,:,1,1),1),size(ev.imageArray(:,:,1,1),2),mp.Nsbp);
+for iSubband = 1:mp.Nsbp
+    I0 = falco_get_sbp_image(mp, iSubband);
+    I_OL(:,:,iSubband) = I0;
+    
+    IOLScoreHist(find(mp.est.itr_ol==ev.Itr),iSubband) = mean(I0(mp.Fend.corr.mask));
+    
+%     if iSubband == 1
+%         fitswrite('I0',fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']))
+%     else
+%     fitswrite('I0',fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']),'writemode','append')
+%     end
+end
+
+save(fullfile([mp.path.config,'IOLScoreHist.mat']),'IOLScoreHist','-append')
+
+end
 
 function save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 drift = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_drift_ind));
