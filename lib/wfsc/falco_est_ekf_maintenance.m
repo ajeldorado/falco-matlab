@@ -124,7 +124,7 @@ mp.isProbing = false;
 % "Remove control from DM command so that controller images are correct"
 
 
-if any(mp.est.itr_ol,ev.Itr) == true
+if any(mp.est.itr_ol==ev.Itr) == true
     [mp,ev] = get_open_loop_data(mp,ev);
 end
 %% Remove control from DM command so that controller images are correct
@@ -279,6 +279,7 @@ end
 ev.normI_OL_sbp = I_OL;
 ev.IOLScoreHist = IOLScoreHist;
 
+print("mean OL contrast: ",num2str(mean(IOLScoreHist((mp.est.itr_ol==ev.Itr),:))))
 end
 
 function save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
