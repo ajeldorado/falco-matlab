@@ -42,9 +42,9 @@ function ev = falco_est(mp, ev, jacStruct)
         case{'ekf_maintenance'}
             
             if ev.Itr == 1
-                print('starting ekf initialization')
+                disp('starting ekf initialization')
                 ev = initialize_ekf_maintenance(mp, ev, jacStruct);
-                print('done ekf initialization')
+                disp('done ekf initialization')
 %                 ev.Itr = 1;
             end
             ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
