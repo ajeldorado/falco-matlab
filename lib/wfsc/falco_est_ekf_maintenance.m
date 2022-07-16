@@ -105,7 +105,7 @@ for iSubband = 1:1:mp.Nsbp
     if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
     if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
 end
-I0vec = y_measured.*ev.peak_psf_counts;
+I0vec = y_measured./ev.peak_psf_counts;
 ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
 
 %--Other data to save out
