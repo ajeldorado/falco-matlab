@@ -274,7 +274,7 @@ for iSubband = 1:mp.Nsbp
 %     end
 end
 
-save(fullfile([mp.path.config,'IOLScoreHist.mat']),'IOLScoreHist','-append')
+% save(fullfile([mp.path.config,'IOLScoreHist.mat']),'IOLScoreHist','-append')
 
 end
 
@@ -299,7 +299,7 @@ fitswrite(drift,fullfile([mp.path.config,'drift_command_it',num2str(ev.Itr),'.fi
 fitswrite(dither,fullfile([mp.path.config,'dither_command_it',num2str(ev.Itr),'.fits']))
 fitswrite(efc,fullfile([mp.path.config,'efc_command_it',num2str(ev.Itr-1),'.fits']))
 
-if ev.Iter == 1
+if ev.Itr == 1
     dz_init = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
     if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz;end
     if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
