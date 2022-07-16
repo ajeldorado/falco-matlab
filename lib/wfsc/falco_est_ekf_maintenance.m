@@ -265,16 +265,19 @@ for iSubband = 1:mp.Nsbp
     I0 = falco_get_sbp_image(mp, iSubband);
     I_OL(:,:,iSubband) = I0;
     
-    IOLScoreHist(find(mp.est.itr_ol==ev.Itr),iSubband) = mean(I0(mp.Fend.corr.mask));
+    IOLScoreHist((mp.est.itr_ol==ev.Itr),iSubband) = mean(I0(mp.Fend.corr.mask));
     
 %     if iSubband == 1
-%         fitswrite('I0',fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']))
+%         fitswrite(I0,fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']))
 %     else
-%     fitswrite('I0',fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']),'writemode','append')
+%         fitswrite(I0,fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']),'writemode','append')
 %     end
 end
 
 % save(fullfile([mp.path.config,'IOLScoreHist.mat']),'IOLScoreHist','-append')
+
+ev.normI_OL_sbp = I_OL;
+ev.IOLScoreHist = IOLScoreHist;
 
 end
 
@@ -294,7 +297,7 @@ if mp.dm_ind(1) == 2; dither(:,:,1) = DM2Vdither ; else dither(:,:,2) = DM2Vdith
 if mp.dm_ind(1) == 1; efc(:,:,1) = mp.dm1.dV;end
 if mp.dm_ind(1) == 2; efc(:,:,1) = mp.dm2.dV ; else efc(:,:,2) = mp.dm2.dV; end
 
-
+% TODO: move to plot_progress_iact
 fitswrite(drift,fullfile([mp.path.config,'drift_command_it',num2str(ev.Itr),'.fits']))
 fitswrite(dither,fullfile([mp.path.config,'dither_command_it',num2str(ev.Itr),'.fits']))
 fitswrite(efc,fullfile([mp.path.config,'efc_command_it',num2str(ev.Itr-1),'.fits']))
