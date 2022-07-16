@@ -96,11 +96,14 @@ if(mp.flagPlot)
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
     semilogy(0:Itr-1,mean(Inorm.mod,2),'-o');
     semilogy(0:Itr-1,mean(Inorm.unmod,2),'--o');
+    if strcmpi(mp.estimator,'ekf_maintenance')
+        semilogy(mp.est.itr_ol(mp.est.itr_ol<=Itr),mean(Im_tb.ev.IOLScoreHist(mp.est.itr_ol<=Itr,:),2),'-p')
+    end
     hold off;
     xlim([0 length(Inorm.total)])
     xlabel('Iteration')
 %     ylabel('Norm. I');
-    legend('Total','Modulated','Unmodulated');
+    legend('Total','Modulated','Unmodulated','Open Loop');
 	title('Mean Normalized Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
