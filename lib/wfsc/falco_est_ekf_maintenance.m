@@ -52,8 +52,7 @@ if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  en
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  end
 
 
-%% Get Drift Command
-mp = falco_drift_injection(mp);
+
 
 %% Get dither command
 % Is this if else necessary?
@@ -279,7 +278,7 @@ end
 ev.normI_OL_sbp = I_OL;
 ev.IOLScoreHist = IOLScoreHist;
 
-disp('mean OL contrast: ',num2str(mean(IOLScoreHist((mp.est.itr_ol==ev.Itr),:))))
+disp(['mean OL contrast: ',num2str(mean(IOLScoreHist((mp.est.itr_ol==ev.Itr),:)))])
 end
 
 function save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
@@ -299,16 +298,16 @@ if mp.dm_ind(1) == 1; efc(:,:,1) = mp.dm1.dV;end
 if mp.dm_ind(1) == 2; efc(:,:,1) = mp.dm2.dV ; else efc(:,:,2) = mp.dm2.dV; end
 
 % TODO: move to plot_progress_iact
-fitswrite(drift,fullfile([mp.path.config,mp.runLabel,'drift_command_it',num2str(ev.Itr),'.fits']))
-fitswrite(dither,fullfile([mp.path.config,mp.runLabel,'dither_command_it',num2str(ev.Itr),'.fits']))
-fitswrite(efc,fullfile([mp.path.config,mp.runLabel,'efc_command_it',num2str(ev.Itr-1),'.fits']))
+fitswrite(drift,fullfile([mp.path.config,'/','/drift_command_it',num2str(ev.Itr),'.fits']))
+fitswrite(dither,fullfile([mp.path.config,'/','dither_command_it',num2str(ev.Itr),'.fits']))
+fitswrite(efc,fullfile([mp.path.config,'/','efc_command_it',num2str(ev.Itr-1),'.fits']))
 
 if ev.Itr == 1
     dz_init = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
     if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz;end
     if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
 
-    fitswrite(dz_init,fullfile([mp.path.config,mp.runLabel,'dark_zone_command_0_pwp.fits']))
+    fitswrite(dz_init,fullfile([mp.path.config,'/','dark_zone_command_0_pwp.fits']))
 end
 
 end

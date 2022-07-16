@@ -112,7 +112,7 @@ ev.R_indices = logical(eye(floor(ev.BS/ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev
 % % one
 ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
 for iSubband = 1:1:mp.Nsbp
-    disp('assembling Q for subband ',num2str(iSubband))
+    disp(['assembling Q for subband ',num2str(iSubband)])
    
     G_reordered = ev.G_tot(:,:,iSubband);
     dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);

@@ -72,6 +72,12 @@ for Itr = 1:mp.Nitr
         if any(mp.dm_ind == 1);  jacStruct.G1 = jacStructLearned.G1;  end
         if any(mp.dm_ind == 1);  jacStruct.G2 = jacStructLearned.G2;  end
     end
+    
+    %% Inject drift
+    % Get Drift Command
+    if strcmpi(mp.estimator,'ekf_maintenance')
+        mp = falco_drift_injection(mp);
+    end
 
     %% Wavefront Estimation
     
