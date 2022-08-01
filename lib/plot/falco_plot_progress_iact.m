@@ -96,9 +96,10 @@ if(mp.flagPlot)
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
     semilogy(0:Itr-1,mean(Inorm.mod,2),'-o');
     semilogy(0:Itr-1,mean(Inorm.unmod,2),'--o');
-    if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==Itr) == true
+    if strcmpi(mp.estimator,'ekf_maintenance') %&& any(mp.est.itr_ol==Itr) == true
         % TODO: this fails when it isnt an OL iteration for some reason
-        semilogy(mp.est.itr_ol(mp.est.itr_ol<=Itr),mean(Im_tb.ev.IOLScoreHist(mp.est.itr_ol<=Itr,:),2),'-p')
+        semilogy(0:Itr-1,mean(Im_tb.ev.IOLScoreHist(1:Itr,:),2),'-p')
+
     end
     hold off;
     xlim([0 length(Inorm.total)])
@@ -233,6 +234,11 @@ if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
     if isfield(ev,'G_tot'); ev = rmfield(ev,'G_tot'); end
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
+end
+if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
+    img = mean(Im_tb.ev.normI_OL_sbp,3);
+    sciCam_fitswrite(tb,img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
+
 end
 
 % Update the diary 

@@ -125,6 +125,8 @@ mp.isProbing = false;
 
 if any(mp.est.itr_ol==ev.Itr) == true
     [mp,ev] = get_open_loop_data(mp,ev);
+else
+    ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither);end
@@ -256,7 +258,8 @@ if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V
 
 
 if ev.Itr == 1
-    IOLScoreHist = zeros(length(mp.est.itr_ol),mp.Nsbp);
+%     IOLScoreHist = zeros(length(mp.est.itr_ol),mp.Nsbp);
+    ev.IOLScoreHist = zeros(mp.Nitr,mp.Nsbp);
 end
 
 I_OL = zeros(size(ev.imageArray(:,:,1,1),1),size(ev.imageArray(:,:,1,1),2),mp.Nsbp);
@@ -264,21 +267,15 @@ for iSubband = 1:mp.Nsbp
     I0 = falco_get_sbp_image(mp, iSubband);
     I_OL(:,:,iSubband) = I0;
     
-    IOLScoreHist((mp.est.itr_ol==ev.Itr),iSubband) = mean(I0(mp.Fend.corr.mask));
+    ev.IOLScoreHist(ev.Itr,iSubband) = mean(I0(mp.Fend.corr.mask));
     
-%     if iSubband == 1
-%         fitswrite(I0,fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']))
-%     else
-%         fitswrite(I0,fullfile([mp.path.config,'normI_OL_sbp',num2str(ev.Itr),'.fits']),'writemode','append')
-%     end
 end
 
-% save(fullfile([mp.path.config,'IOLScoreHist.mat']),'IOLScoreHist','-append')
 
 ev.normI_OL_sbp = I_OL;
-ev.IOLScoreHist = IOLScoreHist;
+% ev.IOLScoreHist = IOLScoreHist;
 
-disp(['mean OL contrast: ',num2str(mean(IOLScoreHist((mp.est.itr_ol==ev.Itr),:)))])
+disp(['mean OL contrast: ',num2str(mean(ev.IOLScoreHist(ev.Itr,:)))])
 end
 
 function save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)

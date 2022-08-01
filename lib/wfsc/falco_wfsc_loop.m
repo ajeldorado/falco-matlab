@@ -76,7 +76,7 @@ for Itr = 1:mp.Nitr
     %% Inject drift
     % Get Drift Command
     if strcmpi(mp.estimator,'ekf_maintenance')
-        mp = falco_drift_injection(mp);
+        [mp,ev] = falco_drift_injection(mp,ev);
     end
 
     %% Wavefront Estimation
@@ -186,6 +186,10 @@ mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true
 if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
     ev.Im = cvar.Im;
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
+end
+if strcmpi(mp.estimator,'ekf_maintenance') 
+   out.IOLScoreHist = ev.IOLScoreHist;
+    
 end
 
 %% Save out an abridged workspace
