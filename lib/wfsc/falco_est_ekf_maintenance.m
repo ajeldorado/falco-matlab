@@ -76,8 +76,28 @@ else
     mp.dm2.dV = zeros(size(DM1Vdither));
 end
 
-if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.dV); end
-if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.dV); end
+if any(mp.dm_ind == 1)
+    % note falco_set_constrained_voltage does not apply the command to the
+    % DM
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.dV); 
+    ev.dm1.new_pinned_actuators = setdiff(cell2mat(mp.dm1.pinned(1)),cell2mat(mp.dm1.pinned(end)));
+end
+if any(mp.dm_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.dV); 
+    ev.dm2.new_pinned_actuators = setdiff(cell2mat(mp.dm2.pinned(1)),cell2mat(mp.dm2.pinned(end)));
+end
+% Check that no new actuators have been pinned
+if size(ev.dm1.new_pinned_actuators,1)>0 || size(ev.dm2.new_pinned_actuators)>0
+    % Check if pinned acts are within lyot stop
+
+    % Print error and exit
+    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+    save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat'],ev))
+    save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat'],mp))
+    
+    error('New actuators pinned, exiting loop');
+end
 
 
 % TODO: check sign on efc command
@@ -267,7 +287,7 @@ for iSubband = 1:mp.Nsbp
     I0 = falco_get_sbp_image(mp, iSubband);
     I_OL(:,:,iSubband) = I0;
     
-    ev.IOLScoreHist(ev.Itr,iSubband) = mean(I0(mp.Fend.corr.mask));
+    ev.IOLScoreHist(ev.Itr,iSubband) = mean(I0(mp.Fend.score.mask));
     
 end
 

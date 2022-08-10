@@ -31,6 +31,11 @@ ev = rearrange_jacobians(mp,ev,jacStruct);
 ev = initialize_ekf_matrices(mp, ev);
 
 
+% Initialize pinned actuator check
+ev.dm1.new_pinned_actuators = [];
+ev.dm2.new_pinned_actuators = [];
+
+
 end
 
 
