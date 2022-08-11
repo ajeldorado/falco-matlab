@@ -78,6 +78,8 @@ else
 end
 
 % Generate command to apply to DMs
+% Note if dm_drift_ind ~= i, the command is set to zero in
+% falco_drift_injection
 if any(mp.dm_ind == 1)
     % note falco_set_constrained_voltage does not apply the command to the
     % DM
@@ -91,37 +93,14 @@ if any(mp.dm_ind == 2)
 elseif any(mp.dm_drift_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
 end
-% ev = pinned_act_safety_check(mp,ev);
 
-% Update new pinned actuators
-if any(mp.dm_ind == 1) || any(mp.dm_drift_ind == 1)
-    ev.dm1.new_pinned_actuators = setdiff(mp.dm1.pinned, ev.dm1.initial_pinned_actuators);
-    ev.dm1.act_ele_pinned = mp.dm1.pinned(ismember(ev.dm1.new_pinned_actuators,mp.dm1.act_ele));
-end
-if any(mp.dm_ind == 2) || any(mp.dm_drift_ind == 2)
-    ev.dm2.new_pinned_actuators = setdiff(mp.dm2.pinned, ev.dm2.initial_pinned_actuators);
-    ev.dm2.act_ele_pinned = mp.dm2.pinned(ismember(ev.dm2.new_pinned_actuators,mp.dm2.act_ele));
-    
-end
+% Do safety check to make sure no actuators are pinned
+ev = pinned_act_safety_check(mp,ev);
+
 
 % TODO: check sign on efc command
 closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_shift, mp.dm2.V_shift);
 
-%%  Check that no new actuators have been pinned
-if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
-  
-    % Print error warning
-    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
-    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
-
-    % If actuators are used in jacobian, quit.
-    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
-        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
-        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
-
-        error('New actuators pinned, exiting loop');
-    end
-end
 
 %% Get images
 
@@ -266,35 +245,36 @@ comm_vector = [comm1;comm2];
 end
 
 
-% function ev = pinned_act_safety_check(mp,ev)
-% % Update new pinned actuators
-% if any(mp.dm_ind == 1) || any(mp.dm_drift_ind == 1)
-%     ev.dm1.new_pinned_actuators = setdiff(mp.dm1.pinned, ev.dm1.initial_pinned_actuators);
-%     ev.dm1.act_ele_pinned = union(ev.dm1.new_pinned_actuators,mp.dm1.act_ele);
-% end
-% if any(mp.dm_ind == 2) || any(mp.dm_drift_ind == 2)
-%     ev.dm2.new_pinned_actuators = setdiff(mp.dm2.pinned, ev.dm2.initial_pinned_actuators);
-%     ev.dm2.act_ele_pinned = union(ev.dm2.new_pinned_actuators,mp.dm2.act_ele);
-% end
-% 
-% 
-% %%  Check that no new actuators have been pinned
-% if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
-%   
-%     % Print error warning
-%     fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
-%     fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
-% 
-%     % If actuators are used in jacobian, quit.
-%     if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
-%         save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
-%         save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
-% 
-%         error('New actuators within mp.act_ele pinned, exiting loop');
-%     end
-% end
-% 
-% end
+function ev = pinned_act_safety_check(mp,ev)
+% Update new pinned actuators
+if any(mp.dm_ind == 1) || any(mp.dm_drift_ind == 1)
+    ev.dm1.new_pinned_actuators = setdiff(mp.dm1.pinned, ev.dm1.initial_pinned_actuators);
+    ev.dm1.act_ele_pinned = mp.dm1.pinned(ismember(ev.dm1.new_pinned_actuators,mp.dm1.act_ele));
+end
+if any(mp.dm_ind == 2) || any(mp.dm_drift_ind == 2)
+    ev.dm2.new_pinned_actuators = setdiff(mp.dm2.pinned, ev.dm2.initial_pinned_actuators);
+    ev.dm2.act_ele_pinned = mp.dm2.pinned(ismember(ev.dm2.new_pinned_actuators,mp.dm2.act_ele));
+
+end
+
+
+%  Check that no new actuators have been pinned
+if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
+
+    % Print error warning
+    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
+    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+
+    % If actuators are used in jacobian, quit.
+    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
+        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
+        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
+
+        error('New actuators in act_ele pinned, exiting loop');
+    end
+end
+
+end
 
 
 
