@@ -27,9 +27,12 @@ if any(mp.est.itr_reset==ev.Itr) == true
     for iSubband = 1:1:mp.Nsbp
         ev.x_hat(:,iSubband) = ev.x_hat(:,iSubband) + (ev.G_tot(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(mp.tb.info.sbp_texp(iSubband))*efc_command;
     end
-    mp.dm1.V_dz = mp.dm1.V_dz + mp.dm1.dV;
-    mp.dm2.V_dz = mp.dm2.V_dz + mp.dm2.dV;
-    
+    mp.dm1.V_shift = mp.dm1.dV;
+    mp.dm2.V_shift = mp.dm2.dV;
+
+%     mp.dm1.V_dz = mp.dm1.V_dz + mp.dm1.dV;
+%     mp.dm2.V_dz = mp.dm2.V_dz + mp.dm2.dV;
+
     mp.dm1.dV = zeros(size(mp.dm1.V_dz));
     mp.dm2.dV = zeros(size(mp.dm2.V_dz));
 end

@@ -60,11 +60,12 @@ if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  en
 if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
 if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
 
+dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
+
 %% Set total command for estimator image
 % TODO: need to save these commands for each iteration separately
 % TODO: what is controller command? - mp.dm1.dV (make sure sign is right)
 
-dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
 if Itr > 1
     if ~isfield(mp.dm1,'dV'); mp.dm1.dV = zeros(mp.dm1.Nact);end
@@ -76,32 +77,49 @@ else
     mp.dm2.dV = zeros(size(DM1Vdither));
 end
 
+% Generate command to apply to DMs
 if any(mp.dm_ind == 1)
     % note falco_set_constrained_voltage does not apply the command to the
     % DM
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.dV); 
-    ev.dm1.new_pinned_actuators = setdiff(cell2mat(mp.dm1.pinned(1)),cell2mat(mp.dm1.pinned(end)));
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
+elseif any(mp.dm_drift_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
 end
+
 if any(mp.dm_ind == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.dV); 
-    ev.dm2.new_pinned_actuators = setdiff(cell2mat(mp.dm2.pinned(1)),cell2mat(mp.dm2.pinned(end)));
-end
-% Check that no new actuators have been pinned
-if size(ev.dm1.new_pinned_actuators,1)>0 || size(ev.dm2.new_pinned_actuators)>0
-    % Check if pinned acts are within lyot stop
-
-    % Print error and exit
-    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
-    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
-    save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat'],ev))
-    save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat'],mp))
-    
-    error('New actuators pinned, exiting loop');
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
+elseif any(mp.dm_drift_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
 end
 
+% Update new pinned actuators
+if any(mp.dm_ind == 1) || any(mp.dm_drift_ind == 1)
+    ev.dm1.new_pinned_actuators = setdiff(mp.dm1.pinned, ev.dm1.initial_pinned_actuators);
+    ev.dm1.act_ele_pinned = union(ev.dm1.new_pinned_actuators,mp.dm1.act_ele);
+end
+if any(mp.dm_ind == 2) || any(mp.dm_drift_ind == 2)
+    ev.dm2.new_pinned_actuators = setdiff(mp.dm2.pinned, ev.dm2.initial_pinned_actuators);
+    ev.dm2.act_ele_pinned = union(ev.dm2.new_pinned_actuators,mp.dm2.act_ele);
+end
 
 % TODO: check sign on efc command
-closed_loop_command = dither + efc_command;
+closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_shift, mp.dm2.V_shift);
+
+%%  Check that no new actuators have been pinned
+if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
+  
+    % Print error warning
+    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
+    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+
+    % If actuators are used in jacobian, quit.
+    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
+        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
+        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
+
+        error('New actuators pinned, exiting loop');
+    end
+end
 
 %% Get images
 
@@ -149,8 +167,8 @@ else
     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
 %% Remove control from DM command so that controller images are correct
-if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither);end
-if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither);end
+if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);end
+if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);end
 
 save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 
@@ -273,8 +291,25 @@ end
 
 function [mp,ev] = get_open_loop_data(mp,ev)
 %% Remove control and dither from DM command 
-if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
-if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);end
+
+% If DM is used for drift and control, apply V_dz and Vdrift, if DM is only
+% used for control, apply V_dz
+if (any(mp.dm_drift_ind == 1) && any(mp.dm_ind == 1)) || any(mp.dm_drift_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);
+elseif any(mp.dm_ind == 1) 
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+
+if (any(mp.dm_drift_ind == 2) && any(mp.dm_ind == 2)) || any(mp.dm_drift_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);
+elseif any(mp.dm_ind == 2) 
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
+
+
+% if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
+% if any(mp.dm_drift_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
+% if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);end
 
 
 if ev.Itr == 1

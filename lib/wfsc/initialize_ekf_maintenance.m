@@ -32,8 +32,11 @@ ev = initialize_ekf_matrices(mp, ev);
 
 
 % Initialize pinned actuator check
+ev.dm1.initial_pinned_actuators = mp.dm1.pinned;
+if any(mp.dm_ind == 2); ev.dm2.initial_pinned_actuators = mp.dm2.pinned; end
 ev.dm1.new_pinned_actuators = [];
 ev.dm2.new_pinned_actuators = [];
+
 
 
 end

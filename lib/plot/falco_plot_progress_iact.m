@@ -237,7 +237,7 @@ if(~strcmpi(mp.estimator,'perfect'))
 end
 if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
     img = mean(Im_tb.ev.normI_OL_sbp,3);
-    sciCam_fitswrite(tb,img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
+    iact_fitswrite(mp,tb,img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
 
 end
 

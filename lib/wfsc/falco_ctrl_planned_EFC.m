@@ -32,6 +32,8 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
         elseif mp.Itr == 1
             mp.ctrl.dmfacVecOn = mp.ctrl.dmfacVec;
             mp.ctrl.dmfacVec = 0;
+        elseif any(mp.Itr >= mp.est.itr_reset) && any(mp.Itr < mp.est.itr_reset + mp.ctrl.start_iteration)  
+            mp.ctrl.dmfacVec = 0;
         else
             mp.ctrl.dmfacVec = 0;
         end
