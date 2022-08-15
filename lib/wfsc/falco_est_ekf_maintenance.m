@@ -118,10 +118,13 @@ ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
 
 %% Save out the estimate
 % TODO: add star and wavelength loop?
+ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 for iSubband = 1:1:mp.Nsbp
     ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)));
     if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
     if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
+
+    ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
 end
 I0vec = y_measured./ev.peak_psf_counts;
 ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
@@ -132,7 +135,7 @@ ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
 ev.ampSqMean = mean(I0vec(:)); %--Mean probe intensity
 % ev.ampNorm = mean(I0vec(:)); %--Normalized probe amplitude maps
 
-ev.Im = ev.imageArray(:,:,1,mp.si_ref);
+% ev.Im = ev.imageArray(:,:,1,mp.si_ref);
 ev.IprobedMean = mean(mean(ev.imageArray)); 
 
 mp.isProbing = false;
