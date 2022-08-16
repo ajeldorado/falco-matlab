@@ -22,7 +22,7 @@ function falco_plot_superimposed_pupil_masks(mp)
         %--Plot superposed apodizer and telescope pupil
         if mp.flagApod
 
-            P3mask = pad_crop(mp.P3.compact.mask, size(mp.P1.compact.mask));
+            P3mask = abs(pad_crop(mp.P3.compact.mask, size(mp.P1.compact.mask)));
             if mp.flagRotation
                 P3mask = propcustom_relay(P3mask, mp.Nrelay1to2 + mp.Nrelay2to3);
             end

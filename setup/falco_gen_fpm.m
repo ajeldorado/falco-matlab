@@ -19,15 +19,20 @@ function [mp] = falco_gen_fpm(mp)
             switch upper(mp.coro)
                 
                 case{'HLC'}
-                    switch upper(mp.dm9.inf0name)
-                        case '3FOLDZERN'
-                            mp = falco_setup_FPM_HLC_3foldZern(mp);
-                        case{'COS', 'COSINE'}
-                            mp = falco_setup_FPM_HLC_cosine(mp);
-                        otherwise
-                            mp = falco_setup_FPM_HLC(mp);
+                        
+                    if ~isfield(mp.compact, 'FPMcube')
+                        
+                        switch upper(mp.dm9.inf0name)
+                            case '3FOLDZERN'
+                                mp = falco_setup_FPM_HLC_3foldZern(mp);
+                            case{'COS', 'COSINE'}
+                                mp = falco_setup_FPM_HLC_cosine(mp);
+                            otherwise
+                                mp = falco_setup_FPM_HLC(mp);
+                        end
+                        mp = falco_gen_FPM_HLC(mp);
+
                     end
-                    mp = falco_gen_FPM_HLC(mp);
                     
                 case{'EHLC'}
                     mp = falco_setup_FPM_EHLC(mp);
@@ -37,7 +42,9 @@ function [mp] = falco_gen_fpm(mp)
             %%--Pre-compute the complex transmission of the allowed Ni+PMGI FPMs.
             switch upper(mp.coro)
                 case{'HLC', 'EHLC'}
-                    [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
+                    if ~isfield(mp.compact, 'FPMcube')
+                        [mp.complexTransCompact,mp.complexTransFull] = falco_gen_complex_trans_table(mp);
+                    end
             end
     end
 
