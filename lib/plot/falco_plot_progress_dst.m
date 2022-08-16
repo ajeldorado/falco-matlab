@@ -200,7 +200,7 @@ if(mp.flagPlot)
     % - Throughput plots 
     % - 
 
-end
+end % if plot
 
 
 %%-- Save data
@@ -246,7 +246,7 @@ if(~strcmpi(mp.estimator,'perfect'))
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
 end
 
-% Update the diary 
-diary off; diary(mp.diaryfile)
+% % Update the diary 
+% diary off; diary(mp.diaryfile)
 
 end %--END OF FUNCTION
