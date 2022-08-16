@@ -131,8 +131,12 @@ end
 
 %--Select which optical layout's compact model to use and get the output E-field
 if ~mp.flagFiber
-    [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-    if mp.debug, varargout{end+1} = sDebug; end
+    if mp.debug
+        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+        varargout{end+1} = sDebug;
+    else
+        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    end
 else
     [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
     varargout{1} = Efiber;
