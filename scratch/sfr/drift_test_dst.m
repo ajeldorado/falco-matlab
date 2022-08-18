@@ -16,7 +16,7 @@ dV2_mean = mean(mean(abs(out.dm2.Vall(:,:,end) - out.dm2.Vall(:,:,end-1))));
 dV_mean = mean([dV1_mean,dV2_mean]);
 
 
-drift = [0, 0.5*dV_mean:dV_mean:dV_mean];
+drift = [0, 0.5*dV_mean:dV_mean:dV_mean].';
 
 initial_command_1 = out.dm1.Vall(:,:,end);
 initial_command_2 = out.dm2.Vall(:,:,end);

@@ -320,6 +320,9 @@ elseif any(mp.dm_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
 end
 
+% Do safety check for pinned actuators
+disp('OL DM safety check.')
+ev = pinned_act_safety_check(mp,ev);
 
 % if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
 % if any(mp.dm_drift_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);end
