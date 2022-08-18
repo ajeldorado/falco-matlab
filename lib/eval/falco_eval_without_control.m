@@ -15,6 +15,7 @@ function outSingle = falco_eval_without_control(mp)
 
     mp.Nitr = 1; % change only for this function
     Itr = 1;
+    ev.Itr = Itr;
     
     outSingle = falco_init_storage_arrays(mp);
 

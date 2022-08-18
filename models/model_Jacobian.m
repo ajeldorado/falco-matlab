@@ -23,7 +23,7 @@ function jacStruct = model_Jacobian(mp)
     if(any(mp.dm_ind==2)); mp.dm2.compact.surfM = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.NdmPad); else; mp.dm2.compact.surfM = zeros(2); end
     switch upper(mp.coro)
         case{'HLC'}
-            if strcmpi(mp.layout, 'fourier')
+            if strcmpi(mp.layout, 'fourier') && ~isfield(mp.compact, 'FPMcube')
                 [mp.FPMcube, mp.dm8.surf, mp.dm9.surf] = falco_gen_HLC_FPM_complex_trans_cube(mp, 'compact'); %--Generate the DM surface and FPM outside the full model so that they don't have to be re-made for each wavelength, tip/tilt offset, etc.
                 %--Get rid of the DM.dmX.inf_datacube fields in the full model to save RAM.
                 mp.dm8 = rmfield(mp.dm8, 'inf_datacube'); 
@@ -37,8 +37,8 @@ function jacStruct = model_Jacobian(mp)
     end
 
     %--Initialize the Jacobian cubes for each DM.
-    if(mp.flagFiber)
-        if(mp.flagLenslet)
+    if mp.flagFiber
+        if mp.flagLenslet
             if(any(mp.dm_ind==1)); jacStruct.G1 = zeros(mp.Fend.Nlens, mp.dm1.Nele, mp.jac.Nmode);  else;  jacStruct.G1 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM1
             if(any(mp.dm_ind==2)); jacStruct.G2 = zeros(mp.Fend.Nlens, mp.dm2.Nele, mp.jac.Nmode);  else;  jacStruct.G2 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM2
         else

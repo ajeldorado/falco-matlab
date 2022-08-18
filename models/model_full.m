@@ -103,8 +103,8 @@ switch lower(mp.layout)
             case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-                if(isfield(mp, 'FPMcubeFull')) %--Load it if stored
-                    %mp.FPM.mask = mp.FPMcubeFull(:, :, ilam);
+                if isfield(mp.full, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
                 else
                     mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'full');
                 end
@@ -112,8 +112,8 @@ switch lower(mp.layout)
             case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-                if(isfield(mp, 'FPMcubeFull')) %--Load it if stored
-                   %mp.FPM.mask = mp.FPMcubeFull(:, :, ilam);
+                if isfield(mp.full, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
                 else %--Otherwise generate it
                     mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'full');
                 end
@@ -140,6 +140,11 @@ end
 % %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
 % if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
 % if(any(mp.dm_ind==2));  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
+
+%% FPM Errors
+if mp.F3.full.flagErrors
+    mp.F3.full.Eab = mp.F3.full.EabArray(:, :, modvar.sbpIndex, modvar.wpsbpIndex);
+end
 
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)

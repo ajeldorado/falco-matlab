@@ -111,6 +111,12 @@ if mp.flagApod
     EP3 = mp.P3.full.mask .* pad_crop(EP3, mp.P3.full.Narr); 
 end
 
+%--Apply errors at the FPM plane before applying the mask
+if mp.F3.full.flagErrors
+    EP3 = pad_crop(EP3, NdmPad);
+    EP3 = propcustom_mft_apply_focal_errors_babinet(EP3, mp.F3.full.Eab, mp.F3.full.EabRes*(mp.lambda0/lambda), mp.P1.full.Nbeam);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation from P3 to P4 depends on coronagraph type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,7 +128,7 @@ switch upper(mp.coro)
         end
 
         % Get phase scale factor for FPM. 
-        if numel(mp.F3.VortexCharge) == 1
+        if numel(mp.F3.phaseScaleFac) == 1
             % Single value indicates fully achromatic mask
             phaseScaleFac = mp.F3.phaseScaleFac;
         else
@@ -145,6 +151,13 @@ switch upper(mp.coro)
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+        
+%         figure(2);
+%         imagesc(angle(fpm));
+%         colorbar; 
+%         colormap(hsv);
+%         caxis([-pi pi])
+%         
         EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         
         % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
@@ -175,14 +188,20 @@ switch upper(mp.coro)
         
         switch mp.layout
             case{'fourier'}
-                %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
-                t_Ti_base = 0;
-                t_Ni_vec = 0;
-                t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-                pol = 2;
-                [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-                transOuterFPM = tCoef;
                 scaleFac = 1;
+                
+                %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
+                if isfield(mp.full, 'FPMcube')
+                    transOuterFPM = mp.FPM.mask(1, 1);
+                else
+                    t_Ti_base = 0;
+                    t_Ni_vec = 0;
+                    t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+                    pol = 2;
+                    [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                    transOuterFPM = tCoef;
+                end
+                
             case{'fpm_scale'}
                 transOuterFPM = mp.FPM.mask(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
                 scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
