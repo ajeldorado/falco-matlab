@@ -13,7 +13,7 @@ runTag = datestr(datetime('now'),30); % get a string with the current date and t
 mkdir(dhmOutDir)
 
 %% Get active actuators for DM1 and DM2
-mp.dm_ind = [1,2];
+% mp.dm_ind = [1,2];
 % % Normalization and throughput calculations
 % 
 % mp = falco_compute_psf_norm_factor(mp);
@@ -41,7 +41,11 @@ ev.dm2.act_ele_pinned = [];
 
 %% Get mean DM command between last two iterations
 dV1_mean = mean(mean(abs(out.dm1.Vall(:,:,end) - out.dm1.Vall(:,:,end-1))));
-dV2_mean = mean(mean(abs(out.dm2.Vall(:,:,end) - out.dm2.Vall(:,:,end-1))));
+if any(mp.dm_ind == 2)
+    dV2_mean = mean(mean(abs(out.dm2.Vall(:,:,end) - out.dm2.Vall(:,:,end-1)))); 
+else
+    dV2_mean = dV1_mean;
+end
 dV_mean = mean([dV1_mean,dV2_mean]);
 
 % p1 = 5.587e-6;
@@ -51,8 +55,6 @@ dV_mean = mean([dV1_mean,dV2_mean]);
 
 
 %%
-% dither_1 = [0, 0.5*dV1_mean:dV1_mean:dV1_mean*10];
-% dither_2 = [0, 0.5*dV2_mean:dV2_mean:dV2_mean*10];
 
 % Set number of exposures to average over
 num_iter = 5;
@@ -67,15 +69,11 @@ initial_command_2 = out.dm2.Vall(:,:,end);
 si = ceil(mp.Nsbp / 2);
 
 active_dm_arr = [1,0; 0,1; 1,1]; % needs to be same size as number of DMs, 1 means DMi is dithering
-contrast = zeros(num_iter,size(dither,1),3);
-mean_contrasts = zeros(1,size(dither,1),3);
-for i = 1:1:3
+contrast = zeros(num_iter,size(dither,1),size(active_dm_arr,1));
+mean_contrasts = zeros(1,size(dither,1),size(active_dm_arr,1));
+for i = 1:1:size(active_dm_arr,1)
     active_dm = active_dm_arr(i,:);
-    %     if sum(active_dm) == 2
-    %         dither = mean([dither_1;dither_2]);
-    %         dither_1 = dither;
-    %         dither_2 = dither;
-    %     end
+
     figure(i)
     contrast(:,:,i) = get_contrast_vs_dither(mp,dither,initial_command_1,initial_command_2,si,active_dm,num_iter,ev);
 
@@ -84,6 +82,24 @@ for i = 1:1:3
 
 
 end
+
+%% Save
+out_dither_test_1.contrast = contrast(:,:,1);
+out_dither_test_1.mean_contrast = mean_contrasts(:,:,1);
+out_dither_test_1.dither = dither;
+save(fullfile(dhmOutDir,['out_dither_test_1',runTag,'.mat']),'out_dither_test_1')
+
+out_dither_test_2.contrast = contrast(:,:,2);
+out_dither_test_2.mean_contrast = mean_contrasts(:,:,2);
+out_dither_test_2.dither = dither;
+save(fullfile(dhmOutDir,['out_dither_test_2',runTag,'.mat']),'out_dither_test_2')
+
+out_dither_test_12.contrast = contrast(:,:,3);
+out_dither_test_12.mean_contrast = mean_contrasts(:,:,3);
+out_dither_test_12.dither = dither;
+save(fullfile(dhmOutDir,['out_dither_test_12',runTag,'.mat']),'out_dither_test_12')
+
+
 %% Plot final result for DM1
 
 dither_legend = "dither = " + string(dither);
@@ -136,23 +152,6 @@ xlabel('$\sigma_{dither} [V/\sqrt{iter}]$','Interpreter','latex')
 ylabel('mean dz contrast')
 title([{'DM12'},{'mean dz contrast'},{'vs dither std dev'}])
 
-%% Save
-out_dither_test_1.contrast = contrast(:,:,1);
-out_dither_test_1.mean_contrast = mean_contrasts(:,:,1);
-out_dither_test_1.dither = dither;
-
-out_dither_test_2.contrast = contrast(:,:,2);
-out_dither_test_2.mean_contrast = mean_contrasts(:,:,2);
-out_dither_test_2.dither = dither;
-
-out_dither_test_12.contrast = contrast(:,:,3);
-out_dither_test_12.mean_contrast = mean_contrasts(:,:,3);
-out_dither_test_12.dither = dither;
-
-save(fullfile(dhmOutDir,['out_dither_test_1',runTag,'.mat']),'out_dither_test_1')
-save(fullfile(dhmOutDir,['out_dither_test_2',runTag,'.mat']),'out_dither_test_2')
-save(fullfile(dhmOutDir,['out_dither_test_12',runTag,'.mat']),'out_dither_test_12')
-
 
 %% Function to get contrast vs dither for a particular DM
 function contrast = get_contrast_vs_dither(mp,dither,initial_command_1,initial_command_2,si,active_dm,num_iter,ev)
@@ -182,6 +181,7 @@ for i = 1:1:size(dither,1)
         
         mp.dither = dither(i);
         [mp, ev] = pinned_act_safety_check(mp,ev);
+        % Only take image if no actuators in act_ele will get pinned
         if ~ev.exit_flag
             % Take image with random command
             image = falco_get_sbp_image(mp,si); % this returns image in contrast units
@@ -242,7 +242,7 @@ if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>
         fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
     end
 
-    % If actuators are used in jacobian, quit.
+    % If new pinned actuators are used in jacobian, set flag to true so no image is taken 
     if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
         save(fullfile([mp.path.config,'/','/ev_exit_',num2str(mp.dither),'.mat']),'ev')
         save(fullfile([mp.path.config,'/','/mp_exit_',num2str(mp.dither),'.mat']),"mp")
