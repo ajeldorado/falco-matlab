@@ -99,7 +99,6 @@ if(mp.flagPlot)
     if strcmpi(mp.estimator,'ekf_maintenance') %&& any(mp.est.itr_ol==Itr) == true
         % TODO: this fails when it isnt an OL iteration for some reason
         semilogy(0:Itr-1,mean(Im_tb.ev.IOLScoreHist(1:Itr,:),2),'-p')
-
     end
     hold off;
     xlim([0 length(Inorm.total)])
@@ -238,7 +237,6 @@ end
 if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
     img = mean(Im_tb.ev.normI_OL_sbp,3);
     iact_fitswrite(mp,tb,img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
-
 end
 
 % Update the diary 
