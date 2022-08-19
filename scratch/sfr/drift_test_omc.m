@@ -35,7 +35,7 @@ dV_mean = mean([dV1_mean,dV2_mean]);
 
 % drift = [0.5*dV_mean:dV_mean:dV_mean].';
 % drift = [8*dV_mean:dV_mean:10*dV_mean].';
-drift = dv_mean*[3,2,1].';
+drift = dV_mean*[3,2,1].';
 
 initial_command_1 = out.dm1.Vall(:,:,iter_end);
 initial_command_2 = out.dm2.Vall(:,:,iter_end);
