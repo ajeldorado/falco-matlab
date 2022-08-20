@@ -1,17 +1,20 @@
 % Script to launch dark hole maintainance after running falco_wfsc_loop the
 % traditional way 
-falco_omc_paths;
-tb.info.OUT_DATA_DIR = data_dir;
+% falco_omc_paths;
+% tb.info.OUT_DATA_DIR = data_dir;
 %% Use a previous DM solution 
 % mp.SeriesNum = 8;
 % mp.TrialNum = 65;
+% TODO check why it loads it9 if itNum=NaN
 dhmStartSoln.SeriesNum = mp.SeriesNum; % Series number of previous DM solution 
 dhmStartSoln.TrialNum = mp.TrialNum; % Trial number of previous DM solution 
-dhmStartSoln.itNum = NaN; % Iteration number for previous DM solution 
+dhmStartSoln.itNum = 60; % Iteration number for previous DM solution 
+% 
+% load(fullfile(pwd,tb.info.OUT_DATA_DIR, ...
+%     ['falco_omc_config_Series0',num2str(dhmStartSoln.SeriesNum),'_Trial0',num2str(dhmStartSoln.TrialNum),'.mat']))
 
-load(fullfile(tb.info.OUT_DATA_DIR,['Series',num2str(dhmStartSoln.SeriesNum),'_Trial',num2str(dhmStartSoln.TrialNum)], ...
-    ['Series',num2str(dhmStartSoln.SeriesNum),'_Trial',num2str(dhmStartSoln.TrialNum),'_config.mat']))
-mp = loadPrevDMsoln(mp, dhmStartSoln, tb.info.OUT_DATA_DIR );
+load_dir = fullfile(pwd,tb.info.OUT_DATA_DIR,'/');
+mp = loadPrevDMsoln(mp, dhmStartSoln,load_dir );
 %mp = loadPrevEsens(mp, dhmStartSoln, tb.info.OUT_DATA_DIR );
 
 %% 
@@ -27,7 +30,7 @@ mp.est.flagUseJac = true; % EKF needs the jacobian for estimation
 mp.est.read_noise = 1; % e-
 mp.est.dark_current = 0.01; %e-/s
 mp.est.itr_ol = [1:200:mp.Nitr,mp.Nitr].'; % "open-loop" iterations 
-mp.est.itr_reset = [500,600];
+mp.est.itr_reset = [mp.Nitr+1];
 
 
 %%-- Controller variables 
@@ -52,6 +55,7 @@ tb.info.sbp_texp = 5*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass (sec
 tb.info.sbp_texp_probe = 5*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass when probing (seconds)
 
 %%-- DM settings 
+if mp.
 mp.dm1.V_dz = mp.dm1.V; 
 mp.dm2.V_dz = mp.dm2.V; 
 

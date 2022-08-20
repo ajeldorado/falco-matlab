@@ -213,12 +213,12 @@ if mp.flagSaveWS
 %     mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
 %     mp.complexTransFull = 1; mp.complexTransCompact = 1;
 % 
-    mp.dm1.compact.inf_datacube = 0;
-    mp.dm2.compact.inf_datacube = 0;
-    mp.dm8.compact.inf_datacube = 0;
-    mp.dm9.compact.inf_datacube = 0;
-    mp.dm8.inf_datacube = 0;
-    mp.dm9.inf_datacube = 0;
+%     mp.dm1.compact.inf_datacube = 0;
+%     mp.dm2.compact.inf_datacube = 0;
+%     mp.dm8.compact.inf_datacube = 0;
+%     mp.dm9.compact.inf_datacube = 0;
+%     mp.dm8.inf_datacube = 0;
+%     mp.dm9.inf_datacube = 0;
 
     fnAll = fullfile(mp.path.ws,[mp.runLabel, '_all.mat']);
     disp(['Saving entire workspace to file ' fnAll '...'])
