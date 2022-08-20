@@ -8,7 +8,7 @@
 % TODO check why it loads it9 if itNum=NaN
 dhmStartSoln.SeriesNum = mp.SeriesNum; % Series number of previous DM solution 
 dhmStartSoln.TrialNum = mp.TrialNum; % Trial number of previous DM solution 
-dhmStartSoln.itNum = 60; % Iteration number for previous DM solution 
+dhmStartSoln.itNum = 67; % Iteration number for previous DM solution 
 % 
 % load(fullfile(pwd,tb.info.OUT_DATA_DIR, ...
 %     ['falco_omc_config_Series0',num2str(dhmStartSoln.SeriesNum),'_Trial0',num2str(dhmStartSoln.TrialNum),'.mat']))
@@ -55,7 +55,7 @@ tb.info.sbp_texp = 5*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass (sec
 tb.info.sbp_texp_probe = 5*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass when probing (seconds)
 
 %%-- DM settings 
-if mp.
+
 mp.dm1.V_dz = mp.dm1.V; 
 mp.dm2.V_dz = mp.dm2.V; 
 
