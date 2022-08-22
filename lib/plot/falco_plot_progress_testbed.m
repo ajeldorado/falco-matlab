@@ -12,7 +12,7 @@ function handles = falco_plot_progress_testbed(handles,mp,Itr,Inorm,Im_tb,DM1sur
             handles = falco_plot_progress_hcst(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf);
         case 'GPCT'
             handles = falco_plot_progress_gpct(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf); 
-        case {'DST', 'OMC'}
+        case 'DST'
             handles = falco_plot_progress_dst(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf); 
         case 'IACT'
             handles = falco_plot_progress_iact(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf); 
