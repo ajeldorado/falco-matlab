@@ -4,7 +4,7 @@
 % of Technology Transfer at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Set the DMs and take an image in the specified subband.
+% Take an image in the specified subband.
 %
 % INPUTS
 % ------

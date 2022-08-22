@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to set DMs and get an image in the specified sub-bandpass from the DST. 
+% Function to get an image in the specified sub-bandpass from the DST. 
 %
 % ---------------
 % INPUTS:
@@ -75,18 +75,14 @@ function normI = falco_get_dst_sbp_image(mp,si)
     if(tb.DM2.installed && tb.DM2.CONNECTED)
         try
             DM_apply2Dmap(tb.DM2,dm2_map);
-        catch ME
-            error(ME);
-    
-            %%%% DST only:
-            %             %try; cleanUpDMs(tb); end
-            %             disp('Error setting DM2. Reseting electronics. Trying again.')
-            %             % push the button on the DM controller (DST only)
-            %             FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
-            %             pause(5);
-            %             setUpDMs(tb);
-            %             DM_apply2Dmap(tb.DM1,dm1_map);
-            %             DM_apply2Dmap(tb.DM2,dm2_map);
+        catch 
+            %try; cleanUpDMs(tb); end
+            disp('Error setting DM2. Reseting electronics. Trying again.')
+            FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
+            pause(5);
+            setUpDMs(tb);
+            DM_apply2Dmap(tb.DM1,dm1_map);
+            DM_apply2Dmap(tb.DM2,dm2_map);
         end
             
     end
@@ -100,17 +96,16 @@ function normI = falco_get_dst_sbp_image(mp,si)
     lam1 = lam0 - sbp_width/2;
     lam2 = lam0 + sbp_width/2;
     if(strcmpi(tb.info.source,'nkt'))
-        NKT_setWvlRange(tb,lam1*1e9,lam2*1e9); % DST/gruane_DST/tb_lib/NKT/NKT_setWvlRange
+        NKT_setWvlRange(tb,lam1*1e9,lam2*1e9);
     end
     
     % Load a dark
-    dark = sciCam_loadDark(tb,sbp_texp); % DST/gruane_DST/tb_lib/scicam/sciCam_loadDark
+    dark = sciCam_loadDark(tb,sbp_texp);
     
     % Scale the PSF photometry by the current integration time
     PSFpeak_counts = PSFpeak*sbp_texp; 
     
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
-    % sciCam_getImage returns FOV window to match falco expected image size   
-    normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
+    normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; 
     
 end

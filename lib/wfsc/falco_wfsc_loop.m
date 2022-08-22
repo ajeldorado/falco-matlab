@@ -12,19 +12,11 @@ flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
-flagBreak = false;
-
 for Itr = 1:mp.Nitr
     
     
     %% Bookkeeping
-    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
-    
-    % update subdir for scicam images
-    if isfield(mp, 'tb')
-        mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
-        mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
-    end
+    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
     
     if mp.flagSim
         fprintf('Zernike modes used in this Jacobian:\t');
@@ -40,7 +32,11 @@ for Itr = 1:mp.Nitr
     if strcmpi(mp.controller, 'plannedefc')
         mp.dm_ind = mp.dm_ind_sched{Itr}; % Change which DMs are used
     end
-    disp(['DMs to be used in this iteration = [' num2str(mp.dm_ind(:)') ']']);
+    fprintf('DMs to be used in this iteration = [')
+    for jj = 1:length(mp.dm_ind)
+        fprintf(' %d', mp.dm_ind(jj)); 
+    end
+    fprintf(' ]\n')
     
     out.serialDateVec(Itr) = now;
     out.datetimeArray = datetime(out.serialDateVec,'ConvertFrom','datenum');
@@ -79,7 +75,12 @@ for Itr = 1:mp.Nitr
     ev = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
+    
+    %% Progress plots (PSF, NI, and DM surfaces)
 
+    if Itr == 1; hProgress.master = 1; end % initialize the handle
+    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
+    
     %% Plot the expected and measured delta E-fields
     
     if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
@@ -87,26 +88,13 @@ for Itr = 1:mp.Nitr
     if Itr > 1
         out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
     end
-    % add model E-field to ev for saving
-    ev.Esim = Esim;
-
-    %% Progress plots (PSF, NI, and DM surfaces)
-    % plot_wfsc_progress also saves images and ev probe data
     
-    if Itr == 1; hProgress.master = 1; end % initialize the handle
-    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
-        
     %% Compute and Plot the Singular Mode Spectrum of the Electric Field
     if mp.flagSVD
         out = falco_plot_singular_mode_spectrum_of_Efield(mp, out, jacStruct, ev.Eest, Itr);
     end
         
     %% Wavefront Control
-    
-    % control strategy
-    if isfield(mp, 'funCtrlStrategy') && ~isempty(mp.funCtrlStrategy)
-        mp = mp.funCtrlStrategy(mp, out, Itr);
-    end
     
     cvar.Eest = ev.Eest;
     cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
@@ -157,10 +145,9 @@ for Itr = 1:mp.Nitr
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
-    
-    %% end early? you can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
+
     if flagBreak
-        break;
+        break
     end
 
 end %--END OF ESTIMATION + CONTROL LOOP

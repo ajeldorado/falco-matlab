@@ -14,11 +14,11 @@
 %
 % INPUTS
 % ------
-% dm : structure of DM parameters, dm.V is relative to dm.biasMap
+% dm : structure of DM parameters
 %
 % OUTPUTS
 % -------
-% dm : structure of DM parameters, dm.V is relative to dm.biasMap
+% dm : structure of DM parameters
 
 function dm = falco_enforce_dm_constraints(dm)
 
@@ -63,7 +63,7 @@ VtotalbeforeNR = Vtotal;
 Vtotal = ConstrainDM.constrain_dm(Vtotal, dm.facesheetFlatmap, tieMat, dm.Vmax, dm.dVnbrLat, dm.dVnbrDiag, vquant, maxiter);
 numOfChangedActs = nnz(Vtotal(:) - VtotalbeforeNR(:));
 if(numOfChangedActs>0)
-    %disp(['     NR violation detected. ',num2str(numOfChangedActs),' actuators involved.'])
+    disp(['     NR violation detected. ',num2str(numOfChangedActs),' actuators involved.'])
 end
 dm.V = Vtotal - dm.biasMap;
 
