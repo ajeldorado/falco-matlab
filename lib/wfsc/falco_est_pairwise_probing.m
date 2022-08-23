@@ -231,8 +231,7 @@ for iSubband = 1:mp.Nsbp
         %--Generate the DM command map for the probe
         switch lower(mp.estimator)
             case{'pairwise-rect', 'pwp-bp', 'pwp-kf'} 
-                %probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar, mp.est.probe.rotation);
-                probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar);
+                probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar, mp.est.probe.rotation);
             case{'pairwise', 'pairwise-square', 'pwp-bp-square'}
                 probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe), mp.est.probe.rotation);
         end
