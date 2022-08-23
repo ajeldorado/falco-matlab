@@ -21,7 +21,7 @@ for Itr = 1:mp.Nitr
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
     
     % update subdir for scicam images
-    if isfield(mp, 'tb')
+    if isfield(mp, 'tb') && isfield(mp, 'testbed') && isequal(upper(mp.testbed), 'OMC')
         mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
         mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
     end
@@ -300,8 +300,10 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
             out.InormHist_tb.unmod = NaN(Itr, mp.Nsbp);
         end
         hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
+
     else
-        %
+        hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
@@ -321,7 +323,6 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
 
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
         end
-        hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
         
     end
 end
