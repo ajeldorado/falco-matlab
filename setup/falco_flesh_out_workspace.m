@@ -5,6 +5,8 @@
 % -------------------------------------------------------------------------
 %
 % Flesh out the rest of the workspace prior to wavefront estimation and control.
+%
+% [mp, out] = falco_flesh_out_workspace(mp)
 
 function [mp, out] = falco_flesh_out_workspace(mp)
 
