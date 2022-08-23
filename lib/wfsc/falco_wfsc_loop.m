@@ -8,7 +8,6 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
-flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
