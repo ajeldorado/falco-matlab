@@ -19,10 +19,9 @@ for Itr = 1:mp.Nitr
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
     
-    % update subdir for scicam images
-    if isfield(mp, 'tb') && isfield(mp, 'testbed') && isequal(upper(mp.testbed), 'OMC')
-        mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
-        mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
+    % user-defined bookkeeping updates for each iteration
+    if isfield(mp, 'funTopofloopBookkeeping') && ~isempty(mp.funTopofloopBookkeeping)
+        mp = mp.funTopofloopBookkeeping(mp, Itr);
     end
     
     if mp.flagSim
