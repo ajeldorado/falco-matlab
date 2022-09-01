@@ -8,8 +8,8 @@
 
 function falco_plot_pairwise_probes(mp, ev, dDMVplus, ampSq2Dcube, iSubband)
 
-if(mp.flagPlot)
-    
+  if(mp.flagPlot)
+
     if mp.est.probe.whichDM == 1
         VtoH = mp.dm1.VtoH;
     elseif mp.est.probe.whichDM == 2
@@ -69,4 +69,5 @@ if(mp.flagPlot)
     drawnow;
     hold off
 
+  end
 end

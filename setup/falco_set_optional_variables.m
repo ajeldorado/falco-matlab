@@ -46,6 +46,9 @@ if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' fil
 
 %% Optional/hidden boolean flags
 
+%--Debugging mode
+if ~isfield(mp, 'debug'); mp.debug = false; end 
+
 %--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)

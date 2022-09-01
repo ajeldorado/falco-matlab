@@ -25,39 +25,35 @@ classdef Probe
         etaOffset double = 0; % Vertical offset from star of rectangular probe in focal plane [lambda/D].  (NOTE: Only used for rectangular probes. No offset for square probed region.)
 
     end % properties
-
-    
+   
     methods
-
-        function S = Probe(varargin)
-            % Initialize the Probe object in 3 possible ways:
+       
+       function S = Probe(varargin)
+            % init Probe object
             %
             % S = Probe
-            % S = Probe(probeStruct) % where probeStruct is a struct
+            % S = Probe(struct_probe) % where modvar is a struct
             % S = Probe('property', value, 'property', value, ...)
             
-            % Single argument is a struct with fields that will become
-            % the object properties.
             if length(varargin) == 1 && isstruct(varargin{1})
-                probeStruct = varargin{1}; % for convenience
-                fnames = fieldnames(probeStruct);
+                % input is a modvar struct to initialize properties
+                modvar = varargin{1}; % for convenience
+                fnames = fieldnames(modvar);
                 for ii = 1:length(fnames)
                     if isprop(S, fnames{ii})
-                        S.(fnames{ii}) = probeStruct.(fnames{ii});
+                        S.(fnames{ii}) = modvar.(fnames{ii});
                     end
                 end
-            end % if init with probeStruct struct
+            end % if init with modvar struct
             
-            % Arguments are explicit pairs of property, value.
             if length(varargin) > 1
                 % varargin is property, value pairs
                 for ii = 1:2:length(varargin)
                     S.(varargin{ii}) = varargin{ii+1};
                 end                 
-            end 
-    
-        end
-    
-    end % methods
-   
+            end % explicit property, value
+           
+       end % class init
+       
+   end % methods
 end
