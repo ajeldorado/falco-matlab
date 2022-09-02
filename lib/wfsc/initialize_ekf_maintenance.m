@@ -52,10 +52,13 @@ function ev = rearrange_jacobians(mp,ev,jacStruct)
 % jacStruct.G_tot = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele*active_dms(1) + mp.dm2.Nele*active_dms(2),Nsbp);
 
 G1 = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele,mp.Nsbp);
-G2 = zeros(2*size(jacStruct.G1,1),mp.dm2.Nele,mp.Nsbp);
+G2 = zeros(2*size(jacStruct.G2,1),mp.dm2.Nele,mp.Nsbp);
 
 % Set up jacobian so real and imag components alternate and jacobian from
 % each DM is stacked
+
+% TODO: set up so there is a G_tot for control and a G_tot for drift that
+% are separate
 for iSubband = 1:mp.Nsbp
     
     if any(mp.dm_ind == 1)
