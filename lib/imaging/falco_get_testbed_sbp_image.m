@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to set DMs and get an image in the specified sub-bandpass from a testbed. 
+% Function to get an image in the specified sub-bandpass from a testbed. 
 % This function calls an equivalent sub-function depending on mp.testbed. 
 %
 % ---------------
@@ -31,8 +31,6 @@ function normI = falco_get_testbed_sbp_image(mp,si)
             normI = falco_get_gpct_sbp_image(mp,si); 
         case 'DST'
             normI = falco_get_dst_sbp_image(mp,si); 
-        case 'OMC'
-            normI = falco_get_omc_sbp_image(mp,si);
         case 'IACT'
             normI = falco_get_iact_sbp_image(mp,si); 
         %Can put other testbeds or fancy models here

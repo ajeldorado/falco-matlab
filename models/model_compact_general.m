@@ -32,13 +32,7 @@
 % In wrapper above this that chooses layout, need to define mp.FPM.mask like this:
 % mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact');
 
-function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
-
-if nargout >= 3,
-    debug = true;
-else
-    debug = false;
-end
+function [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
@@ -101,7 +95,6 @@ EP1 = pupil .* Ein;
 
 %--Re-image to pupil plane P2
 EP2 = propcustom_relay(EP1, NrelayFactor*mp.Nrelay1to2, mp.centering);
-if debug, sDebug.EP2_before_dms = EP2; end
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
@@ -113,7 +106,6 @@ Edm2 = Edm2WFE .* DM2stop .* exp(mirrorFac*2*pi*1j*DM2surf/lambda) .* Edm2;
 
 %--Back-propagate to effective pupil at P2
 EP2eff = propcustom_PTP(Edm2, mp.P2.compact.dx*NdmPad, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
-if debug, sDebug.EP2_after_dms = EP2eff; end
 
 %--Re-image to pupil P3
 EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering);
@@ -298,8 +290,6 @@ else % No FPM in beam path, so relay directly from P3 to P4.
     
 end
 
-if debug, sDebug.EP4_before_mask = EP4; end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Back to common propagation any coronagraph type   %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -307,8 +297,6 @@ if debug, sDebug.EP4_before_mask = EP4; end
 %--Apply the Lyot stop
 EP4 = mp.P4.compact.croppedMask .* EP4;
 
-if debug, sDebug.EP4_after_mask = EP4; end
-    
 %--MFT to camera
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);

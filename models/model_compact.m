@@ -10,17 +10,7 @@
 % INPUTS
 % ------
 % mp : structure of model parameters
-% modvar : an instance of class ModelVariables
-%
-% modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
-% modvar.sbpIndex
-% modvar.sbpIndex
-% modvar.lambda           % optional, default = mp.sbp_centers(modvar.sbpIndex)
-% modvar.starIndex
-% modvar.whichSource
-% modvar.y_offset         % required if modvar.whichSource == 'offaxis'
-% modvar.x_offset         % required if modvar.whichSource == 'offaxis'
-% modvar.zernIndex        % optional, default = 1;
+% modvar : structure of model variables
 %
 % OUTPUTS
 % -------
@@ -55,9 +45,6 @@ while icav < size(varargin, 2)
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
     end
 end
-
-%--Initialize output args
-varargout = {};
 
 %--Normalization factor for compact evaluation model
 if ~flagNewNorm && flagEval
@@ -131,16 +118,10 @@ end
 
 %--Select which optical layout's compact model to use and get the output E-field
 if ~mp.flagFiber
-    if mp.debug
-        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-        varargout{end+1} = sDebug;
-    else
-        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-    end
+    Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
 else
     [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
     varargout{1} = Efiber;
 end
     
 end %--END OF FUNCTION
-

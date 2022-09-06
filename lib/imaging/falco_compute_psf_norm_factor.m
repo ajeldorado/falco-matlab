@@ -119,8 +119,6 @@ function I00 = model_full_norm_wrapper(li, mp)
     modvar.starIndex = 1;
     modvar.whichSource = 'star';
     
-    sModvar = ModelVariables(modvar);
-    
-    Etemp = model_full(mp, sModvar, 'getNorm');
+    Etemp = model_full(mp, modvar,'getNorm');
     I00 = max(max(abs(Etemp).^2));
 end

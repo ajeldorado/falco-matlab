@@ -222,6 +222,7 @@ for iSubband = 1:mp.Nsbp
     else
         InormProbe = mp.est.probeSchedule.InormProbeVec(Itr);
         fprintf('Scheduled probe intensity: %.2e \n', InormProbe);
+
     end
 
     %--Perform the probing
@@ -366,11 +367,9 @@ for iSubband = 1:mp.Nsbp
         %%--Create delta E-fields for each probe image. Then create Npairs phase angles.
         dEplus  = Eplus  - repmat(E0vec, [1, Npairs]);
         dEminus = Eminus - repmat(E0vec, [1, Npairs]);
-        [dphdm, amp_model] = deal(zeros([mp.Fend.corr.Npix, Npairs])); %--phases and model amp of the probes
+        dphdm  = zeros([mp.Fend.corr.Npix, Npairs]); %--phases of the probes
         for iProbe = 1:Npairs
             dphdm(:, iProbe) = atan2(imag(dEplus(:, iProbe))-imag(dEminus(:, iProbe)), real(dEplus(:, iProbe))-real(dEminus(:, iProbe)));
-            % model predicted probe amplitude, only for diagnostics
-            amp_model(:, iProbe) = 0.5*abs(dEplus(:, iProbe) - dEminus(:, iProbe));
         end
         
     end 
@@ -555,9 +554,6 @@ end %--End of loop over stars
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
-ev.InormProbe = InormProbe;        
-ev.maskBool = mp.Fend.corr.maskBool; %--for resizing Eest and IincoEst for plotting
-ev.amp_model = amp_model;
 
 mp.isProbing = false;
 
