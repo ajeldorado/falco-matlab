@@ -124,7 +124,7 @@ end
 switch upper(mp.coro)
     case{'VORTEX', 'VC'}
         if mp.flagApod == false
-            EP3 = pad_crop(EP3, 2^nextpow2(mp.P1.full.Narr)); %--Crop down if there isn't an apodizer mask
+            EP3 = pad_crop(EP3, max([mp.P4.full.Narr, 2^nextpow2(mp.P1.full.Narr)])); %--Crop down if there isn't an apodizer mask
         end
 
         % Get phase scale factor for FPM. 
