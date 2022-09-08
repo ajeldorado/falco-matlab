@@ -6,6 +6,7 @@
 %--Record Keeping
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
+mp.runLabel = sprintf('Series%04d_Trial%04d', mp.SeriesNum, mp.TrialNum);
 
 %--Special Computational Settings
 mp.flagParfor = false;
@@ -177,20 +178,20 @@ mp.Fend.sides = 'right'; %--Which side(s) for correction: 'both', 'left', 'right
 
 mp.Fend.Nxi = 150;
 mp.Fend.Neta = 150;
+mp.scc.modeCoef = 2;  % Gain coeficient to apply to the normalized DM basis set for the empirical SCC Jacobian calculation.
 mp.scc.butterworth_exponent = 3;
-mp.scc.pupil_center_row = 46;
-mp.scc.pupil_center_col = 94;
-mp.scc.pupil_subwindow_diameter = 30;
+% mp.scc.pupil_center_row = 46;
+% mp.scc.pupil_center_col = 94;
+% mp.scc.pupil_subwindow_diameter = 30;
 
 mp.dm1.fourier_spacing = 1; % Center-to-center spacing between Fourier modes in the focal plane. [lambda/D]
 mp.dm1.fourier_gridType = 'hex';  % Options: 'hex' or 'square'. 'hex' has a denser packing
 [mp.dm1.fourier_basis_xis , mp.dm1.fourier_basis_etas] = falco_choose_fourier_locations_polar(...
-    mp.dm1.Nact/2, mp.dm1.fourier_spacing, mp.dm1.fourier_gridType, mp.Fend.corr.Rin-1, mp.Fend.corr.Rout, mp.Fend.corr.ang, mp.Fend.clockAngDeg );
+    mp.dm1.Nact/2, mp.dm1.fourier_spacing, mp.dm1.fourier_gridType, mp.Fend.corr.Rin-1, mp.Fend.corr.Rout+1, mp.Fend.corr.ang, mp.Fend.clockAngDeg );
 
 mp.dm2.fourier_basis_xis = [];
 mp.dm2.fourier_basis_etas = [];
 
-mp.modeCoef = 2;  % Gain coeficient to apply to the normalized DM basis set for the empirical SCC Jacobian calculation.
 
 mp.dm1.Nactbeam = (mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
 mp.dm2.Nactbeam = (mp.dm2.Nact-2); % Number of actuators across the beam (approximate)

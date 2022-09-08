@@ -25,7 +25,6 @@ function ev = falco_est_scc(mp)
     ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
     imageShape0 = [mp.Fend.Neta, mp.Fend.Nxi];
     imageShapeMax = max(imageShape0);
-    imageShapeSquare = max(imageShape0) * [1, 1];
 
     for iStar = 1:mp.compact.star.count
 
@@ -53,7 +52,7 @@ function ev = falco_est_scc(mp)
             % kernel.
             filter_butterworth = (1-falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rin*mp.Fend.res)) .* ...
                 falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rout*mp.Fend.res);
-            imageFilt = pad_crop(image0, imageShapeSquare) .* filter_butterworth;
+            imageFilt = pad_crop(image0, [imageShapeMax, imageShapeMax]) .* filter_butterworth;
 
             imageFilt = ifftshift(imageFilt);
             pupil_scc = fft2(imageFilt);%/imageShapeMax;
@@ -106,6 +105,9 @@ function ev = falco_est_scc(mp)
             end
             
             ev.Eest(:, modeIndex) = Eest;
+            
+            % NOTE: Incoherent estimate is incorrect because of the scale
+            % factor between the SCC estimate and the true E-field.
             ev.IincoEst(:, modeIndex) =  image0Vec - abs(Eest).^2; % incoherent light
             
         end
