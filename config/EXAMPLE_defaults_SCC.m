@@ -89,7 +89,7 @@ mp.controller = 'gridsearchEFC';
 
 % % % GRID SEARCH EFC DEFAULTS     
 %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 3; %--Number of estimation+control iterations to perform
+mp.Nitr = 5; %--Number of estimation+control iterations to perform
 mp.relinItrVec = 1;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 
@@ -119,6 +119,7 @@ mp.dm1.zrot = 0;                % clocking of DM surface [degrees]
 mp.dm1.xc = (mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm1.yc = (mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
 mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
+mp.dm1.basisType = 'fourier';  % basis set for control. 'actuator' or 'fourier'
 
 %--DM2 parameters
 mp.dm2.Nact = 24;               % # of actuators across DM array
@@ -129,6 +130,7 @@ mp.dm2.zrot = 0;                % clocking of DM surface [degrees]
 mp.dm2.xc = (mp.dm2.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
 mp.dm2.yc = (mp.dm2.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
 mp.dm2.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
+mp.dm2.basisType = 'fourier';  % basis set for control. 'actuator' or 'fourier'
 
 %--Aperture stops at DMs
 mp.flagDM1stop = false; %--Whether to apply an iris or not
@@ -140,7 +142,6 @@ mp.dm2.Dstop = mp.dm1.Nact*mp.dm1.dm_spacing;   %--Diameter of iris [meters]
 mp.d_P2_dm1 = 0;        % distance (along +z axis) from P2 pupil to DM1 [meters]
 mp.d_dm1_dm2 = 0.20;   % distance between DM1 and DM2 [meters]
 
-
 %% Optical Layout: All models
 
 %--Key Optical Layout Choices
@@ -151,17 +152,48 @@ mp.coro = 'vortex';
 %--Final Focal Plane Properties
 mp.Fend.res = 6; %--Sampling [ pixels per lambda0/D]
 % mp.Fend.FOV = 11; %--half-width of the field of view in both dimensions [lambda0/D]
+mp.Fend.clockAngDeg = 0; % Clocking angle of the dark hole region
 
 %--Correction and scoring region definition
-mp.Fend.corr.Rin = 2.0;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rin = 2;   % inner radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.ang  = 90;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = 2.0;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rin = 2;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
+mp.Fend.score.ang = 90;  % angular opening of dark hole scoring region [degrees]
+% mp.Fend.corr.Rin = 2.0;   % inner radius of dark hole correction region [lambda0/D]
+% mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
+% mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
+% 
+% mp.Fend.score.Rin = 2.0;  % inner radius of dark hole scoring region [lambda0/D]
+% mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
+% mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
 mp.Fend.sides = 'right'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+
+
+%% SCC
+
+mp.Fend.Nxi = 150;
+mp.Fend.Neta = 150;
+mp.scc.butterworth_exponent = 3;
+mp.scc.pupil_center_row = 46;
+mp.scc.pupil_center_col = 94;
+mp.scc.pupil_subwindow_diameter = 30;
+
+mp.dm1.fourier_spacing = 1; % Center-to-center spacing between Fourier modes in the focal plane. [lambda/D]
+mp.dm1.fourier_gridType = 'hex';  % Options: 'hex' or 'square'. 'hex' has a denser packing
+[mp.dm1.fourier_basis_xis , mp.dm1.fourier_basis_etas] = falco_choose_fourier_locations_polar(...
+    mp.dm1.Nact/2, mp.dm1.fourier_spacing, mp.dm1.fourier_gridType, mp.Fend.corr.Rin-1, mp.Fend.corr.Rout, mp.Fend.corr.ang, mp.Fend.clockAngDeg );
+
+mp.dm2.fourier_basis_xis = [];
+mp.dm2.fourier_basis_etas = [];
+
+mp.modeCoef = 2;  % Gain coeficient to apply to the normalized DM basis set for the empirical SCC Jacobian calculation.
+
+mp.dm1.NactBeam = (mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
+mp.dm2.NactBeam = (mp.dm2.Nact-2); % Number of actuators across the beam (approximate)
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -291,15 +323,4 @@ ZmapCubeFull = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZ
 
 mp.P1.compact.E = exp(1j*10e-9/mp.lambda0*sum(ZmapCubeCompact, 3));
 mp.P1.full.E = exp(1j*10e-9/mp.lambda0*sum(ZmapCubeFull, 3));
-
-%% SCC
-mp.Fend.Nxi = 150;
-mp.Fend.Neta = 150;
-mp.scc.butterworth_exponent = 3;
-mp.scc.pupil_center_row = 46;
-mp.scc.pupil_center_col = 94;
-mp.scc.pupil_subwindow_diameter = 30;
-% mp.scc.pupil_subwindow_array_width = 40;
-
-
 

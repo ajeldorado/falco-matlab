@@ -49,8 +49,15 @@ mp.runLabel = sprintf('Series%04d_Trial%04d', mp.SeriesNum, mp.TrialNum);
 
 %% Step 5: Perform the Wavefront Sensing and Control
 
-% [mp, out] = falco_flesh_out_workspace(mp);
+[mp, out] = falco_flesh_out_workspace(mp);
 
+[mp, out] = falco_wfsc_loop(mp, out);
+
+
+%%
+return
+
+%% 
 mp.P4.full.mask = mp.P4.full.maskWithPinhole;
 [mp, out] = falco_flesh_out_workspace(mp);
 ev1 = falco_est_scc(mp);
@@ -81,20 +88,18 @@ ev1 = falco_est_scc(mp);
 
 %% Compute response matrix
 
-Nbasis = mp.dm1.NactTotal;
+Nbasis = mp.dm1.NbasisModes;
 jac = zeros(mp.Fend.corr.Npix, Nbasis, mp.jac.Nmode);
 mp.dm1.V = zeros(mp.dm1.Nact, mp.dm1.Nact);
 V0 = mp.dm1.V;
 dVcoef = 1;
 
-fn_jac = [mp.path.jac filesep 'scc_jac_test.mat'];
+fn_jac = [mp.path.jac filesep 'scc_jac_test_fourier.mat'];
 
 % for iBasis = 1:Nbasis
 % 
 %     fprintf('Empirically obtaining DM response matrix for basis mode: %d/%d\n', iBasis, Nbasis);
-% 
-%     dV = zeros(mp.dm1.Nact, mp.dm1.Nact);
-%     dV(iBasis) = dVcoef;
+%     dV = mp.dm1.basisCube(:, :, iBasis);
 %     mp.dm1.V = V0 + dV;
 %     evTempPos = falco_est_scc(mp);
 %     mp.dm1.V = V0 - dV;
@@ -121,54 +126,123 @@ fn_jac = [mp.path.jac filesep 'scc_jac_test.mat'];
 % save(fn_jac, 'jac');
 
 
-
-%% 
-load(fn_jac)
-
-jacSum = squeeze(sum(abs(jac).^2, 1));
-jac2D = reshape(jacSum, [mp.dm1.Nact, mp.dm1.Nact]);
-figure(40); imagesc(log10(jac2D)); axis xy equal tight; colorbar; colormap parula;
+% % Nbasis = mp.dm1.NactTotal;
+% % jac = zeros(mp.Fend.corr.Npix, Nbasis, mp.jac.Nmode);
+% % mp.dm1.V = zeros(mp.dm1.Nact, mp.dm1.Nact);
+% % V0 = mp.dm1.V;
+% % dVcoef = 1;
+% % fn_jac = [mp.path.jac filesep 'scc_jac_test.mat'];
+% %
+% % for iBasis = 1:Nbasis
+% % 
+% %     fprintf('Empirically obtaining DM response matrix for basis mode: %d/%d\n', iBasis, Nbasis);
+% % 
+% %     dV = zeros(mp.dm1.Nact, mp.dm1.Nact);
+% %     dV(iBasis) = dVcoef;
+% %     mp.dm1.V = V0 + dV;
+% %     evTempPos = falco_est_scc(mp);
+% %     mp.dm1.V = V0 - dV;
+% %     evTempNeg = falco_est_scc(mp);
+% % 
+% %     for iMode = 1:mp.jac.Nmode
+% %         Ediff = (evTempPos.Eest(:, iMode) - evTempNeg.Eest(:, iMode))/(2*dVcoef);
+% %         jac(:, iBasis, iMode) = Ediff;
+% %     end
+% % 
+% % %     E2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+% % %     E2D(mp.Fend.corr.maskBool) = Ediff;
+% % %     figure(30); imagesc(dV); axis xy equal tight; colorbar; 
+% % %     title(sprintf('Basis Mode %d/%d', iBasis, Nbasis));
+% % %     drawnow;
+% % %     figure(31); imagesc(log10(abs(E2D))); axis xy equal tight; colorbar; 
+% % %     title(sprintf('Basis Mode %d/%d', iBasis, Nbasis));
+% % %     drawnow;
+% % %     figure(32); imagesc(angle(E2D)); axis xy equal tight; colorbar; colormap hsv;
+% % %     title(sprintf('Basis Mode %d/%d', iBasis, Nbasis));
+% % %     drawnow;
+% % end
+% % 
+% % save(fn_jac, 'jac');
+% %
+% % load(fn_jac)
+% % 
+% % jacSum = squeeze(sum(abs(jac).^2, 1));
+% % jac2D = reshape(jacSum, [mp.dm1.Nact, mp.dm1.Nact]);
+% % figure(40); imagesc(log10(jac2D)); axis xy equal tight; colorbar; colormap parula;
 
 
 %%
 
-mp.dm1.V = zeros(mp.dm1.Nact, mp.dm1.Nact);
-V0 = mp.dm1.V;
-
-Im = falco_get_summed_image(mp);
-ni0 = mean(Im(mp.Fend.corr.maskBool));
+load(fn_jac, 'jac')
 
 GG = real(jac' * jac);
 normFac = max(diag(GG));
 
-log10regVec = -8:2;%-6:-1;
+log10regVec = -6:-1;%-6:-1;
 niVec = zeros(size(log10regVec));
 
 
 
+mp.dm1.V = zeros(mp.dm1.Nact, mp.dm1.Nact);
 
-ev = falco_est_scc(mp);
+Im = falco_get_summed_image(mp);
+ni0 = mean(Im(mp.Fend.corr.maskBool));
+fprintf('NI at iteration %d is %.3e\n', 0, ni0);
 
 
-for ii = 1:length(log10regVec)
-    log10reg = log10regVec(ii);
+for Itr = 1:5
+
+    ev = falco_est_scc(mp);
+    V0 = mp.dm1.V;
+    duCube = zeros(mp.dm1.Nact, mp.dm1.Nact, length(log10regVec));
+
+    for ii = 1:length(log10regVec)
+        log10reg = log10regVec(ii);
+
+
+        duVec = -(GG + normFac*10^(log10reg)*eye(size(GG)))\real(jac'*ev.Eest);
+        % https://www.mathworks.com/matlabcentral/answers/400137-computing-a-weighted-sum-of-matrices
+        du2D = sum(mp.dm1.basisCube .* reshape(duVec, 1, 1, []), 3);
+        duCube(:, :, ii) = du2D;
+        figure(41); imagesc(du2D); axis xy equal tight; colorbar; colormap parula; drawnow;
+
+        mp.dm1.V = V0 + du2D;
+        Im = falco_get_summed_image(mp);
+        figure(42); imagesc(mp.Fend.xisDL, mp.Fend.etasDL, log10(Im), [-8, -3]); axis xy equal tight; colorbar; colormap parula;
+        set(gca, 'Fontsize', 20);
+        set(gcf, 'Color', 'w');
+        drawnow; 
+%         pause(0.5);
+
+        niVec(ii) = mean(Im(mp.Fend.corr.maskBool));
+
+    end
+    
+    figure(43); semilogy(log10regVec, niVec, 'Linewidth', 2);
+    set(gca, 'Fontsize', 20);
+    set(gcf, 'Color', 'w');
+    drawnow;
+
+    
+    % Choose best
+    [minVal, indexMin] = min(niVec);
+    fprintf('NI at iteration %d is %.3e\n', Itr, minVal);
+    mp.dm1.V = V0 + duCube(:, :, indexMin);
     
     
-    duVec = -(GG + normFac*10^(log10reg)*eye(size(GG)))\real(jac'*ev.Eest);
-    du2D = reshape(duVec, [mp.dm1.Nact, mp.dm1.Nact]);
-    figure(41); imagesc(du2D); axis xy equal tight; colorbar; colormap parula; drawnow;
-    
-    mp.dm1.V = V0 + du2D;
-    Im = falco_get_summed_image(mp);
-    figure(42); imagesc(log10(Im), [-8, -3]); axis xy equal tight; colorbar; colormap parula;  drawnow; 
-    pause(0.5);
-    
-    niVec(ii) = mean(Im(mp.Fend.corr.maskBool));
 
     
 end
 
-figure(43); semilogy(log10regVec, niVec); drawnow;
+%% Check NI without Pinhole
 
-%%
-% [mp, out] = falco_wfsc_loop(mp, out);
+mp.P4.full.mask = mp.P4.full.maskWithoutPinhole;
+[mp, out] = falco_flesh_out_workspace(mp);
+% ev2 = falco_est_perfect_Efield_with_Zernikes(mp);
+
+Im = falco_get_summed_image(mp);
+niNoPH = mean(Im(mp.Fend.corr.maskBool));
+fprintf('NI without pinhole is %.3e\n', niNoPH);
+
+
+

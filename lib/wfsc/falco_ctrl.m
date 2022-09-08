@@ -26,6 +26,13 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
 
     fprintf('Using the Jacobian to make other matrices...'); tic;
 
+    switch mp.estimator
+        case 'scc'
+            cvar.NeleAll = mp.dm1.NbasisModes + mp.dm2.NbasisModes;
+        otherwise
+            cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
+    end
+    
     %--Compute matrices for linear control with regular EFC
     cvar.GstarG_wsum  = zeros(cvar.NeleAll, cvar.NeleAll); 
     cvar.RealGstarEab_wsum = zeros(cvar.NeleAll, 1);
