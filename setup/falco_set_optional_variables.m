@@ -119,7 +119,7 @@ if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
 if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 
 %--Deformable mirror settings
-if(isfield(mp.dm1,'NactBeam')==false);  mp.dm1.NactBeam = mp.dm1.Nact;  end % Number of actuators across the beam (approximate)
+if(isfield(mp.dm1,'Nactbeam')==false);  mp.dm1.Nactbeam = mp.dm1.Nact;  end % Number of actuators across the beam (approximate)
 if(isfield(mp.dm1,'basisType')==false);  mp.dm1.basisType = 'actuator';  end %--Basis set used for control Options: 'actuator', 'fourier'
 if(isfield(mp.dm1,'orientation')==false);  mp.dm1.orientation = 'rot0';  end %--Change to mp.dm1.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
@@ -141,7 +141,7 @@ if(isfield(mp.dm1,'facesheetFlatmap')==false);  mp.dm1.facesheetFlatmap = mp.dm1
 if(isfield(mp.dm1,'comovingGroups')==false);  mp.dm1.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
 if(isfield(mp.dm1,'tolNbrRule')==false); mp.dm1.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
-if(isfield(mp.dm2,'NactBeam')==false);  mp.dm2.NactBeam = mp.dm2.Nact;  end % Number of actuators across the beam (approximate)
+if(isfield(mp.dm2,'Nactbeam')==false);  mp.dm2.Nactbeam = mp.dm2.Nact;  end % Number of actuators across the beam (approximate)
 if(isfield(mp.dm2,'basisType')==false);  mp.dm2.basisType = 'actuator';  end %--Basis set used for control Options: 'actuator', 'fourier'
 if(isfield(mp.dm2,'orientation')==false);  mp.dm2.orientation = 'rot0';  end %--Change to mp.dm2.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.

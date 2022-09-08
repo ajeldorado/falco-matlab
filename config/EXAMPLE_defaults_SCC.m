@@ -192,8 +192,8 @@ mp.dm2.fourier_basis_etas = [];
 
 mp.modeCoef = 2;  % Gain coeficient to apply to the normalized DM basis set for the empirical SCC Jacobian calculation.
 
-mp.dm1.NactBeam = (mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
-mp.dm2.NactBeam = (mp.dm2.Nact-2); % Number of actuators across the beam (approximate)
+mp.dm1.Nactbeam = (mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
+mp.dm2.Nactbeam = (mp.dm2.Nact-2); % Number of actuators across the beam (approximate)
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
