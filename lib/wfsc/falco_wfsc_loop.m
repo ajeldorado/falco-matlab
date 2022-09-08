@@ -56,8 +56,15 @@ for Itr = 1:mp.Nitr
 
     mp = falco_set_jacobian_modal_weights(mp); 
     
-    cvar.flagRelin = (Itr == 1) || any(mp.relinItrVec == Itr);
-    if  cvar.flagRelin
+    if any(mp.relinItrVec == Itr)
+        cvar.flagRelin = true;        
+    else
+        cvar.flagRelin = false;
+    end
+    
+    if ((Itr == 1) && ~cvar.flagRelin) % load jacStruct from file
+        load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
+    elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
         jacStruct =  model_Jacobian(mp);
     end

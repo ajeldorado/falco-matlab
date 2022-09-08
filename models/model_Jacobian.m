@@ -76,6 +76,10 @@ function jacStruct = model_Jacobian(mp)
         case 'scc'
             if(any(mp.dm_ind==1)); jacStruct.G1 = model_Jacobian_SCC(mp, 1);  end
             if(any(mp.dm_ind==2)); jacStruct.G2 = model_Jacobian_SCC(mp, 2);  end
+            
+            fn_jac = [mp.path.jac filesep mp.jac.fn];
+            fprintf('Saving out SCC Jacobian to %s\n', fn_jac)
+            save(fn_jac, 'jacStruct');
 
         otherwise
             fprintf('Computing control Jacobian matrices ... \n'); tic

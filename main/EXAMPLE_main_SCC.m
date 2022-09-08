@@ -1,11 +1,10 @@
-% Copyright 2018-2021 by the California Institute of Technology. ALL RIGHTS
+% Copyright 2018 by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Script to run wavefront control on a vortex coronagraph with a segmented
-% input pupil.
+% Script to run WFSC with a vortex using the SCC and a Fourier basis set.
 
 clear
 
@@ -31,6 +30,7 @@ EXAMPLE_defaults_SCC
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
 
+
 %--Record Keeping
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
@@ -43,10 +43,51 @@ mp.runLabel = sprintf('Series%04d_Trial%04d', mp.SeriesNum, mp.TrialNum);
 % mp.Nitr = 3; %--Number of wavefront control iterations
 
 
+% % % PLANNED SEARCH EFC DEFAULTS
+mp.controller = 'plannedEFC';
+mp.ctrl.dmfacVec = 1;
+%--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
+    % Column 1: # of iterations, 
+    % Column 2: log10(regularization), 
+    % Column 3: which DMs to use (12, 128, 129, or 1289) for control
+    % Column 4: flag (0 = false, 1 = true), whether to re-linearize
+    %   at that iteration.
+    % Column 5: flag (0 = false, 1 = true), whether to perform an
+    %   EFC parameter grid search to find the set giving the best
+    %   contrast .
+    % The imaginary part of the log10(regularization) in column 2 is
+    %  replaced for that iteration with the optimal log10(regularization)
+    % A row starting with [0, 0, 0, 1...] is for relinearizing only at that time
+mp.ctrl.sched_mat = [...
+    repmat([1, -3, 1, 0, 0], [4, 1]);...
+    ];
+[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+
+
+%--Set path and filename for saved Jacobians
+% mp.path.jac = % Define path to saved out Jacobians. Default if left empty is 'falco-matlab/data/jac/'
+mp.jac.fn = 'jac_scc_test.mat'; % Name of the Jacobian file to save or that is already saved. The path to this file is set by mp.path.jac.
+mp.relinItrVec = 1; %[];  %--Correction iterations at which to re-compute the Jacobian. Make an empty vector to load mp.jac.fn
+
+
 %% Step 4: Flesh out the rest of the variables
 
 [mp, out] = falco_flesh_out_workspace(mp);
 
+
+%% Verify visually that the Fourier modes fully cover the dark hole
+
+freqMax = max([max(mp.dm1.fourier_basis_xis), max(mp.dm1.fourier_basis_etas)]);
+figure(111);
+imagesc(mp.Fend.xisDL, mp.Fend.etasDL, mp.Fend.corr.maskBool); colormap gray;
+hold on;
+h111 = plot(mp.dm1.fourier_basis_xis , mp.dm1.fourier_basis_etas, 'or');
+set(h111, 'MarkerFaceColor', 'r', 'MarkerSize', 5);
+title('Overlay of Fourier Modes on the Dark Hole')
+set(gca, 'Fontsize', 20);
+axis xy equal tight;
+hold off;
+drawnow;
 
 %% Step 5: Determine where to crop the FFT'ed Image for the SCC
 

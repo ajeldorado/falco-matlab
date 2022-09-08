@@ -50,6 +50,7 @@ if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' fil
 %--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
+if(isfield(mp.jac,'fn')==false);  mp.jac.fn = 'default_jac_name.mat';  end  % Name of the file to save the Jacobian into. Do not include the path.
 
 %--Optical model/layout
 if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model

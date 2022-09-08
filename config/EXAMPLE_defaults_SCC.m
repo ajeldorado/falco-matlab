@@ -58,6 +58,9 @@ mp.estimator = 'scc';
 
 %% Wavefront Control: General
 
+%--Whether to perform a model-based (instead of empirical) grid search for the controller
+mp.ctrl.flagUseModel = true; 
+
 %--Threshold for culling weak actuators from the Jacobian:
 mp.logGmin = -6;  % 10^(mp.logGmin) used on the intensity of DM1 and DM2 Jacobians to weed out the weakest actuators
 
@@ -71,7 +74,7 @@ mp.eval.indsZnoll = 2:3; %--Noll indices of Zernikes to compute values for
 mp.eval.Rsens = [2,3; 3,4; 4,5]; 
 
 %--Grid- or Line-Search Settings
-mp.ctrl.log10regVec = -6:1/2:-2; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -5:1:-2; %--log10 of the regularization exponents (often called Beta values)
 mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
    
@@ -91,7 +94,6 @@ mp.controller = 'gridsearchEFC';
 % % % GRID SEARCH EFC DEFAULTS     
 %--WFSC Iterations and Control Matrix Relinearization
 mp.Nitr = 5; %--Number of estimation+control iterations to perform
-mp.relinItrVec = 1;  %--Which correction iterations at which to re-compute the control Jacobian
 mp.dm_ind = [1]; %--Which DMs to use
 
 
@@ -157,27 +159,26 @@ mp.Fend.clockAngDeg = 0; % Clocking angle of the dark hole region
 
 %--Correction and scoring region definition
 mp.Fend.corr.Rin = 2;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.ang  = 90;  % angular opening of dark hole correction region [degrees]
+mp.Fend.corr.Rout  = 5;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
 mp.Fend.score.Rin = 2;  % inner radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.ang = 90;  % angular opening of dark hole scoring region [degrees]
-% mp.Fend.corr.Rin = 2.0;   % inner radius of dark hole correction region [lambda0/D]
-% mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
-% mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
-% 
-% mp.Fend.score.Rin = 2.0;  % inner radius of dark hole scoring region [lambda0/D]
-% mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
-% mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
+mp.Fend.score.Rout = 5;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'right'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
-
+mp.Fend.sides = 'bottom'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.shape = 'D';
 
 %% SCC
 
 mp.Fend.Nxi = 150;
 mp.Fend.Neta = 150;
+
+% % Jacobian
+% mp.path.jac = % Define path to saved out Jacobians. Default if left empty is 'falco-matlab/data/jac/'
+% mp.jac.fn = 'jac_scc_test.mat'; % Name of the Jacobian file to save or that is already saved. The path to this file is set by mp.path.jac.
+% mp.relinItrVec = 1;  %--Which correction iterations at which to re-compute the control Jacobian. Make empty to reload fn_jac.
+
 mp.scc.modeCoef = 2;  % Gain coeficient to apply to the normalized DM basis set for the empirical SCC Jacobian calculation.
 mp.scc.butterworth_exponent = 3;
 % mp.scc.pupil_center_row = 46;
@@ -186,15 +187,17 @@ mp.scc.butterworth_exponent = 3;
 
 mp.dm1.fourier_spacing = 1; % Center-to-center spacing between Fourier modes in the focal plane. [lambda/D]
 mp.dm1.fourier_gridType = 'hex';  % Options: 'hex' or 'square'. 'hex' has a denser packing
+xiMin = mp.Fend.corr.Rin-1;
+clocking = mp.Fend.clockAngDeg - 90; % -90 for 'bottom' dark hole.
 [mp.dm1.fourier_basis_xis , mp.dm1.fourier_basis_etas] = falco_choose_fourier_locations_polar(...
-    mp.dm1.Nact/2, mp.dm1.fourier_spacing, mp.dm1.fourier_gridType, mp.Fend.corr.Rin-1, mp.Fend.corr.Rout+1, mp.Fend.corr.ang, mp.Fend.clockAngDeg );
+    mp.dm1.Nact/2, mp.dm1.fourier_spacing, mp.dm1.fourier_gridType, xiMin, mp.Fend.corr.Rout+1, mp.Fend.corr.ang, clocking, xiMin);
 
 mp.dm2.fourier_basis_xis = [];
 mp.dm2.fourier_basis_etas = [];
 
-
 mp.dm1.Nactbeam = (mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
 mp.dm2.Nactbeam = (mp.dm2.Nact-2); % Number of actuators across the beam (approximate)
+
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
