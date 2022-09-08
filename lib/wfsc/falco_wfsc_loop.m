@@ -62,7 +62,7 @@ for Itr = 1:mp.Nitr
         cvar.flagRelin = false;
     end
     
-    if ((Itr == 1) && ~cvar.flagRelin) % load jacStruct from file
+    if ((Itr == 1) && ~cvar.flagRelin && strcmpi(mp.estimator, 'scc')) % load jacStruct from file
         load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
     elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
