@@ -63,7 +63,6 @@ for Itr = 1:mp.Nitr
 
     mp = falco_set_jacobian_modal_weights(mp); 
     
-<<<<<<< HEAD
     if any(mp.relinItrVec == Itr)
         cvar.flagRelin = true;        
     else
@@ -73,10 +72,6 @@ for Itr = 1:mp.Nitr
     if ((Itr == 1) && ~cvar.flagRelin && strcmpi(mp.estimator, 'scc')) % load jacStruct from file
         load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
     elseif cvar.flagRelin % recompute jacStruct
-=======
-    cvar.flagRelin = (Itr == 1) || any(mp.relinItrVec == Itr);
-    if  cvar.flagRelin
->>>>>>> updated files for dzm
         out.ctrl.relinHist(Itr) = true;
         jacStruct =  model_Jacobian(mp);
     end
@@ -203,13 +198,12 @@ if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
     ev.Im = cvar.Im;
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
 end
-<<<<<<< HEAD
-=======
-if strcmpi(mp.estimator,'ekf_maintenance') 
+
+if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
    out.IOLScoreHist = ev.IOLScoreHist;
     
 end
->>>>>>> updated files for dzm
+
 
 %% Save out an abridged workspace
 
@@ -303,6 +297,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
     
+    % Add open loop contrast history to out variable.
+    if strcmpi(mp.estimator,'ekf_maintenance') 
+        out.IOLScoreHist = ev.IOLScoreHist;
+    end
+    
     if isfield(mp, 'testbed')
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;
@@ -331,12 +330,8 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
 
     else
-<<<<<<< HEAD
         hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
 
-=======
-        %hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
->>>>>>> updated files for dzm
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
@@ -355,13 +350,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
 
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
-<<<<<<< HEAD
         end
         
-=======
-         end
-        
-        hProgress = falco_plot_progress_omc_model(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
->>>>>>> updated files for dzm
     end
 end
