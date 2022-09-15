@@ -24,8 +24,8 @@ end
 % TODO: need e_scaling
 
 % Rearrange jacobians
-ev = rearrange_jacobians(mp,ev,jacStruct);
-
+ev.G_tot_cont = rearrange_jacobians(mp,jacStruct,mp.dm_ind);
+ev.G_tot_drift = rearrange_jacobians(mp,jacStruct,mp.dm_drift_ind);
 
 % Initialize EKF matrices
 ev = initialize_ekf_matrices(mp, ev);
@@ -44,7 +44,7 @@ ev.dm2.act_ele_pinned = [];
 end
 
 
-function ev = rearrange_jacobians(mp,ev,jacStruct)
+function G_tot = rearrange_jacobians(mp,jacStruct,dm_inds)
 
 % active_dms = ismember([1:9],mp.dm_ind);
 
@@ -61,7 +61,7 @@ G2 = zeros(2*size(jacStruct.G2,1),mp.dm2.Nele,mp.Nsbp);
 % are separate
 for iSubband = 1:mp.Nsbp
     
-    if any(mp.dm_ind == 1)
+    if any(dm_inds == 1) 
         G1_comp = jacStruct.G1(:,:,iSubband);
         G1_split = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele);
         G1_split(1:2:end,:) = real(G1_comp);
@@ -73,7 +73,7 @@ for iSubband = 1:mp.Nsbp
         G1 = [];
     end
 
-    if any(mp.dm_ind == 2)
+    if any(dm_inds == 2)
         G2_comp = jacStruct.G2(:,:,iSubband);
         G2_split = zeros(2*size(jacStruct.G2,1),mp.dm2.Nele);
         G2_split(1:2:end,:) = real(G2_comp);
@@ -87,7 +87,7 @@ for iSubband = 1:mp.Nsbp
     end
 end
 
-ev.G_tot = [G1, G2];
+G_tot = [G1, G2];
 
 
 end
@@ -127,7 +127,7 @@ ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
 for iSubband = 1:1:mp.Nsbp
     disp(['assembling Q for subband ',num2str(iSubband)])
    
-    G_reordered = ev.G_tot(:,:,iSubband);
+    G_reordered = ev.G_tot_drift(:,:,iSubband);
     dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);
 
     for i = 0:1:floor(ev.SL/ev.BS)-1
