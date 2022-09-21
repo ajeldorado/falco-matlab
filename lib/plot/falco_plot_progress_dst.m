@@ -8,7 +8,8 @@ function handles = falco_plot_progress_dst(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM
 
 tb = mp.tb;
 
-if(Itr==10 || Itr==40 && ~mp.flagSim)
+% Clear dark at iteration 10 and 40 unless in sim mode
+if (Itr==10 || Itr==40) && ~mp.flagSim
     % Clear the dark 
     disp('Clearing the dark ...');
     sbp_texp = tb.info.sbp_texp(mp.si_ref);

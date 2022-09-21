@@ -25,7 +25,8 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
     % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
     % Step 3: Compute the EFC command to use.
     
-    %% SFR
+    %% Used for dark zone maintenance only right now, allows the controller 
+    % to be 'off' while the estimator converges
     try
         if mp.Itr > mp.ctrl.start_iteration
             mp.ctrl.dmfacVec = mp.ctrl.dmfacVecOn;

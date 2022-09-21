@@ -33,8 +33,15 @@ if any(mp.est.itr_reset==ev.Itr) == true
     if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact);end
     efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
     
+    % Check if sim mode to avoid calling tb obj in sim mode
+    if mp.flagSim
+        sbp_texp = mp.detector.tExpUnprobedVec; % exposure times for non-pairwise-probe images in each subband.
+    else
+        sbp_texp  = mp.tb.info.sbp_texp;
+    end
+
     for iSubband = 1:1:mp.Nsbp
-        ev.x_hat(:,iSubband) = ev.x_hat(:,iSubband) + (ev.G_tot(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(mp.tb.info.sbp_texp(iSubband))*efc_command;
+        ev.x_hat(:,iSubband) = ev.x_hat(:,iSubband) + (ev.G_tot(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*efc_command;
     end
     mp.dm1.V_shift = mp.dm1.dV;
     mp.dm2.V_shift = mp.dm2.dV;

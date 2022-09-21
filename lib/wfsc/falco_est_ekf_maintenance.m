@@ -97,9 +97,14 @@ ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
 
 %% Save out the estimate
 % TODO: add star and wavelength loop?
+if mp.flagSim
+    sbp_texp = mp.detector.tExpUnprobedVec; % exposure times for non-pairwise-probe images in each subband.
+else
+    sbp_texp  = mp.tb.info.sbp_texp;
+end
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 for iSubband = 1:1:mp.Nsbp
-    ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)));
+    ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
     if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
     if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
 
@@ -145,14 +150,18 @@ end
 
 function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
 %% Estimation part. All EKFs are avanced in parallel
-
+if mp.flagSim
+    sbp_texp = mp.detector.tExpUnprobedVec;
+else
+    sbp_texp = mp.tb.info.sbp_texp;
+end
 for iSubband = 1:1:mp.Nsbp
 
     %--Estimate of the closed loop electric field:
-    x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(mp.tb.info.sbp_texp(iSubband))*closed_loop_command;
+    x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
 
     %--Estimate of the measurement:
-    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*mp.tb.info.sbp_texp(iSubband));
+    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*sbp_texp(iSubband));
 
     ev.R(ev.R_indices) = reshape(y_hat + (mp.est.read_noise)^2,size(ev.R(ev.R_indices)));
 

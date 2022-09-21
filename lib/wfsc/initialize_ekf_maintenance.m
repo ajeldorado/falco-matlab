@@ -1,20 +1,27 @@
 function ev = initialize_ekf_maintenance(mp, ev, jacStruct)
 
+% Check if sim mode to avoid calling tb obj in sim mode
+if mp.flagSim
+    sbp_texp = mp.detector.tExpUnprobedVec; % exposure times for non-pairwise-probe images in each subband.
+    psf_peaks = mp.detector.peakFluxVec;
+else
+    sbp_texp  = mp.tb.info.sbp_texp;
+    psf_peaks = mp.tb.info.PSFpeaks;
+end
 
 % Find values to convert images back to counts rather than normalized
 % intensity
 ev.peak_psf_counts = zeros(1,mp.Nsbp);
 ev.e_scaling = zeros(1,mp.Nsbp);
-
-
 for iSubband = 1:mp.Nsbp
 
     % potentially set mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si) set to mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
     % to have cleaner setup
-    ev.peak_psf_counts(iSubband) = mp.tb.info.sbp_texp(iSubband)*mp.tb.info.PSFpeaks(iSubband);
-    ev.e_scaling(iSubband) = sqrt(mp.tb.info.PSFpeaks(iSubband));
+    ev.peak_psf_counts(iSubband) = sbp_texp(iSubband)*psf_peaks(iSubband);
+    ev.e_scaling(iSubband) = sqrt(psf_peaks(iSubband));
 
 end
+
 
 
 % Rearrange jacobians
@@ -45,8 +52,6 @@ G2 = zeros(2*size(jacStruct.G2,1),mp.dm2.Nele,mp.Nsbp);
 % Set up jacobian so real and imag components alternate and jacobian from
 % each DM is stacked
 
-% TODO: set up so there is a G_tot for control and a G_tot for drift that
-% are separate
 for iSubband = 1:mp.Nsbp
     
     if any(dm_inds == 1) 
