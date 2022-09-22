@@ -65,7 +65,7 @@ for iSubband = 1:mp.Nsbp
         G1 = [];
     end
 
-if any(dm_inds == 2)
+    if any(dm_inds == 2)
         G2_comp = jacStruct.G2(:,:,iSubband);
         G2_split = zeros(2*size(jacStruct.G2,1),mp.dm2.Nele);
         G2_split(1:2:end,:) = real(G2_comp);
