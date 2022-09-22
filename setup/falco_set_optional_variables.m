@@ -28,6 +28,7 @@ mp.dm2.dummy = 1;
 mp.Fend.eval.dummy = 1;
 mp.path.dummy = 1;
 mp.detector.dummy = 1;
+mp.scc.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
@@ -39,7 +40,7 @@ if(isfield(mp.path,'config')==false);  mp.path.config = [mp.path.falco filesep '
 
 %--Entire final workspace from FALCO gets saved here.
 if(isfield(mp.path,'ws')==false);  mp.path.ws = [mp.path.falco filesep 'data' filesep 'ws' filesep];  end % Store final workspace data here
-if(isfield(mp.path,'maps')==false); mp.path.falcoaps = [mp.path.falco filesep 'maps' filesep]; end % Maps go here
+if(isfield(mp.path,'maps')==false); mp.path.maps = [mp.path.falco filesep 'maps' filesep]; end % Maps go here
 if(isfield(mp.path,'jac')==false); mp.path.jac = [mp.path.falco filesep 'data' filesep 'jac' filesep]; end % Store the control Jacobians here
 if(isfield(mp.path,'images')==false); mp.path.images = [mp.path.falco filesep 'data' filesep 'images' filesep]; end % Store all full, reduced images here
 if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' filesep 'DM' filesep]; end % Store DM command maps here
@@ -49,6 +50,7 @@ if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' fil
 %--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
+if(isfield(mp.jac,'fn')==false);  mp.jac.fn = 'default_jac_name.mat';  end  % Name of the file to save the Jacobian into. Do not include the path.
 
 %--Optical model/layout
 if(isfield(mp.full,'flagPROPER')==false);  mp.full.flagPROPER = false;  end %--Whether to use a full model written in PROPER. If true, then load (don't generate) all masks for the full model
@@ -118,6 +120,8 @@ if(isfield(mp.eval,'Rsens')==false);  mp.eval.Rsens = [];   end
 if(isfield(mp.eval,'indsZnoll')==false);  mp.eval.indsZnoll = [2,3];   end
 
 %--Deformable mirror settings
+if(isfield(mp.dm1,'Nactbeam')==false);  mp.dm1.Nactbeam = mp.dm1.Nact;  end % Number of actuators across the beam (approximate)
+if(isfield(mp.dm1,'basisType')==false);  mp.dm1.basisType = 'actuator';  end %--Basis set used for control Options: 'actuator', 'fourier'
 if(isfield(mp.dm1,'orientation')==false);  mp.dm1.orientation = 'rot0';  end %--Change to mp.dm1.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm1,'fitType')==false);  mp.dm1.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
 if(isfield(mp.dm1,'dead')==false); mp.dm1.dead = []; end % Vector of linear indices of all dead actuators (those stuck at 0V absolute). This should stay fixed.
@@ -138,6 +142,8 @@ if(isfield(mp.dm1,'facesheetFlatmap')==false);  mp.dm1.facesheetFlatmap = mp.dm1
 if(isfield(mp.dm1,'comovingGroups')==false);  mp.dm1.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
 if(isfield(mp.dm1,'tolNbrRule')==false); mp.dm1.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
+if(isfield(mp.dm2,'Nactbeam')==false);  mp.dm2.Nactbeam = mp.dm2.Nact;  end % Number of actuators across the beam (approximate)
+if(isfield(mp.dm2,'basisType')==false);  mp.dm2.basisType = 'actuator';  end %--Basis set used for control Options: 'actuator', 'fourier'
 if(isfield(mp.dm2,'orientation')==false);  mp.dm2.orientation = 'rot0';  end %--Change to mp.dm2.V orientation before generating DM surface. Options: rot0, rot90, rot180, rot270, flipxrot0, flipxrot90, flipxrot180, flipxrot270
 if(isfield(mp.dm2,'fitType')==false);  mp.dm2.fitType = 'linear';  end %--Type of response for displacement vs voltage. Options are 'linear', 'quadratic', and 'fourier2'.
 if(isfield(mp.dm2,'dead')==false); mp.dm2.dead = []; end % Vector of linear indices of all dead actuators (those stuck at 0V absolute). This should stay fixed.
@@ -169,6 +175,8 @@ if(isfield(mp.jac,'minimizeNI')==false); mp.jac.minimizeNI = false; end %--Have 
 if ~isfield(mp.est, 'probeSchedule'); mp.est.probeSchedule = ProbeSchedule; end %--Schedule of per-iteration values for pairwise probing. Default is empty vectors, meaning they aren't used.
 if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max allowed probe intensity
 if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Reduce estimated intensities to this value if they exceed this (probably due to a bad inversion)
+if(isfield(mp.scc,'modeCoef')==false); mp.scc.modeCoef = 1; end %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
+
 
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus

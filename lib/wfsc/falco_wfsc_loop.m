@@ -12,11 +12,24 @@ flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
+flagBreak = false;
+
 for Itr = 1:mp.Nitr
     
     
     %% Bookkeeping
-    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) '\n' ]);
+    fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
+    
+    % user-defined bookkeeping updates for each iteration
+    if isfield(mp, 'funTopofloopBookkeeping') && ~isempty(mp.funTopofloopBookkeeping)
+        mp = mp.funTopofloopBookkeeping(mp, Itr);
+% =======
+%     % update subdir for scicam images
+%     if isfield(mp, 'tb') && ~mp.flagSim
+%         mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
+%         mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
+% >>>>>>> updated files for dzm
+    end
     
     if mp.flagSim
         fprintf('Zernike modes used in this Jacobian:\t');
@@ -32,11 +45,7 @@ for Itr = 1:mp.Nitr
     if strcmpi(mp.controller, 'plannedefc')
         mp.dm_ind = mp.dm_ind_sched{Itr}; % Change which DMs are used
     end
-    fprintf('DMs to be used in this iteration = [')
-    for jj = 1:length(mp.dm_ind)
-        fprintf(' %d', mp.dm_ind(jj)); 
-    end
-    fprintf(' ]\n')
+    disp(['DMs to be used in this iteration = [' num2str(mp.dm_ind(:)') ']']);
     
     out.serialDateVec(Itr) = now;
     out.datetimeArray = datetime(out.serialDateVec,'ConvertFrom','datenum');
@@ -54,8 +63,15 @@ for Itr = 1:mp.Nitr
 
     mp = falco_set_jacobian_modal_weights(mp); 
     
-    cvar.flagRelin = (Itr == 1) || any(mp.relinItrVec == Itr);
-    if  cvar.flagRelin
+    if any(mp.relinItrVec == Itr)
+        cvar.flagRelin = true;        
+    else
+        cvar.flagRelin = false;
+    end
+    
+    if ((Itr == 1) && ~cvar.flagRelin && strcmpi(mp.estimator, 'scc')) % load jacStruct from file
+        load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
+    elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
         jacStruct =  model_Jacobian(mp);
     end
@@ -68,6 +84,12 @@ for Itr = 1:mp.Nitr
         if any(mp.dm_ind == 1);  jacStruct.G1 = jacStructLearned.G1;  end
         if any(mp.dm_ind == 1);  jacStruct.G2 = jacStructLearned.G2;  end
     end
+    
+    %% Inject drift
+    % Get Drift Command
+    if strcmpi(mp.estimator,'ekf_maintenance')
+        [mp,ev] = falco_drift_injection(mp,ev);
+    end
 
     %% Wavefront Estimation
     
@@ -75,12 +97,7 @@ for Itr = 1:mp.Nitr
     ev = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
-    
-    %% Progress plots (PSF, NI, and DM surfaces)
 
-    if Itr == 1; hProgress.master = 1; end % initialize the handle
-    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
-    
     %% Plot the expected and measured delta E-fields
     
     if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
@@ -88,7 +105,15 @@ for Itr = 1:mp.Nitr
     if Itr > 1
         out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
     end
+    % add model E-field to ev for saving
+    ev.Esim = Esim;
+
+    %% Progress plots (PSF, NI, and DM surfaces)
+    % plot_wfsc_progress also saves images and ev probe data
     
+    if Itr == 1; hProgress.master = 1; end % initialize the handle
+    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
+        
     %% Compute and Plot the Singular Mode Spectrum of the Electric Field
     if mp.flagSVD
         out = falco_plot_singular_mode_spectrum_of_Efield(mp, out, jacStruct, ev.Eest, Itr);
@@ -96,8 +121,12 @@ for Itr = 1:mp.Nitr
         
     %% Wavefront Control
     
+    % control strategy
+    if isfield(mp, 'funCtrlStrategy') && ~isempty(mp.funCtrlStrategy)
+        mp = mp.funCtrlStrategy(mp, out, Itr);
+    end
+    
     cvar.Eest = ev.Eest;
-    cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
     % Save data to 'out'
@@ -145,9 +174,10 @@ for Itr = 1:mp.Nitr
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
-
+    
+    %% end early? you can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
     if flagBreak
-        break
+        break;
     end
 
 end %--END OF ESTIMATION + CONTROL LOOP
@@ -168,6 +198,12 @@ if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
     ev.Im = cvar.Im;
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
 end
+
+if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
+   out.IOLScoreHist = ev.IOLScoreHist;
+    
+end
+
 
 %% Save out an abridged workspace
 
@@ -190,12 +226,12 @@ if mp.flagSaveWS
 %     mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
 %     mp.complexTransFull = 1; mp.complexTransCompact = 1;
 % 
-    mp.dm1.compact.inf_datacube = 0;
-    mp.dm2.compact.inf_datacube = 0;
-    mp.dm8.compact.inf_datacube = 0;
-    mp.dm9.compact.inf_datacube = 0;
-    mp.dm8.inf_datacube = 0;
-    mp.dm9.inf_datacube = 0;
+%     mp.dm1.compact.inf_datacube = 0;
+%     mp.dm2.compact.inf_datacube = 0;
+%     mp.dm8.compact.inf_datacube = 0;
+%     mp.dm9.compact.inf_datacube = 0;
+%     mp.dm8.inf_datacube = 0;
+%     mp.dm9.inf_datacube = 0;
 
     fnAll = fullfile(mp.path.ws,[mp.runLabel, '_all.mat']);
     disp(['Saving entire workspace to file ' fnAll '...'])
@@ -261,6 +297,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
     
+    % Add open loop contrast history to out variable.
+    if strcmpi(mp.estimator,'ekf_maintenance') 
+        out.IOLScoreHist = ev.IOLScoreHist;
+    end
+    
     if isfield(mp, 'testbed')
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;
@@ -287,7 +328,29 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
             out.InormHist_tb.unmod = NaN(Itr, mp.Nsbp);
         end
         hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
+
     else
         hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+
+        out.InormHist_tb.total = out.InormHist; 
+        Im_tb.Im = Im;
+        Im_tb.E = zeros([size(Im), mp.Nsbp]);
+        Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
+        
+        for si = 1:mp.Nsbp
+                tmp = zeros(size(Im));
+                tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
+                Im_tb.E(:, :, si) = tmp; % modulated component 
+ 
+                tmp = zeros(size(Im));
+                tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
+                Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
+
+                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
+                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
+
+                Im_tb.ev = ev; % Passing the probing structure so I can save it
+        end
+        
     end
 end

@@ -7,6 +7,7 @@
 %  Wrapper for the simplified optical models used for the fast Jacobian calculation.
 %  The first-order derivative of the DM pokes are propagated through the system.
 %  Does not include unknown aberrations/errors that are in the full model.
+%  For the SCC, the Jacobians are computed empirically from images.
 %
 % INPUTS
 % ------
@@ -66,112 +67,124 @@ function jacStruct = model_Jacobian(mp)
         
     %--Loop over the possible combinations of 1) Zernike modes, 2) sub-bandpasses, 3) stars, & 4) DM number 
     %   (either with parfor or for)
-    fprintf('Computing control Jacobian matrices ... \n'); tic
     vals_list = allcomb(1:mp.jac.Nmode, mp.dm_ind).'; %--dimensions: [2 x length(mp.jac.Nmode)*length(mp.dm_ind) ]
     Nvals = size(vals_list, 2);
 
-    %--Parallel/distributed computing
-    if(mp.flagParfor)
-        if isfield(mp, 'tb')
-            mp = rmfield(mp, 'tb'); % Remove testbed object 'tb' if it exists before calling parfor.
-        end
-        parfor ii=1:Nvals
-            Jtemp{ii} = model_Jacobian_middle_layer(mp, vals_list, ii)
-        end        
-        
-        %--Re-organize the structure
-        for ii = 1:Nvals
-            iMode = vals_list(1, ii); % index for Zernike-wavelength-star mode
-            whichDM = vals_list(2, ii); % number of the specified DM
+    
+    switch mp.estimator
 
-            if(whichDM==1); jacStruct.G1(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==2); jacStruct.G2(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==3); jacStruct.G3(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==4); jacStruct.G4(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==5); jacStruct.G5(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==6); jacStruct.G6(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==7); jacStruct.G7(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==8); jacStruct.G8(:, :, iMode) =  Jtemp{ii};  end
-            if(whichDM==9); jacStruct.G9(:, :, iMode) =  Jtemp{ii};  end
-        end
-        clear Jtemp
+        case 'scc'
+            if(any(mp.dm_ind==1)); jacStruct.G1 = model_Jacobian_SCC(mp, 1);  end
+            if(any(mp.dm_ind==2)); jacStruct.G2 = model_Jacobian_SCC(mp, 2);  end
+            
+            fn_jac = [mp.path.jac filesep mp.jac.fn];
+            fprintf('Saving out SCC Jacobian to %s\n', fn_jac)
+            save(fn_jac, 'jacStruct');
 
-    %--Serial calculation
-    else 
-        for ii = 1:Nvals
-            iMode = vals_list(1, ii); %--index for Zernike-wavelength-star mode
-            whichDM = vals_list(2, ii); %--number of the specified DM
-            fprintf('mode%ddm%d ', iMode, whichDM)
-                        
-            if(whichDM==1); jacStruct.G1(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==2); jacStruct.G2(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==3); jacStruct.G3(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==4); jacStruct.G4(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==5); jacStruct.G5(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==6); jacStruct.G6(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==7); jacStruct.G7(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==8); jacStruct.G8(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-            if(whichDM==9); jacStruct.G9(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-        end
-        fprintf('\n')
-    end    
+        otherwise
+            fprintf('Computing control Jacobian matrices ... \n'); tic
+            %--Parallel/distributed computing
+            if(mp.flagParfor)
+                if isfield(mp, 'tb')
+                    mp = rmfield(mp, 'tb'); % Remove testbed object 'tb' if it exists before calling parfor.
+                end
+                parfor ii=1:Nvals
+                    Jtemp{ii} = model_Jacobian_middle_layer(mp, vals_list, ii)
+                end        
 
-    fprintf('...done.  Time = %.2f\n', toc);
+                %--Re-organize the structure
+                for ii = 1:Nvals
+                    iMode = vals_list(1, ii); % index for Zernike-wavelength-star mode
+                    whichDM = vals_list(2, ii); % number of the specified DM
+
+                    if(whichDM==1); jacStruct.G1(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==2); jacStruct.G2(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==3); jacStruct.G3(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==4); jacStruct.G4(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==5); jacStruct.G5(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==6); jacStruct.G6(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==7); jacStruct.G7(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==8); jacStruct.G8(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==9); jacStruct.G9(:, :, iMode) =  Jtemp{ii};  end
+                end
+                clear Jtemp
+
+            %--Serial calculation
+            else 
+                for ii = 1:Nvals
+                    iMode = vals_list(1, ii); %--index for Zernike-wavelength-star mode
+                    whichDM = vals_list(2, ii); %--number of the specified DM
+                    fprintf('mode%ddm%d ', iMode, whichDM)
+
+                    if(whichDM==1); jacStruct.G1(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==2); jacStruct.G2(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==3); jacStruct.G3(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==4); jacStruct.G4(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==5); jacStruct.G5(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==6); jacStruct.G6(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==7); jacStruct.G7(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==8); jacStruct.G8(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==9); jacStruct.G9(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                end
+                fprintf('\n')
+            end    
+
+            fprintf('...done.  Time = %.2f\n', toc);
 
     
-    %% Adjust Jacobian for Pinned and Tied Actuators
+            %% Adjust Jacobian for Pinned and Tied Actuators
 
-    % DM1
-    if any(mp.dm_ind == 1)
+            % DM1
+            if any(mp.dm_ind == 1)
 
-        mp.dm1 = falco_enforce_dm_constraints(mp.dm1);
-        mp.dm1 = falco_update_dm_constraints(mp.dm1);
-        
-        % Zero out the influence of pinned actuators since they can't move.
-        indsPinned = find(ismember(mp.dm1.act_ele, mp.dm1.pinned)); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
-        jacStruct.G1(:, indsPinned, :) = 0 * jacStruct.G1(:, indsPinned, :);
-        
-        % Average out the influence of co-moving actuators since they all have to move the same amount. 
-        for iGroup = 1:length(mp.dm1.comovingGroups)
-            
-            indsGroup = find(ismember(mp.dm1.act_ele, mp.dm1.comovingGroups{iGroup})); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
-            nGroup = length(indsGroup);
-            meanEffect = mean(jacStruct.G1(:, indsGroup, :), 2);
-            
-            % Assign mean effect to each actuator in the comoving group
-            for iAct = 1:nGroup
-                jacStruct.G1(:, indsGroup(iAct), :) = meanEffect;
+                mp.dm1 = falco_enforce_dm_constraints(mp.dm1);
+                mp.dm1 = falco_update_dm_constraints(mp.dm1);
+
+                % Zero out the influence of pinned actuators since they can't move.
+                indsPinned = find(ismember(mp.dm1.act_ele, mp.dm1.pinned)); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+                jacStruct.G1(:, indsPinned, :) = 0 * jacStruct.G1(:, indsPinned, :);
+
+                % Average out the influence of co-moving actuators since they all have to move the same amount. 
+                for iGroup = 1:length(mp.dm1.comovingGroups)
+
+                    indsGroup = find(ismember(mp.dm1.act_ele, mp.dm1.comovingGroups{iGroup})); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+                    nGroup = length(indsGroup);
+                    meanEffect = mean(jacStruct.G1(:, indsGroup, :), 2);
+
+                    % Assign mean effect to each actuator in the comoving group
+                    for iAct = 1:nGroup
+                        jacStruct.G1(:, indsGroup(iAct), :) = meanEffect;
+                    end
+
+                end
+
             end
-            
-        end
 
-    end
+            % DM2
+            if any(mp.dm_ind == 2)
 
-    % DM2
-    if any(mp.dm_ind == 2)
+                mp.dm2 = falco_enforce_dm_constraints(mp.dm2);
+                mp.dm2 = falco_update_dm_constraints(mp.dm2);
 
-        mp.dm2 = falco_enforce_dm_constraints(mp.dm2);
-        mp.dm2 = falco_update_dm_constraints(mp.dm2);
-        
-        % Zero out the influence of pinned actuators since they can't move.
-        indsPinned = find(ismember(mp.dm2.act_ele, mp.dm2.pinned)); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
-        jacStruct.G2(:, indsPinned, :) = 0 * jacStruct.G2(:, indsPinned, :);
-        
-        % Average out the influence of co-moving actuators since they all have to move the same amount. 
-        for iGroup = 1:length(mp.dm2.comovingGroups)
-            
-            indsGroup = find(ismember(mp.dm2.act_ele, mp.dm2.comovingGroups{iGroup})); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
-            nGroup = length(indsGroup);
-            meanEffect = mean(jacStruct.G2(:, indsGroup, :), 2);
-            
-            % Assign mean effect to each actuator in the comoving group
-            for iAct = 1:nGroup
-                jacStruct.G2(:, indsGroup(iAct), :) = meanEffect;
+                % Zero out the influence of pinned actuators since they can't move.
+                indsPinned = find(ismember(mp.dm2.act_ele, mp.dm2.pinned)); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+                jacStruct.G2(:, indsPinned, :) = 0 * jacStruct.G2(:, indsPinned, :);
+
+                % Average out the influence of co-moving actuators since they all have to move the same amount. 
+                for iGroup = 1:length(mp.dm2.comovingGroups)
+
+                    indsGroup = find(ismember(mp.dm2.act_ele, mp.dm2.comovingGroups{iGroup})); % Indices in the Jacobian, which doesn't necessarily have all actuators included.
+                    nGroup = length(indsGroup);
+                    meanEffect = mean(jacStruct.G2(:, indsGroup, :), 2);
+
+                    % Assign mean effect to each actuator in the comoving group
+                    for iAct = 1:nGroup
+                        jacStruct.G2(:, indsGroup(iAct), :) = meanEffect;
+                    end
+
+                end
+
             end
-            
-        end
-
-    end
     
 %     %--Handle tied actuators by adding the 2nd actuator's Jacobian column to
 %     %the first actuator's column, and then zeroing out the 2nd actuator's column.
@@ -198,25 +211,26 @@ function jacStruct = model_Jacobian(mp)
 %         end
 %     end
 
-    if(any(mp.dm_ind==8))
-        for ti=1:size(mp.dm8.tied, 1)
-            Index1all = mp.dm8.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm8.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
-            Index1subset = find(mp.dm8.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
-            Index2subset = find(mp.dm8.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G8(:, Index1subset, :) = jacStruct.G8(:, Index1subset, :) + jacStruct.G8(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G8(:, Index2subset, :) = 0*jacStruct.G8(:, Index2subset, :); % zero out the 2nd actuator's column.
-        end
-    end
-    if(any(mp.dm_ind==9))
-        for ti=1:size(mp.dm9.tied, 1)
-            Index1all = mp.dm9.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
-            Index2all = mp.dm9.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
-            Index1subset = find(mp.dm9.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
-            Index2subset = find(mp.dm9.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
-            jacStruct.G9(:, Index1subset, :) = jacStruct.G9(:, Index1subset, :) + jacStruct.G9(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
-            jacStruct.G9(:, Index2subset, :) = 0*jacStruct.G9(:, Index2subset, :); % zero out the 2nd actuator's column.
-        end
+            if(any(mp.dm_ind==8))
+                for ti=1:size(mp.dm8.tied, 1)
+                    Index1all = mp.dm8.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+                    Index2all = mp.dm8.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
+                    Index1subset = find(mp.dm8.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+                    Index2subset = find(mp.dm8.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+                    jacStruct.G8(:, Index1subset, :) = jacStruct.G8(:, Index1subset, :) + jacStruct.G8(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+                    jacStruct.G8(:, Index2subset, :) = 0*jacStruct.G8(:, Index2subset, :); % zero out the 2nd actuator's column.
+                end
+            end
+            if(any(mp.dm_ind==9))
+                for ti=1:size(mp.dm9.tied, 1)
+                    Index1all = mp.dm9.tied(ti, 1); %--Index of first tied actuator in whole actuator set. 
+                    Index2all = mp.dm9.tied(ti, 2); %--Index of second tied actuator in whole actuator set. 
+                    Index1subset = find(mp.dm9.act_ele==Index1all); %--Index of first tied actuator in subset of used actuators. 
+                    Index2subset = find(mp.dm9.act_ele==Index2all); %--Index of second tied actuator in subset of used actuators. 
+                    jacStruct.G9(:, Index1subset, :) = jacStruct.G9(:, Index1subset, :) + jacStruct.G9(:, Index2subset, :); % adding the 2nd actuators Jacobian column to the first actuator's column
+                    jacStruct.G9(:, Index2subset, :) = 0*jacStruct.G9(:, Index2subset, :); % zero out the 2nd actuator's column.
+                end
+            end
     end
        
 end %--END OF FUNCTION model_Jacobian.m
