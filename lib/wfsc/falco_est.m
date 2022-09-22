@@ -39,9 +39,21 @@ function ev = falco_est(mp, ev, jacStruct)
 					ev = falco_est_pairwise_probing(mp, ev);
 				end
             end
+
         case{'scc'}
             ev  = falco_est_scc(mp);
             ev.Im = falco_get_summed_image(mp);            
+
+        case{'ekf_maintenance'}
+            
+            if ev.Itr == 1
+                disp('starting ekf initialization')
+                ev = initialize_ekf_maintenance(mp, ev, jacStruct);
+                disp('done ekf initialization')
+            end
+            
+            ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
+
     end
 
 end

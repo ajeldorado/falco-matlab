@@ -8,7 +8,7 @@ function handles = falco_plot_progress_iact(handles,mp,Itr,Inorm,Im_tb,DM1surf,D
 
 tb = mp.tb;
 
-if(Itr==3)
+if(Itr==3 && ~mp.flagSim)
     % Clear the dark 
     disp('Clearing the dark ...');
     sbp_texp = tb.info.sbp_texp(mp.si_ref);
@@ -201,28 +201,28 @@ else
     tag = '';
 end
 
-sciCam_fitswrite(tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
 
 if(any(mp.dm_ind==1) && Itr==1)
-    sciCam_fitswrite(tb,mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
+    fitswrite_tb(mp,tb,mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
 end
 % if(any(mp.dm_ind==2) && Itr==1)
-%     sciCam_fitswrite(tb,mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits');
+%     fitswrite_tb(mp,tb,mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits');
 % end
 
 if(any(mp.dm_ind==1))
-    sciCam_fitswrite(tb,mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
-    sciCam_fitswrite(tb,DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite_tb(mp,tb,mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite_tb(mp,tb,DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
 end
 if(any(mp.dm_ind==2))
-    sciCam_fitswrite(tb,mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
-    sciCam_fitswrite(tb,DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite_tb(mp,tb,mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite_tb(mp,tb,DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
 end
 
 
-sciCam_fitswrite(tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
-sciCam_fitswrite(tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
-sciCam_fitswrite(tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
+fitswrite_tb(mp,tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
+fitswrite_tb(mp,tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
+fitswrite_tb(mp,tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
@@ -233,3 +233,13 @@ end
 diary off; diary(mp.diaryfile)
 
 end %--END OF FUNCTION
+
+
+function fitswrite_tb(mp, tb, obj, filename)
+if mp.flagSim
+    fitswrite(obj,filename);
+else
+    sciCam_fitswrite(tb,obj,filename);
+end
+
+end
