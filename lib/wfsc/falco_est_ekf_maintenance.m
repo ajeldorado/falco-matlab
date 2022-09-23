@@ -14,7 +14,6 @@ if size(varargin, 2) == 1
     jacStruct = varargin{1};
 end
 
-
 % Augment which DMs are used if the probing DM isn't used for control.
 if whichDM == 1 && ~any(mp.dm_ind == 1)
     mp.dm_ind = [mp.dm_ind(:); 1];
@@ -35,7 +34,6 @@ ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IprobedMean = 0;
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  end
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  end
 
@@ -123,7 +121,6 @@ ev.ampSqMean = mean(I0vec(:)); %--Mean probe intensity
 ev.IprobedMean = mean(mean(ev.imageArray)); 
 
 mp.isProbing = false;
-
 
 %% If itr = itr_OL get OL data. NOTE THIS SHOULD BE BEFORE THE 
 % "Remove control from DM command so that controller images are correct" block
@@ -244,7 +241,6 @@ end
 end
 
 
-
 function out = mypageinv(in)
 
 dim = size(in,3);
@@ -337,8 +333,3 @@ if ev.Itr == 1
 end
 
 end
-
-
-
-
-

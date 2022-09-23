@@ -1,4 +1,3 @@
-
 function [mp,ev] = falco_drift_injection(mp,ev)
 
 switch lower(mp.drift.type)
@@ -66,5 +65,4 @@ if any(mp.dm_ind == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
 comm_vector = [comm1;comm2];
 
 end
-
 

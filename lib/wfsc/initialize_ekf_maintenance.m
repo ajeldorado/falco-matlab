@@ -13,6 +13,7 @@ end
 % intensity
 ev.peak_psf_counts = zeros(1,mp.Nsbp);
 ev.e_scaling = zeros(1,mp.Nsbp);
+
 for iSubband = 1:mp.Nsbp
 
     % potentially set mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si) set to mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
@@ -31,7 +32,6 @@ ev.G_tot_drift = rearrange_jacobians(mp,jacStruct,mp.dm_drift_ind);
 % Initialize EKF matrices
 ev = initialize_ekf_matrices(mp, ev);
 
-
 % Initialize pinned actuator check
 ev.dm1.initial_pinned_actuators = mp.dm1.pinned;
 if any(mp.dm_ind == 2); ev.dm2.initial_pinned_actuators = mp.dm2.pinned; end
@@ -39,7 +39,6 @@ ev.dm1.new_pinned_actuators = [];
 ev.dm2.new_pinned_actuators = [];
 ev.dm1.act_ele_pinned = [];
 ev.dm2.act_ele_pinned = [];
-
 
 end
 
@@ -114,7 +113,6 @@ ev.R_indices = logical(eye(floor(ev.BS/ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev
 % matrix (re | im | px | wavelength).
 % Need to convert jacobian from contrast units to counts.
 
-
 ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
 for iSubband = 1:1:mp.Nsbp
     disp(['assembling Q for subband ',num2str(iSubband)])
@@ -152,12 +150,9 @@ for iSubband = 1:1:mp.Nsbp
     ev.x_hat0(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
     ev.x_hat0(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
 
-
     % The EKF state is scaled such that the intensity is measured in photons:
     ev.x_hat(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
     ev.x_hat(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
  end
 
 end
-
-

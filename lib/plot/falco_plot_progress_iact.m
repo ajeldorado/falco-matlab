@@ -226,6 +226,7 @@ fitswrite_tb(mp,tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
+    if isfield(ev,'G_tot'); ev = rmfield(ev,'G_tot'); end
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
 end
 
