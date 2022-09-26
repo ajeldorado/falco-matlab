@@ -35,7 +35,7 @@ if(any(mp.dm_ind==9)); dDM.dDM9V = zeros(mp.dm9.NactTotal,1); end
 %--Parse the delta command vector by DM
 switch mp.estimator
     
-    case 'scc'
+    case{'scc', 'iefc'}
         if(any(mp.dm_ind==1));  dDM.dDM1V = mp.dm1.weight*sum(mp.dm1.basisCube .* reshape(duVec(cvar.uLegend==1), 1, 1, []), 3);  end
         if(any(mp.dm_ind==2));  dDM.dDM2V = mp.dm2.weight*sum(mp.dm2.basisCube .* reshape(duVec(cvar.uLegend==2), 1, 1, []), 3); end
     

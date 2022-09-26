@@ -198,6 +198,8 @@ mp.dm2.fourier_basis_etas = [];
 mp.dm1.Nactbeam = (mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
 mp.dm2.Nactbeam = (mp.dm2.Nact-2); % Number of actuators across the beam (approximate)
 
+% Update probe commands in main script after calling falco_flesh_out_workspace(mp).
+mp.iefc.probeCube = zeros(mp.dm1.Nact, mp.dm1.Nact, 2);
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -296,6 +298,7 @@ inputs.OD = 7.5e-3/DbeamLyot; % IACT values
 inputs.Nbeam = mp.P4.compact.Nbeam;
 inputs.Npad = NpadCompact;
 mp.P4.compact.mask = pinholeCompact + falco_gen_pupil_Simple(inputs); 
+mp.P4.compact.maskWithoutPinhole = falco_gen_pupil_Simple(inputs);
 
 % Full model
 inputs.Nbeam = mp.P4.full.Nbeam;
