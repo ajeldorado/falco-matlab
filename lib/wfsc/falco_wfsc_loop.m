@@ -8,7 +8,6 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
-flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
@@ -23,12 +22,6 @@ for Itr = 1:mp.Nitr
     % user-defined bookkeeping updates for each iteration
     if isfield(mp, 'funTopofloopBookkeeping') && ~isempty(mp.funTopofloopBookkeeping)
         mp = mp.funTopofloopBookkeeping(mp, Itr);
-% =======
-%     % update subdir for scicam images
-%     if isfield(mp, 'tb') && ~mp.flagSim
-%         mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
-%         mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
-% >>>>>>> updated files for dzm
     end
     
     if mp.flagSim
@@ -69,7 +62,7 @@ for Itr = 1:mp.Nitr
         cvar.flagRelin = false;
     end
     
-    if ((Itr == 1) && ~cvar.flagRelin && strcmpi(mp.estimator, 'scc')) % load jacStruct from file
+    if ((Itr == 1) && ~cvar.flagRelin && (strcmpi(mp.estimator, 'scc') || strcmpi(mp.estimator, 'iefc')) % load jacStruct from file
         load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
     elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
@@ -85,10 +78,10 @@ for Itr = 1:mp.Nitr
         if any(mp.dm_ind == 1);  jacStruct.G2 = jacStructLearned.G2;  end
     end
     
-    %% Inject drift
+    %% Inject drift for (Only) Dark Zone Maintenance
     % Get Drift Command
     if strcmpi(mp.estimator,'ekf_maintenance')
-        [mp,ev] = falco_drift_injection(mp,ev);
+        [mp, ev] = falco_drift_injection(mp, ev);
     end
 
     %% Wavefront Estimation
@@ -105,7 +98,7 @@ for Itr = 1:mp.Nitr
     if Itr > 1
         out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
     end
-    % add model E-field to ev for saving
+    % Add model E-field to ev for saving
     ev.Esim = Esim;
 
     %% Progress plots (PSF, NI, and DM surfaces)
@@ -175,7 +168,7 @@ for Itr = 1:mp.Nitr
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
     
-    %% end early? you can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
+    %% End early? You can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
     if flagBreak
         break;
     end
@@ -201,7 +194,6 @@ end
 
 if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
    out.IOLScoreHist = ev.IOLScoreHist;
-    
 end
 
 
@@ -215,23 +207,6 @@ fprintf('...done.\n')
 %% Save out the data from the workspace
 if mp.flagSaveWS
     clear ev cvar G* h* jacStruct; % Save a ton of space when storing the workspace
-
-%     % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
-%     mp.P1.full.mask=1; mp.P1.compact.mask=1;
-%     mp.P3.full.mask=1; mp.P3.compact.mask=1;
-%     mp.P4.full.mask=1; mp.P4.compact.mask=1;
-%     mp.F3.full.mask=1; mp.F3.compact.mask=1;
-% 
-%     mp.P1.full.E = 1; mp.P1.compact.E = 1; mp.Eplanet = 1; 
-%     mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
-%     mp.complexTransFull = 1; mp.complexTransCompact = 1;
-% 
-%     mp.dm1.compact.inf_datacube = 0;
-%     mp.dm2.compact.inf_datacube = 0;
-%     mp.dm8.compact.inf_datacube = 0;
-%     mp.dm9.compact.inf_datacube = 0;
-%     mp.dm8.inf_datacube = 0;
-%     mp.dm9.inf_datacube = 0;
 
     fnAll = fullfile(mp.path.ws,[mp.runLabel, '_all.mat']);
     disp(['Saving entire workspace to file ' fnAll '...'])
