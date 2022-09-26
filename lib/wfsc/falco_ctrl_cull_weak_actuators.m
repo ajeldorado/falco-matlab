@@ -31,8 +31,8 @@ function [mp, jacStruct] = falco_ctrl_cull_weak_actuators(mp, cvar, jacStruct)
             cvar.flagCullAct = false;
         end
     end
-    %--No actuators culled when using the SCC
-    if strcmpi(mp.estimator, 'scc')
+    %--No actuators culled when using SCC or IEFC
+    if strcmpi(mp.estimator, 'scc') || strcmpi(mp.estimator, 'iefc')
         cvar.flagCullAct = false;
     end
     mp.flagCullActHist(cvar.Itr) = cvar.flagCullAct;

@@ -29,6 +29,7 @@ mp.Fend.eval.dummy = 1;
 mp.path.dummy = 1;
 mp.detector.dummy = 1;
 mp.scc.dummy = 1;
+mp.iefc.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
@@ -179,6 +180,10 @@ if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--
 if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Reduce estimated intensities to this value if they exceed this (probably due to a bad inversion)
 if(isfield(mp.scc,'modeCoef')==false); mp.scc.modeCoef = 1; end %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
 
+%--IEFC
+if(isfield(mp.iefc,'modeCoef')==false); mp.iefc.modeCoef = 1e-3; end %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
+if(isfield(mp.iefc,'probeCoef')==false); mp.iefc.probeCoef = 1e-2; end %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
+if(isfield(mp.iefc,'probeDM')==false); mp.iefc.probeDM = 1; end %--Which DM to use when probing for IEFC.
 
 %--Performance Evaluation
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus

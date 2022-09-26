@@ -62,7 +62,7 @@ for Itr = 1:mp.Nitr
         cvar.flagRelin = false;
     end
     
-    if ((Itr == 1) && ~cvar.flagRelin && (strcmpi(mp.estimator, 'scc') || strcmpi(mp.estimator, 'iefc')) % load jacStruct from file
+    if ((Itr == 1) && ~cvar.flagRelin && (strcmpi(mp.estimator, 'scc') || strcmpi(mp.estimator, 'iefc'))) % load jacStruct from file
         load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
     elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
@@ -267,6 +267,10 @@ end
 
 
 function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis)
+
+    if strcmpi(mp.estimator, 'iefc')
+        ev.Eest = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+    end
 
     Im = ev.Im;
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
