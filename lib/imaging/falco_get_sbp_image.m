@@ -16,7 +16,7 @@
 % subbandImage : subband image in units of normalized intensity
 
 function subbandImage = falco_get_sbp_image(mp, iSubband)
-
+    
     if mp.flagSim
         subbandImage = falco_get_sim_sbp_image(mp, iSubband);
     else

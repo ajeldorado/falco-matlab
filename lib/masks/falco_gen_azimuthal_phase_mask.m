@@ -99,7 +99,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             fpmPhz1D = pi/2*sign(cos(charge*q));
             
             % Filter out unwanted modes  
-            mask1D = exp(1j*fpmPhz1D);
+            mask1D = exp(1j*phaseScaleFac*fpmPhz1D);
             mask1D_FT = fft(mask1D);
             filter = abs(mask1D_FT) > max(abs(mask1D_FT))/100;
             mask1D_FT = mask1D_FT.*filter; 
@@ -107,7 +107,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
             % Convert to 2D mask 
             mask = interp1(q,mask1D,THETA,'linear');
-            mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
+%             mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
             
             disp('generating sector mask')
             
@@ -120,7 +120,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             fpmPhz1D = ceil(mod((q+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi-pi;
             
             % Filter out unwanted modes  
-            mask1D = exp(1j*fpmPhz1D);
+            mask1D = exp(1j*phaseScaleFac*fpmPhz1D);
             mask1D_FT = fft(mask1D);
             filter = abs(mask1D_FT) > max(abs(mask1D_FT))/1000;
             mask1D_FT = mask1D_FT.*filter; 
@@ -128,7 +128,8 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
             % Convert to 2D mask 
             mask = interp1(q,mask1D,THETA,'linear');
-            mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
+%             figure;imagesc(angle(mask));colorbar; colormap(hsv);caxis([-pi pi]);set(gca,'ydir','normal')
+%             mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
             
             
             vort = phaseScaleFac*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi;
