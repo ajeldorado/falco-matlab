@@ -58,11 +58,11 @@ for index = 1:2 %length(RMSs) %length(res)
     %% Step 2: Load default model parameters
 
     disp(index);
-    mp.fracBW = bws(1);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
-    mp.Nsbp = nsbps(1);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.fracBW = bws(6);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.Nsbp = nsbps(6);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.full.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.compact.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
-    mp.F3.phaseMaskType = 'staircase';
+    mp.F3.phaseMaskType = 'frenchwrapped';
 %     mp.F3.VortexCharge = -8;
 %     mp.F3.NstepStaircase = 6;
     EXAMPLE_defaults_HCST_SVC_chromatic

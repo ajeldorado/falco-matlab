@@ -115,14 +115,14 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             Nsteps = inputs.Nsteps;
 
             % Generate 1D phase profile 
-            Nsamps1D = 100*N; 
+            Nsamps1D = 1000*N; 
             q = linspace(-pi,pi,Nsamps1D);
             fpmPhz1D = ceil(mod((q+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi-pi;
             
             % Filter out unwanted modes  
             mask1D = exp(1j*fpmPhz1D);
             mask1D_FT = fft(mask1D);
-            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/100;
+            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/1000;
             mask1D_FT = mask1D_FT.*filter; 
             mask1D = ifft(mask1D_FT);
 
@@ -137,7 +137,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title(' Staircase Vortex Phase Map','FontSize',20);
 
             
-        case 'classicalwrapped'
+        case 'sawtooth'
             
 %             vort = phaseScaleFac*charge*rem(THETA,pi./4);
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
@@ -152,7 +152,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title(' Sawtooth Vortex Phase Map','FontSize',20);
 
 
-        case 'frenchwrapped'
+        case 'galicher8'
             
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             %
@@ -179,7 +179,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %          'TickLabels',{"-\pi",0,"\pi","2\pi","3\pi"},'FontSize',20);title(' Galicher Wrapped Vortex Phase Map','FontSize',20);
 
      
-        case 'mcmc6'
+        case 'wrapped6'
             
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             %
