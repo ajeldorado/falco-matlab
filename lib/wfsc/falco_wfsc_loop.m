@@ -8,6 +8,7 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
+flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
@@ -22,6 +23,12 @@ for Itr = 1:mp.Nitr
     % user-defined bookkeeping updates for each iteration
     if isfield(mp, 'funTopofloopBookkeeping') && ~isempty(mp.funTopofloopBookkeeping)
         mp = mp.funTopofloopBookkeeping(mp, Itr);
+% =======
+%     % update subdir for scicam images
+%     if isfield(mp, 'tb') && ~mp.flagSim
+%         mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
+%         mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
+% >>>>>>> updated files for dzm
     end
     
     if mp.flagSim
@@ -56,8 +63,15 @@ for Itr = 1:mp.Nitr
 
     mp = falco_set_jacobian_modal_weights(mp); 
     
-    cvar.flagRelin = (Itr == 1) || any(mp.relinItrVec == Itr);
-    if  cvar.flagRelin
+    if any(mp.relinItrVec == Itr)
+        cvar.flagRelin = true;        
+    else
+        cvar.flagRelin = false;
+    end
+    
+    if ((Itr == 1) && ~cvar.flagRelin && strcmpi(mp.estimator, 'scc')) % load jacStruct from file
+        load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
+    elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
         jacStruct =  model_Jacobian(mp);
     end
@@ -69,6 +83,12 @@ for Itr = 1:mp.Nitr
         jacStructLearned = load('jacStructLearned.mat');
         if any(mp.dm_ind == 1);  jacStruct.G1 = jacStructLearned.G1;  end
         if any(mp.dm_ind == 1);  jacStruct.G2 = jacStructLearned.G2;  end
+    end
+    
+    %% Inject drift
+    % Get Drift Command
+    if strcmpi(mp.estimator,'ekf_maintenance')
+        [mp,ev] = falco_drift_injection(mp,ev);
     end
 
     %% Wavefront Estimation
@@ -107,7 +127,6 @@ for Itr = 1:mp.Nitr
     end
     
     cvar.Eest = ev.Eest;
-    cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
     % Save data to 'out'
@@ -180,6 +199,12 @@ if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
 end
 
+if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
+   out.IOLScoreHist = ev.IOLScoreHist;
+    
+end
+
+
 %% Save out an abridged workspace
 
 fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
@@ -191,22 +216,22 @@ fprintf('...done.\n')
 if mp.flagSaveWS
     clear ev cvar G* h* jacStruct; % Save a ton of space when storing the workspace
 
-    % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
-    mp.P1.full.mask=1; mp.P1.compact.mask=1;
-    mp.P3.full.mask=1; mp.P3.compact.mask=1;
-    mp.P4.full.mask=1; mp.P4.compact.mask=1;
-    mp.F3.full.mask=1; mp.F3.compact.mask=1;
-
-    mp.P1.full.E = 1; mp.P1.compact.E = 1; mp.Eplanet = 1; 
-    mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
-    mp.complexTransFull = 1; mp.complexTransCompact = 1;
-
-    mp.dm1.compact.inf_datacube = 0;
-    mp.dm2.compact.inf_datacube = 0;
-    mp.dm8.compact.inf_datacube = 0;
-    mp.dm9.compact.inf_datacube = 0;
-    mp.dm8.inf_datacube = 0;
-    mp.dm9.inf_datacube = 0;
+%     % Don't bother saving the large 2-D, floating point maps in the workspace (they take up too much space)
+%     mp.P1.full.mask=1; mp.P1.compact.mask=1;
+%     mp.P3.full.mask=1; mp.P3.compact.mask=1;
+%     mp.P4.full.mask=1; mp.P4.compact.mask=1;
+%     mp.F3.full.mask=1; mp.F3.compact.mask=1;
+% 
+%     mp.P1.full.E = 1; mp.P1.compact.E = 1; mp.Eplanet = 1; 
+%     mp.dm1.full.mask = 1; mp.dm1.compact.mask = 1; mp.dm2.full.mask = 1; mp.dm2.compact.mask = 1;
+%     mp.complexTransFull = 1; mp.complexTransCompact = 1;
+% 
+%     mp.dm1.compact.inf_datacube = 0;
+%     mp.dm2.compact.inf_datacube = 0;
+%     mp.dm8.compact.inf_datacube = 0;
+%     mp.dm9.compact.inf_datacube = 0;
+%     mp.dm8.inf_datacube = 0;
+%     mp.dm9.inf_datacube = 0;
 
     fnAll = fullfile(mp.path.ws,[mp.runLabel, '_all.mat']);
     disp(['Saving entire workspace to file ' fnAll '...'])
@@ -271,6 +296,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     Im = ev.Im;
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
+    
+    % Add open loop contrast history to out variable.
+    if strcmpi(mp.estimator,'ekf_maintenance') 
+        out.IOLScoreHist = ev.IOLScoreHist;
+    end
     
     if isfield(mp, 'testbed')
         out.InormHist_tb.total = out.InormHist; 

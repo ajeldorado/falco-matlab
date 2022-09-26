@@ -124,7 +124,7 @@ end
 switch upper(mp.coro)
     case{'VORTEX', 'VC'}
         if mp.flagApod == false
-            EP3 = pad_crop(EP3, 2^nextpow2(mp.P1.full.Narr)); %--Crop down if there isn't an apodizer mask
+            EP3 = pad_crop(EP3, max([mp.P4.full.Narr, 2^nextpow2(mp.P1.full.Narr)])); %--Crop down if there isn't an apodizer mask
         end
 
         % Get phase scale factor for FPM. 
@@ -138,8 +138,8 @@ switch upper(mp.coro)
             phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
         end
         
-        inVal = 0.3;
-        outVal = 5;
+        inVal = mp.F3.inVal;
+        outVal = mp.F3.outVal;
         spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
         spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
         pixPerLamD = mp.F3.full.res;
@@ -152,12 +152,8 @@ switch upper(mp.coro)
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
-%         figure(2);
-%         imagesc(angle(fpm));
-%         colorbar; 
-%         colormap(hsv);
-%         caxis([-pi pi])
-%         
+%         figure(222);imagesc(angle(fpm));colorbar; colormap(gray);caxis([-pi pi]);set(gca,'ydir','normal')
+ 
         EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         
         % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
