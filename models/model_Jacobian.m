@@ -81,6 +81,14 @@ function jacStruct = model_Jacobian(mp)
             fprintf('Saving out SCC Jacobian to %s\n', fn_jac)
             save(fn_jac, 'jacStruct');
 
+        case 'iefc'
+            if(any(mp.dm_ind==1)); jacStruct.G1 = model_Jacobian_IEFC(mp, 1);  end
+            if(any(mp.dm_ind==2)); jacStruct.G2 = model_Jacobian_IEFC(mp, 2);  end
+            
+            fn_jac = [mp.path.jac filesep mp.jac.fn];
+            fprintf('Saving out IEFC Jacobian to %s\n', fn_jac)
+            save(fn_jac, 'jacStruct');
+            
         otherwise
             fprintf('Computing control Jacobian matrices ... \n'); tic
             %--Parallel/distributed computing

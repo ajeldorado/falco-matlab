@@ -42,8 +42,12 @@ function ev = falco_est(mp, ev, jacStruct)
             end
             
         case{'scc'}
-            ev  = falco_est_scc(mp);
+            ev = falco_est_scc(mp);
             ev.Im = falco_get_summed_image(mp);            
+
+        case{'iefc'}
+            ev = falco_est_iefc(mp);
+            ev.Im = falco_get_summed_image(mp);    
 
         case{'ekf_maintenance'}
             

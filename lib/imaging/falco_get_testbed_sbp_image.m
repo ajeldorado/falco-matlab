@@ -30,7 +30,9 @@ function normI = falco_get_testbed_sbp_image(mp,si)
         case 'GPCT'
             normI = falco_get_gpct_sbp_image(mp,si); 
         case 'DST'
-            normI = falco_get_dst_sbp_image(mp,si); 
+            normI = falco_get_dst_sbp_image(mp,si);
+        case 'OMC'
+            normI = falco_get_omc_sbp_image(mp,si);
         case 'IACT'
             normI = falco_get_iact_sbp_image(mp,si); 
         %Can put other testbeds or fancy models here
