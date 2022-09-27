@@ -151,8 +151,8 @@ if flagUseFPM
                 phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
             end
             
-            inVal = 0.3;
-            outVal = 5;
+            inVal = mp.F3.inVal;
+            outVal = mp.F3.outVal;
             spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
             spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
             pixPerLamD = mp.F3.compact.res;
