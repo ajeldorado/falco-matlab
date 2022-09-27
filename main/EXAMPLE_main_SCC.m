@@ -96,7 +96,8 @@ imageShapeMax = max([mp.Fend.Neta, mp.Fend.Nxi]);
 
 filter_butterworth = (1-falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rin*mp.Fend.res)) .* ...
     falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rout*mp.Fend.res);
-imageFilt = pad_crop(image0, [imageShapeMax, imageShapeMax]) .* filter_butterworth;
+imageFilt = pad_crop(image0, [imageShapeMax, imageShapeMax]);
+% imageFilt = imageFilt .* filter_butterworth; % The filter makes it harder to find the side lobe center.
 
 imageFilt = ifftshift(imageFilt);
 pupil_scc = fft2(imageFilt);%/imageShapeMax;
@@ -104,14 +105,14 @@ pupil_scc = fftshift(pupil_scc);
 
 % From the plot, choose the center of one of the side circles
 mp.scc.pupil_center_row = 46;
-mp.scc.pupil_center_col = 94;
+mp.scc.pupil_center_col = 93;
 mp.scc.pupil_subwindow_diameter = 27;
 
 figure(1000); imagesc(log10(abs(pupil_scc))); axis xy equal tight; colorbar;
 rectangle('Position', [mp.scc.pupil_center_col-mp.scc.pupil_subwindow_diameter/2, mp.scc.pupil_center_row-mp.scc.pupil_subwindow_diameter/2, mp.scc.pupil_subwindow_diameter, mp.scc.pupil_subwindow_diameter], 'Curvature', [1, 1])
 title('FFT of Stellar PSF with Window Outline');
 drawnow;
-
+%%
 disp("Before continuing, make sure that the SCC is using the correct region in the FFT'ed image")
 keyboard
 
