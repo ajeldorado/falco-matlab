@@ -49,12 +49,13 @@ else %--Perform an empirical grid search with actual images
         InormMean = mean(Itotal(mp.Fend.corr.maskBool));
         dDM.Itotal = Itotal;
     else
-        IfiberTotal = falco_get_summed_image_fiber(mp);
+%         IfiberTotal = falco_get_summed_image_fiber(mp);
+        [~,IfiberTotal] = falco_get_summed_image(mp);
         dDM.Itotal = IfiberTotal;
         if(mp.flagLenslet)
             InormMean = mean(max(max(IfiberTotal)));
         else
-            InormMean = mean(IfiberTotal(mp.Fend.corr.maskBool));
+            InormMean = IfiberTotal;
         end
 
     end

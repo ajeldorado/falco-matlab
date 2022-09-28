@@ -66,9 +66,9 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            if ~mp.flagFiber
-                ImCube(:, :, ni) = dDM_temp.Itotal;
-            end
+%             if ~mp.flagFiber
+            ImCube(:, :, ni) = dDM_temp.Itotal;
+%             end
         end
     end
     
@@ -99,6 +99,9 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin, indBest] = min(Inorm_list(:));
     cvarOut.Im = ImCube(:, :, indBest);
+    if mp.flagFiber
+        cvarOut.Ifiber = min(Inorm_list(:));
+    end
     
     %--delta voltage commands
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:, :, indBest); end

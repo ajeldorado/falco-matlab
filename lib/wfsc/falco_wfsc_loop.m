@@ -150,8 +150,15 @@ for Itr = 1:mp.Nitr
 
     %--REPORTING NORMALIZED INTENSITY
     if out.InormHist(Itr+1) ~= 0
-        fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-            out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
+        if mp.flagFiber
+            fprintf('Prev and New Measured NI (SMF):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+                out.InormFiberHist(Itr), out.InormFiberHist(Itr+1), out.InormFiberHist(Itr)/out.InormFiberHist(Itr+1) );
+            fprintf('Prev and New Measured NI (pixels):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+                out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
+        else
+            fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+                out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
+        end
         if ~mp.flagSim
             fprintf('\n');
         end
@@ -247,6 +254,9 @@ function out = falco_store_controller_data(mp, out, cvar, Itr)
         out.IrawScoreHist(Itr+1) = mean(cvar.Im(mp.Fend.score.maskBool));
         out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
         out.InormHist(Itr+1) = out.IrawCorrHist(Itr+1);
+        if mp.flagFiber
+            out.InormFiberHist(Itr+1) = cvar.Ifiber;
+        end
     end
     
 end
@@ -309,7 +319,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
 
     else
-        hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+        if mp.flagFiber
+            hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormFiberHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+        else
+            hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+        end
 
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;

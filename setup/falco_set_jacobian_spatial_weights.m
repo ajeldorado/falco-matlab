@@ -44,6 +44,7 @@ function mp = falco_set_jacobian_spatial_weights(mp)
     end
     
 %     mp.WspatialVec = mp.Wspatial(mp.Fend.corr.maskBool); 
+    if(mp.flagFiber);  mp.WspatialVec = ones(mp.Fend.Nfiber, 1);  end
     if(mp.flagFiber && mp.flagLenslet);  mp.WspatialVec = ones(mp.Fend.Nlens, 1);  end
 
 end

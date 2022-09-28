@@ -43,6 +43,9 @@ function out = falco_store_intensities(mp, out, ev, Itr)
     out.IrawScoreHist(Itr) = mean(ev.Im(mp.Fend.score.maskBool));
     out.IrawCorrHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
     out.InormHist(Itr) = out.IrawCorrHist(Itr); % InormHist is a vestigial variable
+    if mp.flagFiber
+        out.InormFiberHist(Itr) = mean(ev.Ifiber);
+    end
 
     %% Calculate the measured, coherent, and incoherent intensities by subband
 
@@ -61,10 +64,18 @@ function out = falco_store_intensities(mp, out, ev, Itr)
         imageUnmodVec = ev.IincoEst(:, iMode);
 
         out.normIntModCorr(Itr, iMode) = mean(imageModVec);
-        out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
+        if mp.flagFiber
+            out.normIntModScore(Itr, iMode) = mean(imageModVec);
+        else
+            out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
+        end
 
         out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
-        out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+        if mp.flagFiber
+            out.normIntModScore(Itr, iMode) = mean(imageUnmodVec);
+        else
+            out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+        end
     end
     
 end

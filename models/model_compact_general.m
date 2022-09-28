@@ -34,7 +34,7 @@
 
 function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
 
-if nargout >= 3,
+if nargout >= 3
     debug = true;
 else
     debug = false;
@@ -329,7 +329,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Efiber = 0;
 if mp.flagFiber && ~flagEval
-    if mp.flagLenslet
+    if mp.flagLenslet % **not up to date with lenslets**
         Efiber = cell(mp.Fend.Nlens, 1);
         sbpIndex = find(mp.sbp_centers == lambda);
         
@@ -344,14 +344,19 @@ if mp.flagFiber && ~flagEval
         varargout{1} = Efiber;
         
     else  %Fibers placed in the focal plane with no lenslets
-        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+%         EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
         sbpIndex = find(mp.sbp_centers == lambda);
         
-        Efiber = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+        Efiber = zeros(mp.Fend.Nfiber);
         for i=1:mp.Fend.Nfiber
-            Eonefiber = mp.Fend.fiberMode(:, :, sbpIndex, i).*sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, i).*conj(EFend)));
-            Efiber = Efiber + Eonefiber;
+            if flagEval
+                normFactor_fiber = sqrt(mp.Fend.eval.I00_fiber(i,sbpIndex));
+            else
+                normFactor_fiber = sqrt(mp.Fend.compact.I00_fiber(i,sbpIndex));
+            end
+            Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, i).*EFend)) / normFactor_fiber;
+            Efiber(i) = Eonefiber;
         end
         varargout{1} = Efiber;
     end
