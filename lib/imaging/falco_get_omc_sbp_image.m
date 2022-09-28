@@ -126,12 +126,15 @@ function normI = falco_get_omc_sbp_image(mp,si)
     
     % Set wavelength
     %disp(['Setting varia to bandpass',num2str(si)])
-    lam0 = mp.sbp_centers(si);
-    lam1 = lam0 - sbp_width/2;
-    lam2 = lam0 + sbp_width/2;
-    tb.star.lower = lam1/NM;
-    tb.star.upper = lam2/NM;
-    tb.star.power = star_power; 
+    
+    if false
+        lam0 = mp.sbp_centers(si);
+        lam1 = lam0 - sbp_width/2;
+        lam2 = lam0 + sbp_width/2;
+        tb.star.lower = lam1/NM;
+        tb.star.upper = lam2/NM;
+        tb.star.power = star_power;
+    end
     
     if false %debug
         disp(tb.star);
