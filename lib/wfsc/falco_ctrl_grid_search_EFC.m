@@ -124,7 +124,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
-            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
+            set(gca,'Fontsize',20); set(gcf,'Color','w'); grid on;
             drawnow;
         elseif(length(mp.ctrl.dmfacVec)>1)
             figure(499); imagesc(mp.ctrl.log10regVec,mp.ctrl.dmfacVec,reshape(log10(Inorm_list),[length(mp.ctrl.dmfacVec),length(mp.ctrl.log10regVec)])); 
@@ -133,7 +133,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('Proportional Gain','Fontsize',20,'Interpreter','Latex');
             ylabel(ch,'log10(Inorm)','Fontsize',20,'Interpreter','Latex');
-            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]);
+            set(gca,'Fontsize',20); set(gcf,'Color','w');
             drawnow;
         end
     end
