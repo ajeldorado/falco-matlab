@@ -56,13 +56,14 @@ for Itr = 1:mp.Nitr
 
     mp = falco_set_jacobian_modal_weights(mp); 
     
-    if any(mp.relinItrVec == Itr)
+    usesEmpiricalJac = (strcmpi(mp.estimator, 'scc') || strcmpi(mp.estimator, 'iefc'));
+    if any(mp.relinItrVec == Itr) || ((Itr == 1) && ~usesEmpiricalJac)
         cvar.flagRelin = true;        
     else
         cvar.flagRelin = false;
     end
     
-    if ((Itr == 1) && ~cvar.flagRelin && (strcmpi(mp.estimator, 'scc') || strcmpi(mp.estimator, 'iefc'))) % load jacStruct from file
+    if ((Itr == 1) && ~cvar.flagRelin && usesEmpiricalJac) % load jacStruct from file
         load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
     elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
