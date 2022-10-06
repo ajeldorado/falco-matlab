@@ -27,24 +27,33 @@ function out = falco_store_intensities(mp, out, ev, Itr)
     IincoAllBands = sum(Iinco, 2);
 
 
-    % Put intensities back into 2-D arrays to use correct indexing of scoring region.
-    % Modulated
-    Iest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    Iest2D(mp.Fend.corr.maskBool) = IestAllBands(:);
-    out.IestScoreHist(Itr) = mean(Iest2D(mp.Fend.score.maskBool));
-    out.IestCorrHist(Itr) = mean(Iest2D(mp.Fend.corr.maskBool));
-    % Unmodulated
-    Iinco2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    Iinco2D(mp.Fend.corr.maskBool) = IincoAllBands(:);
-    out.IincoScoreHist(Itr) = mean(Iinco2D(mp.Fend.score.maskBool));
-    out.IincoCorrHist(Itr) = mean(Iinco2D(mp.Fend.corr.maskBool));
-
-    % Measured
-    out.IrawScoreHist(Itr) = mean(ev.Im(mp.Fend.score.maskBool));
-    out.IrawCorrHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
-    out.InormHist(Itr) = out.IrawCorrHist(Itr); % InormHist is a vestigial variable
     if mp.flagFiber
+        
         out.InormFiberHist(Itr) = mean(ev.Ifiber);
+        out.IestScoreHist(Itr, :) = IestAllBands(:);
+        out.IestCorrHist(Itr, :) = IestAllBands(:);
+        out.IincoScoreHist(Itr, :) = IincoAllBands(:);
+        out.IincoCorrHist(Itr, :) = IincoAllBands(:);  
+        out.IrawScoreHist(Itr, :) = ev.Ifiber(:);
+        out.IrawCorrHist(Itr, :) = ev.Ifiber(:);
+        out.InormHist(Itr, :) = ev.Ifiber(:);
+    else
+        % Put intensities back into 2-D arrays to use correct indexing of scoring region.
+        % Modulated
+        Iest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        Iest2D(mp.Fend.corr.maskBool) = IestAllBands(:);
+        out.IestScoreHist(Itr) = mean(Iest2D(mp.Fend.score.maskBool));
+        out.IestCorrHist(Itr) = mean(Iest2D(mp.Fend.corr.maskBool));
+        % Unmodulated
+        Iinco2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        Iinco2D(mp.Fend.corr.maskBool) = IincoAllBands(:);
+        out.IincoScoreHist(Itr) = mean(Iinco2D(mp.Fend.score.maskBool));
+        out.IincoCorrHist(Itr) = mean(Iinco2D(mp.Fend.corr.maskBool));
+
+        % Measured
+        out.IrawScoreHist(Itr) = mean(ev.Im(mp.Fend.score.maskBool));
+        out.IrawCorrHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
+        out.InormHist(Itr) = out.IrawCorrHist(Itr); % InormHist is a vestigial variable
     end
 
     %% Calculate the measured, coherent, and incoherent intensities by subband

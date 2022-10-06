@@ -82,16 +82,26 @@ function out = falco_init_storage_arrays(mp)
     out.complexCorrelation = zeros(mp.Nitr-1, mp.Nsbp); % Metric to compare the morphology of the delta E-field estimated vs expected in the model
     
     %--Intensity history at each iteration
-    out.InormHist = zeros(mp.Nitr+1, 1); % Measured, mean raw NI in correction region of dark hole.
     if mp.flagFiber
         out.InormFiberHist = zeros(mp.Nitr+1, 1);
     end
-    out.IrawCorrHist = zeros(mp.Nitr+1, 1); % Measured, mean raw NI in correction region of dark hole.
-    out.IrawScoreHist = zeros(mp.Nitr+1, 1); % Measured, mean raw NI in scoring region of dark hole.
-    out.IestCorrHist = zeros(mp.Nitr, 1); % Mean estimated coherent NI in correction region of dark hole.
-    out.IestScoreHist = zeros(mp.Nitr, 1); % Mean estimated coherent NI in scoring region of dark hole.
-    out.IincoCorrHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in correction region of dark hole.
-    out.IincoScoreHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in scoring region of dark hole.
+    if mp.flagFiber
+        out.InormHist = zeros(mp.Nitr+1, mp.Fend.Nfiber); % Measured, mean raw NI in correction region of dark hole.
+        out.IrawCorrHist = zeros(mp.Nitr+1, mp.Fend.Nfiber); % Measured, mean raw NI in correction region of dark hole.
+        out.IrawScoreHist = zeros(mp.Nitr+1, mp.Fend.Nfiber); % Measured, mean raw NI in scoring region of dark hole.
+        out.IestCorrHist = zeros(mp.Nitr, mp.Fend.Nfiber); % Mean estimated coherent NI in correction region of dark hole.
+        out.IestScoreHist = zeros(mp.Nitr, mp.Fend.Nfiber); % Mean estimated coherent NI in scoring region of dark hole.
+        out.IincoCorrHist = zeros(mp.Nitr, mp.Fend.Nfiber); % Mean estimated incoherent NI in correction region of dark hole.
+        out.IincoScoreHist = zeros(mp.Nitr, mp.Fend.Nfiber); % Mean estimated incoherent NI in scoring region of dark hole.
+    else
+        out.InormHist = zeros(mp.Nitr+1, 1); % Measured, mean raw NI in correction region of dark hole.
+        out.IrawCorrHist = zeros(mp.Nitr+1, 1); % Measured, mean raw NI in correction region of dark hole.
+        out.IrawScoreHist = zeros(mp.Nitr+1, 1); % Measured, mean raw NI in scoring region of dark hole.
+        out.IestCorrHist = zeros(mp.Nitr, 1); % Mean estimated coherent NI in correction region of dark hole.
+        out.IestScoreHist = zeros(mp.Nitr, 1); % Mean estimated coherent NI in scoring region of dark hole.
+        out.IincoCorrHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in correction region of dark hole.
+        out.IincoScoreHist = zeros(mp.Nitr, 1); % Mean estimated incoherent NI in scoring region of dark hole.
+    end
     
     out.normIntMeasCorr = zeros(mp.Nitr, mp.Nsbp); % Measured raw NI in correction region of dark hole.
     out.normIntMeasScore = zeros(mp.Nitr, mp.Nsbp); % Measured raw NI in scoring region of dark hole.

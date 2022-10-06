@@ -49,7 +49,7 @@ for Itr = 1:mp.Nitr
     mp = falco_compute_psf_norm_factor(mp);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
-    out.thput(Itr) = thput;
+    out.thput(Itr) = max(thput);
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
     
     %% Control Jacobian
@@ -325,24 +325,26 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
             hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
         end
 
-        out.InormHist_tb.total = out.InormHist; 
-        Im_tb.Im = Im;
-        Im_tb.E = zeros([size(Im), mp.Nsbp]);
-        Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
-        
-        for si = 1:mp.Nsbp
-                tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
-                Im_tb.E(:, :, si) = tmp; % modulated component 
- 
-                tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
-                Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
+        if ~mp.flagFiber
+            out.InormHist_tb.total = out.InormHist; 
+            Im_tb.Im = Im;
+            Im_tb.E = zeros([size(Im), mp.Nsbp]);
+            Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
 
-                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
-                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
+            for si = 1:mp.Nsbp
+                    tmp = zeros(size(Im));
+                    tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
+                    Im_tb.E(:, :, si) = tmp; % modulated component 
 
-                Im_tb.ev = ev; % Passing the probing structure so I can save it
+                    tmp = zeros(size(Im));
+                    tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
+                    Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
+
+                    out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
+                    out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
+
+                    Im_tb.ev = ev; % Passing the probing structure so I can save it
+            end
         end
         
     end

@@ -47,7 +47,8 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         end
         
         parfor ni = 1:Nvals
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [temp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
@@ -55,20 +56,25 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
             if ~mp.flagFiber
                 ImCube(:, :, ni) = dDM_temp.Itotal;
+            else
+                ImCube(:, :, ni) = mean(dDM_temp.Itotal);
             end
         end
         
     else %--Not Parallelized
         for ni = Nvals:-1:1
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [Itemp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-%             if ~mp.flagFiber
-            ImCube(:, :, ni) = dDM_temp.Itotal;
-%             end
+            if ~mp.flagFiber
+                ImCube(:, :, ni) = dDM_temp.Itotal;
+            else
+                ImCube(:, :, ni) = mean(dDM_temp.Itotal);
+            end
         end
     end
     
@@ -77,10 +83,10 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     for ni=1:Nvals;  fprintf('%.2f\t\t', vals_list(2,ni) );  end
 
     fprintf('\nlog10reg:\t');
-    for ni=1:Nvals;  fprintf('%.1f\t\t',vals_list(1,ni));  end
+    for ni=1:Nvals;  fprintf('%.1f\t\t', vals_list(1,ni));  end
 
     fprintf('\nInorm:  \t')
-    for ni=1:Nvals;  fprintf('%.2e\t',Inorm_list(ni));  end
+    for ni=1:Nvals;  fprintf('%.2e\t', Inorm_list(ni));  end
     fprintf('\n')
 
     % print rms ddmv
