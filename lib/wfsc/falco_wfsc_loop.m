@@ -348,15 +348,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
                 out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
 
-                    tmp = zeros(size(Im));
-                    tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
-                    Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
-
-                    out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
-                    out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
-
-                    Im_tb.ev = ev; % Passing the probing structure so I can save it
-            end
+                Im_tb.ev = ev; % Passing the probing structure so I can save it
         end
         
     end
