@@ -114,7 +114,7 @@ switch upper(mp.coro)
         transOuterFPM = 1;
 end
 
-scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
+% scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
 % switch upper(mp.coro)
 %     case{'HLC'}
 %         switch mp.layout
@@ -221,7 +221,7 @@ if whichDM == 1
             
             dEFendPeak = sum(dEP2box(:)) * transOuterFPM *...
                 sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
-                scaleFac * sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
+                sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
             
             Gmode(:, Gindex) = dEFendPeak / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end

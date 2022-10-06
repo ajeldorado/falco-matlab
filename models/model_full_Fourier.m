@@ -289,9 +289,9 @@ if mp.flagFiber
         sbpIndex = find(mp.sbp_centers == lambda);
         
         Efiber = zeros(mp.Fend.Nfiber,1);
-        for i=1:mp.Fend.Nfiber
-            Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, i) .* EFend)) / sqrt(mp.Fend.full.I00_fiber(i,sbpIndex));
-            Efiber(i) = Eonefiber;
+        for ii=1:mp.Fend.Nfiber
+            Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, ii) .* EFend)) / sqrt(mp.Fend.full.I00_fiber(ii,sbpIndex));
+            Efiber(ii) = Eonefiber;
         end
         
         varargout{1} = Efiber;
