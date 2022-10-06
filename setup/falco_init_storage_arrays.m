@@ -83,7 +83,7 @@ function out = falco_init_storage_arrays(mp)
     
     %--Intensity history at each iteration
     if mp.flagFiber
-        out.InormFiberHist = zeros(mp.Nitr+1, 1);
+        out.InormFiberHist = zeros(mp.Nitr+1, mp.Fend.Nfiber);
     end
     if mp.flagFiber
         out.InormHist = zeros(mp.Nitr+1, mp.Fend.Nfiber); % Measured, mean raw NI in correction region of dark hole.

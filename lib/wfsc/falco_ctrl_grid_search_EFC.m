@@ -41,6 +41,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     
     %--Loop over all the settings to check empirically
     ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
+    IfiberCube = zeros(mp.Fend.Nfiber, Nvals);
     if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
         if isfield(mp, 'tb')
             mp = rmfield(mp, 'tb');
@@ -54,10 +55,9 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            if ~mp.flagFiber
-                ImCube(:, :, ni) = dDM_temp.Itotal;
-            else
-                ImCube(:, :, ni) = mean(dDM_temp.Itotal);
+            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if mp.flagFiber  
+                IfiberCube(:, ni) = dDM_temp.IfiberTotal;
             end
         end
         
@@ -70,10 +70,9 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            if ~mp.flagFiber
-                ImCube(:, :, ni) = dDM_temp.Itotal;
-            else
-                ImCube(:, :, ni) = mean(dDM_temp.Itotal);
+            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if mp.flagFiber  
+                IfiberCube(:, ni) = dDM_temp.IfiberTotal;
             end
         end
     end
@@ -106,7 +105,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     [cvarOut.cMin, indBest] = min(Inorm_list(:));
     cvarOut.Im = ImCube(:, :, indBest);
     if mp.flagFiber
-        cvarOut.Ifiber = min(Inorm_list(:));
+        cvarOut.Ifiber = IfiberCube(:,indBest);
     end
     
     %--delta voltage commands

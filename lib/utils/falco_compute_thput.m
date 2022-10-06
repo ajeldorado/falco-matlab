@@ -15,9 +15,12 @@ function [mp,thput,varargout] = falco_compute_thput(mp)
 if mp.flagFiber
     
     [~, ImSimCompact] = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y);
-    thput = ImSimCompact/mp.sumPupil;
-    fprintf('Fiber throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', 100*thput, mp.thput_eval_x, mp.thput_eval_y);
-    
+    thput = mean(ImSimCompact)/mp.sumPupil;
+    if mp.Fend.Nfiber==1
+        fprintf('Fiber throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', 100*thput, mp.Fend.x_fiber, mp.Fend.y_fiber);
+    else
+        fprintf('Fiber throughput (average all fibers) = %.2f%% \n', 100*thput);
+    end
 else
 
     ImSimCompact = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y, 'eval');

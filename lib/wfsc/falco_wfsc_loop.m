@@ -92,14 +92,15 @@ for Itr = 1:mp.Nitr
     out = falco_store_intensities(mp, out, ev, Itr);
 
     %% Plot the expected and measured delta E-fields
-    
-    if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
-    Esim = compute_simulated_efield_for_delta_efield_plot(mp);
-    if Itr > 1
-        out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
+    if ~mp.flagFiber
+        if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
+        Esim = compute_simulated_efield_for_delta_efield_plot(mp);
+        if Itr > 1
+            out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
+        end
+        % Add model E-field to ev for saving
+        ev.Esim = Esim;
     end
-    % Add model E-field to ev for saving
-    ev.Esim = Esim;
 
     %% Progress plots (PSF, NI, and DM surfaces)
     % plot_wfsc_progress also saves images and ev probe data
@@ -255,7 +256,7 @@ function out = falco_store_controller_data(mp, out, cvar, Itr)
         out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
         out.InormHist(Itr+1) = out.IrawCorrHist(Itr+1);
         if mp.flagFiber
-            out.InormFiberHist(Itr+1) = cvar.Ifiber;
+            out.InormFiberHist(Itr+1,:) = cvar.Ifiber;
         end
     end
     
@@ -325,16 +326,27 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
             hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
         end
 
-        if ~mp.flagFiber
-            out.InormHist_tb.total = out.InormHist; 
-            Im_tb.Im = Im;
-            Im_tb.E = zeros([size(Im), mp.Nsbp]);
-            Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
-
-            for si = 1:mp.Nsbp
-                    tmp = zeros(size(Im));
-                    tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
-                    Im_tb.E(:, :, si) = tmp; % modulated component 
+        out.InormHist_tb.total = out.InormHist; 
+        Im_tb.Im = Im;
+        Im_tb.E = zeros([size(Im), mp.Nsbp]);
+        Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
+        
+        for si = 1:mp.Nsbp
+            if ~mp.flagFiber
+                tmp = zeros(size(Im));
+                tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
+                Im_tb.E(:, :, si) = tmp; % modulated component 
+ 
+                tmp = zeros(size(Im));
+                tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
+                Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
+            else
+                Im_tb.E = ev.Eest;
+                Im_tb.Iinco = ev.IincoEst(:, si);
+            end
+            
+                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
+                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
 
                     tmp = zeros(size(Im));
                     tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);

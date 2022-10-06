@@ -301,7 +301,8 @@ if whichDM == 1
                     Gmodetemp = zeros(mp.Fend.Nfiber, 1);
                     for i=1:mp.Fend.Nfiber
                         Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
-                        Gmodetemp = Gmodetemp + Eonefiber;
+%                         Gmodetemp = Gmodetemp + Eonefiber;
+                        Gmodetemp(i,1) = Eonefiber;
                     end
                     Gmode(:, Gindex) = Gmodetemp;
                 end
@@ -489,7 +490,7 @@ if whichDM == 2
                     Gmodetemp = zeros(mp.Fend.Nfiber, 1);
                     for i=1:mp.Fend.Nfiber
                         Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
-                        Gmodetemp = Gmodetemp + Eonefiber;
+                        Gmodetemp(i,1) = Eonefiber;
                     end
                     Gmode(:, Gindex) = Gmodetemp;
                 end

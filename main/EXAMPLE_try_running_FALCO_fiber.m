@@ -28,9 +28,9 @@ EXAMPLE_defaults_try_running_FALCO
 mp.flagFiber = true;
 mp.flagLenslet = false;
 
-mp.Fend.Nfiber = 1;
-mp.Fend.x_fiber = [6];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
-mp.Fend.y_fiber = [0];%[0 4.625 -4.625];
+mp.Fend.x_fiber = [6,5,8];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+mp.Fend.y_fiber = [0,-3,3];%[0 4.625 -4.625];
+mp.Fend.Nfiber = numel(mp.Fend.x_fiber);
 
 mp.fiber.a = 0.507;%0.875;%0.66; %Radius of the fiber core in lambda_0/D
 mp.fiber.a_phys = 1.75e-6; %Physical radius of the fiber core in meters
@@ -51,7 +51,7 @@ mp.fracBW = 0.2;       %--fractional bandwidth of the whole bandpass (Delta lamb
 mp.Nsbp = 7;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
-mp.Nitr = 3; %--Number of wavefront control iterations
+mp.Nitr = 7; %--Number of wavefront control iterations
 
 %% Step 4: Generate the label associated with this trial
 
