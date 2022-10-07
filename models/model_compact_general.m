@@ -351,11 +351,11 @@ if mp.flagFiber && ~flagEval
         
         Efiber = zeros(mp.Fend.Nfiber, 1);
         for ii=1:mp.Fend.Nfiber
-            if flagEval
-                normFactor_fiber = sqrt(mp.Fend.eval.I00_fiber(ii,sbpIndex));
-            else
-                normFactor_fiber = sqrt(mp.Fend.compact.I00_fiber(ii,sbpIndex));
-            end
+%             if flagEval
+%                 normFactor_fiber = sqrt(mp.Fend.eval.I00_fiber(ii,sbpIndex));
+%             else
+            normFactor_fiber = sqrt(mp.Fend.compact.I00_fiber(ii,sbpIndex));
+%             end
             Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, ii).*EFend)) / normFactor_fiber;
             Efiber(ii) = Eonefiber;
         end

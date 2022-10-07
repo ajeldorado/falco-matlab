@@ -57,8 +57,8 @@ end
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
     if mp.flagFiber
-        [Etemp,Efibertemp] = model_compact(mp, modvar, 'getNorm', 'eval');
-        mp.Fend.eval.I00_fiber(:,si) = abs(Efibertemp).^2;
+%         [Etemp,Efibertemp] = model_compact(mp, modvar, 'getNorm', 'eval');
+        mp.Fend.eval.I00_fiber(:,si) = mp.Fend.compact.I00_fiber(:,si);
     else
         Etemp = model_compact(mp, modvar, 'getNorm', 'eval');
     end
