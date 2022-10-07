@@ -41,7 +41,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     
     %--Loop over all the settings to check empirically
     ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
-    IfiberCube = zeros(mp.Fend.Nfiber, Nvals);
+    if mp.flagFiber; IfiberCube = zeros(mp.Fend.Nfiber, Nvals);end
     if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
         if isfield(mp, 'tb')
             mp = rmfield(mp, 'tb');
