@@ -8,7 +8,7 @@
 
 function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
 
-    if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0))
+    if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0) && ~strcmpi(mp.estimator, 'iefc'))
         for si = 1:mp.Nsbp
             dEmeas = squeeze(Eest(:, si) - EestPrev(:, si));
             dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);

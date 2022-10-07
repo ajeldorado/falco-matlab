@@ -65,8 +65,9 @@ switch upper(mp.coro)
 
                 otherwise
                     
-                    if strcmpi(mp.layout, 'fpm_scale') && strcmpi(mp.coro, 'HLC')
-                        
+%                     if strcmpi(mp.layout, 'fpm_scale') && strcmpi(mp.coro, 'HLC')
+                    if isfield(mp.full, 'FPMcube') && strcmpi(mp.coro, 'HLC')
+
                         if ~isfield(mp.F3.full, 'Nxi')
                             mp.F3.full.Nxi = size(mp.full.FPMcube, 2);
                         end

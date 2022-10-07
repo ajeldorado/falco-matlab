@@ -32,7 +32,13 @@
 % In wrapper above this that chooses layout, need to define mp.FPM.mask like this:
 % mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact');
 
-function [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
+function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
+
+if nargout >= 3,
+    debug = true;
+else
+    debug = false;
+end
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
@@ -95,6 +101,7 @@ EP1 = pupil .* Ein;
 
 %--Re-image to pupil plane P2
 EP2 = propcustom_relay(EP1, NrelayFactor*mp.Nrelay1to2, mp.centering);
+if debug, sDebug.EP2_before_dms = EP2; end
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
@@ -106,6 +113,7 @@ Edm2 = Edm2WFE .* DM2stop .* exp(mirrorFac*2*pi*1j*DM2surf/lambda) .* Edm2;
 
 %--Back-propagate to effective pupil at P2
 EP2eff = propcustom_PTP(Edm2, mp.P2.compact.dx*NdmPad, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
+if debug, sDebug.EP2_after_dms = EP2eff; end
 
 %--Re-image to pupil P3
 EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering);
@@ -143,8 +151,8 @@ if flagUseFPM
                 phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
             end
             
-            inVal = 0.3;
-            outVal = 5;
+            inVal = mp.F3.inVal;
+            outVal = mp.F3.outVal;
             spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
             spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
             pixPerLamD = mp.F3.compact.res;
@@ -209,20 +217,30 @@ if flagUseFPM
             
             switch mp.layout
                 case{'fourier'}
+                    
+                    scaleFac = 1; % Focal plane sampling does not vary with wavelength
                     % Complex transmission of the points outside the FPM
                     % (just fused silica with optional dielectric and no metal).
-                    t_Ti_base = 0;
-                    t_Ni_vec = 0;
-                    t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-                    pol = 2;
-                    [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-                    transOuterFPM = tCoef;
-                    scaleFac = 1; % Focal plane sampling does not vary with wavelength
+                    if isfield(mp.compact, 'FPMcube')
+                        transOuterFPM = mp.FPM.mask(1, 1);
+                    else
+                        t_Ti_base = 0;
+                        t_Ni_vec = 0;
+                        t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+                        pol = 2;
+                        [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                        transOuterFPM = tCoef;
+                    end
+                    
                 case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
+                    
                     transOuterFPM = mp.FPM.mask(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
                     scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+                    
                 otherwise
+                    
                     error('Invalid combination of mp.layout and mp.coro')
+                    
             end
 
             %--Propagate to focal plane F3
@@ -280,6 +298,8 @@ else % No FPM in beam path, so relay directly from P3 to P4.
     
 end
 
+if debug, sDebug.EP4_before_mask = EP4; end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Back to common propagation any coronagraph type   %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -287,6 +307,8 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.compact.croppedMask .* EP4;
 
+if debug, sDebug.EP4_after_mask = EP4; end
+    
 %--MFT to camera
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);
