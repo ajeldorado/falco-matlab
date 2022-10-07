@@ -41,8 +41,8 @@ for index = 1:1 %length(diams) %length(RMSs) %length(bws)
     mp.P1.full.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.compact.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
 
-    EXAMPLE_defaults_VC_simple
-%     EXAMPLE_defaults_SVC_chromatic
+%     EXAMPLE_defaults_VC_simple
+    EXAMPLE_defaults_SVC_chromatic
     
     mp.F3.full.res = 8; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
     mp.F3.inVal = 10; % radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m

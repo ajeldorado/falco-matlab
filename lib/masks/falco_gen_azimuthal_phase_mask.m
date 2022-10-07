@@ -39,6 +39,12 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     charge = inputs.charge; 
     N = inputs.N;
     phaseScaleFac = inputs.phaseScaleFac;
+    
+    %ADDITIONAL TEMPORARY PARAMETERS--needs to be properly integrated...
+    lamda0 = 5.5000e-07;
+    P1 = 300; %mp.P1.full.Nbeam
+    pixPerLamD = 8;%N/P1;
+    
 
     % OPTIONAL INPUTS
     centering = 'pixel';  %--Default to pixel centering
@@ -200,6 +206,29 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             
 %             figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[0,1,2,2.99],...
 %          'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',20);title('Wrapped Vortex Phase Map','FontSize',20);
+
+            case 'dzpm'
+            
+%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+            
+            R1 = (coords.RHO <= 1.03*pixPerLamD);
+            vort(R1) =vort(R1) + 0.47*2*pi;
+            R2 = (coords.RHO < 1.03*pixPerLamD) & (coords.RHO <= 1.41*pixPerLamD);
+            vort(R2) =vort(R2) + 0.92*2*pi;
+            
+            mask = exp(phaseScaleFac*1j*vort);
+
+            
+            
+%             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title(' Sawtooth Vortex Phase Map','FontSize',20);
+
 
             
         otherwise

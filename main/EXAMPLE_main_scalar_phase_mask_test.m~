@@ -61,7 +61,7 @@ for index = 1:1 %length(bws)
     vals = [vals val];
 end
 
-%% Plots
+% %% Plots
 % 
 % %%-- plot FPM 
 phaseScaleFac = 1;
@@ -70,8 +70,8 @@ inputs.type = mp.F3.phaseMaskType;
 inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
 inputs.charge = mp.F3.VortexCharge;
 inputs.phaseScaleFac = phaseScaleFac;
-% inputs.clocking = mp.F3.clocking;
-% inputs.Nsteps = mp.F3.NstepStaircase;
+inputs.clocking = mp.F3.clocking;
+inputs.Nsteps = mp.F3.NstepStaircase;
 fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
 % 
 % figure(1);

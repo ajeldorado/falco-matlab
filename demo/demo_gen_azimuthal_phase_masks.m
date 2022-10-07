@@ -61,22 +61,22 @@ inputs.type = 'vortex';
 inputs.N = 1000; % pixels across the 
 inputs.charge = 6; % charge of the mask (makes most sense for vortex)
 inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
-mask = falco_gen_azimuthal_phase_mask(inputs);
+% mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(4); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 % 
 % % Check frenchwrapped
-inputs.type = 'frenchwrapped';
-mask = falco_gen_azimuthal_phase_mask(inputs);
+% inputs.type = 'frenchwrapped';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(5); imagesc(angle(mask)); axis xy equal tight; colorbar('FontSize',16); title('French Wrapped Phase Mapping');drawnow;
 % 
 % % Check classicalwrapped
-inputs.type = 'classicalwrapped';
-mask = falco_gen_azimuthal_phase_mask(inputs);
+% inputs.type = 'classicalwrapped';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(6); imagesc(angle(mask)); axis xy equal tight; colorbar; title('Classical Wrapped Phase Mapping');drawnow;
 % 
 % % Check mcmc6
-inputs.type = 'mcmc6';
-mask = falco_gen_azimuthal_phase_mask(inputs);
+% inputs.type = 'mcmc6';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(7); imagesc(angle(mask)); axis xy equal tight; colorbar; title('MCMC6 Phase Mapping');drawnow;
 % 
 % % Check sectors
@@ -94,3 +94,8 @@ mask = falco_gen_azimuthal_phase_mask(inputs);
 % inputs.type = 'cos';
 % mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(10); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+
+% Check roddier
+inputs.type = 'dzpm';
+mask = falco_gen_azimuthal_phase_mask(inputs);
+figure(11); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;

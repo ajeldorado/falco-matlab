@@ -43,7 +43,7 @@ prof = 0.*THETA;
 scale = 1;
 linVec = {'--',':','-'};
 
-lambda = 1.01;
+lambda = 1.1;
 
 if lambda < 1
     i = 1;
@@ -89,8 +89,48 @@ title("FFT of Sinusoid")
 
 
 
-%% vortex
-charge1 = 6;
+%% Topologies
+
+%cos
+
+charge0 = 2;
+type0 = "Cos";
+z_m = besselzero(0,1);
+z_m = z_m(end);
+phase0 = z_m*cos(charge0*THETA);
+
+figure(1);
+plot(THETA,phase0,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
+ax = gca;
+ax.FontSize = 20;
+ax.LineWidth = 3;
+xlim([-pi pi]);
+axis on
+ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+ax.YAxis.TickValues = [-8*pi -6*pi -4*pi -2*pi 0 2*pi 4*pi 6*pi 8*pi];
+xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
+yticklabels({'-8\pi','-6\pi','-4\pi','-2\pi','0','2\pi','4\pi','6\pi','8\pi'})
+xlabel('Theta'); 
+ylabel('Phase');
+% title("Charge "+charge0+" "+type0 +" Phase Profile")
+title(type0 +" Phase Profile")
+
+t0 = exp(1j/lambda*phase0);
+
+%%Fourier Transform:
+myfftcos = abs(fftshift(fft(t0)))/N;
+
+% Plot the spectrum:
+figure (310)
+plot(f,myfftcos);
+ylabel('|C_m|^2'); 
+xlabel('Mode');
+title("Modal Decomposition for Cos SVC")
+set(gca, 'YScale', 'log')
+
+
+% vortex
+charge1 = 2;
 phase1 = charge1*THETA;
 type1 = "Classic Vortex";
 
@@ -127,10 +167,9 @@ myfftvortex = abs(fftshift(fft(t1)))/N;
 % set(gca, 'YScale', 'log')
 
 
+% sawtooth
 
-% classical wrapped
-
-charge2 = 6;
+charge2 = 2;
 domain = (THETA >= 0) & (THETA <= pi);
 phase2(domain) = charge2*rem(THETA(domain),2*pi./charge2);
 domain = (THETA >= -pi) & (THETA < 0);
@@ -162,7 +201,7 @@ type2 = "Sawtooth Vortex";
 
 t2 = exp(1j/lambda*phase2);
 %%Fourier Transform:
-myfftclassical = abs(fftshift(fft(t2)))/N;
+myfftsawtooth = abs(fftshift(fft(t2)))/N;
 
 %%Plot the spectrum:
 % figure(311);
@@ -273,8 +312,8 @@ myfftmcmc = abs(fftshift(fft(t4)))/N;
 
 
 % staircase
-Nsteps = 6;
-charge5 = 6;
+Nsteps = 2;
+charge5 = 2;
 phase5 = floor(mod((THETA+pi)/(2*pi)*charge5, 1)*Nsteps)/Nsteps*2*pi;
 
 
@@ -313,7 +352,8 @@ myfftstaircase = abs(fftshift(fft(t5)))/N;
 
 %% Plot with stem markers 
 % close all
-figure(5)
+
+figure(6)
 hold on
 xdata = (0:1:N-1);
 ax = gca;
@@ -322,11 +362,11 @@ set(gca,'YScale', 'log');
 ax.FontSize = 20;
 ax.LineWidth = 2;
 stem(f,myfftvortex,'d','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.9290, 0.6940, 0.1250]);
-stem(f,myfftclassical,'s','MarkerSize',20,'LineStyle','-','LineWidth',2,'Color',[0.5 0 0.8]);
+stem(f,myfftsawtooth,'s','MarkerSize',20,'LineStyle','-','LineWidth',2,'Color',[0.5 0 0.8]);
 % stem(f,myfftfrench,'MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
 % stem(f,myfftmcmc,'MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
 stem(f,myfftstaircase,'*','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0 0.5 0.8]);
-% plot(f,myfftmcmc,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
+stem(f,myfftcos,'.','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
 if lambda == 1
     stem(f,myfftvortex,'.','LineStyle',linVec{i},'LineWidth',2,'Color','k');
 end
@@ -335,8 +375,9 @@ xlim([-2 13]);
 ylim([1E-3 10])
 xticks([0:2:10])
 
-%type1-vortex,type2-classicalwrapped,type3-frenchwrapped,type4-mcmc,type5-staircase
-legend(type1,type2,type5)
+%type1-vortex,type2-sawtooth,type3-frenchwrapped,type4-mcmc,type5-staircase,
+%type0-cos
+legend(type1,type2,type5,type0)
 legend('Location','northeast')
 
 
@@ -352,47 +393,4 @@ legend('Location','northeast')
 hold off 
 ylabel('|C_m|^2'); 
 xlabel('Mode');
-% title("Modal Decomposition for Charge 6 SVCs")
-
-
-%% plot
-% close all
-
-% figure(12)
-% subplot(2,2,1)
-figure(N+1)
-hold on
-xdata = (0:1:N-1);
-% plot(f,myfftvortex,'LineStyle',linVec{i},'LineWidth',1,'Color',[0 0.5 0.8]);
-plot(f,myfftstaircase,'LineStyle',linVec{i},'LineWidth',1,'Color',[0 0.5 0.8]);
-plot(f,myfftclassical,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0 0.8]);
-% plot(f,myfftfrench,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
-plot(f,myfftmcmc,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
-if lambda == 1
-    plot(f,myfftvortex,'LineStyle',linVec{i},'LineWidth',1,'Color','k');
-end
-ax = gca;
-xlim([-10 20]);
-ylim([1E-9 10])
-ax.FontSize = 12;
-ax.LineWidth = 2;
-%type1-vortex,type2-classicalwrapped,type3-frenchwrapped,type4-mcmc,type5-staircase
-legend(type5,type2,type4,type1)
-legend('Location','northwest')
-
-
-% line_type = ['-',"--", ":"];
-line_type = ['-', ":"];
-
-% line_names = ["design wavelength", "0.95 lambda factor", "1.05 lambda factor"];
-line_names = ["design wavelength", "1.05 lambda factor"];
-for j =1:length(line_type)
-    plot([NaN NaN], [NaN NaN],line_type(j), 'Color', 'k', 'DisplayName', line_names(j))
-end
-
-hold off
-set(gca, 'YScale', 'log')
-ylabel('|C_m|^2'); 
-xlabel('Mode');
-title("Modal Decomposition for Charge 6 SVCs")
-
+title("Modal Decomposition for Charge 2 SVCs")
