@@ -49,7 +49,7 @@ for Itr = 1:mp.Nitr
     mp = falco_compute_psf_norm_factor(mp);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
-    out.thput(Itr) = thput;
+    out.thput(Itr, :) = thput(:);   
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
     
     %% Control Jacobian
@@ -93,14 +93,15 @@ for Itr = 1:mp.Nitr
     out = falco_store_intensities(mp, out, ev, Itr);
 
     %% Plot the expected and measured delta E-fields
-    
-    if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
-    Esim = compute_simulated_efield_for_delta_efield_plot(mp);
-    if Itr > 1
-        out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
+    if ~mp.flagFiber
+        if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
+        Esim = compute_simulated_efield_for_delta_efield_plot(mp);
+        if Itr > 1
+            out = falco_plot_DeltaE(mp, out, ev.Eest, EestPrev, Esim, EsimPrev, Itr);
+        end
+        % Add model E-field to ev for saving
+        ev.Esim = Esim;
     end
-    % Add model E-field to ev for saving
-    ev.Esim = Esim;
 
     %% Progress plots (PSF, NI, and DM surfaces)
     % plot_wfsc_progress also saves images and ev probe data
@@ -151,8 +152,15 @@ for Itr = 1:mp.Nitr
 
     %--REPORTING NORMALIZED INTENSITY
     if out.InormHist(Itr+1) ~= 0
-        fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
-            out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
+        if mp.flagFiber
+            fprintf('Prev and New Measured NI (SMF):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+                out.InormFiberHist(Itr), out.InormFiberHist(Itr+1), out.InormFiberHist(Itr)/out.InormFiberHist(Itr+1) );
+            fprintf('Prev and New Measured NI (pixels):\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+                out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
+        else
+            fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
+                out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
+        end
         if ~mp.flagSim
             fprintf('\n');
         end
@@ -184,7 +192,7 @@ Itr = Itr + 1;
 out = store_dm_command_history(mp, out, Itr);
 
 [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
-out.thput(Itr) = thput;
+out.thput(Itr, :) = thput(:);
 mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true
 
 % Update progress plot using image from controller (if new image was taken)
@@ -248,6 +256,9 @@ function out = falco_store_controller_data(mp, out, cvar, Itr)
         out.IrawScoreHist(Itr+1) = mean(cvar.Im(mp.Fend.score.maskBool));
         out.IrawCorrHist(Itr+1) = mean(cvar.Im(mp.Fend.corr.maskBool));
         out.InormHist(Itr+1) = out.IrawCorrHist(Itr+1);
+        if mp.flagFiber
+            out.InormFiberHist(Itr+1,:) = cvar.Ifiber;
+        end
     end
     
 end
@@ -310,7 +321,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
 
     else
-        hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+        if mp.flagFiber
+            hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormFiberHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+        else
+            hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+        end
 
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;
@@ -318,6 +333,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
         
         for si = 1:mp.Nsbp
+            if ~mp.flagFiber
                 tmp = zeros(size(Im));
                 tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
                 Im_tb.E(:, :, si) = tmp; % modulated component 
@@ -325,7 +341,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 tmp = zeros(size(Im));
                 tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
                 Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
-
+            else
+                Im_tb.E = ev.Eest;
+                Im_tb.Iinco = ev.IincoEst(:, si);
+            end
+            
                 out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
                 out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
 

@@ -38,7 +38,7 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
     cvar.RealGstarEab_wsum = zeros(cvar.NeleAll, 1);
     Eest = cvar.Eest;
     
-    jacStruct = falco_apply_spatial_weighting_to_Jacobian(mp, jacStruct);
+    if ~mp.flagFiber; jacStruct = falco_apply_spatial_weighting_to_Jacobian(mp, jacStruct); end % jllopsay: not sure if this applies to the fiber case
     
     for iMode = 1:mp.jac.Nmode
 
