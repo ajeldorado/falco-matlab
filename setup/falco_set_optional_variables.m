@@ -30,6 +30,7 @@ mp.path.dummy = 1;
 mp.detector.dummy = 1;
 mp.scc.dummy = 1;
 mp.iefc.dummy = 1;
+mp.fiber.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
