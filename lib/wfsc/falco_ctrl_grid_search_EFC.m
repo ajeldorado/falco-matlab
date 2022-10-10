@@ -41,33 +41,38 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     
     %--Loop over all the settings to check empirically
     ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
+    if mp.flagFiber; IfiberCube = zeros(mp.Fend.Nfiber, Nvals);end
     if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
         if isfield(mp, 'tb')
             mp = rmfield(mp, 'tb');
         end
         
         parfor ni = 1:Nvals
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [temp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            if ~mp.flagFiber
-                ImCube(:, :, ni) = dDM_temp.Itotal;
+            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if mp.flagFiber  
+                IfiberCube(:, ni) = dDM_temp.IfiberTotal;
             end
         end
         
     else %--Not Parallelized
         for ni = Nvals:-1:1
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [Itemp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            if ~mp.flagFiber
-                ImCube(:, :, ni) = dDM_temp.Itotal;
+            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if mp.flagFiber  
+                IfiberCube(:, ni) = dDM_temp.IfiberTotal;
             end
         end
     end
@@ -77,10 +82,10 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     for ni=1:Nvals;  fprintf('%.2f\t\t', vals_list(2,ni) );  end
 
     fprintf('\nlog10reg:\t');
-    for ni=1:Nvals;  fprintf('%.1f\t\t',vals_list(1,ni));  end
+    for ni=1:Nvals;  fprintf('%.1f\t\t', vals_list(1,ni));  end
 
     fprintf('\nInorm:  \t')
-    for ni=1:Nvals;  fprintf('%.2e\t',Inorm_list(ni));  end
+    for ni=1:Nvals;  fprintf('%.2e\t', Inorm_list(ni));  end
     fprintf('\n')
 
     % print rms ddmv
@@ -99,6 +104,9 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin, indBest] = min(Inorm_list(:));
     cvarOut.Im = ImCube(:, :, indBest);
+    if mp.flagFiber
+        cvarOut.Ifiber = IfiberCube(:,indBest);
+    end
     
     %--delta voltage commands
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:, :, indBest); end
@@ -121,7 +129,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
-            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
+            set(gca,'Fontsize',20); set(gcf,'Color','w'); grid on;
             drawnow;
         elseif(length(mp.ctrl.dmfacVec)>1)
             figure(499); imagesc(mp.ctrl.log10regVec,mp.ctrl.dmfacVec,reshape(log10(Inorm_list),[length(mp.ctrl.dmfacVec),length(mp.ctrl.log10regVec)])); 
@@ -130,7 +138,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('Proportional Gain','Fontsize',20,'Interpreter','Latex');
             ylabel(ch,'log10(Inorm)','Fontsize',20,'Interpreter','Latex');
-            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]);
+            set(gca,'Fontsize',20); set(gcf,'Color','w');
             drawnow;
         end
     end
