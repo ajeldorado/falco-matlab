@@ -38,7 +38,6 @@
 
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
-mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
 Itr = ev.Itr;
 whichDM = mp.est.probe.whichDM;
 
@@ -207,9 +206,7 @@ for iSubband = 1:mp.Nsbp
 
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImage = 1;
-    mp.isProbing = false;
-    
-    mp.isProbing = true;
+    mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
     if ~mp.flagFiber
         I0 = falco_get_sbp_image(mp, iSubband);
         ev.score.Inorm = mean(I0(mp.Fend.score.maskBool));
@@ -250,6 +247,7 @@ for iSubband = 1:mp.Nsbp
     end
 
     %--Perform the probing
+    mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
     iOdd = 1; iEven = 1; % Initialize index counters
     for iProbe = 1:2*Npairs           
 
@@ -617,7 +615,7 @@ ev.InormProbe = InormProbe;
 ev.maskBool = mp.Fend.corr.maskBool; %--for resizing Eest and IincoEst for plotting
 ev.amp_model = amp_model;
 
-mp.isProbing = false;
+mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
 
 fprintf(' done. Time: %.3f\n',toc);
 
