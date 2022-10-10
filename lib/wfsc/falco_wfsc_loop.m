@@ -49,7 +49,7 @@ for Itr = 1:mp.Nitr
     mp = falco_compute_psf_norm_factor(mp);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
-    out.thput(Itr) = max(thput);
+    out.thput(Itr, :) = thput(:);   
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
     
     %% Control Jacobian
@@ -191,7 +191,7 @@ Itr = Itr + 1;
 out = store_dm_command_history(mp, out, Itr);
 
 [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
-out.thput(Itr) = thput;
+out.thput(Itr, :) = thput(:);
 mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true
 
 % Update progress plot using image from controller (if new image was taken)

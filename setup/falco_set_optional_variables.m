@@ -170,7 +170,6 @@ if(isfield(mp.dm2,'facesheetFlatmap')==false);  mp.dm2.facesheetFlatmap = mp.dm2
 if(isfield(mp.dm2,'comovingGroups')==false);  mp.dm2.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
 if(isfield(mp.dm2,'tolNbrRule')==false); mp.dm2.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
-
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
 if(isfield(mp.jac,'Zcoef')==false); mp.jac.Zcoef = 1; end %--coefficients (i.e., weights) of Zernike modes in Jacobian. Weight for piston is always 1.
@@ -192,6 +191,11 @@ if(isfield(mp.iefc,'probeDM')==false); mp.iefc.probeDM = 1; end %--Which DM to u
 if(isfield(mp.Fend.eval,'res')==false);  mp.Fend.eval.res = 10;  end % pixels per lambda0/D in compact evaluation model's final focus
 mp.mas2lam0D = 1/(mp.lambda0/mp.P1.D*180/pi*3600*1000); %% Conversion factor: milliarcseconds (mas) to lambda0/D
 if(isfield(mp.P1,'IDnorm')==false); mp.P1.IDnorm = 0; end % Needed for computing RMS DM surface actuation
+
+%--Single Mode Fiber
+if(isfield(mp.fiber,'a')==false);  mp.fiber.a = 0.507;  end % Radius of the fiber core in lambda_0/D
+if(isfield(mp.fiber,'a_phys')==false);  mp.fiber.a_phys = 1.75e-6;  end % Physical radius of the fiber core in meters
+if(isfield(mp.fiber,'NA')==false);  mp.fiber.NA = 0.12;  end % Numerical aperture of the fiber
 
 %--Training Data: mp.NitrTrain = 5;  %--The number of correction iterations to use per round of training data for the adaptive Jacobian (E-M) algorithm.
 %--Zernike sensitivities to 1nm RMS: which noll indices in which annuli, given by mp.eval.indsZnoll and mp.eval.Rsens 
