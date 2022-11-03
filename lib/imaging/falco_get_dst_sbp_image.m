@@ -30,11 +30,6 @@ function normI = falco_get_dst_sbp_image(mp,si)
     if(mp.isProbing)
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
     else
-        % TO DO: Add the capability to make the exposure time adaptive 
-        % if(tb.info.adaptive_texp)
-        %   query current Inorm (c = mean normI)
-        %   sbp_texp = sciCam_getAdaptiveExposureTime(c,1e-8,10)
-        % else
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
     end
     
@@ -76,7 +71,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
         try
             DM_apply2Dmap(tb.DM2,dm2_map);
         catch 
-            %try; cleanUpDMs(tb); end
+            try; cleanUpDMs(tb); end
             disp('Error setting DM2. Reseting electronics. Trying again.')
             FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
             pause(5);
