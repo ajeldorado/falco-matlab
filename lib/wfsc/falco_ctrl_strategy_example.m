@@ -13,6 +13,8 @@ function mp = falco_ctrl_strategy_example(mp, metrics, itr)
     % /home/bseo/HCIT/hcim/efc/config/CtrlStrategy_20190701.py
     
     % metrics example:
+    % Note: most of the metrics arrays below are size (Nitr, Nsbp)
+    %
     %                   Nitr: 150
     %           log10regHist: [150×1 double]
     %                   ctrl: [1×1 struct]
@@ -50,7 +52,7 @@ function mp = falco_ctrl_strategy_example(mp, metrics, itr)
     %                 alpha2: {1×116 cell}
 
     % exposure time
-    if metrics.normIntMeasCorr(itr) < 1e-7
+    if mean(metrics.normIntMeasCorr(itr,:)) < 1e-7
         mp.tb.info.sbp_texp = 5.0*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass (seconds)
         mp.tb.info.sbp_texp_probe = 5.0*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass when probing (seconds)
     end
@@ -58,12 +60,12 @@ function mp = falco_ctrl_strategy_example(mp, metrics, itr)
     % dark hole weighting, does falco have this?
     
     % regularization
-    if metrics.normIntMeasCorr(itr) < 1e-7 && mod(itr, 10) == 0 && itr > 21
+    if mean(metrics.normIntMeasCorr(itr,:)) < 1e-7 && mod(itr, 10) == 0 && itr > 21
         % beta bump
         mp.ctrl.dmfacVec = 0.5;        %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
         mp.ctrl.log10regVec = -5;   %--log10 of the regularization exponents (often called Beta values)
         
-    elseif metrics.normIntMeasCorr(itr) < 1e-7
+    elseif mean(metrics.normIntMeasCorr(itr)) < 1e-7
         mp.ctrl.dmfacVec = 0.5;        %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
         mp.ctrl.log10regVec = -4:-3;   %--log10 of the regularization exponents (often called Beta values)
     
@@ -72,7 +74,7 @@ function mp = falco_ctrl_strategy_example(mp, metrics, itr)
     % probe intensity
     % -- automatic in falco
     % lower the upper bound
-    if metrics.normIntMeasCorr(itr) < 1e-7
+    if mean(metrics.normIntMeasCorr(itr,:)) < 1e-7
         mp.est.InormProbeMax = 1e-6; % upper bound
     end
 
