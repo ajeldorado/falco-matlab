@@ -65,7 +65,7 @@ function mp = falco_ctrl_strategy_example(mp, metrics, itr)
         mp.ctrl.dmfacVec = 0.5;        %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
         mp.ctrl.log10regVec = -5;   %--log10 of the regularization exponents (often called Beta values)
         
-    elseif mean(metrics.normIntMeasCorr(itr)) < 1e-7
+    elseif mean(metrics.normIntMeasCorr(itr,:)) < 1e-7
         mp.ctrl.dmfacVec = 0.5;        %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
         mp.ctrl.log10regVec = -4:-3;   %--log10 of the regularization exponents (often called Beta values)
     
