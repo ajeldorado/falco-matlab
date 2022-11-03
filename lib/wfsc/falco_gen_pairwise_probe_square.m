@@ -9,25 +9,21 @@
 % square centered on the star.
 %
 %--INPUTS
-%  psi: phase shift of the sine wave [radians]
-%  InormDes: desired normalized intensity of the probes in the image
 %  mp: structure of model parameters
-%    -mp.est.probe.whichDM:      Which DM # to use for probing. 1 or 2. Default is 1
-%    -mp.est.probe.radius:  Max horizontal (or vertical) extent of probed square region [lambda/D].
-%    [Equivalent to lambda_central/D if DM is fully illuminated]
-%    -mp.est.probe.xOffset: offset of probe center in x [actuators]. Use
-%     to avoid central obscurations.
-%    -mp.est.probe.yOffset: offset of probe center in y [actuators]. Use
-%     to avoid central obscurations.
-%    -mp.lambda0:       central wavelength of bandpass [meters]
-%    -mp.est.probe.axis:    which axis to have the phase discontinuity
-%    along [x or y]
-% % % % %  Nact: number of actuators across the (square-grid) actuator array
+%  InormDes: desired normalized intensity of the probes in the image
+%  psi: phase shift of the cosine wave [radians]
+%  badAxis: which axis to have the phase discontinuity along ['x' or 'y']
+%  rotation: CCW rotation angle of the probe shape at the DM [degrees]
 %
 %--OUTPUTS
 %  probeCmd: Nact x Nact array of DM actuator commands to make a probe
 
-function probeCmd = falco_gen_pairwise_probe_square(mp, InormDes, psi, badAxis)
+function probeCmd = falco_gen_pairwise_probe_square(mp, InormDes, psi, badAxis, rotation)
+
+% Input checks
+if ~isa(mp.est.probe, 'Probe')
+    error('mp.est.probe must be an instance of class Probe')
+end
 
 % Number of actuators across DM surface (independent of beam for time being)
 if mp.est.probe.whichDM == 1
@@ -39,9 +35,18 @@ Nact = dm.Nact;
 NactPerBeam = mp.P2.D / dm.dm_spacing;
 
 %--Coordinates in actuator space
-xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.xOffset)/Nact;
-ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.yOffset)/Nact;
-[XS,YS] = meshgrid(xs,ys);
+xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - mp.est.probe.xOffset/Nact;
+ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - mp.est.probe.yOffset/Nact;
+[XS, YS] = meshgrid(xs, ys);
+
+%--Rotate the coordinates
+if rotation ~= 0
+    RS = sqrt(XS.^2 + YS.^2);
+    THETAS = atan2(YS, XS);
+    rotRad = rotation*(pi/180);
+    XS = RS.*cos(THETAS-rotRad);
+    YS = RS.*sin(THETAS-rotRad);
+end
 
 % Probed region extend in dark hole
 lamDIntoAct = Nact / NactPerBeam; % Convert units from lambda/D to actuators
@@ -65,7 +70,7 @@ switch lower(badAxis)
         omegaY = probeRadius/2;
         probeCmd = surfMax*sinc(mX*XS).*sinc(mY*YS).*cos(2*pi*omegaY*YS + psi);
 
-    case 'm'
+    case 'm' % sine waves placing spots at the locations of the fiber tips
         omegaX = mp.est.probe.Xloc/2;
         omegaY = mp.est.probe.Yloc/2;
         probeCmd = zeros(size(XS));
@@ -85,4 +90,4 @@ probeCmd = falco_fit_dm_surf(dm, probeCmd);
 
 probeCmd = mp.est.probe.gainFudge * probeCmd; % Scale the probe amplitude empirically if needed
 
-end %--END OF FUNCTION
+end

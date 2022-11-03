@@ -22,13 +22,13 @@ function falco_plot_superimposed_pupil_masks(mp)
         %--Plot superposed apodizer and telescope pupil
         if mp.flagApod
 
-            P3mask = pad_crop(mp.P3.compact.mask, size(mp.P1.compact.mask));
+            P3mask = abs(pad_crop(mp.P3.compact.mask, size(mp.P1.compact.mask)));
             if mp.flagRotation
                 P3mask = propcustom_relay(P3mask, mp.Nrelay1to2 + mp.Nrelay2to3);
             end
 
             figure(300)
-            imagesc(P3mask - mp.P1.compact.mask, [-1, 1]);
+            imagesc(abs(P3mask) - mp.P1.compact.mask, [-1, 1]);
             title('Apodizer - Entrance Pupil', 'Fontsize', 16)
             axis xy equal tight; colorbar;
             set(gca, 'Fontsize', 20);
@@ -36,7 +36,7 @@ function falco_plot_superimposed_pupil_masks(mp)
             drawnow
 
             figure(302)
-            imagesc(P3mask + mp.P1.compact.mask);
+            imagesc(abs(P3mask) + mp.P1.compact.mask);
             title('Superimposed Pupil and Apodizer', 'Fontsize', 16);
             axis xy equal tight; colorbar; 
             set(gca, 'Fontsize', 20);

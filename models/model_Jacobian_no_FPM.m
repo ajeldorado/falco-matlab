@@ -23,9 +23,11 @@
 
 function Gmode = model_Jacobian_no_FPM(mp, iMode, whichDM)
 
+modvar = ModelVariables;
 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
 modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);
+
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 NdmPad = mp.compact.NdmPad;
 surfIntoPhase = 2;
@@ -111,16 +113,6 @@ switch upper(mp.coro)
     otherwise
         transOuterFPM = 1;
 end
-
-scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
-switch upper(mp.coro)
-    case{'HLC'}
-        switch mp.layout
-            case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
-                scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
-        end
-end
-
 
 %--For including DM surface errors (quilting, scalloping, etc.)
 if mp.flagDMwfe
@@ -219,7 +211,7 @@ if whichDM == 1
             
             dEFendPeak = sum(dEP2box(:)) * transOuterFPM *...
                 sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
-                scaleFac * sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
+                sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
             
             Gmode(:, Gindex) = dEFendPeak / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
@@ -269,7 +261,7 @@ elseif whichDM == 2
             
             dEFendPeak = sum(dEP2box(:)) * transOuterFPM *...
                 sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
-                scaleFac * sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
+                sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
             
             Gmode(:, Gindex) = dEFendPeak / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end

@@ -12,7 +12,7 @@
 % INPUTS
 % ------
 % mp : structure of model parameters
-% iMode : index of the pair of sub-bandpass index and Zernike mode index
+% iMode : index of the subband, Zernike mode, and star combinations
 % whichDM : which DM number
 %
 % OUTPUTS
@@ -25,6 +25,7 @@ function Gmode = model_Jacobian_VC(mp, iMode, whichDM)
 % Setup
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+modvar = ModelVariables;
 modvar.sbpIndex = mp.jac.sbp_inds(iMode);
 modvar.zernIndex = mp.jac.zern_inds(iMode);
 modvar.starIndex = mp.jac.star_inds(iMode);
@@ -56,7 +57,7 @@ Ein = sqrt(starWeight) * Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex);
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat, mp.P1.compact.Narr);
+    zernMat = pad_crop(zernMat, mp.P1.compact.Narr);
     Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
@@ -92,7 +93,7 @@ end
 minPadFacVortex = 8; 
 
 %--Get phase scale factor for the FPM. 
-if numel(mp.F3.VortexCharge) == 1
+if numel(mp.F3.phaseScaleFac) == 1
     % Single value indicates fully achromatic mask
     phaseScaleFac = mp.F3.phaseScaleFac;
 else
@@ -133,7 +134,7 @@ if whichDM == 1
         if mp.flagLenslet
             Gmode = zeros(mp.Fend.Nlens, mp.dm1.Nele);
         else
-            Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele);
+            Gmode = zeros(mp.Fend.Nfiber, mp.dm1.Nele);
         end
     else
         Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele); %--Initialize the Jacobian
@@ -297,12 +298,13 @@ if whichDM == 1
                 else
                     EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
-                    Gmodetemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+                    Gmodetemp = zeros(mp.Fend.Nfiber, 1);
                     for i=1:mp.Fend.Nfiber
-                        Eonefiber = mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*conj(EFend)));
-                        Gmodetemp = Gmodetemp + Eonefiber;
+                        Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
+%                         Gmodetemp = Gmodetemp + Eonefiber;
+                        Gmodetemp(i,1) = Eonefiber;
                     end
-                    Gmode(:, Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
+                    Gmode(:, Gindex) = Gmodetemp;
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
@@ -333,7 +335,7 @@ if whichDM == 2
         if mp.flagLenslet
             Gmode = zeros(mp.Fend.Nlens, mp.dm2.Nele);
         else
-            Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele);
+            Gmode = zeros(mp.Fend.Nfiber, mp.dm2.Nele);
         end
     else
         Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele); %--Initialize the Jacobian
@@ -485,12 +487,12 @@ if whichDM == 2
                     end
                 else
                     EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
-                    Gmodetemp = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+                    Gmodetemp = zeros(mp.Fend.Nfiber, 1);
                     for i=1:mp.Fend.Nfiber
-                        Eonefiber = mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*conj(EFend)));
-                        Gmodetemp = Gmodetemp + Eonefiber;
+                        Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
+                        Gmodetemp(i,1) = Eonefiber;
                     end
-                    Gmode(:, Gindex) = Gmodetemp(mp.Fend.corr.maskBool);
+                    Gmode(:, Gindex) = Gmodetemp;
                 end
             else    
                 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);

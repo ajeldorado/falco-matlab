@@ -10,7 +10,17 @@
 % INPUTS
 % ------
 % mp : structure of model parameters
-% modvar : structure of model variables
+% modvar : an instance of class ModelVariables
+%
+% modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
+% modvar.sbpIndex
+% modvar.sbpIndex
+% modvar.lambda           % optional, default = mp.sbp_centers(modvar.sbpIndex)
+% modvar.starIndex
+% modvar.whichSource
+% modvar.y_offset         % required if modvar.whichSource == 'offaxis'
+% modvar.x_offset         % required if modvar.whichSource == 'offaxis'
+% modvar.zernIndex        % optional, default = 1;
 %
 % OUTPUTS
 % -------
@@ -18,7 +28,9 @@
 
 function [Eout, varargout] = model_compact(mp, modvar, varargin)
 
-modvar.wpsbpIndex = -1; %--Dummy index since not needed in compact model
+if ~isa(modvar, 'ModelVariables')
+    error('modvar must be an instance of class ModelVariables')
+end
 
 % Set default values of input parameters
 normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
@@ -44,13 +56,16 @@ while icav < size(varargin, 2)
     end
 end
 
+%--Initialize output args
+varargout = {};
+
 %--Normalization factor for compact evaluation model
 if ~flagNewNorm && flagEval
     normFac = mp.Fend.eval.I00(modvar.sbpIndex); % Value to normalize the PSF. Set to 0 when finding the normalization factor
 end
 
 %--Set the wavelength
-if isfield(modvar, 'lambda')
+if ~isempty(modvar.lambda)
     lambda = modvar.lambda;
 else
     lambda = mp.sbp_centers(modvar.sbpIndex);
@@ -76,19 +91,21 @@ end
 if normFac == 0
     TTphase = (-1)*(2*pi*(mp.source_x_offset_norm*mp.P2.compact.XsDL + mp.source_y_offset_norm*mp.P2.compact.YsDL));
     Ett = exp(1j*TTphase*mp.lambda0/lambda);
-    Ein = Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
+    Ein = Ett .* Ein;
+    % Ein = Ett .* mp.P1.compact.E(:, :, modvar.sbpIndex); 
 end
 
-%--Apply a Zernike (in amplitude) at input pupil if specified
-if ~isfield(modvar, 'zernIndex')
-    modvar.zernIndex = 1;
-end
+% %--Apply a Zernike (in amplitude) at input pupil if specified
+% if ~isfield(modvar, 'zernIndex')
+%     modvar.zernIndex = 1;
+% end
+
 %--Only used for Zernike sensitivity control, which requires the perfect 
 % E-field of the differential Zernike term.
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
     zernMat = falco_gen_norm_zernike_maps(mp.P1.compact.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat, mp.P1.compact.Narr);
+    zernMat = pad_crop(zernMat, mp.P1.compact.Narr);
     Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
@@ -99,7 +116,11 @@ switch lower(mp.layout)
             case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
                 mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
             case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-                mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
+                if isfield(mp.compact, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.compact.FPMcube(:, :, modvar.sbpIndex);
+                else
+                    mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
+                end
         end
         
     case{'roman_phasec_proper', 'wfirst_phaseb_proper', 'fpm_scale', 'proper'}
@@ -110,10 +131,16 @@ end
 
 %--Select which optical layout's compact model to use and get the output E-field
 if ~mp.flagFiber
-    Eout = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    if mp.debug
+        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+        varargout{end+1} = sDebug;
+    else
+        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    end
 else
     [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
     varargout{1} = Efiber;
 end
     
 end %--END OF FUNCTION
+

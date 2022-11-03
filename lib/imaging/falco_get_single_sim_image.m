@@ -18,14 +18,21 @@
 % Iout : simulated image from full model at one wavelength and polarization
 % and for a single specified star
 
-function Iout = falco_get_single_sim_image(ic, inds_list, mp)
+function [Iout,varargout] = falco_get_single_sim_image(ic, inds_list, mp)
 
+    modvar = ModelVariables;
     modvar.sbpIndex   = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 1);
     modvar.wpsbpIndex = mp.full.indsLambdaMat(mp.full.indsLambdaUnique(inds_list(1, ic)), 2);
     modvar.starIndex = inds_list(3, ic);
     mp.full.polaxis = mp.full.pol_conds(inds_list(2, ic));
     modvar.whichSource = 'star';
-    Estar = model_full(mp, modvar);
+    if mp.flagFiber
+        [Estar,Estarfiber] = model_full(mp, modvar);
+        Ifiberout = abs(Estarfiber).^2;
+        varargout{1} = Ifiberout;
+    else
+        Estar = model_full(mp, modvar);
+    end
     Iout = abs(Estar).^2; %--Apply spectral and stellar weighting outside this function
     
 end

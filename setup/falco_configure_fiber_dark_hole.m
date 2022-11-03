@@ -72,28 +72,29 @@ function mp = falco_configure_fiber_dark_hole(mp)
         mp.F5.fiberMode = mp.F5.fiberMode./fiberModeNorm;
     else
                 
-        for nfib = 1:mp.Fend.Nfiber    
+        for iFiber = 1:mp.Fend.Nfiber    
             maskFiberCore.pixresFP = mp.Fend.res;
             maskFiberCore.FOV = mp.Fend.FOV;
-            maskFiberCore.xi_cen = mp.Fend.x_fiber(nfib);
-            maskFiberCore.eta_cen = mp.Fend.y_fiber(nfib);
+            maskFiberCore.xiOffset = mp.Fend.x_fiber(iFiber);
+            maskFiberCore.etaOffset = mp.Fend.y_fiber(iFiber);
             [mp.Fend.fiberCore.mask, ~, ~] = falco_gen_SW_mask(maskFiberCore);
 
             maskFiberCladding.pixresFP = mp.Fend.res;
             maskFiberCladding.FOV = mp.Fend.FOV;
-            maskFiberCladding.xi_cen = mp.Fend.x_fiber(nfib);
-            maskFiberCladding.eta_cen = mp.Fend.y_fiber(nfib);
+            maskFiberCladding.xiOffset = mp.Fend.x_fiber(iFiber);
+            maskFiberCladding.etaOffset = mp.Fend.y_fiber(iFiber);
             [mp.Fend.fiberCladding.mask, ~, ~] = falco_gen_SW_mask(maskFiberCladding);
 
             [FENDXIS, FENDETAS] = meshgrid(mp.Fend.xisDL, mp.Fend.etasDL);
             
-            FENDRHOS = sqrt((FENDXIS - mp.Fend.x_fiber(nfib)).^2 + (FENDETAS - mp.Fend.y_fiber(nfib)).^2);
+            FENDRHOS = sqrt((FENDXIS - mp.Fend.x_fiber(iFiber)).^2 + (FENDETAS - mp.Fend.y_fiber(iFiber)).^2);
             mp.Fend.fiberCore.mode = mp.Fend.fiberCore.mask.*besselj(0, U.*FENDRHOS/mp.fiber.a)./besselj(0,U);
             mp.Fend.fiberCladding.mode = mp.Fend.fiberCladding.mask.*besselk(0, W.*FENDRHOS/mp.fiber.a)./besselk(0,W);
             mp.Fend.fiberCladding.mode(isnan(mp.Fend.fiberCladding.mode)) = 0;
+            mp.Fend.fiberCladding.mode(isinf(mp.Fend.fiberCladding.mode)) = 0;
             fiberModeTemp = mp.Fend.fiberCore.mode + mp.Fend.fiberCladding.mode;
             fiberModeNorm = sqrt(sum(sum(abs(fiberModeTemp).^2)));
-            mp.Fend.fiberMode(:,:,:,nfib) = fiberModeTemp./fiberModeNorm;
+            mp.Fend.fiberMode(:,:,:,iFiber) = fiberModeTemp./fiberModeNorm;
         end
         
     end

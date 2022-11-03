@@ -12,15 +12,17 @@
 
 function [mp,thput,varargout] = falco_compute_thput(mp)
 
-if(mp.flagFiber)
-    
-    [~, ImSimCompact] = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y);
-    thput = sum(sum(ImSimCompact))/mp.sumPupil;
-    fprintf('Fiber throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', 100*thput, mp.thput_eval_x, mp.thput_eval_y);
-    
+if mp.flagFiber
+    fprintf('Computing throughput over %i fibers (one propagation per fiber) \n',mp.Fend.Nfiber);
+    thput = zeros(mp.Fend.Nfiber,1);
+    for ii=1:mp.Fend.Nfiber
+        [~, ImSimCompact] = falco_sim_image_compact_offaxis(mp, mp.Fend.x_fiber(ii), mp.Fend.y_fiber(ii));
+        thput(ii) = mean(ImSimCompact(ii))/mp.sumPupil*mean(mp.Fend.eval.I00_fiber(ii));
+        fprintf('Fiber (%i/%i) throughput = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n', ii, mp.Fend.Nfiber, 100*thput(ii), mp.Fend.x_fiber(ii), mp.Fend.y_fiber(ii));
+    end
 else
 
-    ImSimCompact = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y,'eval');
+    ImSimCompact = falco_sim_image_compact_offaxis(mp, mp.thput_eval_x, mp.thput_eval_y, 'eval');
 %     if(mp.flagPlot); figure(324); imagesc(mp.Fend.eval.xisDL,mp.Fend.eval.etasDL,ImSimCompact); axis xy equal tight; title('Off-axis PSF for Throughput Calculation','Fontsize',20); set(gca,'Fontsize',20); colorbar; drawnow;  end
 
     switch lower(mp.thput_metric)

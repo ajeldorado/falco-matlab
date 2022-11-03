@@ -7,6 +7,12 @@
 % Peform EFC. The regularization and DM gain are chosen empirically each
 % iteration as the combination that provides the best normalized intensity.
 %
+% STEPS:
+% Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
+% Step 1: If re-linearizing this iteration, empirically find the best regularization value.
+% Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
+% Step 3: Compute the EFC command to use.
+%
 % INPUTS
 % ------
 % mp : structure of model parameters
@@ -20,13 +26,7 @@
 
 function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
-    % STEPS:
-    % Step 0: [Done at begging of WFSC loop function] For this iteration, remove un-used DMs from the controller by changing mp.dm_ind value. 
-    % Step 1: If re-linearizing this iteration, empirically find the best regularization value.
-    % Step 2: For this iteration in the schedule, replace the imaginary part of the regularization with the latest "optimal" regularization
-    % Step 3: Compute the EFC command to use.
-    
-    %% Initializations    
+    % Initializations    
     vals_list = allcomb(mp.ctrl.log10regVec, mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
     Nvals = max(size(vals_list,2));
     Inorm_list = zeros(Nvals,1);
@@ -41,33 +41,38 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     
     %--Loop over all the settings to check empirically
     ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
+    if mp.flagFiber; IfiberCube = zeros(mp.Fend.Nfiber, Nvals);end
     if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
         if isfield(mp, 'tb')
             mp = rmfield(mp, 'tb');
         end
         
         parfor ni = 1:Nvals
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [temp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            if ~mp.flagFiber
-                ImCube(:, :, ni) = dDM_temp.Itotal;
+            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if mp.flagFiber  
+                IfiberCube(:, ni) = dDM_temp.IfiberTotal;
             end
         end
         
     else %--Not Parallelized
         for ni = Nvals:-1:1
-            [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [Itemp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
             if(any(mp.dm_ind==2)); dDM2V_store(:,:,ni) = dDM_temp.dDM2V; end
             if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
             if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
-            if ~mp.flagFiber
-                ImCube(:, :, ni) = dDM_temp.Itotal;
+            ImCube(:, :, ni) = dDM_temp.Itotal;
+            if mp.flagFiber  
+                IfiberCube(:, ni) = dDM_temp.IfiberTotal;
             end
         end
     end
@@ -77,15 +82,31 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     for ni=1:Nvals;  fprintf('%.2f\t\t', vals_list(2,ni) );  end
 
     fprintf('\nlog10reg:\t');
-    for ni=1:Nvals;  fprintf('%.1f\t\t',vals_list(1,ni));  end
+    for ni=1:Nvals;  fprintf('%.1f\t\t', vals_list(1,ni));  end
 
     fprintf('\nInorm:  \t')
-    for ni=1:Nvals;  fprintf('%.2e\t',Inorm_list(ni));  end
+    for ni=1:Nvals;  fprintf('%.2e\t', Inorm_list(ni));  end
     fprintf('\n')
 
+    % print rms ddmv
+    if(any(mp.dm_ind==1))
+        fprintf('rms dDM1V: \t')
+        for ni=1:Nvals; dtmp = dDM1V_store(:,:,ni); fprintf('%.2e\t', rms(dtmp(:))); end
+        fprintf('\n');
+    end
+
+    if(any(mp.dm_ind==2))
+        fprintf('rms dDM2V: \t')
+        for ni=1:Nvals; dtmp = dDM2V_store(:,:,ni); fprintf('%.2e\t', rms(dtmp(:))); end
+        fprintf('\n');
+    end
+    
     %--Find the best scaling factor and Lagrange multiplier pair based on the best contrast.
     [cvarOut.cMin, indBest] = min(Inorm_list(:));
     cvarOut.Im = ImCube(:, :, indBest);
+    if mp.flagFiber
+        cvarOut.Ifiber = IfiberCube(:,indBest);
+    end
     
     %--delta voltage commands
     if(any(mp.dm_ind==1)); dDM.dDM1V = dDM1V_store(:, :, indBest); end
@@ -94,11 +115,11 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
     if(any(mp.dm_ind==9)); dDM.dDM9V = dDM9V_store(:, indBest); end
 
     cvarOut.log10regUsed = vals_list(1,indBest);
-    dmfacBest = vals_list(2,indBest);
+    cvarOut.dmfacUsed = vals_list(2,indBest);
     if(mp.ctrl.flagUseModel)
-        fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, cvarOut.dmfacUsed, cvarOut.cMin)
     else
-        fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, dmfacBest, cvarOut.cMin)
+        fprintf('Empirical grid search finds log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e contrast.\n', cvarOut.log10regUsed, cvarOut.dmfacUsed, cvarOut.cMin)
     end
     
     %% Plot the grid search results
@@ -108,7 +129,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             title('Line Search EFC','Fontsize',20,'Interpreter','Latex');
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('log10(Inorm)','Fontsize',20,'Interpreter','Latex');
-            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]); grid on;
+            set(gca,'Fontsize',20); set(gcf,'Color','w'); grid on;
             drawnow;
         elseif(length(mp.ctrl.dmfacVec)>1)
             figure(499); imagesc(mp.ctrl.log10regVec,mp.ctrl.dmfacVec,reshape(log10(Inorm_list),[length(mp.ctrl.dmfacVec),length(mp.ctrl.log10regVec)])); 
@@ -117,7 +138,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
             xlabel('log10(regularization)','Fontsize',20,'Interpreter','Latex');
             ylabel('Proportional Gain','Fontsize',20,'Interpreter','Latex');
             ylabel(ch,'log10(Inorm)','Fontsize',20,'Interpreter','Latex');
-            set(gca,'Fontsize',20); set(gcf,'Color',[1 1 1]);
+            set(gca,'Fontsize',20); set(gcf,'Color','w');
             drawnow;
         end
     end

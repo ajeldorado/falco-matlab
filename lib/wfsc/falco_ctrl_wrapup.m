@@ -31,16 +31,27 @@ if(any(mp.dm_ind==7)); dDM.dDM7V = zeros(mp.dm7.NactTotal,1); end
 if(any(mp.dm_ind==8)); dDM.dDM8V = zeros(mp.dm8.NactTotal,1); end
 if(any(mp.dm_ind==9)); dDM.dDM9V = zeros(mp.dm9.NactTotal,1); end
 
+
 %--Parse the delta command vector by DM
-if(any(mp.dm_ind==1));  dDM.dDM1V(mp.dm1.act_ele) = mp.dm1.weight*duVec(cvar.uLegend==1);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==2));  dDM.dDM2V(mp.dm2.act_ele) = mp.dm2.weight*duVec(cvar.uLegend==2);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==3));  dDM.dDM3V(mp.dm3.act_ele) = mp.dm3.weight*duVec(cvar.uLegend==3);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==4));  dDM.dDM4V(mp.dm4.act_ele) = mp.dm4.weight*duVec(cvar.uLegend==4);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==5));  dDM.dDM5V(mp.dm5.act_ele) = mp.dm5.weight*duVec(cvar.uLegend==5);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==6));  dDM.dDM6V(mp.dm6.act_ele) = mp.dm6.weight*duVec(cvar.uLegend==6);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==7));  dDM.dDM7V(mp.dm7.act_ele) = mp.dm7.weight*duVec(cvar.uLegend==7);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==8));  dDM.dDM8V(mp.dm8.act_ele) = mp.dm8.weight*duVec(cvar.uLegend==8);  end % Parse the command vector to get component for DM and apply the DM's weight
-if(any(mp.dm_ind==9));  dDM.dDM9V(mp.dm9.act_ele) = mp.dm9.weight*duVec(cvar.uLegend==9);  end % Parse the command vector to get component for DM and apply the DM's weight
+switch mp.estimator
+    
+    case{'scc', 'iefc'}
+        if(any(mp.dm_ind==1));  dDM.dDM1V = mp.dm1.weight*sum(mp.dm1.basisCube .* reshape(duVec(cvar.uLegend==1), 1, 1, []), 3);  end
+        if(any(mp.dm_ind==2));  dDM.dDM2V = mp.dm2.weight*sum(mp.dm2.basisCube .* reshape(duVec(cvar.uLegend==2), 1, 1, []), 3); end
+    
+    otherwise
+        if(any(mp.dm_ind==1));  dDM.dDM1V(mp.dm1.act_ele) = mp.dm1.weight*duVec(cvar.uLegend==1);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==2));  dDM.dDM2V(mp.dm2.act_ele) = mp.dm2.weight*duVec(cvar.uLegend==2);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==3));  dDM.dDM3V(mp.dm3.act_ele) = mp.dm3.weight*duVec(cvar.uLegend==3);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==4));  dDM.dDM4V(mp.dm4.act_ele) = mp.dm4.weight*duVec(cvar.uLegend==4);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==5));  dDM.dDM5V(mp.dm5.act_ele) = mp.dm5.weight*duVec(cvar.uLegend==5);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==6));  dDM.dDM6V(mp.dm6.act_ele) = mp.dm6.weight*duVec(cvar.uLegend==6);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==7));  dDM.dDM7V(mp.dm7.act_ele) = mp.dm7.weight*duVec(cvar.uLegend==7);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==8));  dDM.dDM8V(mp.dm8.act_ele) = mp.dm8.weight*duVec(cvar.uLegend==8);  end % Parse the command vector to get component for DM and apply the DM's weight
+        if(any(mp.dm_ind==9));  dDM.dDM9V(mp.dm9.act_ele) = mp.dm9.weight*duVec(cvar.uLegend==9);  end % Parse the command vector to get component for DM and apply the DM's weight
+
+end
+
 
 %--Enforce tied actuator pair commands. 
 % Assign command of first actuator to the second as well.

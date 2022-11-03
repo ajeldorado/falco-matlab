@@ -32,11 +32,23 @@
 % In wrapper above this that chooses layout, need to define mp.FPM.mask like this:
 % mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact');
 
-function [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
+function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
+
+if nargout >= 3
+    debug = true;
+else
+    debug = false;
+end
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.compact.NdmPad;
-transOuterFPM = 1;
+
+switch mp.coro
+    case 'HLC'
+        transOuterFPM = mp.FPM.mask(1, 1);
+    otherwise
+        transOuterFPM = 1;
+end
 
 if mp.flagRotation
     NrelayFactor = 1;
@@ -54,6 +66,14 @@ else %--Otherwise use the detector resolution
     Nxi = mp.Fend.Nxi;
     deta = mp.Fend.deta;
     Neta = mp.Fend.Neta; 
+end
+
+% FPM scale factor with wavelength
+switch mp.layout
+    case 'fpm_scale'
+        scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+    otherwise
+        scaleFac = 1;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,6 +115,7 @@ EP1 = pupil .* Ein;
 
 %--Re-image to pupil plane P2
 EP2 = propcustom_relay(EP1, NrelayFactor*mp.Nrelay1to2, mp.centering);
+if debug, sDebug.EP2_before_dms = EP2; end
 
 %--Propagate from P2 to DM1, and apply DM1 surface and aperture stop
 Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
@@ -106,6 +127,7 @@ Edm2 = Edm2WFE .* DM2stop .* exp(mirrorFac*2*pi*1j*DM2surf/lambda) .* Edm2;
 
 %--Back-propagate to effective pupil at P2
 EP2eff = propcustom_PTP(Edm2, mp.P2.compact.dx*NdmPad, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
+if debug, sDebug.EP2_after_dms = EP2eff; end
 
 %--Re-image to pupil P3
 EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering);
@@ -133,7 +155,7 @@ if flagUseFPM
         case{'VORTEX', 'VC'}
 
             % Get phase scale factor for the FPM. 
-            if numel(mp.F3.VortexCharge) == 1
+            if numel(mp.F3.phaseScaleFac) == 1
                 % Single value indicates fully achromatic mask
                 phaseScaleFac = mp.F3.phaseScaleFac;
             else
@@ -143,8 +165,8 @@ if flagUseFPM
                 phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
             end
             
-            inVal = 0.3;
-            outVal = 5;
+            inVal = mp.F3.inVal;
+            outVal = mp.F3.outVal;
             spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
             spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
             pixPerLamD = mp.F3.compact.res;
@@ -183,25 +205,25 @@ if flagUseFPM
 
         case{'SPLC', 'FLC'}
             %--MFT from SP to FPM (i.e., P3 to F3)
-            EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, mp.F3.compact.dxi,...
-                mp.F3.compact.Nxi, mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
+            EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, scaleFac*mp.F3.compact.dxi,...
+                mp.F3.compact.Nxi, scaleFac*mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
             EF3 = mp.F3.compact.mask .* EF3inc; % Apply FPM
             %--MFT from FPM to Lyot Plane (i.e., F3 to P4)
-            EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, mp.F3.compact.dxi, mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
+            EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, scaleFac*mp.F3.compact.dxi, scaleFac*mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
 
         case{'LC', 'APLC'}
             %--MFT from SP to FPM (i.e., P3 to F3)
-            EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, mp.F3.compact.dxi, ...
-                mp.F3.compact.Nxi, mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
+            EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, scaleFac*mp.F3.compact.dxi, ...
+                mp.F3.compact.Nxi, scaleFac*mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
             %--Apply (1-FPM) for Babinet's principle later
             EF3 = (1 - mp.F3.compact.mask) .* EF3inc;
 
             %--Use Babinet's principle at the Lyot plane.
             EP4noFPM = propcustom_relay(EP3, NrelayFactor*mp.Nrelay3to4, mp.centering); %--Propagate forward another pupil plane 
             EP4noFPM = pad_crop(EP4noFPM, mp.P4.compact.Narr); %--Crop down to the size of the Lyot stop opening
-            EP4subtrahend = propcustom_mft_FtoP(EF3, mp.fl, lambda, mp.F3.compact.dxi, ...
-                mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
+            EP4subtrahend = propcustom_mft_FtoP(EF3, mp.fl, lambda, scaleFac*mp.F3.compact.dxi, ...
+                scaleFac*mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
             EP4subtrahend = propcustom_relay(EP4subtrahend, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
             EP4 = EP4noFPM - EP4subtrahend;
 
@@ -209,20 +231,17 @@ if flagUseFPM
             
             switch mp.layout
                 case{'fourier'}
-                    % Complex transmission of the points outside the FPM
-                    % (just fused silica with optional dielectric and no metal).
-                    t_Ti_base = 0;
-                    t_Ni_vec = 0;
-                    t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-                    pol = 2;
-                    [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-                    transOuterFPM = tCoef;
+                    
                     scaleFac = 1; % Focal plane sampling does not vary with wavelength
+                    
                 case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
-                    transOuterFPM = mp.FPM.mask(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
+                    
                     scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+                    
                 otherwise
+                    
                     error('Invalid combination of mp.layout and mp.coro')
+                    
             end
 
             %--Propagate to focal plane F3
@@ -240,10 +259,10 @@ if flagUseFPM
 
         case{'EHLC'}
             %--MFT from apodizer plane to FPM (i.e., P3 to F3)
-            EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, mp.F3.compact.dxi, ...
-                mp.F3.compact.Nxi, mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
+            EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, scaleFac*mp.F3.compact.dxi, ...
+                mp.F3.compact.Nxi, scaleFac*mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
             EF3 = mp.FPM.mask .* EF3inc; %--Apply FPM
-            EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, mp.F3.compact.dxi, mp.F3.compact.deta, ...
+            EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, scaleFac*mp.F3.compact.dxi, scaleFac*mp.F3.compact.deta, ...
                 mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
 
@@ -256,8 +275,11 @@ else % No FPM in beam path, so relay directly from P3 to P4.
 
     % Interpolate beam if Lyot plane has different resolution
     if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
+        %Make sure array is oversized before downsampling
+        padFac = 1.2;
+        EP4 = pad_crop(EP4, ceil_even(padFac*mp.P1.compact.Nbeam));
         N1 = length(EP4);
-        N4 = ceil_even(1.1*mp.P4.compact.Narr);
+        N4 = ceil_even(padFac*mp.P4.compact.Narr);
         if strcmpi(mp.centering, 'pixel')
             x1 = (-N1/2:(N1/2-1)) / mp.P1.compact.Nbeam;
             x4 = (-N4/2:(N4/2-1)) / mp.P4.compact.Nbeam;
@@ -277,6 +299,8 @@ else % No FPM in beam path, so relay directly from P3 to P4.
     
 end
 
+if debug, sDebug.EP4_before_mask = EP4; end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Back to common propagation any coronagraph type   %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -284,12 +308,14 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.compact.croppedMask .* EP4;
 
+if debug, sDebug.EP4_after_mask = EP4; end
+    
 %--MFT to camera
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);
 
 %--Don't apply FPM if normalization value is being found
-if(normFac==0)
+if normFac == 0
     Eout = EFend; %--Don't normalize if normalization value is being found
 else
     Eout = EFend/sqrt(normFac); %--Apply normalization
@@ -304,7 +330,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Efiber = 0;
 if mp.flagFiber && ~flagEval
-    if mp.flagLenslet
+    if mp.flagLenslet % **not up to date with lenslets**
         Efiber = cell(mp.Fend.Nlens, 1);
         sbpIndex = find(mp.sbp_centers == lambda);
         
@@ -319,14 +345,19 @@ if mp.flagFiber && ~flagEval
         varargout{1} = Efiber;
         
     else  %Fibers placed in the focal plane with no lenslets
-        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+%         EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
         sbpIndex = find(mp.sbp_centers == lambda);
         
-        Efiber = zeros(mp.Fend.Nxi, mp.Fend.Neta);
-        for i=1:mp.Fend.Nfiber
-            Eonefiber = mp.Fend.fiberMode(:, :, sbpIndex, i).*sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, i).*conj(EFend)));
-            Efiber = Efiber + Eonefiber;
+        Efiber = zeros(mp.Fend.Nfiber, 1);
+        for ii=1:mp.Fend.Nfiber
+%             if flagEval
+%                 normFactor_fiber = sqrt(mp.Fend.eval.I00_fiber(ii,sbpIndex));
+%             else
+            normFactor_fiber = sqrt(mp.Fend.compact.I00_fiber(ii,sbpIndex));
+%             end
+            Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, ii).*EFend)) / normFactor_fiber;
+            Efiber(ii) = Eonefiber;
         end
         varargout{1} = Efiber;
     end

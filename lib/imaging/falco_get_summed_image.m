@@ -16,7 +16,7 @@
 % -------
 % summedImage : PSF averaged over all subbands and polarization states [normalized intensity]
 
-function summedImage = falco_get_summed_image(mp)
+function [summedImage,varargout] = falco_get_summed_image(mp)
 
 
 
@@ -36,22 +36,38 @@ function summedImage = falco_get_summed_image(mp)
 
         %--Obtain all the images in parallel
         parfor iCombo = 1:Ncombos
-            Iall{iCombo} = falco_get_single_sim_image(iCombo, indexCombos, mp);
+            if mp.flagFiber
+                [Iall{iCombo},Iallfiber{iCombo}] = falco_get_single_sim_image(iCombo, indexCombos, mp);
+            else
+                Iall{iCombo} = falco_get_single_sim_image(iCombo, indexCombos, mp);
+            end
         end
 
         %--Apply the spectral and stellar weights, and then sum
         summedImage = 0;
+        summedIfiber = 0;
         for iCombo = 1:Ncombos
             iLambda = indexCombos(1, iCombo);
             iStar = indexCombos(3, iCombo);
             summedImage = summedImage + mp.star.weights(iStar)* (mp.full.lambda_weights_all(iLambda)/length(mp.full.pol_conds)) * Iall{iCombo};
+            if mp.flagFiber
+                summedIfiber = summedIfiber + mp.sbp_weights(iStar)* (mp.full.lambda_weights_all(iLambda)/length(mp.full.pol_conds)) * Iallfiber{iCombo};
+            end
         end
 
     else
         
         summedImage = 0;
+        summedIfiber = 0;
         for iSubband = 1:mp.Nsbp    
-            summedImage = summedImage +  mp.sbp_weights(iSubband)*falco_get_sbp_image(mp, iSubband);
+            if mp.flagFiber
+                [sbpim,sbIfiber] = falco_get_sbp_image(mp, iSubband);
+                summedIfiber = summedIfiber + mp.sbp_weights(iSubband)*sbIfiber;
+                varargout{1} = summedIfiber;
+            else
+                sbpim = falco_get_sbp_image(mp, iSubband);
+            end
+            summedImage = summedImage +  mp.sbp_weights(iSubband)*sbpim;
         end
     end
 

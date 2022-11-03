@@ -16,18 +16,13 @@ methods (Static)
         % Given a DM setting, return one consistent with physical and user
         % mandated constraints.
         % 
-        % Constrains each individual voltage to be in 0 <= v <= `vmax`.  Use of
-        % defaults (min voltage=0V, `vmax`=100V) enforces clip requirements in DNG
-        % 884740 and 884741.
+        % Constrains each individual voltage to be in 0 <= v <= `vmax`.
         % 
         % Constrains each pair of laterally-adjacent actuators to be <= `vlat` after
-        % subtraction of the DM flat map in `flatmap`. Use of default (`vlat`=50V)
-        % enforces neighbor-rule requirements in DNG 884742 and 884743.
+        % subtraction of the DM flat map in `flatmap`.
         % 
         % Constrains each pair of diagonally-adjacent actuators to be <= `vdiag`
-        % after subtraction of the DM flat map in `flatmap`. Use of default
-        % (`vdiag`=75V) enforces neighbor-rule requirements in DNG 1073291 and
-        % 1073292.
+        % after subtraction of the DM flat map in `flatmap`.
         % 
         % Constrains all tied actuators (groups in the `tie` matrix with value > 0)
         % to have the same voltage.  Constrains all dead actuators (groups in the
@@ -89,21 +84,20 @@ methods (Static)
         Check.real_nonnegative_scalar(vquant)
         Check.positive_scalar_integer(maxiter)
 
-        VMIN = 0;
-        if vmax <= VMIN
-            error('VMIN must be < vmax')
+        vmin = 0;
+        if vmax <= vmin
+            error('vmin must be < vmax')
         end
 
         % enforce tie and flat formatting
         if ~ConstrainDM.checktie(tie)
             error('tie must have values 0, -1, or consecutive integers 1 to N')
         end
-        if ~ConstrainDM.checkflat(flatmap, VMIN, vmax, tie)
+        if ~ConstrainDM.checkflat(flatmap, vmin, vmax, tie)
             error(['flatmap must be <= vmax, >= VMIN, have all tied ' 
                     'actuators tied already, and have all dead ' 
                      'actuators = 0V'])
         end
-
 
         % Run initial smoothing
         dmflat = flatmap;

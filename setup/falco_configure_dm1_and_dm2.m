@@ -57,6 +57,35 @@ end
     
 if(isfield(mp.dm1,'V')==false); mp.dm1.V = zeros(mp.dm1.Nact,mp.dm1.Nact); end %--Initial DM voltages
 
+switch mp.dm1.basisType
+    
+    case 'actuator'
+        
+        mp.dm1.NbasisModes = mp.dm1.NactTotal;
+        mp.dm1.basisCube = zeros(mp.dm1.Nact, mp.dm1.Nact, mp.dm1.NbasisModes);
+        for iact = 1:mp.dm1.NactTotal
+            tempVec = zeros(mp.dm1.NactTotal, 1);
+            tempVec(iact) = 1;
+            mp.dm1.basisCube(:, :, iact) = reshape(tempVec, [mp.dm1.Nact, mp.dm1.Nact]);
+        end
+        
+    case 'fourier'
+        
+        if length(mp.dm1.fourier_basis_xis) ~= length(mp.dm1.fourier_basis_etas)
+           error('fourier_basis_xis and fourier_basis_etas must have the same length')
+        end
+        mp.dm1.NbasisModes = 2 * length(mp.dm1.fourier_basis_xis); % 2 for sin and cos at each freq
+        mp.dm1.basisCube = zeros(mp.dm1.Nact, mp.dm1.Nact, mp.dm1.NbasisModes);
+        for ibm = 1:mp.dm1.NbasisModes/2
+            [mp.dm1.basisCube(:, :, ibm), mp.dm1.basisCube(:, :, ibm+mp.dm1.NbasisModes/2)] = ...
+                falco_make_fourier_mode(mp.dm1.Nact, mp.dm1.Nactbeam, ...
+                mp.dm1.fourier_basis_xis(ibm), mp.dm1.fourier_basis_etas(ibm));            
+        end
+        
+    otherwise
+        error('Value of the DM basis type not allowed.')
+end
+
 %% DM2
 % Read the influence function header data from the FITS file
 info = fitsinfo(mp.dm2.inf_fn);
@@ -96,6 +125,35 @@ end
 
 if(isfield(mp.dm2,'V')==false); mp.dm2.V = zeros(mp.dm2.Nact,mp.dm2.Nact); end %--Initial DM voltages
 
+switch mp.dm2.basisType
+    
+    case 'actuator'
+        
+        mp.dm2.NbasisModes = mp.dm2.NactTotal;
+        mp.dm2.basisCube = zeros(mp.dm2.Nact, mp.dm2.Nact, mp.dm2.NbasisModes);
+        for iact = 1:mp.dm2.NactTotal
+            tempVec = zeros(mp.dm2.NactTotal, 1);
+            tempVec(iact) = 1;
+            mp.dm2.basisCube(:, :, iact) = reshape(tempVec, [mp.dm2.Nact, mp.dm2.Nact]);
+        end
+        
+    case 'fourier'
+        
+        if length(mp.dm2.fourier_basis_xis) ~= length(mp.dm2.fourier_basis_etas)
+           error('fourier_basis_xis and fourier_basis_etas must have the same length')
+        end
+        mp.dm2.NbasisModes = 2 * length(mp.dm2.fourier_basis_xis); % 2 for sin and cos at each freq
+        mp.dm2.basisCube = zeros(mp.dm2.Nact, mp.dm2.Nact, mp.dm2.NbasisModes);
+        for ibm = 1:mp.dm2.NbasisModes/2
+            [mp.dm2.basisCube(:, :, ibm), mp.dm2.basisCube(:, :, ibm+mp.dm2.NbasisModes/2)] = ...
+                falco_make_fourier_mode(mp.dm2.Nact, mp.dm2.Nactbeam, ...
+                mp.dm2.fourier_basis_xis(ibm), mp.dm2.fourier_basis_etas(ibm));            
+        end
+        
+    otherwise
+        error('Value of the DM basis type not allowed.')
+end
+
 %%
 %--Re-include all actuators in the basis set. Need act_ele to be a column vector.
 if any(mp.dm_ind == 1); mp.dm1.act_ele = (1:mp.dm1.NactTotal).'; end
@@ -103,8 +161,8 @@ if any(mp.dm_ind == 2); mp.dm2.act_ele = (1:mp.dm2.NactTotal).'; end
 if any(mp.dm_ind == 8); mp.dm8.act_ele = (1:mp.dm8.NactTotal).'; end
 if any(mp.dm_ind == 9); mp.dm9.act_ele = (1:mp.dm9.NactTotal).'; end
 %--Update the number of elements used per DM
-if any(mp.dm_ind == 1); mp.dm1.Nele = length(mp.dm1.act_ele); else; mp.dm1.Nele = 0; end
-if any(mp.dm_ind == 2); mp.dm2.Nele = length(mp.dm2.act_ele); else; mp.dm2.Nele = 0; end
+if any(mp.dm_ind == 1); mp.dm1.Nele = mp.dm1.NbasisModes; else; mp.dm1.Nele = 0; end
+if any(mp.dm_ind == 2); mp.dm2.Nele = mp.dm2.NbasisModes; else; mp.dm2.Nele = 0; end
 if any(mp.dm_ind == 8); mp.dm8.Nele = length(mp.dm8.act_ele); else; mp.dm8.Nele = 0; end
 if any(mp.dm_ind == 9); mp.dm9.Nele = length(mp.dm9.act_ele); else; mp.dm9.Nele = 0; end
 

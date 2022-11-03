@@ -23,7 +23,7 @@ switch upper(mp.coro)
             mp.F3.compact.Nxi = size(mp.F3.compact.mask, 2);
         end
         if ~isfield(mp.F3.compact, 'Neta')
-            mp.F3.compact.Neta= size(mp.F3.compact.mask, 1);
+            mp.F3.compact.Neta = size(mp.F3.compact.mask, 1);
         end
         
         % Resolution in compact model
@@ -50,40 +50,58 @@ switch upper(mp.coro)
 
         
         %% Full Model
-        switch lower(mp.layout)
-            
-            case{'roman_phasec_proper','wfirst_phaseb_proper', 'proper'}
-                % Coorinates not needed in the PROPER model
-            
-            otherwise
-                
-                if mp.full.flagPROPER == false
-                    
-                    mp.F3.full.dummy = 1;
-                    if ~isfield(mp.F3.full, 'Nxi')
-                        mp.F3.full.Nxi = size(mp.F3.full.mask, 2);
-                    end
-                    if ~isfield(mp.F3.full, 'Neta')
-                        mp.F3.full.Neta= size(mp.F3.full.mask, 1);
-                    end
-                
-                    %--Resolution
-                    mp.F3.full.dxi = fLamD/mp.F3.full.res; % [meters/pixel]
-                    mp.F3.full.deta = mp.F3.full.dxi; % [meters/pixel]
-
-                    %--Coordinates (dimensionless [DL]) for the FPMs in the full model
-                    if strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi, 2) == 1
-                        mp.F3.full.xisDL  = (-(mp.F3.full.Nxi-1)/2:(mp.F3.full.Nxi-1)/2)/mp.F3.full.res;
-                        mp.F3.full.etasDL = (-(mp.F3.full.Neta-1)/2:(mp.F3.full.Neta-1)/2)/mp.F3.full.res;
-                    else
-                        mp.F3.full.xisDL  = (-mp.F3.full.Nxi/2:(mp.F3.full.Nxi/2-1))/mp.F3.full.res;
-                        mp.F3.full.etasDL = (-mp.F3.full.Neta/2:(mp.F3.full.Neta/2-1))/mp.F3.full.res;
-                    end
-                    
-                end
-        end
         
-end
+        % Coorinates only needed FALCO full models, not PROPER ones
+        if mp.full.flagPROPER == false
+        
+            mp.F3.full.dummy = 1;
+            
+            switch lower(mp.layout)
+            
+                case{'roman_phasec_proper','wfirst_phaseb_proper', 'proper'}
+                    % Coorinates not needed in the PROPER model
+                    mp.F3.full.Nxi = 2; % dummy value
+                    mp.F3.full.Neta = 2; % dummy value
+
+                otherwise
+                    
+%                     if strcmpi(mp.layout, 'fpm_scale') && strcmpi(mp.coro, 'HLC')
+                    if isfield(mp.full, 'FPMcube') && strcmpi(mp.coro, 'HLC')
+
+                        if ~isfield(mp.F3.full, 'Nxi')
+                            mp.F3.full.Nxi = size(mp.full.FPMcube, 2);
+                        end
+                        if ~isfield(mp.F3.full, 'Neta')
+                            mp.F3.full.Neta = size(mp.full.FPMcube, 1);
+                        end
+                        
+                    else
+                
+                        if ~isfield(mp.F3.full, 'Nxi')
+                            mp.F3.full.Nxi = size(mp.F3.full.mask, 2);
+                        end
+                        if ~isfield(mp.F3.full, 'Neta')
+                            mp.F3.full.Neta = size(mp.F3.full.mask, 1);
+                        end
+                        
+                    end
+                    
+            end
+
+            %--Resolution
+            mp.F3.full.dxi = fLamD/mp.F3.full.res; % [meters/pixel]
+            mp.F3.full.deta = mp.F3.full.dxi; % [meters/pixel]
+
+            %--Coordinates (dimensionless [DL]) for the FPMs in the full model
+            if strcmpi(mp.centering,'interpixel') || mod(mp.F3.full.Nxi, 2) == 1
+                mp.F3.full.xisDL  = (-(mp.F3.full.Nxi-1)/2:(mp.F3.full.Nxi-1)/2)/mp.F3.full.res;
+                mp.F3.full.etasDL = (-(mp.F3.full.Neta-1)/2:(mp.F3.full.Neta-1)/2)/mp.F3.full.res;
+            else
+                mp.F3.full.xisDL  = (-mp.F3.full.Nxi/2:(mp.F3.full.Nxi/2-1))/mp.F3.full.res;
+                mp.F3.full.etasDL = (-mp.F3.full.Neta/2:(mp.F3.full.Neta/2-1))/mp.F3.full.res;
+            end
+            
+        end
 
 
 end %--END OF FUNCTION
