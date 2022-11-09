@@ -64,6 +64,7 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
         
         %--Loop over all the settings to check empirically
         ImCube = zeros(mp.Fend.Neta, mp.Fend.Nxi, Nvals);
+        if mp.flagFiber; IfiberCube = zeros(mp.Fend.Nfiber, Nvals);end
         if mp.flagParfor && (mp.flagSim || mp.ctrl.flagUseModel) %--Parallelized
             parfor ni = 1:Nvals
                 [Inorm_list(ni),dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
@@ -73,6 +74,9 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
                 if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
                 ImCube(:, :, ni) = dDM_temp.Itotal;
+                if mp.flagFiber  
+                    IfiberCube(:, ni) = dDM_temp.IfiberTotal;
+                end
             end
         else %--Not Parallelized
             for ni = Nvals:-1:1
@@ -83,6 +87,9 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
                 if(any(mp.dm_ind==8)); dDM8V_store(:,ni) = dDM_temp.dDM8V; end
                 if(any(mp.dm_ind==9)); dDM9V_store(:,ni) = dDM_temp.dDM9V; end
                 ImCube(:, :, ni) = dDM_temp.Itotal;
+                if mp.flagFiber  
+                    IfiberCube(:, ni) = dDM_temp.IfiberTotal;
+                end
             end
         end
 
@@ -102,6 +109,9 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
         cvar.latestBestlog10reg = vals_list(1,indBest);
         cvar.latestBestDMfac = vals_list(2,indBest);
         cvar.Im = ImCube(:, :, indBest);
+        if mp.flagFiber
+            cvar.Ifiber = IfiberCube(:,indBest);
+        end
         if mp.ctrl.flagUseModel
             fprintf('Model-based grid search expects log10reg, = %.1f,\t dmfac = %.2f\t   gives %4.2e normalized intensity.\n',cvar.latestBestlog10reg, cvar.latestBestDMfac, cvar.cMin)
         else
