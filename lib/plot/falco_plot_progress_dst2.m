@@ -8,18 +8,6 @@ function handles = falco_plot_progress_dst2(handles,mp,Itr,Inorm,Im_tb,DM1surf,D
 
 tb = mp.tb;
 
-% Clear dark at iteration 10 and 40 unless in sim mode
-if (Itr==10 || Itr==40) && ~mp.flagSim
-    % Clear the dark 
-    disp('Clearing the dark ...');
-    sbp_texp = tb.info.sbp_texp(mp.si_ref);
-    [~,flnm] = sciCam_loadDark(tb,sbp_texp);
-    delete(flnm);
-else
-    disp('Keeping dark ...');
-end
-
-
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
 Icbmin = -10;

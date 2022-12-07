@@ -61,7 +61,19 @@ function normI = falco_get_dst2_sbp_image(mp,si)
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
     if tb.DM1.installed && tb.DM1.CONNECTED 
-        DM_apply2Dmap(tb.DM1,dm1_map);
+        
+        try
+            DM_apply2Dmap(tb.DM1,dm1_map);
+        catch 
+            try; cleanUpDMs(tb); end
+            disp('Error setting DM1. Reseting electronics. Trying again.')
+            FNGR_setPos(tb,tb.FNGR.inpos);FNGR_setPos(tb,tb.FNGR.outpos);
+            pause(5);
+            setUpDMs(tb);
+            DM_apply2Dmap(tb.DM1,dm1_map);
+            DM_apply2Dmap(tb.DM1,dm1_map);
+            DM_apply2Dmap(tb.DM1,dm1_map);
+        end
     end
     if tb.DM2.installed && tb.DM2.CONNECTED 
         DM_apply2Dmap(tb.DM2,dm2_map);
