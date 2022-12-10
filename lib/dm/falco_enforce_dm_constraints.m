@@ -59,19 +59,15 @@ maxiter = 1000;
 vquant = 0; % LSB in volts
 Vtotal = dm.V + dm.biasMap;
 Vtotal(dm.dead) = 0;
+
 VbeforeConstraints = Vtotal;
 Vtotal = ConstrainDM.constrain_dm(Vtotal, dm.facesheetFlatmap, tieMat, dm.Vmax, dm.dVnbrLat, dm.dVnbrDiag, vquant, maxiter);
-
 VafterConstraints = Vtotal; 
-VafterConstraints(Vtotal == dm.Vmin | Vtotal == dm.Vmax) = VbeforeConstraints(Vtotal == dm.Vmin | Vtotal == dm.Vmax); % Ignore railed actuators 
 
-numOfChangedActsChanged = nnz(Vtotal(:) - VbeforeConstraints(:));
-numOfChangedActsNR = nnz(VafterConstraints(:) - VbeforeConstraints(:));
-numOfActsRailed = numOfChangedActsChanged - numOfChangedActsNR;
+numOfChangedActsChanged = nnz(VafterConstraints(:) - VbeforeConstraints(:));
+
 if(numOfChangedActsChanged>0)
-    disp(['     DM constrained: ',num2str(numOfChangedActsChanged),' changed, ',...
-                num2str(numOfChangedActsNR),' NR violations,',...
-                num2str(numOfActsRailed),' railed.'])
+    disp(['     DM constrained: ',num2str(numOfChangedActsChanged),' changed.'])
 end
 
 dm.V = Vtotal - dm.biasMap;
