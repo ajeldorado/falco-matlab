@@ -113,15 +113,22 @@ Edm2 = Edm2WFE .* DM2stop .* exp(mirrorFac*2*pi*1j*DM2surf/lambda) .* Edm2;
 
 %--Back-propagate to effective pupil at P2
 EP2eff = propcustom_PTP(Edm2, mp.P2.compact.dx*NdmPad, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1));
+if debug, sDebug.Edm1 = Edm1; end
+if debug, sDebug.Edm2 = Edm2; end
 if debug, sDebug.EP2_after_dms = EP2eff; end
 
 %--Re-image to pupil P3
 EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering);
 
+if debug, sDebug.EP3_before_mask = EP3; end
+
 %--Apply apodizer mask.
 if mp.flagApod
     EP3 = mp.P3.compact.mask .* pad_crop(EP3, mp.P3.compact.Narr); 
 end
+
+if debug, sDebug.EP3_after_mask = EP3; end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation from P3 to P4 depends on coronagraph type
