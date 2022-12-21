@@ -39,7 +39,12 @@ function mp = falco_set_jacobian_spatial_weights(mp)
     for iStar = 1:mp.compact.star.count
         mp.WspatialVec(:, iStar) = mp.jac.star.weights(iStar) * mp.Wspatial(mp.Fend.corr.maskBool); 
     end
+    if strcmpi(mp.estimator, 'iefc')
+        mp.WspatialVec = repmat(mp.WspatialVec, [size(mp.iefc.probeCube, 3), 1]);
+    end
+    
 %     mp.WspatialVec = mp.Wspatial(mp.Fend.corr.maskBool); 
+    if(mp.flagFiber);  mp.WspatialVec = ones(mp.Fend.Nfiber, 1);  end
     if(mp.flagFiber && mp.flagLenslet);  mp.WspatialVec = ones(mp.Fend.Nlens, 1);  end
 
 end

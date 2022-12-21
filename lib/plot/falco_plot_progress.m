@@ -53,7 +53,11 @@ if(mp.flagPlot)
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
             %ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',24,'Interpreter','LaTex');
-            title(sprintf('Stellar PSF: NI = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            if mp.flagFiber
+                title(sprintf('Stellar PSF: NI (SMF) = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            else
+                title(sprintf('Stellar PSF: NI = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            end
 
             %--Off-axis PSF
             h_offaxis = subplot(2,3,4); % Save the handle of the subplot
@@ -161,7 +165,11 @@ if(mp.flagPlot)
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
             set(gca,'FontSize',20,'FontName','Times','FontWeight','Normal')
             %ylabel(ch_psf,'$log_{10}$(NI)','Fontsize',24,'Interpreter','LaTex');
-            title(sprintf('Stellar PSF: NI = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            if mp.flagFiber
+                title(sprintf('Stellar PSF: NI (SMF) = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            else
+                title(sprintf('Stellar PSF: NI = %.2e',InormHist(Itr)),'Fontsize',fst);%,'Fontweight','Bold');
+            end
 
             h_offaxis = subplot(2,2,3); % Save the handle of the subplot
             set(h_offaxis, 'OuterPosition', [0.05, 0.02, [1 1]*0.45])

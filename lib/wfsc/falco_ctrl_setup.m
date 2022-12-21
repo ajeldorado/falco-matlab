@@ -39,7 +39,7 @@ if(any(mp.dm_ind==7));  u7 = mp.dm7.V(mp.dm7.act_ele);  else;  u7 = [];  end
 if(any(mp.dm_ind==8));  u8 = mp.dm8.V(mp.dm8.act_ele);  else;  u8 = [];  end
 if(any(mp.dm_ind==9));  u9 = mp.dm9.V(mp.dm9.act_ele);  else;  u9 = [];  end
 cvar.uVec = [u1; u2; u3; u4; u5; u6; u7; u8; u9]; %--column vector
-cvar.NeleAll = length(cvar.uVec);
+% cvar.NeleAll = length(cvar.uVec);
 
 %--Get the indices of each DM's command within the full command
 if(any(mp.dm_ind==1));  u1dummy = 1*ones(mp.dm1.Nele,1);  else;  u1dummy = [];  end
