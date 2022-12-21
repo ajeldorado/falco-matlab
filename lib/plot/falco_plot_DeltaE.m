@@ -8,7 +8,7 @@
 
 function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
 
-    if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0))
+    if(Itr > 1 && ~any(mp.ctrl.dmfacVec == 0) && ~strcmpi(mp.estimator, 'iefc') && ~mp.flagFiber)
         for si = 1:mp.Nsbp
             dEmeas = squeeze(Eest(:, si) - EestPrev(:, si));
             dEmeas2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
@@ -28,7 +28,9 @@ function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
             fprintf('Complex correlation of deltaE is %3.2f    for subband %d/%d\n', out.complexCorrelation(Itr-1, si), si, mp.Nsbp);
 
             if mp.flagPlot            
-                figure(50+si); set(gcf, 'Color', 'w');
+                figure(50+si);
+                clf(50+si);
+                set(gcf, 'Color', 'w');
                 if Itr > 2; clf(50+si); end
                 fs = 18;
 

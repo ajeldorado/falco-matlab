@@ -20,12 +20,12 @@
 
 function [Eout, varargout] = model_full(mp, modvar, varargin)
 
-% Set default values of input parameters
-if isfield(modvar, 'sbpIndex') && isfield(modvar, 'wpsbpIndex')
-    normFac = mp.Fend.full.I00(modvar.sbpIndex, modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
-else
-    error("modvar must have fields 'sbpIndex' and 'wpsbpIndex'.")
+if ~isa(modvar, 'ModelVariables')
+    error('modvar must be an instance of class ModelVariables')
 end
+
+% Set default values of input parameters
+normFac = mp.Fend.full.I00(modvar.sbpIndex, modvar.wpsbpIndex); %--Value to normalize the PSF. Set to 0 when finding the normalization factor
 
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
@@ -48,12 +48,10 @@ if(any(mp.dm_ind==8)); mp.dm8 = rmfield(mp.dm8, 'compact'); end
 if(any(mp.dm_ind==9)); mp.dm9 = rmfield(mp.dm9, 'compact'); end
 
 %--Set the wavelength
-if(isfield(modvar, 'lambda')) %--For FALCO or for evaluation without WFSC
+if ~isempty(modvar.lambda) %--For FALCO or for evaluation without WFSC
     lambda = modvar.lambda;
-elseif(isfield(modvar, 'sbpIndex')) %--For use in FALCO
-    lambda = mp.full.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 else
-    error('model_full: Need to specify a value or indices for a wavelength.')
+    lambda = mp.full.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,9 +84,9 @@ if normFac == 0
 end
 
 %--Apply a Zernike (in amplitude) at input pupil if specified
-if isfield(modvar, 'zernIndex') == false
-    modvar.zernIndex = 1;
-end
+% if isfield(modvar, 'zernIndex') == false
+%     modvar.zernIndex = 1;
+% end
 
 if modvar.zernIndex ~= 1
     indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
@@ -105,8 +103,8 @@ switch lower(mp.layout)
             case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-                if(isfield(mp, 'FPMcubeFull')) %--Load it if stored
-                    %mp.FPM.mask = mp.FPMcubeFull(:, :, ilam);
+                if isfield(mp.full, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
                 else
                     mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'full');
                 end
@@ -114,8 +112,8 @@ switch lower(mp.layout)
             case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
                 %--Complex transmission map of the FPM.
                 ilam = (modvar.sbpIndex-1)*mp.Nwpsbp + modvar.wpsbpIndex;
-                if(isfield(mp, 'FPMcubeFull')) %--Load it if stored
-                   %mp.FPM.mask = mp.FPMcubeFull(:, :, ilam);
+                if isfield(mp.full, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
                 else %--Otherwise generate it
                     mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'full');
                 end
@@ -135,13 +133,18 @@ switch lower(mp.layout)
                     ilam = modvar.sbpIndex;
                 end
                 %fprintf('si=%d, wi=%d, ilam=%d\n', modvar.sbpIndex, modvar.wpsbpIndex, ilam);
-                mp.FPM.mask = mp.full.FPMcube(:, :, ilam);%modvar.sbpIndex, modvar.wpsbpIndex);
+                mp.FPM.mask = mp.full.FPMcube(:, :, ilam);
         end
 end
 
 % %% Apply DM constraints now. Can't do within DM surface generator if calling a PROPER model. 
 % if(any(mp.dm_ind==1));  mp.dm1 = falco_enforce_dm_constraints(mp.dm1);  end
 % if(any(mp.dm_ind==2));  mp.dm2 = falco_enforce_dm_constraints(mp.dm2);  end
+
+%% FPM Errors
+if mp.F3.full.flagErrors
+    mp.F3.full.Eab = mp.F3.full.EabArray(:, :, modvar.sbpIndex, modvar.wpsbpIndex);
+end
 
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)

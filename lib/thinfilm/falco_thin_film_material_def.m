@@ -143,6 +143,18 @@ switch lower(metal)
         nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
         knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');
 
+    case{'chromium', 'chrome', 'cr'} 
+        t_Ti_vec = t_Ti_base*ones(lenMetal, 1);
+        t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no Ni
+
+        vnickel = load('chromium_wvlUM_n_k_Johnson_1974.csv');
+
+        lam_nickel = vnickel(:,1) * 1e3;  % nm
+        n_nickel   = vnickel(:,2);
+        k_nickel   = vnickel(:,3);
+        nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
+        knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');        
+        
     otherwise
         error('Invalid value of metal.')
         

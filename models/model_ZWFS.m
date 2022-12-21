@@ -8,6 +8,10 @@
 %       of the beam that passes through the phase dimple.
 %   - 'to_input' only propagates to the input pupil.
 
+if ~isa(modvar, 'ModelVariables')
+    error('modvar must be an instance of class ModelVariables')
+end
+
 % set default options 
 refwave = false;
 to_input = false;
@@ -26,11 +30,11 @@ if(~isempty(varargin))
 end
 
 %--Set the wavelength
-if(isfield(modvar, 'lambda'))
+if ~isempty(modvar.lambda)
     lambda = modvar.lambda;
-elseif(isfield(modvar, 'ebpIndex'))
+elseif ~isempty(modvar.ebpIndex)
     lambda = mp.wfs.lambdas(modvar.ebpIndex);
-elseif(isfield(modvar, 'sbpIndex'))
+else
     lambda = mp.wfs.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
 end
 
@@ -52,29 +56,30 @@ if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations
     Ein = Ett.*mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
         
 else % Default to using the starlight
-    %--Include the tip/tilt in the input stellar wavefront
-    if(isfield(mp, 'ttx'))  % #NEWFORTIPTILT
-        %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
-        x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
-        y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
-
-        TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
-        Ett = exp(1i*TTphase*mp.lambda0/lambda);
-        Ein = Ett.*mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);  
-
-    else %--Backward compatible with code without tip/tilt offsets in the Jacobian
-        Ein = mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);  
-    end
+    Ein = mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
+%     %--Include the tip/tilt in the input stellar wavefront
+%     if isfield(mp, 'ttx')
+%         %--Scale by lambda/lambda0 because ttx and tty are in lambda0/D
+%         x_offset = mp.ttx(modvar.ttIndex)*(mp.lambda0/lambda);
+%         y_offset = mp.tty(modvar.ttIndex)*(mp.lambda0/lambda);
+% 
+%         TTphase = (-1)*(2*pi*(x_offset*mp.P2.full.XsDL + y_offset*mp.P2.full.YsDL));
+%         Ett = exp(1i*TTphase*mp.lambda0/lambda);
+%         Ein = Ett.*mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);  
+% 
+%     else %--Backward compatible with code without tip/tilt offsets in the Jacobian
+%         Ein = mp.wfs.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);  
+%     end
 end
 
-%--Apply a Zernike (in amplitude) at input pupil if specified
-if(isfield(modvar, 'zernIndex')==false)
-    modvar.zernIndex = 1;
-end
+% %--Apply a Zernike (in amplitude) at input pupil if specified
+% if(isfield(modvar, 'zernIndex')==false)
+%     modvar.zernIndex = 1;
+% end
 
-if(modvar.zernIndex~=1)
-    indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
-    zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+if modvar.zernIndex ~= 1
+    indsZnoll = modvar.zernIndex; %--Just send in one Zernike mode
+    zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZnoll); %--normalized (RMS = 1) Zernike modes.
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(modvar.zernIndex);
 end
 

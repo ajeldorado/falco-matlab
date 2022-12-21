@@ -12,9 +12,9 @@ function DMsurf = falco_dm_surf_from_cube(dm,dmFullOrCompact)
     DMsurf = zeros(dmFullOrCompact.NdmPad); % Initialize the empty array
     for iact=1:dm.NactTotal 
         if( any(any(dmFullOrCompact.inf_datacube(:,:,iact))) && any(dm.VtoH(iact)) )
-            y_box_ind = dmFullOrCompact.xy_box_lowerLeft(1,iact):dmFullOrCompact.xy_box_lowerLeft(1,iact)+dmFullOrCompact.Nbox-1; % x-indices in pupil arrays for the box
-            x_box_ind = dmFullOrCompact.xy_box_lowerLeft(2,iact):dmFullOrCompact.xy_box_lowerLeft(2,iact)+dmFullOrCompact.Nbox-1; % y-indices in pupil arrays for the box
-            DMsurf(x_box_ind,y_box_ind) = DMsurf(x_box_ind,y_box_ind) + dm.V(iact)*dm.VtoH(iact)*dmFullOrCompact.inf_datacube(:,:,iact);
+            x_box_ind = dmFullOrCompact.xy_box_lowerLeft(1,iact):dmFullOrCompact.xy_box_lowerLeft(1,iact)+dmFullOrCompact.Nbox-1; % x-indices in pupil arrays for the box
+            y_box_ind = dmFullOrCompact.xy_box_lowerLeft(2,iact):dmFullOrCompact.xy_box_lowerLeft(2,iact)+dmFullOrCompact.Nbox-1; % y-indices in pupil arrays for the box
+            DMsurf(y_box_ind, x_box_ind) = DMsurf(y_box_ind,x_box_ind) + dm.V(iact)*dm.VtoH(iact)*dmFullOrCompact.inf_datacube(:,:,iact);
         end
     end
     

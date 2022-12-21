@@ -30,7 +30,13 @@ mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E
 mp.Fend.compact.I00 = ones(1, mp.Nsbp); % Initial input before computing
 mp.Fend.eval.I00 = ones(1, mp.Nsbp); % Initial input before computing
 mp.Fend.full.I00 = ones(mp.Nsbp, mp.Nwpsbp); % Initial input before computing
+if mp.flagFiber
+    mp.Fend.compact.I00_fiber = ones(mp.Fend.Nfiber, mp.Nsbp); % Initial input before computing
+    mp.Fend.eval.I00_fiber = ones(mp.Fend.Nfiber, mp.Nsbp); % Initial input before computing
+    mp.Fend.full.I00_fiber = ones(mp.Fend.Nfiber,mp.Nsbp, mp.Nwpsbp); % Initial input before computing
+end
 
+modvar = ModelVariables;
 modvar.zernIndex = 1;
 modvar.whichSource = 'star';  
 modvar.starIndex = 1; % Always use first star for image normalization
@@ -38,14 +44,24 @@ modvar.starIndex = 1; % Always use first star for image normalization
 %--Compact Model Normalizations
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
-    Etemp = model_compact(mp, modvar, 'getNorm');
+    if mp.flagFiber
+        [Etemp,Efibertemp] = model_compact(mp, modvar, 'getNorm');
+        mp.Fend.compact.I00_fiber(:,si) = abs(Efibertemp).^2;
+    else
+        Etemp = model_compact(mp, modvar, 'getNorm');
+    end
     mp.Fend.compact.I00(si) = max(max(abs(Etemp).^2));
 end
 
 %--Compact Evaluation Model Normalizations
 for si=1:mp.Nsbp
     modvar.sbpIndex = si;
-    Etemp = model_compact(mp, modvar, 'getNorm', 'eval');
+    if mp.flagFiber
+%         [Etemp,Efibertemp] = model_compact(mp, modvar, 'getNorm', 'eval');
+        mp.Fend.eval.I00_fiber(:,si) = mp.Fend.compact.I00_fiber(:,si);
+    else
+        Etemp = model_compact(mp, modvar, 'getNorm', 'eval');
+    end
     mp.Fend.eval.I00(si) = max(max(abs(Etemp).^2));
 end
 
@@ -60,13 +76,20 @@ if(mp.flagParfor)
     end
     
     parfor li = 1:mp.Nsbp*mp.Nwpsbp
-        I00vec{li} = model_full_norm_wrapper(li,mptmp);
+        if mptmp.flagFiber
+            [I00vec{li},I00fibervec{li}] = model_full_norm_wrapper(li,mptmp);
+        else
+            I00vec{li} = model_full_norm_wrapper(li,mptmp);
+        end
     end
 
     counter = 0;
     for si=1:mp.Nsbp
         for wi=1:mp.Nwpsbp
             counter = counter+1;
+            if mptmp.flagFiber
+                mp.Fend.full.I00_fiber(si, wi) = I00fibervec{counter};
+            end
             mp.Fend.full.I00(si, wi) = I00vec{counter};
         end
     end
@@ -76,7 +99,12 @@ else %--No parfor
         for wi=1:mp.Nwpsbp
             modvar.sbpIndex = si;
             modvar.wpsbpIndex = wi;
-            Etemp = model_full(mp, modvar,'getNorm');
+            if mp.flagFiber
+                [Etemp,Efibertemp] = model_full(mp, modvar, 'getNorm');
+                mp.Fend.full.I00_fiber(:,si) = abs(Efibertemp).^2;
+            else
+                Etemp = model_full(mp, modvar,'getNorm');
+            end
             mp.Fend.full.I00(si,wi) = max(max(abs(Etemp).^2));
         end
     end
@@ -110,13 +138,20 @@ end %--END OF FUNCTION
 
 %--Extra function needed to use parfor (because parfor can have only a
 %  single changing input argument).
-function I00 = model_full_norm_wrapper(li, mp)
+function [I00,varargout] = model_full_norm_wrapper(li, mp)
+    modvar = ModelVariables;
     modvar.sbpIndex = mp.full.indsLambdaMat(li,1);
     modvar.wpsbpIndex = mp.full.indsLambdaMat(li,2);
     modvar.zernIndex = 1;
     modvar.starIndex = 1;
     modvar.whichSource = 'star';
     
-    Etemp = model_full(mp, modvar,'getNorm');
+    if mp.flagFiber
+        [Etemp,Efibertemp] = model_full(mp, modvar,'getNorm');
+        I00fiber = abs(Efibertemp).^2;
+        varargout{1} = I00fiber;
+    else
+        Etemp = model_full(mp, modvar,'getNorm');
+    end
     I00 = max(max(abs(Etemp).^2));
 end

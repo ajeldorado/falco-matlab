@@ -111,6 +111,12 @@ if mp.flagApod
     EP3 = mp.P3.full.mask .* pad_crop(EP3, mp.P3.full.Narr); 
 end
 
+%--Apply errors at the FPM plane before applying the mask
+if mp.F3.full.flagErrors
+    EP3 = pad_crop(EP3, NdmPad);
+    EP3 = propcustom_mft_apply_focal_errors_babinet(EP3, mp.F3.full.Eab, mp.F3.full.EabRes*(mp.lambda0/lambda), mp.P1.full.Nbeam);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation from P3 to P4 depends on coronagraph type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -118,11 +124,11 @@ end
 switch upper(mp.coro)
     case{'VORTEX', 'VC'}
         if mp.flagApod == false
-            EP3 = pad_crop(EP3, 2^nextpow2(mp.P1.full.Narr)); %--Crop down if there isn't an apodizer mask
+            EP3 = pad_crop(EP3, max([mp.P4.full.Narr, 2^nextpow2(mp.P1.full.Narr)])); %--Crop down if there isn't an apodizer mask
         end
 
         % Get phase scale factor for FPM. 
-        if numel(mp.F3.VortexCharge) == 1
+        if numel(mp.F3.phaseScaleFac) == 1
             % Single value indicates fully achromatic mask
             phaseScaleFac = mp.F3.phaseScaleFac;
         else
@@ -132,8 +138,8 @@ switch upper(mp.coro)
             phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
         end
         
-        inVal = 0.3;
-        outVal = 5;
+        inVal = mp.F3.inVal;
+        outVal = mp.F3.outVal;
         spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
         spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
         pixPerLamD = mp.F3.full.res;
@@ -145,6 +151,9 @@ switch upper(mp.coro)
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+        
+%         figure(222);imagesc(angle(fpm));colorbar; colormap(gray);caxis([-pi pi]);set(gca,'ydir','normal')
+ 
         EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         
         % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
@@ -175,14 +184,20 @@ switch upper(mp.coro)
         
         switch mp.layout
             case{'fourier'}
-                %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
-                t_Ti_base = 0;
-                t_Ni_vec = 0;
-                t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-                pol = 2;
-                [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-                transOuterFPM = tCoef;
                 scaleFac = 1;
+                
+                %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
+                if isfield(mp.full, 'FPMcube')
+                    transOuterFPM = mp.FPM.mask(1, 1);
+                else
+                    t_Ti_base = 0;
+                    t_Ni_vec = 0;
+                    t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+                    pol = 2;
+                    [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                    transOuterFPM = tCoef;
+                end
+                
             case{'fpm_scale'}
                 transOuterFPM = mp.FPM.mask(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
                 scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
@@ -268,16 +283,15 @@ if mp.flagFiber
         varargout{1} = Efiber;
         
     else  % Fibers placed in the focal plane with no lenslets
-        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, ...
-            mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+%         EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, ...
+%             mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
         sbpIndex = find(mp.sbp_centers == lambda);
         
-        Efiber = zeros(mp.Fend.Nxi, mp.Fend.Neta);
-        for i=1:mp.Fend.Nfiber
-            Eonefiber = mp.Fend.fiberMode(:, :, sbpIndex, i) .* ...
-                sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, i).*conj(EFend)));
-            Efiber = Efiber + Eonefiber;
+        Efiber = zeros(mp.Fend.Nfiber,1);
+        for ii=1:mp.Fend.Nfiber
+            Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, sbpIndex, ii) .* EFend)) / sqrt(mp.Fend.full.I00_fiber(ii,sbpIndex));
+            Efiber(ii) = Eonefiber;
         end
         
         varargout{1} = Efiber;
