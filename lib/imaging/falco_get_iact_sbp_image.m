@@ -1,10 +1,10 @@
-% Copyright 2019, by the California Institute of Technology. ALL RIGHTS
+% Copyright 2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to get an image in the specified sub-bandpass from the DST. 
+% Function to get an image in the specified sub-bandpass from the IACT. 
 %
 % ---------------
 % INPUTS:
@@ -17,78 +17,42 @@
 %           by a photometry measurement at a single offset)
 %
 % REVISION HISTORY
+% - Modified from falco_get_dst_sbp_image on 2021-04-07 by G. Ruane
 % - Modified from falco_get_gpct_sbp_image on 2019-06-26 by G. Ruane
 % - Modified from falco_get_hcst_sbp_image on 2019-03-22 by G. Ruane
 % - Created on 2019-03-22 by G. Ruane 
 
-function normI = falco_get_dst_sbp_image(mp,si)
+function normI = falco_get_iact_sbp_image(mp,si)
 
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     tb.sciCam.subdir = 'falco';
     
-    if(mp.isProbing)
+    if(mp.isProbing) % use these values if you're probing 
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
-    else
-        % TO DO: Add the capability to make the exposure time adaptive 
-        % if(tb.info.adaptive_texp)
-        %   query current Inorm (c = mean normI)
-        %   sbp_texp = sciCam_getAdaptiveExposureTime(c,1e-8,10)
-        % else
+        numCoadds = tb.info.sbp_numCoadds_probe(si);% Number of coadds to use for each sub-bandpass
+    else % use these values for dark hole images 
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
-    end
+        numCoadds = tb.info.sbp_numCoadds(si);% Number of coadds to use for each sub-bandpass
+    end    
+    tb.sciCam.numCoadds = numCoadds; % This sets the camera to use coadds 
     
+    % PSF photometry 
     PSFpeak   = tb.info.PSFpeaks(si);% counts per second 
     
     
-    %----- Send commands to the DM -----
-    %disp('Sending current DM voltages to testbed') 
-    if(mp.dm1.transp)
-        dm1_map = mp.dm1.V'; % There's a transpose between Matlab and DM indexing
-    else
-        dm1_map = mp.dm1.V;
-    end
-    if(mp.dm2.transp)
-        dm2_map = mp.dm2.V'; % There's a transpose between Matlab and DM indexing
-    else
-        dm2_map = mp.dm2.V;
-    end
-    
-%     figure(700)
-%     subplot(1,2,1)
-%     imagesc(dm1_map+tb.DM1.flatmap);
-%     axis image; 
-%     colorbar;
-% 
-%     subplot(1,2,2)
-%     imagesc(dm1_map);
-%     axis image; 
-%     colorbar;
-%     drawnow; 
+	%----- Send commands to the DM -----
 
-    % Send the commands to the DM. 
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
-    if(tb.DM1.installed && tb.DM1.CONNECTED)
-        DM_apply2Dmap(tb.DM1,dm1_map);
+    if(tb.DM.installed && tb.DM.CONNECTED)
+        DM_apply2Dmap(tb.DM,mp.dm1.V);
     end
-    if(tb.DM2.installed && tb.DM2.CONNECTED)
-        try
-            DM_apply2Dmap(tb.DM2,dm2_map);
-        catch 
-            %try; cleanUpDMs(tb); end
-            disp('Error setting DM2. Reseting electronics. Trying again.')
-            FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
-            pause(5);
-            setUpDMs(tb);
-            DM_apply2Dmap(tb.DM1,dm1_map);
-            DM_apply2Dmap(tb.DM2,dm2_map);
-        end
-            
-    end
+
     
-    %----- Get image from the testbed -----
-    disp(['Getting image from testbed in band ',num2str(si),'. texp = ',num2str(sbp_texp)])
+	%----- Get image from the testbed -----
+%     disp(['Getting image from testbed in band ',num2str(si),'. texp = ',num2str(sbp_texp)])
+    disp(['Getting image from testbed. texp=',num2str(sbp_texp),'s. numCoadds=',num2str(numCoadds)])
     
     % Set wavelength
     %disp(['Setting varia to bandpass',num2str(si)])
@@ -103,7 +67,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
     dark = sciCam_loadDark(tb,sbp_texp);
     
     % Scale the PSF photometry by the current integration time
-    PSFpeak_counts = PSFpeak*sbp_texp; 
+    PSFpeak_counts = PSFpeak*sbp_texp*numCoadds; 
     
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; 

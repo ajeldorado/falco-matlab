@@ -116,7 +116,11 @@ switch lower(mp.layout)
             case{'EHLC'} %--DMs, optional apodizer, extended FPM with metal and dielectric modulation and outer stop, and LS. Uses 1-part direct MFTs to/from FPM
                 mp.FPM.mask = falco_gen_EHLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
             case{'HLC'} %--DMs, optional apodizer, FPM with optional metal and dielectric modulation, and LS. Uses Babinet's principle about FPM.
-                mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
+                if isfield(mp.compact, 'FPMcube') %--Load it if stored
+                    mp.FPM.mask = mp.compact.FPMcube(:, :, modvar.sbpIndex);
+                else
+                    mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact'); %--Complex transmission map of the FPM.
+                end
         end
         
     case{'roman_phasec_proper', 'wfirst_phaseb_proper', 'fpm_scale', 'proper'}
@@ -127,8 +131,12 @@ end
 
 %--Select which optical layout's compact model to use and get the output E-field
 if ~mp.flagFiber
-    [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
-    if mp.debug, varargout{end+1} = sDebug; end
+    if mp.debug
+        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+        varargout{end+1} = sDebug;
+    else
+        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    end
 else
     [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
     varargout{1} = Efiber;

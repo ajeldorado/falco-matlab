@@ -119,6 +119,7 @@ if debug, sDebug.EP2_after_dms = EP2eff; end
 
 %--Re-image to pupil P3
 EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering);
+if debug, sDebug.EP3_before_mask = EP3; end
 
 if debug, sDebug.EP3_before_mask = EP3; end
 
@@ -126,6 +127,7 @@ if debug, sDebug.EP3_before_mask = EP3; end
 if mp.flagApod
     EP3 = mp.P3.compact.mask .* pad_crop(EP3, mp.P3.compact.Narr); 
 end
+if debug, sDebug.EP3_after_mask = EP3; end
 
 if debug, sDebug.EP3_after_mask = EP3; end
 
@@ -148,7 +150,7 @@ if flagUseFPM
         case{'VORTEX', 'VC'}
 
             % Get phase scale factor for the FPM. 
-            if numel(mp.F3.VortexCharge) == 1
+            if numel(mp.F3.phaseScaleFac) == 1
                 % Single value indicates fully achromatic mask
                 phaseScaleFac = mp.F3.phaseScaleFac;
             else
@@ -224,20 +226,30 @@ if flagUseFPM
             
             switch mp.layout
                 case{'fourier'}
+                    
+                    scaleFac = 1; % Focal plane sampling does not vary with wavelength
                     % Complex transmission of the points outside the FPM
                     % (just fused silica with optional dielectric and no metal).
-                    t_Ti_base = 0;
-                    t_Ni_vec = 0;
-                    t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-                    pol = 2;
-                    [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
-                    transOuterFPM = tCoef;
-                    scaleFac = 1; % Focal plane sampling does not vary with wavelength
+                    if isfield(mp.compact, 'FPMcube')
+                        transOuterFPM = mp.FPM.mask(1, 1);
+                    else
+                        t_Ti_base = 0;
+                        t_Ni_vec = 0;
+                        t_PMGI_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+                        pol = 2;
+                        [tCoef, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_PMGI_vec, lambda*mp.FPM.d0fac, pol);
+                        transOuterFPM = tCoef;
+                    end
+                    
                 case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
+                    
                     transOuterFPM = mp.FPM.mask(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
                     scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+                    
                 otherwise
+                    
                     error('Invalid combination of mp.layout and mp.coro')
+                    
             end
 
             %--Propagate to focal plane F3

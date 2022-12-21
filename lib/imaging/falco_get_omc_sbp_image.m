@@ -149,6 +149,8 @@ function normI = falco_get_omc_sbp_image(mp,si)
     
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     % sciCam_getImage returns FOV window to match falco expected image size   
-    normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
-    %TODO: add the option to not subtract darks when taking probe pairs
+
+    rawIm = sciCam_getImage(tb,sbp_texp);
+    normI = (rawIm-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
+    
 end

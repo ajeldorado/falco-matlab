@@ -46,6 +46,9 @@ if(isfield(mp.path,'dm')==false); mp.path.dm = [mp.path.falco filesep 'data' fil
 
 %% Optional/hidden boolean flags
 
+%--Debugging mode
+if ~isfield(mp, 'debug'); mp.debug = false; end 
+
 %--Saving data
 if(isfield(mp,'flagSaveWS')==false);  mp.flagSaveWS = false;  end  %--Whether to save out the entire workspace at the end of the trial. Can take up lots of space.
 if(isfield(mp,'flagSVD')==false);  mp.flagSVD = false;  end    %--Whether to compute and save the singular mode spectrum of the control Jacobian (each iteration)
@@ -93,6 +96,10 @@ if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector 
 
 %--Propagation method
 if(isfield(mp,'propMethodPTP')==false);  mp.propMethodPTP = 'fft';  end %--Propagation method for postage stamps around the influence functions. 'mft' or 'fft'
+
+%--FPM Errors
+if(isfield(mp.F3, 'full')==false);  mp.F3.full.dummy = 1;  end
+if(isfield(mp.F3.full, 'flagErrors')==false);  mp.F3.full.flagErrors = false;  end
 
 %--Vortex or other azithumal, phase-only FPMs
 if(isfield(mp.jac, 'mftToVortex')==false);  mp.jac.mftToVortex = false;  end  %--Whether to use MFTs to propagate to/from the vortex FPM

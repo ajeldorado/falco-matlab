@@ -8,7 +8,6 @@
 
 function [mp, out] = falco_wfsc_loop(mp, out)
 
-flagBreak = false;
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
@@ -20,11 +19,11 @@ for Itr = 1:mp.Nitr
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
     
-    % update subdir for scicam images
-%     if isfield(mp, 'tb')
-%         mp.tb.sciCam.subdir = ['Series_' num2str(mp.SeriesNum) '_Trial_' num2str(mp.TrialNum) '_It_' num2str(Itr)];
-%         mp.path.images = [mp.tb.info.images_pn '/' datestr(now,29) '/' mp.tb.sciCam.subdir];
-%     end
+
+    % user-defined bookkeeping updates for each iteration
+    if isfield(mp, 'funTopofloopBookkeeping') && ~isempty(mp.funTopofloopBookkeeping)
+        mp = mp.funTopofloopBookkeeping(mp, Itr);
+    end
     
     if mp.flagSim
         fprintf('Zernike modes used in this Jacobian:\t');
@@ -300,8 +299,14 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
             out.InormHist_tb.unmod = NaN(Itr, mp.Nsbp);
         end
         hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
+
     else
+<<<<<<< HEAD
         %hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+=======
+        hProgress = falco_plot_progress(hProgress, mp, Itr, out.InormHist, Im, DM1surf, DM2surf, ImSimOffaxis);
+
+>>>>>>> eeee566807b0660ad8a72cde63ddd7544e47913a
         out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
@@ -320,8 +325,13 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
 
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
+<<<<<<< HEAD
          end
         
         hProgress = falco_plot_progress_omc_model(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
+=======
+        end
+        
+>>>>>>> eeee566807b0660ad8a72cde63ddd7544e47913a
     end
 end

@@ -31,14 +31,15 @@ function imageOut = falco_add_noise_to_subband_image(mp, imageIn, iSubband)
         noisyImageInElectrons = factorNeededInMatlab*imnoise(imageInElectrons/factorNeededInMatlab, 'poisson');
 
         % Compute dark current
-        darkCurrent = mp.detector.darkCurrentRate * mp.detector.tExpVec(iSubband)*ones(size(imageIn));
-        darkCurrent = factorNeededInMatlab*imnoise(darkCurrent/factorNeededInMatlab, 'poisson');
+        darkCurrentMean = mp.detector.darkCurrentRate * mp.detector.tExpVec(iSubband)*ones(size(imageIn));
+        darkCurrentAll = factorNeededInMatlab*imnoise(darkCurrentMean/factorNeededInMatlab, 'poisson');
+        darkCurrentNoise = darkCurrentAll - darkCurrentMean;
 
         % Compute Gaussian read noise
         readNoise = mp.detector.readNoiseStd * randn(size(imageIn));
         
         % Convert back from e- to counts and then discretize
-        imageInCounts = imageInCounts + round((noisyImageInElectrons + darkCurrent + readNoise)/mp.detector.gain)/mp.detector.Nexp;
+        imageInCounts = imageInCounts + round((noisyImageInElectrons + darkCurrentNoise + readNoise)/mp.detector.gain)/mp.detector.Nexp;
         
     end
 
