@@ -31,16 +31,7 @@ while icav < size(varargin, 2)
     end
 end
 
-Ifiber = 0; %Dummy initialization to make MATLAB happy
-
-if(mp.flagFiber)
-    if(mp.flagLenslet)
-        Ifiber = zeros(mp.F5.Neta, mp.F5.Nxi);
-    else
-        Ifiber = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    end
-end
-  
+Ifiber = 0; %Dummy initialization to make MATLAB happy  
 Iout = 0; %--Initialize
 
 for iStar = 1:mp.star.count
