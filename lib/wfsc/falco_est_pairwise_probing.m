@@ -432,28 +432,49 @@ for iSubband = 1:mp.Nsbp
 if strcmpi(mp.estimator, 'pwp-bp') || strcmpi(mp.estimator, 'pairwise-rect') || ...
         strcmpi(mp.estimator,'pwp-bp-square') || strcmpi(mp.estimator, 'pairwise') || strcmpi(mp.estimator, 'pairwise-square') ||...
         (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
+    
     Eest = zeros(Ncorr, 1);
     zerosCounter = 0;
+    partialCounter = 0;
     for ipix = 1:Ncorr
         if mp.est.flagUseJac 
             dE = dEplus(ipix, :).';
             H = [real(dE), imag(dE)];
+            Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
         else
             H = zeros(Npairs, 2); % Observation matrix
-            if isnonzero(ipix) == 1 % Leave Eest for a pixel as zero if any probe amplitude is zero there.
+            goodProbeInds = find(amp(ipix, :) > 0);
+            NpairsGood = length(goodProbeInds);
+            
+            % If <2 probe pairs had good measurements, can't do pinv. Leave Eest as zero.
+            if NpairsGood < 2
+                zerosCounter = zerosCounter + 1;
+            
+            % Otherwise, use the 2+ good probe pair measurements for that pixel:
+            else
                 for iProbe = 1:Npairs
                     H(iProbe, :) = amp(ipix, iProbe)*[cos(dphdm(ipix, iProbe)), sin(dphdm(ipix, iProbe)) ];
                 end
-            else
-                zerosCounter = zerosCounter+1;
+                % Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
+                Epix = pinv(H(goodProbeInds, :)) * zAll(goodProbeInds, ipix); %--Batch process estimation
+                
+                % Record how many pixels didn't use all the probe pairs
+                if NpairsGood < Npairs
+                    partialCounter = partialCounter + 1;
+                end
+                
             end
+
         end
-        Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
+        
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
 
-    Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
-    fprintf('%d of %d pixels were given zero probe amplitude. \n', zerosCounter, mp.Fend.corr.Npix); 
+    Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS VALUE!!!!!!!!!!!!!!!
+    fprintf('%d of %d pixels were given zero probe amplitude. \n', zerosCounter, mp.Fend.corr.Npix);
+    if Npairs > 2 % Only possible for Npairs > 2
+        fprintf('%d of %d pixels threw out at least one probe pair. \n', partialCounter, mp.Fend.corr.Npix); 
+    end
 
     %--Initialize the state and state covariance estimates for Kalman
     %filter. The state is the real and imag parts of the E-field.
