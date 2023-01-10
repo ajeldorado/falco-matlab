@@ -44,7 +44,15 @@ function falco_plot_pairwise_probes(mp, ev, dDMVplus, ampSq2Dcube, iSubband)
         colorbar;
         colormap(gca,gray);
         title(sprintf('+ Probe Image'));
+        
+        try
+           axis(mp.Fend.dzAxisPix)
+        catch
+           axis xy equal tight; 
+        end
     end
+    
+    
     
     %--Plot the raw images for each - probe
     IcubeNonNeg = ev.imageArray(:, :, :, iSubband);
@@ -55,7 +63,15 @@ function falco_plot_pairwise_probes(mp, ev, dDMVplus, ampSq2Dcube, iSubband)
         colorbar;
         colormap(gca,gray);
         title(sprintf('- Probe Image'));
+        
+        try
+           axis(mp.Fend.dzAxisPix)
+        catch
+           axis xy equal tight; 
+        end
     end
+    
+    
     
     %--Plot the squared amplitude of the delta amplitude from each probe.
     for iProbe=1:Npairs
@@ -65,6 +81,13 @@ function falco_plot_pairwise_probes(mp, ev, dDMVplus, ampSq2Dcube, iSubband)
         colorbar;
         colormap(gca,gray);
         title('Probe Intensity, |dP|^2');
+        
+        try
+           axis(mp.Fend.dzAxisPix)
+        catch
+           axis xy equal tight; 
+        end       
+        
     end
     drawnow;
     hold off

@@ -9,7 +9,8 @@
 function handles = falco_plot_progress_omc(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf)
 
 if mp.flagSim
-    handles = falco_plot_progress_omc_model(handles, mp, Itr, InormHist_tb, Im_tb, DM1surf, DM2surf);
+    %handles = falco_plot_progress_omc_model(handles, mp, Itr, InormHist_tb, Im_tb, DM1surf, DM2surf);
+    handles = falco_plot_progress_omc_model(handles, mp, Itr, Inorm, Im_tb, DM1surf, DM2surf);
     return
 end
 
@@ -86,6 +87,13 @@ if(mp.flagPlot)
     catch % sometimes the Inorm total doesnt have a new value, like the last plot update
         title(['it = ',num2str(Itr-1),', Inorm = ',num2str(Inorm.total(Itr-1),2)]);
     end
+    
+    try
+        axis(mp.Fend.dzAxis)
+    catch
+        axis xy equal tight; 
+    end
+    
 
 	subplot(2,3,2); 
     imagesc(1e9*DM1surf);  axis xy equal tight; axis off;
@@ -189,6 +197,12 @@ if(mp.flagPlot)
         %     xlabel('\lambda_0/D'); 
         %     ylabel('\lambda_0/D');
     %         title(['Modulated (band ',num2str(si),')']);
+             try
+                 axis(mp.Fend.dzAxis)
+             catch
+                 axis xy equal tight; 
+             end
+    
 
             subplot(2,mp.Nsbp,si+mp.Nsbp); % Save the handle of the subplot
             imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
@@ -198,6 +212,11 @@ if(mp.flagPlot)
         %     xlabel('\lambda_0/D'); 
         %     ylabel('\lambda_0/D');
     %         title(['Phase (band ',num2str(si),')']);
+            try
+                 axis(mp.Fend.dzAxis)
+            catch
+                 axis xy equal tight; 
+            end
         end
         drawnow;
     end

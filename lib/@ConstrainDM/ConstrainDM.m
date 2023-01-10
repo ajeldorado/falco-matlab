@@ -94,9 +94,10 @@ methods (Static)
             error('tie must have values 0, -1, or consecutive integers 1 to N')
         end
         if ~ConstrainDM.checkflat(flatmap, vmin, vmax, tie)
-            error(['flatmap must be <= vmax, >= VMIN, have all tied ' 
-                    'actuators tied already, and have all dead ' 
-                     'actuators = 0V'])
+            %error(['flatmap must be <= vmax, >= VMIN, have all tied ' 
+            %        'actuators tied already, and have all dead ' 
+            %         'actuators = 0V'])
+            error(['flatmap must be <= vmax, >= VMIN, have all tied actuators tied already, and have all dead actuators = 0V']);
         end
 
         % Run initial smoothing
@@ -479,14 +480,14 @@ methods (Static)
             isCompliant = false;
         end
 
-        tienumset = sort(unique(tie(:).')); % set(tie.ravel())
-        tmp = tienumset(tienumset~=0 & tienumset~=-1); % Remove -1 and 0.
-        for t = tmp
-            if length(unique(flatmap(tie == t))) ~= 1
-                % non-identical values implies more than one element
-                isCompliant = false;
-            end
-        end        
+%         tienumset = sort(unique(tie(:).')); % set(tie.ravel())
+%         tmp = tienumset(tienumset~=0 & tienumset~=-1); % Remove -1 and 0.
+%         for t = tmp
+%             if length(unique(flatmap(tie == t))) ~= 1
+%                 % non-identical values implies more than one element
+%                 isCompliant = false;
+%             end
+%         end        
     end
 
     
