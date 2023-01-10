@@ -38,9 +38,15 @@
 
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
-mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
 Itr = ev.Itr;
 whichDM = mp.est.probe.whichDM;
+
+% Number of elements to correct depending of regular pixels or fibers
+if mp.flagFiber
+    Ncorr = mp.Fend.Nfiber;
+else
+    Ncorr = mp.Fend.corr.Npix;
+end
 
 %% Input checks
 if ~isa(mp.est.probe, 'Probe')
@@ -114,8 +120,12 @@ if any(mp.dm_ind == 2);  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.
 % Initialize output arrays
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1+2*Npairs, mp.Nsbp);
-ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
-ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+if mp.flagFiber
+    ev.Ifiber = zeros(mp.Fend.Nfiber, 1);
+end
+ev.Eest = zeros(Ncorr, mp.Nsbp*mp.compact.star.count);
+ev.IincoEst = zeros(Ncorr, mp.Nsbp*mp.compact.star.count);
+
 ev.IprobedMean = 0;
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, mp.Nsbp);  end
@@ -180,8 +190,13 @@ for iSubband = 1:mp.Nsbp
     if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom); end
     
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
+    
     Iplus  = zeros([mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities
     Iminus = zeros([mp.Fend.corr.Npix, Npairs]); % Pixels of minus probes' intensities
+    if mp.flagFiber
+        Ifiberplus  = zeros([mp.Fend.Nfiber, Npairs]); % Pixels of plus probes' intensities
+        Ifiberminus = zeros([mp.Fend.Nfiber, Npairs]); % Pixels of minus probes' intensities
+    end
     DM1Vplus  = zeros([Nact, Nact, Npairs]);
     DM1Vminus = zeros([Nact, Nact, Npairs]);
     DM2Vplus  = zeros([Nact, Nact, Npairs]);
@@ -191,13 +206,22 @@ for iSubband = 1:mp.Nsbp
 
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImage = 1;
-    mp.isProbing = false;
-    I0 = falco_get_sbp_image(mp, iSubband);
-    mp.isProbing = true;
+    mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
+    if ~mp.flagFiber
+        I0 = falco_get_sbp_image(mp, iSubband);
+        ev.score.Inorm = mean(I0(mp.Fend.score.maskBool));
+        ev.corr.Inorm  = mean(I0(mp.Fend.corr.maskBool));
+    else
+        [I0,I0fiber] = falco_get_sbp_image(mp, iSubband);
+        I0fibervec = I0fiber;
+        ev.score.Inorm = mean(I0fibervec);
+        ev.corr.Inorm  = mean(I0fibervec);
+    end
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     
     if iStar == 1 % Image already includes all stars, so don't sum over star loop
         ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
+        if mp.flagFiber; ev.Ifiber = ev.Ifiber + mp.sbp_weights(iSubband)*I0fiber;end % 
 
         %--Store values for first image and its DM commands
         ev.imageArray(:, :, whichImage, iSubband) = I0;
@@ -206,15 +230,13 @@ for iSubband = 1:mp.Nsbp
     end
     
     %--Compute the average Inorm in the scoring and correction regions
-    ev.score.Inorm = mean(I0(mp.Fend.score.maskBool));
-    ev.corr.Inorm  = mean(I0(mp.Fend.corr.maskBool));
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
     if isempty(mp.est.probeSchedule.InormProbeVec)
         ev.InormProbeMax = mp.est.InormProbeMax;
         if mp.flagFiber
-            InormProbe = min([sqrt(max(I0)*1e-8), ev.InormProbeMax]);
+            InormProbe = min([sqrt(max(I0fibervec)*1e-8), ev.InormProbeMax]);
         else
             InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
         end
@@ -225,6 +247,7 @@ for iSubband = 1:mp.Nsbp
     end
 
     %--Perform the probing
+    mp.isProbing = true; % tells the camera whether to use the exposure time for either probed or unprobed images.
     iOdd = 1; iEven = 1; % Initialize index counters
     for iProbe = 1:2*Npairs           
 
@@ -253,12 +276,13 @@ for iSubband = 1:mp.Nsbp
 
         %--Take probed image
         if mp.flagFiber
-            Im = falco_get_sbp_image_fiber(mp, iSubband);
+            [Im,Ifiber] = falco_get_sbp_image(mp, iSubband);
+            ev.IprobedMean = ev.IprobedMean + Ifiber/(2*Npairs); %--Inorm averaged over all the probed images
         else
             Im = falco_get_sbp_image(mp, iSubband);
+            ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
         end
         whichImage = 1+iProbe; %--Increment image counter
-        ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
 
         %--Store probed image and its DM settings
         ev.imageArray(:, :, whichImage, iSubband) = Im;
@@ -267,18 +291,29 @@ for iSubband = 1:mp.Nsbp
 
         %--Report results
         probeSign = ['-', '+'];
-        fprintf('Actual Probe %d%s Contrast is: %.2e \n', ceil(iProbe/2), probeSign(mod(iProbe, 2)+1), mean(Im(mp.Fend.corr.maskBool)));
-
+        if mp.flagFiber
+            fprintf('Actual Probe %d%s Contrast is: %.2e \n', ceil(iProbe/2), probeSign(mod(iProbe, 2)+1), mean(Ifiber));
+        else
+            fprintf('Actual Probe %d%s Contrast is: %.2e \n', ceil(iProbe/2), probeSign(mod(iProbe, 2)+1), mean(Im(mp.Fend.corr.maskBool)));
+        end
+        
         %--Assign image to positive or negative probe collection:
         if mod(iProbe, 2) == 1  % Odd; for plus probes
             if whichDM == 1;  DM1Vplus(:, :, iOdd) = dDM1Vprobe + DM1Vnom;  end
             if whichDM == 2;  DM2Vplus(:, :, iOdd) = dDM2Vprobe + DM2Vnom;  end
             Iplus(:, iOdd) = Im(mp.Fend.corr.maskBool);
+            if mp.flagFiber
+                Ifiberplus(:, iOdd) = Ifiber;
+            end
+
             iOdd = iOdd + 1;
         elseif mod(iProbe, 2) == 0  % Even; for minus probes
             if whichDM == 1;  DM1Vminus(:, :, iEven) = dDM1Vprobe + DM1Vnom;  end
             if whichDM == 2;  DM2Vminus(:, :, iEven) = dDM2Vprobe + DM2Vnom;  end 
             Iminus(:, iEven) = Im(mp.Fend.corr.maskBool);
+            if mp.flagFiber
+                Ifiberminus(:, iEven) = Ifiber;
+            end
             iEven = iEven + 1;
         end
     end
@@ -286,9 +321,17 @@ for iSubband = 1:mp.Nsbp
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
     ampSq = (Iplus+Iminus)/2 - repmat(I0vec, [1,Npairs]);  % square of probe E-field amplitudes
     ampSq(ampSq < 0) = 0;  % If probe amplitude is zero, amplitude is zero there.
-    amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
-    isnonzero = all(amp, 2);
-    zAll = ((Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
+    if ~mp.flagFiber
+        amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
+        isnonzero = all(amp, 2);
+        zAll = ((Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
+    else
+        ampSqFiber = (Ifiberplus+Ifiberminus)/2 - repmat(I0fibervec, [1,Npairs]);  % square of probe E-field amplitudes
+        ampSqFiber(ampSqFiber < 0) = 0;  % If probe amplitude is zero, amplitude is zero there.
+        amp = sqrt(ampSqFiber);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
+        isnonzero = all(amp, 2);
+        zAll = ((Ifiberplus-Ifiberminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
+    end
     ampSq2Dcube = zeros(mp.Fend.Neta, mp.Fend.Nxi, mp.est.probe.Npairs);
     for iProbe=1:Npairs % Display the actual probe intensity
         ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
@@ -328,14 +371,19 @@ for iSubband = 1:mp.Nsbp
 
         if mp.flagFiber
             [~, E0] = model_compact(mp, modvar);
+            E0vec = E0;
+            %--For probed fields based on model:
+            Eplus  = zeros(size(Ifiberplus ));
+            Eminus = zeros(size(Ifiberminus));
         else
             E0 = model_compact(mp, modvar);
-        end
-        E0vec = E0(mp.Fend.corr.maskBool);
+            E0vec = E0(mp.Fend.corr.maskBool);
+             %--For probed fields based on model:
+            Eplus  = zeros(size(Iplus ));
+            Eminus = zeros(size(Iminus));
+       end
+        
 
-        %--For probed fields based on model:
-        Eplus  = zeros(size(Iplus ));
-        Eminus = zeros(size(Iminus));
         for iProbe=1:Npairs
             % For plus probes:
             if whichDM == 1
@@ -345,10 +393,12 @@ for iSubband = 1:mp.Nsbp
             end
             if(mp.flagFiber)
                 [~, Etemp] = model_compact(mp, modvar);
+                Eplus(:, iProbe) = Etemp;
             else
                 Etemp = model_compact(mp, modvar);
+                Eplus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             end
-            Eplus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
+            
             % For minus probes:
             if whichDM == 1
                 mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vminus(:, :, iProbe));
@@ -357,16 +407,18 @@ for iSubband = 1:mp.Nsbp
             end
             if mp.flagFiber
                 [~, Etemp] = model_compact(mp, modvar);
+                Eminus(:, iProbe) = Etemp;
             else
                 Etemp = model_compact(mp, modvar);
+                Eminus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             end
-            Eminus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
+            
         end
 
         %%--Create delta E-fields for each probe image. Then create Npairs phase angles.
         dEplus  = Eplus  - repmat(E0vec, [1, Npairs]);
         dEminus = Eminus - repmat(E0vec, [1, Npairs]);
-        [dphdm, amp_model] = deal(zeros([mp.Fend.corr.Npix, Npairs])); %--phases and model amp of the probes
+        [dphdm, amp_model] = deal(zeros([Ncorr, Npairs])); %--phases and model amp of the probes
         for iProbe = 1:Npairs
             dphdm(:, iProbe) = atan2(imag(dEplus(:, iProbe))-imag(dEminus(:, iProbe)), real(dEplus(:, iProbe))-real(dEminus(:, iProbe)));
             % model predicted probe amplitude, only for diagnostics
@@ -380,35 +432,56 @@ for iSubband = 1:mp.Nsbp
 if strcmpi(mp.estimator, 'pwp-bp') || strcmpi(mp.estimator, 'pairwise-rect') || ...
         strcmpi(mp.estimator,'pwp-bp-square') || strcmpi(mp.estimator, 'pairwise') || strcmpi(mp.estimator, 'pairwise-square') ||...
         (strcmpi(mp.estimator, 'pwp-kf') && ev.Itr < mp.est.ItrStartKF)
-    Eest = zeros(mp.Fend.corr.Npix, 1);
+    
+    Eest = zeros(Ncorr, 1);
     zerosCounter = 0;
-    for ipix = 1:mp.Fend.corr.Npix
+    partialCounter = 0;
+    for ipix = 1:Ncorr
         if mp.est.flagUseJac 
             dE = dEplus(ipix, :).';
             H = [real(dE), imag(dE)];
+            Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
         else
             H = zeros(Npairs, 2); % Observation matrix
-            if isnonzero(ipix) == 1 % Leave Eest for a pixel as zero if any probe amplitude is zero there.
+            goodProbeInds = find(amp(ipix, :) > 0);
+            NpairsGood = length(goodProbeInds);
+            
+            % If <2 probe pairs had good measurements, can't do pinv. Leave Eest as zero.
+            if NpairsGood < 2
+                zerosCounter = zerosCounter + 1;
+            
+            % Otherwise, use the 2+ good probe pair measurements for that pixel:
+            else
                 for iProbe = 1:Npairs
                     H(iProbe, :) = amp(ipix, iProbe)*[cos(dphdm(ipix, iProbe)), sin(dphdm(ipix, iProbe)) ];
                 end
-            else
-                zerosCounter = zerosCounter+1;
+                % Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
+                Epix = pinv(H(goodProbeInds, :)) * zAll(goodProbeInds, ipix); %--Batch process estimation
+                
+                % Record how many pixels didn't use all the probe pairs
+                if NpairsGood < Npairs
+                    partialCounter = partialCounter + 1;
+                end
+                
             end
+
         end
-        Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
+        
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
 
-    Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS HARD-CODED VALUE!!!!!!!!!!!!!!!
-    fprintf('%d of %d pixels were given zero probe amplitude. \n', zerosCounter, mp.Fend.corr.Npix); 
+    Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS VALUE!!!!!!!!!!!!!!!
+    fprintf('%d of %d pixels were given zero probe amplitude. \n', zerosCounter, mp.Fend.corr.Npix);
+    if Npairs > 2 % Only possible for Npairs > 2
+        fprintf('%d of %d pixels threw out at least one probe pair. \n', partialCounter, mp.Fend.corr.Npix); 
+    end
 
     %--Initialize the state and state covariance estimates for Kalman
     %filter. The state is the real and imag parts of the E-field.
     if strcmpi(mp.estimator, 'pwp-kf')
         %--Re-organize the batch-processed E-field estimate into the first state estimate for the Kalman filter
-        xOld = zeros(2*mp.Fend.corr.Npix, 1);
-        for ii = 1:mp.Fend.corr.Npix
+        xOld = zeros(2*Ncorr, 1);
+        for ii = 1:Ncorr
             xOld(2*(ii-1)+1:2*(ii-1)+2) = [real(Eest(ii)); imag(Eest(ii))];
         end
         ev.xOld = xOld; %--Save out for returning later
@@ -538,9 +611,13 @@ end %End Kalman Filter Computation
 
 %% Save out the estimates
 ev.Eest(:, modeIndex) = Eest;
-ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
+if mp.flagFiber
+    ev.IincoEst(:, modeIndex) =  I0fibervec - abs(Eest).^2; % incoherent light
+else
+    ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
+end
 
-if mp.flagPlot
+if mp.flagPlot && ~mp.flagFiber
     Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
     Eest2D(mp.Fend.corr.maskBool) = Eest;
     %figure(701); imagesc(real(Eest2D)); title('real(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
@@ -559,7 +636,7 @@ ev.InormProbe = InormProbe;
 ev.maskBool = mp.Fend.corr.maskBool; %--for resizing Eest and IincoEst for plotting
 ev.amp_model = amp_model;
 
-mp.isProbing = false;
+mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
 
 fprintf(' done. Time: %.3f\n',toc);
 

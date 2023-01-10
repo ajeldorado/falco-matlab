@@ -33,12 +33,14 @@ duVec = -scaleFactor*((10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum
 %% Take images and compute average intensity in dark hole
 
 if mp.ctrl.flagUseModel %--Perform model-based grid search using compact model
-    if ~mp.flagFiber
+    if mp.flagFiber
+        error('Fiber option not implemented for mp.ctrl.flagUseModel==true.')
+    elseif strcmpi(mp.estimator, 'iefc')
+        error("Cannot use mp.ctrl.flagUseModel=true when 'iefc' is mp.estimator.")
+    else
         Itotal = falco_get_expected_summed_image(mp,cvar);
         InormMean = mean(Itotal(mp.Fend.corr.maskBool));
         dDM.Itotal = Itotal;
-    else
-        error('Fiber option not implemented for mp.ctrl.flagUseModel==true.')
     end
     
 else %--Perform an empirical grid search with actual images
@@ -47,12 +49,14 @@ else %--Perform an empirical grid search with actual images
         InormMean = mean(Itotal(mp.Fend.corr.maskBool));
         dDM.Itotal = Itotal;
     else
-        IfiberTotal = falco_get_summed_image_fiber(mp);
-        dDM.Itotal = IfiberTotal;
+%         IfiberTotal = falco_get_summed_image_fiber(mp);
+        [Itotal,IfiberTotal] = falco_get_summed_image(mp);
+        dDM.Itotal = Itotal;
+        dDM.IfiberTotal = IfiberTotal;
         if(mp.flagLenslet)
             InormMean = mean(max(max(IfiberTotal)));
         else
-            InormMean = mean(IfiberTotal(mp.Fend.corr.maskBool));
+            InormMean = mean(IfiberTotal);
         end
 
     end

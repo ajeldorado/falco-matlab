@@ -11,6 +11,10 @@
 
 function out = falco_store_intensities(mp, out, ev, Itr)
     
+    if strcmpi(mp.estimator, 'iefc')
+        ev.Eest = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+    end
+
     % Apply subband weights and then sum over subbands
     Iest = abs(ev.Eest).^2;
     Iinco = ev.IincoEst;
@@ -21,27 +25,32 @@ function out = falco_store_intensities(mp, out, ev, Itr)
     end
     IestAllBands = sum(Iest, 2);
     IincoAllBands = sum(Iinco, 2);
-    
-    
+
+
     % Put intensities back into 2-D arrays to use correct indexing of scoring region.
     % Modulated
-    Iest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    Iest2D(mp.Fend.corr.maskBool) = IestAllBands(:);
-    out.IestScoreHist(Itr) = mean(Iest2D(mp.Fend.score.maskBool));
-    out.IestCorrHist(Itr) = mean(Iest2D(mp.Fend.corr.maskBool));
-    % Unmodulated
-    Iinco2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    Iinco2D(mp.Fend.corr.maskBool) = IincoAllBands(:);
-    out.IincoScoreHist(Itr) = mean(Iinco2D(mp.Fend.score.maskBool));
-    out.IincoCorrHist(Itr) = mean(Iinco2D(mp.Fend.corr.maskBool));
+    if ~mp.flagFiber
+        Iest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        Iest2D(mp.Fend.corr.maskBool) = IestAllBands(:);
+        out.IestScoreHist(Itr) = mean(Iest2D(mp.Fend.score.maskBool));
+        out.IestCorrHist(Itr) = mean(Iest2D(mp.Fend.corr.maskBool));
+        % Unmodulated
+        Iinco2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        Iinco2D(mp.Fend.corr.maskBool) = IincoAllBands(:);
+        out.IincoScoreHist(Itr) = mean(Iinco2D(mp.Fend.score.maskBool));
+        out.IincoCorrHist(Itr) = mean(Iinco2D(mp.Fend.corr.maskBool));
+    end
 
     % Measured
     out.IrawScoreHist(Itr) = mean(ev.Im(mp.Fend.score.maskBool));
     out.IrawCorrHist(Itr) = mean(ev.Im(mp.Fend.corr.maskBool));
     out.InormHist(Itr) = out.IrawCorrHist(Itr); % InormHist is a vestigial variable
-    
+    if mp.flagFiber
+        out.InormFiberHist(Itr,:) = ev.Ifiber;
+    end
+
     %% Calculate the measured, coherent, and incoherent intensities by subband
-    
+
     % measured intensities
     for iSubband = 1:mp.Nsbp
         imageMeas = squeeze(ev.imageArray(:, :, 1, iSubband));
@@ -49,18 +58,26 @@ function out = falco_store_intensities(mp, out, ev, Itr)
         out.normIntMeasScore(Itr, iSubband) = mean(imageMeas(mp.Fend.score.maskBool));
         clear im        
     end
-    
+
     % estimated
     for iMode = 1:mp.jac.Nmode
-        
+
         imageModVec = abs(ev.Eest(:, iMode)).^2;
         imageUnmodVec = ev.IincoEst(:, iMode);
-        
+
         out.normIntModCorr(Itr, iMode) = mean(imageModVec);
-        out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
-        
+        if mp.flagFiber
+            out.normIntModScore(Itr, iMode) = mean(imageModVec);
+        else
+            out.normIntModScore(Itr, iMode) = mean(imageModVec(mp.Fend.scoreInCorr));
+        end
+
         out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
-        out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+        if mp.flagFiber
+            out.normIntModScore(Itr, iMode) = mean(imageUnmodVec);
+        else
+            out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
+        end
     end
     
 end

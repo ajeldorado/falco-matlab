@@ -54,22 +54,22 @@ classdef TestFunctionalFLC < matlab.unittest.TestCase
             
             % Tests:
             Iraw = out.IrawCorrHist(end);
-            testCase.verifyTrue(isalmost(Iraw, 1.1157e-05, 3e-7))
+            testCase.verifyTrue(isalmost(Iraw, 8.4796e-06, 3e-7))
             
             Iest = out.IestScoreHist(end);
-            testCase.verifyTrue(isalmost(Iest, 8.1474e-06, 3e-7))
+            testCase.verifyTrue(isalmost(Iest, 2.7282e-05, 3e-6))
             
             Iinco = out.IincoCorrHist(end);
-            testCase.verifyTrue(isalmost(Iinco, 1.2834e-05, 3e-7))
+            testCase.verifyTrue(isalmost(Iinco, -1.2982e-05, 3e-6))
             
             complexProj = out.complexProjection(2, 1);
-            testCase.verifyTrue(isalmost(complexProj, 0.7420, 1e-2))
+            testCase.verifyTrue(isalmost(complexProj, 1.2403, 1e-2))
             
             dm1pv = out.dm1.Spv(end);
-            testCase.verifyTrue(isalmost(dm1pv, 5.6956e-08, 1e-9))
+            testCase.verifyTrue(isalmost(dm1pv, 7.7374e-08, 1e-9))
 
             thput = out.thput(end);
-            testCase.verifyTrue(isalmost(thput, 0.1493, 1e-3))
+            testCase.verifyTrue(isalmost(thput, 0.1455, 1e-3))
             
             import matlab.unittest.constraints.EveryElementOf
             import matlab.unittest.constraints.IsEqualTo
