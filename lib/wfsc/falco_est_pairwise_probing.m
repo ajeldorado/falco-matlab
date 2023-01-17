@@ -448,7 +448,8 @@ if strcmpi(mp.estimator, 'pwp-bp') || strcmpi(mp.estimator, 'pairwise-rect') || 
             
             % If <2 probe pairs had good measurements, can't do pinv. Leave Eest as zero.
             if NpairsGood < 2
-                zerosCounter = zerosCounter + 1;
+                zerosCounter = zerosCounter + 1;              
+                Epix = [0 0]; % default to 0 in case we don't have 2 good probe pairs
             
             % Otherwise, use the 2+ good probe pair measurements for that pixel:
             else
