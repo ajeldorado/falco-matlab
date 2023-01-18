@@ -418,11 +418,12 @@ for iSubband = 1:mp.Nsbp
         %%--Create delta E-fields for each probe image. Then create Npairs phase angles.
         dEplus  = Eplus  - repmat(E0vec, [1, Npairs]);
         dEminus = Eminus - repmat(E0vec, [1, Npairs]);
+        dEprobe = (dEplus - dEminus)/2; % Take the average to mitigate nonlinearity
         [dphdm, amp_model] = deal(zeros([Ncorr, Npairs])); %--phases and model amp of the probes
         for iProbe = 1:Npairs
-            dphdm(:, iProbe) = atan2(imag(dEplus(:, iProbe))-imag(dEminus(:, iProbe)), real(dEplus(:, iProbe))-real(dEminus(:, iProbe)));
+            dphdm(:, iProbe) = atan2(imag(dEprobe(:, iProbe)), real(dEprobe(:, iProbe)));
             % model predicted probe amplitude, only for diagnostics
-            amp_model(:, iProbe) = 0.5*abs(dEplus(:, iProbe) - dEminus(:, iProbe));
+            amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
         end
         
     end 
@@ -449,6 +450,7 @@ if strcmpi(mp.estimator, 'pwp-bp') || strcmpi(mp.estimator, 'pairwise-rect') || 
             % If <2 probe pairs had good measurements, can't do pinv. Leave Eest as zero.
             if NpairsGood < 2
                 zerosCounter = zerosCounter + 1;
+                Epix = [0; 0];
             
             % Otherwise, use the 2+ good probe pair measurements for that pixel:
             else
