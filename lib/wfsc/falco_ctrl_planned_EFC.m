@@ -147,6 +147,7 @@ function [dDM, cvar] = falco_ctrl_planned_EFC(mp, cvar)
         
         [cvar.cMin,dDM] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
         cvar.Im = dDM.Itotal;
+        cvar.Ifiber = dDM.IfiberTotal;
         dDM = rmfield(dDM, 'Itotal'); % reduce amount of memory used since image moved to cvar structure
         if mp.ctrl.flagUseModel
             fprintf('Model says scheduled log10reg = %.1f\t gives %4.2e contrast.\n', log10regSchedOut, cvar.cMin)
