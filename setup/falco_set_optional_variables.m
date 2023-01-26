@@ -183,6 +183,13 @@ if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--
 if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Reduce estimated intensities to this value if they exceed this (probably due to a bad inversion)
 if(isfield(mp.scc,'modeCoef')==false); mp.scc.modeCoef = 1; end %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
 
+%--Kalman filtering
+if ~isfield(mp.est, 'kf');  mp.est.kf.dummy = 1;  end
+if ~isfield(mp.est.kf, 'ItrStart'); mp.est.kf.ItrStart = 2;  end  % WFSC iteration at which to start kalman filter
+if ~isfield(mp.est.kf, 'Rcoef'); mp.est.kf.Rcoef = 1;  end % Tuning coefficient for measurement noise covariance matrix at each iteration
+if ~isfield(mp.est.kf, 'Pcoef0'); mp.est.kf.Pcoef0 = 1;  end % Tuning coefficient for initial covariance matrix
+if ~isfield(mp.est.kf, 'Qcoef'); mp.est.kf.Qcoef = 1;  end % Tuning coefficient for model-error covariance matrix at each iteration
+
 %--IEFC
 if(isfield(mp.iefc,'modeCoef')==false); mp.iefc.modeCoef = 1e-3; end %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
 if(isfield(mp.iefc,'probeCoef')==false); mp.iefc.probeCoef = 1e-2; end %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.

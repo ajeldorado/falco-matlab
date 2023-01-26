@@ -46,7 +46,7 @@ function ev = falco_est(mp, ev, jacStruct)
                 end
             end
             
-        case{'borde-traub', 'bt', 'bt-rect'}
+        case{'borde-traub', 'bt', 'bt-kf', 'bt-rect', 'bt-rect-kf'}
             ev = falco_est_borde_traub_probing(mp, ev);
             
         case{'scc'}
