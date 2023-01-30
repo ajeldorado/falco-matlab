@@ -35,6 +35,12 @@ else
     Ncorr = mp.Fend.corr.Npix;
 end
 
+if strcmpi(mp.estimator, 'bt-kf') || strcmpi(mp.estimator, 'bt-rect-kf')
+    useKalmanFilter = true;
+else
+    useKalmanFilter = false;
+end
+
 %% Input checks
 if ~isa(mp.est.probe, 'Probe')
     error('mp.est.probe must be an instance of class Probe')
@@ -112,6 +118,7 @@ ev.Eest = zeros(Ncorr, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(Ncorr, mp.Nsbp*mp.compact.star.count);
 
 ev.IprobedMean = 0;
+ev.IprobedMeanSubband = zeros(mp.Nsbp, 1);
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, mp.Nsbp);  end
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, mp.Nsbp);  end
@@ -126,7 +133,7 @@ end
 probePhaseVec = probePhaseVec * pi / Npairs;
 
 switch mp.estimator
-    case{'borde-traub', 'bt'}
+    case{'borde-traub', 'bt', 'bt-kf'}
         
         switch lower(mp.est.probe.axis)
             case 'y'
@@ -240,9 +247,9 @@ for iSubband = 1:mp.Nsbp
 
         %--Generate the DM command map for the probe
         switch lower(mp.estimator)
-            case{'bt-rect'} 
+            case{'bt-rect', 'bt-rect-kf'} 
                 probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar, mp.est.probe.rotation);
-            case{'borde-traub', 'bt'}
+            case{'borde-traub', 'bt', 'bt-kf'}
                 probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe), mp.est.probe.rotation);
         end
         %--Select which DM to use for probing. Allocate probe to that DM
@@ -268,6 +275,7 @@ for iSubband = 1:mp.Nsbp
                 ev.IprobedMean = ev.IprobedMean + Ifiber/(2*Npairs); %--Inorm averaged over all the probed images
             else
                 Im = falco_get_sbp_image(mp, iSubband);
+                ev.IprobedMeanSubband = mean(Im(mp.Fend.corr.maskBool));
                 ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
             end
         else
@@ -395,37 +403,157 @@ for iSubband = 1:mp.Nsbp
 
     
     %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
-
-    % Old way from pairwise probing:
-    % zAll = ((Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
-
-    % New way with Borde-Traub probing:
-    zAll = (Iplus - I0vec - dIprobe).'/2; % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
     
+    % New measurement vector with Borde-Traub probing:
+    zAll = (Iplus - I0vec - dIprobe).'/2; % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
+
+    if useKalmanFilter
+        Hall = zeros(Npairs, 2, mp.Fend.corr.Npix);
+    end
     Eest = zeros(Ncorr, 1);
     for ipix = 1:Ncorr
         dE = dEprobe(ipix, :).';
         H = [real(dE), imag(dE)];
+        if useKalmanFilter
+            Hall(:, :, ipix) = H;
+        end
         Epix = pinv(H) * zAll(:, ipix); %--Batch process estimation
         Eest(ipix) = Epix(1) + 1i*Epix(2);
     end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%  Kalman Filter Update
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%      
+    if useKalmanFilter
 
-%% Save out the estimates
-ev.Eest(:, modeIndex) = Eest;
-if mp.flagFiber
-    ev.IincoEst(:, modeIndex) =  I0fibervec - abs(Eest).^2; % incoherent light
-else
-    ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
-end
+        if ev.Itr < mp.est.kf.ItrStart
 
-if mp.flagPlot && ~mp.flagFiber
-    Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-    Eest2D(mp.Fend.corr.maskBool) = Eest;
-    %figure(701); imagesc(real(Eest2D)); title('real(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
-    %figure(702); imagesc(imag(Eest2D)); title('imag(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
-    %figure(703); imagesc(log10(abs(Eest2D).^2)); title('abs(Eest)^2', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
-    %drawnow;
-end
+            % Re-organize the batch-processed E-field estimate into the first state estimate for the Kalman filter
+            xOld = zeros(2*Ncorr, 1);
+            for ii = 1:Ncorr
+                xOld(2*(ii-1)+1:2*(ii-1)+2) = [real(Eest(ii)); imag(Eest(ii))];
+            end
+            ev.xOld = xOld;
+
+            %--Initialize the state covariance matrix (2x2 for each dark hole pixel)
+            ev.Pold_KF_array = repmat(mp.est.kf.Pcoef0*eye(2), [mp.Fend.corr.Npix, 1, mp.Nsbp]);
+
+        else
+
+            xOld = ev.xOld;
+            Pold = ev.Pold_KF_array(:, :, modeIndex);
+
+            %--Compute the change in E-field since last correction iteration
+            if mp.est.flagUseJac %--Use Jacobian to compute delta E-field from previous correction step to now.
+                if whichDM == 1
+                    dE = squeeze(jacStruct.G1(:, :, modeIndex)) * mp.dm1.dV(mp.dm1.act_ele);
+                elseif whichDM == 2
+                    dE = squeeze(jacStruct.G2(:, :, modeIndex)) * mp.dm2.dV(mp.dm2.act_ele);
+                end
+            else
+                % For Xminus, use nonlinear dynamics instead of Gamma. This means
+                % difference the output of model_compact rather than using the
+                % Jacobian.
+                %--Previous unprobed field based on model:
+                if whichDM == 1;  mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom - mp.dm1.dV); end
+                if whichDM == 2;  mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom - mp.dm2.dV); end
+                if mp.flagFiber
+                    [~, Eprev] = model_compact(mp, modvar);
+                else
+                    Eprev = model_compact(mp, modvar);
+                end
+                EprevVec = Eprev(mp.Fend.corr.maskBool);
+                dE = E0vec - EprevVec; % Change in unprobed E-field between correction iterations
+            end
+
+            %--Construct dX, the change in state, from dE
+            dX = zeros(size(xOld));
+            for ii = 1:mp.Fend.corr.Npix
+               dX(2*(ii-1)+1:2*(ii-1)+2) = [real(dE(ii)); imag(dE(ii))];
+            end
+
+            %--Compute Sensor Noise, R. You can calculate this from the properties
+            % of your optical system.
+            % ncounts_readout = mp.readNoiseStd;  % Read noise in counts (ADU). Might need to be in photo-electrons
+            % ncounts_shot = sqrt(ev.IprobedMean*mp.peakCountsPerPixPerSec);
+            % Dark current not included here (yet).
+            ncounts_peak = mp.detector.peakFluxVec(iSubband) * mp.detector.tExpProbedVec(iSubband); % Using exposure time for probes
+            ncounts_std = sqrt( (sqrt(2)*ev.IprobedMeanSubband(iSubband)*ncounts_peak + mp.detector.readNoiseStd^2)/mp.detector.Nexp);
+            Rvar = (ncounts_std/ncounts_peak)^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
+            Rmat = mp.est.kf.Rcoef*Rvar*eye(Npairs);
+            fprintf('Sensor noise coefficient: %.3e\n', Rmat(1, 1));
+
+            %--Compute Process Noise, Q. This you just have to tune (via the scalar mp.est.kf.Qcoef).
+            Q00 = ev.corr.Inorm; %--Set coefficient to the current measured contrast. Can change to the last estimated contrast.
+            Q = Q00*mp.est.kf.Qcoef*repmat( eye(2), [mp.Fend.corr.Npix, 1]);
+            dP = Q;
+            fprintf('Process noise coefficient: %.3e\n', Q(1, 1));
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Compute Kalman Filter Equations
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            xNew = zeros(2*mp.Fend.corr.Npix, 1);
+            Pnew = zeros(2*mp.Fend.corr.Npix, 2);
+            Kall = zeros(2, Npairs, mp.Fend.corr.Npix); %--Store the Kalman gain matrices. For diagnostics only
+
+            xMinusAll = xOld + dX; %State Estimate Extrapolation (Recall Phi = Identity)
+            PminusAll = Pold + dP; %Covariance Estimate Extrapolation (Recall Phi = Identity)
+            for ii=1:mp.Fend.corr.Npix
+                %--Format several matrices
+                z = zAll(:, ii); % z has dimensions [Npairs x Npix]
+                H = Hall(:, :, ii); % H has dimensions [Npairs x 2]
+                xMinus = xMinusAll(2*(ii-1)+1:2*(ii-1)+2); % x has dimensions [2 x 1]
+                Pminus = PminusAll(2*(ii-1)+1:2*(ii-1)+2, 1:2); % P has dimensions [2 x 2]
+
+                %--Compute the Kalman gain matrix.
+                K = Pminus*H.'/(H*Pminus*H.' + Rmat); % dimensions [2 x Npairs]
+                Kall(:, :, ii) = K; % Store Kalman gains for diagnostics only
+
+                %--State Estimate Update
+                xNew(2*(ii-1)+1:2*(ii-1)+2) = xMinus + K*(z-H*xMinus);
+                Pnew(2*(ii-1)+1:2*(ii-1)+2, 1:2) = (eye(2)-K*H)*Pminus;
+            end
+
+            %--For diagnostics only. Print the mean state covariance matrix to the command line
+            P11 = mean(Pnew(1:2:end, 1));
+            P22 = mean(Pnew(2:2:end, 2));
+            P12 = mean(Pnew(1:2:end, 2));
+            P21 = mean(Pnew(2:2:end, 1));
+            fprintf('P11,P22,P12,P21: \t%.2e \t%.2e \t%.2e \t%.2e \n', P11, P22, P12, P21);
+
+            % Re-order Xnew into Eest
+            EestKF = zeros(mp.Fend.corr.Npix, 1); %for re-ordering state for control
+            for jj=1:mp.Fend.corr.Npix
+                EestKF(jj) = xNew(2*(jj-1)+1) + 1i*xNew(2*(jj-1)+2);
+            end
+            Eest = EestKF;
+
+            %--Save out new state covariance P as the old for the next correction iteration.
+            ev.Pold_KF_array(:, :, modeIndex) = Pnew;
+
+            fprintf(['mean(abs(K)) = ' num2str(mean(mean(mean(abs(Kall))))) '.\n']);
+        end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    end %End Kalman Filter Computation
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+    
+
+    %% Save out the estimates
+    ev.Eest(:, modeIndex) = Eest;
+    if mp.flagFiber
+        ev.IincoEst(:, modeIndex) =  I0fibervec - abs(Eest).^2; % incoherent light
+    else
+        ev.IincoEst(:, modeIndex) =  I0vec - abs(Eest).^2; % incoherent light
+    end
+
+    if mp.flagPlot && ~mp.flagFiber
+        Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        Eest2D(mp.Fend.corr.maskBool) = Eest;
+        %figure(701); imagesc(real(Eest2D)); title('real(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
+        %figure(702); imagesc(imag(Eest2D)); title('imag(Eest)', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
+        %figure(703); imagesc(log10(abs(Eest2D).^2)); title('abs(Eest)^2', 'Fontsize', 18); set(gca, 'Fontsize', 18); axis xy equal tight; colorbar;
+        %drawnow;
+    end
 
 end %--End of loop over the wavelengths
 end %--End of loop over stars
