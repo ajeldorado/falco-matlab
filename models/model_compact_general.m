@@ -34,7 +34,7 @@
 
 function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
 
-if nargout >= 3,
+if nargout >= 3
     debug = true;
 else
     debug = false;

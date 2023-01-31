@@ -93,52 +93,14 @@ title("FFT of Sinusoid")
 
 %cos
 
-charge0 = 2;
+charge0 = 6;
 type0 = "Cos";
 z_m = besselzero(0,1);
 z_m = z_m(end);
 phase0 = z_m*cos(charge0*THETA);
 
-figure(1);
-plot(THETA,phase0,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
-ax = gca;
-ax.FontSize = 20;
-ax.LineWidth = 3;
-xlim([-pi pi]);
-axis on
-ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
-ax.YAxis.TickValues = [-8*pi -6*pi -4*pi -2*pi 0 2*pi 4*pi 6*pi 8*pi];
-xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
-yticklabels({'-8\pi','-6\pi','-4\pi','-2\pi','0','2\pi','4\pi','6\pi','8\pi'})
-xlabel('Theta'); 
-ylabel('Phase');
-% title("Charge "+charge0+" "+type0 +" Phase Profile")
-title(type0 +" Phase Profile")
-
-t0 = exp(1j/lambda*phase0);
-
-%%Fourier Transform:
-myfftcos = abs(fftshift(fft(t0)))/N;
-
-% Plot the spectrum:
-figure (310)
-plot(f,myfftcos);
-ylabel('|C_m|^2'); 
-xlabel('Mode');
-title("Modal Decomposition for Cos SVC")
-set(gca, 'YScale', 'log')
-
-
-% vortex
-charge1 = 2;
-phase1 = charge1*THETA;
-type1 = "Classic Vortex";
-
-
-% figure(N)
-% subplot(2,2,2)
 % figure(1);
-% plot(THETA,phase1,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
+% plot(THETA,phase0,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
 % ax = gca;
 % ax.FontSize = 20;
 % ax.LineWidth = 3;
@@ -150,7 +112,50 @@ type1 = "Classic Vortex";
 % yticklabels({'-8\pi','-6\pi','-4\pi','-2\pi','0','2\pi','4\pi','6\pi','8\pi'})
 % xlabel('Theta'); 
 % ylabel('Phase');
-% % title("Charge "+charge1+" "+type1 +" Phase Profile")
+% % title("Charge "+charge0+" "+type0 +" Phase Profile")
+% title(type0 +" Phase Profile")
+
+t0 = exp(1j/lambda*phase0);
+
+%%Fourier Transform:
+myfftcos = abs(fftshift(fft(t0)))/N;
+
+% Plot the spectrum:
+% figure (310)
+% plot(f,myfftcos);
+% ylabel('|C_m|^2'); 
+% xlabel('Mode');
+% title("Modal Decomposition for Cos SVC")
+% set(gca, 'YScale', 'log')
+
+
+% vortex
+charge1 = 6;
+phase1 = charge1*THETA;
+type1 = "Classic Vortex";
+
+
+% figure(N)
+% % subplot(2,2,2)
+% figure(1);
+% plot(THETA,phase1,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
+% ax = gca;
+% set(groot,'defaulttextinterpreter','latex');
+% set(groot,'defaultLegendInterpreter','latex');
+% set(groot,'defaultAxesTickLabelInterpreter','latex');  
+% ax.FontSize = 28;
+% ax.LineWidth = 1;
+% xlim([-pi pi]);
+% axis on
+% set(gca,'TickDir','out');
+% set(gcf,'color','w');
+% ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+% ax.YAxis.TickValues = [-8*pi -6*pi -4*pi -2*pi 0 2*pi 4*pi 6*pi 8*pi];
+% xticklabels({'$-\pi$','$-\frac{\pi}{2}$','$0$','$\frac{\pi}{2}$','$\pi$'})
+% yticklabels({'$-8\pi$','$-6\pi$','$-4\pi$','$-2\pi$','$0$','$2\pi$','$4\pi$','$6\pi$','$8\pi$'})
+% xlabel('$\Theta$ (azimuthal angle)'); 
+% ylabel('$\phi$ (phase)');
+% title("Charge "+charge1+" "+type1 +" Phase Profile")
 % title(type1 +" Phase Profile")
 
 t1 = exp(1j/lambda*phase1);
@@ -169,7 +174,7 @@ myfftvortex = abs(fftshift(fft(t1)))/N;
 
 % sawtooth
 
-charge2 = 2;
+charge2 = 6;
 domain = (THETA >= 0) & (THETA <= pi);
 phase2(domain) = charge2*rem(THETA(domain),2*pi./charge2);
 domain = (THETA >= -pi) & (THETA < 0);
@@ -184,17 +189,22 @@ type2 = "Sawtooth Vortex";
 % figure(2);
 % plot(THETA,phase2,'Color',[0.5 0 0.8],'LineWidth',2)
 % ax = gca;
-% ax.FontSize = 20;
-% ax.LineWidth = 3;
+% set(groot,'defaulttextinterpreter','latex');
+% set(groot,'defaultLegendInterpreter','latex');
+% set(groot,'defaultAxesTickLabelInterpreter','latex');  
+% ax.FontSize = 28;
+% ax.LineWidth = 1;
 % xlim([-pi pi]);
 % axis on
+% set(gca,'TickDir','out');
+% set(gcf,'color','w');
 % ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
-% ax.YAxis.TickValues = [-2*pi 0 2*pi ];
-% xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
-% yticklabels({'-2\pi','0','2\pi'})
-% xlabel('Theta'); 
-% ylabel('Phase');
-% % title("Charge "+charge2+" "+type2 +" Phase Profile")
+% ax.YAxis.TickValues = [0 pi 2*pi ];
+% xticklabels({'$-\pi$','$-\frac{\pi}{2}$','$0$','$\frac{\pi}{2}$','$\pi$'})
+% yticklabels({'$0$','$\pi$','$2\pi$'})
+% xlabel('$\Theta$ (azimuthal angle)'); 
+% ylabel('$\phi$ (phase)');
+% title("Charge "+charge2+" "+type2 +" Phase Profile")
 % title(type2 +" Phase Profile")
 
 
@@ -312,8 +322,8 @@ myfftmcmc = abs(fftshift(fft(t4)))/N;
 
 
 % staircase
-Nsteps = 2;
-charge5 = 2;
+Nsteps = 6;
+charge5 = 6;
 phase5 = floor(mod((THETA+pi)/(2*pi)*charge5, 1)*Nsteps)/Nsteps*2*pi;
 
 
@@ -322,18 +332,23 @@ type5 = "Staircase Vortex";
 % figure(5);
 % plot(THETA,phase5,'Color',[0 0.5 0.8],'LineWidth',2)
 % ax = gca;
-% ax.FontSize = 20;
-% ax.LineWidth = 3;
+% set(groot,'defaulttextinterpreter','latex');
+% set(groot,'defaultLegendInterpreter','latex');
+% set(groot,'defaultAxesTickLabelInterpreter','latex');  
+% ax.FontSize = 28;
+% ax.LineWidth = 1;
 % xlim([-pi pi]);
 % ylim([0 2*pi*1.03]);
 % axis on
+% set(gca,'TickDir','out');
+% set(gcf,'color','w');
 % ax.XAxis.TickValues = linspace(-pi,pi,7);
-% ax.YAxis.TickValues = [-2*pi 0 2*pi ];
-% xticklabels({'-\pi','-2\pi/3','-\pi/3','0','\pi/3','2\pi/3','\pi'})
-% yticklabels({'-2\pi','0','2\pi'})
-% xlabel('Theta'); 
-% ylabel('Phase');
-% % title("Charge 6 "+type5 +" Phase Profile")
+% ax.YAxis.TickValues = [0 pi 2*pi ];
+% xticklabels({'$-\pi$','$-\frac{2\pi}{3}$','$-\frac{\pi}{3}$','$0$','$\frac{\pi}{3}$','$\frac{2\pi}{3}$','$\pi$'})
+% yticklabels({'$0$','$\pi$','$2\pi$'})
+% xlabel('$\Theta$ (azimuthal angle)'); 
+% ylabel('$\phi$ (phase)');
+% title("Charge 6 "+type5 +" Phase Profile")
 % title(type5 +" Phase Profile")
  
 
@@ -353,7 +368,8 @@ myfftstaircase = abs(fftshift(fft(t5)))/N;
 %% Plot with stem markers 
 % close all
 
-figure(6)
+figure(673)
+epsilon = 0.05;
 hold on
 xdata = (0:1:N-1);
 ax = gca;
@@ -361,24 +377,25 @@ set(gcf,'color','w')
 set(gca,'YScale', 'log');
 ax.FontSize = 20;
 ax.LineWidth = 2;
-stem(f,myfftvortex,'d','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.9290, 0.6940, 0.1250]);
-stem(f,myfftsawtooth,'s','MarkerSize',20,'LineStyle','-','LineWidth',2,'Color',[0.5 0 0.8]);
+stem(f,myfftvortex,'d','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.9290, 0.6940, 0.1250],'MarkerFaceColor',[0.9290, 0.6940, 0.1250]);
+stem(f+epsilon,myfftsawtooth,'s','MarkerSize',20,'LineStyle','--','LineWidth',2,'Color',[0.5 0 0.8]);
 % stem(f,myfftfrench,'MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
 % stem(f,myfftmcmc,'MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
-stem(f,myfftstaircase,'*','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0 0.5 0.8]);
-stem(f,myfftcos,'.','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
+stem(f-epsilon,myfftstaircase,'*','MarkerSize',15,'LineStyle','-.','LineWidth',2,'Color',[0 0.5 0.8]);
+% stem(f,myfftcos,'.','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
 if lambda == 1
-    stem(f,myfftvortex,'.','LineStyle',linVec{i},'LineWidth',2,'Color','k');
+%     stem(f,myfftvortex,'.','LineStyle',linVec{i},'LineWidth',2,'Color','k');
 end
 
-xlim([-2 13]);
-ylim([1E-3 10])
-xticks([0:2:10])
+% xlim([-10 23]);
+xlim([-1.2 13])
+ylim([5E-3 10])
+xticks([0:2:12])
 
 %type1-vortex,type2-sawtooth,type3-frenchwrapped,type4-mcmc,type5-staircase,
 %type0-cos
-legend(type1,type2,type5,type0)
-legend('Location','northeast')
+legend(type1,type2,type5)
+legend('Location','northwest')
 
 
 % line_type = ['-',"--", ":"];
@@ -391,6 +408,7 @@ legend('Location','northeast')
 % end
 
 hold off 
-ylabel('|C_m|^2'); 
+% ylabel('|C_m|^2'); 
+ylabel('Power');
 xlabel('Mode');
-title("Modal Decomposition for Charge 2 SVCs")
+% title("Modal Decomposition for Charge 2 SVCs")

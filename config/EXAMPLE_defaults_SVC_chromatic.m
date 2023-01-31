@@ -15,7 +15,7 @@ mp.TrialNum = 5309;
 %--Special Computational Settings
 mp.flagParfor = false;
 mp.useGPU = false;
-mp.flagPlot = false;
+mp.flagPlot = true;
 mp.flagJitter = false;
 
 %--General
@@ -158,7 +158,7 @@ mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'vortex';
 
 %--Final Focal Plane Properties
-mp.Fend.res = 2.5;%3; %--Sampling [ pixels per lambda0/D]
+% mp.Fend.res = 2.5; %3; %--Sampling [ pixels per lambda0/D]
 mp.Fend.FOV = 11;%15; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
@@ -170,7 +170,7 @@ mp.Fend.score.Rin = 3.0;%2.0;  % inner radius of dark hole scoring region [lambd
 mp.Fend.score.Rout = 10;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'right'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
@@ -184,7 +184,7 @@ mp.P3.D = 0.4*32e-3;%mp.P2.D;
 mp.P4.D = 0.4*32e-3;%mp.P2.D;
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 600; % INCREASE SAMPLING RES HERE
+% mp.P1.compact.Nbeam = 600; % INCREASE SAMPLING RES HERE
 mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -206,7 +206,7 @@ mp.NrelayFend = 0; %--How many times to rotate the final image by 180 degrees
 % mp.fl = 1; 
 
 %--Pupil Plane Resolutions
-mp.P1.full.Nbeam = 600; %INCREASE SAMPLING RES HERE
+% mp.P1.full.Nbeam = 600; %INCREASE SAMPLING RES HERE
 mp.P2.full.Nbeam = mp.P1.full.Nbeam;
 mp.P3.full.Nbeam = mp.P1.full.Nbeam;
 mp.P4.full.Nbeam = mp.P1.full.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -326,7 +326,7 @@ if(chromatic)
     end
 
 
-    mp.F3.phaseScaleFacLambdas = mp.sbp_centers
+    mp.F3.phaseScaleFacLambdas = mp.sbp_centers;
 
-    mp.F3.phaseScaleFac = mp.lambda0./ mp.F3.phaseScaleFacLambdas
+    mp.F3.phaseScaleFac = mp.lambda0 ./ mp.F3.phaseScaleFacLambdas; %FLIP THIS
 end

@@ -11,7 +11,12 @@
 
 % REVISION HISTORY:
 % --------------
-% Modified on 2022-04-06 by Niyati Desai.
+% Created on 2022-04-06 by Niyati Desai.
+% for Zernike plotting.
+% Added contrast curve plotting 2022-06-24
+% Added dimple contrast plotting 2022-10-16
+
+%Data saved in niyatid/falco-matlab/2022SimulationData
 
 % load vortex8zernikes.mat %zernikes across varying bandwidths
 
@@ -77,6 +82,19 @@ xlabel('Bandwidth');
 ylabel('Raw Contrast');
 title('Raw Contrasts for Charge 6 Vortex SVC')
 set(gca, 'YScale', 'log')
+%%
+figure
+load sawtoothdualzonecontrasts.mat
+dualzonevals = vals;
+bws(1) = 0;
+xaxis = bws;
+
+semilogy(xaxis,vals,'Color',[0 0.5 0.8],'LineWidth',2)
+set(gca, 'YScale', 'log')
+xlabel('Bandwidth');
+ylabel('Raw Contrast');
+title('Raw Contrasts for Charge 6 Sawtooth Dualzone SVC')
+
 
 %% Load Charge 8 Contrast Data
 
@@ -124,26 +142,33 @@ figure
 hold on
 xaxis = bws;
 ax = gca;
-ax.FontSize = 20;
-ax.LineWidth = 2;
+set(gcf,'color','w');
+ax.FontSize = 15;
+ax.LineWidth = 1;
 ylim([5e-13 5e-6]);
+grid on;
+box on;
 % hold on
-plot(xaxis,frenchvals,'LineWidth',3,'Color',[0.4660, 0.6740, 0.1880])
-% plot(bws,mcmcvals,'LineWidth',3,'Color',[0.4660, 0.6740, 0.1880])
+% plot(xaxis,frenchvals,'LineWidth',2,'Color',[0.4660, 0.6740, 0.1880])
+% plot(bws,mcmcvals,'LineWidth',2,'Color',[0.4660, 0.6740, 0.1880])
 hold on
-plot(xaxis,classic8vals,'LineWidth',3,'Color',[0.5 0 0.8])
+plot(xaxis,classicvals,'LineWidth',2,'Color',[0.5 0 0.8])
 hold on
-plot(xaxis(2:end),stair8vals(2:end),'LineWidth',3,'Color',[0 0.5 0.8])
+plot(xaxis(2:end),stairvals(2:end),'LineWidth',2,'LineStyle',':','Color',[0 0.5 0.8])
 hold on
-plot(xaxis,vortex8vals,'LineWidth',3,'Color',[0.9290, 0.6940, 0.1250])
+plot(xaxis,vortexvals,'LineWidth',2,'LineStyle','--','Color',[0.9290, 0.6940, 0.1250])
+hold on
+plot(xaxis,dualzonevals,'LineWidth',2,'LineStyle','--','Color',[0.6940, 0.1250, 0.9290])
 ax.XAxis.TickValues = [0 0.05 0.1 0.15 0.2];
 xticklabels({'0','5%','10%','15%','20%'})
 
 % legend('Wrapped','Sawtooth','Staircase','Classic Vortex');
-legend('Galicher','Sawtooth','Staircase','Classic Vortex');
+% legend('Galicher','Sawtooth','Staircase','Classic Vortex');
+legend('Sawtooth','Staircase','Classic Vortex','Dual Zone');
+legend('Location','southeast')
 xlabel('Bandwidth');
 ylabel('Raw Contrast');
-title('Contrasts for Charge 8 SVCs')
+title('Contrasts for Charge 6 SVCs')
 set(gca, 'YScale', 'log')
 
 % figure
@@ -166,7 +191,6 @@ set(gca, 'YScale', 'log')
 % ylabel('Computation Time (minutes)');
 % title('Computing Time no WFSC')
 % % set(gca, 'YScale', 'log')
-
 
 
 

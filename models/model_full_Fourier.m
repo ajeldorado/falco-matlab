@@ -140,8 +140,6 @@ switch upper(mp.coro)
         
         inVal = mp.F3.inVal;
         outVal = mp.F3.outVal;
-        spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
-        spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
         pixPerLamD = mp.F3.full.res;
         
         inputs.type = mp.F3.phaseMaskType;
@@ -152,9 +150,32 @@ switch upper(mp.coro)
         inputs.Nsteps = mp.F3.NstepStaircase;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
-%         figure(222);imagesc(angle(fpm));colorbar; colormap(gray);caxis([-pi pi]);set(gca,'ydir','normal')
- 
-        EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
+        %Plot vortex phase
+%         figure(221);imagesc(angle(fpm));colorbar; colormap(gray);caxis([-pi pi]);set(gca,'ydir','normal')
+        if mp.F3.dimpleFlag
+            inVal = mp.F3.inVal;
+            outVal = mp.F3.outVal;
+            pixPerLamD = mp.F3.full.res;
+
+            inputs.type = mp.F3.phaseMaskType;
+            inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
+            inputs.charge = mp.F3.VortexCharge;
+            inputs.phaseScaleFac = phaseScaleFac;
+            inputs.clocking = mp.F3.clocking;
+            inputs.Nsteps = mp.F3.NstepStaircase;
+            inputs.roddierradius = mp.F3.roddierradius;
+            
+            inputs.res = mp.F3.full.res;
+            FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);
+            
+            inputs.res = floor(pixPerLamD*mp.P1.full.Nbeam/(2*mp.F3.outVal));
+            FPMfine = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+            
+%             EP4 = propcustom_mft_PtoFtoP_multispot(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU,'spotDiamVec',mp.F3.VortexSpotDiamVec * (phaseScaleFac),'spotAmpVec',mp.F3.VortexSpotAmpVec,'spotPhaseVec',mp.F3.VortexSpotPhaseVec/phaseScaleFac);
+            EP4 = propcustom_mft_PtoFtoP_multispot(EP3, FPMcoarse, FPMfine, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU);
+        else
+            EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU);
+        end
         
         % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
         if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
