@@ -160,7 +160,15 @@ Edm1 = Edm1WFE .* DM1stop .* exp(surfIntoPhase*2*pi*1j*DM1surf/lambda) .* Edm1;
 
 %--DM1---------------------------------------------------------
 if whichDM == 1 
-    Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele);
+    if mp.flagFiber
+        if mp.flagLenslet
+            Gmode = zeros(mp.Fend.Nlens, mp.dm1.Nele);
+        else
+            Gmode = zeros(mp.Fend.Nfiber, mp.dm1.Nele);
+        end
+    else
+        Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele); %--Initialize the Jacobian
+    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS;
@@ -248,11 +256,36 @@ if whichDM == 1
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering);
-            EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, ...
-                mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
-            if(mp.useGPU); EFend = gather(EFend); end
+
+            if mp.flagFiber
+                if mp.flagLenslet
+                    for nlens = 1:mp.Fend.Nlens
+                        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta,...
+                            mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        Elenslet = EFend.*mp.Fend.lenslet.mask;
+                        EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                        Gmode(nlens, Gindex) = max(max(mp.F5.fiberMode(:, :, modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:, :, modvar.sbpIndex).*EF5));
+                    end
+                else
+                    EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+
+                    Gmodetemp = zeros(mp.Fend.Nfiber, 1);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
+%                         Gmodetemp = Gmodetemp + Eonefiber;
+                        Gmodetemp(i,1) = Eonefiber;
+                    end
+                    Gmode(:, Gindex) = Gmodetemp;
+                end
+            else    
+                EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+
+                if mp.useGPU
+                    EFend = gather(EFend);
+                end
             
-            Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            end
         end
         
         Gindex = Gindex + 1;
@@ -268,7 +301,15 @@ end
 
 %--DM2---------------------------------------------------------
 if whichDM == 2
-    Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele);
+    if mp.flagFiber
+        if mp.flagLenslet
+            Gmode = zeros(mp.Fend.Nlens, mp.dm2.Nele);
+        else
+            Gmode = zeros(mp.Fend.Nfiber, mp.dm2.Nele);
+        end
+    else
+        Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele); %--Initialize the Jacobian
+    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS; 
@@ -345,10 +386,32 @@ if whichDM == 2
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering);
-            EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
-            if mp.useGPU; EFend = gather(EFend); end
+            if mp.flagFiber
+                if mp.flagLenslet
+                    for nlens = 1:mp.Fend.Nlens
+                        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        Elenslet = EFend.*mp.Fend.lenslet.mask;
+                        EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                        Gmode(nlens, Gindex) = max(max(mp.F5.fiberMode(:, :, modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:, :, modvar.sbpIndex).*EF5));
+                    end
+                else
+                    EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+                    Gmodetemp = zeros(mp.Fend.Nfiber, 1);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
+                        Gmodetemp(i,1) = Eonefiber;
+                    end
+                    Gmode(:, Gindex) = Gmodetemp;
+                end
+            else    
+                EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
-            Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                if(mp.useGPU)
+                    EFend = gather(EFend);
+                end
+            
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            end
         end
         Gindex = Gindex + 1;
     end

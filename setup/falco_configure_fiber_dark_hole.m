@@ -15,12 +15,12 @@ function mp = falco_configure_fiber_dark_hole(mp)
     maskFiberCore.rhoInner = 0;
     maskFiberCore.rhoOuter = mp.fiber.a;
     maskFiberCore.angDeg = 180;
-    maskFiberCore.whichSide = mp.Fend.sides;
+    maskFiberCore.whichSide = 'both';
     
     maskFiberCladding.rhoInner = mp.fiber.a;
     maskFiberCladding.rhoOuter = 20;
     maskFiberCladding.angDeg = 180;
-    maskFiberCladding.whichSide = mp.Fend.sides;
+    maskFiberCladding.whichSide = 'both';
     
     if(mp.flagLenslet)
         %--Mask defining the area covered by the lenslet.  Only the immediate area
