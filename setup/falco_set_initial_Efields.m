@@ -25,7 +25,7 @@ function [mp] = falco_set_initial_Efields(mp)
             mp.P1.full.E  = ones(mp.P1.full.Narr ,mp.P1.full.Narr, mp.Nwpsbp, mp.Nsbp);
             for si = 1:mp.Nsbp
                 for wi = 1:mp.Nwpsbp
-                    mp.P1.full.E(:, :, wi, si) = pad_crop(EarrayTemp(:, :, wi, si), mp.P1.full.Narr);
+                    mp.P1.full.E(:, :, wi, si) = pad_crop(EarrayTemp, mp.P1.full.Narr);
                 end
             end
             clear EarrayTemp
@@ -39,7 +39,7 @@ function [mp] = falco_set_initial_Efields(mp)
             EcubeTemp = mp.P1.compact.E;
             mp.P1.compact.E = ones(mp.P1.compact.Narr,mp.P1.compact.Narr,mp.Nsbp);
             for si = 1:mp.Nsbp
-                mp.P1.compact.E(:, :, si) = pad_crop(EcubeTemp(:, :, si), mp.P1.compact.Narr);
+                mp.P1.compact.E(:, :, si) = pad_crop(EcubeTemp, mp.P1.compact.Narr);
             end
             clear EcubeTemp
         end

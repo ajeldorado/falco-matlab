@@ -64,16 +64,16 @@ end
 magn = 4*pi*mp.lambda0*sqrt(InormDes);   % surface height to get desired intensity [meters]
 switch lower(badAxis)
     case 'y'
-        omegaX = mp.est.probe.Xloc(1)/2;
+        omegaX = mp.Fend.x_fiber(1);
         probeCmd = magn*sin(2*pi*omegaX*XS + psi);
 
     case 'x'
-        omegaY = mp.est.probe.Yloc(1)/2;
+        omegaY = mp.Fend.y_fiber(1);
         probeCmd = magn*sin(2*pi*omegaY*YS + psi);
         
     case 'm'
-        omegaX = mp.est.probe.Xloc/2;
-        omegaY = mp.est.probe.Yloc/2;
+        omegaX = mp.Fend.x_fiber;
+        omegaY = mp.Fend.y_fiber;
         probeCmd = zeros(size(XS));
         for i = 1:mp.Fend.Nfiber
             probeCmd = probeCmd + magn*sin(2*pi*omegaX(i)*XS + psi).*sin(2*pi*omegaY(i)*YS + psi);

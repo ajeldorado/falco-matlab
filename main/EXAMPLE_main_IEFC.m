@@ -6,23 +6,100 @@
 %
 % Script to run WFSC with a vortex using implicit EFC (IEFC) and a Fourier basis set.
 
-clear
+% clear
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
 %--Required packages are FALCO and PROPER. 
-% Add FALCO to the MATLAB path with the command:  addpath(genpath(full_path_to_falco)); savepath;
-
+addpath(genpath('/home/hcst/falco-matlab'));% savepath;
+addpath('/home/hcst/HCST_scripts/EFC');
 %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
 % mp.path.config = ; %--Location of config files and minimal output files. Default is [mp.path.falco filesep 'data' filesep 'brief' filesep]
 % mp.path.ws = ; % (Mostly) complete workspace from end of trial. Default is [mp.path.falco filesep 'data' filesep 'ws' filesep];
 % mp.flagSaveWS = false;  %--Whether to save out entire (large) workspace at the end of trial. Default is false
 
+clearvars -except bench 
 
 %% Step 2: Load default model parameters
+lambda0 = 785*1e-9;
 
-EXAMPLE_defaults_SCC % Re-use SCC example's configuration
+mp.flagFiber = false;
+EXAMPLE_defaults_HCST_VVC % Re-use SCC example's configuration
+mp.flagSim = false;      %--Simulation or not
+mp.testbed = 'HCST';
+mp.dm1.basisType = 'fourier';
+mp.dm1.Nactbeam = 27;
+mp.Fend.res = 8.7;
 
+mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.shape = 'D'; % 'D', 'circle'
+
+
+mp.Nitr = 50;
+%% HCST preparation
+% Flags; all flags false --> regular EFC run
+flag_svc = false;
+efc_imageSharpening = false;
+flagFieldStop = false;
+mp.flag_lc = false;
+
+% path2flatMap = [bench.info.HCST_DATA_DIR,'is_results/2022Oct13/'];
+% path2flatMap =[bench.info.HCST_DATA_DIR,'pr_results/2022Nov23/'];
+path2flatMap =[bench.info.HCST_DATA_DIR,'pr_results/2023Jan16/'];
+% path2startingMap =[bench.info.HCST_DATA_DIR,'is_results/2022Oct13/'];
+path2startingMap =[bench.info.HCST_DATA_DIR,'efc_results/2023Jan27/'];
+% path2startingMap =[bench.info.HCST_DATA_DIR,'pr_results/2023Jan16/'];
+
+NDfilter_FWpos = 2;
+FWpos = 1; 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Nsbp = 1; % Number of sub-bandpasses, AKA number of wavelengths in full bandpass
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if FWpos~=NDfilter_FWpos
+    NDfilter_cal = 28.6082 * 4.9367 * 4.4753 * 4.6956;%23.16; %>1
+%     NDfilter_cal = 28.6082 * 4.9367 * 4.4753;% * 4.6956;%23.16; %>1
+else
+    NDfilter_cal = 1;
+end 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tint_offAxis = 1e-2*ones(Nsbp,1); %; % 1e-3; %Integration time for off-axis PSF
+mp.tint_efc = 5e-0; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
+mp.tint_est = 1e-2;%5e-1; % time of integration for the estimation/sensing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+bench.info.sbp_texp = mp.tint_efc;
+mp.tint = mp.tint_efc;
+mp.peakPSFtint = tint_offAxis;
+mp.NDfilter_cal = NDfilter_cal;
+
+% Source parameters
+bench.info.source = 'nkt';% 'nkt';%
+
+if Nsbp>1
+    fracBW = 0.10;  % bandwidth of experiment
+    mp.sbp_centers = lambda0*linspace( 1-fracBW/2,1+fracBW/2,Nsbp);
+    bench.info.sbp_width = 14e-9*ones(Nsbp,1);%[14,14,14,14,14]*1e-9;% 3e-9;%-  %--Width of each sub-bandpass on testbed (meters)
+%     bench.info.sbp_width([4:6]) = 6e-9; %
+else
+    fracBW = 0.01; % bandwidth of experiment; when Nsbp is 1 --> narrowband or monochromatic  
+    mp.sbp_centers = lambda0;
+    bench.info.sbp_width = [14]*1e-9; % bandpass of the sub-bandpass [nm]
+end
+
+frameSize = 180;
+
+datelabel = datestr(now,'yyyymmmddTHHMM');
+label_progress = [num2str(Nsbp),'lams',num2str(round(1e9*lambda0)),'nm_BW',num2str(fracBW*100),'_VVC_',datelabel];
+
+falcoPreparev2
+
+mp.bench = bench;
+sbp_width = 16e-9;
+% bench.info.sbp_width = sbp_width ; %--Width of each sub-bandpass on testbed (meters)
+bench.info.sbp_texp = mp.tint_efc;% Exposure time for each sub-bandpass (seconds)
+bench.info.PSFpeaks = PSFpeaks;% counts per second 
 
 %% Step 3: Overwrite default values as desired
 
@@ -57,8 +134,9 @@ mp.runLabel = sprintf('Series%04d_Trial%04d', mp.SeriesNum, mp.TrialNum);
 % % % % PLANNED SEARCH EFC DEFAULTS
 % mp.controller = 'plannedEFC';
 % mp.ctrl.dmfacVec = 1;
-mp.ctrl.log10regVec = -6:1:-1; %--log10 of the regularization exponents (often called Beta values)
-% 
+mp.ctrl.log10regVec = -8:1:-4; %--log10 of the regularization exponents (often called Beta values)
+% mp.ctrl.log10regVec = -10:1:-3; 
+
 % %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
 %     % Column 1: # of iterations, 
 %     % Column 2: log10(regularization), 
@@ -79,12 +157,13 @@ mp.ctrl.log10regVec = -6:1:-1; %--log10 of the regularization exponents (often c
 
 %--Set path and filename for saved Jacobians
 % mp.path.jac = % Define path to saved out Jacobians. Default if left empty is 'falco-matlab/data/jac/'
-mp.jac.fn = 'jac_iefc_example.mat'; %'jac_iefc_test.mat'; % Name of the Jacobian file to save or that is already saved. The path to this file is set by mp.path.jac.
-mp.relinItrVec = 1; %[];%1; %[];  %--Correction iterations at which to re-compute the Jacobian. Make an empty vector to load mp.jac.fn
+mp.jac.fn = 'jac_iefc_2.mat'; %'jac_iefc_test.mat'; % Name of the Jacobian file to save or that is already saved. The path to this file is set by mp.path.jac.
+mp.relinItrVec = [1, 15, 25, 35]; %[];%1; %[];  %--Correction iterations at which to re-compute the Jacobian. Make an empty vector to load mp.jac.fn
+% mp.relinItrVec = []; %[];%1; %[];  %--Correction iterations at which to re-compute the Jacobian. Make an empty vector to load mp.jac.fn
 
 % Use the regular Lyot stop without pinholes for SCC
-mp.P4.compact.mask = mp.P4.compact.maskWithoutPinhole;
-mp.P4.full.mask = mp.P4.full.maskWithoutPinhole;
+% mp.P4.compact.mask = mp.P4.compact.maskWithoutPinhole;
+% mp.P4.full.mask = mp.P4.full.maskWithoutPinhole;
 
 %% Step 4: Flesh out the rest of the variables
 
@@ -101,8 +180,8 @@ mp.iefc.probeCube = zeros(mp.dm1.Nact, mp.dm1.Nact, 2);
 mp.iefc.probeCube(:, :, 1) = dmVsin;
 mp.iefc.probeCube(:, :, 2) = dmVcos;
 
-mp.iefc.modeCoef = 1e-3; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
-mp.iefc.probeCoef = 1e-3; %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
+mp.iefc.modeCoef = 1e-3 /2; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
+mp.iefc.probeCoef = 2e-4 /2; %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
 mp.iefc.probeDM = 1; %--Which DM to use when probing for IEFC.
 
 
@@ -128,12 +207,12 @@ drawnow;
 [mp, out] = falco_wfsc_loop(mp, out);
 
 
-
+return
 %% Code for doing IEFC WFSC standalone, outside of FALCO
 
-return
 
-probeCoef0 = 0.1;
+
+probeCoef0 = 0.01;
 dVprobe1 = probeCoef0 * dmVsin;
 dVprobe2 = probeCoef0 * dmVcos;
 
@@ -159,12 +238,12 @@ for iBasis = 1:Nbasis
     dVmode = dVcoef * mp.dm1.basisCube(:, :, iBasis);
     
     mp.dm1.V = V0 + dVmode;
-    evPlus1 = falco_est_delta_intensity(mp, whichDM, dVprobe1);
-    evPlus2 = falco_est_delta_intensity(mp, whichDM, dVprobe2);
+    evPlus1 = falco_est_delta_intensity(mp, whichDM, dVprobe1,iBasis);
+    evPlus2 = falco_est_delta_intensity(mp, whichDM, dVprobe2,iBasis);
 
     mp.dm1.V = V0 - dVmode;
-    evMinus1 = falco_est_delta_intensity(mp, whichDM, dVprobe1);
-    evMinus2 = falco_est_delta_intensity(mp, whichDM, dVprobe2);
+    evMinus1 = falco_est_delta_intensity(mp, whichDM, dVprobe1,iBasis);
+    evMinus2 = falco_est_delta_intensity(mp, whichDM, dVprobe2,iBasis);
     
     mp.dm1.V = V0; % reset
     

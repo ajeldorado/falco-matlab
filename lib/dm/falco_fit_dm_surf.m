@@ -32,9 +32,10 @@ if(mSurface ~= nSurface); error('surfaceToFit must be a square matrix.'); end
 if(mod(nSurface,2) ~= 0); error('surfaceToFit must have an even number of points.'); end
 
 %--Original influence function
-infFuncAtOrigRes = dm.inf0;
+% infFuncAtOrigRes = dm.inf0;
+infFuncAtOrigRes = dm.infMaster;
 nPixAcrossOrigInfFunc = length(infFuncAtOrigRes);
-origPixPerAct = dm.dm_spacing/dm.dx_inf0;
+origPixPerAct = dm.dm_spacing / dm.dx_inf0;
 xOrig = (-(nPixAcrossOrigInfFunc-1)/2:(nPixAcrossOrigInfFunc-1)/2)/origPixPerAct;
 [Xorig,Yorig] = meshgrid(xOrig);
 

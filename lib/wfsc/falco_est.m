@@ -55,10 +55,16 @@ function ev = falco_est(mp, ev, jacStruct)
             end
 
         case{'iefc'}
+            if ~mp.flagSim % jllopsay
+                mp.tint = mp.tint_est;
+            end
             ev = falco_est_iefc(mp);
             if mp.flagFiber
                 [ev.Im,ev.Ifiber] = falco_get_summed_image(mp);
             else
+                if ~mp.flagSim % jllopsay
+                    mp.tint = mp.tint_efc;
+                end
                 ev.Im = falco_get_summed_image(mp);
             end
 

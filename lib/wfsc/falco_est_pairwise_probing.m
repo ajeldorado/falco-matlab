@@ -196,6 +196,8 @@ for iSubband = 1:mp.Nsbp
     if mp.flagFiber
         Ifiberplus  = zeros([mp.Fend.Nfiber, Npairs]); % Pixels of plus probes' intensities
         Ifiberminus = zeros([mp.Fend.Nfiber, Npairs]); % Pixels of minus probes' intensities
+        Iplus  = zeros([180,180, Npairs]); % Pixels of plus probes' intensities
+        Iminus = zeros([180,180, Npairs]); % Pixels of minus probes' intensities
     end
     DM1Vplus  = zeros([Nact, Nact, Npairs]);
     DM1Vminus = zeros([Nact, Nact, Npairs]);
@@ -207,24 +209,36 @@ for iSubband = 1:mp.Nsbp
     %--Take initial, unprobed image (for unprobed DM settings).
     whichImage = 1;
     mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
+
+    % jllop: back to tint_est
+    if ~mp.flagSim;mp.tint = mp.tint_efc;end
+
     if ~mp.flagFiber
         I0 = falco_get_sbp_image(mp, iSubband);
         ev.score.Inorm = mean(I0(mp.Fend.score.maskBool));
         ev.corr.Inorm  = mean(I0(mp.Fend.corr.maskBool));
+        I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     else
         [I0,I0fiber] = falco_get_sbp_image(mp, iSubband);
         I0fibervec = I0fiber;
         ev.score.Inorm = mean(I0fibervec);
         ev.corr.Inorm  = mean(I0fibervec);
     end
-    I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
+    
+    
+    % jllop: back to tint_est
+    if ~mp.flagSim;mp.tint = mp.tint_est;end
     
     if iStar == 1 % Image already includes all stars, so don't sum over star loop
-        ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
-        if mp.flagFiber; ev.Ifiber = ev.Ifiber + mp.sbp_weights(iSubband)*I0fiber;end % 
+        
+        if mp.flagFiber
+            ev.Ifiber = ev.Ifiber + mp.sbp_weights(iSubband)*I0fiber;
+        else
+            ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
+            %--Store values for first image and its DM commands
+            ev.imageArray(:, :, whichImage, iSubband) = I0;
+        end % 
 
-        %--Store values for first image and its DM commands
-        ev.imageArray(:, :, whichImage, iSubband) = I0;
         if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
         if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
     end
@@ -281,11 +295,11 @@ for iSubband = 1:mp.Nsbp
         else
             Im = falco_get_sbp_image(mp, iSubband);
             ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
+            %--Store probed image and its DM settings
+            ev.imageArray(:, :, whichImage, iSubband) = Im;
         end
         whichImage = 1+iProbe; %--Increment image counter
 
-        %--Store probed image and its DM settings
-        ev.imageArray(:, :, whichImage, iSubband) = Im;
         if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
         if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
 
@@ -301,27 +315,33 @@ for iSubband = 1:mp.Nsbp
         if mod(iProbe, 2) == 1  % Odd; for plus probes
             if whichDM == 1;  DM1Vplus(:, :, iOdd) = dDM1Vprobe + DM1Vnom;  end
             if whichDM == 2;  DM2Vplus(:, :, iOdd) = dDM2Vprobe + DM2Vnom;  end
-            Iplus(:, iOdd) = Im(mp.Fend.corr.maskBool);
+            
             if mp.flagFiber
                 Ifiberplus(:, iOdd) = Ifiber;
+                Iplus(:,:, iOdd) = Im;
+            else
+                Iplus(:, iOdd) = Im(mp.Fend.corr.maskBool);
             end
 
             iOdd = iOdd + 1;
         elseif mod(iProbe, 2) == 0  % Even; for minus probes
             if whichDM == 1;  DM1Vminus(:, :, iEven) = dDM1Vprobe + DM1Vnom;  end
             if whichDM == 2;  DM2Vminus(:, :, iEven) = dDM2Vprobe + DM2Vnom;  end 
-            Iminus(:, iEven) = Im(mp.Fend.corr.maskBool);
+            
             if mp.flagFiber
                 Ifiberminus(:, iEven) = Ifiber;
+                Iminus(:,:, iEven) = Im;
+            else
+                Iminus(:, iEven) = Im(mp.Fend.corr.maskBool);
             end
             iEven = iEven + 1;
         end
     end
 
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
-    ampSq = (Iplus+Iminus)/2 - repmat(I0vec, [1,Npairs]);  % square of probe E-field amplitudes
-    ampSq(ampSq < 0) = 0;  % If probe amplitude is zero, amplitude is zero there.
     if ~mp.flagFiber
+        ampSq = (Iplus+Iminus)/2 - repmat(I0vec, [1,Npairs]);  % square of probe E-field amplitudes
+        ampSq(ampSq < 0) = 0;  % If probe amplitude is zero, amplitude is zero there.
         amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
         isnonzero = all(amp, 2);
         zAll = ((Iplus-Iminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
@@ -331,10 +351,17 @@ for iSubband = 1:mp.Nsbp
         amp = sqrt(ampSqFiber);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
         isnonzero = all(amp, 2);
         zAll = ((Ifiberplus-Ifiberminus)/4).';  % Measurement vector, dimensions: [Npairs, mp.Fend.corr.Npix]
+        ampSq = (Iplus+Iminus)/2;
+        ampSq(ampSq < 0) = 0;
     end
     ampSq2Dcube = zeros(mp.Fend.Neta, mp.Fend.Nxi, mp.est.probe.Npairs);
     for iProbe=1:Npairs % Display the actual probe intensity
-        ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
+        ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi); 
+        if ~mp.flagFiber
+            ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe);
+        else
+            ampSq2D = ampSq(:,:, iProbe);
+        end
         ampSq2Dcube(:, :, iProbe) = ampSq2D;
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
     end
@@ -618,5 +645,8 @@ ev.amp_model = amp_model;
 mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
 
 fprintf(' done. Time: %.3f\n',toc);
+
+% jllop: tint is not tint_efc
+if ~mp.flagSim;mp.tint = mp.tint_efc;end
 
 end %--END OF FUNCTION

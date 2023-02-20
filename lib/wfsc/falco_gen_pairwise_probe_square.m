@@ -63,13 +63,17 @@ switch lower(badAxis)
         mY = 2*probeRadius;
         omegaX = probeRadius/2;        
         probeCmd = surfMax*sinc(mX*XS).*sinc(mY*YS).*cos(2*pi*omegaX*XS + psi);
-
+        if mp.flagFiber
+            probeCmd = surfMax*cos(2*pi*omegaX*XS + psi);
+        end
     case 'x'
         mX = 2*probeRadius;
         mY = probeRadius;
         omegaY = probeRadius/2;
         probeCmd = surfMax*sinc(mX*XS).*sinc(mY*YS).*cos(2*pi*omegaY*YS + psi);
-
+        if mp.flagFiber
+            probeCmd = surfMax*cos(2*pi*omegaY*YS + psi);
+        end
     case 'm' % sine waves placing spots at the locations of the fiber tips
         omegaX = mp.est.probe.Xloc/2;
         omegaY = mp.est.probe.Yloc/2;

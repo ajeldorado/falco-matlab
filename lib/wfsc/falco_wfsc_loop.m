@@ -14,7 +14,17 @@ mp.thput_vec = zeros(mp.Nitr+1, 1);
 flagBreak = false;
 
 for Itr = 1:mp.Nitr
-    
+%     
+%     if Itr == mp.relinItrVec(3)
+%         mp.tint_efc = 5*mp.tint_efc; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
+%         mp.tint_est = 5*mp.tint_est;%5e-1; % time of integration for the estimation/sensing
+%         bench.info.sbp_texp = mp.tint_efc;
+%         mp.tint = mp.tint_efc;
+%         mp.iefc.modeCoef = mp.iefc.modeCoef / 2; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
+%         mp.iefc.probeCoef = mp.iefc.probeCoef / 2; %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
+%         mp.iefc.probeDM = 1; %--Which DM to use when probing for IEFC.
+% 
+%     end
     
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
@@ -122,6 +132,10 @@ for Itr = 1:mp.Nitr
     end
     
     cvar.Eest = ev.Eest;
+     
+    if ~mp.flagSim % jllopsay
+        mp.tint = mp.tint_efc;
+    end
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
     % Save data to 'out'
@@ -172,7 +186,7 @@ for Itr = 1:mp.Nitr
     fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
     fprintf('Saving data snippet to \n%s\n', fnSnippet)
     save(fnSnippet, 'out');
-    fprintf('...done.\n\n')
+    fprintf('...done.\n\n');
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
@@ -180,6 +194,17 @@ for Itr = 1:mp.Nitr
     %% End early? You can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
     if flagBreak
         break;
+    end
+
+    %% Save cmds - jllopsay
+    if(~mp.flagSim)
+        if mp.flagFiber
+            datacmds = hcst_DM_2Dto1D(mp.bench,mp.dm1.V');
+        else
+            datacmds = hcst_DM_2Dto1D(mp.bench,rot90(mp.dm1.V',2));
+        end
+        cmds = datacmds+mp.bench.DM.flatvec;
+        save([mp.bench.info.outDir,'cdms',datestr(now,'yyyymmddTHHMMSS'),'.mat'],'cmds');
     end
 
 end %--END OF ESTIMATION + CONTROL LOOP
@@ -294,7 +319,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     end
     
     if isfield(mp, 'testbed')
-        out.InormHist_tb.total = out.InormHist; 
+        if mp.flagFiber
+            out.InormHist_tb.total = out.InormFiberHist; 
+        else
+            out.InormHist_tb.total = out.InormHist; 
+        end
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
@@ -312,13 +341,20 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
 
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
+                
+                out.InormHist_tb.betaHist = out.log10regHist;
             end
             clear tmp;
         else
             out.InormHist_tb.mod = NaN(Itr, mp.Nsbp);
             out.InormHist_tb.unmod = NaN(Itr, mp.Nsbp);
+            out.InormHist_tb.betaHist = NaN;
         end
-        hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
+%         if mp.flagFiber
+%             hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormFiberHist, Im_tb, DM1surf, DM2surf);
+%         else
+            hProgress = falco_plot_progress_testbed(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
+%         end
 
     else
         if mp.flagFiber

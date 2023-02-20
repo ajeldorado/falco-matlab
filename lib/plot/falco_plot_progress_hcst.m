@@ -12,9 +12,12 @@ Icbmin = -8;
 Icbmax = -4;
 Im = Im_tb.Im;
 if(Itr>1)
-    Imod = Inorm.mod(Itr-1);
+    Imod = mean(Inorm.mod(Itr,:));
+    I_arr = (Inorm.mod(Itr,:))+(Inorm.unmod(Itr,:));
+%     Imod = Inorm.mod(Itr-1);
 else
     Imod = NaN;
+    I_arr = NaN;
 end
 Im(Im<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
 
@@ -37,7 +40,7 @@ if(mp.flagPlot)
     end
 
     
-    subplot(2,3,1); % Save the handle of the subplot
+    subplot(3,3,1); % Save the handle of the subplot
     axis off
     handles.tb1 = text(0.1,0.8,sprintf('%s: Iteration %d',mp.coro,Itr-1));
     handles.tb2 = text(0.1,0.7,sprintf('%.1f%% BW @ %dnm',(100*mp.fracBW),round(mp.lambda0*1e9)));
@@ -50,7 +53,7 @@ if(mp.flagPlot)
             handles.tb5 = text(0.1,0.4,sprintf('T_{E.E.} =   %.2f%%',100*mp.thput_vec(Itr)));
     end
 
-    subplot(2,3,2); % Save the handle of the subplot
+    subplot(3,3,2); % Save the handle of the subplot
     imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[Icbmin Icbmax]); 
     axis xy equal tight; 
     colorbar; 
@@ -63,29 +66,29 @@ if(mp.flagPlot)
 %       title(sprintf('PSF at Iter=%03d,   NI=%.2e',Itr,contrast_bandavg(Itr)),'Fontsize',20,'Fontweight','Bold');
 
 
-	subplot(2,3,3); % Save the handle of the subplot
+	subplot(3,3,3); % Save the handle of the subplot
     imagesc(1e9*DM1surf);  axis xy equal tight; axis off;
     colorbar;
     colormap(gca,gray);
     title('DM1 Surface (nm)');
 
-    subplot(2,3,4);
+    subplot(3,3,4);
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
     if(Itr>1)
-        semilogy(0:Itr-2,Inorm.mod,'-o');
-        semilogy(0:Itr-2,Inorm.unmod,'--o');
+        semilogy(0:Itr-1,mean(Inorm.mod,2),'-o');
+        semilogy(0:Itr-1,mean(Inorm.unmod,2),'--o');
     end
     hold off;
     xlim([0 length(Inorm.total)])
     xlabel('Iteration')
-%     ylabel('Norm. I');
+    ylabel('Norm. I');
     legend('Total','Modulated','Unmodulated');
 	title('Normalized Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
     
-	subplot(2,3,5); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E).^2),[Icbmin Icbmax]); 
+	subplot(3,3,5); % Save the handle of the subplot
+    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,round(mp.Nsbp/2))).^2),[Icbmin Icbmax]); 
     axis xy equal tight;
     colorbar;
     colormap(gca,parula)
@@ -93,8 +96,8 @@ if(mp.flagPlot)
 %     ylabel('\lambda_0/D');
     title('Modulated (previous)');
     
-	subplot(2,3,6); % Save the handle of the subplot
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E),[-pi pi]); 
+	subplot(3,3,6); % Save the handle of the subplot
+    imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,round(mp.Nsbp/2))),[-pi pi]); 
     axis xy equal tight; 
     colorbar; 
     colormap(gca,hsv);
@@ -102,8 +105,57 @@ if(mp.flagPlot)
 %     ylabel('\lambda_0/D');
     title('Phase (previous)');
     
-   drawnow;
    
+
+    subplot(3,3,7);
+    if(Itr>1)
+        plot(0:Itr-2,Inorm.betaHist(1:Itr-1),'-o');
+    end
+    xlim([0 length(Inorm.total)])
+    xlabel('Iteration')
+    ylabel('Beta');
+    grid on;axis square;
+
+    subplot(3,3,8);
+    if(Itr>1)
+        plot(mp.sbp_centers*1e9,I_arr,'-o');
+    end
+    xlabel('Wvl [nm]')
+    ylabel('NI');
+%     grid on;axis square;
+
+   drawnow;
+
+   % Copied from IACT
+   if(Itr>1)
+        %%-- Probed E-field plots
+        hEplot = figure(98);
+        set(hEplot,'units', 'inches', 'Position', [0 0 4*mp.Nsbp 6])
+        set(hEplot,'Color','w')
+
+        for si = 1:mp.Nsbp
+
+            subplot(2,mp.Nsbp,si); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,si)).^2),[Icbmin Icbmax]); 
+            axis xy equal tight;
+            colorbar;
+            colormap(gca,parula)  
+        %     xlabel('\lambda_0/D'); 
+        %     ylabel('\lambda_0/D');
+    %         title(['Modulated (band ',num2str(si),')']);
+
+            subplot(2,mp.Nsbp,si+mp.Nsbp); % Save the handle of the subplot
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
+            axis xy equal tight; 
+            colorbar; 
+            colormap(gca,hsv);
+        %     xlabel('\lambda_0/D'); 
+        %     ylabel('\lambda_0/D');
+    %         title(['Phase (band ',num2str(si),')']);
+        end
+        drawnow;
+    end
+
 end
 
 out_dir = [mp.bench.info.OUT_DATA_DIR,mp.runLabel,'/'];
