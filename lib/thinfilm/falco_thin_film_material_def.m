@@ -119,6 +119,17 @@ switch lower(dielectric)
         n_diel = interp1(lam_mgf2_0, n_mgf2_0, lam_nm, 'linear');
         k_diel = interp1(lam_mgf2_0, k_mgf2_0, lam_nm, 'linear');
         
+    case{'cryolite'}
+        dataCryolite = load('cryolite_data_from_Sidqi_2019_wvlUM_n_k.csv');
+        
+        lamUM_cryolite_0 = dataCryolite(:,1);  % [um]
+        lam_cryolite_0 = lamUM_cryolite_0 * 1e3; % [nm]
+        n_cryolite_0 = dataCryolite(:,2);
+        k_cryolite_0 = dataCryolite(:,3);
+        
+        n_diel = interp1(lam_cryolite_0, n_cryolite_0, lam_nm, 'linear');
+        k_diel = interp1(lam_cryolite_0, k_cryolite_0, lam_nm, 'linear');
+        
     otherwise
         error('Invalid value of dielectric.')
         
@@ -145,7 +156,7 @@ switch lower(metal)
 
     case{'chromium', 'chrome', 'cr'} 
         t_Ti_vec = t_Ti_base*ones(lenMetal, 1);
-        t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no Ni
+        t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no main metal
 
         vnickel = load('chromium_wvlUM_n_k_Johnson_1974.csv');
 
@@ -154,6 +165,18 @@ switch lower(metal)
         k_nickel   = vnickel(:,3);
         nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
         knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');        
+        
+    case{'al', 'aluminum'} 
+        t_Ti_vec = t_Ti_base*ones(lenMetal, 1);
+        t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no main metal
+
+        vnickel = load('al_wvlUM_n_k_Rakic_1995.csv');
+
+        lam_nickel = vnickel(:,1) * 1e3;  % nm
+        n_nickel   = vnickel(:,2);
+        k_nickel   = vnickel(:,3);
+        nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
+        knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');    
         
     otherwise
         error('Invalid value of metal.')
