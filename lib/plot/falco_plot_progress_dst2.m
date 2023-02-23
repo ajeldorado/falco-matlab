@@ -214,25 +214,25 @@ end
 fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
 
 if(any(mp.dm_ind==1) && Itr==1)
-    fitswrite_tb(mp,tb,mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
+    fitswrite(mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
 end
 if(any(mp.dm_ind==2) && Itr==1)
-    fitswrite_tb(mp,tb,mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits'));
+    fitswrite(mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits'));
 end
 
 if(any(mp.dm_ind==1))
-    fitswrite_tb(mp,tb,mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
-    fitswrite_tb(mp,tb,DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
 end
 if(any(mp.dm_ind==2))
-    fitswrite_tb(mp,tb,mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
-    fitswrite_tb(mp,tb,DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
 end
 
 
-fitswrite_tb(mp,tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
-fitswrite_tb(mp,tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
-fitswrite_tb(mp,tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
+fitswrite(abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
+fitswrite(angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
+fitswrite(Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
@@ -240,7 +240,7 @@ if(~strcmpi(mp.estimator,'perfect'))
 end
 if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
     img = mean(Im_tb.ev.normI_OL_sbp,3);
-    fitswrite_tb(mp,tb,img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
 end
 % Update the diary 
 diary off; diary(mp.diaryfile)
