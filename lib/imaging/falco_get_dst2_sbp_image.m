@@ -4,7 +4,7 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Function to get an image in the specified sub-bandpass from the DST. 
+% Function to get an image in the specified sub-bandpass from the DST-2. 
 %
 % ---------------
 % INPUTS:
@@ -16,18 +16,14 @@
 %          	(i.e. approximate raw contrast but normalized 
 %           by a photometry measurement at a single offset)
 %
-% REVISION HISTORY
-% - Modified from falco_get_gpct_sbp_image on 2019-06-26 by G. Ruane
-% - Modified from falco_get_hcst_sbp_image on 2019-03-22 by G. Ruane
-% - Created on 2019-03-22 by G. Ruane 
 
-function normI = falco_get_dst_sbp_image(mp,si)
+function normI = falco_get_dst2_sbp_image(mp,si)
 
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     tb.sciCam.subdir = 'falco';
     
-    if(mp.isProbing)
+    if mp.isProbing
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
     else
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
@@ -38,16 +34,16 @@ function normI = falco_get_dst_sbp_image(mp,si)
     
     %----- Send commands to the DM -----
     %disp('Sending current DM voltages to testbed') 
-    if(mp.dm1.transp)
-        dm1_map = mp.dm1.V'; % There's a transpose between Matlab and DM indexing
+    if mp.dm1.transp 
+        dm1_map = mp.dm1.V'; % Applies a transpose between Matlab and DM indexing
     else
         dm1_map = mp.dm1.V;
     end
-    if(mp.dm2.transp)
-        dm2_map = mp.dm2.V'; % There's a transpose between Matlab and DM indexing
-    else
-        dm2_map = mp.dm2.V;
-    end
+%     if(mp.dm2.transp)
+%         dm2_map = mp.dm2.V'; % There's a transpose between Matlab and DM indexing
+%     else
+%         dm2_map = mp.dm2.V;
+%     end
     
 %     figure(700)
 %     subplot(1,2,1)
@@ -64,22 +60,23 @@ function normI = falco_get_dst_sbp_image(mp,si)
     % Send the commands to the DM. 
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
-    if(tb.DM1.installed && tb.DM1.CONNECTED)
-        DM_apply2Dmap(tb.DM1,dm1_map);
-    end
-    if(tb.DM2.installed && tb.DM2.CONNECTED)
+    if tb.DM1.installed && tb.DM1.CONNECTED 
+        
         try
-            DM_apply2Dmap(tb.DM2,dm2_map);
+            DM_apply2Dmap(tb.DM1,dm1_map);
         catch 
             try; cleanUpDMs(tb); end
-            disp('Error setting DM2. Reseting electronics. Trying again.')
-            FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
+            disp('Error setting DM1. Reseting electronics. Trying again.')
+            FNGR_setPos(tb,tb.FNGR.inpos);FNGR_setPos(tb,tb.FNGR.outpos);
             pause(10);
             setUpDMs(tb);
             DM_apply2Dmap(tb.DM1,dm1_map);
-            DM_apply2Dmap(tb.DM2,dm2_map);
+            DM_apply2Dmap(tb.DM1,dm1_map);
+            DM_apply2Dmap(tb.DM1,dm1_map);
         end
-            
+    end
+    if tb.DM2.installed && tb.DM2.CONNECTED 
+        DM_apply2Dmap(tb.DM2,dm2_map);
     end
     
     %----- Get image from the testbed -----

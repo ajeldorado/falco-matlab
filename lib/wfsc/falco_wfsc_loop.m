@@ -15,7 +15,7 @@ flagBreak = false;
 
 for Itr = 1:mp.Nitr
     
-    
+
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
     
