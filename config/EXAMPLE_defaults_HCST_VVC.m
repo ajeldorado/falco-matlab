@@ -53,7 +53,8 @@ mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is
 mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
 mp.est.probe.xOffset = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
 mp.est.probe.yOffset = 0;    % offset of probe center in y [actuators]. Use to avoid central obscurations.
-mp.est.probe.axis = 'y';     % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
+
+% which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
 
 %% Wavefront Control: General
@@ -74,7 +75,8 @@ mp.eval.indsZnoll = []; %--Noll indices of Zernikes to compute values for
 mp.eval.Rsens = [2,3; 3,4; 4,5]; 
 
 %--Grid- or Line-Search Settings
-mp.ctrl.log10regVec = -4:1:-1; %--log10 of the regularization exponents (often called Beta values)
+% mp.ctrl.log10regVec = -4:1:-1; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -3:1:0; %--log10 of the regularization exponents (often called Beta values)
 mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
    
@@ -105,7 +107,8 @@ mp.dm_ind = [1]; %--Which DMs to use
 mp.dm1.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
 mp.dm2.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
 
-mp.dm1.dm_spacing = 300e-6; %--User defined actuator pitch [meters]
+correction_to_match_res = 1.0251;
+mp.dm1.dm_spacing = 300e-6*correction_to_match_res; %--User defined actuator pitch [meters]
 mp.dm2.dm_spacing = 300e-6; %--User defined actuator pitch [meters]
 
 mp.dm1.inf_sign = '+';
@@ -128,14 +131,16 @@ else
     if mp.Nsbp>1
         gainfactor = 1;
     else
-        gainfactor = 1.25;
+        gainfactor = 1.25;        
+%         gainfactor = 3.25;
+
     end
 end
 mp.dm1.VtoH = (4e-7*ones(mp.dm1.Nact) * 2*sqrt(2)).*gainmap*gainfactor;%
 %****
 mp.dm1.xtilt = 6.8198;               % for foreshortening. angle of rotation about x-axis [degrees]
 mp.dm1.ytilt = 0;               % for foreshortening. angle of rotation about y-axis [degrees]
-mp.dm1.zrot = 0.16086;                % clocking of DM surface [degrees]
+mp.dm1.zrot = 1.305*2;                % clocking of DM surface [degrees]
 % mp.dm1.xc = 34-18.3;%bench.DM.yc;%(mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
 % mp.dm1.yc = 17.5;% bench.DM.xc;%(mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
 mp.dm1.xc = 15.7;%34-18.3;
@@ -172,7 +177,7 @@ mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'vortex';
 
 %--Final Focal Plane Properties
-mp.Fend.res = 7.24*mp.lambda0/(785e-9); %10.35; %--Sampling [ pixels per lambda0/D]
+mp.Fend.res = 7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
 mp.Fend.clockAngDeg = 0; % Clocking angle of the dark hole region
 
 mp.Fend.Nxi = 180;
@@ -225,12 +230,13 @@ mp.iefc.probeCube = zeros(mp.dm1.Nact, mp.dm1.Nact, 2);
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
 %--Focal Lengths
-mp.fl = 1; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
+mp.fl = 648.59e-3; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
+ls_od=0.844;
 %--Pupil Plane Diameters
-mp.P2.D = (mp.dm1.Nact-2)*mp.dm1.dm_spacing;
+mp.P2.D = 0.0096;%(mp.dm1.Nact-2)*mp.dm1.dm_spacing;
 mp.P3.D = mp.P2.D;
-mp.P4.D = mp.P2.D;
+mp.P4.D =0.009/ls_od;% mp.P2.D;
 
 %--Pupil Plane Resolutions
 mp.P1.compact.Nbeam = 250;
@@ -312,7 +318,7 @@ pinholeFull = falco_gen_pupil_Simple(inputs);
 % Inputs common to both the compact and full models
 clear inputs
 inputs.centering = mp.centering;
-inputs.OD = 0.844;%0.84;%0.93;%7.5e-3/DbeamLyot; 
+inputs.OD = ls_od;%0.84;%0.93;%7.5e-3/DbeamLyot; 
 
 % Compact model
 inputs.Nbeam = mp.P4.compact.Nbeam;
