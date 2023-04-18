@@ -45,9 +45,20 @@ if mp.ctrl.flagUseModel %--Perform model-based grid search using compact model
     
 else %--Perform an empirical grid search with actual images
     if ~mp.flagFiber
-        Itotal = falco_get_summed_image(mp);
-        InormMean = mean(Itotal(mp.Fend.corr.maskBool));
-        dDM.Itotal = Itotal;
+        switch mp.estimator
+            case 'scc'
+%                 Itotal = falco_est_scc(mp);
+%                 InormMean = mean(abs(Itotal.Eest));
+%                 dDM.Itotal = Itotal.Im;
+                Itotal = falco_get_summed_image(mp);
+                InormMean = mean(Itotal(mp.Fend.corr.maskBool));
+                dDM.Itotal = Itotal;
+            otherwise
+                Itotal = falco_get_summed_image(mp);
+                InormMean = mean(Itotal(mp.Fend.corr.maskBool));
+                dDM.Itotal = Itotal;
+        end
+        
     else
 %         IfiberTotal = falco_get_summed_image_fiber(mp);
         [Itotal,IfiberTotal] = falco_get_summed_image(mp);

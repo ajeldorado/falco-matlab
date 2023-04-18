@@ -17,9 +17,10 @@
 function ev = falco_est_scc(mp)
 
 %     fprintf('Estimating electric field with the SCC ...\n'); tic;
-    flagPlot = false;
+    %mp.flagPlot = true;
 
     ev.Eest = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+    ev.Eest_full = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
     ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
     ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
     ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
@@ -50,21 +51,39 @@ function ev = falco_est_scc(mp)
             % Consider replacing the butterworth filter with just
             % convolving the dark hole software mask with a soft-edge
             % kernel.
-            filter_butterworth = (1-falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rin*mp.Fend.res)) .* ...
-                falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rout*mp.Fend.res);
-            imageFilt = pad_crop(image0, [imageShapeMax, imageShapeMax]) .* filter_butterworth;
+            
+            imageShapeMax = max([mp.Fend.Neta, mp.Fend.Nxi]);
+            ctr_x = 0.;
+            ctr_y = -0.5*( mp.Fend.corr.Rout + mp.Fend.corr.Rin)*mp.Fend.res;
+            Y0 = (mp.Fend.corr.Rout - mp.Fend.corr.Rin +2)*mp.Fend.res/2;
+            X0 = (mp.Fend.corr.Rout+2)*mp.Fend.res;
+            expx = 4;%3.8;
+            expy = 7.9; %7.6;%2.8;
+            
+            expxcirc = 3.3;%5;
+            %filter_butterworth =falco_butterworth(imageShapeMax, imageShapeMax, ctr_x, ctr_y, expx,expy, X0, Y0);
+            filter_butterworth = falco_butterworth(imageShapeMax, imageShapeMax, 0, -500, expx,expy, 800, 375, 'squared').*...
+                falco_butterworth(imageShapeMax, imageShapeMax, 0, 0, expxcirc,expxcirc, 325, 325, 'circle');
+
+            %filter_butterworth = (1-falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rin*mp.Fend.res)) .* ...
+             %   falco_butterworth(imageShapeMax, imageShapeMax, 0.5, mp.Fend.corr.Rout*mp.Fend.res);
+                %falco_butterworth(imageShapeMax, imageShapeMax, mp.scc.butterworth_exponent, mp.Fend.corr.Rout*mp.Fend.res);
+            
+            imageFilt = pad_crop(image0, [imageShapeMax, imageShapeMax]);
+            imageFilt = imageFilt .* filter_butterworth; % The filter makes it harder to find the side lobe center.
+
 
             imageFilt = ifftshift(imageFilt);
             pupil_scc = fft2(imageFilt);%/imageShapeMax;
             pupil_scc = fftshift(pupil_scc);
             %pupil = pad_crop(pupil, SCCpupsubwindowsize);
             
-            if flagPlot
-                figure(1001); imagesc(log10(image0)); axis xy equal tight; colorbar; drawnow;
-                figure(1002); imagesc(log10(fftshift(imageFilt))); axis xy equal tight; colorbar; drawnow;
+            if mp.flagPlot
+                figure(1001); imagesc(log10(abs(image0))); axis xy equal tight; colorbar; drawnow;
+                %figure(1002); imagesc(log10(abs(fftshift(imageFilt)))); axis xy equal tight; colorbar; drawnow;
 
-                figure(1003); imagesc(log10(abs(pupil_scc))); axis xy equal tight; colorbar; drawnow;
-                figure(1004); imagesc(angle(pupil_scc)); axis xy equal tight; colorbar; drawnow;
+                %figure(1003); imagesc(log10(abs(pupil_scc))); axis xy equal tight; colorbar; drawnow;
+                %figure(1004); imagesc(angle(pupil_scc)); axis xy equal tight; colorbar; drawnow;
             end
         
             % Make template
@@ -88,23 +107,24 @@ function ev = falco_est_scc(mp)
             window2D = falco_gen_pupil_Simple(inputs);
             pupil_scc = pupil_scc .* window2D;
 
-            if flagPlot
-                figure(1018); imagesc(power(abs(pupil_scc), 0.25)); axis xy equal tight;
+            if mp.flagPlot
+                figure(1018); imagesc(pad_crop(power(abs(pupil_scc), 0.25),100)); axis xy equal tight;
             end
 
             pupil_scc = fftshift(pupil_scc);
             estimate_scc = ifft2(pupil_scc);%/imageShapeMax;
             estimate_scc = ifftshift(estimate_scc);
-            estimate_scc = pad_crop(estimate_scc, imageShape0);
+            estimate_scc = pad_crop(estimate_scc, imageShape0);%./filter_butterworth;
             estimate_scc = -1j*(estimate_scc); % Not necessary, but makes closer to "true" estimate
             Eest = estimate_scc(mp.Fend.corr.maskBool);
 
-            if flagPlot
+            if mp.flagPlot
                 figure(1005); imagesc(log10(abs(estimate_scc))); axis xy equal tight; colorbar; drawnow;
-                figure(1006); imagesc(angle(estimate_scc)); axis xy equal tight; colorbar; drawnow;
+                %figure(1006); imagesc(angle(estimate_scc)); axis xy equal tight; colorbar; drawnow;
             end
             
             ev.Eest(:, modeIndex) = Eest;
+            ev.Eest_full(:, :, 1, modeIndex) = estimate_scc;
             
             % NOTE: Incoherent estimate is incorrect because of the scale
             % factor between the SCC estimate and the true E-field.

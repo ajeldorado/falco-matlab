@@ -30,12 +30,12 @@ function normI = falco_get_iact_sbp_image(mp,si)
     
     if(mp.isProbing) % use these values if you're probing 
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
-%         numCoadds = tb.info.sbp_numCoadds_probe(si);% Number of coadds to use for each sub-bandpass
+        numCoadds = tb.info.sbp_numCoadds_probe(si);% Number of coadds to use for each sub-bandpass
     else % use these values for dark hole images 
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
-%         numCoadds = tb.info.sbp_numCoadds(si);% Number of coadds to use for each sub-bandpass
+        numCoadds = tb.info.sbp_numCoadds(si);% Number of coadds to use for each sub-bandpass
     end    
-%     tb.sciCam.numCoadds = numCoadds; % This sets the camera to use coadds 
+    tb.sciCam.numCoadds = numCoadds; % This sets the camera to use coadds
     
     % PSF photometry 
     PSFpeak   = tb.info.PSFpeaks(si);% counts per second 
@@ -67,8 +67,8 @@ function normI = falco_get_iact_sbp_image(mp,si)
     dark = sciCam_loadDark(tb,sbp_texp);
     
     % Scale the PSF photometry by the current integration time
-    PSFpeak_counts = PSFpeak*sbp_texp;
-%     PSFpeak_counts = PSFpeak*sbp_texp*numCoadds; 
+    %PSFpeak_counts = PSFpeak*sbp_texp;
+    PSFpeak_counts = PSFpeak*sbp_texp*numCoadds;
     
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; 

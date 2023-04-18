@@ -50,12 +50,24 @@ function ev = falco_est(mp, ev, jacStruct)
             ev = falco_est_borde_traub_probing(mp, ev);
             
         case{'scc'}
+            if ~mp.flagSim && strcmp(mp.testbed,'iact')
+                tb = mp.tb;
+                PHBLK_default(tb);
+            end
+            mp.flagPlot = true;
             ev = falco_est_scc(mp);
+            
+            if ~mp.flagSim && strcmp(mp.testbed,'iact')
+                PHBLK_allblock(tb);
+            end
+            
+            
             if mp.flagFiber
                 [ev.Im,ev.Ifiber] = falco_get_summed_image(mp);
             else
                 ev.Im = falco_get_summed_image(mp);
             end
+            
 
         case{'iefc'}
             ev = falco_est_iefc(mp);

@@ -47,12 +47,12 @@ if(mp.flagPlot)
         try
             figure(handles.master);
         catch
-            handles.master = figure('Color','w');
-            set(handles.master,'units', 'inches', 'Position', [0 0 12 4])
+            handles.master = figure(57);
+            set(handles.master,'Color', 'w', 'units', 'inches', 'Position', [0 0 12 4])
         end
     else
-        handles.master = figure('Color','w');
-        set(handles.master,'units', 'inches', 'Position', [0 0 12 4])
+        handles.master = figure(57);
+            set(handles.master,'Color', 'w', 'units', 'inches', 'Position', [0 0 12 4])
     end
 
     

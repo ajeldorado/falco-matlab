@@ -17,7 +17,8 @@
 
 function jac = model_Jacobian_IEFC(mp, whichDM)
 
-    flagPlot = false; % plotting for debugging
+    mp.isProbing = true;
+    flagPlot = true; % plotting for debugging
     Nprobes = size(mp.iefc.probeCube, 3);
     
     if whichDM == 1
@@ -45,14 +46,14 @@ function jac = model_Jacobian_IEFC(mp, whichDM)
                     jac((iProbe-1)*mp.Fend.corr.Npix+1:iProbe*mp.Fend.corr.Npix, iBasisMode, iJacMode) = (plusStruct.DeltaI - minusStruct.DeltaI)/(2*mp.iefc.modeCoef*mp.iefc.probeCoef);
 
                     if flagPlot
-                        figure(30); imagesc(dVmode); axis xy equal tight; colorbar; 
-                        title(sprintf('Basis Mode %d/%d', iBasisMode, Nbasis));
+                        figure(30); imagesc(log10(abs(plusStruct.imagePlus))); axis xy equal tight; colorbar;
+                        title(sprintf('Basis Mode %d/%d', iBasisMode,mp.dm1.NbasisModes));
                         drawnow;
 
-                        E2D = zeros(mp.Fend.Nxi, mp.Fend.Neta);
-                        E2D(mp.Fend.corr.maskBool) = jac(1:mp.Fend.corr.Npix, iBasisMode, iJacMode);
-                        figure(31); imagesc(log10(abs(E2D))); axis xy equal tight; colorbar; 
-                        title(sprintf('Basis Mode %d/%d', iBasisMode, Nbasis));
+                        %E2D = zeros(mp.Fend.Nxi, mp.Fend.Neta);
+                        %E2D(mp.Fend.corr.maskBool) = jac(1:mp.Fend.corr.Npix, iBasisMode, iJacMode);
+                        figure(31); imagesc(log10(abs(plusStruct.imageMinus))); axis xy equal tight; colorbar 
+                        title(sprintf('Basis Mode %d/%d', iBasisMode,mp.dm1.NbasisModes));
                         drawnow;
                     end
 
@@ -111,6 +112,6 @@ function jac = model_Jacobian_IEFC(mp, whichDM)
     
     end
 
-     
+    mp.isProbing = false; 
 
 end

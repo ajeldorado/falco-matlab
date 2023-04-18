@@ -21,6 +21,7 @@
 
 function ev = falco_est_iefc(mp)
 
+    mp.isProbing = true;
     Nprobes = size(mp.iefc.probeCube, 3);
     
     ev.Eest = zeros(Nprobes*mp.Fend.corr.Npix, mp.jac.Nmode);
@@ -37,8 +38,9 @@ function ev = falco_est_iefc(mp)
             ev.Eest((iProbe-1)*mp.Fend.corr.Npix+1:iProbe*mp.Fend.corr.Npix, iJacMode) = iefcStruct.DeltaI / mp.iefc.probeCoef;
             ev.imageArray(:, :, 1+2*(iProbe-1)+1, mp.jac.Nmode) = iefcStruct.imagePlus;
             ev.imageArray(:, :, 1+2*(iProbe-1)+2, mp.jac.Nmode) = iefcStruct.imageMinus;
-        end        
+        end      
         
+    mp.isProbing = false;    
     end
         
 end %--END OF FUNCTION

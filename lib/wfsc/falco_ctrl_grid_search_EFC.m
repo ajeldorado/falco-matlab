@@ -48,7 +48,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         end
         
         parfor ni = 1:Nvals
-            [temp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [Itemp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
             Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end
