@@ -353,7 +353,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
          end
         
-        hProgress = falco_plot_progress_omc_model(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
+        %hProgress = falco_plot_progress_omc_model(hProgress, mp, Itr, out.InormHist_tb, Im_tb, DM1surf, DM2surf);
        end
 end
 

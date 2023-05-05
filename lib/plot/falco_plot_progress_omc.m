@@ -9,7 +9,7 @@
 function handles = falco_plot_progress_omc(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf)
 
 if mp.flagSim
-    handles = falco_plot_progress_omc_model(handles, mp, Itr, InormHist_tb, Im_tb, DM1surf, DM2surf);
+    handles = falco_plot_progress_omc_model(handles, mp, Itr, Inorm, Im_tb, DM1surf, DM2surf);
     return
 end
 
