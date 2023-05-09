@@ -614,7 +614,7 @@ ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
 ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
 ev.InormProbe = InormProbe;        
 ev.maskBool = mp.Fend.corr.maskBool; %--for resizing Eest and IincoEst for plotting
-ev.amp_model = amp_model;
+if ~(mp.est.flagUseJac); ev.amp_model = amp_model; end;
 
 mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
 
