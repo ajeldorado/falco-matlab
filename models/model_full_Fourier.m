@@ -157,17 +157,19 @@ switch upper(mp.coro)
             outVal = mp.F3.outVal;
             pixPerLamD = mp.F3.full.res;
 
-            inputs.type = mp.F3.phaseMaskType;
+            inputs.type = 'sawtooth';
             inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
             inputs.charge = mp.F3.VortexCharge;
             inputs.phaseScaleFac = phaseScaleFac;
             inputs.clocking = mp.F3.clocking;
-            inputs.Nsteps = mp.F3.NstepStaircase;
+%             inputs.Nsteps = mp.F3.NstepStaircase;
             inputs.roddierradius = mp.F3.roddierradius;
+            inputs.roddierphase = mp.F3.roddierphase;
             
             inputs.res = mp.F3.full.res;
             FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);
             
+            inputs.type = mp.F3.phaseMaskType;
             inputs.res = floor(pixPerLamD*mp.P1.full.Nbeam/(2*mp.F3.outVal));
             FPMfine = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
             

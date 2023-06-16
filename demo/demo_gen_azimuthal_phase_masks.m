@@ -22,21 +22,22 @@ clear
 % Required Inputs
 inputs.type = 'staircase';
 inputs.N = 1000; % number of pixels across the array
-inputs.charge = 6; % charge of the mask (makes most sense for vortex)
-inputs.Nsteps = 6; % number of steps per 2*pi radians. For 'staircase' only
+inputs.charge = 1; % charge of the mask (makes most sense for vortex)
+inputs.Nsteps = 10; % number of steps per 2*pi radians. For 'staircase' only
 inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
 
-% % Optional Inputs
-% inputs.centering = 'pixel';
-% inputs.xOffset = 5.5; % [pixels]
-% inputs.yOffset = -10; % [pixels]
-% inputs.clocking = 0; % [degrees]
+% Optional Inputs
+inputs.centering = 'pixel';
+inputs.xOffset = 5.5; % [pixels]
+inputs.yOffset = -10; % [pixels]
+inputs.clocking = 0; % [degrees]
 
 % Check staircase
 mask = falco_gen_azimuthal_phase_mask(inputs);
+figure(1); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 %%
-figure(1); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+
 
 % Check clocking
 inputs.clocking = 30; % [degrees]
@@ -72,9 +73,9 @@ mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(5); imagesc(angle(mask)); axis xy equal tight; colorbar('FontSize',16); title('French Wrapped Phase Mapping');drawnow;
 % 
 % % % Check sawtooth
-inputs.type = 'sawtooth';
-mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(6); imagesc(angle(mask)); axis xy equal tight; colorbar; title('Sawtooth Phase Mapping');drawnow;
+% inputs.type = 'sawtooth';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
+% figure(6); imagesc(angle(mask)); axis xy equal tight; colorbar; title('Sawtooth Phase Mapping');drawnow;
 % figure(1); imagesc(abs(mask)); colorbar; axis xy equal tight; colormap(gray); title('Sawtooth Transmission Mapping');drawnow;
 % 
 % % Check mcmc6
@@ -103,7 +104,12 @@ figure(6); imagesc(angle(mask)); axis xy equal tight; colorbar; title('Sawtooth 
 % mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(11); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
-% Check roddier
-inputs.type = 'roddier';
+% Check just dimple
+inputs.type = 'just dimple';
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(11); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+
+% Check roddier
+% inputs.type = 'roddier';
+% mask = falco_gen_azimuthal_phase_mask(inputs);
+% figure(11); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;

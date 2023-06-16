@@ -55,14 +55,16 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     clocking = 0; % [degrees]
     wav = 5.5000e-07;
     res = 8;
-    roddierradius = 0.53;
+    roddierradius = 0.53; %[lambda/D]
+    roddierphase = 0.5; %[wavs]
     if(isfield(inputs,'centering')); centering = inputs.centering; end % 'pixel' or 'interpixel'
     if(isfield(inputs, 'xOffset')); xOffset = inputs.xOffset; end % [pixels]
     if(isfield(inputs, 'yOffset')); yOffset = inputs.yOffset; end % [pixels]
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
     if(isfield(inputs,'wav')); wav = inputs.wav; end %[m]
     if(isfield(inputs,'res'));res = inputs.res; end %[m]
-    if(isfield(inputs,'roddierradius'));roddierradius = inputs.roddierradius; end %[m]
+    if(isfield(inputs,'roddierradius'));roddierradius = inputs.roddierradius; end %[lambda/D]
+    if(isfield(inputs,'roddierphase'));roddierphase = inputs.roddierphase; end %[wavs]
     % Input checks
     Check.scalar_integer(charge);
     
@@ -277,9 +279,44 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
             
             R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
-            vort(R1) =vort(R1) + 0.5*2*pi;
+            vort(R1) =vort(R1) + roddierphase*2*pi;
             
             mask = exp(phaseScaleFac*1j*vort);
+            
+%             
+%             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
+        case 'smallvortex'
+            %sawtooth within some roddier radius
+            %is the -2 factor right...???
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            vort(domain) = charge*rem(coords.THETA(domain)+pi,2*pi./charge);
+            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            vort(domain) = charge*rem((coords.THETA(domain)),2*pi./charge);
+            
+            R1 = (coords.RHO > roddierradius*res*phaseScaleFac);
+            vort(R1) =0;
+            
+            mask = exp(phaseScaleFac*1j*-2*vort);
+            
+%             
+%             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
+
+        case 'just dimple'
+            %roddier + sawtooth
+%             pixPerLamD = 8;
+%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            dimple = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            
+            R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
+            dimple(R1) =dimple(R1) + roddierphase*2*pi;
+            
+            mask = exp(phaseScaleFac*-1j*dimple);
             
 %             
 %             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
@@ -292,11 +329,49 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %             figure(); imagesc(angle(mask)); axis image; title('ChatGPT Phase Map','FontSize',20);
 
         case 'custom'
-            nonintcharge = 2*0.9474;
-            vort = phaseScaleFac*nonintcharge*THETA;
-            mask = exp(1j*vort);
+%             nonintcharge = 2*0.9474;
+%             vort = phaseScaleFac*nonintcharge*THETA;
+%             mask = exp(1j*vort);
             
-            figure(); imagesc(angle(mask)); axis image; title('Custom Phase Map','FontSize',20);
+            %read in Metasurface vortcube, lams
+%             load lorenzovortex6cube.mat
+%             lams   = [3.4,3.6,3.8,4.,4.2];
+            i_lam = 3; %find(round((lams(ceil(end/2)))./lams,4) == round(phaseScaleFac,4));
+            
+            
+%             mask = vortcube(:,:,i_lam);
+            
+            design="sawtooth";
+            trans  = "var"; %"const";
+%             
+%             % i_lam  = 2;%2;%3;%4;%5
+% %             vortcube = [];%zeros(4);
+%             
+% 
+% %             for i_lam = 1:length(lams)
+% 
+                Npad   = N; %4096; %4096; %8192; % %2^13;
+                charge = 6;
+                theta  = angle(falco_gen_vortex_mask(1,Npad)); % gen_v_mask  with charge 1 means having an array with the azi angle for each pxl
+                z1 = 2.40483; % wiki Bessel zeros
+                z2 = 5.52008; % using z2 or z3 results in more than 2pi phase coverage needed
+                z3 = 8.65373; %
+                if design=="sawtooth", [pss,Tss,sss] = b30_library_siz_auto(angle(exp(1i.*charge.*theta)),i_lam); end % VORTEX: add wavelength dependent phase. 
+                if design=="cosine", [pss,Tss,sss] = b30_library_siz_auto(angle(exp(1i.*z1.*cos(charge.*theta)))+z1-pi,i_lam); end % COSINE: add wavelength dependent phase. 
+                vortex1 = exp(1i.*pss); % phase only
+                if trans=="const", vortex = vortex1; end
+                if trans=="var", vortex = vortex1.*sqrt(Tss); end % add phase dependent transmission values
+% 
+% %                 vortcube = cat(3,vortcube,vortex); %(:,:,i_lam);
+% 
+% %             end
+%             
+            mask = vortex;
+            
+            
+            
+%             figure(); imagesc(angle(mask)); axis image; title('Custom Phase Map','FontSize',20);
+%             disp('read metasurface map successfully');
 
             
         otherwise

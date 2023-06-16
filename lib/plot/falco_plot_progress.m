@@ -41,13 +41,13 @@ if(mp.flagPlot)
 
             %--Top label
             handles.textbox1 = annotation('textbox', [0.25 0.89 0.5 0.1], ...
-                'String', sprintf('%s: Iteration %d',mp.coro,Itr-1),'Fontsize',32,...
+                'String', sprintf('%.e bw, %s: Iteration %d',mp.FracBW,mp.F3.phaseMaskType,Itr-1),'Fontsize',32,...
                 'HorizontalAlignment','center','LineStyle','none','Interpreter','latex');
 
             %--Stellar PSF
             h_psf = subplot(2,3,1); % Save the handle of the subplot
             set(h_psf, 'OuterPosition', [0.01, 0.46, subplotbox])
-            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-10 -3]); 
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-15 -3]); 
             axis xy equal tight; colorbar(h_psf); colormap(h_psf,parula);
             % xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
@@ -155,7 +155,7 @@ if(mp.flagPlot)
 
             h_psf = subplot(2,2,1); % Save the handle of the subplot
             set(h_psf, 'OuterPosition', [0.05, 0.46, [1 1]*0.45])
-            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-10 -3]); 
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-15 -3]); 
             axis xy equal tight; colorbar(h_psf); colormap(h_psf,parula);
         %     xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');

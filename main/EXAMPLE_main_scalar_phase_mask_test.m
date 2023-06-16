@@ -4,7 +4,15 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
-% Script to perform a DM-apodized VC (DMVC) simple design run.
+% Script to perform simple test of SVCs across bandiwdth
+% NO DARK HOLE DIGGING- NO WFSC LOOP
+
+% Can test designs with varying roddier radii/phase dimples.
+
+% REVISION HISTORY:
+% --------------
+% Created on 2022-06-21 by Niyati Desai.
+
 
 clear
 tic;
@@ -29,140 +37,134 @@ tic;
     nulldepths = [];
     peaks =[];
     radii = [0.5 0.65 0.8 0.95 1.1 1.25 1.4 1.55];
+    phaselist = [0 0.2 0.4 0.6];
     imcube = [];
 
-for index = 1:1  %length(radii) %6 %
-    clearvars -except vals bws index nsbps nulldepths peaks radii imcube
+for index = 4:4 %length(bws) %length(radii) %6 %
+    clearvars -except vals bws index nsbps nulldepths peaks phaselist imcube
 
-    mp.fracBW = bws(1);       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-    mp.Nsbp = nsbps(1);            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-    mp.P1.full.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
-    mp.P1.compact.Nbeam = 600; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.fracBW = bws(index);       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+    mp.Nsbp = nsbps(index);            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+    mp.P1.full.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.P1.compact.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
 
-    %     EXAMPLE_defaults_VC_simple
+%         EXAMPLE_defaults_VC_simple
     EXAMPLE_defaults_SVC_chromatic
-    mp.flagPlot = true;
+    mp.flagPlot = false;
 
-    mp.Fend.res = 10;
-    mp.F3.compact.res = 4;
-    mp.F3.full.res = 8; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
-    mp.F3.inVal = 10; % radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m
-    mp.F3.outVal = 17;% radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m
+    mp.Fend.res = 35.55;
+    mp.F3.compact.res = 16;
+    mp.F3.full.res = 16; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
+    mp.F3.inVal = 1; % radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m
+    mp.F3.outVal = 2;% radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m
 
+    mp.F3.phaseMaskType = 'roddier';
     mp.F3.VortexCharge = 6;
-%     mp.F3.Nsteps = 6;
+    mp.F3.roddierradius = 0.53; %[lambda/D]
+    mp.F3.roddierphase = 0.5; %phaselist(index);
+    mp.F3.dimpleFlag = true;
+    
+    mp.flagVVC = false;
 
-    mp.F3.phaseMaskType = 'sawtooth';%plaintest';
-    mp.F3.dimpleFlag = false;
-    mp.F3.VortexSpotDiamVec = 1.06;%radii(index);%[1.41 1.03];%[1.03 1.41];%1.06;%
-    mp.F3.VortexSpotAmpVec = 1;%[1 1];%0;%
-    mp.F3.VortexSpotPhaseVec = -0.5;%[0.92 -0.45];%0.5;%
+    if mp.flagVVC
+        fprintf('achromatic VVC')
+        mp.sbp_weights = ones(mp.Nsbp,1);
+        mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
+        mp.sbp_weights(1) = 1/2; %--Give end sub-bands half weighting
+        mp.sbp_weights(end) = 1/2; %--Give end sub-bands half weighting
+        mp.F3.phaseScaleFacLambdas = ones(1, mp.Nsbp) * mp.lambda0;
+        mp.F3.phaseScaleFac = ones(1, mp.Nsbp);
+    end
 
+    
     [mp, out] = falco_flesh_out_workspace(mp);
 
         %% Calculate image 
-% 
-% 
-%     %     tic;
-% %         mp.flagLambdaOffset = true;
-% 
-%         %For null depth plot
-%         %run 20% BW sim once
+
+
+    %     tic;
+%         mp.flagLambdaOffset = true;
+
+        %For null depth plot
+        %run 20% BW sim once
 %         nulldepths = [];
 %         phasescalefacs = mp.F3.phaseScaleFac;
 %         for iSubband = 1:mp.Nsbp 
 %             im3 = falco_get_sbp_image(mp, iSubband);
-%             peakheight = max(im3,[],'all');
-%             peaks = [peaks peakheight];
-%             nulldepths = [nulldepths mean(im3(mp.Fend.score.mask))];
+% %             peakheight = max(im3,[],'all');
+% %             peaks = [peaks peakheight];
+%             nulldepths = [nulldepths mean(im3(mp.Fend.score.mask))]
+% 
 %         end
 %     %     toc; 
 % % 
         im = falco_get_summed_image(mp);
-        imcube(:,:,index) = im;
+%         imcube(:,:,index) = im;
         %%
 %         figure(); imagesc(im/2^16);
 %         axis tight; axis equal;
 %         set(gca,'ColorScale','log','FontSize',12);
 %         h = colorbar; caxis([-7 0]);
-        
-        xisDL = mp.Fend.xisDL;
-        etasDL = mp.Fend.etasDL;
-
-        figure();
-%         imagesc(xisDL,etasDL,im);
-        imagesc(im/2^16);
-        axis image; set(gca,'ydir','normal')
-        % caxis([1e-8,5e-5]);
-        title("Final Focal Plane Image for Radii = " +radii(index));
-        set(gca,'tickdir','out')
-        set(gcf,'Color','w');
-        colorbar;
-        set(gca,'ColorScale','log')
-        
-        
+%         
+%         xisDL = mp.Fend.xisDL;
+%         etasDL = mp.Fend.etasDL;
+% 
+%         figure();
+% %         imagesc(xisDL,etasDL,im);
+%         imagesc(im/2^16);
+%         axis image; set(gca,'ydir','normal')
+%         % caxis([1e-8,5e-5]);
+%         title("Final Focal Plane Image for Phase");
+%         set(gca,'tickdir','out')
+%         set(gcf,'Color','w');
+%         colorbar;
+%         set(gca,'ColorScale','log')
+%         
+%         
 %         scoremask = im(mp.Fend.score.mask);
 %         rawcontrast = mean(im(mp.Fend.score.mask))
 %         val = rawcontrast;
 %         vals = [vals val];
 end
 
-% %% Plots
-% % 
-% % %%-- plot FPM 
-% phaseScaleFac = 1;
-% pixPerLamD = mp.F3.full.res;
-% inputs.type = mp.F3.phaseMaskType;
-% inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
-% inputs.charge = mp.F3.VortexCharge;
-% inputs.phaseScaleFac = phaseScaleFac;
-% % inputs.clocking = mp.F3.clocking;
-% inputs.Nsteps = mp.F3.Nsteps;
-% fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
-% % 
-% % figure(1);
-% % imagesc(abs(fpm));
-% % colorbar; 
-% % colormap(gray); 
-% % 
-% figure(3);
-% imagesc(angle(fpm));
-% colorbar; 
-% colormap(hsv);
-% caxis([-pi pi]) 
-% axis tight; axis equal;
+%% Plots
+
 % 
 % %%-- plot image 
 % 
-% figure(3);
-% imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(im));
-% colorbar; 
-% caxis([-12 -5])
+figure(5);
+imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(im));
+colorbar; 
+caxis([-15 -5]);
+axis equal; axis tight;
+title('Phasescalefac:1.0, Sawtooth + Roddier dimple')
 
 
-% rawcontrast = mean(im(mp.Fend.score.mask))
+rawcontrast = mean(im(mp.Fend.score.mask))
 
 %% Debugging
 
-modvar = ModelVariables;
-mp.debug= true;
-[Eout, sDebug] = model_compact(mp,modvar);
-figure(6);
-imagesc(abs(sDebug.EP4_after_mask));
-axis equal; axis tight;
+% modvar = ModelVariables;
+% mp.debug= true;
+% [Eout, sDebug] = model_compact(mp,modvar);
+% figure(6);
+% imagesc(abs(sDebug.EP4_after_mask));
+% axis equal; axis tight;
 
 
 %% Save data
 % % toc;
-
-% figure(4)
+% rawcontrasts = vals;
+% 
+% figure(44)
 % bws(1) = 0;
 % xaxis = bws;
 % xaxis = phasescalefacs;
-% plot(xaxis,peaks,'Color',[0 0.5 0.8],'LineWidth',2)
+% plot(xaxis,nulldepths,'Color',[0 0.5 0.8],'LineWidth',2)
 % xlabel('Bandwidth');
 % ylabel('Raw Contrast');
-% title('Vortex Phase Mask Alone')
+% title('Sawtooth + Roddier dimple')
 % set(gca, 'YScale', 'log')
+% grid on;
 
 % save monochromaticroddier.mat vals radii im mp %phasescalefacs mp %imcube mp %nulldepths phasescalefacs peaks im3 mp %
