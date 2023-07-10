@@ -18,7 +18,7 @@
 function jac = model_Jacobian_IEFC(mp, whichDM)
 
     mp.isProbing = true;
-    flagPlot = true; % plotting for debugging
+    flagPlot = false; % plotting for debugging
     Nprobes = size(mp.iefc.probeCube, 3);
     
     if whichDM == 1
@@ -55,6 +55,11 @@ function jac = model_Jacobian_IEFC(mp, whichDM)
                         figure(31); imagesc(log10(abs(plusStruct.imageMinus))); axis xy equal tight; colorbar 
                         title(sprintf('Basis Mode %d/%d', iBasisMode,mp.dm1.NbasisModes));
                         drawnow;
+                        
+                        figure(32); imagesc(log10(abs(plusStruct.imagePlus-plusStruct.imageMinus))); axis xy equal tight; colorbar 
+                        title(sprintf('Basis Mode %d/%d', iBasisMode,mp.dm1.NbasisModes));
+                        drawnow;
+                        
                     end
 
                 end  
