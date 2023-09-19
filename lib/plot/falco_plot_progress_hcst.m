@@ -8,8 +8,8 @@ function handles = falco_plot_progress_hcst(handles,mp,Itr,Inorm,Im_tb,DM1surf,D
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
-Icbmin = -8;
-Icbmax = -4;
+Icbmin = -8.5;
+Icbmax = -4.5;
 Im = Im_tb.Im;
 if(Itr>1)
     Imod = mean(Inorm.mod(Itr,:));

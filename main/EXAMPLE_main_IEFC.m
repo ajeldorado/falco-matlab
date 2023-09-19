@@ -28,8 +28,8 @@ EXAMPLE_defaults_HCST_VVC % Re-use SCC example's configuration
 mp.flagSim = false;      %--Simulation or not
 mp.testbed = 'HCST';
 mp.dm1.basisType = 'fourier';
-mp.dm1.Nactbeam = 27;
-mp.Fend.res = 8.7;
+mp.dm1.Nactbeam = 29;
+mp.Fend.res = 8.6;
 
 mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 mp.Fend.shape = 'D'; % 'D', 'circle'
@@ -45,10 +45,13 @@ mp.flag_lc = false;
 
 % path2flatMap = [bench.info.HCST_DATA_DIR,'is_results/2022Oct13/'];
 % path2flatMap =[bench.info.HCST_DATA_DIR,'pr_results/2022Nov23/'];
-path2flatMap =[bench.info.HCST_DATA_DIR,'pr_results/2023Jan16/'];
+% path2flatMap =[bench.info.HCST_DATA_DIR,'pr_results/2023Jan16/'];
+path2flatMap = [bench.info.HCST_DATA_DIR,'zygo_flat/2019Jun26/'];
+
 % path2startingMap =[bench.info.HCST_DATA_DIR,'is_results/2022Oct13/'];
-path2startingMap =[bench.info.HCST_DATA_DIR,'efc_results/2023Jan27/'];
-% path2startingMap =[bench.info.HCST_DATA_DIR,'pr_results/2023Jan16/'];
+% path2startingMap =[bench.info.HCST_DATA_DIR,'efc_results/2023Jan27/'];
+path2startingMap =[bench.info.HCST_DATA_DIR,'efc_results/2023Jun13/'];
+% path2startingMap = [bench.info.HCST_DATA_DIR,'zygo_flat/2019Jun26/'];
 
 NDfilter_FWpos = 2;
 FWpos = 1; 
@@ -65,9 +68,9 @@ else
 end 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-tint_offAxis = 1e-2*ones(Nsbp,1); %; % 1e-3; %Integration time for off-axis PSF
-mp.tint_efc = 5e-0; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
-mp.tint_est = 1e-2;%5e-1; % time of integration for the estimation/sensing
+tint_offAxis = 1e-1*ones(Nsbp,1); %; % 1e-3; %Integration time for off-axis PSF
+mp.tint_efc = 1e-0; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
+mp.tint_est = 1e-1;%5e-1; % time of integration for the estimation/sensing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 bench.info.sbp_texp = mp.tint_efc;
 mp.tint = mp.tint_efc;
@@ -96,7 +99,7 @@ label_progress = [num2str(Nsbp),'lams',num2str(round(1e9*lambda0)),'nm_BW',num2s
 falcoPreparev2
 
 mp.bench = bench;
-sbp_width = 16e-9;
+sbp_width = 10e-9;
 % bench.info.sbp_width = sbp_width ; %--Width of each sub-bandpass on testbed (meters)
 bench.info.sbp_texp = mp.tint_efc;% Exposure time for each sub-bandpass (seconds)
 bench.info.PSFpeaks = PSFpeaks;% counts per second 
@@ -134,7 +137,7 @@ mp.runLabel = sprintf('Series%04d_Trial%04d', mp.SeriesNum, mp.TrialNum);
 % % % % PLANNED SEARCH EFC DEFAULTS
 % mp.controller = 'plannedEFC';
 % mp.ctrl.dmfacVec = 1;
-mp.ctrl.log10regVec = -8:1:-4; %--log10 of the regularization exponents (often called Beta values)
+mp.ctrl.log10regVec = -8:2:0; %--log10 of the regularization exponents (often called Beta values)
 % mp.ctrl.log10regVec = -10:1:-3; 
 
 % %--CONTROL SCHEDULE. Columns of mp.ctrl.sched_mat are: 
@@ -158,7 +161,7 @@ mp.ctrl.log10regVec = -8:1:-4; %--log10 of the regularization exponents (often c
 %--Set path and filename for saved Jacobians
 % mp.path.jac = % Define path to saved out Jacobians. Default if left empty is 'falco-matlab/data/jac/'
 mp.jac.fn = 'jac_iefc_2.mat'; %'jac_iefc_test.mat'; % Name of the Jacobian file to save or that is already saved. The path to this file is set by mp.path.jac.
-mp.relinItrVec = [1, 15, 25, 35]; %[];%1; %[];  %--Correction iterations at which to re-compute the Jacobian. Make an empty vector to load mp.jac.fn
+mp.relinItrVec = [1, 15, 35]; %[];%1; %[];  %--Correction iterations at which to re-compute the Jacobian. Make an empty vector to load mp.jac.fn
 % mp.relinItrVec = []; %[];%1; %[];  %--Correction iterations at which to re-compute the Jacobian. Make an empty vector to load mp.jac.fn
 
 % Use the regular Lyot stop without pinholes for SCC
@@ -180,8 +183,8 @@ mp.iefc.probeCube = zeros(mp.dm1.Nact, mp.dm1.Nact, 2);
 mp.iefc.probeCube(:, :, 1) = dmVsin;
 mp.iefc.probeCube(:, :, 2) = dmVcos;
 
-mp.iefc.modeCoef = 1e-3 /2; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
-mp.iefc.probeCoef = 2e-4 /2; %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
+mp.iefc.modeCoef = 1e-3/2; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
+mp.iefc.probeCoef = 5e-4/2; %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
 mp.iefc.probeDM = 1; %--Which DM to use when probing for IEFC.
 
 

@@ -14,17 +14,18 @@ mp.thput_vec = zeros(mp.Nitr+1, 1);
 flagBreak = false;
 
 for Itr = 1:mp.Nitr
-%     
-%     if Itr == mp.relinItrVec(3)
-%         mp.tint_efc = 5*mp.tint_efc; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
-%         mp.tint_est = 5*mp.tint_est;%5e-1; % time of integration for the estimation/sensing
-%         bench.info.sbp_texp = mp.tint_efc;
-%         mp.tint = mp.tint_efc;
-%         mp.iefc.modeCoef = mp.iefc.modeCoef / 2; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
-%         mp.iefc.probeCoef = mp.iefc.probeCoef / 2; %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
-%         mp.iefc.probeDM = 1; %--Which DM to use when probing for IEFC.
-% 
-%     end
+    if false
+        if Itr == 10
+            mp.tint_efc = 1; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
+    %         mp.tint_est = 5*mp.tint_est;%5e-1; % time of integration for the estimation/sensing
+            bench.info.sbp_texp = mp.tint_efc;
+            mp.tint = mp.tint_efc;
+    %         mp.iefc.modeCoef = mp.iefc.modeCoef / 2; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
+    %         mp.iefc.probeCoef = mp.iefc.probeCoef / 2; %--Gain coefficient to apply to the stored probe commands used for IEFC state estimation.
+    %         mp.iefc.probeDM = 1; %--Which DM to use when probing for IEFC.
+
+        end
+    end
     
 
     %% Bookkeeping
@@ -133,9 +134,10 @@ for Itr = 1:mp.Nitr
     end
     
     cvar.Eest = ev.Eest;
-     
+    
     if ~mp.flagSim % jllopsay
         mp.tint = mp.tint_efc;
+        mp.label_im = 'control';
     end
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
@@ -175,6 +177,9 @@ for Itr = 1:mp.Nitr
         else
             fprintf('Prev and New Measured NI:\t\t\t %.2e\t->\t%.2e\t (%.2f x smaller)  \n',...
                 out.InormHist(Itr), out.InormHist(Itr+1), out.InormHist(Itr)/out.InormHist(Itr+1) );
+            if out.InormHist(Itr)>5e-5
+                flagbreak = true;
+            end
         end
         if ~mp.flagSim
             fprintf('\n');

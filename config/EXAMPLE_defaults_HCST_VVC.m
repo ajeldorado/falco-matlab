@@ -3,6 +3,8 @@
 
 %% Misc
 
+mp.flag_lc = false;
+
 %--Record Keeping
 mp.SeriesNum = 1;
 mp.TrialNum = 1;
@@ -57,6 +59,10 @@ mp.est.probe.yOffset = 0;    % offset of probe center in y [actuators]. Use to a
 % which axis to have the phase discontinuity along [x or y or xy/alt/alternate]
 mp.est.probe.gainFudge = 1;     % empirical fudge factor to make average probe amplitude match desired value.
 
+mp.est.probe.axis = 'x';
+if flag_efc360is
+    mp.est.probe.axis = 'xy';
+end
 %% Wavefront Control: General
 
 %--Whether to perform a model-based (instead of empirical) grid search for the controller
@@ -76,7 +82,11 @@ mp.eval.Rsens = [2,3; 3,4; 4,5];
 
 %--Grid- or Line-Search Settings
 % mp.ctrl.log10regVec = -4:1:-1; %--log10 of the regularization exponents (often called Beta values)
-mp.ctrl.log10regVec = -3:1:0; %--log10 of the regularization exponents (often called Beta values)
+if mp.flagFiber
+    mp.ctrl.log10regVec = -5:1:-2; %--log10 of the regularization exponents (often called Beta values)
+else
+    mp.ctrl.log10regVec = -2:0.5:-0.; %--log10 of the regularization exponents (often called Beta values)
+end
 mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
    
@@ -107,8 +117,12 @@ mp.dm_ind = [1]; %--Which DMs to use
 mp.dm1.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
 mp.dm2.inf_fn = 'influence_BMC_kiloDM_300micron_res10_spline.fits';
 
-correction_to_match_res = 1.0251;
-mp.dm1.dm_spacing = 300e-6*correction_to_match_res; %--User defined actuator pitch [meters]
+% correction_to_match_res = 0.98011;%1.0251;
+% correction_to_match_res = 0.97521;%1.0251;
+% correction_to_match_res = 0.997;%1.0251;
+correction_to_match_res = 1.0025;%1.0251;
+magnification2project2LSplane = 1.12;
+mp.dm1.dm_spacing = 300e-6*magnification2project2LSplane*correction_to_match_res; %--User defined actuator pitch [meters]
 mp.dm2.dm_spacing = 300e-6; %--User defined actuator pitch [meters]
 
 mp.dm1.inf_sign = '+';
@@ -131,20 +145,25 @@ else
     if mp.Nsbp>1
         gainfactor = 1;
     else
-        gainfactor = 1.25;        
-%         gainfactor = 3.25;
+%         gainfactor = 0.3;        
+%         gainfactor = 0.475;
+        gainfactor = 0.425;
 
     end
+end
+if flag_efc360is
+    gainfactor = 0.3;
 end
 mp.dm1.VtoH = (4e-7*ones(mp.dm1.Nact) * 2*sqrt(2)).*gainmap*gainfactor;%
 %****
 mp.dm1.xtilt = 6.8198;               % for foreshortening. angle of rotation about x-axis [degrees]
 mp.dm1.ytilt = 0;               % for foreshortening. angle of rotation about y-axis [degrees]
-mp.dm1.zrot = 1.305*2;                % clocking of DM surface [degrees]
-% mp.dm1.xc = 34-18.3;%bench.DM.yc;%(mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
-% mp.dm1.yc = 17.5;% bench.DM.xc;%(mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
-mp.dm1.xc = 15.7;%34-18.3;
-mp.dm1.yc = 16.5;
+% mp.dm1.zrot = 1.305*2;                % clocking of DM surface [degrees]
+mp.dm1.zrot = 0.2;                % clocking of DM surface [degrees]
+% mp.dm1.xc = 18.5;%bench.DM.yc;%(mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
+% mp.dm1.yc = 16.75;% bench.DM.xc;%(mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
+mp.dm1.xc = 17.6;%34-14.7;% 
+mp.dm1.yc = 16.1;%34-19;%
 mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
 mp.dm1.basisType = 'actuator';  % basis set for control. 'actuator' or 'fourier'
 
@@ -177,24 +196,54 @@ mp.layout = 'Fourier';  %--Which optical layout to use
 mp.coro = 'vortex';
 
 %--Final Focal Plane Properties
-mp.Fend.res = 7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
+% mp.Fend.res = 8.01*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
+% mp.Fend.res = 7.9299*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
+% mp.Fend.res = 6.9443*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
+mp.Fend.res = 7.2036*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
 mp.Fend.clockAngDeg = 0; % Clocking angle of the dark hole region
+
+%**************************
+% mp.Fend.dxi = 6.5e-6;%(mp.fl*mp.lambda0/0.009)/mp.Fend.res; % sampling at Fend.[meters]
+% mp.Fend.deta = mp.Fend.dxi; % sampling at Fend.[meters]    
+%**************************
 
 mp.Fend.Nxi = 180;
 mp.Fend.Neta = 180;
 mp.Fend.FOV = mp.Fend.Nxi/2/mp.Fend.res; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
-mp.Fend.corr.Rin = 3.5;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 10;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rin = 4.5;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 10.5;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
-mp.Fend.score.Rin = mp.Fend.corr.Rin+0.5;  % inner radius of dark hole scoring region [lambda0/D]
-mp.Fend.score.Rout = mp.Fend.corr.Rout-0.5;  % outer radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rin = mp.Fend.corr.Rin+0.25;  % inner radius of dark hole scoring region [lambda0/D]
+mp.Fend.score.Rout = mp.Fend.corr.Rout-0.25;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'left'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'bottom'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 mp.Fend.shape = 'D'; % 'D', 'circle'
+
+%***********************************
+if flag_efc360is
+    mp.Fend.corr.Rin = 3.5;   % inner radius of dark hole correction region [lambda0/D]
+    mp.Fend.corr.Rout  = 12.5;  % outer radius of dark hole correction region [lambda0/D]
+    mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
+    mp.Fend.score.Rin = mp.Fend.corr.Rin+0.25;  % inner radius of dark hole scoring region [lambda0/D]
+    mp.Fend.score.Rout = mp.Fend.corr.Rout-0.25;  % outer radius of dark hole scoring region [lambda0/D]
+    mp.Fend.score.ang = mp.Fend.corr.ang;  % angular opening of dark hole scoring region [degrees]
+    mp.Fend.shape = 'circle'; % 'D', 'circle'
+    mp.Fend.sides = 'both'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+elseif flag_smallDH4smf
+    mp.Fend.corr.Rin = 6.5;   % inner radius of dark hole correction region [lambda0/D]
+    mp.Fend.corr.Rout  = 9.5;  % outer radius of dark hole correction region [lambda0/D]
+    mp.Fend.corr.ang  = 50;  % angular opening of dark hole correction region [degrees]
+    mp.Fend.score.Rin = mp.Fend.corr.Rin+0.25;  % inner radius of dark hole scoring region [lambda0/D]
+    mp.Fend.score.Rout = mp.Fend.corr.Rout-0.25;  % outer radius of dark hole scoring region [lambda0/D]
+    mp.Fend.score.ang = mp.Fend.corr.ang;  % angular opening of dark hole scoring region [degrees]
+    mp.Fend.shape = 'circle'; % 'D', 'circle'
+end
+    %***********************************
+
 
 %% SCC
 
@@ -221,7 +270,7 @@ clocking = mp.Fend.clockAngDeg + 90; % - 90; % - 90-180; %- 90; % -90 for 'botto
 mp.dm2.fourier_basis_xis = [];
 mp.dm2.fourier_basis_etas = [];
 
-mp.dm1.Nactbeam = 33;%(mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
+mp.dm1.Nactbeam = 30; %33;%(mp.dm1.Nact-2); % Number of actuators across the beam (approximate)
 
 % Update probe commands in main script after calling falco_flesh_out_workspace(mp).
 mp.iefc.probeCube = zeros(mp.dm1.Nact, mp.dm1.Nact, 2);
@@ -229,17 +278,31 @@ mp.iefc.probeCube = zeros(mp.dm1.Nact, mp.dm1.Nact, 2);
 %% Optical Layout: Compact Model (and Jacobian Model)
 % NOTE for HLC and LC: Lyot plane resolution must be the same as input pupil's in order to use Babinet's principle
 
+
 %--Focal Lengths
 mp.fl = 648.59e-3; %--[meters] Focal length value used for all FTs in the compact model. Don't need different values since this is a Fourier model.
 
-ls_od=0.844;
+% ls_od=0.93; % apodizer
+% ls_od=0.848; %
+ls_od=0.84; %
 %--Pupil Plane Diameters
-mp.P2.D = 0.0096;%(mp.dm1.Nact-2)*mp.dm1.dm_spacing;
+% mp.P2.D = 0.0097;%apodizer
+mp.P2.D = 0.009/ls_od;%(mp.dm1.Nact-2)*mp.dm1.dm_spacing;
 mp.P3.D = mp.P2.D;
-mp.P4.D =0.009/ls_od;% mp.P2.D;
+
+%**********
+% mp.P4.D =0.0097/ls_od;% mp.P2.D;
+mp.P4.D = mp.P2.D;%/ls_od;% mp.P2.D;
+%**********
 
 %--Pupil Plane Resolutions
-mp.P1.compact.Nbeam = 250;
+if flag_apodizer_avc
+    maskaux = fitsread('/media/hcst/edc9d85f-b1f5-4499-97aa-197291d84a05/HCST_data/pupil_amp_maps/apod_amp_mask_061223.fits');
+    maskaux = fliplr(rot90(maskaux,2));
+    mp.P1.compact.Nbeam = size(maskaux,1); %250;
+else
+    mp.P1.compact.Nbeam = 250; %
+end
 mp.P2.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P3.compact.Nbeam = mp.P1.compact.Nbeam;
 mp.P4.compact.Nbeam = mp.P1.compact.Nbeam;  % P4 must be the same as P1 for Vortex. 
@@ -274,15 +337,20 @@ mp.P1.D = 4.00; %--circumscribed telescope diameter [meters]. Used only for conv
 clear inputs
 inputs.OD = 1.00;
 
-% Full model
-inputs.Nbeam = mp.P4.full.Nbeam;
-inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
-mp.P1.full.mask = falco_gen_pupil_Simple(inputs); 
+if flag_apodizer_avc
+    mp.P1.full.mask = maskaux;
+    mp.P1.compact.mask = maskaux;
+else
+    % Full
+    inputs.Nbeam = mp.P4.full.Nbeam;
+    inputs.Npad = 2^(nextpow2(mp.P1.full.Nbeam));
+    mp.P1.full.mask = falco_gen_pupil_Simple(inputs); 
+    % Compact
+    inputs.Nbeam = mp.P1.compact.Nbeam;
+    inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
+    mp.P1.compact.mask = falco_gen_pupil_Simple(inputs); 
+end
 
-% Compact model
-inputs.Nbeam = mp.P1.compact.Nbeam;
-inputs.Npad = 2^(nextpow2(mp.P1.compact.Nbeam));
-mp.P1.compact.mask = falco_gen_pupil_Simple(inputs); 
 
 
 %% "Apodizer" (P3) Definition and Generation
@@ -291,28 +359,28 @@ mp.flagApod = false;    %--Whether to use an apodizer or not in the FALCO models
 
 %% Lyot stop (P4) Definition and Generation
 
-clear inputs
-DbeamLyot = 7.5e-3; % [meters]
-radialOffset = 12.6e-3/DbeamLyot; % [beam diameters]
-radiusPinhole = (0.350e-3/2)/DbeamLyot; % [beam diameters]
-pinholeRotation = -60; % [degrees]
-maxOffset = radialOffset*max([abs(sind(pinholeRotation)), abs(cosd(pinholeRotation))]);
-NpadCompact = ceil_even(mp.P4.compact.Nbeam*(2*maxOffset + 2*radiusPinhole) + 1) + 2;
-NpadFull = ceil_even(mp.P4.full.Nbeam*(2*maxOffset + 2*radiusPinhole) + 1) + 2;
+% clear inputs
+% DbeamLyot = 9e-3; % [meters]
+% radialOffset = 12.6e-3/DbeamLyot; % [beam diameters]
+% radiusPinhole = (0.350e-3/2)/DbeamLyot; % [beam diameters]
+% pinholeRotation = -60; % [degrees]
+% maxOffset = radialOffset*max([abs(sind(pinholeRotation)), abs(cosd(pinholeRotation))]);
+% NpadCompact = ceil_even(mp.P4.compact.Nbeam*(2*maxOffset + 2*radiusPinhole) + 1) + 2;
+% NpadFull = ceil_even(mp.P4.full.Nbeam*(2*maxOffset + 2*radiusPinhole) + 1) + 2;
 
 % Pinhole
-inputs.centering = mp.centering;
-inputs.OD = 2*radiusPinhole;
-inputs.xShear = radialOffset*cosd(pinholeRotation);
-inputs.yShear = radialOffset*sind(pinholeRotation);
+% inputs.centering = mp.centering;
+% inputs.OD = 2*radiusPinhole;
+% inputs.xShear = radialOffset*cosd(pinholeRotation);
+% inputs.yShear = radialOffset*sind(pinholeRotation);
 
-inputs.Nbeam = mp.P4.compact.Nbeam;
-inputs.Npad = NpadCompact;
-pinholeCompact = falco_gen_pupil_Simple(inputs); 
+% inputs.Nbeam = mp.P4.compact.Nbeam;
+% inputs.Npad = NpadCompact;
+% pinholeCompact = falco_gen_pupil_Simple(inputs); 
 
-inputs.Nbeam = mp.P4.full.Nbeam;
-inputs.Npad = NpadFull;
-pinholeFull = falco_gen_pupil_Simple(inputs); 
+% inputs.Nbeam = mp.P4.full.Nbeam;
+% inputs.Npad = NpadFull;
+% pinholeFull = falco_gen_pupil_Simple(inputs); 
 
 % Main, centered Lyot stop opening
 % Inputs common to both the compact and full models
@@ -325,7 +393,7 @@ inputs.Nbeam = mp.P4.compact.Nbeam;
 inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));%NpadCompact;
 % mp.P4.compact.mask = pinholeCompact + falco_gen_pupil_Simple(inputs); 
 mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
-mp.P4.compact.maskWithoutPinhole = falco_gen_pupil_Simple(inputs);
+% mp.P4.compact.maskWithoutPinhole = falco_gen_pupil_Simple(inputs);
 
 % Full model
 inputs.Nbeam = mp.P4.full.Nbeam;

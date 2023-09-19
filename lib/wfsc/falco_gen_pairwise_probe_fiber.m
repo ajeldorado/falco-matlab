@@ -68,7 +68,7 @@ switch lower(badAxis)
         probeCmd = magn*sin(2*pi*omegaX*XS + psi);
 
     case 'x'
-        omegaY = mp.Fend.y_fiber(1);
+        omegaY = mp.Fend.y_fiber(1)/0.9412;
         probeCmd = magn*sin(2*pi*omegaY*YS + psi);
         
     case 'm'

@@ -214,8 +214,11 @@ for iSubband = 1:mp.Nsbp
     whichImage = 1;
     mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
 
-    % jllop: back to tint_est
-    if ~mp.flagSim;mp.tint = mp.tint_efc;end
+    % jllop: back to tint_efc for eval
+    if ~mp.flagSim
+        mp.tint = mp.tint_efc;
+        mp.label_im = 'eval';
+    end
 
     if ~mp.flagFiber
         I0 = falco_get_sbp_image(mp, iSubband);
@@ -231,7 +234,10 @@ for iSubband = 1:mp.Nsbp
     
     
     % jllop: back to tint_est
-    if ~mp.flagSim;mp.tint = mp.tint_est;end
+    if ~mp.flagSim
+        mp.tint = mp.tint_est;
+        mp.label_im = 'est';
+    end
     
     if iStar == 1 % Image already includes all stars, so don't sum over star loop
         
@@ -661,7 +667,7 @@ mp.isProbing = false; % tells the camera whether to use the exposure time for ei
 
 fprintf(' done. Time: %.3f\n',toc);
 
-% jllop: tint is not tint_efc
-if ~mp.flagSim;mp.tint = mp.tint_efc;end
+% % jllop: tint is not tint_efc
+% if ~mp.flagSim;mp.tint = mp.tint_efc;end
 
 end %--END OF FUNCTION

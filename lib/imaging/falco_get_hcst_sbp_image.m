@@ -89,7 +89,7 @@ function [image_dh,varargout] = falco_get_hcst_sbp_image(mp,si)
     if mp.flagFiber
         SMFInt0 = bench.info.SMFInt0s(si)/mp.peakPSFtint(si)*current_tint*mp.NDfilter_cal;
         hcst_andor_setSubwindow(bench,bench.andor.FEURow,...
-            bench.andor.FEUCol,32,false);
+            bench.andor.FEUCol,24,false);
         dark4EFCSMF = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
         im = hcst_andor_getImage(bench)-dark4EFCSMF;
         Vsmf = hcst_fiu_aperturePhotometryOnAndor(bench,im,true);%max(im(:));
@@ -100,53 +100,74 @@ function [image_dh,varargout] = falco_get_hcst_sbp_image(mp,si)
         varargout{1} = normI;
         peakPSF=1;
         % Save data
-        save([bench.info.inprogress_folder,'image_data_',datestr(now,'yyyymmmddTHHMMSS'),'.mat'],'im','Vsmf','SMFInt0','current_tint')
+        lamII=lam0;
+        flnm = strcat('image_data_',mp.label_im,'_si',string(si),'_',datestr(now,'yyyymmmddTHHMMSS'),'.mat');
+        save(strcat(bench.info.inprogress_folder,flnm),...
+            'im','Vsmf','SMFInt0','current_tint','si','lamII','cmds')
+        
+        figure(1110+si)        
+        subplot( 2, 1, 1 )
+        imagesc(im );
+        axis image
+        colorbar
+        title(['counts - max:',num2str(max(im(:)))])
+
+        subplot( 2, 1, 2 )
+        imagesc(log10_4plot(im) );
+        axis image
+        colorbar
+        title('counts (log-scale)')
+
     else
         peakPSF = PSFpeak/mp.peakPSFtint(si)*current_tint*mp.NDfilter_cal; 
         normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 
         image_dh = normI;
         % Save data
-        save([bench.info.inprogress_folder,'image_data_',datestr(now,'yyyymmmddTHHMMSS'),'.mat'],'normI','peakPSF','current_tint')
+        lamII=lam0;
+        flnm = strcat('image_data_',mp.label_im,'_si',string(si),'_',datestr(now,'yyyymmmddTHHMMSS'),'.mat');
+        save(strcat(bench.info.inprogress_folder,flnm),...
+            'normI','peakPSF','current_tint','si','lamII','cmds')
+    
+    
+        figure(1110+si)
+        im_tmp = zeros(size(image_dh))*nan;
+        dh = image_dh(mp.Fend.corr.maskBool);
+        im_tmp(mp.Fend.corr.maskBool) = image_dh(mp.Fend.corr.maskBool);
+        subplot( 2, 3, 1 )
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL, im_tmp );
+        axis xy equal tight;
+        colorbar
+        title(['contrast - med:',num2str(median(dh(:)))])
+
+        subplot( 2, 3, 2 )
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(im_tmp) );
+        axis xy equal tight;
+        colorbar
+        title('contrast (log-scale)')
+
+        subplot( 2, 3, 3 )
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(image_dh) );
+        axis xy equal tight;
+        colorbar
+        title('contrast (log-scale)')
+
+        subplot( 2, 3, 4 )
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL, im_tmp * peakPSF );
+        axis xy equal tight;
+        colorbar
+        title(['counts - med:',num2str(median(dh(:) * peakPSF))])
+
+        subplot( 2, 3, 5 )
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(im_tmp * peakPSF) );
+        axis image
+        colorbar
+        title('counts (log-scale)')
+        axis xy equal tight;
+
+        subplot( 2, 3, 6 )
+        imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(image_dh * peakPSF) );
+        axis xy equal tight;
+        colorbar
+        title('counts (log-scale)')
     end
-    
-    figure(1110+si)
-    im_tmp = zeros(size(image_dh))*nan;
-    dh = image_dh(mp.Fend.corr.maskBool);
-    im_tmp(mp.Fend.corr.maskBool) = image_dh(mp.Fend.corr.maskBool);
-    subplot( 2, 3, 1 )
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL, im_tmp );
-    axis image
-    colorbar
-    title(['contrast - med:',num2str(median(dh(:)))])
-    
-    subplot( 2, 3, 2 )
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(im_tmp) );
-    axis image
-    colorbar
-    title('contrast (log-scale)')
-    
-    subplot( 2, 3, 3 )
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(image_dh) );
-    axis image
-    colorbar
-    title('contrast (log-scale)')
-    
-    subplot( 2, 3, 4 )
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL, im_tmp * peakPSF );
-    axis image
-    colorbar
-    title(['counts - med:',num2str(median(dh(:) * peakPSF))])
-    
-    subplot( 2, 3, 5 )
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(im_tmp * peakPSF) );
-    axis image
-    colorbar
-    title('counts (log-scale)')
-    
-    subplot( 2, 3, 6 )
-    imagesc(mp.Fend.xisDL,mp.Fend.etasDL, log10_4plot(image_dh * peakPSF) );
-    axis image
-    colorbar
-    title('counts (log-scale)')
-    
 end 
