@@ -75,8 +75,8 @@ switch lower(badAxis)
             probeCmd = surfMax*cos(2*pi*omegaY*YS + psi);
         end
     case 'm' % sine waves placing spots at the locations of the fiber tips
-        omegaX = mp.est.probe.Xloc/2;
-        omegaY = mp.est.probe.Yloc/2;
+        omegaX = mp.Fend.x_fiber;
+        omegaY = mp.Fend.y_fiber;
         probeCmd = zeros(size(XS));
         for iFiber = 1:mp.Fend.Nfiber
             probeCmd = probeCmd + surfMax*sin(2*pi*omegaX(iFiber)*XS + 2*pi*omegaY(iFiber)*YS + psi);
