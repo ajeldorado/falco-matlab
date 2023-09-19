@@ -295,9 +295,11 @@ if mp.flagFiber
         end
         
         varargout{1} = Efiber;
-
-        figure(901);
-        imagesc(log10(abs(Efiber).^2)); axis equal tight; colorbar;
+        
+        if mp.flagPlot
+            figure(901);
+            imagesc(log10(abs(Efiber).^2)); axis equal tight; colorbar;
+        end
     end
 end
 

@@ -48,6 +48,13 @@ for Itr = 1:mp.Nitr
     
     mp = falco_compute_psf_norm_factor(mp);
     
+    %******************************************************************************
+    %jllop
+    im_check = falco_get_summed_image(mp);
+    NI_check = mean(im_check(mp.Fend.corr.maskBool));
+    disp(NI_check)
+    %******************************************************************************
+
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr, :) = thput(:);   
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
@@ -91,7 +98,15 @@ for Itr = 1:mp.Nitr
     ev = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
-
+    
+    %% Test: save Efield jllopsay
+    if mp.flagFiber
+        ev2 = falco_est_perfect_Efield_with_Zernikes_testEFCSMF(mp);
+        Eest2D = ev2.Eest2D;
+        clear ev2
+        fitswrite(angle(Eest2D),[mp.path.outdir+"phase_smf_"+mp.runLabel_short+'_Itr'+string(Itr)+".fits"])
+        fitswrite(abs(Eest2D).^2,[mp.path.outdir+"Int_int_"+mp.runLabel_short+'_Itr'+string(Itr)+".fits"])
+    end
     %% Plot the expected and measured delta E-fields
     if ~mp.flagFiber
         if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
@@ -205,6 +220,14 @@ if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
    out.IOLScoreHist = ev.IOLScoreHist;
 end
 
+%% Test: save Efield jllopsay
+if mp.flagFiber
+    ev2 = falco_est_perfect_Efield_with_Zernikes_testEFCSMF(mp);
+    Eest2D = ev2.Eest2D;
+    clear ev2
+    fitswrite(angle(Eest2D),[mp.path.outdir+"phase_smf_"+mp.runLabel_short+'_Itr'+string(Itr)+".fits"])
+    fitswrite(abs(Eest2D).^2,[mp.path.outdir+"Int_int_"+mp.runLabel_short+'_Itr'+string(Itr)+".fits"])
+end
 
 %% Save out an abridged workspace
 

@@ -141,9 +141,11 @@ for si=1:mp.Nsbp
 
         %--Generate the command map for the probe
         probeCmd = falco_gen_pairwise_probe_fiber(mp,InormProbe,probePhaseVec(iProbe),badAxisVec(iProbe));
-
-        figure(901);
-        imagesc(probeCmd); axis equal tight;
+        
+        if mp.flagPlot
+            figure(901);
+            imagesc(probeCmd); axis equal tight;
+        end
         
         %--Select which DM to use for probing. Allocate probe to that DM
         if(mp.est.probe.whichDM == 1)
