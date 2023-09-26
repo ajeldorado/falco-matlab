@@ -73,7 +73,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
         catch 
             try; cleanUpDMs(tb); end
             disp('Error setting DM2. Reseting electronics. Trying again.')
-            FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
+            FNGR_setPos(tb,6);FNGR_setPos(tb,9);FNGR_setPos(tb,6);
             pause(10);
             setUpDMs(tb);
             DM_apply2Dmap(tb.DM1,dm1_map);
