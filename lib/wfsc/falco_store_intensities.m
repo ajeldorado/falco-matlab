@@ -78,7 +78,7 @@ function out = falco_store_intensities(mp, out, ev, Itr)
 
         out.normIntUnmodCorr(Itr, iMode) = mean(imageUnmodVec);
         if mp.flagFiber
-            out.normIntModScore(Itr, iMode) = mean(imageUnmodVec);
+            out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec);
         else
             out.normIntUnmodScore(Itr, iMode) = mean(imageUnmodVec(mp.Fend.scoreInCorr));
         end

@@ -294,7 +294,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     end
     
     if isfield(mp, 'testbed')
-        out.InormHist_tb.total = out.InormHist; 
+        out.InormHist_tb.total = out.IrawScoreHist; 
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
@@ -308,8 +308,8 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
                 Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
 
-                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
-                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
+                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(mp.Fend.scoreInCorr, si)).^2);
+                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(mp.Fend.scoreInCorr, si));
 
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
             end
