@@ -40,5 +40,7 @@ function Ipixelated = fourierPixelate(I,Npix,varargin)
         (Xpix-centerPixOffset(2))*sampsPerPix,...
         (Ypix-centerPixOffset(1))*sampsPerPix);
     
+    Ipixelated = abs(Ipixelated); 
+    
 end
 
