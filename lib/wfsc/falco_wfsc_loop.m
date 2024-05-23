@@ -182,8 +182,10 @@ for Itr = 1:mp.Nitr
         break;
     end
     % sfr
-    figure(111)
-    semilogy(out.IrawScoreHist);hold on; semilogy(out.IOLScoreHist);hold off;
+    if strcmpi(mp.estimator,'ekf_maintenance') && Itr > 1 
+        figure(111)
+        semilogy(out.IrawScoreHist);hold on; semilogy(ev.IOLScoreHist);hold off;
+    end
 end %--END OF ESTIMATION + CONTROL LOOP
 
 Itr = mp.Nitr;
