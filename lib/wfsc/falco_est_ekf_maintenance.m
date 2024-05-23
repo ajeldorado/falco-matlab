@@ -66,12 +66,16 @@ if any(mp.dm_ind == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
 elseif any(mp.dm_drift_ind == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
 
 if any(mp.dm_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
 elseif any(mp.dm_drift_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
 end
 
 % Do safety check to make sure no actuators are pinned
@@ -133,8 +137,16 @@ else
 end
 
 %% Remove control from DM command so that controller images are correct
-if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);end
-if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);end
+if any(mp.dm_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+if any(mp.dm_ind == 2) 
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
 
 save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 
@@ -270,13 +282,13 @@ function [mp,ev] = get_open_loop_data(mp,ev)
 % used for control, apply V_dz
 if (any(mp.dm_drift_ind == 1) && any(mp.dm_ind == 1)) || any(mp.dm_drift_ind == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);
-elseif any(mp.dm_ind == 1) 
+elseif any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
 
 if (any(mp.dm_drift_ind == 2) && any(mp.dm_ind == 2)) || any(mp.dm_drift_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);
-elseif any(mp.dm_ind == 2) 
+elseif any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
 end
 
