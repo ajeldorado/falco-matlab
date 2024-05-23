@@ -181,7 +181,9 @@ for Itr = 1:mp.Nitr
     if flagBreak
         break;
     end
-
+    % sfr
+    figure(111)
+    semilogy(out.IrawScoreHist);hold on; semilogy(out.IOLScoreHist);hold off;
 end %--END OF ESTIMATION + CONTROL LOOP
 
 Itr = mp.Nitr;
