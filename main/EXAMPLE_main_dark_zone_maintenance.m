@@ -16,7 +16,7 @@ mp.dm_ind_static = [2]; %--DMs ONLY holding dark zone shape, not injecting drift
 mp.estimator = 'ekf_maintenance';
 mp.est.probe.Npairs = 1; 
 mp.est.probe.whichDM = 1; %--Which DM is used for dither/control
-mp.est.dither = 9.5e-4; %--std dev of dither command for random dither [V/sqtr(iter)]
+mp.est.dither = 9.5e-5; %--std dev of dither command for random dither [V/sqtr(iter)]
 mp.est.flagUseJac = true; % EKF needs the jacobian for estimation 
 mp.est.read_noise = 1; %--Read noise of detector [e-]
 mp.est.dark_current = 0.01; %--Dark current of detector [e-/s]
@@ -37,7 +37,7 @@ mp.relinItrVec = [1];
 %%-- Drift variables 
 mp.dm_drift_ind = 1;%--which DM is drifting 
 mp.drift.type = 'rand_walk';%--what type of drift is happening 
-mp.drift.magnitude = 9e-5; %--std dev of random walk [V/sqrt(iter)]
+mp.drift.magnitude = 9e-6; %--std dev of random walk [V/sqrt(iter)]
 mp.drift.presumed_dm_std = mp.drift.magnitude; %--std dev of random walk provided to estimator, change this to account for the uncertainty of the drift magnitude
 
 %%--
