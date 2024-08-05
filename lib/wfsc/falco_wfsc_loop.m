@@ -291,16 +291,18 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     % Plot open loop contrast if dark zone maintenance is running
     if strcmpi(mp.estimator,'ekf_maintenance') 
         out.IOLScoreHist = ev.IOLScoreHist;
-        figure(111)
-        semilogy([1:1:Itr], out.IrawScoreHist(1:Itr), '-*');hold on; 
-        semilogy([1:1:Itr], out.IOLScoreHist(1:Itr), '-p');hold off;
-        legend('closed loop', 'open loop')
-        xlim([0,mp.Nitr])
-        xlabel('iteration')
-        ylabel('contrast')
-        title('Contrast vs Iteration')
-        set(gca,'FontSize',16 ,'FontName','Times','FontWeight','Normal')
-        drawnow;
+        if(mp.flagPlot)
+            figure(111)
+            semilogy([1:1:Itr], out.IrawScoreHist(1:Itr), '-*');hold on; 
+            semilogy([1:1:Itr], out.IOLScoreHist(1:Itr), '-p');hold off;
+            legend('closed loop', 'open loop')
+            xlim([0,mp.Nitr])
+            xlabel('iteration')
+            ylabel('contrast')
+            title('Contrast vs Iteration')
+            set(gca,'FontSize',16 ,'FontName','Times','FontWeight','Normal')
+            drawnow;
+        end
     end
     
     if isfield(mp, 'testbed')
