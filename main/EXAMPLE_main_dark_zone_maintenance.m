@@ -57,7 +57,7 @@ mp.dm1.V_shift = zeros(mp.dm1.Nact); %--DM shift command for estimator reset to 
 mp.dm2.V_shift = zeros(mp.dm2.Nact);
 
 %% Change run label and FALCO output paths
-mp.runLabel = ['dark_zone_maintenance'];
+mp.runLabel = ['DZM'];
 
 out_dir = fullfile(mp.path.config,mp.runLabel);
 mp.path.config = out_dir;  %--Location of *config.mat and *snippet.mat output files
