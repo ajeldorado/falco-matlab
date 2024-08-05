@@ -181,11 +181,7 @@ for Itr = 1:mp.Nitr
     if flagBreak
         break;
     end
-    % sfr
-    if strcmpi(mp.estimator,'ekf_maintenance') && Itr > 1 
-        figure(111)
-        semilogy(out.IrawScoreHist);hold on; semilogy(ev.IOLScoreHist);hold off;
-    end
+
 end %--END OF ESTIMATION + CONTROL LOOP
 
 Itr = mp.Nitr;
@@ -292,9 +288,19 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     if any(mp.dm_ind == 1); DM1surf = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.Ndm); else; DM1surf = zeros(mp.dm1.compact.Ndm); end
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
     
-    % Add open loop contrast history to out variable.
+    % Plot open loop contrast if dark zone maintenance is running
     if strcmpi(mp.estimator,'ekf_maintenance') 
         out.IOLScoreHist = ev.IOLScoreHist;
+        figure(111)
+        semilogy([1:1:Itr], out.IrawScoreHist(1:Itr), '-*');hold on; 
+        semilogy([1:1:Itr], out.IOLScoreHist(1:Itr), '-p');hold off;
+        legend('closed loop', 'open loop')
+        xlim([0,mp.Nitr])
+        xlabel('iteration')
+        ylabel('contrast')
+        title('Contrast vs Iteration')
+        set(gca,'FontSize',16 ,'FontName','Times','FontWeight','Normal')
+        drawnow;
     end
     
     if isfield(mp, 'testbed')
