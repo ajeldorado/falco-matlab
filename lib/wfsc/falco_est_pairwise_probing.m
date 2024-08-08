@@ -193,6 +193,10 @@ for iSubband = 1:mp.Nsbp
     if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom); end
     if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom); end
     
+    % Test: mitigate_persistance. jorgellop
+    if any(mp.dm_ind == 1);  mp.dm1.DM1Vnom = mp.dm1.V; end
+    if any(mp.dm_ind == 2);  mp.dm2.DM2Vnom = mp.dm2.V; end
+
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
     
     Iplus  = zeros([mp.Fend.corr.Npix, Npairs]); % Pixels of plus probes' intensities

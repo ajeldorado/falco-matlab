@@ -103,4 +103,34 @@ function normI = falco_get_dst_sbp_image(mp,si)
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; 
     
+    %% Test: mitigate_persistance. jorgellop
+    if(mp.dm1.transp)
+        dm1_map = mp.dm1.DM1Vnom'; % There's a transpose between Matlab and DM indexing
+    else
+        dm1_map = mp.dm1.DM1Vnom;
+    end
+    if(mp.dm2.transp)
+        dm2_map = mp.dm2.DM2Vnom'; % There's a transpose between Matlab and DM indexing
+    else
+        dm2_map = mp.dm2.DM2Vnom;
+    end
+    
+    if(tb.DM1.installed && tb.DM1.CONNECTED)
+        DM_apply2Dmap(tb.DM1,dm1_map);
+    end
+    if(tb.DM2.installed && tb.DM2.CONNECTED)
+        try
+            DM_apply2Dmap(tb.DM2,dm2_map);
+        catch 
+            try; cleanUpDMs(tb); end
+            disp('Error setting DM2. Reseting electronics. Trying again.')
+            FNGR_setPos(tb,6);FNGR_setPos(tb,9);FNGR_setPos(tb,6);
+            pause(10);
+            setUpDMs(tb);
+            DM_apply2Dmap(tb.DM1,dm1_map);
+            DM_apply2Dmap(tb.DM2,dm2_map);
+        end
+            
+    end
+
 end
