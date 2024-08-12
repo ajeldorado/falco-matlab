@@ -188,14 +188,24 @@ function ev = falco_est_scc(mp)
                     window2D = falco_gen_pupil_Simple(inputs);
                     imageShapeMax = max([mp.Fend.Neta, mp.Fend.Nxi]);
                     
-                    %Remove low orders
-                    filter_butterworth = falco_butterworth(imageShapeMax, imageShapeMax, 0, 0, 2,2, 30, 30, 'circle');%2,2,10,10
-                    pupil_scc = pupil_scc .* (1- filter_butterworth);
+                    switch upper(mp.tb.FPM.whichMask)
+                        case 'A'
+                            bp_low = [2,2,30,30];
+                            bp_high = [7,7,60,60];
+                        case 'B'
+                            bp_low = [2,2,25,25];
+                            bp_high = [5,5,55,55]; 
+                    end
                     
+                    if strcmp(mp.tb.PHBLK.inpos.default, 'far3pin') == 1
+                        %Remove low orders
+                        filter_butterworth = falco_butterworth(imageShapeMax, imageShapeMax, 0, 0, bp_low(1), bp_low(2), bp_low(3), bp_low(4), 'circle');%2,2,10,10
+                        pupil_scc = pupil_scc .* (1- filter_butterworth);
+                    end    
                     %Remove high orders
-                    filter_butterworth = falco_butterworth(imageShapeMax, imageShapeMax, 0, 0, 7, 7, 60, 60, 'circle');%7,7,60,60
+                    filter_butterworth = falco_butterworth(imageShapeMax, imageShapeMax, 0, 0, bp_high(1), bp_high(2), bp_high(3), bp_high(4), 'circle');%7,7,60,60
                     pupil_scc = pupil_scc .* filter_butterworth;
-                    
+
                     estimate_scc = fftshift(pupil_scc);
                     estimate_scc = ifft2(estimate_scc);
                     Eest = ifftshift(estimate_scc);
@@ -213,9 +223,9 @@ function ev = falco_est_scc(mp)
                     ev.IincoEst(:, modeIndex) = 0;% image_fringe_Vec - abs(Eest).^2; % incoherent light
 
                     if mp.flagPlot
-                        figure(1001); imagesc(log10(abs(image_fringe))); axis xy equal tight; colorbar; caxis([-8,-4]); drawnow;
-                        figure(1002); imagesc(log10(abs(image_no_fringe))); axis xy equal tight; colorbar; caxis([-8,-4]); drawnow;
-                        figure(1003); imagesc(log10(abs(ev.Eest_full(:, :, 1, modeIndex)))); axis xy equal tight; colorbar; caxis([-8,-4]); drawnow;
+                        figure(1001); imagesc(log10(abs(image_fringe))); axis xy equal tight; colorbar; caxis([-8,-4]); title('Fringed Image'); drawnow;
+                        figure(1002); imagesc(log10(abs(image_no_fringe))); axis xy equal tight; colorbar; caxis([-8,-4]); title('No Fringe Image'); drawnow;
+                        figure(1003); imagesc(log10(abs(ev.Eest_full(:, :, 1, modeIndex)))); axis xy equal tight; colorbar; caxis([-8,-4]); title('Estimate'); drawnow;
                         
                     end
                 end
