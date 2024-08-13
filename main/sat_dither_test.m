@@ -1,5 +1,8 @@
 %% Replace path with the latest experiment .all file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load("/proj/iact/data/falco/outputs/Series11_Trial12\EKF_Series1_Trial1_config.mat")
+% on IACT
+% load("/proj/iact/data/falco/outputs/Series11_Trial12\EKF_Series1_Trial1_config.mat")
+% on FALCO
+load("C:\Users\chris\OneDrive\Documents\FALCO_results\EKF_Series1_Trial1\EKF_Series1_Trial1_config.mat")
 % load other files too
 fprintf('Successfully loaded files.\n');
 
@@ -20,33 +23,33 @@ ev.exit_flag = false;
 
 
 %% Select the specific iteration index
-Itr = 20; 
+mp.Itr = out.Nitr; 
 mp.dm_ind = [1];
 mp.dm_ind_static = [];
 
 %% Setting initial DM commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Access the 2D voltage maps for specified iteration
-init_command_dm1 = out.dm1.Vall(:,:,Itr);  % 2D voltage map for dm1 at iteration Itr
-init_command_dm2 = out.dm2.Vall(:,:,Itr);  % 2D voltage map for dm2 at iteration Itr
+mp.init_command_dm1 = out.dm1.Vall(:,:,Itr);  % 2D voltage map for dm1 at iteration Itr
+mp.init_command_dm2 = out.dm2.Vall(:,:,Itr);  % 2D voltage map for dm2 at iteration Itr
 
 % Load the second to last command
-delta_dm1 = abs(init_command_dm1-out.dm1.Vall(:,:,Itr-1));
-delta_dm2 = abs(init_command_dm2-out.dm2.Vall(:,:,Itr-1));
+mp.delta_dm1 = abs(init_command_dm1-out.dm1.Vall(:,:,Itr-1));
+mp.delta_dm2 = abs(init_command_dm2-out.dm2.Vall(:,:,Itr-1));
 
 mp.dm1.V_dz = init_command_dm1;
 mp.dm2.V_dz = init_command_dm2;
 
 % delta_dm_mean = mean([std(delta_dm1(init_command_dm1 ~= 0)), std(delta_dm2(init_command_dm2 ~= 0))]);
 if size(mp.dm_ind,2) > 1
-    delta_dm_mean = mean([mean(delta_dm1(init_command_dm1 ~= 0)), mean(delta_dm2(init_command_dm2 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(delta_dm1(init_command_dm1 ~= 0)), mean(delta_dm2(init_command_dm2 ~= 0))]);
 
 elseif any(mp.dm_ind == 1)
 
-    delta_dm_mean = mean([mean(delta_dm1(init_command_dm1 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(delta_dm1(init_command_dm1 ~= 0))]);
 
 elseif any(mp.dm_ind == 2)
 
-    delta_dm_mean = mean([mean(delta_dm2(init_command_dm2 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(delta_dm2(init_command_dm2 ~= 0))]);
 
 end
 
@@ -55,10 +58,10 @@ fprintf('Successfully loaded initial DM commands.\n');
 %% Setting initial variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 mp.est.dithers = delta_dm_mean*[1, 5, 10, 20]; % ideally 3 dithers
 % mp.est.dithers = [1e-10, 1e-5, 1e-3, 1];
-num_dithers = numel(mp.est.dithers); % set to the same index number of mp.est.dithers
+mp.num_dithers = numel(mp.est.dithers); % set to the same index number of mp.est.dithers
 num_iterations = 15;
 % num_subbands = 1;
-iSubband = ceil(mp.Nsbp / 2); % Pick the middle wavelength
+mp.iSubband = ceil(mp.Nsbp / 2); % Pick the middle wavelength
 fprintf('Now setting necessary initial variables.\n');
 
 %% Set total command for estimator image %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -69,7 +72,7 @@ if Itr > 1
     if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact); end
     % efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
 else
-    efc_command = 0 * mp.est.dithers(1);
+    mp.efc_command = 0 * mp.est.dithers(1);
     mp.dm1.dV = zeros(size(init_command_dm1));
     mp.dm2.dV = zeros(size(init_command_dm2));
 end
@@ -81,10 +84,10 @@ fprintf('Now entering first for loop. (give statistics of each dither)\n');
 % contrasts --> # dithers (rows) vs # iterations (columns)
 
 % this needs to be 2 dimensional
-contrasts = zeros(num_dithers, num_iterations);
-dithers_nm_1 = zeros(num_dithers, num_iterations);
+mp.contrasts = zeros(num_dithers, num_iterations);
+mp.dithers_nm_1 = zeros(num_dithers, num_iterations);
 if any(mp.dm_ind == 2)
-dithers_nm_2 = zeros(num_dithers, num_iterations);
+mp.dithers_nm_2 = zeros(num_dithers, num_iterations);
 end
 %% For loops %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % One loop that goes over the iterations
@@ -177,7 +180,7 @@ for i = 1:num_dithers
                 dithers_nm_2(i, j) = std(DM2Vdither_nm(init_command_dm2 ~= 0));
             end
             % Store results
-            contrasts(i, j) = mean_contrast;
+            mp.contrasts(i, j) = mean_contrast;
         end
         
     end
@@ -261,7 +264,33 @@ grid on;
 
 fprintf('Plots generated successfully.\n');
 
+%% Save output %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Get the current date and time to create a unique folder name
+current_time = datestr(now, 'yyyy-mm-dd_HH-MM');
+folder_name = ['dither_test_' current_time];
+output_dir = fullfile('C:\Users\chris\OneDrive\Documents\FALCO_results', folder_name);
 
+% Create the directory if it does not exist
+if ~exist(output_dir, 'dir')
+    mkdir(output_dir);
+end
+
+% Save the generated plots
+saveas(figure(1), fullfile(output_dir, 'Contrast_per_iteration.png'));
+saveas(figure(2), fullfile(output_dir, 'DM1_Dither_std_vs_iteration.png'));
+if any(mp.dm_ind == 2)
+    saveas(figure(3), fullfile(output_dir, 'DM2_Dither_std_vs_iteration.png'));
+    saveas(figure(4), fullfile(output_dir, 'Mean_Contrast_vs_Mean_DM2_Dither_std.png'));
+    saveas(figure(5), fullfile(output_dir, 'Mean_of_Mean_Contrasts_vs_Dithers.png'));
+else
+    saveas(figure(3), fullfile(output_dir, 'Mean_Contrast_vs_Mean_DM1_Dither_std.png'));
+    saveas(figure(4), fullfile(output_dir, 'Mean_of_Mean_Contrasts_vs_Dithers.png'));
+end
+
+% Save the MATLAB struct
+save(fullfile(output_dir, 'mp_struct.mat'), 'mp');
+
+fprintf('Plots, data, and MATLAB struct saved successfully in %s.\n', output_dir);
 
 function [mp,ev] = pinned_act_safety_check(mp,ev)
 ev.exit_flag = false;
@@ -308,47 +337,3 @@ if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>
 end
 
 end
-
-%% Initializing necessary functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% function subbandImage = falco_get_sbp_image(mp, iSubband)
-%     if mp.flagSim
-%         subbandImage = falco_get_sim_sbp_image(mp, iSubband);
-%     else
-%         subbandImage = falco_get_testbed_sbp_image(mp, iSubband);
-%     end
-% end
-
-function heightMap = falco_calc_act_height_from_voltage(dm)
-    switch lower(dm.fitType)
-        case {'linear', 'poly1'}
-            heightMap = dm.VtoH .* dm.V;
-        case {'quadratic', 'poly2'}
-            if ~isfield(dm, 'p1') || ~isfield(dm, 'p2') || ~isfield(dm, 'p3')
-                error("The fields p1, p2, and p3 must exist when dm.fitType == 'quadratic'.\n" + ...
-                    "Those fields satisfy the formula:\n" + ...
-                    "height = p1*V*V + p2*V + p3");
-            end
-            Vbias = dm.biasMap;
-            Vtotal = dm.V + Vbias;
-            heightMapTotal = dm.p1.*Vtotal.^2 + dm.p2.*Vtotal + dm.p3;
-            heightMapBias = dm.p1.*Vbias.^2 + dm.p2.*Vbias + dm.p3;
-            heightMap = heightMapTotal - heightMapBias;
-        case {'fourier2'}
-            if ~isfield(dm, 'a0') || ~isfield(dm, 'a1') || ~isfield(dm, 'a2') || ...
-                    ~isfield(dm, 'b1') || ~isfield(dm, 'b2') || ~isfield(dm, 'w')
-                error("The fields a0, a1, a2, b1, b2, and w must exist when dm.fitType == 'fourier2'.\n" + ...
-                    "Those fields satisfy the formula:\n" + ...
-                    "height = a0 + a1*cos(V*w) + b1*sin(V*w) + a2*cos(2*V*w) + b2*sin(2*V*w)");
-            end  
-            Vbias = dm.biasMap;
-            Vtotal = dm.V + Vbias;
-            heightMapTotal = dm.a0 + dm.a1.*cos(Vtotal.*dm.w) + dm.b1.*sin(Vtotal.*dm.w) + dm.a2.*cos(2*Vtotal.*dm.w) + dm.b2.*sin(2*Vtotal.*dm.w);
-            heightMapBias = dm.a0 + dm.a1.*cos(Vbias.*dm.w) + dm.b1.*sin(Vbias.*dm.w) + dm.a2.*cos(2*Vbias.*dm.w) + dm.b2.*sin(2*Vbias.*dm.w);
-            heightMap = heightMapTotal - heightMapBias;        
-        otherwise
-            error('Value of dm.fitType not recognized.');
-    end
-end
-
-% disp('Necessary functions initialized.\n');
