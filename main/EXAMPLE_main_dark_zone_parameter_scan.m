@@ -8,12 +8,35 @@ addpath(genpath(current_folder));
 % addpath(genpath("C:\Users\skmk9\Downloads"));
 
 %% Load dm_commands
+out_pre_config = load("C:\Users\skmk9\Downloads\Series0001_Trial0001_LC_simple_2DM48_z1_IWA2.8_OWA10_5lams550nm_BW10_plannedEFC_config.mat");
 out_pre = load("C:\Users\skmk9\Downloads\Series0001_Trial0001_LC_simple_2DM48_z1_IWA2.8_OWA10_5lams550nm_BW10_plannedEFC_snippet.mat");
+
+init_command_dm1 = out_pre.out.dm1.Vall(:,:,end);  % 2D voltage map for dm1 at iteration Itr
+init_command_dm2 = out_pre.out.dm2.Vall(:,:,end);  % 2D voltage map for dm2 at iteration Itr
+% Load the second to last command
+delta_dm1 = abs(init_command_dm1-out_pre.out.dm1.Vall(:,:,end-1));
+delta_dm2 = abs(init_command_dm2-out_pre.out.dm2.Vall(:,:,end-1));
+dm1.V_dz = init_command_dm1;
+dm2.V_dz = init_command_dm2;
+
+% delta_dm_mean = mean([std(delta_dm1(init_command_dm1 ~= 0)), std(delta_dm2(init_command_dm2 ~= 0))]);
+% if size(dm_ind,2) > 1
+%     mp.delta_dm_mean = mean([mean(mp.delta_dm1(mp.init_command_dm1 ~= 0)), mean(mp.delta_dm2(mp.init_command_dm2 ~= 0))]);
+
+% elseif any(mp.dm_ind == 1)
+
+delta_dm_mean = mean([mean(delta_dm1(init_command_dm1 ~= 0))]);
+
+% elseif any(mp.dm_ind == 2)
+% 
+%     mp.delta_dm_mean = mean([mean(mp.delta_dm2(mp.init_command_dm2 ~= 0))]);
+% 
+% end
 
 DZMExperimentTemplate
 PWPExperimentTemplate
 
-drifts = [9e-6];
+drifts = [delta_dm_mean/10];
 
 mp_dzm_arr = {};
 out_dzm_arr = {};

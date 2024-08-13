@@ -7,7 +7,6 @@ mp_dzm = mp;
 
 mp_dzm.SeriesNum = 11;
 mp_dzm.TrialNum = 1;
-mp_dzm.relinItrVec = 1;
 
 %--Use just 1 wavelength for initial debugging/testing of code
 mp_dzm.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
@@ -37,8 +36,8 @@ mp_dzm.ctrl.start_iteration = 10;
 mp_dzm.ctrl.dmfacVec = 1; 
 % et EFC tikhonov parameter 
 mp_dzm.ctrl.sched_mat = repmat([1, -1.0, 1, 1, 0], [mp_dzm.Nitr, 1]);% 
-[mp_dzm.Nitr, mp_dzm.relinItrVec, mp_dzm.gridSearchItrVec, mp_dzm.ctrl.log10regSchedIn, mp_dzm.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp_dzm.ctrl.sched_mat);
-
+[~, mp_dzm.relinItrVec, mp_dzm.gridSearchItrVec, mp_dzm.ctrl.log10regSchedIn, mp_dzm.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp_dzm.ctrl.sched_mat);
+mp_dzm.relinItrVec = 1;
 
 %% -- Drift variables 
 mp_dzm.dm_drift_ind = 1;%--which DM is drifting 
