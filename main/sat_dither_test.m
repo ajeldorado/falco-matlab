@@ -1,10 +1,10 @@
 %% Replace path with the latest experiment .all file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % on IACT
-load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_config.mat")
-load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_all.mat")
+% load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_config.mat")
+% load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_all.mat")
 
 % on FALCO
-% load("C:\Users\chris\OneDrive\Documents\FALCO_results\EKF_Series1_Trial1\EKF_Series1_Trial1_config.mat")
+load("C:\Users\chris\OneDrive\Documents\FALCO_results\EKF_Series1_Trial1\EKF_Series1_Trial1_config.mat")
 % load other files too
 fprintf('Successfully loaded files.\n');
 
@@ -43,25 +43,25 @@ mp.dm2.V_dz = mp.init_command_dm2;
 
 % delta_dm_mean = mean([std(delta_dm1(init_command_dm1 ~= 0)), std(delta_dm2(init_command_dm2 ~= 0))]);
 if size(mp.dm_ind,2) > 1
-    mp.delta_dm_mean = mean([mean(delta_dm1(mp.init_command_dm1 ~= 0)), mean(delta_dm2(mp.init_command_dm2 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(mp.delta_dm1(mp.init_command_dm1 ~= 0)), mean(mp.delta_dm2(mp.init_command_dm2 ~= 0))]);
 
 elseif any(mp.dm_ind == 1)
 
-    mp.delta_dm_mean = mean([mean(delta_dm1(mp.init_command_dm1 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(mp.delta_dm1(mp.init_command_dm1 ~= 0))]);
 
 elseif any(mp.dm_ind == 2)
 
-    mp.delta_dm_mean = mean([mean(delta_dm2(mp.init_command_dm2 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(mp.delta_dm2(mp.init_command_dm2 ~= 0))]);
 
 end
 
 fprintf('Successfully loaded initial DM commands.\n');
 
 %% Setting initial variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-mp.est.dithers = delta_dm_mean*[1, 5, 10, 20]; % ideally 3 dithers
+mp.est.dithers = mp.delta_dm_mean*[1, 5, 10, 20]; % ideally 3 dithers
 % mp.est.dithers = [1e-10, 1e-5, 1e-3, 1];
 mp.num_dithers = numel(mp.est.dithers); % set to the same index number of mp.est.dithers
-num_iterations = 15;
+mp.num_iterations = 15;
 % num_subbands = 1;
 mp.iSubband = ceil(mp.Nsbp / 2); % Pick the middle wavelength
 fprintf('Now setting necessary initial variables.\n');
@@ -69,7 +69,7 @@ fprintf('Now setting necessary initial variables.\n');
 %% Set total command for estimator image %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO: need to save these commands for each iteration separately
 
-if Itr > 1
+if mp.Itr > 1
     if ~isfield(mp.dm1,'dV'); mp.dm1.dV = zeros(mp.dm1.Nact); end
     if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact); end
     % efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
@@ -97,7 +97,7 @@ for i = 1:mp.num_dithers
     dither = mp.est.dithers(i); % assuming only one dither value, otherwise use i if there are multiple dithers
     fprintf(['on dither ',num2str(i)])
     % Second loop that will give statistics of each dither
-    for j = 1:num_iterations
+    for j = 1:mp.num_iterations
         fprintf('Now inside second for loop.\n');
         
         V1 = zeros(mp.dm1.NactTotal,1);
@@ -151,13 +151,13 @@ for i = 1:mp.num_dithers
         if ~ev.exit_flag
             % Call falco_get_sbp_image for each subband
             disp('Calling falco_get_sbp_image...');
-            I = falco_get_sbp_image(mp, iSubband); % iSubband : index of subband for which to take the image
+            I = falco_get_sbp_image(mp, mp.iSubband); % iSubband : index of subband for which to take the image
             disp('falco_get_sbp_image called successfully');
 
             % Need to convert if it's not in contrast units
             % I0 = ev.imageArray / peak to put it into contrast units % ev is the estimator variable... (internal)
             mean_contrast = mean(I(mp.Fend.score.mask)); % this is the dark zone mask
-            disp(['Mean contrast for subband ', num2str(iSubband), ': ', num2str(mean_contrast)]);
+            disp(['Mean contrast for subband ', num2str(mp.iSubband), ': ', num2str(mean_contrast)]);
             
             % Generate command to apply to DMs
             if any(mp.dm_ind == 1)
@@ -192,46 +192,46 @@ end
 % four things:
 %   1. contrast per iteration for each of the dithers
 figure;
-for i = 1:num_dithers
+for i = 1:mp.num_dithers
     semilogy(1:mp.num_iterations, mp.contrasts(i, :), '-o');
     hold on;
 end
 title('Contrast per iteration for each of the dithers');
 xlabel('Iteration');
 ylabel('Contrast');
-legend(arrayfun(@(x) ['Dither ' num2str(x)], 1:num_dithers, 'UniformOutput', false));
+legend(arrayfun(@(x) ['Dither ' num2str(x)], 1:mp.num_dithers, 'UniformOutput', false));
 hold off;
 
 %   2. dither std nms vs. iteration for each of the dithers
 figure;
-for i = 1:num_dithers
-    plot(1:num_iterations, dithers_nm_1(i, :), '-o');
+for i = 1:mp.num_dithers
+    plot(1:mp.num_iterations, mp.dithers_nm_1(i, :), '-o');
     hold on;
 end
 title('DM1 Dither std nms vs. iteration for each of the dithers');
 xlabel('Iteration');
 ylabel('Standard Deviation (nm)');
-legend(arrayfun(@(x) ['Dither ' num2str(x)], 1:num_dithers, 'UniformOutput', false));
+legend(arrayfun(@(x) ['Dither ' num2str(x)], 1:mp.num_dithers, 'UniformOutput', false));
 hold off;
 
 if any(mp.dm_ind == 2)
 figure;
-for i = 1:num_dithers
-    plot(1:num_iterations, dithers_nm_2(i, :), '-o');
+for i = 1:mp.num_dithers
+    plot(1:mp.num_iterations, mp.dithers_nm_2(i, :), '-o');
     hold on;
 end
 title('DM2 Dither std nms vs. iteration for each of the dithers');
 xlabel('Iteration');
 ylabel('Standard Deviation (nm)');
-legend(arrayfun(@(x) ['Dither ' num2str(x)], 1:num_dithers, 'UniformOutput', false));
+legend(arrayfun(@(x) ['Dither ' num2str(x)], 1:mp.num_dithers, 'UniformOutput', false));
 hold off;
 end
 
 %   3. take the averages along the dimensions of both the contrasts and the dither std
 %                   nms ver the iteration axis, then you plot the mean std
 %                   dithers (as x-axis) and mean contrast (as y-axis)
-mean_contrasts = mean(contrasts, 2);
-mean_dithers_nm_1 = mean(dithers_nm_1, 2);
+mean_contrasts = mean(mp.contrasts, 2);
+mean_dithers_nm_1 = mean(mp.dithers_nm_1, 2);
 
 
 figure;
@@ -254,7 +254,7 @@ grid on;
 end
 
 %   4. mean of the mean contrasts (y-axis) vs. dithers in voltages (x-axis)
-mean_contrasts_over_all = mean(contrasts, 2);
+mean_contrasts_over_all = mean(mp.contrasts, 2);
 
 figure;
 plot(mp.est.dithers, mean_contrasts_over_all, '-o');
