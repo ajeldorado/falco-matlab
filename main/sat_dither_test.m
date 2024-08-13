@@ -1,8 +1,10 @@
 %% Replace path with the latest experiment .all file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % on IACT
-% load("/proj/iact/data/falco/outputs/Series11_Trial12\EKF_Series1_Trial1_config.mat")
+load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_config.mat")
+load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_all.mat")
+
 % on FALCO
-load("C:\Users\chris\OneDrive\Documents\FALCO_results\EKF_Series1_Trial1\EKF_Series1_Trial1_config.mat")
+% load("C:\Users\chris\OneDrive\Documents\FALCO_results\EKF_Series1_Trial1\EKF_Series1_Trial1_config.mat")
 % load other files too
 fprintf('Successfully loaded files.\n');
 
@@ -29,27 +31,27 @@ mp.dm_ind_static = [];
 
 %% Setting initial DM commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Access the 2D voltage maps for specified iteration
-mp.init_command_dm1 = out.dm1.Vall(:,:,Itr);  % 2D voltage map for dm1 at iteration Itr
-mp.init_command_dm2 = out.dm2.Vall(:,:,Itr);  % 2D voltage map for dm2 at iteration Itr
+mp.init_command_dm1 = out.dm1.Vall(:,:,mp.Itr);  % 2D voltage map for dm1 at iteration Itr
+mp.init_command_dm2 = out.dm2.Vall(:,:,mp.Itr);  % 2D voltage map for dm2 at iteration Itr
 
 % Load the second to last command
-mp.delta_dm1 = abs(init_command_dm1-out.dm1.Vall(:,:,Itr-1));
-mp.delta_dm2 = abs(init_command_dm2-out.dm2.Vall(:,:,Itr-1));
+mp.delta_dm1 = abs(mp.init_command_dm1-out.dm1.Vall(:,:,mp.Itr-1));
+mp.delta_dm2 = abs(mp.init_command_dm2-out.dm2.Vall(:,:,mp.Itr-1));
 
-mp.dm1.V_dz = init_command_dm1;
-mp.dm2.V_dz = init_command_dm2;
+mp.dm1.V_dz = mp.init_command_dm1;
+mp.dm2.V_dz = mp.init_command_dm2;
 
 % delta_dm_mean = mean([std(delta_dm1(init_command_dm1 ~= 0)), std(delta_dm2(init_command_dm2 ~= 0))]);
 if size(mp.dm_ind,2) > 1
-    mp.delta_dm_mean = mean([mean(delta_dm1(init_command_dm1 ~= 0)), mean(delta_dm2(init_command_dm2 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(delta_dm1(mp.init_command_dm1 ~= 0)), mean(delta_dm2(mp.init_command_dm2 ~= 0))]);
 
 elseif any(mp.dm_ind == 1)
 
-    mp.delta_dm_mean = mean([mean(delta_dm1(init_command_dm1 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(delta_dm1(mp.init_command_dm1 ~= 0))]);
 
 elseif any(mp.dm_ind == 2)
 
-    mp.delta_dm_mean = mean([mean(delta_dm2(init_command_dm2 ~= 0))]);
+    mp.delta_dm_mean = mean([mean(delta_dm2(mp.init_command_dm2 ~= 0))]);
 
 end
 
@@ -73,8 +75,8 @@ if Itr > 1
     % efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
 else
     mp.efc_command = 0 * mp.est.dithers(1);
-    mp.dm1.dV = zeros(size(init_command_dm1));
-    mp.dm2.dV = zeros(size(init_command_dm2));
+    mp.dm1.dV = zeros(size(mp.init_command_dm1));
+    mp.dm2.dV = zeros(size(mp.init_command_dm2));
 end
 
 fprintf('Now entering first for loop. (give statistics of each dither)\n');
@@ -84,14 +86,14 @@ fprintf('Now entering first for loop. (give statistics of each dither)\n');
 % contrasts --> # dithers (rows) vs # iterations (columns)
 
 % this needs to be 2 dimensional
-mp.contrasts = zeros(num_dithers, num_iterations);
-mp.dithers_nm_1 = zeros(num_dithers, num_iterations);
+mp.contrasts = zeros(mp.num_dithers, mp.num_iterations);
+mp.dithers_nm_1 = zeros(mp.num_dithers, mp.num_iterations);
 if any(mp.dm_ind == 2)
-mp.dithers_nm_2 = zeros(num_dithers, num_iterations);
+mp.dithers_nm_2 = zeros(mp.num_dithers, mp.num_iterations);
 end
 %% For loops %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % One loop that goes over the iterations
-for i = 1:num_dithers
+for i = 1:mp.num_dithers
     dither = mp.est.dithers(i); % assuming only one dither value, otherwise use i if there are multiple dithers
     fprintf(['on dither ',num2str(i)])
     % Second loop that will give statistics of each dither
@@ -173,11 +175,11 @@ for i = 1:num_dithers
             
                 DM1Vdither_nm = falco_calc_act_height_from_voltage(mp.dm1)*10^9; % convert to nano meters
                 % Calculate standard deviation of the dithered commands (excluding zeros)
-                dithers_nm_1(i, j) = std(DM1Vdither_nm(init_command_dm1 ~= 0));
+                mp.dithers_nm_1(i, j) = std(DM1Vdither_nm(mp.init_command_dm1 ~= 0));
             end
             if any(mp.dm_ind == 2)
                 DM2Vdither_nm = falco_calc_act_height_from_voltage(mp.dm2)*10^9;
-                dithers_nm_2(i, j) = std(DM2Vdither_nm(init_command_dm2 ~= 0));
+                mp.dithers_nm_2(i, j) = std(DM2Vdither_nm(mp.init_command_dm2 ~= 0));
             end
             % Store results
             mp.contrasts(i, j) = mean_contrast;
@@ -191,7 +193,7 @@ end
 %   1. contrast per iteration for each of the dithers
 figure;
 for i = 1:num_dithers
-    semilogy(1:num_iterations, contrasts(i, :), '-o');
+    semilogy(1:mp.num_iterations, mp.contrasts(i, :), '-o');
     hold on;
 end
 title('Contrast per iteration for each of the dithers');
