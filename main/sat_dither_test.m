@@ -1,14 +1,14 @@
 %% Replace path with the latest experiment .all file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % on IACT
-% load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_config.mat")
-% load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_all.mat")
+load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_config.mat")
+load("/proj/iact/data/falco/outputs/Series11_Trial12/Series11_Trial12_all.mat")
 
 % on FALCO
-load("C:\Users\chris\OneDrive\Documents\FALCO_results\EKF_Series1_Trial1\EKF_Series1_Trial1_config.mat")
+% load("C:\Users\chris\OneDrive\Documents\FALCO_results\EKF_Series1_Trial1\EKF_Series1_Trial1_config.mat")
 % load other files too
 fprintf('Successfully loaded files.\n');
 
-
+mp.path.config = tb.info.OUT_DATA_DIR;
 %% Initialize pinned act list
 
 % Initialize pinned actuator check
@@ -27,7 +27,7 @@ ev.exit_flag = false;
 %% Select the specific iteration index
 mp.Itr = out.Nitr; 
 mp.dm_ind = [1];
-mp.dm_ind_static = [];
+mp.dm_ind_static = [2];
 
 %% Setting initial DM commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Access the 2D voltage maps for specified iteration
@@ -58,10 +58,10 @@ end
 fprintf('Successfully loaded initial DM commands.\n');
 
 %% Setting initial variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-mp.est.dithers = mp.delta_dm_mean*[1, 5, 10, 20]; % ideally 3 dithers
+mp.est.dithers = mp.delta_dm_mean*[0.1, 1, 3, 5, 10, 15, 20, 30, 50]; % ideally 3 dithers
 % mp.est.dithers = [1e-10, 1e-5, 1e-3, 1];
 mp.num_dithers = numel(mp.est.dithers); % set to the same index number of mp.est.dithers
-mp.num_iterations = 15;
+mp.num_iterations = 25;
 % num_subbands = 1;
 mp.iSubband = ceil(mp.Nsbp / 2); % Pick the middle wavelength
 fprintf('Now setting necessary initial variables.\n');
@@ -270,7 +270,7 @@ fprintf('Plots generated successfully.\n');
 % Get the current date and time to create a unique folder name
 current_time = datestr(now, 'yyyy-mm-dd_HH-MM');
 folder_name = ['dither_test_' current_time];
-output_dir = fullfile('C:\Users\chris\OneDrive\Documents\FALCO_results', folder_name);
+output_dir = fullfile(mp.path.config,'/', folder_name);
 
 % Create the directory if it does not exist
 if ~exist(output_dir, 'dir')
