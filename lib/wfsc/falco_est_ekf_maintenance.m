@@ -226,13 +226,13 @@ end
 if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
 
     % Print error warning
-    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
-    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+    if ~isempty(ev.dm1.new_pinned_actuators); fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ',')); end
+    if ~isempty(ev.dm2.new_pinned_actuators); fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ',')); end
 
     % If actuators are used in jacobian, quit.
-    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
-        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
-        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
+    if size(ev.dm1.act_ele_pinned,2)>10 || size(ev.dm2.act_ele_pinned,2)>10
+        save(fullfile(mp.path.config,['ev_exit_',num2str(ev.Itr),'.mat']),'ev')
+        save(fullfile(mp.path.config,['mp_exit_',num2str(ev.Itr),'.mat']),'mp')
 
         error('New actuators in act_ele pinned, exiting loop');
     end

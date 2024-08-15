@@ -106,6 +106,9 @@ if(mp.flagPlot)
     xlabel('Iteration')
 %     ylabel('Norm. I');
     legend('Total','Modulated','Unmodulated');
+    if strcmpi(mp.estimator,'ekf_maintenance')
+        legend('Total','OL est','Unmodulated','OL meas','location','southeast');
+    end
 	title('Mean Normalized Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
@@ -250,10 +253,13 @@ if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
 end
+
 if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
     img = mean(Im_tb.ev.normI_OL_sbp,3);
     fitswrite(img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
 end
+
+
 % Update the diary 
 diary off; diary(mp.diaryfile)
 
