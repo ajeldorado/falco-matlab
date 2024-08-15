@@ -75,6 +75,16 @@ function ev = falco_est(mp, ev, jacStruct)
             end
             
             ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
+
+        case{'modal_ekf_maintenance'}
+
+            if ev.Itr == 1
+                disp('starting modal ekf initialization')
+                ev = initialize_modal_ekf_maintenance(mp, ev, jacStruct);
+                disp('done modal ekf initialization')
+            end
+            
+            ev = falco_est_modal_ekf_maintenance(mp,ev,jacStruct);
     end
 
 end
