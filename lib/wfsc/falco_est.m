@@ -18,7 +18,10 @@
 
 function ev = falco_est(mp, ev, jacStruct)
     
-    if ~mp.est.flagUseJac; clear jacStruct; end % save RAM
+    %mc: for BB PWP, flagUseJac needs to be true
+    if ~mp.est.flagUseJac; clear jacStruct; end % save RAM 
+   
+   
 
     switch lower(mp.estimator)
         case{'perfect'}
@@ -31,13 +34,14 @@ function ev = falco_est(mp, ev, jacStruct)
                 
             
         case{'pwp-bp-square', 'pwp-bp', 'pairwise', 'pairwise-square', ...
-                'pairwise-rect', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf'}
+                'pairwise-rect', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf', 'pairwise-bb'}
             if(mp.flagFiber && mp.flagLenslet)
                 if mp.est.flagUseJac
                     ev = falco_est_pairwise_probing_fiber(mp, jacStruct);
                 else
                     ev = falco_est_pairwise_probing_fiber(mp);
                 end
+
                 
             else
                 if mp.est.flagUseJac
