@@ -337,11 +337,22 @@ fitswrite(dither,fullfile([mp.path.config,'/','dither_command_it',num2str(ev.Itr
 fitswrite(efc,fullfile([mp.path.config,'/','efc_command_it',num2str(ev.Itr-1),'.fits']))
 
 if ev.Itr == 1
-    dz_init = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
-    if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz;end
-    if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
+    dz_init = zeros(mp.dm1.Nact, mp.dm1.Nact, length(mp.dm_ind));
+    if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz; end
+    if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz; else dz_init(:,:,2) = mp.dm2.V_dz; end
+    fitswrite(dz_init, fullfile([mp.path.config, '/', 'dark_zone_command_0_pwp.fits']))
 
-    fitswrite(dz_init,fullfile([mp.path.config,'/','dark_zone_command_0_pwp.fits']))
+    % Create a struct to hold relevant EKF parameters
+    ekf_params = struct();
+    ekf_params.e_scaling = mp.e_scaling;
+    ekf_params.dither = mp.est.dither;
+    ekf_params.drift = mp.est.drift;
+
+    % Save the EKF parameters struct to a config file
+    fn_config = [mp.path.config filesep mp.runLabel, '_ekf_config.mat'];
+    save(fn_config, 'ekf_params')
+    fprintf('Saved the EKF config file: \t%s\n', fn_config)
 end
+
 
 end
