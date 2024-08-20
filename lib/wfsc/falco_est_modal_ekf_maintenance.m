@@ -138,12 +138,27 @@ else
     sbp_texp  = mp.tb.info.sbp_texp;
 end
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+
 for iSubband = 1:1:mp.Nsbp
     ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
     if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
     if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
-
-    ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
+    if mp.unprobeImg
+        if any(mp.dm_ind == 1)
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
+        elseif any(mp.dm_ind_static == 1)
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+        end
+        if any(mp.dm_ind == 2) 
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
+        elseif any(mp.dm_ind_static == 2)
+            mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+        end
+        ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
+    else
+        ev.imageArray(:, :, 1, iSubband) = ev.imageArrayMinus(:,:,1,iSubband);
+    end
+    ev.Im = ev.Im + mp.sbp_weights(iSubband) * ev.imageArray(:, :, 1, iSubband);
 end
 I0vec = y_measured./ev.peak_psf_counts;
 ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
@@ -193,27 +208,24 @@ if mp.flagSim
 else
     sbp_texp = mp.tb.info.sbp_texp;
 end
+dy_hat = [];
+H_T = [];
 for iSubband = 1:1:mp.Nsbp
-
     %--Estimate of the closed loop electric field:
-    % x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
-
+    G = (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband));
+    u_hat_CL = ev.u_hat - closed_loop_command;
     %--Estimate of the measurement:
-    % y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*sbp_texp(iSubband));
-    Gprobe = ev.G_tot_cont * ev.dither;
-    E_hat = ev.E_floor + ev.G_tot_cont*closed_loop_command + ev.M*ev.x_hat(:, iSubband);
-    y_hat = 4*Gprobe(1:2:end)*E_hat(1:2:end) + 4*Gprobe(2:2:end)*E_hat(2:2:end);
-    
-    ev.R = np.diag(2*(E_hat(1:2:end)^2 + E_hat(2:2:end)^2 + Gprobe(1:2:end)^2 + Gprobe(2:2:end)^2));
-    ev.H = 4*(Gprobe(1:2:end)*ev.M(:, 1:2:end) + Gprobe(2:2:end)*ev.M(:,2:2:end))';
-%     H_T = H.transpose(0,2,1);
-    % TODO: check that this transpose is correct
-    H_T = permute(ev.H,[2,1,3]);
-
+    dy_dx_hat_CL = 4 * G * ev.dither;
+    dy_hat_real_imag = dy_dx_hat_CL + G * u_hat_CL;
+    dy_hat = [dy_hat, dy_hat_real_imag(1:2:end) + dy_hat_real_imag(2:2:end)];
+    H_T = [H_T, G(1:2:end, :)'*diag(dy_dx_hat_CL(1:2:end)) + G(2:2:end, :)'*diag(dy_dx_hat_CL(2:2:end))];
+    H = H_T';
     ev.P(:,:,iSubband) = ev.P(:,:,iSubband) + ev.Q(:,:,iSubband);
+    
+    ev.R = eye(length(dy_hat))* (10^(mp.ctrl.sched_mat(ev.Itr, 2)));
    
-    P_H_T = mypagemtimes(ev.P(:,:,:,iSubband), H_T);
-    S = mypagemtimes(ev.H, P_H_T) + ev.R;
+    P_H_T = mypagemtimes(ev.P(:,:,:,iSubband), H');
+    S = mypagemtimes(H, P_H_T) + ev.R;
     S_inv = mypageinv(S) ;%does this need to be a pinv?
 
     % S_inv = np.linalg.pinv(S)
@@ -221,19 +233,9 @@ for iSubband = 1:1:mp.Nsbp
     ev.P(:,:,:,iSubband) = ev.P(:,:,:,iSubband) - mypagemtimes(P_H_T, permute(K,[2,1,3]));
     
     % EKF correction:
-    dy = (y_measured(:,iSubband) - y_hat);
+    ev.u_hat = K*(y_measured(:,iSubband) - dy_hat);
     
-    dy_hat_stacked  = zeros(size(K));
-    dy_hat_stacked(1,:,:) = dy.';
-    dy_hat_stacked(2,:,:) = dy.';
-    
-    dx_hat_stacked = K.*dy_hat_stacked;
-
-    dx_hat = zeros(size(x_hat_CL));
-    dx_hat(1:ev.SS:end) = dx_hat_stacked(1,:,:);
-    dx_hat(2:ev.SS:end) = dx_hat_stacked(2,:,:);
-
-    ev.x_hat(:,iSubband) = ev.x_hat(:,iSubband) + dx_hat;
+    ev.x_hat(:,iSubband) = G * ev.u_hat;
 
 end
 

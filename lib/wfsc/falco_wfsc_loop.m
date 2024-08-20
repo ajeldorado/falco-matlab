@@ -81,7 +81,7 @@ for Itr = 1:mp.Nitr
     
     %% Inject drift for (Only) Dark Zone Maintenance
     % Get Drift Command
-    if strcmpi(mp.estimator,'ekf_maintenance')
+    if strcmpi(mp.estimator,'ekf_maintenance') || strcmpi(mp.estimator, 'modal_ekf_maintenance')
         [mp, ev] = falco_drift_injection(mp, ev);
     end
 
@@ -122,6 +122,9 @@ for Itr = 1:mp.Nitr
     end
     
     cvar.Eest = ev.Eest;
+    if strcmp(mp.estimator, 'modal_ekf_maintenance')
+        cvar.u_hat = ev.u_hat;
+    end
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
     % Save data to 'out'
