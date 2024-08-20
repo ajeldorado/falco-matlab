@@ -23,11 +23,9 @@ for iSubband = 1:mp.Nsbp
 
 end
 
-
-
 % Rearrange jacobians
-ev.G_tot_cont = rearrange_jacobians(mp,jacStruct,mp.dm_ind);
-ev.G_tot_drift = rearrange_jacobians(mp,jacStruct,mp.dm_drift_ind);
+ev.G_tot_cont = rearrange_jacobian(mp,jacStruct,mp.dm_ind);
+ev.G_tot_drift = rearrange_jacobian(mp,jacStruct,mp.dm_drift_ind);
 
 % Initialize EKF matrices
 ev = initialize_ekf_matrices(mp, ev, sbp_texp);
@@ -41,7 +39,6 @@ ev.dm1.act_ele_pinned = [];
 ev.dm2.act_ele_pinned = [];
 
 end
-
 
 function G_tot = rearrange_jacobians(mp,jacStruct,dm_inds)
 
@@ -81,7 +78,6 @@ end
 
 G_tot = [G1, G2];
 
-
 end
 
 function ev = initialize_ekf_matrices(mp, ev, sbp_texp)
@@ -106,24 +102,12 @@ ev.R = zeros(floor(ev.BS/ev.SS),floor(ev.BS/ev.SS),floor(ev.SL/ev.BS));
 ev.H_indices = find(kron(eye(floor(ev.BS/ev.SS)),ones(1,ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev.BS/ev.SS)*ev.SS,floor(ev.SL/ev.BS)));
 ev.R_indices = logical(eye(floor(ev.BS/ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev.BS/ev.SS),floor(ev.SL/ev.BS)));
 
-
-
 % The drift covariance matrix for each pixel (or block of pixels). Needs 
 % to be estimated if the model is not perfectly known.  This is a 4D
 % matrix (re | im | px | wavelength).
 % Need to convert jacobian from contrast units to counts.
 
-ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
-for iSubband = 1:1:mp.Nsbp
-    disp(['assembling Q for subband ',num2str(iSubband)])
-   
-    G_reordered = ev.G_tot_drift(:,:,iSubband);
-    dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);
-
-    for i = 0:1:floor(ev.SL/ev.BS)-1
-        ev.Q(:,:,i+1,iSubband) = G_reordered((i)*ev.BS+1:(i+1)*ev.BS,:)*dm_drift_covariance*G_reordered(i*ev.BS+1:(i+1)*ev.BS,:).'*sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
-    end
-end
+ev.Q = dzm_build_q(mp, ev, sbp_texp);
 
 %% 
 ev.P = ev.Q*0.0;
