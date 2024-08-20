@@ -221,7 +221,7 @@ comm_vector = [comm1;comm2];
 end
 
 
-function ev = pinned_act_safety_check(mp,ev)
+function ev = pinned_act_safety_check(mp,ev,jacStruct)
 % Update new pinned actuators
 if any(mp.dm_ind == 1) || any(mp.dm_drift_ind == 1)
     ev.dm1.new_pinned_actuators = setdiff(mp.dm1.pinned, ev.dm1.initial_pinned_actuators);
@@ -243,10 +243,30 @@ if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>
 
     % If actuators are used in jacobian, quit.
     if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
-        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
-        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
+        %--Remove pinned or dead actuators from list of active elements
+        if any(mp.dm_drift_ind == 1)
+            mp.dm1.act_ele = setdiff(mp.dm1.act_ele, ev.dm1.act_ele_pinned);
+        end
+        if any(mp.dm_drift_ind == 2)
+            mp.dm2.act_ele = setdiff(mp.dm2.act_ele, ev.dm2.act_ele_pinned);
+        end
+        
+        %--Update the number of elements used per DM
+        if any(mp.dm_drift_ind == 1); mp.dm1.Nele = length(mp.dm1.act_ele); end
+        if any(mp.dm_drift_ind == 2); mp.dm2.Nele = length(mp.dm2.act_ele); end
 
-        error('New actuators in act_ele pinned, exiting loop');
+        %--Remove pinned or dead actuators from Jacobians
+        if any(mp.dm_drift_ind == 1); jacStruct.G1 = jacStruct.G1(:,mp.dm1.act_ele,:); end
+        if any(mp.dm_drift_ind == 2); jacStruct.G2 = jacStruct.G2(:,mp.dm2.act_ele,:); end
+        
+        % Updating pixel-wise jacobian and Q
+        ev.G_tot_drift = rearrange_jacobian(mp, jacStruct, mp.dm_drift_ind);
+        ev.Q = dzm_build_q(mp, ev);
+
+        % save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
+        % save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
+        % 
+        % error('New actuators in act_ele pinned, exiting loop');
     end
 end
 
