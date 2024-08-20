@@ -345,8 +345,22 @@ if ev.Itr == 1
     % Create a struct to hold relevant EKF parameters
     ekf_params = struct();
     ekf_params.e_scaling = mp.e_scaling;
+    ekf_params.peak_psf_counts = mp.peak_psf_counts;
+    ekf_params.normI_OL_sbp = mp.normI_OL_sbp;
+    ekf_params.Esim = mp.Esim; 
     ekf_params.dither = mp.est.dither;
     ekf_params.drift = mp.est.drift;
+    ekf_params.dithers_nm_1 = mp.dithers_nm_1;
+    ekf_params.dithers_nm_2 = mp.dithers_nm_2;
+    ekf_params.Nsbp = mp.Nsbp;
+    ekf_params.dm1.NactTotal = mp.dm1.NactTotal;
+    ekf_params.dm2.NactTotal = mp.dm2.NactTotal;
+    ekf_params.dm1.act_ele = dm1.act_ele;
+    ekf_params.dm2.act_ele = dm2.act_ele;
+    ekf_params.dm1.V = dm1.V;
+    ekf_params.dm2.V = dm2.V;
+    ekf_params.dm1.Nact = dm1.Nact;
+    ekf_params.dm2.Nact = dm2.Nact;
 
     % Save the EKF parameters struct to a config file
     fn_config = [mp.path.config filesep mp.runLabel, '_ekf_config.mat'];
