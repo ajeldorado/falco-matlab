@@ -286,6 +286,42 @@ if ~exist(output_dir, 'dir')
     mkdir(output_dir);
 end
 
+%% Create a struct to save all relevant variables
+
+% Initialize a new struct to hold the variables
+out_struct = struct();
+
+% Assign all relevant variables directly to the new struct
+out_struct.SeriesNum = mp.SeriesNum;
+out_struct.TrialNum = mp.TrialNum;
+out_struct.Nitr = mp.Nitr;
+out_struct.Itr = mp.Itr;
+out_struct.dm_ind = mp.dm_ind;
+out_struct.dm_ind_static = mp.dm_ind_static;
+out_struct.init_command_dm1 = mp.init_command_dm1;
+out_struct.init_command_dm2 = mp.init_command_dm2;
+out_struct.delta_dm1 = mp.delta_dm1;
+out_struct.delta_dm2 = mp.delta_dm2;
+out_struct.dm1_V_dz = mp.dm1.V_dz;
+out_struct.dm2_V_dz = mp.dm2.V_dz;
+out_struct.delta_dm_mean = out.delta_dm_mean;
+out_struct.est_dithers = out.est.dithers;
+out_struct.num_dithers = out.num_dithers;
+out_struct.num_iterations = out.num_iterations;
+out_struct.iSubband = out.iSubband;
+out_struct.contrasts = out.contrasts;
+out_struct.dithers_nm_1 = out.dithers_nm_1;
+
+% Only add DM2-related variables if it's used
+if any(mp.dm_ind == 2)
+    out_struct.dithers_nm_2 = out.dithers_nm_2;
+end
+
+% Save the struct to a file
+save(fullfile(output_dir, 'out_struct.mat'), 'out_struct');
+
+fprintf('out_struct.mat saved successfully in %s.\n', output_dir);
+
 % Save the generated plots
 saveas(figure(1), fullfile(output_dir, 'Contrast_per_iteration.png'));
 saveas(figure(2), fullfile(output_dir, 'DM1_Dither_std_vs_iteration.png'));
