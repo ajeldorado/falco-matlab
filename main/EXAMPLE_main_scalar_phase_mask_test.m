@@ -50,7 +50,7 @@ for index = 4:4 %length(bws) %length(radii) %6 %
 
 %         EXAMPLE_defaults_VC_simple
     EXAMPLE_defaults_SVC_chromatic
-    mp.flagPlot = false;
+    mp.flagPlot = true;
 
     mp.Fend.res = 35.55;
     mp.F3.compact.res = 16;
@@ -66,15 +66,15 @@ for index = 4:4 %length(bws) %length(radii) %6 %
     
     mp.flagVVC = false;
 
-    if mp.flagVVC
-        fprintf('achromatic VVC')
-        mp.sbp_weights = ones(mp.Nsbp,1);
-        mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
-        mp.sbp_weights(1) = 1/2; %--Give end sub-bands half weighting
-        mp.sbp_weights(end) = 1/2; %--Give end sub-bands half weighting
-        mp.F3.phaseScaleFacLambdas = ones(1, mp.Nsbp) * mp.lambda0;
-        mp.F3.phaseScaleFac = ones(1, mp.Nsbp);
-    end
+    % if mp.flagVVC
+    %     fprintf('achromatic VVC')
+    %     mp.sbp_weights = ones(mp.Nsbp,1);
+    %     mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
+    %     mp.sbp_weights(1) = 1/2; %--Give end sub-bands half weighting
+    %     mp.sbp_weights(end) = 1/2; %--Give end sub-bands half weighting
+    %     mp.F3.phaseScaleFacLambdas = ones(1, mp.Nsbp) * mp.lambda0;
+    %     mp.F3.phaseScaleFac = ones(1, mp.Nsbp);
+    % end
 
     
     [mp, out] = falco_flesh_out_workspace(mp);
@@ -87,57 +87,54 @@ for index = 4:4 %length(bws) %length(radii) %6 %
 
         %For null depth plot
         %run 20% BW sim once
-%         nulldepths = [];
-%         phasescalefacs = mp.F3.phaseScaleFac;
-%         for iSubband = 1:mp.Nsbp 
-%             im3 = falco_get_sbp_image(mp, iSubband);
-% %             peakheight = max(im3,[],'all');
-% %             peaks = [peaks peakheight];
-%             nulldepths = [nulldepths mean(im3(mp.Fend.score.mask))]
-% 
-%         end
+        nulldepths = [];
+        phasescalefacs = mp.F3.phaseScaleFac;
+        for iSubband = 1:mp.Nsbp 
+            im3 = falco_get_sbp_image(mp, iSubband);
+%             peakheight = max(im3,[],'all');
+%             peaks = [peaks peakheight];
+            nulldepths = [nulldepths mean(im3(mp.Fend.score.mask))];
+
+        end
 %     %     toc; 
 % % 
         im = falco_get_summed_image(mp);
 %         imcube(:,:,index) = im;
-        %%
-%         figure(); imagesc(im/2^16);
-%         axis tight; axis equal;
-%         set(gca,'ColorScale','log','FontSize',12);
-%         h = colorbar; caxis([-7 0]);
-%         
-%         xisDL = mp.Fend.xisDL;
-%         etasDL = mp.Fend.etasDL;
-% 
+ 
 %         figure();
 % %         imagesc(xisDL,etasDL,im);
 %         imagesc(im/2^16);
 %         axis image; set(gca,'ydir','normal')
 %         % caxis([1e-8,5e-5]);
-%         title("Final Focal Plane Image for Phase");
+%         title("Final Focal Plane Image");
 %         set(gca,'tickdir','out')
 %         set(gcf,'Color','w');
 %         colorbar;
 %         set(gca,'ColorScale','log')
 %         
-%         
+% IF ITERATING OVER SOME VARIABLE (other than broadband)         
 %         scoremask = im(mp.Fend.score.mask);
 %         rawcontrast = mean(im(mp.Fend.score.mask))
 %         val = rawcontrast;
 %         vals = [vals val];
+
 end
 
 %% Plots
 
 % 
-% %%-- plot image 
+%%-- plot image 
 % 
-figure(5);
-imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(im));
-colorbar; 
-caxis([-15 -5]);
-axis equal; axis tight;
-title('Phasescalefac:1.0, Sawtooth + Roddier dimple')
+% figure(5);
+% imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(im));
+% colorbar; 
+% caxis([-15 -5]);
+% axis equal; axis tight;
+% title(['Final Focal Plane Image'])
+% set(gca,'tickdir','out')
+% set(gcf,'Color','w');
+% colorbar;
+% % set(gca,'ColorScale','log')
 
 
 rawcontrast = mean(im(mp.Fend.score.mask))
@@ -153,18 +150,18 @@ rawcontrast = mean(im(mp.Fend.score.mask))
 
 
 %% Save data
-% % toc;
+
 % rawcontrasts = vals;
-% 
-% figure(44)
 % bws(1) = 0;
 % xaxis = bws;
-% xaxis = phasescalefacs;
-% plot(xaxis,nulldepths,'Color',[0 0.5 0.8],'LineWidth',2)
-% xlabel('Bandwidth');
-% ylabel('Raw Contrast');
-% title('Sawtooth + Roddier dimple')
-% set(gca, 'YScale', 'log')
-% grid on;
+% 
+figure(44)
+xaxis = phasescalefacs;
+plot(xaxis,nulldepths,'Color',[0 0.5 0.8],'LineWidth',2)
+xlabel('\lambda/\lambda_0');
+ylabel('Raw Contrast');
+title('Sawtooth + Roddier dimple')
+set(gca, 'YScale', 'log')
+grid on;
 
-% save monochromaticroddier.mat vals radii im mp %phasescalefacs mp %imcube mp %nulldepths phasescalefacs peaks im3 mp %
+% save filenamehere.mat vals radii im mp %phasescalefacs mp %imcube mp %nulldepths phasescalefacs peaks im3 mp %

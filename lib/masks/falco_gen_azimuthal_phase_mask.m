@@ -53,7 +53,6 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     xOffset = 0;
     yOffset = 0;
     clocking = 0; % [degrees]
-    wav = 5.5000e-07;
     res = 8;
     roddierradius = 0.53; %[lambda/D]
     roddierphase = 0.5; %[wavs]
@@ -61,7 +60,6 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     if(isfield(inputs, 'xOffset')); xOffset = inputs.xOffset; end % [pixels]
     if(isfield(inputs, 'yOffset')); yOffset = inputs.yOffset; end % [pixels]
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
-    if(isfield(inputs,'wav')); wav = inputs.wav; end %[m]
     if(isfield(inputs,'res'));res = inputs.res; end %[m]
     if(isfield(inputs,'roddierradius'));roddierradius = inputs.roddierradius; end %[lambda/D]
     if(isfield(inputs,'roddierphase'));roddierphase = inputs.roddierphase; end %[wavs]
@@ -201,7 +199,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %             set(get(h,'label'),'string','\phi');
 
 
-        case 'galicher8'
+        case 'wrapped8'
             
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             %
@@ -269,8 +267,6 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             
         case 'roddier'
             %roddier + sawtooth
-%             pixPerLamD = 8;
-%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             vort = 0.* coords.THETA;
             domain = (coords.THETA >= 0);
@@ -286,29 +282,9 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %             
 %             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
-        case 'smallvortex'
-            %sawtooth within some roddier radius
-            %is the -2 factor right...???
-            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
-            vort = 0.* coords.THETA;
-            domain = (coords.THETA >= 0);
-            vort(domain) = charge*rem(coords.THETA(domain)+pi,2*pi./charge);
-            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
-            vort(domain) = charge*rem((coords.THETA(domain)),2*pi./charge);
-            
-            R1 = (coords.RHO > roddierradius*res*phaseScaleFac);
-            vort(R1) =0;
-            
-            mask = exp(phaseScaleFac*1j*-2*vort);
-            
-%             
-%             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
-%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
 
-        case 'just dimple'
+        case 'just_dimple'
             %roddier + sawtooth
-%             pixPerLamD = 8;
-%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             dimple = 0.* coords.THETA;
             domain = (coords.THETA >= 0);
@@ -322,11 +298,6 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
 
-        case 'chatgpt'
-            vort = phaseScaleFac*charge*THETA.^2;
-            mask = exp(1j*vort);
-            
-%             figure(); imagesc(angle(mask)); axis image; title('ChatGPT Phase Map','FontSize',20);
 
         case 'custom'
 %             nonintcharge = 2*0.9474;
