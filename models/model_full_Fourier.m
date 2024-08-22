@@ -152,7 +152,7 @@ switch upper(mp.coro)
         
         %Plot vortex phase
 %         figure(221);imagesc(angle(fpm));colorbar; colormap(gray);caxis([-pi pi]);set(gca,'ydir','normal')
-        if mp.F3.dimpleFlag
+        if mp.F3.flagDimple
             inVal = mp.F3.inVal;
             outVal = mp.F3.outVal;
             pixPerLamD = mp.F3.full.res;

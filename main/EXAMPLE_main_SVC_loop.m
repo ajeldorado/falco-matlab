@@ -78,7 +78,7 @@ for index = 3:3 %length(RMSs) %length(res)
     mp.F3.NstepStaircase = 6;
     mp.F3.roddierradius = 0.53; %[lambda/D]
     mp.F3.roddierphase = 0.5;
-    mp.F3.dimpleFlag = true;
+    mp.F3.flagDimple = true;
     
  
  

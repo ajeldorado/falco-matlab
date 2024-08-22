@@ -164,7 +164,33 @@ if flagUseFPM
             inputs.clocking = mp.F3.clocking;
             inputs.Nsteps = mp.F3.NstepStaircase;
             fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
-            EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
+
+            if mp.F3.flagDimple
+                inVal = mp.F3.inVal;
+                outVal = mp.F3.outVal;
+                pixPerLamD = mp.F3.compact.res;
+    
+                inputs.type = 'sawtooth';
+                inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);
+                inputs.charge = mp.F3.VortexCharge;
+                inputs.phaseScaleFac = phaseScaleFac;
+                inputs.clocking = mp.F3.clocking;
+    %             inputs.Nsteps = mp.F3.NstepStaircase;
+                inputs.roddierradius = mp.F3.roddierradius;
+                inputs.roddierphase = mp.F3.roddierphase;
+                
+                inputs.res = mp.F3.compact.res;
+                FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);
+                
+                inputs.type = mp.F3.phaseMaskType;
+                inputs.res = floor(pixPerLamD*mp.P1.compact.Nbeam/(2*mp.F3.outVal));
+                FPMfine = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+                
+                EP4 = propcustom_mft_PtoFtoP_multispot(EP3, FPMcoarse, FPMfine, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU);
+            else
+                EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU);
+            end
+
             
             % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
             if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end

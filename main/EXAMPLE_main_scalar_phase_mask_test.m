@@ -62,7 +62,7 @@ for index = 4:4 %length(bws) %length(radii) %6 %
     mp.F3.VortexCharge = 6;
     mp.F3.roddierradius = 0.53; %[lambda/D]
     mp.F3.roddierphase = 0.5; %phaselist(index);
-    mp.F3.dimpleFlag = true;
+    mp.F3.flagDimple = true;
     
     mp.flagVVC = false;
 
