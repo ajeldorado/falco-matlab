@@ -170,6 +170,7 @@ if whichDM == 1
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = pixres;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
     else % Use FFTs
@@ -192,6 +193,7 @@ if whichDM == 1
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = Nfft1/mp.P1.compact.Nbeam;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
                 
         % Generate FPM with fftshift already applied
@@ -369,6 +371,7 @@ if whichDM == 2
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = pixres;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
 
     else        
@@ -391,6 +394,7 @@ if whichDM == 2
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = Nfft2/mp.P1.compact.Nbeam;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
         % Generate FPM with fftshift already applied

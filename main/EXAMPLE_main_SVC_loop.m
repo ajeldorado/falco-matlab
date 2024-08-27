@@ -29,7 +29,7 @@ radiiList = linspace(0.2,1.8,17);
 phaseList = linspace(0,1,11);
 tic; 
  
-for index = 3:3 %length(RMSs) %length(res)
+for index = 1:1 %length(RMSs) %length(res)
     toc;
     clearvars -except vals bws index nsbps res 
     mp.use_lastJacStruc = false;
@@ -39,12 +39,12 @@ for index = 3:3 %length(RMSs) %length(res)
     
     if ~slowpoke
         %--Library locations. FALCO and PROPER are required. CVX is optional.
-        mp.path.falco = '/Users/niyatid/falco-matlab/';  %--Location of FALCO
+        mp.path.falco = '/Users/ndesai/Documents/falco-matlab/';  %--Location of FALCO
  
         %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-        mp.path.config = '/Users/niyatid/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-        mp.path.ws = '/Users/niyatid/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-        mp.path.mask = '/Users/niyatid/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+        mp.path.config = '/Users/ndesai/Documents/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+        mp.path.ws = '/Users/ndesai/Documents/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+        mp.path.mask = '/Users/ndesai/Documents/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
         mp.path.ws_inprogress = mp.path.ws;
     else
     %for slowpoke
@@ -64,16 +64,16 @@ for index = 3:3 %length(RMSs) %length(res)
     %% Step 2: Load default model parameters
  
     disp(index);
-    mp.fracBW = bws(3);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
-    mp.Nsbp = nsbps(3);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.fracBW = bws(4);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
+    mp.Nsbp = nsbps(4);%index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.full.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     mp.P1.compact.Nbeam = 300; %res(index); %make sure this line is commented out in EXAMPLE_defaults_HCST_SVC_chromatic
     
     EXAMPLE_defaults_SVC_chromatic
 %     EXAMPLE_defaults_VC_simple
     
-    
-    mp.F3.phaseMaskType = 'sawtooth';
+     
+    mp.F3.phaseMaskType = 'roddier';
     mp.F3.VortexCharge = 6;
     mp.F3.NstepStaircase = 6;
     mp.F3.roddierradius = 0.53; %[lambda/D]
@@ -98,7 +98,7 @@ for index = 3:3 %length(RMSs) %length(res)
     mp.TrialNum = 1;
  
     mp.Nwpsbp = 1;          %--Number of wavelengths to be used to approximate an image in each sub-bandpass
-    mp.Nitr = 3; %--Number of wavefront control iterations
+    mp.Nitr = 2; %--Number of wavefront control iterations
  
     mp.flagVVC = false;
 
