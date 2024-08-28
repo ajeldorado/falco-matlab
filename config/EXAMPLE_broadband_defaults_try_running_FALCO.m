@@ -11,7 +11,7 @@ mp.TrialNum = 5309;
 mp.flagParfor = false;
 mp.useGPU = false;
 mp.flagPlot = false;
-mp.est.flagUseJac = false;
+mp.est.flagUseJac = true;
 
 %--General
 mp.centering = 'pixel';
@@ -43,11 +43,11 @@ mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image
 % centered on the star
 % - 'pairwise-rect' for pairwise probing in the specified rectangular regions for
 %    one or more stars
-mp.estimator = 'pairwise-bb';
+mp.estimator = 'pairwise';
 
 %--New variables for pairwise probing estimation:
 mp.est.probe = Probe; % initialize object
-mp.est.probe.Npairs = 2;     % Number of pair-wise probe PAIRS to use.
+mp.est.probe.Npairs = 6;     % Number of pair-wise probe PAIRS to use.
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
 mp.est.probe.xOffset = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.

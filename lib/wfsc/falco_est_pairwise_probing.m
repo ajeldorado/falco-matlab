@@ -390,7 +390,7 @@ for iSubband = 1:mp.Nsbp
         DMV4plot = DM2Vplus - repmat(DM2Vnom, [1, 1, size(DM2Vplus, 3)]);
     end
     falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube, iSubband)
-    disp('test after falco_plot_pairwise_probes..,  size(jacStruct.G1):') %mc
+    %disp('test after falco_plot_pairwise_probes..,  size(jacStruct.G1):') %mc
     %size(jacStruct.G1) %mc
     %% Perform the estimation
 
@@ -405,14 +405,21 @@ for iSubband = 1:mp.Nsbp
     
     %end
 
+    %mc
+%     save('/home/hcst/falco-matlab/data/DM1Vnom_pwp.mat', 'DM1Vnom');
+%     save('/home/hcst/falco-matlab/data/DM2Vnom_pwp.mat', 'DM2Vnom');
+%     save('/home/hcst/falco-matlab/data/DM1Vplus_pwp.mat', 'DM1Vplus');
+%     save('/home/hcst/falco-matlab/data/zAll_pwp.mat', 'zAll');
+    %save('/home/hcst/falco-matlab/data/jacStruct_pwp.mat', 'jacStruct');
 
     if strcmpi(mp.estimator, 'pairwise-bb') 
         %perform broadband estimations of Electric Field
-        Eest = pairwise_bb_estimation(mp, jacStruct, DM1Vplus, DM2Vplus, zAll);
+        Eest = pairwise_bb_estimation_test(mp, jacStruct, DM1Vplus, DM2Vplus, zAll);
     
     else
     
         if mp.est.flagUseJac %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
+            
             
             dEplus  = zeros(size(Iplus ));
             for iProbe=1:Npairs
@@ -486,7 +493,8 @@ for iSubband = 1:mp.Nsbp
                 % model predicted probe amplitude, only for diagnostics
                 amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
             end
-            
+        %mc shoulb be the same as gdus    
+        %save('/home/hcst/falco-matlab/data/dEplus_pwp.mat', 'dEplus'); 
         end 
         
         %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
@@ -497,6 +505,8 @@ for iSubband = 1:mp.Nsbp
         Eest = zeros(Ncorr, 1);
         zerosCounter = 0;
         partialCounter = 0;
+        disp('size dEplus')%mc
+        disp(size(dEplus))%mc
         for ipix = 1:Ncorr
             
             H = zeros(Npairs, 2); % Initialize the observation matrix
@@ -668,9 +678,14 @@ if strcmpi(mp.estimator, 'pairwise-bb')
     ev.Eest = Eest;
     disp('size of Eest:'); %mc
     disp(size(Eest)); %mc
+    disp('ev.Eest pairwise-bb')
+    disp(ev.Eest(1:5,:))
 
 else
     ev.Eest(:, modeIndex) = Eest;
+    save('/home/hcst/falco-matlab/data/Eest_pwp.mat', 'Eest');
+    disp('ev.Eest normal pwp')
+    disp(ev.Eest(1:5,:))
 end
 
 if mp.flagFiber
@@ -702,7 +717,7 @@ disp('mp.Nsbp just before end of loop over wavelengths')
 disp(mp.Nsbp);
 
 end %--End of loop over the wavelengths
-disp('mp.Nsbp just afterr end of loop over wavelengths')
+disp('mp.Nsbp just after end of loop over wavelengths')
 disp(mp.Nsbp);
 end %--End of loop over stars
 

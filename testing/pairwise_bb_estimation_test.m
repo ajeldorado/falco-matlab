@@ -2,7 +2,7 @@
 
 
 
-function Eest = pairwise_bb_estimation(mp, jacStruct, DM1Vplus, DM2Vplus, zAll)
+function Eest = pairwise_bb_estimation_test(mp, jacStruct, DM1Vplus, DM2Vplus, zAll)
 
     
 %     disp('size jacStruct(G1)')
@@ -81,6 +81,7 @@ function Eest = pairwise_bb_estimation(mp, jacStruct, DM1Vplus, DM2Vplus, zAll)
     gdus_transpose = reshape(gdus.', mp.est.probe.Npairs, 2*mp.Nsbp_bb, mp.Fend.corr.Npix);
     gdus = permute(gdus_transpose, [2, 1, 3]); %2*Nsbp_bb x Npairs x Npix
     
+
     gdus_pinv = zeros(size(gdus));
     for i = 1:size(gdus, 3) %for each page (corresponds to a single pixel)
         gdus_pinv(:, :, i) = (pinv(gdus(:, :, i))).';
@@ -98,13 +99,23 @@ function Eest = pairwise_bb_estimation(mp, jacStruct, DM1Vplus, DM2Vplus, zAll)
 %     %then the pseudo-inverses
 %     gdus_pinv = permute(pagemtimes(Z_inv, gdus_transpose), [2, 1, 3]);
     
-    
-    Eest_notComplex = pagemtimes(gdus_pinv, zAll4_t); %E_hat %shape is 2*Nsbp x 1 x Npix 
-    
-    %reshape to have Npix x Nwpsbp complex matrix
-    Eest_complex1 = reshape(Eest_notComplex, [2, mp.Nsbp_bb, mp.Fend.corr.Npix]); %separates Nwpsbp in Re and Im
-    Eest_complex2 = permute(Eest_complex1, [3, 2, 1]); % Npix x Nwpsbp x 2
-    Eest = Eest_complex2(:, :, 1) + 1i * Eest_complex2(:, :, 2); % Npix x Nsbp_bb complex matrix
+epix = []
+for n = 1:2:2*mp.Nsbp_bb
+    gdus_pinv_per_sbp = gdus_pinv(n:n+1,:,:);
+    epix_per_sbp = pagemtimes(gdus_pinv_per_sbp, zAll4_t);
+    epix = [epix, epix_per_sbp];
+end
+
+Eest1 = epix(1,:,:) + 1i * epix(2,:,:);
+Eest = permute(Eest1, [3,2,1]);
+
+%     
+%     Eest_notComplex = pagemtimes(gdus_pinv, zAll4_t); %E_hat %shape is 2*Nsbp x 1 x Npix 
+%     
+%     %reshape to have Npix x Nwpsbp complex matrix
+%     Eest_complex1 = reshape(Eest_notComplex, [2, mp.Nsbp_bb, mp.Fend.corr.Npix]); %separates Nwpsbp in Re and Im
+%     Eest_complex2 = permute(Eest_complex1, [3, 2, 1]); % Npix x Nwpsbp x 2
+%     Eest = Eest_complex2(:, :, 1) + 1i * Eest_complex2(:, :, 2); % Npix x Nsbp_bb complex matrix
 
 
 

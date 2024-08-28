@@ -23,23 +23,28 @@ T_tot_start = tic;
 
 %% Step 2: Load default model parameters
 
-EXAMPLE_defaults_BB_try_running_FALCO %*import and run the script
+EXAMPLE_broadband_defaults_try_running_FALCO %*import and run the script
 
 
 %% Step 3: Overwrite default values as desired
 
 %%--Special Computational Settings
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation %* false to disable parallel processing
-mp.flagPlot = false;    %* enable plotting
+mp.flagPlot = true;    %* enable plotting
 mp.flag_timeMaya = false; 
+mp.est.flagUseJac = true;
+mp.flagSaveWS = true;
+mp.estimator = 'pairwise-bb';
+
+
 
 %--Record Keeping
-mp.SeriesNum = 1;
-mp.TrialNum = 1;
+mp.SeriesNum = 2; %1: normal pwp, 2: bb pwp bb_jac test , 3 : bb_jac, 4: bb_jac_test + pairwise_bb_estimation_test
+mp.TrialNum = 2;
 
 %--Use just 1 wavelength for initial debugging/testing of code
-mp.fracBW = 0.1;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 3;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.fracBW = 0.02;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = 1;       %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 mp.Nsbp_bb = mp.Nsbp;    %mc number of sub-bandpasses for broadband pwp
 
@@ -59,5 +64,5 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 [mp, out] = falco_flesh_out_workspace(mp); % Flesh out the rest of the workspace prior to wavefront estimation and control.
 
 [mp, out] = falco_wfsc_loop(mp, out);
-
+disp(out.InormHist);
 T_tot = toc(T_tot_start)

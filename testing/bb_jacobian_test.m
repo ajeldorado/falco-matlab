@@ -1,6 +1,4 @@
-
-
-function G = bb_jacobian(mp,jacStruct,dm_ind)
+function G = bb_jacobian_test(mp,jacStruct,dm_ind)
 
     %Computes the Jacobian matrix for broadband Pair-Wise Probing.
 
@@ -10,10 +8,12 @@ function G = bb_jacobian(mp,jacStruct,dm_ind)
 
     Nele_tot = size(G_tot, 2); %Nact_ele for dm1 + dm2
 
-    
-    G_reordered = reshape(G_tot, [2 * mp.Fend.corr.Npix * mp.Nsbp_bb, Nele_tot]); %collapses x (pixels) and y (actuators) into a single dimension
-    disp('G_reordered bb_jacobian')
+    %matlab doesnt reshape in the same order as python!!
+    %G_reordered = reshape(G_tot, [2 * mp.Fend.corr.Npix * mp.Nsbp_bb, Nele_tot]); %collapses x (pixels) and y (actuators) into a single dimension
+    G_reordered = reshape(permute(G_tot, [1 3 2]),2 * mp.Fend.corr.Npix * mp.Nsbp_bb, Nele_tot ); %stack each page (of each sbp) on top of each other
+    disp('G_reordered bb_jacobian_test')
     disp(G_reordered(1:5,1:5))
+    
     % Reshape in group of pixel instead of wavelength 
     i_s = 1:2 * mp.Fend.corr.Npix : (2 * mp.Nsbp_bb * mp.Fend.corr.Npix - 2 * mp.Fend.corr.Npix + 1); %start (at 1 because matlab) : step : end (excludes last value)
     i_e = i_s + 1; %to consider the other Re or Im part of each pixel 
@@ -26,8 +26,9 @@ function G = bb_jacobian(mp,jacStruct,dm_ind)
     for factor = 0:2:(2 * mp.Fend.corr.Npix - 2) %loops through each pixel (step = 2 for Im and Re parts)
         G_factor = [G_factor; G_reordered(i_se + factor, :)]; %concatenate the rows vertically 
     end
-
-    G = reshape(G_factor, [2 * mp.Fend.corr.Npix * mp.Nsbp_bb, Nele_tot]); %re-collapses x (pixels) and y (actuators) into a single dimension
+    
+    G = G_factor;
+    %this line doesnt change anything to the previous G_factor matrix
+    %G = reshape(G_factor, [2 * mp.Fend.corr.Npix * mp.Nsbp_bb, Nele_tot]); %re-collapses x (pixels) and y (actuators) into a single dimension
 
 end
-

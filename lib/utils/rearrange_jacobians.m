@@ -6,8 +6,11 @@ if strcmpi(mp.estimator, 'pairwise-bb')
     mp.Nsbp = mp.Nsbp_bb; 
 end
 
+
 G1 = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele,mp.Nsbp);
 G2 = zeros(2*size(jacStruct.G2,1),mp.dm2.Nele,mp.Nsbp);
+
+
 
 % Set up jacobian so real and imag components alternate and jacobian from
 % each DM is stacked
