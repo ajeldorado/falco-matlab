@@ -66,8 +66,8 @@ inputs.charge = 6; % charge of the mask (makes most sense for vortex)
 inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
 mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(4); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
-% 
-% % Check wrapped8
+%%
+% Check wrapped8
 % inputs.type = 'wrapped8';
 % mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(5); imagesc(angle(mask)); axis xy equal tight; colorbar('FontSize',16); title('French Wrapped Phase Mapping');drawnow;
@@ -98,20 +98,27 @@ figure(9); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; d
 % inputs.type = 'cos';
 % mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(10); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
-
-%% Check dzpm
-inputs.type = 'dzpm';
-inputs.res = 128;
-mask = falco_gen_azimuthal_phase_mask(inputs);
-figure(11); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+%% Radially varying SVCs
+% Check dzpm
+% inputs.type = 'dzpm';
+% inputs.res = 128;
+% mask = falco_gen_azimuthal_phase_mask(inputs);
+% figure(11); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 % Check just dimple
 % inputs.type = 'just_dimple';
+% inputs.res = 128;
 % mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(12); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 % Check roddier
 inputs.type = 'roddier';
 inputs.res = 128;
+mask = falco_gen_azimuthal_phase_mask(inputs);
+figure(13); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+
+%% Metasurface SVCs
+% Check custom metasurface
+inputs.type = 'custom';
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(13); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;

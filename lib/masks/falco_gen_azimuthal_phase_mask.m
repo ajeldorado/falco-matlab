@@ -53,9 +53,9 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     xOffset = 0;
     yOffset = 0;
     clocking = 0; % [degrees]
-    % res = 8;
-    % roddierradius = 0.53; %[lambda/D]
-    % roddierphase = 0.5; %[wavs]
+    res = 0;
+    roddierradius = 0.53; %[lambda/D]
+    roddierphase = 0.5; %[wavs]
     if(isfield(inputs,'centering')); centering = inputs.centering; end % 'pixel' or 'interpixel'
     if(isfield(inputs, 'xOffset')); xOffset = inputs.xOffset; end % [pixels]
     if(isfield(inputs, 'yOffset')); yOffset = inputs.yOffset; end % [pixels]
@@ -120,14 +120,15 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
         case 'sectors'
             % Generate 1D phase profile 
-            Nsamps1D = 100*N; 
+            Nfac = 100;
+            Nsamps1D = Nfac*N; 
             q = linspace(-pi,pi,Nsamps1D);
             fpmPhz1D = pi/2*sign(cos(charge*q));
             
             % Filter out unwanted modes  
             mask1D = exp(1j*phaseScaleFac*fpmPhz1D);
             mask1D_FT = fft(mask1D);
-            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/100;
+            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/Nfac;
             mask1D_FT = mask1D_FT.*filter; 
             mask1D = ifft(mask1D_FT);
 
@@ -141,14 +142,15 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             Nsteps = inputs.Nsteps;
 
             % Generate 1D phase profile 
-            Nsamps1D = 1000*N; 
+            Nfac = 1000;
+            Nsamps1D = Nfac*N; 
             q = linspace(-pi,pi,Nsamps1D);
             fpmPhz1D = ceil(mod((q+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi-pi;
             
             % Filter out unwanted modes  
             mask1D = exp(1j*phaseScaleFac*fpmPhz1D);
             mask1D_FT = fft(mask1D);
-            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/1000;
+            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/Nfac;
             mask1D_FT = mask1D_FT.*filter; 
             mask1D = ifft(mask1D_FT);
 
@@ -249,7 +251,11 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %          'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',20);title('Wrapped Vortex Phase Map','FontSize',20);
 
         case 'dzpm'
-%             vort = phaseScaleFac*charge*rem(THETA,pi./4);
+            % dual zone phase mask
+            if~res
+               error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             vort = 0.* coords.THETA;
             domain = (coords.THETA >= 0);
@@ -267,6 +273,10 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             
         case 'roddier'
             %roddier + sawtooth
+            if~res
+               error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             vort = 0.* coords.THETA;
             domain = (coords.THETA >= 0);
@@ -284,7 +294,11 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
 
         case 'just_dimple'
-            %roddier + sawtooth
+            %roddier dimple alone
+            if~res
+                error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             dimple = 0.* coords.THETA;
             domain = (coords.THETA >= 0);
@@ -300,9 +314,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
 
         case 'custom'
-%             nonintcharge = 2*0.9474;
-%             vort = phaseScaleFac*nonintcharge*THETA;
-%             mask = exp(1j*vort);
+            % MONOCHROMATIC metasurface vortex
             
             %read in Metasurface vortcube, lams
 %             load lorenzovortex6cube.mat
@@ -346,7 +358,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
             
         otherwise
-            validOptions = "Valid options are 'vortex', 'cos', 'sectors', 'staircase', 'classicalwrapped', 'frenchwrapped', and 'mcmc6'.";
+            validOptions = "Valid options are 'vortex', 'cos', 'sectors', 'staircase', 'sawtooth', 'wrapped8', 'wrapped6', 'dzpm', 'roddier', and 'just_dimple'.";
             error('%s is not a valid option for inputs.type. \n%s', inputs.type, validOptions)
     end
 

@@ -1,3 +1,11 @@
+% CREATED BY: LORENZO KONIG 
+% LAST MODIFIED: JAN 2023
+
+% This script reads in a desired phase map and a specific wavelength index
+% It finds the corresponding metasurface block size for that phase
+% And returns the effective phase at the specific wavelength for
+% that metasurface blocksize
+
 function [m,n,m1]=b30_library_siz_auto(phi,n_lam)
     % have to give phase AND wavelength index !
     %addpath '/Users/lorenzo/Documents/RETICOLO_V9/rev1cd_diam_LVODCA_sw200_crc1' % to be able to use the data from there

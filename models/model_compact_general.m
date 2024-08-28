@@ -150,20 +150,7 @@ if flagUseFPM
                 % chromatic phase FPM.
                 phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
             end
-            
-            inVal = mp.F3.inVal;
-            outVal = mp.F3.outVal;
-            spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
-            spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
-            pixPerLamD = mp.F3.compact.res;
-            
-            inputs.type = mp.F3.phaseMaskType;
-            inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);
-            inputs.charge = mp.F3.VortexCharge;
-            inputs.phaseScaleFac = phaseScaleFac;
-            inputs.clocking = mp.F3.clocking;
-            inputs.Nsteps = mp.F3.NstepStaircase;
-            fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+           
 
             if mp.F3.flagDimple
                 inVal = mp.F3.inVal;
@@ -175,7 +162,6 @@ if flagUseFPM
                 inputs.charge = mp.F3.VortexCharge;
                 inputs.phaseScaleFac = phaseScaleFac;
                 inputs.clocking = mp.F3.clocking;
-    %             inputs.Nsteps = mp.F3.NstepStaircase;
                 inputs.roddierradius = mp.F3.roddierradius;
                 inputs.roddierphase = mp.F3.roddierphase;
                 
@@ -188,7 +174,22 @@ if flagUseFPM
                 
                 EP4 = propcustom_mft_PtoFtoP_multispot(EP3, FPMcoarse, FPMfine, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU);
             else
-                EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU);
+
+                inVal = mp.F3.inVal;
+                outVal = mp.F3.outVal;
+                spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
+                spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
+                pixPerLamD = mp.F3.compact.res;
+                
+                inputs.type = mp.F3.phaseMaskType;
+                inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);
+                inputs.charge = mp.F3.VortexCharge;
+                inputs.phaseScaleFac = phaseScaleFac;
+                inputs.clocking = mp.F3.clocking;
+                inputs.Nsteps = mp.F3.NstepStaircase;
+                fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+
+                EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
             end
 
             
