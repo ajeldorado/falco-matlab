@@ -13,7 +13,7 @@
 % ------
 % inputs: structure of inputs parameters
 %   - inputs.type: type of mask. Valid options are 'vortex', 'cos',
-%   'sectors','staircase','sawtooth','galicher8','wrapped6','dzpm','custom'
+%   'sectors','staircase','sawtooth','wrapped8','wrapped6','dzpm','roddier','just_dimple','custom'
 %   - inputs.charge: number of 2-pi phase progressions over the 360
 %     degrees of the mask)
 %   - inputs.N: width and height of the output array
@@ -27,6 +27,8 @@
 %                     array center in units of pixels
 %   - inputs.yOffset: (optional) y-offset of the mask center from the
 %                     array center in units of pixels
+%   - inputs.roddierradius: (optional) radius of roddier dimple [lambda0/D]
+%   - inputs.roddierphase: (optional) phase of roddier dimple [wavs]
 %   - inputs.wav: (required for 'custom') index of fpm cube with lam depth
 %
 % OUTPUTS
@@ -40,12 +42,6 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     charge = inputs.charge; 
     N = inputs.N;
     phaseScaleFac = inputs.phaseScaleFac;
-    
-    
-    %ADDITIONAL TEMPORARY PARAMETERS--needs to be properly integrated...
-%     
-%     P1 = 300; %mp.P1.full.Nbeam
-%     pixPerLamD = 8;%N/P1;
     
 
     % OPTIONAL INPUTS
