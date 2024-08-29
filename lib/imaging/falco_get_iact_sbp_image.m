@@ -28,7 +28,7 @@ function normI = falco_get_iact_sbp_image(mp,si)
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
     tb.sciCam.subdir = 'falco';
     
-    if(mp.isProbing) % use these values if you're probing 
+    if mp.isProbing  % use these values if you're probing 
         sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
         numCoadds = tb.info.sbp_numCoadds_probe(si);% Number of coadds to use for each sub-bandpass
     else % use these values for dark hole images 
@@ -45,7 +45,7 @@ function normI = falco_get_iact_sbp_image(mp,si)
 
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
-    if(tb.DM.installed && tb.DM.CONNECTED)
+    if tb.DM.installed && tb.DM.CONNECTED 
         DM_apply2Dmap(tb.DM,mp.dm1.V);
     end
 
@@ -59,8 +59,10 @@ function normI = falco_get_iact_sbp_image(mp,si)
     lam0 = mp.sbp_centers(si);
     lam1 = lam0 - sbp_width/2;
     lam2 = lam0 + sbp_width/2;
-    if(strcmpi(tb.info.source,'nkt'))
+    if strcmpi(tb.info.source,'nkt') && mp.Nsbp>1
         NKT_setWvlRange(tb,lam1*1e9,lam2*1e9);
+    else
+        disp('Monochromatic mode, laser not queried')
     end
     
     % Load a dark
