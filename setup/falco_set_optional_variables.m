@@ -147,7 +147,7 @@ if(isfield(mp.dm1,'dVnbrDiag')==false); mp.dm1.dVnbrDiag = mp.dm1.Vmax; end % ma
 if(isfield(mp.dm1,'biasMap')==false);  mp.dm1.biasMap = mp.dm1.Vmax/2*ones(mp.dm1.Nact, mp.dm1.Nact);  end  %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm1.biasMap + mp.dm1.V
 if(isfield(mp.dm1,'facesheetFlatmap')==false);  mp.dm1.facesheetFlatmap = mp.dm1.biasMap;  end %--Voltage map that produces a flat DM1 surface. Used when enforcing the neighbor rule.
 if(isfield(mp.dm1,'comovingGroups')==false);  mp.dm1.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
-if(isfield(mp.dm1,'tolNbrRule')==false); mp.dm1.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
+if(isfield(mp.dm1,'marginNbrRule')==false); mp.dm1.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
 if(isfield(mp.dm2,'Nactbeam')==false);  mp.dm2.Nactbeam = mp.dm2.Nact;  end % Number of actuators across the beam (approximate)
 if(isfield(mp.dm2,'basisType')==false);  mp.dm2.basisType = 'actuator';  end %--Basis set used for control Options: 'actuator', 'fourier'
@@ -169,7 +169,7 @@ if(isfield(mp.dm2,'dVnbrDiag')==false); mp.dm2.dVnbrDiag = mp.dm2.Vmax; end % ma
 if(isfield(mp.dm2,'biasMap')==false);  mp.dm2.biasMap = mp.dm2.Vmax/2*ones(mp.dm2.Nact, mp.dm2.Nact);  end %--Bias voltage. Needed prior to WFSC to allow + and - voltages. Total voltage is mp.dm2.biasMap + mp.dm2.V
 if(isfield(mp.dm2,'facesheetFlatmap')==false);  mp.dm2.facesheetFlatmap = mp.dm2.biasMap;  end %--Voltage map that produces a flat DM2 surface. Used when enforcing the neighbor rule.
 if(isfield(mp.dm2,'comovingGroups')==false);  mp.dm2.comovingGroups = {};  end % Cell array with each index containing a vector of linear indices for actuators that move together. The vectors can be any length.
-if(isfield(mp.dm2,'tolNbrRule')==false); mp.dm2.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
+if(isfield(mp.dm2,'marginNbrRule')==false); mp.dm2.marginNbrRule = 0.001; end % voltage tolerance used when checking neighbor rule and bound limits. Units of volts.
 
 %--Control
 if(isfield(mp.jac,'zerns')==false); mp.jac.zerns = 1; end %--Zernike modes in Jacobian
@@ -182,6 +182,13 @@ if ~isfield(mp.est, 'probeSchedule'); mp.est.probeSchedule = ProbeSchedule; end 
 if(isfield(mp.est,'InormProbeMax')==false); mp.est.InormProbeMax = 1e-4; end %--Max allowed probe intensity
 if(isfield(mp.est,'Ithreshold')==false); mp.est.Ithreshold = 1e-2; end %--Reduce estimated intensities to this value if they exceed this (probably due to a bad inversion)
 if(isfield(mp.scc,'modeCoef')==false); mp.scc.modeCoef = 1; end %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
+
+%--Kalman filtering
+if ~isfield(mp.est, 'kf');  mp.est.kf.dummy = 1;  end
+if ~isfield(mp.est.kf, 'ItrStart'); mp.est.kf.ItrStart = 2;  end  % WFSC iteration at which to start kalman filter
+if ~isfield(mp.est.kf, 'Rcoef'); mp.est.kf.Rcoef = 1;  end % Tuning coefficient for measurement noise covariance matrix at each iteration
+if ~isfield(mp.est.kf, 'Pcoef0'); mp.est.kf.Pcoef0 = 1;  end % Tuning coefficient for initial covariance matrix
+if ~isfield(mp.est.kf, 'Qcoef'); mp.est.kf.Qcoef = 1;  end % Tuning coefficient for model-error covariance matrix at each iteration
 
 %--IEFC
 if(isfield(mp.iefc,'modeCoef')==false); mp.iefc.modeCoef = 1e-3; end %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.

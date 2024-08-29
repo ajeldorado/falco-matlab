@@ -28,6 +28,12 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     % Initializations    
     vals_list = allcomb(mp.ctrl.log10regVec, mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
+    
+	if isfield(mp.ctrl, 'dmGainOverride')
+        cvar.latestBestDMfac = mp.ctrl.dmGainOverride;
+        vals_list = allcomb(mp.ctrl.log10regVec, mp.ctrl.dmGainOverride).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
+	end
+    
     Nvals = max(size(vals_list,2));
     Inorm_list = zeros(Nvals,1);
 

@@ -4,27 +4,19 @@
 
 EXAMPLE_try_running_FALCO
 
-% Option 2: Load DM command from previous experiment 
-
-% mp.SeriesNum = 8;
-% mp.TrialNum = 65;
-% dhmStartSoln.SeriesNum = mp.SeriesNum; % Series number of previous DM solution 
-% dhmStartSoln.TrialNum = mp.TrialNum; % Trial number of previous DM solution 
-% dhmStartSoln.itNum = NaN; % Iteration number for previous DM solution 
-% 
-% load(fullfile(tb.info.OUT_DATA_DIR,['Series',num2str(dhmStartSoln.SeriesNum),'_Trial',num2str(dhmStartSoln.TrialNum)], ...
-%     ['Series',num2str(dhmStartSoln.SeriesNum),'_Trial',num2str(dhmStartSoln.TrialNum),'_config.mat']))
-% mp = loadPrevDMsoln(mp, dhmStartSoln, tb.info.OUT_DATA_DIR );
+% Option 2: Load DM command from previous experiment, load mp and out variables 
 
 %% Step 2: Set variables for DZM
 
 mp.Nitr = 100; % Number of iteration for EKF 
+mp.dm_ind = 1; %--DMs used in estimation/control
+mp.dm_ind_static = [2]; %--DMs ONLY holding dark zone shape, not injecting drift or part of control
 
 %%-- Variables for ekf maintenance estimation
 mp.estimator = 'ekf_maintenance';
 mp.est.probe.Npairs = 1; 
-mp.est.probe.whichDM = 1; %--Which DM is used for control
-mp.est.dither = 9.5e-4; %--std dev of dither command for random dither [V/sqtr(iter)]
+mp.est.probe.whichDM = 1; %--Which DM is used for dither/control
+mp.est.dither = 9.5e-5; %--std dev of dither command for random dither [V/sqtr(iter)]
 mp.est.flagUseJac = true; % EKF needs the jacobian for estimation 
 mp.est.read_noise = 1; %--Read noise of detector [e-]
 mp.est.dark_current = 0.01; %--Dark current of detector [e-/s]
@@ -40,12 +32,12 @@ mp.ctrl.dmfacVec = 1;
 % Set EFC tikhonov parameter 
 mp.ctrl.sched_mat = repmat([1, -1.0, 1, 1, 0], [mp.Nitr, 1]);% 
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-mp.relinItrVec = [];
+mp.relinItrVec = [1];
 
 %%-- Drift variables 
-mp.dm_drift_ind = mp.dm_ind;%--which DM is drifting 
+mp.dm_drift_ind = 1;%--which DM is drifting 
 mp.drift.type = 'rand_walk';%--what type of drift is happening 
-mp.drift.magnitude = 9e-5; %--std dev of random walk [V/sqrt(iter)]
+mp.drift.magnitude = 9e-6; %--std dev of random walk [V/sqrt(iter)]
 mp.drift.presumed_dm_std = mp.drift.magnitude; %--std dev of random walk provided to estimator, change this to account for the uncertainty of the drift magnitude
 
 %%--
@@ -60,13 +52,14 @@ mp.dm2.V_dz = mp.dm2.V;
 mp.dm1.V_drift = zeros(mp.dm1.Nact); %--Drift injected, initialize to 0
 mp.dm2.V_drift = zeros(mp.dm2.Nact);
 
+
 mp.dm1.V_shift = zeros(mp.dm1.Nact); %--DM shift command for estimator reset to avoid linearization / phase wrapping errors, initialize to zero
 mp.dm2.V_shift = zeros(mp.dm2.Nact);
 
 %% Change run label and FALCO output paths
-mp.runLabel = ['EKF_Series',num2str(mp.SeriesNum),'_Trial',num2str(mp.TrialNum)];
+mp.runLabel = ['DZM'];
 
-out_dir = fullfile(tb.info.OUT_DATA_DIR,mp.runLabel);
+out_dir = fullfile(mp.path.config,mp.runLabel);
 mp.path.config = out_dir;  %--Location of *config.mat and *snippet.mat output files
 mp.path.ws = out_dir; % Location for (mostly) complete workspace from end of trial, *_all.mat
 
