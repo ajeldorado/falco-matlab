@@ -120,9 +120,11 @@ if(isfield(mp.F3, 'clocking')==false);  mp.F3.clocking = 0;  end  % Counterclock
 if(isfield(mp.F3, 'phaseScaleFac')==false);  mp.F3.phaseScaleFac = 1;  end  % Factor to apply to the phase in the phase FPM. Use a vector to add chromaticity to the model. 
 if(isfield(mp.F3, 'inVal')==false);  mp.F3.inVal = 0.3;  end  % Inner radius to start the Tukey window for azimuthal phase FPMs. Units of lambda0/D.
 if(isfield(mp.F3, 'outVal')==false);  mp.F3.outVal = 5.0;  end  % Out radius to end the Tukey window for azimuthal phase FPMs. Units of lambda0/D.
-if(isfield(mp.F3, 'flagDimple')==false);  mp.F3.flagDimple = false;  end
-if(isfield(mp.F3, 'roddierphase')==false);  mp.F3.roddierphase = 0.50;  end  % [waves]
-if(isfield(mp.F3, 'roddierradius')==false);  mp.F3.roddierradius = 0.53;  end % [lambda/D]
+
+if(isfield(mp.F3, 'flagDimple')==false);  mp.F3.flagDimple = false;  end % When using the roddier+sawtooth hybrid radial and azimuthal mask.
+if(isfield(mp.F3, 'roddierphase')==false); mp.F3.roddierphase = 0.5; end % Phase of central roddier dimple as a multiple of 2*pi.
+if(isfield(mp.F3, 'roddierradius')==false); mp.F3.roddierradius = 0.53; end %Radius of central roddier dimple in units of lambda0/D.
+
 
 %--HLC FPM materials
 if(isfield(mp.F3, 'substrate')==false);  mp.F3.substrate = 'FS';  end % name of substrate material  [FS or N-BK7]
