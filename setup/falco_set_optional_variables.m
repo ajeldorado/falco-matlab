@@ -30,6 +30,7 @@ mp.path.dummy = 1;
 mp.detector.dummy = 1;
 mp.scc.dummy = 1;
 mp.iefc.dummy = 1;
+mp.plot.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
@@ -81,6 +82,10 @@ if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end
 %% Optional/hidden variables
 
 if ~isfield(mp, 'runLabel');  mp.runLabel = 'default_label_';  end
+
+% Progress plot limits
+if ~isfield(mp.plot, 'contrast_clim_min');  mp.plot.contrast_clim_min = -10;  end
+if ~isfield(mp.plot, 'contrast_clim_max');  mp.plot.contrast_clim_max = -3;  end
 
 % How many stars to use and their positions
 % mp.star is for the full model, and mp.compact.star is for the compact and

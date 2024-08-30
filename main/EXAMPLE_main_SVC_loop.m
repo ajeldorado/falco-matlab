@@ -102,6 +102,10 @@ for index = 1:1 %length(RMSs) %length(res)
  
     mp.flagVVC = false;
 
+    % progress plothe 
+    mp.plot.contrast_clim_min = -15;
+    mp.plot.contrast_clim_max = -3; 
+
     if mp.flagVVC
         fprintf('achromatic VVC')
         mp.sbp_weights = ones(mp.Nsbp,1);

@@ -47,7 +47,7 @@ if(mp.flagPlot)
             %--Stellar PSF
             h_psf = subplot(2,3,1); % Save the handle of the subplot
             set(h_psf, 'OuterPosition', [0.01, 0.46, subplotbox])
-            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-10 -3]); 
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[mp.plot.contrast_clim_min, mp.plot.contrast_clim_max]); 
             axis xy equal tight; colorbar(h_psf); colormap(h_psf,parula);
             % xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
@@ -155,7 +155,7 @@ if(mp.flagPlot)
 
             h_psf = subplot(2,2,1); % Save the handle of the subplot
             set(h_psf, 'OuterPosition', [0.05, 0.46, [1 1]*0.45])
-            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[-10 -3]); 
+            imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(Im),[mp.plot.contrast_clim_min, mp.plot.contrast_clim_max]); 
             axis xy equal tight; colorbar(h_psf); colormap(h_psf,parula);
         %     xlabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX'); 
             ylabel('$\lambda_0$/D','FontSize',16,'Interpreter','LaTeX');
