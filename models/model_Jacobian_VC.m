@@ -164,6 +164,11 @@ if whichDM == 1
         end
         etas = xis.';
                 
+        if mp.F3.flagDimple
+            inputs.roddierphase = mp.F3.roddierphase;
+            inputs.roddierradius = mp.F3.roddierradius;
+        end
+
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nxi;
         inputs.charge = mp.F3.VortexCharge;
@@ -187,6 +192,11 @@ if whichDM == 1
             spot = 1;
         end
         
+        if mp.F3.flagDimple
+            inputs.roddierphase = mp.F3.roddierphase;
+            inputs.roddierradius = mp.F3.roddierradius;
+        end
+
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nfft1;
         inputs.charge = mp.F3.VortexCharge;

@@ -114,6 +114,8 @@ figure(9); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; d
 % Check roddier
 inputs.type = 'roddier';
 inputs.res = 128;
+inputs.roddierphase = 0.5; % waves
+inputs.roddierradius = 0.53; % lambda/D
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(13); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 

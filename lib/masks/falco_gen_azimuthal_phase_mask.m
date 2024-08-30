@@ -54,15 +54,13 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     yOffset = 0;
     clocking = 0; % [degrees]
     res = 0;
-    roddierradius = 0.53; %[lambda/D]
-    roddierphase = 0.5; %[wavs]
     if(isfield(inputs,'centering')); centering = inputs.centering; end % 'pixel' or 'interpixel'
     if(isfield(inputs, 'xOffset')); xOffset = inputs.xOffset; end % [pixels]
     if(isfield(inputs, 'yOffset')); yOffset = inputs.yOffset; end % [pixels]
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
     if(isfield(inputs,'res'));res = inputs.res; end %[m]
-    if(isfield(inputs,'roddierradius'));roddierradius = inputs.roddierradius; end %[lambda/D]
-    if(isfield(inputs,'roddierphase'));roddierphase = inputs.roddierphase; end %[wavs]
+    if(isfield(inputs,'roddierradius')); roddierradius = inputs.roddierradius; end % [lambda/D]
+    if(isfield(inputs,'roddierphase')); roddierphase = inputs.roddierphase; end % [waves]
     % Input checks
     Check.scalar_integer(charge);
     
@@ -109,8 +107,6 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %             h = colorbar('Ticks',charge*pi.*[-0.99,-.5,0,0.5,1],'TickLabels',{'$-6\pi$','$-3\pi$','$0$','$3\pi$','$6\pi$'},'TickLabelInterpreter', 'latex'); 
 %             set(get(h,'label'),'string','\phi');
             %             title('Classical Vortex Phase Map','FontSize',20);
-
-
 
         case{'cos'}
             z_m = besselzero(0,1);
@@ -273,8 +269,16 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             
         case 'roddier'
             %roddier + sawtooth
-            if~res
+            if ~res
                error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
+            if ~isfield(inputs, 'roddierradius')
+                error("inputs.roddierradius must be defined for this mask case.")
+            end
+
+            if ~isfield(inputs, 'roddierphase')
+                error("inputs.roddierphase must be defined for this mask case.")
             end
 
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
@@ -288,15 +292,22 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             vort(R1) =vort(R1) + roddierphase*2*pi;
             
             mask = exp(phaseScaleFac*1j*vort);
-            
-%             
+
 %             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
 
         case 'just_dimple'
-            %roddier dimple alone
+            % a roddier dimple without any azimuthal structure
             if~res
                 error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
+            if ~isfield(inputs, 'roddierradius')
+                error("inputs.roddierradius must be defined for this mask case.")
+            end
+
+            if ~isfield(inputs, 'roddierphase')
+                error("inputs.roddierphase must be defined for this mask case.")
             end
 
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
@@ -307,8 +318,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             dimple(R1) =dimple(R1) + roddierphase*2*pi;
             
             mask = exp(phaseScaleFac*-1j*dimple);
-            
-%             
+
 %             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
 

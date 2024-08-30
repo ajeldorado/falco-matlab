@@ -38,16 +38,16 @@ for index = 1:1 %length(RMSs) %length(res)
     slowpoke = false;
     
     if ~slowpoke
-        %--Library locations. FALCO and PROPER are required. CVX is optional.
-        mp.path.falco = '/Users/ndesai/Documents/falco-matlab/';  %--Location of FALCO
- 
-        %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
-        mp.path.config = '/Users/ndesai/Documents/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
-        mp.path.ws = '/Users/ndesai/Documents/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-        mp.path.mask = '/Users/ndesai/Documents/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
-        mp.path.ws_inprogress = mp.path.ws;
+        % %--Library locations. FALCO and PROPER are required. CVX is optional.
+        % mp.path.falco = '/Users/ndesai/Documents/falco-matlab/';  %--Location of FALCO
+        % 
+        % %%--Output Data Directories (Comment these lines out to use defaults within falco-matlab/data/ directory.)
+        % mp.path.config = '/Users/ndesai/Documents/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
+        % mp.path.ws = '/Users/ndesai/Documents/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+        % mp.path.mask = '/Users/ndesai/Documents/falco-matlab/lib/masks/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+        % mp.path.ws_inprogress = mp.path.ws;
     else
-    %for slowpoke
+    % for slowpoke machine
  
         % % %--Library locations. FALCO and PROPER are required. CVX is optional.
         mp.path.falco = 'C:\Users\jdllop\Documents\GitHub\falco-matlab';%'~/Repos/falco-matlab/';  %--Location of FALCO
@@ -55,11 +55,11 @@ for index = 1:1 %length(RMSs) %length(res)
         % %%--Output Data Directories ( Comment these lines out to use defaults within falco-matlab/data/ directory.)
         mp.path.config = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\brief';%'~/Repos/falco-matlab/data/brief/'; %--Location of config files and minimal output files. Default is [mainPath filesep 'data' filesep 'brief' filesep]
         mp.path.ws = 'C:\Users\jdllop\Documents\GitHub\falco-matlab\data\ws';%'~/Repos/falco-matlab/data/ws/'; % (Mostly) complete workspace from end of trial. Default is [mainPath filesep 'data' filesep 'ws' filesep];
+        
+        %%--Add to the MATLAB Path
+        addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
+    
     end
- 
-    %%--Add to the MATLAB Path
-    addpath(genpath(mp.path.falco)) %--Add FALCO library to MATLAB path
- 
  
     %% Step 2: Load default model parameters
  
@@ -90,7 +90,7 @@ for index = 1:1 %length(RMSs) %length(res)
     mp.F3.outVal = 5; % 17;% radius of fine-sampled DFT region in propcustom_mft_PtoFtoP.m
  
     %%--Special Computational Settings
-    mp.flagParfor = true; %--whether to use parfor for Jacobian calculation
+    mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
     mp.flagPlot = true;
  
     %--Record Keeping
