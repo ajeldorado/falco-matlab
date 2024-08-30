@@ -15,7 +15,7 @@
 % -------
 % subbandImage : sub-bandpass image
 
-function subbandImage = falco_get_sim_sbp_image(mp, iSubband)
+function [subbandImage,varargout] = falco_get_sim_sbp_image(mp, iSubband)
 
     %--Compute the DM surfaces outside the full model to save time
     if any(mp.dm_ind == 1); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1, mp.dm1.dx, mp.dm1.NdmPad); end
@@ -29,17 +29,30 @@ function subbandImage = falco_get_sim_sbp_image(mp, iSubband)
 
     if mp.flagParfor
         parfor iCombo = 1:Ncombos
-            Iall{iCombo} = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband);
+            if mp.flagFiber
+                [Iall{iCombo},Ifiberall{iCombo}] = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband);
+            else
+                Iall{iCombo} = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband);
+            end
         end
     else
         for iCombo = Ncombos:-1:1
-            Iall{iCombo} = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband);
+            if mp.flagFiber
+                [Iall{iCombo},Ifiberall{iCombo}] = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband);
+            else
+                Iall{iCombo} = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband);
+            end
         end
     end
 
     %--Apply the spectral weights and sum
     subbandImage = 0; 
+    subbandIfiber = 0; 
     for iCombo = 1:Ncombos
+        if mp.flagFiber
+            subbandIfiber =  subbandIfiber + Ifiberall{iCombo};
+            varargout{1} = subbandIfiber;
+        end
         subbandImage = subbandImage + Iall{iCombo};  
     end
     
@@ -51,7 +64,7 @@ function subbandImage = falco_get_sim_sbp_image(mp, iSubband)
 end %--END OF FUNCTION
 
 
-function Iout = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband)
+function [Iout,varargout] = falco_compute_subband_image_component(mp, indexComboArray, iCombo, iSubband)
 
     % Generate the weighted, normalized intensity image for a single
     % wavelength, polarization, and star in the specified subband.
@@ -68,7 +81,12 @@ function Iout = falco_compute_subband_image_component(mp, indexComboArray, iComb
     modvar.wpsbpIndex = iWavelength;
     modvar.starIndex = iStar;
     mp.full.polaxis = mp.full.pol_conds(iPol); % used only in PROPER full models
-    Estar = model_full(mp, modvar);
+    if mp.flagFiber
+        [Estar,Efiber] = model_full(mp, modvar);
+        varargout{1} = abs(Efiber).^2;
+    else
+        Estar = model_full(mp, modvar);
+    end
 
     % Apply wavelength weight within subband.
     % Assume polarizations are evenly weighted.

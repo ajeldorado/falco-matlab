@@ -125,6 +125,8 @@ end
 
 xisF3 = scaleFac * mp.F3.compact.xis;
 etasF3 = scaleFac * mp.F3.compact.etas;
+dxiF3 = scaleFac * mp.F3.compact.dxi;
+detaF3 = scaleFac * mp.F3.compact.deta;
 
 %--For including DM surface errors (quilting, scalloping, etc.)
 if mp.flagDMwfe
@@ -158,7 +160,15 @@ Edm1 = Edm1WFE .* DM1stop .* exp(surfIntoPhase*2*pi*1j*DM1surf/lambda) .* Edm1;
 
 %--DM1---------------------------------------------------------
 if whichDM == 1 
-    Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele);
+    if mp.flagFiber
+        if mp.flagLenslet
+            Gmode = zeros(mp.Fend.Nlens, mp.dm1.Nele);
+        else
+            Gmode = zeros(mp.Fend.Nfiber, mp.dm1.Nele);
+        end
+    else
+        Gmode = zeros(mp.Fend.corr.Npix, mp.dm1.Nele); %--Initialize the Jacobian
+    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS;
@@ -208,7 +218,7 @@ if whichDM == 1
             %--Matrices for the MFT from the pupil P3 to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(etasF3*y_box)/(lambda*mp.fl)))...
                 * sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
-                scaleFac * sqrt(mp.F3.compact.dxi*mp.F3.compact.deta) / (lambda*mp.fl);
+                 sqrt(dxiF3*detaF3) / (lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(x_box*xisF3)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
@@ -220,8 +230,8 @@ if whichDM == 1
                     EF3 = (transOuterFPM - fpm) .* EF3inc; %--Propagate through (1-complex FPM) for Babinet's principle
 
                     %--DFT to LS ("Sub" name for Subtrahend part of the Lyot-plane E-field)
-                    EP4subtrahend = propcustom_mft_FtoP(EF3, mp.fl, lambda, scaleFac*mp.F3.compact.dxi, ...
-                        scaleFac*mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
+                    EP4subtrahend = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxiF3, ...
+                        detaF3, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
                     EP4subtrahend = propcustom_relay(EP4subtrahend, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
 
                     %--Full Lyot plane pupil (for Babinet)
@@ -234,7 +244,7 @@ if whichDM == 1
                     
                 case{'FLC', 'SPLC'}
                     EF3 = mp.F3.compact.mask .* EF3inc;
-                    EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, scaleFac*mp.F3.compact.dxi, scaleFac*mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering); % MFT to Lyot Plane
+                    EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxiF3, detaF3, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering); % MFT to Lyot Plane
                     EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
                 
                 otherwise
@@ -246,11 +256,36 @@ if whichDM == 1
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering);
-            EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, ...
-                mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
-            if(mp.useGPU); EFend = gather(EFend); end
+
+            if mp.flagFiber
+                if mp.flagLenslet
+                    for nlens = 1:mp.Fend.Nlens
+                        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta,...
+                            mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        Elenslet = EFend.*mp.Fend.lenslet.mask;
+                        EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                        Gmode(nlens, Gindex) = max(max(mp.F5.fiberMode(:, :, modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:, :, modvar.sbpIndex).*EF5));
+                    end
+                else
+                    EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+
+                    Gmodetemp = zeros(mp.Fend.Nfiber, 1);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
+%                         Gmodetemp = Gmodetemp + Eonefiber;
+                        Gmodetemp(i,1) = Eonefiber;
+                    end
+                    Gmode(:, Gindex) = Gmodetemp;
+                end
+            else    
+                EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+
+                if mp.useGPU
+                    EFend = gather(EFend);
+                end
             
-            Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            end
         end
         
         Gindex = Gindex + 1;
@@ -266,7 +301,15 @@ end
 
 %--DM2---------------------------------------------------------
 if whichDM == 2
-    Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele);
+    if mp.flagFiber
+        if mp.flagLenslet
+            Gmode = zeros(mp.Fend.Nlens, mp.dm2.Nele);
+        else
+            Gmode = zeros(mp.Fend.Nfiber, mp.dm2.Nele);
+        end
+    else
+        Gmode = zeros(mp.Fend.corr.Npix, mp.dm2.Nele); %--Initialize the Jacobian
+    end
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad2AS = mp.dm2.compact.NboxAS; 
@@ -305,7 +348,7 @@ if whichDM == 2
             %--Matrices for the MFT from the pupil P3 to the focal plane mask
             rect_mat_pre = (exp(-2*pi*1j*(etasF3*y_box)/(lambda*mp.fl)))...
                 * sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
-                scaleFac*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta) / (lambda*mp.fl);
+                sqrt(dxiF3*detaF3) / (lambda*mp.fl);
             rect_mat_post = (exp(-2*pi*1j*(x_box*xisF3)/(lambda*mp.fl)));
 
             %--MFT from pupil P3 to FPM
@@ -317,8 +360,8 @@ if whichDM == 2
                     EF3 = (transOuterFPM-fpm) .* EF3inc; %--Propagate through (1 - (complex FPM)) for Babinet's principle
 
                     % DFT to LS
-                    EP4subtrahend = propcustom_mft_FtoP(EF3, mp.fl, lambda, scaleFac*mp.F3.compact.dxi, ...
-                        scaleFac*mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
+                    EP4subtrahend = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxiF3, ...
+                        detaF3, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering);
                     EP4subtrahend = propcustom_relay(EP4subtrahend, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering); %--Get the correct orientation
 
                     EP4noFPM = zeros(mp.dm2.compact.NdmPad);
@@ -330,8 +373,8 @@ if whichDM == 2
             
                 case{'FLC', 'SPLC'}
                     EF3 = mp.F3.compact.mask .* EF3inc; % Apply FPM
-                    EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, scaleFac*mp.F3.compact.dxi, ...
-                        scaleFac*mp.F3.compact.deta, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering); % MFT to Lyot Plane
+                    EP4 = propcustom_mft_FtoP(EF3, mp.fl, lambda, dxiF3, ...
+                        detaF3, mp.P4.compact.dx, mp.P4.compact.Narr, mp.centering); % MFT to Lyot Plane
                     EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering); % Add more re-imaging relays between pupils P3 and P4 if necessary
                 
                 otherwise
@@ -343,10 +386,32 @@ if whichDM == 2
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering);
-            EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
-            if mp.useGPU; EFend = gather(EFend); end
+            if mp.flagFiber
+                if mp.flagLenslet
+                    for nlens = 1:mp.Fend.Nlens
+                        EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering, 'xfc', mp.Fend.x_lenslet_phys(nlens), 'yfc', mp.Fend.y_lenslet_phys(nlens));
+                        Elenslet = EFend.*mp.Fend.lenslet.mask;
+                        EF5 = propcustom_mft_PtoF(Elenslet, mp.lensletFL, lambda, mp.Fend.dxi, mp.F5.dxi, mp.F5.Nxi, mp.F5.deta, mp.F5.Neta, mp.centering);
+                        Gmode(nlens, Gindex) = max(max(mp.F5.fiberMode(:, :, modvar.sbpIndex))).*sum(sum(mp.F5.fiberMode(:, :, modvar.sbpIndex).*EF5));
+                    end
+                else
+                    EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
+                    Gmodetemp = zeros(mp.Fend.Nfiber, 1);
+                    for i=1:mp.Fend.Nfiber
+                        Eonefiber = sum(sum(mp.Fend.fiberMode(:, :, modvar.sbpIndex, i).*EFend)) / sqrt(mp.Fend.compact.I00_fiber(i,modvar.sbpIndex));
+                        Gmodetemp(i,1) = Eonefiber;
+                    end
+                    Gmode(:, Gindex) = Gmodetemp;
+                end
+            else    
+                EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
-            Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+                if(mp.useGPU)
+                    EFend = gather(EFend);
+                end
+            
+                Gmode(:, Gindex) = EFend(mp.Fend.corr.maskBool) / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
+            end
         end
         Gindex = Gindex + 1;
     end
@@ -382,8 +447,8 @@ if whichDM == 8
     end
     
     %--MFT from pupil P3 to FPM (at focus F3)
-    EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, scaleFac*mp.F3.compact.dxi, ...
-        mp.F3.compact.Nxi, scaleFac*mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
+    EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, dxiF3, ...
+        mp.F3.compact.Nxi, detaF3, mp.F3.compact.Neta, mp.centering);
     EF3inc = pad_crop(EF3inc, mp.dm8.compact.NdmPad);
     %--Coordinates for metal thickness and dielectric thickness
     DM9transIndAll = falco_discretize_FPM_surf(mp.dm9.surf, mp.t_diel_nm_vec, mp.dt_diel_nm); %--All of the mask
@@ -424,7 +489,7 @@ if whichDM == 8
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*scaleFac*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
+                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(dxiF3*detaF3)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
 
             %--DFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).
@@ -474,8 +539,8 @@ if whichDM == 9
     end
     
     %--MFT from pupil P3 to FPM (at focus F3)
-    EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, scaleFac*mp.F3.compact.dxi, ...
-        mp.F3.compact.Nxi, scaleFac*mp.F3.compact.deta, mp.F3.compact.Neta, mp.centering);
+    EF3inc = propcustom_mft_PtoF(EP3, mp.fl, lambda, mp.P2.compact.dx, dxiF3, ...
+        mp.F3.compact.Nxi, detaF3, mp.F3.compact.Neta, mp.centering);
     EF3inc = pad_crop(EF3inc, mp.dm9.compact.NdmPad);
     
     %--Coordinates for metal thickness and dielectric thickness
@@ -516,7 +581,7 @@ if whichDM == 9
 
             %--Matrices for the MFT from the FPM stamp to the Lyot stop
             rect_mat_pre = (exp(-2*pi*1j*(mp.P4.compact.ys*eta_box)/(lambda*mp.fl)))...
-                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*scaleFac*sqrt(mp.F3.compact.dxi*mp.F3.compact.deta)/(lambda*mp.fl);
+                *sqrt(mp.P4.compact.dx*mp.P4.compact.dx)*sqrt(dxiF3*detaF3)/(lambda*mp.fl);
             rect_mat_post  = (exp(-2*pi*1j*(xi_box*mp.P4.compact.xs)/(lambda*mp.fl)));
 
             %--MFT from FPM to Lyot stop (Nominal term transOuterFPM*EP4noFPM subtracts out to 0 since it ignores the FPM change).

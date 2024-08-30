@@ -114,16 +114,6 @@ switch upper(mp.coro)
         transOuterFPM = 1;
 end
 
-scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
-% switch upper(mp.coro)
-%     case{'HLC'}
-%         switch mp.layout
-%             case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
-%                 scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
-%         end
-% end
-
-
 %--For including DM surface errors (quilting, scalloping, etc.)
 if mp.flagDMwfe
     if any(mp.dm_ind == 1); Edm1WFE = exp(2*pi*1j/lambda.*pad_crop(mp.dm1.compact.wfe, NdmPad, 'extrapval', 0)); else; Edm1WFE = ones(NdmPad); end
@@ -221,7 +211,7 @@ if whichDM == 1
             
             dEFendPeak = sum(dEP2box(:)) * transOuterFPM *...
                 sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
-                scaleFac * sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
+                sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
             
             Gmode(:, Gindex) = dEFendPeak / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end
@@ -271,7 +261,7 @@ elseif whichDM == 2
             
             dEFendPeak = sum(dEP2box(:)) * transOuterFPM *...
                 sqrt(mp.P2.compact.dx*mp.P2.compact.dx) * ...
-                scaleFac * sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
+                sqrt(mp.Fend.dxi*mp.Fend.deta) / (lambda*mp.fl);
             
             Gmode(:, Gindex) = dEFendPeak / sqrt(mp.Fend.compact.I00(modvar.sbpIndex));
         end

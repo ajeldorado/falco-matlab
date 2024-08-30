@@ -23,9 +23,15 @@ function ev = falco_est(mp, ev, jacStruct)
     switch lower(mp.estimator)
         case{'perfect'}
             ev  = falco_est_perfect_Efield_with_Zernikes(mp);
-            ev.Im = falco_get_summed_image(mp);
+            if mp.flagFiber
+                [ev.Im,ev.Ifiber] = falco_get_summed_image(mp);
+            else
+                ev.Im = falco_get_summed_image(mp);
+            end
+                
             
-        case{'pwp-bp-square', 'pwp-bp', 'pwp-kf', 'pairwise', 'pairwise-square', 'pairwise-rect'}
+        case{'pwp-bp-square', 'pwp-bp', 'pairwise', 'pairwise-square', ...
+                'pairwise-rect', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf'}
             if(mp.flagFiber && mp.flagLenslet)
                 if mp.est.flagUseJac
                     ev = falco_est_pairwise_probing_fiber(mp, jacStruct);
@@ -41,13 +47,24 @@ function ev = falco_est(mp, ev, jacStruct)
                 end
             end
             
+        case{'borde-traub', 'bt', 'bt-kf', 'bt-rect', 'bt-rect-kf'}
+            ev = falco_est_borde_traub_probing(mp, ev);
+            
         case{'scc'}
             ev = falco_est_scc(mp);
-            ev.Im = falco_get_summed_image(mp);            
+            if mp.flagFiber
+                [ev.Im,ev.Ifiber] = falco_get_summed_image(mp);
+            else
+                ev.Im = falco_get_summed_image(mp);
+            end
 
         case{'iefc'}
             ev = falco_est_iefc(mp);
-            ev.Im = falco_get_summed_image(mp);    
+            if mp.flagFiber
+                [ev.Im,ev.Ifiber] = falco_get_summed_image(mp);
+            else
+                ev.Im = falco_get_summed_image(mp);
+            end
 
         case{'ekf_maintenance'}
             
