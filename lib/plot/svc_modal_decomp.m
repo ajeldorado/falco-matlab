@@ -14,7 +14,7 @@
 
 %% Demo
 %%Time specifications:
-Fs = 100;                      % samples per second
+Fs = 100;                       % samples per second
 dt = 1/Fs;                     % seconds per sample
 StopTime = 1;                  % seconds
 t = linspace(-pi,pi,Fs);%(0:dt:StopTime-dt)';
@@ -43,7 +43,7 @@ prof = 0.*THETA;
 scale = 1;
 linVec = {'--',':','-'};
 
-lambda = 1.05;
+lambda = 1.1;
 
 if lambda < 1
     i = 1;
@@ -89,16 +89,18 @@ title("FFT of Sinusoid")
 
 
 
-%% vortex
-charge1 = 8;
-phase1 = charge1*THETA;
-type1 = "Classic Vortex";
+%% Topographies
 
+%cos
 
-% figure(N)
-% subplot(2,2,2)
+charge0 = 6;
+type0 = "Cos";
+z_m = besselzero(0,1);
+z_m = z_m(end);
+phase0 = z_m*cos(charge0*THETA);
+
 % figure(1);
-% plot(THETA,phase1,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
+% plot(THETA,phase0,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
 % ax = gca;
 % ax.FontSize = 20;
 % ax.LineWidth = 3;
@@ -110,7 +112,50 @@ type1 = "Classic Vortex";
 % yticklabels({'-8\pi','-6\pi','-4\pi','-2\pi','0','2\pi','4\pi','6\pi','8\pi'})
 % xlabel('Theta'); 
 % ylabel('Phase');
-% % title("Charge "+charge1+" "+type1 +" Phase Profile")
+% % title("Charge "+charge0+" "+type0 +" Phase Profile")
+% title(type0 +" Phase Profile")
+
+t0 = exp(1j/lambda*phase0);
+
+%%Fourier Transform:
+myfftcos = abs(fftshift(fft(t0)))/N;
+
+% Plot the spectrum:
+% figure (310)
+% plot(f,myfftcos);
+% ylabel('|C_m|^2'); 
+% xlabel('Mode');
+% title("Modal Decomposition for Cos SVC")
+% set(gca, 'YScale', 'log')
+
+
+%% vortex
+charge1 = 6;
+phase1 = charge1*THETA;
+type1 = "Classic Vortex";
+
+
+% figure(N)
+% % subplot(2,2,2)
+% figure(1);
+% plot(THETA,phase1,'Color',[0.9290, 0.6940, 0.1250],'LineWidth',2)
+% ax = gca;
+% set(groot,'defaulttextinterpreter','latex');
+% set(groot,'defaultLegendInterpreter','latex');
+% set(groot,'defaultAxesTickLabelInterpreter','latex');  
+% ax.FontSize = 28;
+% ax.LineWidth = 1;
+% xlim([-pi pi]);
+% axis on
+% set(gca,'TickDir','out');
+% set(gcf,'color','w');
+% ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+% ax.YAxis.TickValues = [-8*pi -6*pi -4*pi -2*pi 0 2*pi 4*pi 6*pi 8*pi];
+% xticklabels({'$-\pi$','$-\frac{\pi}{2}$','$0$','$\frac{\pi}{2}$','$\pi$'})
+% yticklabels({'$-8\pi$','$-6\pi$','$-4\pi$','$-2\pi$','$0$','$2\pi$','$4\pi$','$6\pi$','$8\pi$'})
+% xlabel('$\Theta$ (azimuthal angle)'); 
+% ylabel('$\phi$ (phase)');
+% title("Charge "+charge1+" "+type1 +" Phase Profile")
 % title(type1 +" Phase Profile")
 
 t1 = exp(1j/lambda*phase1);
@@ -127,10 +172,9 @@ myfftvortex = abs(fftshift(fft(t1)))/N;
 % set(gca, 'YScale', 'log')
 
 
+% sawtooth
 
-% classical wrapped
-
-charge2 = 8;
+charge2 = 6;
 domain = (THETA >= 0) & (THETA <= pi);
 phase2(domain) = charge2*rem(THETA(domain),2*pi./charge2);
 domain = (THETA >= -pi) & (THETA < 0);
@@ -142,27 +186,33 @@ newtheta = linspace(-4*pi,4*pi,N);
 
 type2 = "Sawtooth Vortex";
 % subplot(2,2,3)
-% figure(2);
-% plot(THETA,phase2,'Color',[0.5 0 0.8],'LineWidth',2)
-% ax = gca;
-% ax.FontSize = 20;
-% ax.LineWidth = 3;
-% xlim([-pi pi]);
-% axis on
-% ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
-% ax.YAxis.TickValues = [-2*pi 0 2*pi ];
-% xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
-% yticklabels({'-2\pi','0','2\pi'})
-% xlabel('Theta'); 
-% ylabel('Phase');
-% % title("Charge "+charge2+" "+type2 +" Phase Profile")
+figure(2);
+plot(THETA,phase2,'Color',[0.5 0 0.8],'LineWidth',2)
+ax = gca;
+set(groot,'defaulttextinterpreter','latex');
+set(groot,'defaultLegendInterpreter','latex');
+set(groot,'defaultAxesTickLabelInterpreter','latex');  
+ax.FontSize = 28;
+ax.LineWidth = 1;
+xlim([-pi pi]);
+ylim([0 2.05*pi]);
+axis on
+set(gca,'TickDir','out');
+set(gcf,'color','w');
+ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+ax.YAxis.TickValues = [0 pi 2*pi ];
+xticklabels({'$-\pi$','$-\frac{\pi}{2}$','$0$','$\frac{\pi}{2}$','$\pi$'})
+yticklabels({'$0$','$\pi$','$2\pi$'})
+xlabel('$\Theta$ (azimuthal angle)'); 
+ylabel('$\phi$ (phase)');
+% title("Charge "+charge2+" "+type2 +" Phase Profile")
 % title(type2 +" Phase Profile")
 
 
 
 t2 = exp(1j/lambda*phase2);
 %%Fourier Transform:
-myfftclassical = abs(fftshift(fft(t2)))/N;
+myfftsawtooth = abs(fftshift(fft(t2)))/N;
 
 %%Plot the spectrum:
 % figure(311);
@@ -171,7 +221,7 @@ myfftclassical = abs(fftshift(fft(t2)))/N;
 % xlabel('Mode');
 % title("Modal Decomposition for Charge 8 Classically Wrapped SVC")
 % set(gca, 'YScale', 'log')
-
+%%
 
 % french wrapped
 
@@ -224,6 +274,7 @@ myfftfrench = abs(fftshift(fft(t3)))/N;
 % xlabel('Mode');
 % title("Modal Decomposition for Charge 8 French Wrapped SVC")
 
+
 % mcmc6 wrapped
 
 domain = (THETA > 0) & (THETA < 1.84799568);
@@ -273,8 +324,8 @@ myfftmcmc = abs(fftshift(fft(t4)))/N;
 
 
 % staircase
-Nsteps = 8;
-charge5 = 8;
+Nsteps = 6;
+charge5 = 6;
 phase5 = floor(mod((THETA+pi)/(2*pi)*charge5, 1)*Nsteps)/Nsteps*2*pi;
 
 
@@ -283,18 +334,23 @@ type5 = "Staircase Vortex";
 % figure(5);
 % plot(THETA,phase5,'Color',[0 0.5 0.8],'LineWidth',2)
 % ax = gca;
-% ax.FontSize = 20;
-% ax.LineWidth = 3;
+% set(groot,'defaulttextinterpreter','latex');
+% set(groot,'defaultLegendInterpreter','latex');
+% set(groot,'defaultAxesTickLabelInterpreter','latex');  
+% ax.FontSize = 28;
+% ax.LineWidth = 1;
 % xlim([-pi pi]);
 % ylim([0 2*pi*1.03]);
 % axis on
+% set(gca,'TickDir','out');
+% set(gcf,'color','w');
 % ax.XAxis.TickValues = linspace(-pi,pi,7);
-% ax.YAxis.TickValues = [-2*pi 0 2*pi ];
-% xticklabels({'-\pi','-2\pi/3','-\pi/3','0','\pi/3','2\pi/3','\pi'})
-% yticklabels({'-2\pi','0','2\pi'})
-% xlabel('Theta'); 
-% ylabel('Phase');
-% % title("Charge 6 "+type5 +" Phase Profile")
+% ax.YAxis.TickValues = [0 pi 2*pi ];
+% xticklabels({'$-\pi$','$-\frac{2\pi}{3}$','$-\frac{\pi}{3}$','$0$','$\frac{\pi}{3}$','$\frac{2\pi}{3}$','$\pi$'})
+% yticklabels({'$0$','$\pi$','$2\pi$'})
+% xlabel('$\Theta$ (azimuthal angle)'); 
+% ylabel('$\phi$ (phase)');
+% title("Charge 6 "+type5 +" Phase Profile")
 % title(type5 +" Phase Profile")
  
 
@@ -311,34 +367,120 @@ myfftstaircase = abs(fftshift(fft(t5)))/N;
 % xlabel('Mode');
 % title("Modal Decomposition for Charge 6 Staircase SVC")
 
+%%
+% arielle mask
+
+domain = (THETA > 0) & (THETA < pi/4);
+phase6(domain) = 6*THETA(domain);
+domain = (THETA > pi/4) & (THETA < pi/2);
+phase6(domain) = 6*THETA(domain) - pi/2;
+domain = (THETA > pi/2) & (THETA < 3*pi/4);
+phase6(domain) = 6*THETA(domain) - pi;
+domain = (THETA > 3*pi/4) & (THETA <= pi);
+phase6(domain) = 6*THETA(domain) - 7*pi/2;
+domain = (THETA > -pi+3*pi/4) & (THETA < 0);
+phase6(domain) = 6*(THETA(domain)+pi)-7*pi/2;
+domain = (THETA > -pi+pi/2) & (THETA < -pi+3*pi/4);
+phase6(domain) = 6*(THETA(domain)+pi)-pi;
+domain = (THETA > -pi+pi/4) & (THETA < -pi+pi/2);
+phase6(domain) = 6*(THETA(domain)+pi)-pi/2;
+domain = (THETA >= -pi) & (THETA < -pi+pi/4);
+phase6(domain) = 6*(THETA(domain)+pi);
+
+
+type6 = "ABC";
+% subplot(2,2,4)
+% figure(6);
+% plot(THETA,phase6,'Color',[0.4660, 0.6740, 0.1880],'LineWidth',2)
+% ax = gca;
+% ax.FontSize = 20;
+% ax.LineWidth = 3;
+% xlim([-pi pi]);
+% axis on
+% ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+% ax.YAxis.TickValues = [0 pi 2*pi ];
+% xticklabels({'$-\pi$','$-\frac{\pi}{2}$','$0$','$\frac{\pi}{2}$','$\pi$'})
+% yticklabels({'$0$','$\pi$','$2\pi$'})
+% xlabel('Theta'); 
+% ylabel('Phase');
+% % title("Charge 6 "+type6 +" Phase Profile")
+% title(type6 +" Phase Profile")
+
+figure(6);
+plot(THETA/pi,phase6/pi,'Color',[0.5 0 0.8],'LineWidth',2)
+ax = gca;
+set(groot,'defaulttextinterpreter','latex');
+set(groot,'defaultLegendInterpreter','latex');
+set(groot,'defaultAxesTickLabelInterpreter','latex');  
+ax.FontSize = 28;
+ax.LineWidth = 1;
+% xlim([-pi pi]);
+axis on
+set(gca,'TickDir','out');
+set(gcf,'color','w');
+% ax.XAxis.TickValues = [-pi -pi/2 0 pi/2 pi ];
+% ax.YAxis.TickValues = [0 pi 2*pi 3*pi];
+% xticklabels({'$-\pi$','$-\frac{\pi}{2}$','$0$','$\frac{\pi}{2}$','$\pi$'})
+% yticklabels({'$0$','$\pi$','$2\pi$'})
+xlabel('$\Theta/\pi$ (azimuthal angle)'); 
+ylabel('$\phi/\pi$ (phase)');
+title("Charge 6 "+type6 +" Phase Profile")
+% title(type6 +" Phase Profile")
+
+
+
+
+t6 = exp(1j/lambda*phase6);
+
+%%Fourier Transform:
+myfftabc = abs(fftshift(fft(t6)))/N;
+
+%%Plot the spectrum:
+figure(311)
+plot(f,myfftabc);
+set(gca, 'YScale', 'log')
+ylabel('|C_m|^2'); 
+xlabel('Mode');
+title("Modal Decomposition for Charge 6 ABC SVC")
+
+
+
 %% Plot with stem markers 
 % close all
-figure(N+4)
+
+figure(673)
+epsilon = 0.05;
 hold on
 xdata = (0:1:N-1);
 ax = gca;
+set(gcf,'color','w')
+set(gca,'YScale', 'log');
 ax.FontSize = 20;
 ax.LineWidth = 2;
-stem(f,myfftvortex,'d','MarkerSize',10,'LineWidth',2,'Color',[0.9290, 0.6940, 0.1250]);
-stem(f,myfftclassical,'s','MarkerSize',20,'LineWidth',2,'Color',[0.5 0 0.8]);
-stem(f,myfftfrench,'MarkerSize',10,'LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
-stem(f,myfftstaircase,'*','MarkerSize',10,'LineWidth',2,'Color',[0 0.5 0.8]);
-% plot(f,myfftmcmc,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
+stem(f,myfftvortex,'d','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.9290, 0.6940, 0.1250],'MarkerFaceColor',[0.9290, 0.6940, 0.1250]);
+stem(f+epsilon,myfftsawtooth,'s','MarkerSize',20,'LineStyle','--','LineWidth',2,'Color',[0.5 0 0.8]);
+% stem(f,myfftfrench,'MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
+% stem(f,myfftmcmc,'MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
+% stem(f-epsilon,myfftstaircase,'*','MarkerSize',15,'LineStyle','-.','LineWidth',2,'Color',[0 0.5 0.8]);
+stem(f,myfftcos,'.','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
+% stem(f,myfftabc,'.','MarkerSize',10,'LineStyle','-','LineWidth',2,'Color',[0.4660, 0.6740, 0.1880]);
 if lambda == 1
-    stem(f,myfftvortex,'.','LineStyle',linVec{i},'LineWidth',1,'Color','k');
+%     stem(f,myfftvortex,'.','LineStyle',linVec{i},'LineWidth',2,'Color','k');
 end
 
-xlim([-2 20]);
-ylim([1E-5 10])
-xticks([0:4:18])
+% xlim([-10 23]);
+xlim([-1.2 13])
+ylim([5E-3 10])
+xticks([0:2:12])
 
-%type1-vortex,type2-classicalwrapped,type3-frenchwrapped,type4-mcmc,type5-staircase
-legend(type1,type2,type3,type5)
-legend('Location','northeast')
-
+%type1-vortex,type2-sawtooth,type3-frenchwrapped,type4-mcmc,type5-staircase,
+%type0-cos
+legend(type1,type2,type0)
+legend('Location','northwest')
+title('Charge 6 FPMs')
 
 % line_type = ['-',"--", ":"];
-line_type = ['-', ":"];
+% line_type = ['-', ":"];
 
 % line_names = ["design wavelength", "0.95 lambda factor", "1.05 lambda factor"];
 % line_names = ["design wavelength", "1.05 lambda factor"];
@@ -346,51 +488,8 @@ line_type = ['-', ":"];
 %     plot([NaN NaN], [NaN NaN],line_type(j), 'Color', 'k', 'DisplayName', line_names(j))
 % end
 
-hold off
-set(gca, 'YScale', 'log')
-ylabel('|C_m|^2'); 
+hold off 
+% ylabel('|C_m|^2'); 
+ylabel('Power');
 xlabel('Mode');
-title("Modal Decomposition for Charge 8 SVCs")
-
-
-%% plot
-% close all
-
-% figure(12)
-% subplot(2,2,1)
-figure(N+1)
-hold on
-xdata = (0:1:N-1);
-% plot(f,myfftvortex,'LineStyle',linVec{i},'LineWidth',1,'Color',[0 0.5 0.8]);
-plot(f,myfftstaircase,'LineStyle',linVec{i},'LineWidth',1,'Color',[0 0.5 0.8]);
-plot(f,myfftclassical,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0 0.8]);
-plot(f,myfftfrench,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
-% plot(f,myfftmcmc,'LineStyle',linVec{i},'LineWidth',1,'Color',[0.5 0.8 0]);
-if lambda == 1
-    plot(f,myfftvortex,'LineStyle',linVec{i},'LineWidth',1,'Color','k');
-end
-ax = gca;
-xlim([-10 20]);
-ylim([1E-9 10])
-ax.FontSize = 12;
-ax.LineWidth = 2;
-%type1-vortex,type2-classicalwrapped,type3-frenchwrapped,type4-mcmc,type5-staircase
-legend(type1,type5,type2,type3)
-legend('Location','northwest')
-
-
-% line_type = ['-',"--", ":"];
-line_type = ['-', ":"];
-
-% line_names = ["design wavelength", "0.95 lambda factor", "1.05 lambda factor"];
-line_names = ["design wavelength", "1.05 lambda factor"];
-for j =1:length(line_type)
-    plot([NaN NaN], [NaN NaN],line_type(j), 'Color', 'k', 'DisplayName', line_names(j))
-end
-
-hold off
-set(gca, 'YScale', 'log')
-ylabel('|C_m|^2'); 
-xlabel('Mode');
-title("Modal Decomposition for Charge 8 SVCs")
-
+% title("Modal Decomposition for Charge 2 SVCs")

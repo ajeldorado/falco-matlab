@@ -117,6 +117,7 @@ innerSpot = prop_ellipse(bm, ra_ID, ra_ID, 'cx', cx_ID, 'cy', cy_ID, 'DARK')*(1-
 mask = ifftshift(abs(bm.wf)); %--undo PROPER's fftshift
 mask = mask.*innerSpot; %--Include the inner FPM spot
 
+
 end %--END OF FUNCTION
 
 % %--DEBUGGING: Visually verify that mask is centered correctly
