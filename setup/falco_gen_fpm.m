@@ -10,8 +10,12 @@ function [mp] = falco_gen_fpm(mp)
     
     %--Stash DM8 and DM9 starting commands if they are given in the main script
     if isfield(mp, 'dm8')
-        if(isfield(mp.dm8, 'V')); mp.DM8V0 = mp.dm8.V; end
-        if(isfield(mp.dm9, 'V')); mp.DM9V0 = mp.dm9.V; end
+        if(isfield(mp.dm8, 'V')) 
+            mp.DM8V0 = mp.dm8.V; 
+        end
+        if(isfield(mp.dm9, 'V'))
+            mp.DM9V0 = mp.dm9.V; 
+        end
     end
     
     switch lower(mp.layout)
