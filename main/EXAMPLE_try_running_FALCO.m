@@ -30,10 +30,11 @@ EXAMPLE_defaults_try_running_FALCO
 %%--Special Computational Settings
 mp.flagParfor = false; %--whether to use parfor for Jacobian calculation
 mp.flagPlot = true;
+mp.flagSaveWS = true;
 
 %--Record Keeping
 mp.SeriesNum = 1;
-mp.TrialNum = 1;
+mp.TrialNum = 2;
 
 %--Use just 1 wavelength for initial debugging/testing of code
 mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)

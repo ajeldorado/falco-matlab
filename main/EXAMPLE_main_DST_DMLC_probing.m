@@ -6,7 +6,8 @@
 %
 % Script to perform a DM-apodized LC simple design run.
 
-clear
+clear all
+load('C:\Users\sredmond\Documents\github_repos\falco-matlab\data\brief\Series0001_Trial0001_LC_simple_2DM48_z1_IWA2.8_OWA10_5lams550nm_BW10_plannedEFC_snippet.mat')
 
 %% Step 1: Define Necessary Paths on Your Computer System
 
@@ -33,7 +34,7 @@ mp.flagPlot = true;
 
 %--Record Keeping
 mp.SeriesNum = 1;
-mp.TrialNum = 1;
+mp.TrialNum = 3;
 
 %%--[OPTIONAL] Start from a previous FALCO trial's DM settings
 % fn_prev = 'ws_Series0002_Trial0001_HLC_WFIRST20180103_2DM48_z1_IWA2.7_OWA10_6lams575nm_BW12.5_EFC_30its.mat';
@@ -61,7 +62,17 @@ mp.runLabel = ['Series',num2str(mp.SeriesNum,'%04d'),'_Trial',num2str(mp.TrialNu
 
 
 %% Step 5: Perform the Wavefront Sensing and Control
+mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nitr = 1;
+
+mp.flagSaveWS = true;
+mp.dm1.V = out.dm1.Vall(:,:,end-1);
+mp.dm2.V = out.dm1.Vall(:,:,end-1);
+
 
 [mp, out] = falco_flesh_out_workspace(mp);
+I = falco_get_sbp_image(mp, 1);
+figure; imagesc(I)
+mean(I(mp.Fend.score))
 
 [mp, out] = falco_wfsc_loop(mp, out);

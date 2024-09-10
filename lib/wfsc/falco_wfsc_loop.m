@@ -67,7 +67,10 @@ for Itr = 1:mp.Nitr
         load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
     elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
+        temp = mp.dm_ind;
+        mp.dm_ind = [1,2];
         jacStruct =  model_Jacobian(mp);
+        mp.dm_ind = temp;
     end
     
     [mp, jacStruct] = falco_ctrl_cull_weak_actuators(mp, cvar, jacStruct);
@@ -173,6 +176,19 @@ for Itr = 1:mp.Nitr
     fprintf('Saving data snippet to \n%s\n', fnSnippet)
     save(fnSnippet, 'out');
     fprintf('...done.\n\n')
+    
+    %-
+    % Im_tb.E = zeros([size(ev.Im), mp.Nsbp]);
+    % 
+    % for si = 1:mp.Nsbp
+    %     tmp = zeros(size(ev.Im));
+    %     tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
+    %     Im_tb.E(:, :, si) = tmp; % modulated component 
+    % end
+    % clear tmp
+    % fitswrite(abs(Im_tb.E).^2,fullfile(mp.path.config,['normI_Esens_it',num2str(Itr-1),'.fits']));
+    % fitswrite(angle(Im_tb.E),fullfile(mp.path.config,['phz_Esens_it',num2str(Itr-1),'.fits']));
+    %-
 
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
@@ -212,6 +228,7 @@ fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
 fprintf('\nSaving data snippet to:\n\t%s\n', fnSnippet)
 save(fnSnippet, 'out');
 fprintf('...done.\n')
+
 
 %% Save out the data from the workspace
 if mp.flagSaveWS

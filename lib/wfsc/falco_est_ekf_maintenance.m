@@ -131,10 +131,12 @@ mp.isProbing = false;
 
 
 if any(mp.est.itr_ol==ev.Itr) == true
-    [mp,ev] = get_open_loop_data(mp,ev);
+    [mp,ev] = get_open_loop_data(mp,ev); 
+    % call pwp within get OL image
 else
     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
+% get OL estimate from model every iteration
 
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind == 1)
@@ -342,6 +344,11 @@ if ev.Itr == 1
     if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
 
     fitswrite(dz_init,fullfile([mp.path.config,'/','dark_zone_command_0_pwp.fits']))
+
+    %--Save the config file
+    fn_config = [mp.path.config filesep mp.runLabel,'_ekf_config.mat'];
+    save(fn_config, 'SOMETHING')
+    fprintf('Saved the ekf config file: \t%s\n', fn_config)
 end
 
 end

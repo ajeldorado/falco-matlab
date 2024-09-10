@@ -4,18 +4,26 @@
 
 EXAMPLE_try_running_FALCO
 
+
 % Option 2: Load DM command from previous experiment, load mp and out variables 
+
+%%
+dhmStartSoln.SeriesNum = mp.SeriesNum; % Series number of previous DM solution 
+dhmStartSoln.TrialNum = mp.TrialNum; % Trial number of previous DM solution 
+dhmStartSoln.itNum = NaN; % Iteration number for previous DM solution 
+
+mp = loadPrevEsens(mp, dhmStartSoln, 'C:\Users\sredmond\Documents\github_repos\falco-matlab\data\brief' );
 
 %% Step 2: Set variables for DZM
 
 mp.Nitr = 100; % Number of iteration for EKF 
-mp.dm_ind = 1; %--DMs used in estimation/control
-mp.dm_ind_static = [2]; %--DMs ONLY holding dark zone shape, not injecting drift or part of control
+mp.dm_ind = [1, 2]; %--DMs used in estimation/control
+mp.dm_ind_static = []; %--DMs ONLY holding dark zone shape, not injecting drift or part of control
 
 %%-- Variables for ekf maintenance estimation
 mp.estimator = 'ekf_maintenance';
 mp.est.probe.Npairs = 1; 
-mp.est.probe.whichDM = 1; %--Which DM is used for dither/control
+mp.est.probe.whichDM = 2; %--Which DM is used for dither/control
 mp.est.dither = 9.5e-5; %--std dev of dither command for random dither [V/sqtr(iter)]
 mp.est.flagUseJac = true; % EKF needs the jacobian for estimation 
 mp.est.read_noise = 1; %--Read noise of detector [e-]
@@ -30,7 +38,7 @@ mp.controller = 'plannedEFC';
 mp.ctrl.start_iteration = 10; 
 mp.ctrl.dmfacVec = 1; 
 % Set EFC tikhonov parameter 
-mp.ctrl.sched_mat = repmat([1, -1.0, 1, 1, 0], [mp.Nitr, 1]);% 
+mp.ctrl.sched_mat = repmat([1, -1.0, 12, 1, 0], [mp.Nitr, 1]);% 
 [mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 mp.relinItrVec = [1];
 
@@ -57,7 +65,7 @@ mp.dm1.V_shift = zeros(mp.dm1.Nact); %--DM shift command for estimator reset to 
 mp.dm2.V_shift = zeros(mp.dm2.Nact);
 
 %% Change run label and FALCO output paths
-mp.runLabel = ['DZM'];
+mp.runLabel = ['DZM2'];
 
 out_dir = fullfile(mp.path.config,mp.runLabel);
 mp.path.config = out_dir;  %--Location of *config.mat and *snippet.mat output files
