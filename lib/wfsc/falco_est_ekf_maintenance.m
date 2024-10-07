@@ -188,6 +188,25 @@ if mp.flagSim
 else
     sbp_texp = mp.tb.info.sbp_texp;
 end
+
+if mp.est.flagUseJac
+    gdu = (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
+else %--Get the probe phase from the model and the probe amplitude from the measurements
+    % For unprobed field based on model:
+    if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz); end
+    if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz); end
+    E0 = model_compact(mp, modvar);
+    E0vec = E0(mp.Fend.corr.maskBool);
+     
+    %--For probed fields based on model:
+    gdu  = zeros(size(y_measured(:,iSubband)));
+    if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, closed_loop_command); end
+    if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, closed_loop_command); end
+    Edither = model_compact(mp, modvar);
+    Edithervec = Edither(mp.Fend.corr.maskBool);
+
+    gdu = Edithervec - E0vec;
+end
 for iSubband = 1:1:mp.Nsbp
 
     %--Estimate of the closed loop electric field:
