@@ -86,6 +86,11 @@ for Itr = 1:mp.Nitr
     % Get Drift Command
     if strcmpi(mp.estimator,'ekf_maintenance')
         [mp, ev] = falco_drift_injection(mp, ev);
+        % Hack to enable Jacobians to get made of all DMs of interest but
+        % only the desired DMs get used for control
+        if Itr==1
+            mp.dm_ind = mp.dm_ind_sched{2};
+        end
     end
 
     %% Wavefront Estimation

@@ -26,7 +26,8 @@ end
 
 
 % Rearrange jacobians
-ev.G_tot_cont = rearrange_jacobians(mp,jacStruct,mp.dm_ind);
+dm_inds_cont_est = unique([mp.dm_ind, mp.est.probe.whichDM]);
+ev.G_tot_cont = rearrange_jacobians(mp,jacStruct,dm_inds_cont_est);
 ev.G_tot_drift = rearrange_jacobians(mp,jacStruct,mp.dm_drift_ind);
 
 % Initialize EKF matrices

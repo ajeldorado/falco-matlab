@@ -2,7 +2,7 @@
 % Option 1: Generate dark zone using any method, make sure the number of
 % iterations is sufficient
 
-EXAMPLE_try_running_FALCO
+% EXAMPLE_try_running_FALCO
 
 
 % Option 2: Load DM command from previous experiment, load mp and out variables 
@@ -12,12 +12,12 @@ dhmStartSoln.SeriesNum = mp.SeriesNum; % Series number of previous DM solution
 dhmStartSoln.TrialNum = mp.TrialNum; % Trial number of previous DM solution 
 dhmStartSoln.itNum = NaN; % Iteration number for previous DM solution 
 
-mp = loadPrevEsens(mp, dhmStartSoln, 'C:\Users\sredmond\Documents\github_repos\falco-matlab\data\brief' );
+% mp = loadPrevEsens(mp, dhmStartSoln, 'C:\Users\sredmond\Documents\github_repos\falco-matlab\data\brief' );
 
 %% Step 2: Set variables for DZM
 
 mp.Nitr = 100; % Number of iteration for EKF 
-mp.dm_ind = [1, 2]; %--DMs used in estimation/control
+mp.dm_ind = [1,2]; %--DMs used in estimation/control
 mp.dm_ind_static = []; %--DMs ONLY holding dark zone shape, not injecting drift or part of control
 
 %%-- Variables for ekf maintenance estimation
@@ -32,21 +32,31 @@ mp.est.itr_ol = [1:1:mp.Nitr].'; %--"open-loop" iterations where an image is tak
 mp.est.itr_reset = [mp.Nitr+1];
 
 
-%%-- Controller variables 
-mp.controller = 'plannedEFC';
-% TODO: This doesn't do anything right now!
-mp.ctrl.start_iteration = 10; 
-mp.ctrl.dmfacVec = 1; 
-% Set EFC tikhonov parameter 
-mp.ctrl.sched_mat = repmat([1, -1.0, 12, 1, 0], [mp.Nitr, 1]);% 
-[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
-mp.relinItrVec = [1];
-
 %%-- Drift variables 
 mp.dm_drift_ind = 1;%--which DM is drifting 
 mp.drift.type = 'rand_walk';%--what type of drift is happening 
 mp.drift.magnitude = 9e-6; %--std dev of random walk [V/sqrt(iter)]
 mp.drift.presumed_dm_std = mp.drift.magnitude; %--std dev of random walk provided to estimator, change this to account for the uncertainty of the drift magnitude
+
+
+%%-- Controller variables 
+mp.controller = 'plannedEFC';
+% TODO: This doesn't do anything right now!
+mp.ctrl.start_iteration = 10; 
+mp.ctrl.dmfacVec = 1; 
+% concatonate everything we might need a Jacobian for:
+total_dms = unique([mp.dm_ind, mp.est.probe.whichDM, mp.dm_drift_ind]);
+whichDM_tot = str2num(strjoin(string(total_dms), ''));
+whichDM_cont = str2num(strjoin(string(mp.dm_ind), ''));
+% Set EFC tikhonov parameter 
+mp.ctrl.sched_mat = repmat([1, -1.0, whichDM_cont, 1, 0], [mp.Nitr-1, 1]);% 
+% for the first iteration, set the schedule to account for all DMs
+mp.ctrl.sched_mat = [[1, -1.0, whichDM_tot, 1, 0]; mp.ctrl.sched_mat];
+[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
+mp.relinItrVec = [1];
+
+
+mp.dm_ind = total_dms;
 
 %%--
 % Exposure times

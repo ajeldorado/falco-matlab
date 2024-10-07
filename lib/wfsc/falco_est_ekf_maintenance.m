@@ -15,11 +15,8 @@ if size(varargin, 2) == 1
 end
 
 % Augment which DMs are used if the probing DM isn't used for control.
-if whichDM == 1 && ~any(mp.dm_ind == 1)
-    mp.dm_ind = [mp.dm_ind(:); 1];
-elseif whichDM == 2 && ~any(mp.dm_ind == 2)
-    mp.dm_ind = [mp.dm_ind(:); 2];
-end
+dm_ind_dzm = unique([mp.dm_ind, mp.est.probe.whichDM]);
+
 
 %--Select number of actuators across based on chosen DM for the probing
 if whichDM == 1
@@ -39,10 +36,25 @@ if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  en
 
 %% Get dither command
 
-if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
-if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+% Generate random dither command
+if any([mp.est.probe.whichDM] == 1)  
 
-dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
+    DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
+    DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
+else 
+    DM1Vdither = zeros(size(mp.dm1.V)); 
+end % The 'else' block would mean we're only using DM2
+
+if any([mp.est.probe.whichDM] == 2)  
+
+    DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
+    DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
+else
+    DM2Vdither = zeros(size(mp.dm2.V)); 
+end % The 'else' block would mean we're only using DM1
+
+
+dither = get_dm_command_vector(mp, dm_ind_dzm, DM1Vdither, DM2Vdither);
 
 %% Set total command for estimator image
 % TODO: need to save these commands for each iteration separately
@@ -50,38 +62,39 @@ dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 if Itr > 1
     if ~isfield(mp.dm1,'dV'); mp.dm1.dV = zeros(mp.dm1.Nact);end
     if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact);end
-    efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
+    efc_command = get_dm_command_vector(mp,get_dm_command_vector,mp.dm1.dV, mp.dm2.dV);
 else
     efc_command = 0*dither;
     mp.dm1.dV = zeros(size(DM1Vdither));
-    mp.dm2.dV = zeros(size(DM1Vdither));
+    mp.dm2.dV = zeros(size(DM2Vdither));
 end
 
 % Generate command to apply to DMs
 % Note if dm_drift_ind ~= i, the command is set to zero in
 % falco_drift_injection
-if any(mp.dm_ind == 1)
-    % note falco_set_constrained_voltage does not apply the command to the
-    % DM
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
-elseif any(mp.dm_drift_ind == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
-elseif any(mp.dm_ind_static == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
-end
-
-if any(mp.dm_ind == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
-elseif any(mp.dm_drift_ind == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
-elseif any(mp.dm_ind_static == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
-end
+% if any(dm_ind_dzm == 1)
+%     % note falco_set_constrained_voltage does not apply the command to the
+%     % DM
+%     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
+% elseif any(mp.dm_drift_ind == 1)
+%     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
+% elseif any(mp.dm_ind_static == 1)
+%     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+% end
+% 
+% if any(dm_ind_dzm == 2)
+%     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
+% elseif any(mp.dm_drift_ind == 2)
+%     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
+% elseif any(mp.dm_ind_static == 2)
+%     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+% end
+mp = apply_full_constrained_voltage(mp, dm_ind_dzm, DM1Vdither, DM2Vdither);
 
 % Do safety check to make sure no actuators are pinned
 ev = pinned_act_safety_check(mp,ev);
 
-closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_shift, mp.dm2.V_shift);
+closed_loop_command = dither + efc_command + get_dm_command_vector(mp,dm_ind_dzm,mp.dm1.V_shift, mp.dm2.V_shift);
 
 %% Get images
 
@@ -139,16 +152,17 @@ end
 % get OL estimate from model every iteration
 
 %% Remove control from DM command so that controller images are correct
-if any(mp.dm_ind == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
-elseif any(mp.dm_ind_static == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
-end
-if any(mp.dm_ind == 2) 
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
-elseif any(mp.dm_ind_static == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
-end
+% if any(mp.dm_ind == 1)
+%     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
+% elseif any(mp.dm_ind_static == 1)
+%     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+% end
+% if any(mp.dm_ind == 2) 
+%     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
+% elseif any(mp.dm_ind_static == 2)
+%     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+% end
+mp = apply_full_constrained_voltage(mp, dm_ind_dzm, DM1Vdither, DM2Vdither);
 
 save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 
@@ -214,11 +228,53 @@ end
 end
 
 
-function comm_vector = get_dm_command_vector(mp,command1, command2)
-
-if any(mp.dm_ind == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
-if any(mp.dm_ind == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
+function comm_vector = get_dm_command_vector(mp, dm_inds, command1, command2)
+% This removes empties command vector if a DM is not being used for
+% anything at all
+if any(dm_inds == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
+if any(dm_inds == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
 comm_vector = [comm1;comm2];
+
+end
+
+
+function mp = apply_full_constrained_voltage(mp, dm_ind_dzm, DM1Vdither, DM2Vdither)
+
+if any(dm_ind_dzm == 1)
+    % note falco_set_constrained_voltage does not apply the command to the
+    % DM
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
+elseif any(mp.dm_drift_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+
+if any(dm_ind_dzm == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
+elseif any(mp.dm_drift_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
+
+end
+
+function mp = apply_probe_constrained_voltage(mp, dm_ind_dzm, DM1Vdither, DM2Vdither)
+
+if any(dm_ind_dzm == 1)
+    % note falco_set_constrained_voltage does not apply the command to the
+    % DM
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+
+if any(dm_ind_dzm == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
 
 end
 
@@ -346,9 +402,9 @@ if ev.Itr == 1
     fitswrite(dz_init,fullfile([mp.path.config,'/','dark_zone_command_0_pwp.fits']))
 
     %--Save the config file
-    fn_config = [mp.path.config filesep mp.runLabel,'_ekf_config.mat'];
-    save(fn_config, 'SOMETHING')
-    fprintf('Saved the ekf config file: \t%s\n', fn_config)
+    % fn_config = [mp.path.config filesep mp.runLabel,'_ekf_config.mat'];
+    % save(fn_config, 'SOMETHING')
+    % fprintf('Saved the ekf config file: \t%s\n', fn_config)
 end
 
 end
