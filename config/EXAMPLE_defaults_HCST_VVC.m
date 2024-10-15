@@ -33,9 +33,9 @@ mp.source_y_offset_norm = 0;  % y location [lambda_c/D] in dark hole at which to
 %% Bandwidth and Wavelength Specs
 
 mp.lambda0 = lambda0;    %--Central wavelength of the whole spectral bandpass [meters]
-mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
-mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
-mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+% mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+% mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+% mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
 %% Wavefront Estimation
 
@@ -50,7 +50,7 @@ mp.estimator = 'pairwise';
 
 % %--New variables for pairwise probing estimation:
 mp.est.probe = Probe; % initialize object
-mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use.
+mp.est.probe.Npairs = 3;     % Number of pair-wise probe PAIRS to use. %% MAYA!
 mp.est.probe.whichDM = 1;    % Which DM # to use for probing. 1 or 2. Default is 1
 mp.est.probe.radius = 12;    % Max x/y extent of probed region [lambda/D].
 mp.est.probe.xOffset = 0;   % offset of probe center in x [actuators]. Use to avoid central obscurations.
@@ -85,29 +85,43 @@ mp.eval.Rsens = [2,3; 3,4; 4,5];
 if mp.flagFiber
     mp.ctrl.log10regVec = -5:1:-2; %--log10 of the regularization exponents (often called Beta values)
 else
-    mp.ctrl.log10regVec = -2:0.5:-0.; %--log10 of the regularization exponents (often called Beta values)
+    mp.ctrl.log10regVec = -1:1:-1.; %--log10 of the regularization exponents (often called Beta values)
 end
-mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
+% mp.ctrl.dmfacVec = 1;            %--Proportional gain term applied to the total DM delta command. Usually in range [0.5,1].
 % % mp.ctrl.dm9regfacVec = 1;        %--Additional regularization factor applied to DM9
-   
+ 
+mp.ctrl.dmfacVec = 1; 
+
 %--Spatial pixel weighting
 mp.WspatialDef = [];% [3, 4.5, 3]; %--spatial control Jacobian weighting by annulus: [Inner radius, outer radius, intensity weight; (as many rows as desired)]
 
 %--DM weighting
 mp.dm1.weight = 1;
-mp.dm2.weight = 1;
+% mp.dm1.weight = 0;
+mp.dm2.weight = 0;
 
 %% Wavefront Control: Controller Specific
 % Controller options: 
 %  - 'gridsearchEFC' for EFC as an empirical grid search over tuning parameters
 %  - 'plannedEFC' for EFC with an automated regularization schedule
-mp.controller = 'gridsearchEFC';
+% mp.controller = 'gridsearchEFC';
+mp.controller = 'plannedEFC';
 
-% % % GRID SEARCH EFC DEFAULTS     
+% GRID SEARCH EFC DEFAULTS     
 %--WFSC Iterations and Control Matrix Relinearization
-mp.Nitr = 5; %--Number of estimation+control iterations to perform
+mp.Nitr = 49; %--Number of estimation+control iterations to perform
 mp.dm_ind = [1]; %--Which DMs to use
 
+mp.ctrl.sched_mat = [...
+        repmat([1,1j,12,1,1],[10,1]);...
+        repmat([1,1j-2,12,1,1],[1,1]);... 
+        repmat([1,1j,12,1,1],[8,1]);...     
+       repmat([1,1j-2,12,1,1],[1,1]);... %maya commented this line
+       repmat([1,1j,12,1,1],[10,1]);...   %maya commented this line
+%         repmat([1,1j,12,1,1],[180,1]);...
+%         repmat([1,1j,12,1,1],[1000,1]);...
+        ];
+[mp.Nitr, mp.relinItrVec, mp.gridSearchItrVec, mp.ctrl.log10regSchedIn, mp.dm_ind_sched] = falco_ctrl_EFC_schedule_generator(mp.ctrl.sched_mat);
 
 %% Deformable Mirrors: Influence Functions
 %--Influence Function Options:
@@ -143,11 +157,13 @@ if mp.flagFiber
     gainfactor = 1.5;
 else
     if mp.Nsbp>1
-        gainfactor = 1;
+        gainfactor = 1.;
     else
 %         gainfactor = 0.3;        
-%         gainfactor = 0.475;
+%         gainfactor = 0.575;
         gainfactor = 0.425;
+%         gainfactor = 0.1;
+%         gainfactor = 1.;
 
     end
 end
@@ -159,11 +175,15 @@ mp.dm1.VtoH = (4e-7*ones(mp.dm1.Nact) * 2*sqrt(2)).*gainmap*gainfactor;%
 mp.dm1.xtilt = 6.8198;               % for foreshortening. angle of rotation about x-axis [degrees]
 mp.dm1.ytilt = 0;               % for foreshortening. angle of rotation about y-axis [degrees]
 % mp.dm1.zrot = 1.305*2;                % clocking of DM surface [degrees]
-mp.dm1.zrot = 0.2;                % clocking of DM surface [degrees]
+mp.dm1.zrot = 0.;                % clocking of DM surface [degrees]
 % mp.dm1.xc = 18.5;%bench.DM.yc;%(mp.dm1.Nact/2 - 1/2);       % x-center location of DM surface [actuator widths]
-% mp.dm1.yc = 16.75;% bench.DM.xc;%(mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
-mp.dm1.xc = 17.6;%34-14.7;% 
-mp.dm1.yc = 16.1;%34-19;%
+% mp.dm1.yc = 16.25;% bench.DM.xc;%(mp.dm1.Nact/2 - 1/2);       % y-center location of DM surface [actuator widths]
+% mp.dm1.xc = 34 - 17.9; %  %34 - 17.9142 - 0.5; %15.2+1;%34-17.9813; %19.3; %18.2; %17.6; 34-14.7;
+% mp.dm1.yc = 16. + 0.; %16.2888; %16.4+0.5;%18.2; %19.3; %16.1; %34-19;
+mp.dm1.xc = 34 - 17.8;
+mp.dm1.yc = 34 - 17.2;
+% mp.dm1.xc = 17;
+% mp.dm1.yc = 17.;
 mp.dm1.edgeBuffer = 1;          % max radius (in actuator spacings) outside of beam on DM surface to compute influence functions for. [actuator widths]
 mp.dm1.basisType = 'actuator';  % basis set for control. 'actuator' or 'fourier'
 
@@ -199,7 +219,7 @@ mp.coro = 'vortex';
 % mp.Fend.res = 8.01*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
 % mp.Fend.res = 7.9299*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
 % mp.Fend.res = 6.9443*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
-mp.Fend.res = 7.2036*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
+mp.Fend.res = 7.256*mp.lambda0/(775e-9); %7.2036*mp.lambda0/(775e-9); %7.3233*mp.lambda0/(775e-9); %10.35; %--Sampling [ pixels per lambda0/D]
 mp.Fend.clockAngDeg = 0; % Clocking angle of the dark hole region
 
 %**************************
@@ -212,15 +232,15 @@ mp.Fend.Neta = 180;
 mp.Fend.FOV = mp.Fend.Nxi/2/mp.Fend.res; %--half-width of the field of view in both dimensions [lambda0/D]
 
 %--Correction and scoring region definition
-mp.Fend.corr.Rin = 4.5;   % inner radius of dark hole correction region [lambda0/D]
-mp.Fend.corr.Rout  = 10.5;  % outer radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rin = 3.5;   % inner radius of dark hole correction region [lambda0/D]
+mp.Fend.corr.Rout  = 10.;  % outer radius of dark hole correction region [lambda0/D]
 mp.Fend.corr.ang  = 180;  % angular opening of dark hole correction region [degrees]
 
 mp.Fend.score.Rin = mp.Fend.corr.Rin+0.25;  % inner radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.Rout = mp.Fend.corr.Rout-0.25;  % outer radius of dark hole scoring region [lambda0/D]
 mp.Fend.score.ang = 180;  % angular opening of dark hole scoring region [degrees]
 
-mp.Fend.sides = 'bottom'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
+mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 mp.Fend.shape = 'D'; % 'D', 'circle'
 
 %***********************************
@@ -250,7 +270,7 @@ end
 % % Jacobian
 % mp.path.jac = % Define path to saved out Jacobians. Default if left empty is 'falco-matlab/data/jac/'
 % mp.jac.fn = 'jac_scc_test.mat'; % Name of the Jacobian file to save or that is already saved. The path to this file is set by mp.path.jac.
-% mp.relinItrVec = 1;  %--Which correction iterations at which to re-compute the control Jacobian. Make empty to reload fn_jac.
+% mp.ItrVec = 1;  %--Which correction iterations at which to re-compute the control Jacobian. Make empty to reload fn_jac.
 
 mp.scc.modeCoef = 2;  % Gain coeficient to apply to the normalized DM basis set for the empirical SCC Jacobian calculation.
 mp.scc.butterworth_exponent = 3;
@@ -411,11 +431,23 @@ mp.P4.full.maskWithoutPinhole = falco_gen_pupil_Simple(inputs);
 
 %% Vortex Specific Values %%
 
-mp.F3.VortexCharge = -8; %--Charge of the vortex mask
+if flag_svc
+    mp.F3.VortexCharge = -6; %--Charge of the vortex mask
+    mp.F3.phaseMaskType = 'classicalwrapped';
+    mp.F3.phaseScaleFacLambdas = mp.sbp_centers;
+    mp.F3.phaseScaleFac = mp.F3.phaseScaleFacLambdas ./ mp.lambda0;
+elseif flag_svc_dimple
+    mp.F3.VortexCharge = 6; %--Charge of the vortex mask
+    mp.F3.phaseMaskType = 'classicalwrapped';
+    mp.F3.phaseScaleFacLambdas = mp.sbp_centers;
+    mp.F3.phaseScaleFac = mp.lambda0 ./ mp.F3.phaseScaleFacLambdas;
+else
+%     mp.F3.VortexCharge = 8; %--Charge of the vortex mask
+    mp.F3.VortexCharge = 4; %--Charge of the vortex mask
+end
 
 mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
 mp.F3.full.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
-
 
 %% Aberrations
 
@@ -426,4 +458,5 @@ ZmapCubeFull = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZ
 
 mp.P1.compact.E = exp(1j*10e-9/mp.lambda0*sum(ZmapCubeCompact, 3));
 mp.P1.full.E = exp(1j*10e-9/mp.lambda0*sum(ZmapCubeFull, 3));
+
 

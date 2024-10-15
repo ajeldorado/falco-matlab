@@ -21,7 +21,8 @@ else
 end
 Im(Im<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
 
-if(mp.flagPlot)
+% if(mp.flagPlot)
+if(true)
 
     if(Itr>1)
         delete(handles.tb1)

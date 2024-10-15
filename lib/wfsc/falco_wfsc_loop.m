@@ -13,11 +13,19 @@ mp.thput_vec = zeros(mp.Nitr+1, 1);
 
 flagBreak = false;
 
+Time_per_Itr = nan(1, mp.Nitr); %Initialize time vector for each iteration
+
 for Itr = 1:mp.Nitr
-    if false
-        if Itr == 10
-            mp.tint_efc = 1; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
-    %         mp.tint_est = 5*mp.tint_est;%5e-1; % time of integration for the estimation/sensing
+    
+    if mp.flag_timeMaya
+        profile on %start profiling per iteration
+        Time_per_Itr_start = tic(); %start a tic/toc for each iteration
+    end
+    
+    if mp.flag_adjusttime
+        if Itr == 5
+            mp.tint_efc = 10 * mp.tint_efc; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
+            mp.tint_est = 10 * mp.tint_est;%5e-1; % time of integration for the estimation/sensing
             bench.info.sbp_texp = mp.tint_efc;
             mp.tint = mp.tint_efc;
     %         mp.iefc.modeCoef = mp.iefc.modeCoef / 2; %--Gain coefficient to apply to the normalized DM basis sets for the empirical SCC calibration.
@@ -25,9 +33,19 @@ for Itr = 1:mp.Nitr
     %         mp.iefc.probeDM = 1; %--Which DM to use when probing for IEFC.
 
         end
+        if Itr == 10
+            mp.tint_efc = 10 * mp.tint_efc; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
+%             mp.tint_est = 2 * mp.tint_est;%5e-1; % time of integration for the estimation/sensing
+            bench.info.sbp_texp = mp.tint_efc;
+        end
     end
     
-
+    if false
+        if Itr==50
+            mp.dm1.weight = 0;
+        end
+    end
+    
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
     
@@ -48,7 +66,7 @@ for Itr = 1:mp.Nitr
     
     % Updated DM info
     if strcmpi(mp.controller, 'plannedefc')
-        mp.dm_ind = mp.dm_ind_sched{Itr}; % Change which DMs are used
+        mp.dm_ind = mp.dm_ind_sched{Itr}(1); % Change which DMs are used
     end
     disp(['DMs to be used in this iteration = [' num2str(mp.dm_ind(:)') ']']);
     
@@ -65,7 +83,10 @@ for Itr = 1:mp.Nitr
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
     
     %% Control Jacobian
-
+    if strcmp(mp.estimator, 'iefc')
+        mp.label_im = 'control';
+    end
+    
     mp = falco_set_jacobian_modal_weights(mp); 
     
     usesEmpiricalJac = (strcmpi(mp.estimator, 'scc') || strcmpi(mp.estimator, 'iefc'));
@@ -79,7 +100,7 @@ for Itr = 1:mp.Nitr
         load([mp.path.jac filesep mp.jac.fn], 'jacStruct');
     elseif cvar.flagRelin % recompute jacStruct
         out.ctrl.relinHist(Itr) = true;
-        jacStruct =  model_Jacobian(mp);
+        jacStruct =  model_Jacobian(mp); %%
     end
     
     [mp, jacStruct] = falco_ctrl_cull_weak_actuators(mp, cvar, jacStruct);
@@ -100,7 +121,7 @@ for Itr = 1:mp.Nitr
     %% Wavefront Estimation
     
     if (Itr > 1); EestPrev = ev.Eest; end % save previous estimate for Delta E plot
-    ev = falco_est(mp, ev, jacStruct);
+    ev = falco_est(mp, ev, jacStruct);  %%
     
     out = falco_store_intensities(mp, out, ev, Itr);
 
@@ -119,7 +140,7 @@ for Itr = 1:mp.Nitr
     % plot_wfsc_progress also saves images and ev probe data
     
     if Itr == 1; hProgress.master = 1; end % initialize the handle
-    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
+    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis); %%
         
     %% Compute and Plot the Singular Mode Spectrum of the Electric Field
     if mp.flagSVD
@@ -139,7 +160,8 @@ for Itr = 1:mp.Nitr
         mp.tint = mp.tint_efc;
         mp.label_im = 'control';
     end
-    [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
+    
+    [mp, cvar] = falco_ctrl(mp, cvar, jacStruct); %%
     
     % Save data to 'out'
     out = falco_store_controller_data(mp, out, cvar, Itr);
@@ -160,7 +182,7 @@ for Itr = 1:mp.Nitr
     
     %% Report Various Stats
 
-    out = falco_compute_dm_stats(mp, out, Itr);
+    out = falco_compute_dm_stats(mp, out, Itr); %%
 
     %--Calculate sensitivities to small Zernike phase aberrations at entrance pupil.
     if ~isempty(mp.eval.Rsens) && ~isempty(mp.eval.indsZnoll)
@@ -212,8 +234,26 @@ for Itr = 1:mp.Nitr
         cmds = datacmds+mp.bench.DM.flatvec;
         save([mp.bench.info.outDir,'cdms',datestr(now,'yyyymmddTHHMMSS'),'.mat'],'cmds');
     end
+    
+    if mp.flag_timeMaya
+        Time_per_Itr(Itr) = toc(Time_per_Itr_start); %end of tic/toc per iteration
+    
+        %save ProfileResults .html files for each iteration
+        
+        p = profile("info");
+        filename = sprintf('ProfileResults_Itr%d', Itr);
+        saveDirectory = '/home/hcst/Documents/Maya/ProfileResults';
+        fullPath = fullfile(saveDirectory, filename);
+        disp(fullPath);
+        profsave(p, fullPath);
+        
+        fprintf('Running time for iteration %d: %.2f seconds\n', Itr,  Time_per_Itr(Itr));
+    end
+    
 
 end %--END OF ESTIMATION + CONTROL LOOP
+
+
 
 Itr = mp.Nitr;
 
@@ -324,6 +364,8 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         out.IOLScoreHist = ev.IOLScoreHist;
     end
     
+    Im_tb.clock = clock;
+    
     if isfield(mp, 'testbed')
         if mp.flagFiber
             out.InormHist_tb.total = out.InormFiberHist; 
@@ -395,4 +437,6 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         end
         
     end
+%     mkdir([mp.bench.info.outDir,'pwp_progress/']);
+%     save([mp.bench.info.outDir,'pwp_progress/data',datestr(now,'HHMMSS'), '_' num2str(Itr),'.mat'], '-struct', 'ev')
 end

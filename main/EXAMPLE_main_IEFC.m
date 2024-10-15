@@ -20,8 +20,40 @@ addpath('/home/hcst/HCST_scripts/EFC');
 
 clearvars -except bench 
 
+%% Flags; all flags false --> regular EFC run
+flag_svc = true;
+efc_imageSharpening = false;
+flagFieldStop = false;
+mp.flag_lc = false;
+flag_efc360is = false;
+flag_smallDH4smf = false;
+flag_apodizer_avc = false;
+
 %% Step 2: Load default model parameters
-lambda0 = 785*1e-9;
+lambda0 = 760*1e-9;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Nsbp = 1; % Number of sub-bandpasses, AKA number of wavelengths in full bandpass
+mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lambda / lambda0)
+mp.Nsbp = Nsbp;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
+mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if Nsbp>1
+    mp.fracBW = 0.1;  % bandwidth of experiment
+    mp.sbp_centers = lambda0*linspace( 1-mp.fracBW/2,1+mp.fracBW/2,Nsbp);
+    bench.info.sbp_width = 10e-9*ones(Nsbp,1);%[14,14,14,14,14]*1e-9;% 3e-9;%-  %--Width of each sub-bandpass on testbed (meters)
+%     bench.info.sbp_width([4:6]) = 6e-9; %
+else
+    mp.fracBW = 0.013; % bandwidth of experiment; when Nsbp is 1 --> narrowband or monochromatic  
+%     mp.fracBW = 0.1;
+    mp.sbp_centers = lambda0;
+    bench.info.sbp_width = [10]*1e-9; % bandpass of the sub-bandpass [nm]
+%     bench.info.sbp_width = [78]*1e-9; % bandpass of the sub-bandpass [nm]
+    mp.est.probe.gainFudge = 1;
+    if flag_efc360is
+        mp.est.probe.gainFudge = 3;
+    end
+end
 
 mp.flagFiber = false;
 EXAMPLE_defaults_HCST_VVC % Re-use SCC example's configuration
@@ -34,31 +66,23 @@ mp.Fend.res = 8.6;
 mp.Fend.sides = 'top'; %--Which side(s) for correction: 'both', 'left', 'right', 'top', 'bottom'
 mp.Fend.shape = 'D'; % 'D', 'circle'
 
-
 mp.Nitr = 50;
 %% HCST preparation
-% Flags; all flags false --> regular EFC run
-flag_svc = false;
-efc_imageSharpening = false;
-flagFieldStop = false;
-mp.flag_lc = false;
 
 % path2flatMap = [bench.info.HCST_DATA_DIR,'is_results/2022Oct13/'];
 % path2flatMap =[bench.info.HCST_DATA_DIR,'pr_results/2022Nov23/'];
 % path2flatMap =[bench.info.HCST_DATA_DIR,'pr_results/2023Jan16/'];
-path2flatMap = [bench.info.HCST_DATA_DIR,'zygo_flat/2019Jun26/'];
+% path2flatMap = [bench.info.HCST_DATA_DIR,'zygo_flat/2019Jun26/'];
+path2flatMap = [bench.info.HCST_DATA_DIR,'pr_results/2024Apr09/'];
 
 % path2startingMap =[bench.info.HCST_DATA_DIR,'is_results/2022Oct13/'];
 % path2startingMap =[bench.info.HCST_DATA_DIR,'efc_results/2023Jan27/'];
-path2startingMap =[bench.info.HCST_DATA_DIR,'efc_results/2023Jun13/'];
+% path2startingMap =[bench.info.HCST_DATA_DIR,'efc_results/2023Jun13/'];
 % path2startingMap = [bench.info.HCST_DATA_DIR,'zygo_flat/2019Jun26/'];
+path2startingMap = [bench.info.HCST_DATA_DIR,'pr_results/2024Apr09/'];
 
 NDfilter_FWpos = 2;
 FWpos = 1; 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Nsbp = 1; % Number of sub-bandpasses, AKA number of wavelengths in full bandpass
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if FWpos~=NDfilter_FWpos
     NDfilter_cal = 28.6082 * 4.9367 * 4.4753 * 4.6956;%23.16; %>1
@@ -68,9 +92,9 @@ else
 end 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-tint_offAxis = 1e-1*ones(Nsbp,1); %; % 1e-3; %Integration time for off-axis PSF
-mp.tint_efc = 1e-0; %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
-mp.tint_est = 1e-1;%5e-1; % time of integration for the estimation/sensing
+tint_offAxis = 2.5e-2*ones(Nsbp,1); %; % 1e-3; %Integration time for off-axis PSF
+mp.tint_efc = 2.5e-2*ones(Nsbp,1); %30; %1e-1; %30; %35e-0;%1e-1;%[2,1,1,0.5,1]*0.05; % for the control and evalution
+mp.tint_est = 1e-2*ones(Nsbp,1);%5e-1; % time of integration for the estimation/sensing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 bench.info.sbp_texp = mp.tint_efc;
 mp.tint = mp.tint_efc;

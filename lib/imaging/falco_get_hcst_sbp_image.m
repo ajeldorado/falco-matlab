@@ -72,7 +72,9 @@ function [image_dh,varargout] = falco_get_hcst_sbp_image(mp,si)
         lam0 = mp.sbp_centers(si);
         lam1 = lam0 - sbp_width/2;
         lam2 = lam0 + sbp_width/2;
-        tb_NKT_setWvlRange(bench,lam1*1e9,lam2*1e9);
+        if  (mp.Nsbp > 1)
+            tb_NKT_setWvlRange(bench,lam1*1e9,lam2*1e9);
+        end
     else
         disp('Getting image from testbed (using laser source)')
     end
