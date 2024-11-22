@@ -29,7 +29,7 @@ function [image_dh,varargout] = falco_get_hcst_sbp_image(mp,si)
     sbp_texp  = mp.tint(si);% Exposure time for each sub-bandpass (seconds)
     PSFpeak   = bench.info.PSFpeaks(si);% counts per second 
     
-    hcst_andor_setExposureTime(bench,sbp_texp);
+    hcst_orca_setExposureTime(bench,sbp_texp);
 
     %----- Send commands to the DM -----
     disp('Sending current DM voltages to testbed') 
@@ -81,19 +81,19 @@ function [image_dh,varargout] = falco_get_hcst_sbp_image(mp,si)
 
     % Load the dark with the correct tint. It must exist in the dark
     % library. 
-    dark = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
+    dark = hcst_orca_loadDark(bench,[bench.info.path2darks,'dark_orca_tint',num2str(bench.orca.tint,2),'_coadds1.fits']);
 %     dark = 0;
     % Scale the PSF photometry by the current integration time
     
     
     % Get normalized intensity (dark subtracted and normalized by peakPSF)
-    current_tint = bench.andor.tint;
+    current_tint = bench.orca.tint;
     if mp.flagFiber
         SMFInt0 = bench.info.SMFInt0s(si)/mp.peakPSFtint(si)*current_tint*mp.NDfilter_cal;
-        hcst_andor_setSubwindow(bench,bench.andor.FEURow,...
-            bench.andor.FEUCol,24,false);
-        dark4EFCSMF = hcst_andor_loadDark(bench,[bench.info.path2darks,'dark_tint',num2str(bench.andor.tint,2),'_coadds1.fits']);
-        im = hcst_andor_getImage(bench)-dark4EFCSMF;
+        hcst_orca_setSubwindow(bench,bench.orca.FEURow,...
+            bench.orca.FEUCol,24,false);
+        dark4EFCSMF = hcst_orca_loadDark(bench,[bench.info.path2darks,'dark_orca_tint',num2str(bench.orca.tint,2),'_coadds1.fits']);
+        im = hcst_orca_getImage(bench)-dark4EFCSMF;
         Vsmf = hcst_fiu_aperturePhotometryOnAndor(bench,im,true);%max(im(:));
         normI = Vsmf/SMFInt0;
         
@@ -122,7 +122,7 @@ function [image_dh,varargout] = falco_get_hcst_sbp_image(mp,si)
 
     else
         peakPSF = PSFpeak/mp.peakPSFtint(si)*current_tint*mp.NDfilter_cal; 
-        normI = (hcst_andor_getImage(bench)-dark)/peakPSF; 
+        normI = (hcst_orca_getImage(bench)-dark)/peakPSF; 
         image_dh = normI;
         % Save data
         lamII=lam0;
