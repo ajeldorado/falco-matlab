@@ -2,12 +2,15 @@
 
 function G_tot = rearrange_jacobians(mp,jacStruct,dm_inds)
 
-if strcmpi(mp.estimator, 'pairwise-bb') 
+if strcmpi(mp.estimator, 'pairwise-bb') %mc
     mp.Nsbp = mp.Nsbp_bb; 
+    fprintf('Nsbp =', mp.Nsbp)
 end
+
 
 G1 = zeros(2*size(jacStruct.G1,1),mp.dm1.Nele,mp.Nsbp);
 G2 = zeros(2*size(jacStruct.G2,1),mp.dm2.Nele,mp.Nsbp);
+
 
 % Set up jacobian so real and imag components alternate and jacobian from
 % each DM is stacked
@@ -42,7 +45,7 @@ end
 
 G_tot = [G1, G2];
 
-if strcmpi(mp.estimator, 'pairwise-bb') 
+if strcmpi(mp.estimator, 'pairwise-bb') %mc
     mp.Nsbp = 1; 
 end
 

@@ -206,7 +206,6 @@ for iStar = 1:mp.compact.star.count
     modvar.starIndex = iStar;
     modvar.whichSource = 'star';
 
-disp(mp.Nsbp) %mc
 for iSubband = 1:mp.Nsbp
     disp(mp.Nsbp); %mc
     disp(iSubband); %mc
@@ -390,7 +389,7 @@ for iSubband = 1:mp.Nsbp
         DMV4plot = DM2Vplus - repmat(DM2Vnom, [1, 1, size(DM2Vplus, 3)]);
     end
     falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube, iSubband)
-    disp('test after falco_plot_pairwise_probes..,  size(jacStruct.G1):') %mc
+    disp('test after falco_plot_pairwise_probes..') %mc
     %size(jacStruct.G1) %mc
     %% Perform the estimation
 
@@ -405,11 +404,17 @@ for iSubband = 1:mp.Nsbp
     
     %end
 
+    %mc
+    pathname = '/Users/mayacadieux/Documents/udem/E24_stage/falco-matlab/data';
+    save( fullfile(pathname, 'DM1Vplus_classic.mat'), 'DM1Vplus')
+    save( fullfile(pathname, 'zAll_classic.mat'), 'zAll')
+    save( fullfile(pathname, 'DM1Vnom_classic.mat'), 'DM1Vnom')
+%%
+
 
     if strcmpi(mp.estimator, 'pairwise-bb') 
         %perform broadband estimations of Electric Field
         Eest = pairwise_bb_estimation(mp, jacStruct, DM1Vplus, DM2Vplus, zAll);
-    
     else
     
         if mp.est.flagUseJac %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.
@@ -494,6 +499,7 @@ for iSubband = 1:mp.Nsbp
         if useKalmanFilter
             Hall = zeros(Npairs, 2, mp.Fend.corr.Npix);
         end
+
         Eest = zeros(Ncorr, 1);
         zerosCounter = 0;
         partialCounter = 0;
@@ -538,7 +544,7 @@ for iSubband = 1:mp.Nsbp
             end
             
         end
-    
+        
         Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS VALUE!!!!!!!!!!!!!!!
         fprintf('%d of %d pixels were given zero probe amplitude. \n', zerosCounter, mp.Fend.corr.Npix);
         if Npairs > 2 % Only possible for Npairs > 2
@@ -665,12 +671,21 @@ for iSubband = 1:mp.Nsbp
 %% Save out the estimates
 
 if strcmpi(mp.estimator, 'pairwise-bb') 
+    Eest(abs(Eest).^2 > mp.est.Ithreshold) = 0;  % If estimate is too bright, the estimate was probably bad. !!!!!!!!!!!!!!BE VERY CAREFUL WITH THIS VALUE!!!!!!!!!!!!!!!
     ev.Eest = Eest;
-    disp('size of Eest:'); %mc
-    disp(size(Eest)); %mc
+    %mc
+    %pathname = '/Users/mayacadieux/Documents/udem/E24_stage/falco-matlab/data';
+    %save( fullfile(pathname, 'Eest_bb.mat'), 'Eest')
+
 
 else
+    %mc
+    %pathname = '/Users/mayacadieux/Documents/udem/E24_stage/falco-matlab/data';
+    %save( fullfile(pathname, 'Eest_1Nsbp_classic.mat'), 'Eest')
+   
+
     ev.Eest(:, modeIndex) = Eest;
+
 end
 
 if mp.flagFiber
@@ -687,7 +702,7 @@ if mp.flagPlot && ~mp.flagFiber
 
     Eest2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 
-    if strcmpi(mp.estimator, 'pairwise-bb') %mc: to avoid error, but where do we need Eest2D?
+    if strcmpi(mp.estimator, 'pairwise-bb') %mc: to avoid error
         continue
     else  
         Eest2D(mp.Fend.corr.maskBool) = Eest;
@@ -698,13 +713,11 @@ if mp.flagPlot && ~mp.flagFiber
         %drawnow;
     end
 end
-disp('mp.Nsbp just before end of loop over wavelengths')
-disp(mp.Nsbp);
 
 end %--End of loop over the wavelengths
-disp('mp.Nsbp just afterr end of loop over wavelengths')
-disp(mp.Nsbp);
+
 end %--End of loop over stars
+
 
 %--Other data to save out
 ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
@@ -718,7 +731,7 @@ mp.isProbing = false; % tells the camera whether to use the exposure time for ei
 
 % 
 if strcmpi(mp.estimator, 'pairwise-bb') 
-    mp.Nsbp = mp.Nsbp_bb; %re-assign the initial nb of sub=bandpasses value 
+    mp.Nsbp = mp.Nsbp_bb; %re-assign the initial nb of sub-bandpasses value 
     mp = falco_set_spectral_properties(mp);
 end
 
