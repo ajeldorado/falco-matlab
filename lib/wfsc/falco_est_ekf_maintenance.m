@@ -116,7 +116,7 @@ for iSubband = 1:mp.Nsbp
 end
 
 %% Perform the estimation
-ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
+ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command,DM1Vdither, DM2Vdither);
 
 % Reset DM commands
 mp = set_constrained_full_command(mp, DM1Vdither, DM2Vdither);
@@ -181,7 +181,7 @@ end
 
 
 
-function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
+function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command, DM1Vdither, DM2Vdither)
 %% Estimation part. All EKFs are avanced in parallel
 if mp.flagSim
     sbp_texp = mp.detector.tExpUnprobedVec;
@@ -189,36 +189,14 @@ else
     sbp_texp = mp.tb.info.sbp_texp;
 end
 
-if mp.est.flagUseJac
-    gdu = (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
-
-else %--Get the probe phase from the model and the probe amplitude from the measurements
-    % For unprobed field based on model:
-    if any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz); end
-    if any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz); end
-    E0 = model_compact(mp, modvar);
-    E0vec = E0(mp.Fend.corr.maskBool);
-     
-    %--For probed fields based on model:
-    gdu  = zeros(2*size(y_measured(:,iSubband)));
-    if any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + closed_loop_command); end
-    if any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + closed_loop_command); end
-    Edither = model_compact(mp, modvar);
-    Edithervec = Edither(mp.Fend.corr.maskBool);
-
-    gdu_comp = Edithervec - E0vec;
-
-    gdu(1:2:end) = real(gdu_comp);
-    gdu(2:2:end) = imag(gdu_comp);
-
-    % Split gdu into re and imag and convert units
-    % Reset DMS
-end
 
 for iSubband = 1:1:mp.Nsbp
 
+    % Get gdu
+    gdu = get_gdu(mp, ev, iSubband, y_measured, closed_loop_command, DM1Vdither, DM2Vdither);
+
     %--Estimate of the closed loop electric field:
-    x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
+    x_hat_CL = ev.x_hat(:,iSubband) + gdu*ev.e_scaling(iSubband)*sqrt(sbp_texp(iSubband));
 
     %--Estimate of the measurement:
     y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*sbp_texp(iSubband));
@@ -262,6 +240,40 @@ end
 
 end
 
+function gdu = get_gdu(mp, ev, iSubband, y_measured, closed_loop_command, DM1Vdither, DM2Vdither)
+
+
+modvar = ModelVariables;
+modvar.starIndex = 1;
+modvar.whichSource = 'star';
+
+if mp.est.flagUseJacAlgDiff
+    gdu = ev.G_tot_cont(:,:,iSubband)*closed_loop_command;
+
+else %--Get the probe phase from the model and the probe amplitude from the measurements
+    % For unprobed field based on model:
+    if any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz); end
+    if any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz); end
+    E0 = model_compact(mp, modvar);
+    E0vec = E0(mp.Fend.corr.maskBool);
+     
+    %--For probed fields based on model:
+    gdu  = zeros(2*size(y_measured(:,iSubband),1),1);    
+    if any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); end
+    if any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); end
+    Edither = model_compact(mp, modvar);
+    Edithervec = Edither(mp.Fend.corr.maskBool);
+
+    gdu_comp = Edithervec - E0vec;
+
+    gdu(1:2:end,1) = real(gdu_comp);
+    gdu(2:2:end,1) = imag(gdu_comp);
+
+    % Split gdu into re and imag and convert units
+    % Reset DMS
+end
+
+end
 
 function comm_vector = get_dm_command_vector(mp,command1, command2)
 
