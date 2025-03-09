@@ -50,13 +50,15 @@ function out = falco_store_intensities(mp, out, ev, Itr)
     end
 
     %% Calculate the measured, coherent, and incoherent intensities by subband
-
-    % measured intensities
-    for iSubband = 1:mp.Nsbp
-        imageMeas = squeeze(ev.imageArray(:, :, 1, iSubband));
-        out.normIntMeasCorr(Itr, iSubband) = mean(imageMeas(mp.Fend.corr.maskBool));
-        out.normIntMeasScore(Itr, iSubband) = mean(imageMeas(mp.Fend.score.maskBool));
-        clear im        
+    for iStar = 1:mp.compact.star.count
+        for si = 1:mp.Nsbp
+            modeIndex = (iStar-1)*mp.Nsbp + si;
+            
+            imageMeas = squeeze(ev.imageArray(:, :, 1, modeIndex));
+            out.normIntMeasCorr(Itr, modeIndex) = mean(imageMeas(mp.Fend.corr.maskBool));
+            out.normIntMeasScore(Itr, modeIndex) = mean(imageMeas(mp.Fend.score.maskBool));
+            clear im
+        end
     end
 
     % estimated

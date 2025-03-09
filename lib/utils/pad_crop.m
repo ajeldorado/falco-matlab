@@ -29,7 +29,8 @@
 %
 %--OUTPUTS:
 % arrayOut: rectangular padded or cropped version of the input matrix
-
+%
+% arrayOut = pad_crop(arrayIn, nDes, varargin)
 
 function arrayOut = pad_crop(arrayIn, nDes, varargin)
 

@@ -36,14 +36,6 @@ Im = Im_tb.Im;
 Im4plot = Im;
 Im4plot(Im4plot<0) = 0; %--Prevent the log10(Im) plot from getting complex values.
 
-% if(Itr>1 && ~strcmpi(mp.estimator,'perfect') )
-%     Imod = mean(Inorm.mod(Itr-1,:));
-% else
-%     Imod = NaN;
-% end
-
-
-
 if(mp.flagPlot)
 
     if(Itr>1)
@@ -63,7 +55,6 @@ if(mp.flagPlot)
         set(handles.master,'units', 'inches', 'Position', [0 0 12 8])
     end
 
-    
 %     subplot(2,3,1); % Save the handle of the subplot
 %     axis off
 %     handles.tb1 = text(0.1,0.8,sprintf('%s: Iteration %d',mp.coro,Itr-1));
@@ -88,6 +79,14 @@ if(mp.flagPlot)
         title(['it = ',num2str(Itr-1),', Inorm = ',num2str(Inorm.total(Itr-1),2)]);
     end
     
+    %% add rectangular correction / scoring regions
+    if(exist(mp.Fend.shape)); 
+        if strcmp(mp.Fend.shape,'square')
+            hold on; rectangle('Position', [mp.Fend.xiOffset - mp.Fend.corr.Rout, mp.Fend.etaOffset - mp.Fend.corr.Rout, mp.Fend.corr.Rout*2, mp.Fend.corr.Rout*2],'EdgeColor','r');
+            hold on; rectangle('Position', [mp.Fend.xiOffset - mp.Fend.score.Rout, mp.Fend.etaOffset - mp.Fend.score.Rout, mp.Fend.score.Rout*2, mp.Fend.score.Rout*2],'EdgeColor','y');
+        end
+    end
+        
     try
         axis(mp.Fend.dzAxis)
     catch
@@ -188,30 +187,23 @@ if(mp.flagPlot)
         set(hEplot,'Color','w')
 
         for si = 1:mp.Nsbp
-
             subplot(2,mp.Nsbp,si); % Save the handle of the subplot
             imagesc(mp.Fend.xisDL,mp.Fend.etasDL,log10(abs(Im_tb.E(:,:,si)).^2),[Icbmin Icbmax]); 
             axis xy equal tight;
             colorbar;
             colormap(gca,parula)  
-        %     xlabel('\lambda_0/D'); 
-        %     ylabel('\lambda_0/D');
-    %         title(['Modulated (band ',num2str(si),')']);
              try
                  axis(mp.Fend.dzAxis)
              catch
                  axis xy equal tight; 
              end
     
-
             subplot(2,mp.Nsbp,si+mp.Nsbp); % Save the handle of the subplot
             imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
             axis xy equal tight; 
             colorbar; 
             colormap(gca,hsv);
-        %     xlabel('\lambda_0/D'); 
-        %     ylabel('\lambda_0/D');
-    %         title(['Phase (band ',num2str(si),')']);
+    
             try
                  axis(mp.Fend.dzAxis)
             catch
@@ -263,10 +255,63 @@ if(any(mp.dm_ind==2))
 end
 
 
-sciCam_fitswrite(tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
-sciCam_fitswrite(tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
-sciCam_fitswrite(tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
+% Im_tb.E should be a cube with all modes but sciCam_fitswrite does not
+% write it as a cube
+%need to also export the unprobed images
+% for iStar = 1:mp.compact.star.count
+%     for si = 1:mp.Nsbp
+%         modeIndex = (iStar-1)*mp.Nsbp + si;
+%                     
+%         %reference
+%         %tmp = zeros(size(Im));
+%         %tmp(mp.Fend.corr.maskBool) = ev.Eest(:, modeIndex);
+%         %Im_tb.E(:, :, modeIndex) = tmp; % modulated component
+%         %tmp = zeros(size(Im));
+%         %tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
+%         %Im_tb.Iinco(:, :, modeIndex) = tmp; % unmodulated component
+%         %out.InormHist_tb.mod(Itr, modeIndex) = mean(abs(ev.Eest(:, modeIndex)).^2);
+%         %out.InormHist_tb.unmod(Itr, modeIndex) = mean(ev.IincoEst(:, modeIndex)); 
+%         
+%         
+%         thisIunprobed = Im_tb.ev.I0{modeIndex};
+%         
+%         %tmp = zeros(size(Im));
+%         %tmp = squeeze(Im_tb.E(:,:,modeIndex));
+%         %thisEsens = zeros(size(Im));
+%         thisEsens = squeeze(Im_tb.E(:,:,modeIndex));
+%         
+%         %tmp = zeros(size(Im));
+%         %tmp = squeeze(Im_tb.Iinco(:,:,modeIndex));
+%         %thisIinco = zeros(size(Im));
+%         %thisIinco(mp.Fend.corr.maskBool) = tmp;
+%         thisIinco = squeeze(Im_tb.Iinco(:,:,modeIndex));
+%         
+%             
+%         %new
+%         sciCam_fitswrite(tb,abs(thisEsens).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1), '_mode', num2str(modeIndex), tag,'.fits']));
+%         sciCam_fitswrite(tb,angle(thisEsens),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1), '_mode', num2str(modeIndex), tag,'.fits']));
+%         sciCam_fitswrite(tb,thisIinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1), '_mode', num2str(modeIndex),tag,'.fits']));
+%         sciCam_fitswrite(tb,thisIunprobed,fullfile(out_dir,['normI_unprobed_it',num2str(Itr-1),'_mode', num2str(modeIndex), tag,'.fits']));
+%      end
+% end
 
+%add unprobed fits files
+for iStar = 1:mp.compact.star.count
+    for si = 1:mp.Nsbp
+        modeIndex = (iStar-1)*mp.Nsbp + si;
+        thisIunprobed = Im_tb.ev.I0{modeIndex};
+    end
+end
+sciCam_fitswrite(tb,thisIunprobed,fullfile(out_dir,['normI_unprobed_it',num2str(Itr-1),'_mode', num2str(modeIndex), tag,'.fits']));
+
+
+%old
+sciCam_fitswrite(tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1), tag,'.fits']));
+sciCam_fitswrite(tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1), tag,'.fits']));
+sciCam_fitswrite(tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1), tag,'.fits']));
+ 
+
+% all the data is being saved in the .mat structure
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');

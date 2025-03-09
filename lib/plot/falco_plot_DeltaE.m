@@ -46,7 +46,12 @@ function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
                 end
 
                 hMeasAmp = subplot(2,2,2); % Save the handle of the subplot
-                imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+                try
+                    imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+                catch
+                    disp('warning: problem plotting deltaE');
+                end
+                
                 title('abs(dE_{meas})', 'Fontsize', fs); 
                 set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
                 

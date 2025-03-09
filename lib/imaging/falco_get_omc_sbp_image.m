@@ -30,8 +30,10 @@ function normI = falco_get_omc_sbp_image(mp,si)
 
     % convenience:
     tb = mp.tb;
-    sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
-    star_power = tb.info.star_power(si); %--star setting
+    
+    % % not used here?
+    %     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
+    %     star_power = tb.info.star_power(si); %--star setting
     
     % already set in config: tb.sciCam.subdir = 'falco';
     if isfield(mp,'debug'), debug = mp.debug; else, debug = false; end
@@ -139,7 +141,14 @@ function normI = falco_get_omc_sbp_image(mp,si)
     if false %debug
         disp(tb.star);
     end
-    
+
+    %--- Set / check EM gain
+    if isfield('em_gain', tb.info)
+        if tb.info.em_gain ~= double(tb.sciCam.excam.em_gain)
+            tb.sciCam.excam.em_gain(py.int(tb.info.em_gain));
+        end
+    end
+
     %     if(strcmpi(tb.info.source,'nkt'))
     %         NKT_setWvlRange(tb,lam1*1e9,lam2*1e9); % DST/gruane_DST/tb_lib/NKT/NKT_setWvlRange
     %     end
@@ -152,7 +161,8 @@ function normI = falco_get_omc_sbp_image(mp,si)
     
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     % sciCam_getImage returns FOV window to match falco expected image size   
-    rawIm = sciCam_getImage(tb,sbp_texp);
+    %rawIm = sciCam_getImage(tb,sbp_texp);
+    rawIm = sciCam_getImage(tb,sbp_texp,'nexp',1, 'addheader', false);
     normI = (rawIm-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
     
 end

@@ -225,6 +225,9 @@ else
     disp('Entire workspace NOT saved because mp.flagSaveWS==false')
 end
 
+%% restore some settings to defaults
+mp.tb.sciCam.subdir = 'temp';
+
 end %--END OF main FUNCTION
 
 
@@ -268,12 +271,20 @@ function Esim = compute_simulated_efield_for_delta_efield_plot(mp)
 
     %--Model-based estimate for comparing Delta E (1st star only)
     modvar = ModelVariables;
-    modvar.whichSource = 'star';
-    modvar.starIndex = 1; % 1ST STAR ONLY
-    for si = mp.Nsbp:-1:1
-        modvar.sbpIndex = si;
-        Etemp = model_compact(mp, modvar);
-        Esim(:, si) = Etemp(mp.Fend.corr.maskBool);
+    %modvar.whichSource = 'star';
+    
+    listStar = {'star', 'offaxisstar'};
+    
+    for iStar = 1:mp.compact.star.count
+        modvar.whichSource = listStar{iStar};
+        for iSubband = 1:mp.Nsbp
+            modeIndex = (iStar-1)*mp.Nsbp + iSubband; % 1 to Nstarbands
+    
+            modvar.starIndex = iStar;
+            modvar.sbpIndex = iSubband;
+            Etemp = model_compact(mp, modvar);
+            Esim(:, modeIndex) = Etemp(mp.Fend.corr.maskBool);
+        end
     end
 end
 
@@ -299,20 +310,23 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
         if ~strcmpi(mp.estimator, 'perfect')
-            for si = 1:mp.Nsbp
-                tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.maskBool) = ev.Eest(:, si);
-                Im_tb.E(:, :, si) = tmp; % modulated component 
+            for iStar = 1:mp.compact.star.count
+                for si = 1:mp.Nsbp
+                    modeIndex = (iStar-1)*mp.Nsbp + si;
+                    
+                    tmp = zeros(size(Im));
+                    tmp(mp.Fend.corr.maskBool) = ev.Eest(:, modeIndex);
+                    Im_tb.E(:, :, modeIndex) = tmp; % modulated component
  
-                tmp = zeros(size(Im));
-                tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
-                Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
+                    tmp = zeros(size(Im));
+                    tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, modeIndex);
+                    Im_tb.Iinco(:, :, modeIndex) = tmp; % unmodulated component
 
-                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
-                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
-
-                Im_tb.ev = ev; % Passing the probing structure so I can save it
+                    out.InormHist_tb.mod(Itr, modeIndex) = mean(abs(ev.Eest(:, modeIndex)).^2);
+                    out.InormHist_tb.unmod(Itr, modeIndex) = mean(ev.IincoEst(:, modeIndex)); 
+                end
             end
+            Im_tb.ev = ev; % Passing the probing structure so I can save it
             clear tmp;
         else
             out.InormHist_tb.mod = NaN(Itr, mp.Nsbp);
@@ -332,6 +346,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
         
+        %this also needs to be updated to modeIndex (simulation case)
         for si = 1:mp.Nsbp
             if ~mp.flagFiber
                 tmp = zeros(size(Im));
@@ -345,10 +360,8 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 Im_tb.E = ev.Eest;
                 Im_tb.Iinco = ev.IincoEst(:, si);
             end
-            
                 out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
                 out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
-
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
         end
         
