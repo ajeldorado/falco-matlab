@@ -34,7 +34,7 @@ else
     else
         for ii = 1:Nzones
             shapes{ii} = 'circle';
-        end
+         end
     end
 end
 

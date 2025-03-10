@@ -28,7 +28,8 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
 
     switch mp.estimator
         case 'scc'
-            cvar.NeleAll = mp.dm1.NbasisModes + mp.dm2.NbasisModes;
+            %cvar.NeleAll = mp.dm1.NbasisModes + mp.dm2.NbasisModes;
+            cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
         otherwise
             cvar.NeleAll = mp.dm1.Nele + mp.dm2.Nele + mp.dm3.Nele + mp.dm4.Nele + mp.dm5.Nele + mp.dm6.Nele + mp.dm7.Nele + mp.dm8.Nele + mp.dm9.Nele; %--Number of total actuators used 
     end
