@@ -130,12 +130,12 @@ function normI = falco_get_omc_sbp_image(mp,si)
     %disp(['Setting varia to bandpass',num2str(si)])
     
     if true
-        lam0 = mp.sbp_centers(si);
-        lam1 = lam0 - sbp_width/2;
-        lam2 = lam0 + sbp_width/2;
-        tb.star.lower = lam1/NM;
-        tb.star.upper = lam2/NM;
-        tb.star.power = star_power;
+        lam0 = 1e9*mp.sbp_centers(si);
+        lam1 = lam0 - tb.info.sbp_width/2;
+        lam2 = lam0 + tb.info.sbp_width/2;
+        tb.star.lower = lam1;
+        tb.star.upper = lam2;
+        tb.star.power = tb.info.star_power;
     end
     
     if false %debug
