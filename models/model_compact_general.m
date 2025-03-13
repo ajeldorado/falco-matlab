@@ -131,11 +131,13 @@ if debug, sDebug.EP2_after_dms = EP2eff; end
 
 %--Re-image to pupil P3
 EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering);
+if debug, sDebug.EP3_before_mask = EP3; end
 
 %--Apply apodizer mask.
 if mp.flagApod
     EP3 = mp.P3.compact.mask .* pad_crop(EP3, mp.P3.compact.Narr); 
 end
+if debug, sDebug.EP3_after_mask = EP3; end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Propagation from P3 to P4 depends on coronagraph type
