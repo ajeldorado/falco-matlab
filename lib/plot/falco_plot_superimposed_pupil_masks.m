@@ -55,7 +55,7 @@ function falco_plot_superimposed_pupil_masks(mp)
             P1andP4 = mp.P1.compact.mask + P4mask;
 
             figure(301)
-            imagesc(P1andP4);
+            imagesc(abs(P1andP4));
             title('Superimposed Pupil and Lyot Stop', 'Fontsize', 16)
             axis xy equal tight; colorbar; 
             set(gca, 'Fontsize', 20);

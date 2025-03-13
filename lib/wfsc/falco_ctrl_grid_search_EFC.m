@@ -28,6 +28,12 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
 
     % Initializations    
     vals_list = allcomb(mp.ctrl.log10regVec, mp.ctrl.dmfacVec).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
+    
+	if isfield(mp.ctrl, 'dmGainOverride')
+        cvar.latestBestDMfac = mp.ctrl.dmGainOverride;
+        vals_list = allcomb(mp.ctrl.log10regVec, mp.ctrl.dmGainOverride).'; %--dimensions: [2 x length(mp.ctrl.muVec)*length(mp.ctrl.dmfacVec) ]
+	end
+    
     Nvals = max(size(vals_list,2));
     Inorm_list = zeros(Nvals,1);
 
@@ -48,7 +54,7 @@ function [dDM, cvarOut] = falco_ctrl_grid_search_EFC(mp,cvar)
         end
         
         parfor ni = 1:Nvals
-            [temp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
+            [Itemp, dDM_temp] = falco_ctrl_EFC_base(ni,vals_list,mp,cvar);
             Inorm_list(ni) = mean(Itemp);
             %--delta voltage commands
             if(any(mp.dm_ind==1)); dDM1V_store(:,:,ni) = dDM_temp.dDM1V; end

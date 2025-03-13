@@ -66,6 +66,5 @@ cs = [-7, 0];
 figure(5); imagesc(log10(Ipup2), cs); axis xy equal tight; colorbar;
 figure(6); imagesc(log10(Ipup2fft), cs); axis xy equal tight; colorbar;
 
-
 figure(7); imagesc(angle(Epup2)); axis xy equal tight; colorbar;
 figure(8); imagesc(angle(pad_crop(Epup2fft, Nout))); axis xy equal tight; colorbar;

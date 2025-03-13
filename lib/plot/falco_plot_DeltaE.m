@@ -22,6 +22,9 @@ function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
             dEsimNonzero = dEsim(indsNonzero);
             
             dEmax = max(abs(dEsim)); % max value in plots
+            if dEmax == 0
+                dEmax = max(abs(dEmeas));
+            end
             out.complexProjection(Itr-1, si) = abs(dEsimNonzero'*dEmeasNonzero) / abs(dEsimNonzero'*dEsimNonzero);
             fprintf('Complex projection of deltaE is %3.2f    for subband %d/%d\n', out.complexProjection(Itr-1, si), si, mp.Nsbp);
             out.complexCorrelation(Itr-1, si) = abs(dEsimNonzero'*dEmeasNonzero/(sqrt(abs(dEmeasNonzero'*dEmeasNonzero))*sqrt(abs(dEsimNonzero'*dEsimNonzero))));

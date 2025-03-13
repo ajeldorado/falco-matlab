@@ -20,13 +20,24 @@ function PUPIL = falco_gen_pupil_customHex( input )
     Nbeam = input.Nbeam;
     apRad = Nbeam/2; % aperture radius in samples 
     
+    if isfield(input,'hg_expon')
+        hg_expon = input.hg_expon;
+    else
+        hg_expon = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
+    end
+    if isfield(input,'hg_expon_spider')
+        hg_expon_spider = input.hg_expon_spider;
+    else
+        hg_expon_spider = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
+    end
+    % Default hyper gaussian parameters based on comparison with PROPER 
     %     % Hypergaussian tuning: Measured data for segments compared to
     %     PROPER:
     %     NpupVec = 200:100:1000;
     %     hgExpVec = [44, 64, 84, 110, 130, 160, 194, 224, 250];
     %     y = 0.2623*x -17.4000
-    hg_expon = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
-    hg_expon_spider = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
+%     hg_expon = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
+%     hg_expon_spider = ceil_even(0.2623*Nbeam - 17.4); % hyper-gaussian exponent for anti-aliasing 
 %     hg_expon = 1000; % hyper-gaussian exponent for anti-aliasing 
 %     hg_expon_spider = 100; % hyper-gaussian exponent for anti-aliasing 
     

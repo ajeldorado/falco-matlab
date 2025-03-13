@@ -164,12 +164,18 @@ if whichDM == 1
         end
         etas = xis.';
                 
+        if mp.F3.flagDimple
+            inputs.roddierphase = mp.F3.roddierphase;
+            inputs.roddierradius = mp.F3.roddierradius;
+        end
+
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nxi;
         inputs.charge = mp.F3.VortexCharge;
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = pixres;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
     else % Use FFTs
@@ -186,12 +192,18 @@ if whichDM == 1
             spot = 1;
         end
         
+        if mp.F3.flagDimple
+            inputs.roddierphase = mp.F3.roddierphase;
+            inputs.roddierradius = mp.F3.roddierradius;
+        end
+
         inputs.type = mp.F3.phaseMaskType;
         inputs.N = Nfft1;
         inputs.charge = mp.F3.VortexCharge;
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = Nfft1/mp.P1.compact.Nbeam;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
                 
         % Generate FPM with fftshift already applied
@@ -370,6 +382,7 @@ if whichDM == 2
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = pixres;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
 
     else        
@@ -392,6 +405,7 @@ if whichDM == 2
         inputs.phaseScaleFac = phaseScaleFac;
         inputs.clocking = mp.F3.clocking;
         inputs.Nsteps = mp.F3.NstepStaircase;
+        inputs.res = Nfft2/mp.P1.compact.Nbeam;
         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
         
         % Generate FPM with fftshift already applied
