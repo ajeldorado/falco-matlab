@@ -40,6 +40,18 @@ function Epupil = propcustom_mft_apply_focal_errors_babinet(Epupil, EerrorMap, r
     % Backwards MFT to the original pupil plane
     deltaE = propcustom_mft_FtoP(Efocus .* (1-EerrorMap), -fl, lambda, dxi, deta, dx, NarrayPupil);
     
-    Epupil = Epupil - deltaE;
+    % figure(14);
+    % imagesc(abs(deltaE));
+    % axis xy equal tight; colorbar;
+    % colormap gray;
+    % 
+    % figure(15);
+    % imagesc(angle(deltaE));
+    % axis xy equal tight; colorbar;
+    % colormap hsv;
+
+
+
+    Epupil = Epupil + deltaE; %This should be a plus sign! (Always check plots to verify)
 
 end

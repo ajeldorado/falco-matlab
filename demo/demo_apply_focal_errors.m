@@ -11,15 +11,15 @@ clear;
 inputs.Npad = 700;
 inputs.Nbeam = 500; % number of points across the pupil diameter
 inputs.OD = 1; % Outer radius (fraction of Nbeam) 
-inputs.ID = 0.2;% Inner radius (zero if you want an off-axis telescope)
-inputs.angStrut = [0 120 240];%Angles of the struts (deg)
-inputs.wStrut = 0.01; % Width of the struts (fraction of pupil diam.)
+inputs.ID = 0; %0.2;% Inner radius (zero if you want an off-axis telescope)
+inputs.angStrut = 0; %[0 120 240];%Angles of the struts (deg)
+inputs.wStrut = 0; %0.01; % Width of the struts (fraction of pupil diam.)
 inputs.centering = 'pixel';%'interpixel'; %'interpixel' or 'pixel'; 'pixel' is default
 inputs.stretch = 1;% Stretch the horizontal axis to create elliptical beam 
 
 % Optional Inputs
-inputs.clocking = 15; % CCW rotation. Doesn't work with flag HG. [degrees]
-inputs.xShear = 0.1;
+inputs.clocking = 0; %15; % CCW rotation. Doesn't work with flag HG. [degrees]
+inputs.xShear = 0; %0.1;
 
 pupil = falco_gen_pupil_Simple( inputs );
 
@@ -27,7 +27,7 @@ figure(1);
 imagesc(pupil);
 axis xy equal tight; colorbar;
 colormap gray;
-
+%%
 
 Nfoc = 200;
 resErrorMap = 4; % pixels per lambda/D
@@ -35,6 +35,25 @@ zeroMeanNormNoise = (rand(Nfoc, Nfoc) - 0.5)/0.2887;
 % EerrorMap = exp(1j*zeroMeanNormNoise*0.8/360);
 EerrorMap = 1 + 0.1*zeroMeanNormNoise;
 beamDiamPix = inputs.Nbeam;
+
+%% Try making a Lyot spot as the error pattern
+
+% Parameters
+resErrorMap = 6; 
+beamDiamPix = inputs.Nbeam;
+r = 20; %corresponds to approx 3.3 l/D radius Lyot spot)
+
+% Create array with central circular region
+[x, y] = meshgrid(1:beamDiamPix, 1:beamDiamPix);
+EerrorMap = sqrt((x - ceil(beamDiamPix/2)).^2 + (y - ceil(beamDiamPix/2)).^2) > r;
+
+%% Try vortex FPM
+% charge = 4;
+% beamDiamPix = inputs.Nbeam;
+% Npad = 16*beamDiamPix;
+% resErrorMap = 16; 
+% vortex = falco_gen_vortex_mask(charge, Npad);
+% EerrorMap = vortex;
 
 figure(11);
 imagesc(abs(EerrorMap));

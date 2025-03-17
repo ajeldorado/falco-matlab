@@ -28,8 +28,8 @@ inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add 
 
 % Optional Inputs
 inputs.centering = 'pixel';
-inputs.xOffset = 5.5; % [pixels]
-inputs.yOffset = -10; % [pixels]
+inputs.xOffset = 0; %5.5; % [pixels]
+inputs.yOffset = 0; %-10; % [pixels]
 inputs.clocking = 0; % [degrees]
 
 % Check staircase
@@ -40,12 +40,12 @@ figure(1); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; d
 
 
 % Check clocking
-inputs.clocking = 30; % [degrees]
+inputs.clocking = 20; % [degrees]
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(2); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 % Check lateral offsets and rotation together
-inputs.clocking = 30; % [degrees]
+inputs.clocking = 45; % [degrees]
 inputs.xOffset = 30.2; % [pixels]
 inputs.yOffset = -14.5; % [pixels]
 mask = falco_gen_azimuthal_phase_mask(inputs);
@@ -112,12 +112,15 @@ figure(9); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; d
 % figure(12); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 % Check roddier
-inputs.type = 'roddier';
+inputs.type = 'vortex'; %'roddier';
 inputs.res = 128;
-inputs.roddierphase = 0.5; % waves
-inputs.roddierradius = 0.53; % lambda/D
+inputs.clocking = 0;
+inputs.roddierradius = 0.53; %[lambda/D]
+inputs.roddierphase = 0.5; %[wavs]
+inputs.holeradius = 0.06; %[lambda/D]
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(13); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+figure(14); imagesc(abs(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 %% Metasurface SVCs
 % Check custom metasurface

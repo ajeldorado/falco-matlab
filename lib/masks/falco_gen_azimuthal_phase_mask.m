@@ -55,8 +55,10 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     if(isfield(inputs, 'yOffset')); yOffset = inputs.yOffset; end % [pixels]
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
     if(isfield(inputs,'res'));res = inputs.res; end %[m]
-    if(isfield(inputs,'roddierradius')); roddierradius = inputs.roddierradius; end % [lambda/D]
-    if(isfield(inputs,'roddierphase')); roddierphase = inputs.roddierphase; end % [waves]
+
+    if(isfield(inputs,'roddierradius'));roddierradius = inputs.roddierradius; end %[lambda/D]
+    if(isfield(inputs,'roddierphase'));roddierphase = inputs.roddierphase; end %[wavs]
+    if(isfield(inputs,'holeradius'));holeradius = inputs.holeradius; end %[wavs]
     % Input checks
     Check.scalar_integer(charge);
     
@@ -80,7 +82,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     X = reshape(xyAll(1, :), [N, N]);
     Y = reshape(xyAll(2, :), [N, N]);
 
-    [THETA, ~] = cart2pol(X, Y);
+    [THETA, RHO] = cart2pol(X, Y);
 
     % make mask 
     switch lower(maskType)
@@ -269,6 +271,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
                error('Error. For radial FPMs, the resolution must be specified.')
             end
 
+
             if ~isfield(inputs, 'roddierradius')
                 error("inputs.roddierradius must be defined for this mask case.")
             end
@@ -284,11 +287,30 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             domain = (coords.THETA >= -pi) & (coords.THETA < 0);
             vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
             
-            R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
-            vort(R1) =vort(R1) + roddierphase*2*pi;
+            R1 = (RHO <= roddierradius*res*phaseScaleFac);
+            vort(R1) = vort(R1) + roddierphase*2*pi;
+            %These lines only for simulating a hole in the mask or opaque spot!
+            % R3 = (RHO <= holeradius*res*phaseScaleFac);
+            % vort(R3) = 0;
+            % amp(R3) = 0;
             
-            mask = exp(phaseScaleFac*1j*vort);
 
+            masktemp = exp(phaseScaleFac*1j*vort);
+            mask = masktemp.*amp;
+
+            % coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            % vort = 0.* coords.THETA;
+            % domain = (coords.THETA >= 0);
+            % vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+            % domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            % vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+            % 
+            % R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
+            % vort(R1) =vort(R1) + roddierphase*2*pi;
+            % 
+            % mask = exp(phaseScaleFac*1j*vort);
+            
+%             
 %             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
 

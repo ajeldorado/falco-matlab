@@ -114,6 +114,7 @@ end
 %--Apply errors at the FPM plane before applying the mask
 if mp.F3.full.flagErrors
     EP3 = pad_crop(EP3, NdmPad);
+    % mp.F3.full.EabRes = floor(mp.F3.full.res*mp.P1.full.Nbeam/(2*mp.F3.outVal));
     EP3 = propcustom_mft_apply_focal_errors_babinet(EP3, mp.F3.full.Eab, mp.F3.full.EabRes*(mp.lambda0/lambda), mp.P1.full.Nbeam);
 end
 
@@ -152,6 +153,7 @@ switch upper(mp.coro)
 
             inputs.roddierradius = mp.F3.roddierradius;
             inputs.roddierphase = mp.F3.roddierphase;
+            inputs.holeradius = mp.F3.holeradius;
             
             inputs.res = mp.F3.full.res;
             FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);

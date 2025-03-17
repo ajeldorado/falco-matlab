@@ -5,10 +5,6 @@
 
 %% Misc
 
-%--Record Keeping
-mp.SeriesNum = 867;
-mp.TrialNum = 5309;
-
 %--Special Computational Settings
 mp.flagParfor = false;
 mp.useGPU = false;
@@ -272,7 +268,7 @@ mp.F3.phaseScaleFacLambdas = mp.sbp_centers;
 offset = 1; %1-(mp.fracBW/2); %in case you want to test dark hole digging NOT centered at lambda0
 mp.F3.phaseScaleFac = mp.lambda0*offset ./ mp.F3.phaseScaleFacLambdas;
 
-disp('calculated phase scale facs');
+% disp('calculated phase scale facs');
 
 
 
