@@ -123,20 +123,29 @@ if any(mp.dm_ind == 2);  DM2Vnom = mp.dm2.V;  else; DM2Vnom = zeros(size(mp.dm2.
 
 % Initialize output arrays
 Npairs = mp.est.probe.Npairs; % % Number of image PAIRS for DM Diversity or Kalman filter initialization
+Nstarbands = mp.Nsbp*mp.compact.star.count; % Nsbp subbands for each star
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1+2*Npairs, mp.Nsbp);
 if mp.flagFiber
     ev.Ifiber = zeros(mp.Fend.Nfiber, 1);
 end
-ev.Eest = zeros(Ncorr, mp.Nsbp*mp.compact.star.count);
-ev.IincoEst = zeros(Ncorr, mp.Nsbp*mp.compact.star.count);
+ev.Eest = zeros(Ncorr, Nstarbands);
+ev.IincoEst = zeros(Ncorr, Nstarbands);
 
 ev.IprobedMean = 0;
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, mp.Nsbp);  end
-if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, mp.Nsbp);  end
+if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, Nstarbands);  end
+if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, Nstarbands);  end
+
+% probe data per probe per modeIndex 
+ev.ampSqMean = zeros(Ncorr, Npairs, Nstarbands); %--Mean probe intensity
+ev.ampNorm = zeros(Ncorr, Npairs, Nstarbands); %--Normalized probe amplitude maps
+ev.InormProbe = zeros(Ncorr, Npairs, Nstarbands);
+ev.amp_model = zeros(Ncorr, Npairs, Nstarbands);
+ev.maskBool = mp.Fend.corr.maskBool; %--for resizing Eest and IincoEst for plotting
+
 
 %--Generate evenly spaced probes along the complex unit circle
-% NOTE: Nprobes=Npairs*2;   
+% NOTE: Nprobes=Npairs*2;
 probePhaseVec = [0 Npairs];
 for k = 1:Npairs-1
     probePhaseVec = [probePhaseVec probePhaseVec(end)-(Npairs-1)];
@@ -175,17 +184,67 @@ end
 
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
+%% save current star configuration
+if isfield(mp.est,'toggledMSWC')
+    if (mp.est.toggledMSWC)
+        initSource = mp.star;
+        
+        if ~(mp.flagSim)
+            %initTbSource.onax = mp.tb.star.onoff;
+            %initTbSource.offax = mp.tb.offaxisstar.onoff;
+            initTbSource.onax.current = mp.tb.star.current;
+            initTbSource.offax.current = mp.tb.offaxisstar.current;
+        end
+    end
+end
+
+listStar = {'star', 'offaxisstar'};
 for iStar = 1:mp.compact.star.count
 
     modvar = ModelVariables;
     modvar.starIndex = iStar;
-    modvar.whichSource = 'star';
+    modvar.whichSource = listStar{iStar};
+    
+    %% toggle current star for estimation 
+    if isfield(mp.est,'toggledMSWC')
+        if (mp.est.toggledMSWC)
+            if iStar == 1
+                % star = 'star'
+                mp.tb.star.current = mp.tb.info.star_power;
+                mp.tb.offaxisstar.current = 0;
+                mp.tb.info.PSFpeaks = mp.tb.info.PSFpeaks_save;
+            end
+            
+            if iStar == 2
+                % offaxis star, use info_offaxisstar
+                mp.tb.star.current = 0;
+                mp.tb.offaxisstar.current = mp.tb.info_offaxisstar.star_power;
+                mp.tb.info.PSFpeaks = mp.tb.info_offaxisstar.PSFpeaks;
+            end
+            mp.star.weights = zeros(1,mp.star.count);
+            mp.star.weights(iStar) = initSource.weights(iStar);
+            
+            % save the current source config
+            currentSource = mp.star;
+            
+            if ~(mp.flagSim)
+                currentTbSource.onax.current = mp.tb.star.current;
+                if currentTbSource.onax.current < 0; currentTbSource.onax.current = 0; end;
+                currentTbSource.offax.current = mp.tb.offaxisstar.current;
+                if currentTbSource.offax.current < 0; currentTbSource.offax.current = 0; end;
+
+                %currentTbSource.onax = mp.tb.star.onoff;
+                %currentTbSource.offax = mp.tb.offaxisstar.onoff;
+                pause(mp.est.toggledMSWC_waitTime);
+            end
+        end
+    end
 
 for iSubband = 1:mp.Nsbp
 
     modvar.sbpIndex = iSubband;
     fprintf('Wavelength: %u/%u ... ', iSubband, mp.Nsbp);
-    modeIndex = (iStar-1)*mp.Nsbp + iSubband;
+    modeIndex = (iStar-1)*mp.Nsbp + iSubband; % 1 to Nstarbands
     fprintf('Mode: %u/%u ... ', modeIndex, mp.jac.Nmode);    
 
     %% Measure current contrast level average, and on each side of Image Plane
@@ -207,8 +266,28 @@ for iSubband = 1:mp.Nsbp
     DM2Vminus = zeros([Nact, Nact, Npairs]);
 
     %% Compute probe shapes and take probed images:
+%     % set unprobed star state
+%     if isfield(mp.est, 'toggledMSWC')
+%         if (mp.est.toggledMSWC)
+%             mp.star = initSource;
+%             
+%             if ~(mp.flagSim)
+%                 %mp.tb.star.onoff = initTbSource.onax;
+%                 %mp.tb.offaxisstar.onoff = initTbSource.offax;
+%                 mp.tb.star.current = initTbSource.onax.current;
+%                 mp.tb.offaxisstar.current = initTbSource.offax.current;
+%                 pause(mp.est.toggledMSWC_waitTime);
+%                 
+%             end
+%         end
+%     end
 
-    %--Take initial, unprobed image (for unprobed DM settings).
+    %--Take initial, unprobed image (for unprobed DM settings).\
+    
+    % turn on both stars for unprobed
+    %mp.tb.star.current = mp.tb.info_star.star_power;
+    %mp.tb.offaxisstar.current = mp.tb.info_offaxisstar.star_power;
+    
     whichImage = 1;
     mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
     if ~mp.flagFiber
@@ -223,15 +302,48 @@ for iSubband = 1:mp.Nsbp
     end
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
     
-    if iStar == 1 % Image already includes all stars, so don't sum over star loop
-        ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
+    % only need outer loop for fully toggled
+%     % set probed star state (if toggled)
+%     if isfield(mp.est, 'toggledMSWC')
+%         if (mp.est.toggledMSWC)
+%             mp.star = currentSource;
+%             
+%             if ~(mp.flagSim)
+%                 %mp.tb.star.onoff = currentTbSource.onax;
+%                 %mp.tb.offaxisstar.onoff = initTbSource.offax;
+%                 
+%                 mp.tb.star.current = currentTbSource.onax.current;
+%                 mp.tb.offaxisstar.current = currentTbSource.offax.current;                
+%                 pause(mp.est.toggledMSWC_waitTime);
+%             end
+%         end
+%     end
+    
+    %if iStar == 1 % Image already includes all stars, so don't sum over star loop
+        
+    
+        %this logic adds unprobed images for each
+        %star component for toggled MSWC (but only once for full MSWC)
+        
+        if iStar == 1
+            ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
+        else
+            if isfield(mp.est,'toggledMSWC')
+                if mp.est.toggledMSWC
+                    ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0;
+                end
+            end
+        end
+        
+        ev.I0{modeIndex} = I0; %save unprobed image per mode
+        
         if mp.flagFiber; ev.Ifiber = ev.Ifiber + mp.sbp_weights(iSubband)*I0fiber;end % 
 
         %--Store values for first image and its DM commands
-        ev.imageArray(:, :, whichImage, iSubband) = I0;
-        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
-        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
-    end
+        ev.imageArray(:, :, whichImage, modeIndex) = I0;
+        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, modeIndex) = mp.dm1.V;  end
+        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, modeIndex) = mp.dm2.V;  end
+    %end
     
     %--Compute the average Inorm in the scoring and correction regions
     fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
@@ -287,11 +399,21 @@ for iSubband = 1:mp.Nsbp
             ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
         end
         whichImage = 1+iProbe; %--Increment image counter
+        
+        % if toggledMSWC, check option to force offaxis images to zero
+        if isfield(mp.est, 'toggledMSWC')
+            if (mp.est.toggledMSWC)
+                if ((iStar == 2) && mp.est.toggledMSWCforceZero)
+                    Im = zeros(size(Im));
+                    ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); 
+                end
+            end
+        end
 
         %--Store probed image and its DM settings
-        ev.imageArray(:, :, whichImage, iSubband) = Im;
-        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, iSubband) = mp.dm1.V;  end
-        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, iSubband) = mp.dm2.V;  end
+        ev.imageArray(:, :, whichImage, modeIndex) = Im;
+        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, modeIndex) = mp.dm1.V;  end
+        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, modeIndex) = mp.dm2.V;  end
 
         %--Report results
         probeSign = ['-', '+'];
@@ -320,7 +442,8 @@ for iSubband = 1:mp.Nsbp
             end
             iEven = iEven + 1;
         end
-    end
+        
+    end % for iProbe = 1:2*Npairs
 
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
     ampSq = (Iplus+Iminus)/2 - repmat(I0vec, [1,Npairs]);  % square of probe E-field amplitudes
@@ -350,7 +473,8 @@ for iSubband = 1:mp.Nsbp
     elseif whichDM == 2
         DMV4plot = DM2Vplus - repmat(DM2Vnom, [1, 1, size(DM2Vplus, 3)]);
     end
-    falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube, iSubband)
+    falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube, modeIndex)
+    %falco_plot_pairwise_probes(mp, ev, DMV4plot, ampSq2Dcube, iSubband)
 
     %% Perform the estimation
     
@@ -431,7 +555,25 @@ for iSubband = 1:mp.Nsbp
         
     end 
     
-    %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
+    %% reset back the original star state after finished probing
+   
+    if isfield(mp.est, 'toggledMSWC')
+        if (mp.est.toggledMSWC)
+            mp.star = initSource;
+      
+            if ~(mp.flagSim)
+                %mp.tb.star.onoff = initTbSource.onax;
+                %mp.tb.offaxisstar.onoff = initTbSource.offax;
+                if (initTbSource.onax.current < 0); initTbSource.onax.current = 0; end
+                mp.tb.star.current = initTbSource.onax.current;
+                mp.tb.offaxisstar.current = initTbSource.offax.current;
+                pause(mp.est.toggledMSWC_waitTime);
+            end
+        end
+    end
+
+%% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
+>>>>>>> 7d511b079f69ef268579610ae80faec944471af2
 
     if useKalmanFilter
         Hall = zeros(Npairs, 2, mp.Fend.corr.Npix);
@@ -454,14 +596,20 @@ for iSubband = 1:mp.Nsbp
             
             % If <2 probe pairs had good measurements, can't do pinv. Leave Eest as zero.
             if NpairsGood < 2
+<<<<<<< HEAD
                 zerosCounter = zerosCounter + 1;
                 Epix = [0; 0];
+=======
+                zerosCounter = zerosCounter + 1;              
+                Epix = [0 0]; % default to 0 in case we don't have 2 good probe pairs
+>>>>>>> 7d511b079f69ef268579610ae80faec944471af2
             
             % Otherwise, use the 2+ good probe pair measurements for that pixel:
             else
                 for iProbe = 1:Npairs
                     H(iProbe, :) = amp(ipix, iProbe)*[cos(dphdm(ipix, iProbe)), sin(dphdm(ipix, iProbe)) ];
                 end
+                ev.condnum(ipix) = cond(H);
                 % Epix = pinv(H)*zAll(:, ipix); %--Batch process estimation
                 Epix = pinv(H(goodProbeInds, :)) * zAll(goodProbeInds, ipix); %--Batch process estimation
                 
@@ -604,6 +752,8 @@ for iSubband = 1:mp.Nsbp
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Save out the estimates
+% modeIndex = (iStar-1)*mp.Nsbp + iSubband;
+% ev.Eest is size [Npixels num_modes] whre num_modes is Nstars * Nsubbands
 ev.Eest(:, modeIndex) = Eest;
 if mp.flagFiber
     ev.IincoEst(:, modeIndex) =  I0fibervec - abs(Eest).^2; % incoherent light
@@ -620,15 +770,17 @@ if mp.flagPlot && ~mp.flagFiber
     %drawnow;
 end
 
+%--Other data to save out, all are per modeIndex = (iStar-1)*mp.Nsbp + iSubband; % 1 to Nstarbands
+% probe data per probe per modeIndex 
+ev.ampSqMean(:, :, modeIndex) = mean(ampSq(:)); %--Mean probe intensity
+ev.ampNorm(:, :, modeIndex) = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
+ev.InormProbe(:, :, modeIndex) = InormProbe;        
+ev.amp_model(:, :, modeIndex) = amp_model;
+
+
+
 end %--End of loop over the wavelengths
 end %--End of loop over stars
-
-%--Other data to save out
-ev.ampSqMean = mean(ampSq(:)); %--Mean probe intensity
-ev.ampNorm = amp/sqrt(InormProbe); %--Normalized probe amplitude maps
-ev.InormProbe = InormProbe;        
-ev.maskBool = mp.Fend.corr.maskBool; %--for resizing Eest and IincoEst for plotting
-ev.amp_model = amp_model;
 
 mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
 

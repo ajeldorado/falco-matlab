@@ -41,22 +41,51 @@ function out = falco_plot_DeltaE(mp, out, Eest, EestPrev, Esim, EsimPrev, Itr)
                 imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEsim2D)); axis xy equal tight; colorbar; colormap(hModelAmp, 'parula');
                 title('abs(dE_{model})', 'Fontsize', fs); 
                 set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+                
+                try
+                   axis(mp.Fend.dzAxis)
+                catch
+                   axis xy equal tight; 
+                end
 
                 hMeasAmp = subplot(2,2,2); % Save the handle of the subplot
-                imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+                try
+                    imagesc(mp.Fend.xisDL, mp.Fend.etasDL, abs(dEmeas2D), [0, dEmax]); axis xy equal tight; colorbar; colormap(hMeasAmp, 'parula');
+                catch
+                    disp('warning: problem plotting deltaE');
+                end
+                
                 title('abs(dE_{meas})', 'Fontsize', fs); 
                 set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+                
+                try
+                   axis(mp.Fend.dzAxis)
+                catch
+                   axis xy equal tight; 
+                end
 
                 hModelPh = subplot(2,2,3); % Save the handle of the subplot
                 imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEsim2D)); axis xy equal tight; colorbar; colormap(hModelPh, 'hsv');
                 title('angle(dE_{model})', 'Fontsize', fs); 
                 set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
+                
+                try
+                   axis(mp.Fend.dzAxis)
+                catch
+                   axis xy equal tight; 
+                end
 
                 hMeasPh = subplot(2,2,4); % Save the handle of the subplot
                 imagesc(mp.Fend.xisDL, mp.Fend.etasDL, angle(dEmeas2D)); axis xy equal tight; colorbar; colormap(hMeasPh, 'hsv');
                 title('angle(dE_{meas})', 'Fontsize', fs); 
                 set(gca,'FontSize', fs); %,'FontName','Times','FontWeight','Normal')
                 drawnow;
+                
+                try
+                   axis(mp.Fend.dzAxis)
+                catch
+                   axis xy equal tight; 
+                end
             end
         end
     end

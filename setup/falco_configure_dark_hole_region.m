@@ -45,6 +45,9 @@ for iZone = 1:Nzones
     CORR.angDeg = mp.Fend.corr.ang(iZone); %--degrees
     CORR.whichSide = sides{iZone}; %--which (sides) of the dark hole have open
     CORR.shape = shapes{iZone};
+    if strcmp(CORR.shape,'c')
+        CORR.offset_from_center = mp.Fend.corr.offset_from_center;
+    end
     if(isfield(mp.Fend,'clockAngDeg'));  CORR.clockAngDeg = mp.Fend.clockAngDeg(iZone);  end
     if(isfield(mp.Fend,'xiOffset'));  CORR.xiOffset = mp.Fend.xiOffset(iZone);  end
     if(isfield(mp.Fend,'etaOffset'));  CORR.etaOffset = mp.Fend.etaOffset(iZone);  end
@@ -106,6 +109,9 @@ for iZone = 1:Nzones
     SCORE.angDeg = mp.Fend.score.ang(iZone); %--degrees
     SCORE.whichSide = sides{iZone}; %--which (sides) of the dark hole have open
     SCORE.shape = shapes{iZone};
+    if strcmp(CORR.shape,'c')
+        SCORE.offset_from_center = mp.Fend.score.offset_from_center;
+    end
     if(isfield(mp.Fend,'clockAngDeg'));  SCORE.clockAngDeg = mp.Fend.clockAngDeg(iZone);  end
     if(isfield(mp.Fend,'xiOffset'));  SCORE.xiOffset = mp.Fend.xiOffset(iZone);  end
     if(isfield(mp.Fend,'etaOffset'));  SCORE.etaOffset = mp.Fend.etaOffset(iZone);  end

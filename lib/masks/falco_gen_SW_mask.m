@@ -112,6 +112,9 @@ switch lower(darkHoleShape)
                         (RHOS.*cos(THETAS-clockAngRad)<=-rhoInner & RHOS.*cos(THETAS-clockAngRad)>=-rhoOuter & RHOS.*sin(THETAS-clockAngRad)<=rhoOuter & RHOS.*sin(THETAS-clockAngRad)>=-rhoOuter);
     case{'d'}
         softwareMask0 = ((RHOS.*cos(THETAS-clockAngRad)>=rhoInner | RHOS.*cos(THETAS-clockAngRad)<=-rhoInner) & RHOS<=rhoOuter);
+    case{'c'}
+        ofc = inputs.offset_from_center; 
+        softwareMask0 = ((RHOS.*cos(THETAS-clockAngRad)>=ofc| RHOS.*cos(THETAS-clockAngRad)<=-ofc) & RHOS<=rhoOuter & RHOS > rhoInner);
     otherwise
         error('falco_gen_SW_mask.m: Invalid value given for inputs.shape')
 end
