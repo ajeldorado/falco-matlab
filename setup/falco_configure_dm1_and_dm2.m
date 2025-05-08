@@ -44,9 +44,10 @@ mp.dm1.centering = mp.centering;
 mp.dm1.compact.dummy = 1;
 mdc = mp.dm1.compact;
 mp.dm1.compact = mp.dm1; % BE CAREFUL ABOUT OVERWRITING VARIABLES
-for fn = fieldnames(mdc)
-    mp.dm1.compact.(fn{1}) = mdc.(fn{1});
-end
+mp.dm1.compact = UpdateStruct(mp.dm1.compact, mdc);
+%for fn = fieldnames(mdc)
+%    mp.dm1.compact.(fn{1}) = mdc.(fn{1});
+%end
 
 mp.dm1 = falco_gen_dm_poke_cube(mp.dm1, mp, mp.P2.full.dx,'NOCUBE');
 if( any(mp.dm_ind==1) )
@@ -110,9 +111,10 @@ mp.dm2.centering = mp.centering;
 mp.dm2.compact.dummy = 1;
 mdc = mp.dm2.compact;
 mp.dm2.compact = mp.dm2; % BE CAREFUL ABOUT OVERWRITING VARIABLES
-for fn = fieldnames(mdc)'
-    mp.dm2.compact.(fn{1}) = mdc.(fn{1});
-end
+mp.dm2.compact = UpdateStruct(mp.dm2.compact, mdc);
+%for fn = fieldnames(mdc)'
+%    mp.dm2.compact.(fn{1}) = mdc.(fn{1});
+%end
 
 mp.dm2.dx = mp.P2.full.dx;
 mp.dm2.compact.dx = mp.P2.compact.dx;
