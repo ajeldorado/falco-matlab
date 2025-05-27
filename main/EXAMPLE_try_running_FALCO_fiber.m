@@ -23,14 +23,15 @@ mp.flagSaveWS = true;  %--Whether to save out entire (large) workspace at the en
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_try_running_FALCO
-mp.estimator = 'pairwise';
+mp.estimator = 'perfect';
+mp.ctrl.flagUseModel = true;
 
 % % Fiber parameters
 mp.flagFiber = true;
 mp.flagLenslet = false;
 
-mp.Fend.x_fiber = [6,5];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
-mp.Fend.y_fiber = [0,-3];%[0 4.625 -4.625];
+mp.Fend.x_fiber = [6];%[5.3405 -2.6702 -2.6702]; %Fiber core center positions in lambda_0/D
+mp.Fend.y_fiber = [0];%[0 4.625 -4.625];
 mp.Fend.Nfiber = numel(mp.Fend.x_fiber);
 
 mp.fiber.a = 0.507;%0.875;%0.66; %Radius of the fiber core in lambda_0/D

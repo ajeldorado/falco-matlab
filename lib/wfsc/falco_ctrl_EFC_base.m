@@ -34,7 +34,10 @@ duVec = -scaleFactor*((10^(log10reg)*diag(cvar.EyeGstarGdiag) + cvar.GstarG_wsum
 
 if mp.ctrl.flagUseModel %--Perform model-based grid search using compact model
     if mp.flagFiber
-        error('Fiber option not implemented for mp.ctrl.flagUseModel==true.')
+        [Itotal,IfiberTotal] = falco_get_expected_summed_Ifiber(mp,cvar);
+        dDM.Itotal = Itotal;
+        dDM.IfiberTotal = IfiberTotal;
+        InormMean = mean(IfiberTotal);
     elseif strcmpi(mp.estimator, 'iefc')
         error("Cannot use mp.ctrl.flagUseModel=true when 'iefc' is mp.estimator.")
     else
