@@ -25,7 +25,7 @@ if(isfield(inputs,'magfacD')); mag = inputs.magfacD; else; mag = 1; end  %--Pupi
 if(isfield(inputs,'segment_gap_m')); segment_gap_m = inputs.segment_gap_m; else; segment_gap_m = (4+2)*1e-3; end % meters
 if(isfield(inputs,'clock_deg')); clockDeg = inputs.clock_deg; else; clockDeg = 0; end  % 23.4350 to make pupil edge touch array edge
 if(isfield(inputs,'flagRot180deg')); flagRot180deg = inputs.flagRot180deg; else; flagRot180deg = false; end
-if(isfield(inputs, 'upsampleFactor')); upsampleFactor = inputs.upsampleFactor; else; upsampleFactor = 101; end % upsampling factor
+if(isfield(inputs, 'upsampleFactor')); upsampleFactor = inputs.upsampleFactor; else; upsampleFactor = 100; end % upsampling factor
 if(isfield(inputs,'xShear')); xShear = inputs.xShear; else; xShear = 0; end % [pupil diameters]
 if(isfield(inputs,'yShear')); yShear = inputs.yShear; else; yShear = 0; end % [pupil diameters]
 shearMax = max(abs([xShear, yShear])); % [pupil diameters]
