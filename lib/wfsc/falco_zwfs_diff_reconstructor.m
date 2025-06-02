@@ -23,14 +23,14 @@ function phz = falco_zwfs_diff_reconstructor(I0, IZ, Iref, mask, b, theta, varar
     A = sqrt(I0);
     b = mean(A(mask))*b; % Scale reference wave to match incident energy
     
-    if(nargin==1)
+    if(nargin==7)
         phz_ref = varargin{1};
         beta = sin(theta)*cos(phz_ref) + (1-cos(theta))*sin(phz_ref);
     else
         beta = sin(theta);
     end
     
-    denom = 2*b.*A.*beta;
+    denom = 2.*b.*A.*beta;
     phz = (IZ - Iref)./denom;% first order phase difference approximation 
 
 	phz = phz - mean(phz(mask));% subtract of constant offset 

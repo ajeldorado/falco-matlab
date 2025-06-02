@@ -153,6 +153,7 @@ end
 mask = apOuter.*apInner;
 
 
+
 end %--END OF FUNCTION
 
 % %--DEBUGGING: Visually verify that mask is centered correctly

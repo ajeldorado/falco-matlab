@@ -30,6 +30,7 @@ mp.path.dummy = 1;
 mp.detector.dummy = 1;
 mp.scc.dummy = 1;
 mp.iefc.dummy = 1;
+mp.plot.dummy = 1;
 mp.fiber.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
@@ -83,6 +84,10 @@ if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end
 
 if ~isfield(mp, 'runLabel');  mp.runLabel = 'default_label_';  end
 
+% Progress plot limits
+if ~isfield(mp.plot, 'contrast_clim_min');  mp.plot.contrast_clim_min = -10;  end
+if ~isfield(mp.plot, 'contrast_clim_max');  mp.plot.contrast_clim_max = -3;  end
+
 % How many stars to use and their positions
 % mp.star is for the full model, and mp.compact.star is for the compact and
 % Jacobian models.
@@ -115,6 +120,9 @@ if(isfield(mp.F3, 'clocking')==false);  mp.F3.clocking = 0;  end  % Counterclock
 if(isfield(mp.F3, 'phaseScaleFac')==false);  mp.F3.phaseScaleFac = 1;  end  % Factor to apply to the phase in the phase FPM. Use a vector to add chromaticity to the model. 
 if(isfield(mp.F3, 'inVal')==false);  mp.F3.inVal = 0.3;  end  % Inner radius to start the Tukey window for azimuthal phase FPMs. Units of lambda0/D.
 if(isfield(mp.F3, 'outVal')==false);  mp.F3.outVal = 5.0;  end  % Out radius to end the Tukey window for azimuthal phase FPMs. Units of lambda0/D.
+if(isfield(mp.F3, 'flagDimple')==false);  mp.F3.flagDimple = false;  end
+if(isfield(mp.F3, 'roddierphase')==false);  mp.F3.roddierphase = 0.50;  end  % [waves]
+if(isfield(mp.F3, 'roddierradius')==false);  mp.F3.roddierradius = 0.53;  end % [lambda/D]
 
 %--HLC FPM materials
 if(isfield(mp.F3, 'substrate')==false);  mp.F3.substrate = 'FS';  end % name of substrate material  [FS or N-BK7]
