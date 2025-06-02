@@ -41,7 +41,7 @@ else
             maskEE  = 0*mp.Fend.eval.RHOS;
             maskEE(mp.Fend.eval.RHOS<=mp.thput_radius) = 1;
             % figure(325); imagesc(mp.Fend.eval.xisDL,mp.Fend.eval.etasDL,maskEE); axis xy equal tight; drawnow;
-            thput = sum(ImSimCompact(maskEE==1))/mp.sumPupil*mean(mp.Fend.eval.I00);
+            thput = sum(sum(ImSimCompact(maskEE==1))/mp.sumPupil*mean(mp.Fend.eval.I00));
             fprintf('E.E. throughput within a %.2f lambda/D radius = %.2f%% \tat separation = (%.1f, %.1f) lambda/D.\n',mp.thput_radius,100*thput,mp.thput_eval_x,mp.thput_eval_y);
     end
     

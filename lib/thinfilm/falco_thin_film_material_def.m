@@ -151,8 +151,8 @@ switch lower(metal)
         lam_nickel = vnickel(:,1);  % nm
         n_nickel   = vnickel(:,2);
         k_nickel   = vnickel(:,3);
-        nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
-        knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');
+        nMetal    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
+        kMetal    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');
 
     case{'chromium', 'chrome', 'cr'} 
         t_Ti_vec = t_Ti_base*ones(lenMetal, 1);
@@ -163,20 +163,22 @@ switch lower(metal)
         lam_nickel = vnickel(:,1) * 1e3;  % nm
         n_nickel   = vnickel(:,2);
         k_nickel   = vnickel(:,3);
-        nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
-        knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');        
+        nMetal    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
+        kMetal    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');        
         
     case{'al', 'aluminum'} 
         t_Ti_vec = t_Ti_base*ones(lenMetal, 1);
         t_Ti_vec(t_Ni_vec < 1e-10) = 0; % no Ti where no main metal
 
-        vnickel = load('al_wvlUM_n_k_Rakic_1995.csv');
-
-        lam_nickel = vnickel(:,1) * 1e3;  % nm
-        n_nickel   = vnickel(:,2);
-        k_nickel   = vnickel(:,3);
-        nnickel    = interp1(lam_nickel, n_nickel, lam_nm, 'linear');
-        knickel    = interp1(lam_nickel, k_nickel, lam_nm, 'linear');    
+        tAl = readtable('al_wvlUM_n_k_Rakic_1995.csv');
+        [~,iwvl] = unique(tAl.wl);
+        arrayAl = table2array(tAl(iwvl,:)); 
+        
+        lam_Al = arrayAl(:,1) * 1e3;  % nm
+        n_Al   = arrayAl(:,2);
+        k_Al   = arrayAl(:,3);
+        nMetal    = interp1(lam_Al, n_Al, lam_nm, 'linear');
+        kMetal    = interp1(lam_Al, k_Al, lam_nm, 'linear');    
         
     otherwise
         error('Invalid value of metal.')
@@ -272,7 +274,7 @@ for jj = 1:lenDiel
         dni = t_Ni_vec(ii);
         dti = t_Ti_vec(ii);
         
-        nvec = [1, 1, n_diel-1j*k_diel, nnickel-1j*knickel, nti-1j*kti, n_substrate];
+        nvec = [1, 1, n_diel-1j*k_diel, nMetal-1j*kMetal, nti-1j*kti, n_substrate];
         dvec = [d0-dpm-dni-dti, dpm, dni, dti];
         
         %--Choose polarization
