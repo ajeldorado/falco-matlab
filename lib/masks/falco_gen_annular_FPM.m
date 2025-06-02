@@ -145,7 +145,7 @@ if rhoInner > 0
     inpInner.yShear = yOffset*pixresFPM/Nbeam;
     inpInner.clockingDegrees = 0;
     inpInner.upsampleFactor = upsampleFactor;
-    apInner = 1 - falco_gen_ellipse(inpInner);
+    apInner = 1 - (1-FPMampFac)*falco_gen_ellipse(inpInner);
 else
     apInner = 1;
 end
