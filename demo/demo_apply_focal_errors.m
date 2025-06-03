@@ -36,6 +36,17 @@ zeroMeanNormNoise = (rand(Nfoc, Nfoc) - 0.5)/0.2887;
 EerrorMap = 1 + 0.1*zeroMeanNormNoise;
 beamDiamPix = inputs.Nbeam;
 
+
+%% Try making a Lyot spot as the error pattern
+% Parameters
+resErrorMap = 6;
+beamDiamPix = inputs.Nbeam;
+r = 10; %2.8;  % pixels per lambda/D
+% Create array with central circular region
+[x, y] = meshgrid(1:beamDiamPix, 1:beamDiamPix);
+EerrorMap = sqrt((x - ceil(beamDiamPix/2)).^2 + (y - ceil(beamDiamPix/2)).^2) > r*resErrorMap;
+
+
 figure(11);
 imagesc(abs(EerrorMap));
 axis xy equal tight; colorbar;

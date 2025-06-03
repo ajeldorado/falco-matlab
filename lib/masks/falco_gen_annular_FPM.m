@@ -48,6 +48,7 @@ end
 
 if(isfield(inputs, 'FPMampFac')); FPMampFac = inputs.FPMampFac; else; FPMampFac = 0; end % amplitude transmission of inner FPM spot
 if(isfield(inputs,'centering')); centering = inputs.centering; else; centering = "pixel"; end
+if(isfield(inputs, 'upsampleFactor')); upsampleFactor = inputs.upsampleFactor; else; upsampleFactor = 100; end % upsampling factor
 
 pixresFPM = inputs.pixresFPM; %--pixels per lambda_c/D
 rhoInner = inputs.rhoInner; % radius of inner FPM amplitude spot (in lambda_c/D)
@@ -96,26 +97,61 @@ end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-%--INITIALIZE PROPER. Note that:  bm.dx = diam / bdf / np;
-bdf = Dmask/Darray; %--beam diameter factor in output array
-bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
+% %--INITIALIZE PROPER. Note that:  bm.dx = diam / bdf / np;
+% bdf = Dmask/Darray; %--beam diameter factor in output array
+% bm = prop_begin(Dmask, wl_dummy, Narray,'beam_diam_fraction',bdf);
+% prop_set_antialiasing(ceil_odd(upsampleFactor));
+% 
+% if(isinf(rhoOuter) == false)
+%     %--Outer opaque ring of FPM
+%     ra_OD = (rhoOuter);
+%     cx_OD = 0 + cshift + xOffset;
+%     cy_OD = 0 + cshift + yOffset;
+%     bm = prop_circular_aperture(bm, ra_OD, 'cx', cx_OD, 'cy', cy_OD);%, cx, cy, norm);
+% end
+% 
+% %--Inner spot of FPM (Amplitude transmission can be nonzero)
+% ra_ID = (rhoInner); 
+% cx_ID = 0 + cshift + xOffset;
+% cy_ID = 0 + cshift + yOffset;
+% innerSpot = prop_ellipse(bm, ra_ID, ra_ID, 'cx', cx_ID, 'cy', cy_ID, 'DARK')*(1-FPMampFac) + FPMampFac;
+% 
+% mask = ifftshift(abs(bm.wf)); %--undo PROPER's fftshift
+% mask = mask.*innerSpot; %--Include the inner FPM spot
 
-if(isinf(rhoOuter) == false)
-    %--Outer opaque ring of FPM
-    ra_OD = (rhoOuter);
-    cx_OD = 0 + cshift + xOffset;
-    cy_OD = 0 + cshift + yOffset;
-    bm = prop_circular_aperture(bm, ra_OD, 'cx', cx_OD, 'cy', cy_OD);%, cx, cy, norm);
+%----------Use FALCO's ellipse function instead----------
+% Create outer aperture
+Nbeam = 2*rhoOuter*pixresFPM;
+inpOuter.Nbeam = Nbeam;
+inpOuter.Narray = Narray;
+inpOuter.radiusX = 0.5;
+inpOuter.radiusY = 0.5;
+inpOuter.centering = centering;
+inpOuter.xShear = xOffset*pixresFPM/Nbeam;
+inpOuter.yShear = yOffset*pixresFPM/Nbeam;
+inpOuter.clockingDegrees = 0;
+inpOuter.upsampleFactor = upsampleFactor;
+apOuter = falco_gen_ellipse(inpOuter);
+
+% Create inner aperture
+if rhoInner > 0
+    Nbeam = 2*rhoInner*pixresFPM;
+    inpInner.Nbeam = Nbeam;
+    inpInner.Narray = Narray;
+    inpInner.radiusX = 0.5;
+    inpInner.radiusY = 0.5;
+    inpInner.centering = centering;
+    inpInner.xShear = xOffset*pixresFPM/Nbeam;
+    inpInner.yShear = yOffset*pixresFPM/Nbeam;
+    inpInner.clockingDegrees = 0;
+    inpInner.upsampleFactor = upsampleFactor;
+    apInner = 1 - (1-FPMampFac)*falco_gen_ellipse(inpInner);
+else
+    apInner = 1;
 end
 
-%--Inner spot of FPM (Amplitude transmission can be nonzero)
-ra_ID = (rhoInner); 
-cx_ID = 0 + cshift + xOffset;
-cy_ID = 0 + cshift + yOffset;
-innerSpot = prop_ellipse(bm, ra_ID, ra_ID, 'cx', cx_ID, 'cy', cy_ID, 'DARK')*(1-FPMampFac) + FPMampFac;
+mask = apOuter.*apInner;
 
-mask = ifftshift(abs(bm.wf)); %--undo PROPER's fftshift
-mask = mask.*innerSpot; %--Include the inner FPM spot
 
 
 end %--END OF FUNCTION
