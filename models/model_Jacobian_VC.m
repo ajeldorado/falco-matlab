@@ -297,7 +297,8 @@ if whichDM == 1
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering); %--Add more re-imaging relays if necessary
             EP4 = EP4.*mp.P4.compact.croppedMask;
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
-
+            EP4 = falco_apply_detector_offsets(mp, EP4, lambda, 'compact');
+            
             %--MFT to detector
             if mp.flagFiber
                 if mp.flagLenslet
@@ -489,6 +490,7 @@ if whichDM == 2
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering); %--Add more re-imaging relays if necessary
             EP4 = EP4.*mp.P4.compact.croppedMask;
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
+            EP4 = falco_apply_detector_offsets(mp, EP4, lambda, 'compact');
 
             %--MFT to detector
             if mp.flagFiber
