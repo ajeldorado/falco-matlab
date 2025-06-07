@@ -32,6 +32,8 @@ mp.scc.dummy = 1;
 mp.iefc.dummy = 1;
 mp.plot.dummy = 1;
 mp.fiber.dummy = 1;
+mp.Fend.compact.dummy = 1;
+mp.Fend.full.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
@@ -100,6 +102,14 @@ if ~isfield(mp.compact.star, 'xiOffsetVec');  mp.compact.star.xiOffsetVec = 0;  
 if ~isfield(mp.compact.star, 'etaOffsetVec');  mp.compact.star.etaOffsetVec = 0;  end
 if ~isfield(mp.compact.star, 'weights');  mp.compact.star.weights = 1;  end
 if ~isfield(mp.jac.star, 'weights');  mp.jac.star.weights = ones(1, mp.compact.star.count);  end % Spatial weighting in the Jacobian by star
+
+% Downstream star offsets (i.e., tip/tilt added to Lyot stop plane)
+if ~isfield(mp.Fend.compact, 'xiOffset'); mp.Fend.compact.xiOffset = 0;  end  % [lambda0/D]
+if ~isfield(mp.Fend.compact, 'etaOffset'); mp.Fend.compact.etaOffset = 0;  end  % [lambda0/D]
+if ~isfield(mp.Fend.full, 'xiOffset'); mp.Fend.full.xiOffset = 0;  end  % [lambda0/D]
+if ~isfield(mp.Fend.full, 'etaOffset'); mp.Fend.full.etaOffset = 0;  end  % [lambda0/D]
+
+
 
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
 
