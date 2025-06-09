@@ -53,18 +53,20 @@ function EP4 = falco_apply_detector_offsets(mp, EP4, lambda, model_type)
         if length(mp.Fend.full.xiOffset) == 1
             xiOffset = mp.Fend.full.xiOffset;
             etaOffset = mp.Fend.full.etaOffset;
-        elseif length(mp.Fend.full.xiOffset) == length(mp.full.lambdas)
-            iLambda = find(mp.full.lambdas==lambda);
-            xiOffset = mp.Fend.full.xiOffset(iLambda);
-            etaOffset = mp.Fend.full.etaOffset(iLambda);
         elseif length(mp.Fend.full.xiOffset) == mp.Nsbp
             iSubband = find(mp.sbp_centers==lambda);
             xiOffset = mp.Fend.full.xiOffset(iSubband);
             etaOffset = mp.Fend.full.etaOffset(iSubband);
+        elseif length(mp.Fend.full.xiOffset) == length(mp.full.lambdas)
+            iLambda = find(mp.full.lambdas==lambda);
+            xiOffset = mp.Fend.full.xiOffset(iLambda);
+            etaOffset = mp.Fend.full.etaOffset(iLambda);        
         else
             error('mp.Fend.full.xiOffset must either have length 1 or mp.full.NlamUnique or mp.Nsbp.')
         end
         
+        display(xiOffset)
+        display(etaOffset)
         if (xiOffset ~= 0) || (etaOffset ~= 0)
             TTphase = (2*pi*(xiOffset*mp.P4.full.XsDL + etaOffset*mp.P4.full.YsDL));
             EP4 = EP4 .* exp(1j*TTphase*mp.lambda0/lambda);

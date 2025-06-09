@@ -256,7 +256,7 @@ if whichDM == 1
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering);
-            EP4 = falco_apply_detector_offsets(mp, EP4, lambda, 'compact');
+            EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
 
             if mp.flagFiber
                 if mp.flagLenslet
@@ -387,7 +387,7 @@ if whichDM == 2
             
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering);
-            EP4 = falco_apply_detector_offsets(mp, EP4, lambda, 'compact');
+            EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
             if mp.flagFiber
                 if mp.flagLenslet
                     for nlens = 1:mp.Fend.Nlens
@@ -501,7 +501,7 @@ if whichDM == 8
 
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering);
-            EP4 = falco_apply_detector_offsets(mp, EP4, lambda, 'compact');
+            EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
             EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, ...
                 mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
             if mp.useGPU; EFend = gather(EFend); end
@@ -594,7 +594,7 @@ if whichDM == 9
 
             %--MFT to final focal plane
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
-            EP4 = falco_apply_detector_offsets(mp, EP4, lambda, 'compact');
+            EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
             EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, mp.Fend.dxi, mp.Fend.Nxi, mp.Fend.deta, mp.Fend.Neta, mp.centering);
             if mp.useGPU; EFend = gather(EFend); end
 

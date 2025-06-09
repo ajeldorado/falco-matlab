@@ -95,6 +95,9 @@ if modvar.zernIndex ~= 1
     Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns ==  modvar.zernIndex);
 end
 
+% Compute the change in E-field to apply at the exit pupil plane, EP4.
+EP4mult = falco_get_full_model_detector_offsets(mp, modvar);
+
 %% Pre-compute the FPM first for HLC as mp.FPM.mask
 switch lower(mp.layout)
     case{'fourier'}
@@ -151,9 +154,9 @@ switch lower(mp.layout)
     
     case{'fourier', 'fpm_scale'}
         if ~mp.flagFiber
-            Eout = model_full_Fourier(mp, lambda, Ein, normFac);
+            Eout = model_full_Fourier(mp, lambda, Ein, normFac, EP4mult);
         else
-            [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac);
+            [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac, EP4mult);
             varargout{1} = Efiber;
         end
         

@@ -26,7 +26,16 @@
 % varargout{1}==Efiber : E-field at final plane when a single mode fiber
 % is used
 
-function [Eout, varargout] = model_full_Fourier(mp, lambda, Ein, normFac)
+function [Eout, varargout] = model_full_Fourier(mp, lambda, Ein, normFac, varargin)
+
+%--If there is a third input, it is the Jacobian structure
+flagEP4mult = false; % default
+if size(varargin, 2) == 1
+    EP4mult = varargin{1};
+    if ~isempty(EP4mult)
+        flagEP4mult = true;
+    end
+end
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.full.NdmPad;
@@ -165,6 +174,7 @@ switch upper(mp.coro)
         else
             inVal = mp.F3.inVal;
             outVal = mp.F3.outVal;
+            mp.F3.VortexSpotDiam = 0; % TEMPORARY--DO NOT COMMIT
             spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
             spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
             pixPerLamD = mp.F3.full.res;
@@ -271,9 +281,13 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.full.croppedMask .* EP4;
 
-%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
+%--Apply other changes at EP4 if needed.
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
-EP4 = falco_apply_detector_offsets(mp, EP4, lambda, 'full');
+if flagEP4mult % Apply change in E-field at EP4 (for downstream shift and/or aberrations) 
+    EP4 = EP4 .* pad_crop(EP4mult, size(EP4));
+end
+
+%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.full.dx, mp.Fend.dxi, mp.Fend.Nxi, ...
     mp.Fend.deta, mp.Fend.Neta, mp.centering);
 
