@@ -573,7 +573,6 @@ for iSubband = 1:mp.Nsbp
     end
 
 %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
->>>>>>> 7d511b079f69ef268579610ae80faec944471af2
 
     if useKalmanFilter
         Hall = zeros(Npairs, 2, mp.Fend.corr.Npix);
@@ -596,13 +595,9 @@ for iSubband = 1:mp.Nsbp
             
             % If <2 probe pairs had good measurements, can't do pinv. Leave Eest as zero.
             if NpairsGood < 2
-<<<<<<< HEAD
-                zerosCounter = zerosCounter + 1;
-                Epix = [0; 0];
-=======
+
                 zerosCounter = zerosCounter + 1;              
                 Epix = [0 0]; % default to 0 in case we don't have 2 good probe pairs
->>>>>>> 7d511b079f69ef268579610ae80faec944471af2
             
             % Otherwise, use the 2+ good probe pair measurements for that pixel:
             else
