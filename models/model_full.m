@@ -96,7 +96,9 @@ if modvar.zernIndex ~= 1
 end
 
 % Compute the change in E-field to apply at the exit pupil plane, EP4.
-EP4mult = falco_get_full_model_detector_offsets(mp, modvar);
+EP4mult = mp.P4.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);
+% EP4mult = falco_get_full_model_detector_offsets(mp, modvar);
+
 
 %% Pre-compute the FPM first for HLC as mp.FPM.mask
 switch lower(mp.layout)

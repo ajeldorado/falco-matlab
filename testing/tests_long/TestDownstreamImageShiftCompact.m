@@ -48,7 +48,6 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             modvar.whichSource = 'star';
 
             Eout = model_compact(testCase.mp, modvar);
-            image0 = abs(Eout).^2;
             
             testCase.verifyTrue(true) % Got to this point
         end
@@ -59,6 +58,9 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             testCase.mp.Nwpsbp = 1;
             testCase.mp.fracBW = 0.20;
             
+            testCase.mp.Fend.compact.xiOffset = 0;
+            testCase.mp.Fend.compact.etaOffset = 0;
+
             % testCase.mp = falco_set_spectral_properties(testCase.mp);
             [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
 
@@ -83,7 +85,12 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
                 E0 = model_compact(testCase.mp, modvar);
                 image0 = abs(E0).^2;
                 image0 = pad_crop(image0, Ncrop);
+            end
 
+            testCase.mp.Fend.compact.xiOffset = 4/5; % lambda0/D
+            testCase.mp.Fend.compact.etaOffset = -2; % lambda0/D
+            [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
+            for iSubband = 1:testCase.mp.Nsbp
                 % Shifted image
                 testCase.mp.Fend.compact.xiOffset = 4/5; % lambda0/D
                 testCase.mp.Fend.compact.etaOffset = -2; % lambda0/D
@@ -116,6 +123,8 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             modvar.starIndex = 1;
             modvar.whichSource = 'star';
             
+            testCase.mp.Fend.compact.xiOffset = 0;
+            testCase.mp.Fend.compact.etaOffset = 0;
             [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
 
             Ncrop = ceil_even(2*testCase.mp.Fend.res*(testCase.mp.Fend.FOV-2));
@@ -123,28 +132,37 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
 
             testCase.mp.runLabel = 'test_ds_image_shift';
 
-            for iSubband = 1:testCase.mp.Nsbp
-
+            % Unshifted image
+            for iSubband = testCase.mp.Nsbp:-1:1
                 modvar.sbpIndex = iSubband;
-
-                % Unshifted image
-                testCase.mp.Fend.compact.xiOffset = 0;
-                testCase.mp.Fend.compact.etaOffset = 0;
                 E0 = model_compact(testCase.mp, modvar);
                 image0 = abs(E0).^2;
                 image0 = pad_crop(image0, Ncrop);
-    
-                % Shifted image
-                testCase.mp.Fend.compact.xiOffset = 4/5; % lambda0/D
-                testCase.mp.Fend.compact.etaOffset = -2; % lambda0/D
+                image0_cube(:, :, iSubband) = image0;
+            end
+
+            % Shifted image
+            testCase.mp.P4.compact = rmfield(testCase.mp.P4.compact, 'E');
+            testCase.mp.P4.full = rmfield(testCase.mp.P4.full, 'E');
+            testCase.mp.Fend.compact.xiOffset = 4/5; % lambda0/D
+            testCase.mp.Fend.compact.etaOffset = -2; % lambda0/D
+            [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
+            for iSubband = 1:testCase.mp.Nsbp%:-1:1
+                modvar.sbpIndex = iSubband;
                 E1 = model_compact(testCase.mp, modvar);
                 image1a = abs(E1).^2;
                 image1b = circshift(image1a, -testCase.mp.Fend.res*[testCase.mp.Fend.compact.etaOffset, testCase.mp.Fend.compact.xiOffset]);
                 image1b = pad_crop(image1b, Ncrop);
-    
-                absDiff = abs(image0 - image1b);
+                absDiff = abs(image0_cube(:, :, iSubband) - image1b);
+                
+                % figure(1); imagesc(log10(image0_cube(:, :, iSubband))); axis xy equal tight; colorbar;
+                % figure(2); imagesc(log10(image1a)); axis xy equal tight; colorbar;
+                % figure(3); imagesc(log10(image1b)); axis xy equal tight; colorbar;
+                % figure(4); imagesc(absDiff); axis xy equal tight; colorbar;
+                % figure(5); imagesc(log10(absDiff)); axis xy equal tight; colorbar;
+                % drawnow;
+
                 testCond = all(absDiff(:) <= atol);
-    
                 testCase.verifyTrue(testCond)
             end
              
@@ -156,9 +174,9 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             testCase.mp.Nwpsbp = 1;
             testCase.mp.fracBW = 0.20;
             
+            testCase.mp.Fend.compact.xiOffset = 0;
+            testCase.mp.Fend.compact.etaOffset = 0;
             [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
-            % testCase.mp = falco_set_spectral_properties(testCase.mp);
-            % testCase.mp = falco_compute_psf_norm_factor(testCase.mp);
 
             Ncrop = ceil_even(2*testCase.mp.Fend.res*(testCase.mp.Fend.FOV-2));
             atol = 1e-16;
@@ -170,26 +188,33 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             modvar.starIndex = 1;
             modvar.whichSource = 'star';
 
-            for iSubband = 1:testCase.mp.Nsbp
+            % Unshifted image
+            for iSubband = testCase.mp.Nsbp:-1:1
 
                 modvar.sbpIndex = iSubband;
-                
-                % Unshifted image
-                testCase.mp.Fend.compact.xiOffset = 0;
-                testCase.mp.Fend.compact.etaOffset = 0;
                 E0 = model_compact(testCase.mp, modvar);
                 image0 = abs(E0).^2;
                 image0 = pad_crop(image0, Ncrop);
+                image0_cube(:, :, iSubband) = image0;
+
+            end
     
-                % Shifted image
-                testCase.mp.Fend.compact.xiOffset = 4/5*ones(testCase.mp.Nsbp, 1); % lambda0/D
-                testCase.mp.Fend.compact.etaOffset = -2*ones(testCase.mp.Nsbp, 1); % lambda0/D
+            % Shifted image
+            testCase.mp.P4.compact = rmfield(testCase.mp.P4.compact, 'E');
+            testCase.mp.P4.full = rmfield(testCase.mp.P4.full, 'E');
+            testCase.mp.Fend.compact.xiOffset = 4/5*ones(testCase.mp.Nsbp, 1); % lambda0/D
+            testCase.mp.Fend.compact.etaOffset = -2*ones(testCase.mp.Nsbp, 1); % lambda0/D
+            [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
+            for iSubband = 1:testCase.mp.Nsbp
+
+                modvar.sbpIndex = iSubband;
+
                 E1 = model_compact(testCase.mp, modvar);
                 image1a = abs(E1).^2;
                 image1b = circshift(image1a, round(-testCase.mp.Fend.res*[testCase.mp.Fend.compact.etaOffset(1), testCase.mp.Fend.compact.xiOffset(1)]));
                 image1b = pad_crop(image1b, Ncrop);
     
-                absDiff = abs(image0 - image1b);
+                absDiff = abs(image0_cube(:, :, iSubband) - image1b);
                 testCond = all(absDiff(:) <= atol);
     
                 testCase.verifyTrue(testCond)
@@ -202,6 +227,8 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             testCase.mp.Nwpsbp = 1;
             testCase.mp.fracBW = 0.20;
             
+            testCase.mp.Fend.compact.xiOffset = 0;
+            testCase.mp.Fend.compact.etaOffset = 0;
             [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
             % testCase.mp = falco_set_spectral_properties(testCase.mp);
             % testCase.mp = falco_compute_psf_norm_factor(testCase.mp);
@@ -220,9 +247,6 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             for iSubband = testCase.mp.Nsbp:-1:1
 
                 modvar.sbpIndex = iSubband;
-
-                testCase.mp.Fend.compact.xiOffset = 0;
-                testCase.mp.Fend.compact.etaOffset = 0;
                 E0 = model_compact(testCase.mp, modvar);
                 image0 = abs(E0).^2;
                 image0 = pad_crop(image0, Ncrop);
@@ -230,8 +254,12 @@ classdef TestDownstreamImageShiftCompact < matlab.unittest.TestCase
             end
 
             % Shifted image
+            testCase.mp.P4.compact = rmfield(testCase.mp.P4.compact, 'E');
+            testCase.mp.P4.full = rmfield(testCase.mp.P4.full, 'E');
             testCase.mp.Fend.compact.xiOffset = [4/5, 2/5, 6/5]; % lambda0/D
             testCase.mp.Fend.compact.etaOffset = [0, -2, 2]; % lambda0/D
+            [testCase.mp, ~] = falco_flesh_out_workspace(testCase.mp);
+
             for iSubband = testCase.mp.Nsbp:-1:1
 
                 modvar.sbpIndex = iSubband;
