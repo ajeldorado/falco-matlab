@@ -339,6 +339,7 @@ if debug, sDebug.EP4_after_mask = EP4; end
     
 %--MFT to camera
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
+EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);
 
 %--Don't apply FPM if normalization value is being found
