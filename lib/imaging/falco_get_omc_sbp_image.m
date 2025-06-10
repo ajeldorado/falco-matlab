@@ -129,7 +129,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
     % Set wavelength
     %disp(['Setting varia to bandpass',num2str(si)])
     
-    if false
+    if true
         lam0 = mp.sbp_centers(si);
         lam1 = lam0 - sbp_width/2;
         lam2 = lam0 + sbp_width/2;
@@ -162,7 +162,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     % sciCam_getImage returns FOV window to match falco expected image size   
     %rawIm = sciCam_getImage(tb,sbp_texp);
-    rawIm = sciCam_getImage(tb,sbp_texp,'nexp',1, 'addheader', false);
+    rawIm = sciCam_getImage(tb,sbp_texp,'nexp',1, 'addheader', true);
     normI = (rawIm-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
     
 end

@@ -554,13 +554,13 @@ for iSubband = 1:mp.Nsbp
         end
         
     end 
-    
+
     %% reset back the original star state after finished probing
-   
+    
     if isfield(mp.est, 'toggledMSWC')
         if (mp.est.toggledMSWC)
             mp.star = initSource;
-      
+            
             if ~(mp.flagSim)
                 %mp.tb.star.onoff = initTbSource.onax;
                 %mp.tb.offaxisstar.onoff = initTbSource.offax;
@@ -572,8 +572,7 @@ for iSubband = 1:mp.Nsbp
         end
     end
 
-%% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
-
+    %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
     if useKalmanFilter
         Hall = zeros(Npairs, 2, mp.Fend.corr.Npix);
     end
@@ -596,8 +595,8 @@ for iSubband = 1:mp.Nsbp
             % If <2 probe pairs had good measurements, can't do pinv. Leave Eest as zero.
             if NpairsGood < 2
 
-                zerosCounter = zerosCounter + 1;              
-                Epix = [0 0]; % default to 0 in case we don't have 2 good probe pairs
+                zerosCounter = zerosCounter + 1;
+                Epix = [0; 0]; % default to 0 in case we don't have 2 good probe pairs
             
             % Otherwise, use the 2+ good probe pair measurements for that pixel:
             else
