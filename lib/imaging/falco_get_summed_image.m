@@ -7,6 +7,7 @@
 % summedImage = falco_get_summed_image(mp)
 %
 % Get a broadband image over the entire bandpass by summing subband images.
+% Uses full model
 %
 % INPUTS
 % ------

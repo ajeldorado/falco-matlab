@@ -1,4 +1,4 @@
-% Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
+ % Copyright 2018-2021, by the California Institute of Technology. ALL RIGHTS
 % RESERVED. United States Government Sponsorship acknowledged. Any
 % commercial use must be negotiated with the Office of Technology Transfer
 % at the California Institute of Technology.
@@ -42,7 +42,7 @@ function deltaE = falco_deltaE_from_deltaV(mp, dV1, dV2, lambda)
     % Obtain E-fields before and after applying delta DM voltages
     Epre = model_compact(mp, modvar, 'nonorm') / sqrt(I00);
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, V1init+dV1);
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, V2init+dV2);
+    %mp.dm2 = falco_set_constrained_voltage(mp.dm2, V2init+dV2);
     Epost = model_compact(mp, modvar, 'nonorm') / sqrt(I00);
     deltaE = Epost - Epre;
 

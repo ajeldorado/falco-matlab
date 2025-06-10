@@ -96,7 +96,7 @@ methods (Static)
         if ~ConstrainDM.checkflat(flatmap, vmin, vmax, tie)
             error(['flatmap must be <= vmax, >= VMIN, have all tied ' 
                     'actuators tied already, and have all dead ' 
-                     'actuators = 0V'])
+                     'actuators = 0V']);
         end
 
         % Run initial smoothing
@@ -484,7 +484,7 @@ methods (Static)
         for t = tmp
             if length(unique(flatmap(tie == t))) ~= 1
                 % non-identical values implies more than one element
-                isCompliant = false;
+               isCompliant = false;
             end
         end        
     end
