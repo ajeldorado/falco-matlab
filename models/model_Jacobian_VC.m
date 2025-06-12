@@ -61,6 +61,9 @@ if modvar.zernIndex ~= 1
     Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
+% Compute the change in E-field to apply at the exit pupil plane, EP4.
+EP4mult = mp.P4.compact.E(:, :, modvar.sbpIndex);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Masks and DM surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -296,8 +299,10 @@ if whichDM == 1
             EP4 = pad_crop(EP4, mp.P4.compact.Narr);
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering); %--Add more re-imaging relays if necessary
             EP4 = EP4.*mp.P4.compact.croppedMask;
+            EP4 = EP4mult .* EP4;
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
-
+            % EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
+            
             %--MFT to detector
             if mp.flagFiber
                 if mp.flagLenslet
@@ -488,7 +493,9 @@ if whichDM == 2
             EP4 = pad_crop(EP4, mp.P4.compact.Narr);
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering); %--Add more re-imaging relays if necessary
             EP4 = EP4.*mp.P4.compact.croppedMask;
+            EP4 = EP4mult .* EP4;
             EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image 180 degrees if necessary
+            % EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
 
             %--MFT to detector
             if mp.flagFiber

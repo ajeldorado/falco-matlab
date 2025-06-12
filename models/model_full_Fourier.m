@@ -26,7 +26,13 @@
 % varargout{1}==Efiber : E-field at final plane when a single mode fiber
 % is used
 
-function [Eout, varargout] = model_full_Fourier(mp, lambda, Ein, normFac)
+function [Eout, varargout] = model_full_Fourier(mp, lambda, Ein, normFac, varargin)
+
+%--If there is an extra input, it is the exit pupil multiplier array.
+EP4mult = 1; % default
+if size(varargin, 2) == 1
+    EP4mult = varargin{1};
+end
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.full.NdmPad;
@@ -165,6 +171,7 @@ switch upper(mp.coro)
         else
             inVal = mp.F3.inVal;
             outVal = mp.F3.outVal;
+            % mp.F3.VortexSpotDiam = 0; % TEMPORARY--DO NOT COMMIT
             spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
             spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
             pixPerLamD = mp.F3.full.res;
@@ -271,15 +278,11 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.full.croppedMask .* EP4;
 
-%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
+%--Apply other changes at EP4 if needed.
+EP4 = EP4mult .* EP4;
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
 
-%--Defocus of final DI lens (or incorrect Camera Z)
-if isfield(mp.P4, 'phase_error')
-    EP4 = EP4 .* pad_crop(mp.P4.phase_error, mp.P4.full.Narr);
-end
-
-%--Lyot (EP4) to Camera
+%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.full.dx, mp.Fend.dxi, mp.Fend.Nxi, ...
     mp.Fend.deta, mp.Fend.Neta, mp.centering);
 

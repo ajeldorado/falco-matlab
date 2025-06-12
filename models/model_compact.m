@@ -109,6 +109,9 @@ if modvar.zernIndex ~= 1
     Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
+% Compute the change in E-field to apply at the exit pupil plane, EP4.
+EP4mult = mp.P4.compact.E(:, :, modvar.sbpIndex);
+
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
 switch lower(mp.layout)
     case{'fourier'}
@@ -132,13 +135,13 @@ end
 %--Select which optical layout's compact model to use and get the output E-field
 if ~mp.flagFiber
     if mp.debug
-        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, EP4mult);
         varargout{end+1} = sDebug;
     else
-        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, EP4mult);
     end
 else
-    [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, EP4mult);
     varargout{1} = Efiber;
 end
     

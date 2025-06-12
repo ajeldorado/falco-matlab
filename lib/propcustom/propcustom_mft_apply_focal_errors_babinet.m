@@ -40,6 +40,6 @@ function Epupil = propcustom_mft_apply_focal_errors_babinet(Epupil, EerrorMap, r
     % Backwards MFT to the original pupil plane
     deltaE = propcustom_mft_FtoP(Efocus .* (1-EerrorMap), -fl, lambda, dxi, deta, dx, NarrayPupil);
     
-    Epupil = Epupil - deltaE;
+    Epupil = Epupil + deltaE;
 
 end
