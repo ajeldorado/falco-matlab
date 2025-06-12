@@ -5,7 +5,7 @@
 % -------------------------------------------------------------------------
 % 
 % Get the multiplicative E-field to shift the final image via a tip-tilt at
-% a pupil plane in the full model.
+% a pupil plane in the compact model.
 %
 % INPUTS
 % ------
@@ -21,39 +21,35 @@
 % -----
 % N/A
 
-function EP4mult = falco_get_full_model_detector_offsets(mp, modvar)
+function EP4mult = falco_get_compact_model_detector_offsets(mp, modvar)
 
-    if length(mp.Fend.full.xiOffset) ~= length(mp.Fend.full.etaOffset)
-        error("mp.Fend.full.xiOffset and mp.Fend.full.etaOffset must have same length.")
+    if length(mp.Fend.compact.xiOffset) ~= length(mp.Fend.compact.etaOffset)
+        error("mp.Fend.compact.xiOffset and mp.Fend.compact.etaOffset must have same length.")
     end
 
     %--Set the wavelength
     if ~isempty(modvar.lambda) %--For FALCO or for evaluation without WFSC
         lambda = modvar.lambda;
-        if length(mp.Fend.full.xiOffset) == 1
-            xiOffset = mp.Fend.full.xiOffset;
-            etaOffset = mp.Fend.full.etaOffset;
+        if length(mp.Fend.compact.xiOffset) == 1
+            xiOffset = mp.Fend.compact.xiOffset;
+            etaOffset = mp.Fend.compact.etaOffset;
         else
             error('An arbitrary wavelength cannot be used when the downstream image shift is given by a vector corresponding to exact wavelength values.')
         end
 
     else
 
-        lambda = mp.full.lambdasMat(modvar.sbpIndex, modvar.wpsbpIndex);
+        lambda = mp.sbp_centers(modvar.sbpIndex);
 
-        if length(mp.Fend.full.xiOffset) == 1
-            xiOffset = mp.Fend.full.xiOffset;
-            etaOffset = mp.Fend.full.etaOffset;
-        elseif length(mp.Fend.full.xiOffset) == mp.Nsbp
+        if length(mp.Fend.compact.xiOffset) == 1
+            xiOffset = mp.Fend.compact.xiOffset;
+            etaOffset = mp.Fend.compact.etaOffset;
+        elseif length(mp.Fend.compact.xiOffset) == mp.Nsbp
             iSubband = modvar.sbpIndex;
-            xiOffset = mp.Fend.full.xiOffset(iSubband);
-            etaOffset = mp.Fend.full.etaOffset(iSubband);
-        elseif length(mp.Fend.full.xiOffset) == length(mp.full.lambdas)
-            iLambda = find(mp.full.lambdas==lambda);
-            xiOffset = mp.Fend.full.xiOffset(iLambda);
-            etaOffset = mp.Fend.full.etaOffset(iLambda);        
+            xiOffset = mp.Fend.compact.xiOffset(iSubband);
+            etaOffset = mp.Fend.compact.etaOffset(iSubband);      
         else
-            error('mp.Fend.full.xiOffset must either have length 1 or mp.full.NlamUnique or mp.Nsbp.')
+            error('mp.Fend.compact.xiOffset must either have length 1 or mp.Nsbp.')
         end
     
     end
@@ -69,7 +65,7 @@ function EP4mult = falco_get_full_model_detector_offsets(mp, modvar)
     end
 
     if (xiOffset ~= 0) || (etaOffset ~= 0)
-        TTphase = rot180fac*(2*pi*(xiOffset*mp.P4.full.XsDL + etaOffset*mp.P4.full.YsDL));
+        TTphase = rot180fac*(2*pi*(xiOffset*mp.P4.compact.XsDL + etaOffset*mp.P4.compact.YsDL));
         EP4mult = exp(1j*TTphase*mp.lambda0/lambda);
     else
         EP4mult = 1;

@@ -37,8 +37,19 @@ function EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda)
         error('mp.Fend.compact.xiOffset must either have length 1 or mp.Nsbp.')
     end
     
+
+    % 180-degree rotations
+    % This is applied to account for the 180-degree rotation that may be
+    % applied in the compact model.
+    rot180fac = 1; % Default is no extra rotations
+    if mp.flagRotation
+        if mod(mp.NrelayFend, 2) == 1
+            rot180fac = -1;
+        end
+    end
+
     if (xiOffset ~= 0) || (etaOffset ~= 0)
-        TTphase = (2*pi*(xiOffset*mp.P4.compact.XsDL + etaOffset*mp.P4.compact.YsDL));
+        TTphase = rot180fac*(2*pi*(xiOffset*mp.P4.compact.XsDL + etaOffset*mp.P4.compact.YsDL));
         EP4 = EP4 .* exp(1j*TTphase*mp.lambda0/lambda);
     end
 

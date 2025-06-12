@@ -32,7 +32,13 @@
 % In wrapper above this that chooses layout, need to define mp.FPM.mask like this:
 % mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact');
 
-function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
+function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, varargin)
+
+%--If there is an extra input, it is the exit pupil multiplier array.
+EP4mult = 1; % default
+if size(varargin, 2) == 1
+    EP4mult = varargin{1};
+end
 
 if nargout >= 3
     debug = true;
@@ -336,10 +342,13 @@ if debug, sDebug.EP4_before_mask = EP4; end
 EP4 = mp.P4.compact.croppedMask .* EP4;
 
 if debug, sDebug.EP4_after_mask = EP4; end
-    
-%--MFT to camera
+
+% Apply rotation, downstream pointing, and dowstream aberrations.
+EP4 = EP4mult .* EP4;
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
-EP4 = falco_apply_compact_model_detector_offsets(mp, EP4, lambda);
+
+
+%--MFT to camera
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);
 
 %--Don't apply FPM if normalization value is being found
