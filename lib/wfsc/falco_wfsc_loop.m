@@ -47,6 +47,7 @@ for Itr = 1:mp.Nitr
     %% Normalization and throughput calculations
     
     mp = falco_compute_psf_norm_factor(mp);
+    out = falco_store_normalization_data(mp, out, Itr);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr, :) = thput(:);   
@@ -190,6 +191,9 @@ Itr = mp.Nitr;
 Itr = Itr + 1;
 
 out = store_dm_command_history(mp, out, Itr);
+
+mp = falco_compute_psf_norm_factor(mp);
+out = falco_store_normalization_data(mp, out, Itr);
 
 [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
 out.thput(Itr, :) = thput(:);
