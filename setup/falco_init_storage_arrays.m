@@ -19,11 +19,17 @@ function out = falco_init_storage_arrays(mp)
     out.Itr = 1;
     out.Nitr = mp.Nitr;
 
+    %--Normalization history
+    out.I00compactZeros = zeros(mp.Nsbp, 1); % Star normalization for mp.dm1.V = mp.dm2.V = zeros
+    out.I00fullZeros = zeros(mp.Nsbp, mp.Nwpsbp); % Star normalization for mp.dm1.V = mp.dm2.V = zeros
+    out.I00compactHist = zeros(mp.Nsbp, mp.Nitr+1);
+    out.I00fullHist = zeros(mp.Nsbp, mp.Nwpsbp, mp.Nitr+1);
+
     %--EFC regularization history
     out.log10regHist = zeros(mp.Nitr, 1);  % Keeping for backwards compatibility
     out.ctrl.log10regHist = zeros(mp.Nitr, 1);
     out.ctrl.dmfacHist = zeros(mp.Nitr, 1);    
-    out.ctrl.relinHist = logical(zeros(mp.Nitr, 1));
+    out.ctrl.relinHist = false(mp.Nitr, 1);
 
     %--Peak-to-Valley DM voltages
     out.dm1.Vpv = zeros(mp.Nitr, 1);

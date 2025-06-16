@@ -21,7 +21,26 @@
 % -------
 % mp : structure of model parameters
 
-function mp = falco_compute_psf_norm_factor(mp)
+function mp = falco_compute_psf_norm_factor(mp, varargin)
+
+%--If there is an extra input, it is for zeroing out the (delta) DM voltages temporarily.
+zeroOutVoltages = false; % default
+if size(varargin, 2) == 1
+    extraArg = varargin{1};
+    if extraArg == 0
+        zeroOutVoltages = true;
+    else
+        error('The 2nd argument must be 0 to zero out the DM voltages.')
+    end
+end
+
+if zeroOutVoltages
+    V1init = mp.dm1.V;
+    V2init = mp.dm2.V;
+    mp.dm1.V = 0*mp.dm1.V;
+    mp.dm2.V = 0*mp.dm2.V;
+end
+
 
 %--Different normalization factor used when comparing to PROPER model:
 mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2));
@@ -131,6 +150,18 @@ if(mp.flagPlot)
     title('Full Model: Normalization Check');
     set(gca,'Fontsize', 18)
     drawnow;
+end
+
+if zeroOutVoltages
+
+    % Reset voltages to original value
+    mp.dm1.V = V1init;
+    mp.dm2.V = V2init;
+
+    % Save these normalizations to other arrays
+    mp.I00compactZeros = mp.Fend.compact.I00(:);
+    mp.I00fullZeros = mp.Fend.full.I00;
+
 end
 
 end %--END OF FUNCTION
