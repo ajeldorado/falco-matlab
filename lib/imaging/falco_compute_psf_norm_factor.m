@@ -162,6 +162,11 @@ if zeroOutVoltages
     mp.I00compactZeros = mp.Fend.compact.I00(:);
     mp.I00fullZeros = mp.Fend.full.I00;
 
+else
+
+    mp.Fend.compact.I00ratio = mp.Fend.compact.I00(:) ./ mp.I00compactZeros(:);
+    mp.Fend.full.I00ratio = mp.Fend.full.I00 ./ mp.I00fullZeros;
+
 end
 
 end %--END OF FUNCTION

@@ -13,5 +13,7 @@ function out = falco_store_normalization_data(mp, out, Itr)
     out.I00fullZeros = mp.I00fullZeros; % Star normalization for mp.dm1.V = mp.dm2.V = zeros
     out.I00compactHist(:, Itr) = mp.Fend.compact.I00(:);
     out.I00fullHist(:, :, Itr) = mp.Fend.full.I00;
+    out.I00compactRatioHist(:, Itr) = mp.Fend.compact.I00ratio;
+    out.I00fullRatioHist(:, :, Itr) = mp.Fend.full.I00ratio;
 
 end
