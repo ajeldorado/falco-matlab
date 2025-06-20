@@ -24,6 +24,8 @@ function out = falco_init_storage_arrays(mp)
     out.I00fullZeros = zeros(mp.Nsbp, mp.Nwpsbp); % Star normalization for mp.dm1.V = mp.dm2.V = zeros
     out.I00compactHist = zeros(mp.Nsbp, mp.Nitr+1);
     out.I00fullHist = zeros(mp.Nsbp, mp.Nwpsbp, mp.Nitr+1);
+    out.I00compactRatioHist = zeros(mp.Nsbp, mp.Nitr+1); % Stellar peak ratio
+    out.I00fullRatioHist = zeros(mp.Nsbp, mp.Nwpsbp, mp.Nitr+1); % Stellar peak ratio
 
     %--EFC regularization history
     out.log10regHist = zeros(mp.Nitr, 1);  % Keeping for backwards compatibility
