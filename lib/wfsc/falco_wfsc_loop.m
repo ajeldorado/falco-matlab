@@ -363,6 +363,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
 
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
         end
+        figure(112);
+        imagesc(abs(Im_tb.E(:, :, end)).^2)
+        colorbar;
+        drawnow
+
         
     end
 end

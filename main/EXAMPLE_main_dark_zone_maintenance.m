@@ -2,9 +2,16 @@
 % Option 1: Generate dark zone using any method, make sure the number of
 % iterations is sufficient
 
-EXAMPLE_try_running_FALCO
+% EXAMPLE_try_running_FALCO
 
 % Option 2: Load DM command from previous experiment, load mp and out variables 
+
+%%
+dhmStartSoln.SeriesNum = 1; % Series number of previous DM solution 
+dhmStartSoln.TrialNum = 2; % Trial number of previous DM solution 
+dhmStartSoln.itNum = NaN; % Iteration number for previous DM solution 
+
+mp = loadPrevEsens(mp, dhmStartSoln, 'C:\Users\sredmond\Documents\github_repos\falco-matlab\data\brief' );
 
 %% Step 2: Set variables for DZM
 
@@ -22,7 +29,7 @@ mp.est.read_noise = 1; %--Read noise of detector [e-]
 mp.est.dark_current = 0.01; %--Dark current of detector [e-/s]
 mp.est.itr_ol = [1:1:mp.Nitr].'; %--"open-loop" iterations where an image is taken with initial DM command + drift command
 mp.est.itr_reset = [mp.Nitr+1];
-mp.est.dither_cycle_iters = 50; %--Number of unique dither commands used
+mp.est.dither_cycle_iters = 500; %--Number of unique dither commands used
 
 %%-- Controller variables 
 mp.controller = 'plannedEFC';
