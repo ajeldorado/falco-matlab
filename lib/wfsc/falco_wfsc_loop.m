@@ -121,7 +121,9 @@ for Itr = 1:mp.Nitr
     if isfield(mp, 'funCtrlStrategy') && ~isempty(mp.funCtrlStrategy)
         mp = mp.funCtrlStrategy(mp, out, Itr);
     end
-    
+    if strcmpi(mp.estimator, 'modal_ekf_maintenance')
+        cvar.du_hat = ev.x_hat;
+    end
     cvar.Eest = ev.Eest;
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
