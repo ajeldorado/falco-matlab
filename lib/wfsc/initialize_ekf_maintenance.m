@@ -89,7 +89,7 @@ G_tot = [G1, G2];
 
 end
 
-function ev = initialize_modal_ekf(mp, ev)
+function ev = initialize_modal_ekf_matrices(mp, ev)
 
     fprintf('Initializing modal EKF...\n');
 
@@ -98,15 +98,16 @@ function ev = initialize_modal_ekf(mp, ev)
     Nact_drift = sum(nele_vals(mp.dm_drift_ind));
 
     %--Initial DM command, based on all available DM actuators
+    ev.SS = 2; % Pixel state size. Two for real and imaginary parts of the electric field. If incoherent intensity is not ignored, SS should be 3 and the EKF modified accordingly.
     ev.x_hat = zeros(size(mp.dm_ind, 2) * Nact_est, mp.Nsbp);
     ev.Q = zeros(Nact_drift,Nact_drift,mp.Nsbp);
     ev.P = zeros(Nact_drift,Nact_drift,mp.Nsbp);
     for iSubband = 1:1:mp.Nsbp
         %--Initial covariance, based on drifting DM actuators
-        ev.Q(:,:,iSubband) = eye(size(mp.dm_drift_ind, 2) * Nact_drift) * mp.est.presumed_dm_drift_std^2;
+        ev.Q(:,:,iSubband) = eye(size(mp.dm_drift_ind, 2) * Nact_drift) * mp.drift.presumed_dm_std^2;
         
         %--Process noise covariance, based on drifting DM actuators
-        ev.P(:,:,iSubband) = eye(size(mp.dm_drift_ind, 2) * Nact_drift) * mp.est.presumed_dm_drift_std^2; %+ eye(size(mp.dm_drift_ind, 2) * Nact) * mp.est.testbed_drift^2;
+        ev.P(:,:,iSubband) = eye(size(mp.dm_drift_ind, 2) * Nact_drift) * mp.drift.presumed_dm_std^2; %+ eye(size(mp.dm_drift_ind, 2) * Nact) * mp.est.testbed_drift^2;
     end
 
 end
