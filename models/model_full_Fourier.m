@@ -166,7 +166,7 @@ switch upper(mp.coro)
             inputs.res = floor(pixPerLamD*mp.P1.full.Nbeam/(2*mp.F3.outVal));
             FPMfine = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
             
-%             EP4 = propcustom_mft_PtoFtoP_multispot(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU,'spotDiamVec',mp.F3.VortexSpotDiamVec * (phaseScaleFac),'spotAmpVec',mp.F3.VortexSpotAmpVec,'spotPhaseVec',mp.F3.VortexSpotPhaseVec/phaseScaleFac);
+            % EP4 = propcustom_mft_PtoFtoP_multispot(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU,'spotDiamVec',mp.F3.VortexSpotDiamVec * (phaseScaleFac),'spotAmpVec',mp.F3.VortexSpotAmpVec,'spotPhaseVec',mp.F3.VortexSpotPhaseVec/phaseScaleFac);
             EP4 = propcustom_mft_PtoFtoP_multispot(EP3, FPMcoarse, FPMfine, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU);
         else
             inVal = mp.F3.inVal;
@@ -186,9 +186,8 @@ switch upper(mp.coro)
             EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         end
         
-        % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
-        if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
-        
+        % One 180-degree rotation is inherent to propcustom_mft_PtoFtoP
+        EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);        
         EP4 = pad_crop(EP4, mp.P4.full.Narr);
 
     case{'SPLC', 'FLC'}

@@ -212,9 +212,8 @@ if flagUseFPM
                 EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
             end
 
-            
-            % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
-            if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
+            % One 180-degree rotation is inherent to propcustom_mft_PtoFtoP
+            EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
 
             % Resize beam if Lyot plane has different resolution
             if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
@@ -327,7 +326,6 @@ else % No FPM in beam path, so relay directly from P3 to P4.
         EP4 = (mp.P1.compact.Nbeam/mp.P4.compact.Nbeam) * EP4;
     end
     
-%     figure(552); imagesc(abs(EP4)); axis xy equal tight; colorbar; drawnow;
     EP4 = pad_crop(EP4, mp.P4.compact.Narr);
     
 end
