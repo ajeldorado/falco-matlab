@@ -37,6 +37,7 @@ normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Se
 flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
 flagUseFPM = true; % default is to have the FPM in the beam
+flagRevGrad = false; % extra outputs to use in the reverse gradient model
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
@@ -51,6 +52,8 @@ while icav < size(varargin, 2)
             flagEval = true;
         case{'nofpm', 'unocculted'}
             flagUseFPM = false;
+        case{'for_reverse_gradient'}
+            flagRevGrad = true;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
     end
