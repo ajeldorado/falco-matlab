@@ -62,7 +62,7 @@ for ni=Nrings:-1:1;
 
 %--(RE-)INITIALIZE PROPER
 bm = prop_begin(Dbeam, wl_dummy, Narray,'beam_diam_fraction',bdf);
-nSubsamples = 100;
+nSubsamples = 101;
 prop_set_antialiasing(nSubsamples)
 
 %--Outer diameter of ring
