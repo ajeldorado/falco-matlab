@@ -17,7 +17,7 @@
 % 'dzpm'
 % 'custom'
 
-clear
+% clear
 
 % Required Inputs
 inputs.type = 'staircase';
@@ -62,7 +62,7 @@ clear inputs
 % Check vortex
 inputs.type = 'vortex';
 inputs.N = 1000; % pixels across the 
-inputs.charge = 6; % charge of the mask (makes most sense for vortex)
+inputs.charge = -6; % charge of the mask (makes most sense for vortex)
 inputs.phaseScaleFac = 1; % Factor to apply uniformly to the phase. Used to add chromaticity.
 mask = falco_gen_azimuthal_phase_mask(inputs);
 % figure(4); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
@@ -112,13 +112,20 @@ figure(9); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; d
 % figure(12); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
 
 % Check roddier
-inputs.type = 'roddier';
+% inputs.type = 'roddier';
+% inputs.res = 128;
+% inputs.roddierphase = 0.5; % waves
+% inputs.roddierradius = 0.53; % lambda/D
+% mask = falco_gen_azimuthal_phase_mask(inputs);
+% figure(13); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
+
+% Check twistedcenter
+inputs.type = 'twistedcenter';
 inputs.res = 128;
 inputs.roddierphase = 0.5; % waves
 inputs.roddierradius = 0.53; % lambda/D
 mask = falco_gen_azimuthal_phase_mask(inputs);
 figure(13); imagesc(angle(mask)); axis xy equal tight; colorbar; colormap gray; drawnow;
-
 %% Metasurface SVCs
 % Check custom metasurface
 inputs.type = 'custom';

@@ -226,7 +226,11 @@ fitswrite_tb(mp,tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
-    if isfield(ev,'G_tot'); ev = rmfield(ev,'G_tot'); end
+    if strcmpi(mp.estimator, 'ekf_maintenance')
+        fields_to_remove = {'G_tot_cont','G_tot_drift','R','H','P','Q'};
+        ev = rmfield(ev,fields_to_remove); 
+        disp('removed dzm matrices')
+    end
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
 end
 

@@ -179,8 +179,8 @@ switch upper(mp.coro)
             EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
         end
         
-        % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
-        if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
+        % One 180 degree totation is inherent to propcustom_mft_PtoFtoP
+        EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
         
         EP4 = pad_crop(EP4, mp.P4.full.Narr);
 

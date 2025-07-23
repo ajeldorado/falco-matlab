@@ -9,7 +9,7 @@ function arrayOut = offcenter_crop(arrayIn, centerRow, centerCol, nRowOut, nColO
 % 
 % This function crops a 2-D array about the center pixel specified by
 % centerRow and centerCol. The input array can be
-% rectangular with even or odd side lengths. The output will is rectangular
+% rectangular with even or odd side lengths. The output will be rectangular
 % with dimensions nRowOut, nColOut. If the output array includes
 % regions outside the input array, those pixels are included
 % and set to zero. If the specified cropping region is fully outside the

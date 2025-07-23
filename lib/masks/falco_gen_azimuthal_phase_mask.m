@@ -84,7 +84,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     X = reshape(xyAll(1, :), [N, N]);
     Y = reshape(xyAll(2, :), [N, N]);
 
-    [THETA, ~] = cart2pol(X, Y);
+    [THETA, RHO] = cart2pol(X, Y);
 
     % make mask 
     switch lower(maskType)
@@ -175,12 +175,12 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
         case 'sawtooth'
             
 %             vort = phaseScaleFac*charge*rem(THETA,pi./4);
-            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
-            vort = 0.* coords.THETA;
-            domain = (coords.THETA >= 0);
-            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
-            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
-            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+%             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* THETA;
+            domain = (THETA >= 0);
+            vort(domain) = charge*rem(THETA(domain),2*pi./charge);
+            domain = (THETA >= -pi) & (THETA < 0);
+            vort(domain) = charge*rem((THETA(domain)+pi),2*pi./charge);
             mask = exp(phaseScaleFac*1j*vort);
 
 %             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
@@ -281,20 +281,59 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
                 error("inputs.roddierphase must be defined for this mask case.")
             end
 
-            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
-            vort = 0.* coords.THETA;
-            domain = (coords.THETA >= 0);
-            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
-            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
-            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+%             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* THETA;
+            domain = (THETA >= 0);
+            vort(domain) = charge*rem(THETA(domain),2*pi./charge);
+            domain = (THETA >= -pi) & (THETA < 0);
+            vort(domain) = charge*rem((THETA(domain)+pi),2*pi./charge);
             
-            R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
+            R1 = (RHO <= roddierradius*res*phaseScaleFac);
             vort(R1) =vort(R1) + roddierphase*2*pi;
             
             mask = exp(phaseScaleFac*1j*vort);
 
 %             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
 %          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
+
+        case 'twistedcenter'
+            %sawtooth + twisted center
+            if ~res
+               error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
+            if ~isfield(inputs, 'roddierradius')
+                error("inputs.roddierradius must be defined for this mask case.")
+            end
+
+            if ~isfield(inputs, 'roddierphase')
+                error("inputs.roddierphase must be defined for this mask case.")
+            end
+            
+            centercoords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            centercoords = rotateCoordinates(centercoords,30);
+            vortcenter = 0.*centercoords.THETA;
+            domain = (centercoords.THETA >= 0);
+            vortcenter(domain) = charge*rem(centercoords.THETA(domain),2*pi./charge);
+            domain = (centercoords.THETA >= -pi) & (centercoords.THETA < 0);
+            vortcenter(domain) = charge*rem((centercoords.THETA(domain)+pi),2*pi./charge);
+            R1 = (RHO > roddierradius*res*phaseScaleFac);
+            vortcenter(R1) = 0;
+            
+            coords = generateCoordinates(N);
+            vort = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+            
+            R1 = (RHO <= roddierradius*res*phaseScaleFac);
+            vort(R1) =0;
+            
+            combinedvort = vortcenter + vort;
+            
+            mask = exp(phaseScaleFac*1j*combinedvort);
+
 
         case 'just_dimple'
             % a roddier dimple without any azimuthal structure
@@ -394,6 +433,44 @@ function coords = generateCoordinates( N )
         coords.xvals = xvals;
         coords.yvals = yvals;
 end
+
+function rotatedCoords = rotateCoordinates(coords, angle_degrees)
+   % Convert angle from degrees to radians
+   angle_radians = deg2rad(angle_degrees);
+   
+   %Create rotation matrix
+   R = [cos(angle_radians), -sin(angle_radians);
+        sin(angle_radians), cos(angle_radians)];
+   
+    %Get original X and Y coordinates
+   X = coords.X;
+   Y = coords.Y;
+   
+   %Initialize arrays for rotated coordinates
+   X_rot = zeros(size(X));
+   Y_rot = zeros(size(Y));
+   
+   %Apply rotation to each point
+   for i = 1:size(X,1)
+       for j = 1:size(X,2)
+           rotated_point = R *[X(i,j); Y(i,j)];
+           X_rot(i,j) = rotated_point(1);
+           Y_rot(i,j) = rotated_point(2);
+       end
+   end
+   
+   %Generate new polar coordinates from rotated cartesian coordinates
+   [THETA_rot, RHO_rot] = cart2pol(X_rot, Y_rot);
+   
+   %Create output structure
+   rotatedCoords = coords;
+   rotatedCoords.X = X_rot;
+   rotatedCoords.Y = Y_rot;
+   rotatedCoords.THETA = THETA_rot;
+   rotatedCoords.RHO = RHO_rot;
+end
+   
+  
 
 function [pt,rvec,qvec] = polarTransform(input_image, center_vec, rmax, numRadPts, numAngles,method)
     %[pt,rvec,qvec] = polarTransform(input_image, center_vec, rmax, numRadPts, numAngles,method)

@@ -207,8 +207,8 @@ if flagUseFPM
             end
 
             
-            % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
-            if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
+            % One 180-degree rotation is inherent to propcustom_mft_PtoFtoP
+            EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
 
             % Resize beam if Lyot plane has different resolution
             if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
