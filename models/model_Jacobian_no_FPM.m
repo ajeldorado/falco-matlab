@@ -163,23 +163,24 @@ end
 %--DM1---------------------------------------------------------
 if whichDM == 1 
     Edm1 = mp.jac.Edm1_list(:, :, imode);
-    % Gmode = zeros(1, mp.dm1.Nele);
+    DM2surf = mp.jac.DM2surf;
+    DM2stop = mp.jac.DM2stop;
     
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS; %NboxPad1;%2.^ceil(log2(NboxPad1)); %--Power of 2 array size for FFT-AS propagations from DM1->DM2->DM1
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
 
-    if any(mp.dm_ind == 2)
-        DM2surf = pad_crop(mp.jac.DM2surf, mp.dm1.compact.NdmPad);
-    else
-        DM2surf = zeros(mp.dm1.compact.NdmPad);
-    end
-    
-    if mp.flagDM2stop
-        DM2stop = pad_crop(mp.dm2.compact.mask, mp.dm1.compact.NdmPad);
-    else
-        DM2stop = ones(mp.dm1.compact.NdmPad);
-    end
+    % if any(mp.dm_ind == 2)
+    %     DM2surf = pad_crop(mp.jac.DM2surf, mp.dm1.compact.NdmPad);
+    % else
+    %     DM2surf = zeros(mp.dm1.compact.NdmPad);
+    % end
+    % 
+    % if mp.flagDM2stop
+    %     DM2stop = pad_crop(mp.dm2.compact.mask, mp.dm1.compact.NdmPad);
+    % else
+    %     DM2stop = ones(mp.dm1.compact.NdmPad);
+    % end
     
     Edm1pad = pad_crop(Edm1, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
     Edm2WFEpad = pad_crop(Edm2WFE, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing

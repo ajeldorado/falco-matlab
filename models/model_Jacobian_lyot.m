@@ -32,7 +32,6 @@ modvar.starIndex = mp.jac.star_inds(imode);
 lambda = mp.sbp_centers(modvar.sbpIndex); 
 NdmPad = mp.compact.NdmPad;
 surfIntoPhase = 2;
-scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
 
 if mp.flagRotation
     NrelayFactor = 1;
@@ -51,39 +50,9 @@ else
     apodReimaged = ones(NdmPad); 
 end
 
-% Define the FPM
-switch upper(mp.coro)
-    
-    case{'LC', 'APLC', 'FLC', 'SPLC'}
-        fpm = mp.F3.compact.mask;
-        transOuterFPM = 1;
-        
-    case{'HLC'}
-        switch mp.layout
-            case{'fourier'}
-                %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
-                if isfield(mp.compact, 'FPMcube')
-                    fpm = squeeze(mp.compact.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM.
-                    transOuterFPM = fpm(1, 1);
-                else
-                    t_Ti_base = 0;
-                    t_Ni_vec = 0;
-                    t_diel_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
-                    pol = 2;
-                    [transOuterFPM, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_diel_vec, lambda*mp.FPM.d0fac, pol);
-                    fpm = squeeze(mp.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM. Calculated in model_Jacobian.m
-                end
-            case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
-                fpm = squeeze(mp.compact.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM.
-                transOuterFPM = fpm(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
-                scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
-            otherwise
-                error('Invalid combination of mp.layout and mp.coro')
-        end
-        
-    otherwise
-        error('Value of mp.coro not recognized.');
-end
+fpm = squeeze(mp.jac.lc_fpm(:, :, imode));
+transOuterFPM = mp.jac.transOuterFPM(imode);
+scaleFac = mp.jac.scaleFac(imode);
 
 xisF3 = scaleFac * mp.F3.compact.xis;
 etasF3 = scaleFac * mp.F3.compact.etas;
@@ -111,23 +80,12 @@ end
 if whichDM == 1 
 
     Edm1 = mp.jac.Edm1_list(:, :, imode);
-
+    DM2surf = mp.jac.DM2surf;
+    DM2stop = mp.jac.DM2stop;
+    
     %--Two array sizes (at same resolution) of influence functions for MFT and angular spectrum
     NboxPad1AS = mp.dm1.compact.NboxAS;
     mp.dm1.compact.xy_box_lowerLeft_AS = mp.dm1.compact.xy_box_lowerLeft - (mp.dm1.compact.NboxAS-mp.dm1.compact.Nbox)/2; %--Adjust the sub-array location of the influence function for the added zero padding
-
-    if any(mp.dm_ind == 2)
-        DM2surf = pad_crop(mp.jac.DM2surf, mp.dm1.compact.NdmPad);
-    else
-        DM2surf = zeros(mp.dm1.compact.NdmPad);
-    end
-    
-    if mp.flagDM2stop
-        DM2stop = pad_crop(mp.dm2.compact.mask, mp.dm1.compact.NdmPad);
-    else
-        DM2stop = ones(mp.dm1.compact.NdmPad);
-    end
-
     
     apodReimaged = pad_crop(apodReimaged, mp.dm1.compact.NdmPad);
 
@@ -169,8 +127,6 @@ if whichDM == 1
 
     %--MFT from pupil P3 to FPM
     EF3inc = rect_mat_pre * dEP3box * rect_mat_post; % MFT to FPM
-    
-
 
     switch upper(mp.coro)
         

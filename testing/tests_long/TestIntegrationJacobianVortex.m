@@ -42,7 +42,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
         
         function testIntegrationJacobianVCfft(testCase)
             mp = testCase.mp;
-            mp.runLabel = 'test_VC';
+            mp.runLabel = 'test_vc_jac_fft';
             mp.jac.mftToVortex = false;
             [mp, out] = falco_flesh_out_workspace(mp);
             
@@ -103,7 +103,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
         
         function testIntegrationJacobianVCmft(testCase)
             mp = testCase.mp;
-            mp.runLabel = 'test_VC';
+            mp.runLabel = 'test_vc_jac_mft';
             mp.jac.mftToVortex = true;
             
             mp.P1.compact.Nbeam = 200;
@@ -183,7 +183,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             mp.jac.minimizeNI = true;
 %             mp.jac.mftToVortex = false;
 
-            mp.runLabel = 'test_VC';
+            mp.runLabel = 'test_vc_jac_no_fpm';
             [mp, out] = falco_flesh_out_workspace(mp);
             mp.dm1.V = zeros(mp.dm1.Nact);
             mp.dm2.V = zeros(mp.dm2.Nact);

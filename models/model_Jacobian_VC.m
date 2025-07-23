@@ -68,21 +68,21 @@ EP4mult = mp.P4.compact.E(:, :, modvar.sbpIndex);
 % % Masks and DM surfaces
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
-% pupil = padOrCropEven(mp.P1.compact.mask, NdmPad);
-% Ein = padOrCropEven(Ein, NdmPad);
+% pupil = pad_crop(mp.P1.compact.mask, NdmPad);
+% Ein = pad_crop(Ein, NdmPad);
 % %--Re-image the apodizer from pupil P3 back to pupil P2. (Sign of mp.Nrelay2to3 doesn't matter.)
 if mp.flagApod 
-    apodReimaged = padOrCropEven(mp.P3.compact.mask, NdmPad);
+    apodReimaged = pad_crop(mp.P3.compact.mask, NdmPad);
     apodReimaged = propcustom_relay(apodReimaged, NrelayFactor*mp.Nrelay2to3, mp.centering);
 else
     apodReimaged = ones(NdmPad); 
 end
 % 
-% if mp.flagDM1stop; DM1stop = padOrCropEven(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
-% if mp.flagDM2stop; DM2stop = padOrCropEven(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
+% if mp.flagDM1stop; DM1stop = pad_crop(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
+% if mp.flagDM2stop; DM2stop = pad_crop(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
 % 
-% if any(mp.dm_ind == 1); DM1surf = padOrCropEven(mp.dm1.compact.surfM, NdmPad); else; DM1surf = 0; end 
-if any(mp.dm_ind == 2); DM2surf = padOrCropEven(mp.dm2.compact.surfM, NdmPad); else; DM2surf = 0; end 
+% if any(mp.dm_ind == 1); DM1surf = pad_crop(mp.dm1.compact.surfM, NdmPad); else; DM1surf = 0; end 
+if any(mp.dm_ind == 2); DM2surf = pad_crop(mp.dm2.compact.surfM, NdmPad); else; DM2surf = 0; end 
 
 % if mp.useGPU
 %     pupil = gpuArray(pupil);
@@ -142,6 +142,8 @@ if whichDM == 1
     Edm1 = mp.jac.Edm1_list(:, :, imode);    
     Nfft1 = mp.jac.Nfft1_list(imode);
     fpm = mp.jac.vortexDM1_list(:, :, imode);
+    DM2surf = mp.jac.DM2surf;
+    DM2stop = mp.jac.DM2stop;
 
     % if mp.flagFiber
     %     if mp.flagLenslet
@@ -239,20 +241,20 @@ if whichDM == 1
     %     fftshiftVortex = fftshift(spot.*fpm);    
     % end
     
-    if any(mp.dm_ind == 2)
-        DM2surf = pad_crop(DM2surf, mp.dm1.compact.NdmPad);
-    else
-        DM2surf = zeros(mp.dm1.compact.NdmPad);
-    end
+    % if any(mp.dm_ind == 2)
+    %     DM2surf = pad_crop(DM2surf, mp.dm1.compact.NdmPad);
+    % else
+    %     DM2surf = zeros(mp.dm1.compact.NdmPad);
+    % end
+    % 
+    % if mp.flagDM2stop
+    %     DM2stop = pad_crop(mp.dm2.compact.mask, mp.dm1.compact.NdmPad);
+    % else
+    %     DM2stop = ones(mp.dm1.compact.NdmPad);
+    % end
     
-    if mp.flagDM2stop
-        DM2stop = pad_crop(mp.dm2.compact.mask, mp.dm1.compact.NdmPad);
-    else
-        DM2stop = ones(mp.dm1.compact.NdmPad);
-    end
-    
-    apodReimaged = padOrCropEven(apodReimaged, mp.dm1.compact.NdmPad);
-    Edm1pad = padOrCropEven(Edm1, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
+    apodReimaged = pad_crop(apodReimaged, mp.dm1.compact.NdmPad);
+    Edm1pad = pad_crop(Edm1, mp.dm1.compact.NdmPad); %--Pad or crop for expected sub-array indexing
 
     %--Propagate each actuator from DM2 through the optical system
     % Gindex = 1; % initialize index counter
@@ -265,7 +267,7 @@ if whichDM == 1
 
     %--Propagate from DM1 to DM2, and then back to P2
      %--Pad influence function at DM1 for angular spectrum propagation.
-    dEbox = (mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm1.VtoH(iact) *  ...
+    dEbox = (mirrorFac*2*pi*1j/lambda)*pad_crop(mp.dm1.VtoH(iact) *  ...
         mp.dm1.compact.inf_datacube(:, :, iact), NboxPad1AS);
     if mp.useGPU; dEbox = gpuArray(dEbox); end
     dEbox = propcustom_PTP(dEbox.*Edm1pad(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad1AS, lambda, mp.d_dm1_dm2);
@@ -312,7 +314,7 @@ if whichDM == 1
         EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering); 
 
         %--Pad pupil P3 for FFT
-        EP3pad = padOrCropEven(EP3, Nfft1);
+        EP3pad = pad_crop(EP3, Nfft1);
 
         %--FFT from P3 to Fend.and apply vortex
         EF3incShift = fft2(fftshift(EP3pad))/Nfft1;
@@ -369,7 +371,7 @@ end
 %--DM2---------------------------------------------------------
 if whichDM == 2
 
-    Edm1 = mp.jac.Edm1_list(:, :, imode);
+    Edm2 = mp.jac.Edm2_list(:, :, imode);
     fpm = mp.jac.vortexDM2_list(:, :, imode);
     Nfft2 = mp.jac.Nfft2_list(imode); %--Array size for planes P3, F3, and P4
     % if mp.flagFiber
@@ -457,21 +459,21 @@ if whichDM == 2
     % end
     
     apodReimaged = pad_crop( apodReimaged, mp.dm2.compact.NdmPad);
-    if mp.flagDM2stop
-        DM2stop = pad_crop(mp.dm2.compact.mask, mp.dm1.compact.NdmPad);
-    else
-        DM2stop = ones(mp.dm1.compact.NdmPad);
-    end        
-    %--Propagate full field to DM2 before back-propagating in small boxes
-    Edm2inc = padOrCropEven( propcustom_PTP(Edm1, mp.compact.NdmPad*mp.P2.compact.dx, lambda, mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
-    Edm2inc = padOrCropEven(Edm2inc, mp.dm2.compact.NdmPad);
-    Edm2 = DM2stop.*Edm2inc.*exp(mirrorFac*2*pi*1j/lambda*padOrCropEven(DM2surf, mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
+    % if mp.flagDM2stop
+    %     DM2stop = pad_crop(mp.dm2.compact.mask, mp.dm1.compact.NdmPad);
+    % else
+    %     DM2stop = ones(mp.dm1.compact.NdmPad);
+    % end        
+    % %--Propagate full field to DM2 before back-propagating in small boxes
+    % Edm2inc = pad_crop( propcustom_PTP(Edm1, mp.compact.NdmPad*mp.P2.compact.dx, lambda, mp.d_dm1_dm2), mp.dm2.compact.NdmPad); % E-field incident upon DM2
+    % Edm2inc = pad_crop(Edm2inc, mp.dm2.compact.NdmPad);
+    % Edm2 = DM2stop.*Edm2inc.*exp(mirrorFac*2*pi*1j/lambda*pad_crop(DM2surf, mp.dm2.compact.NdmPad)); % Initial E-field at DM2 including its own phase contribution
                 
     %--x- and y- coordinates of the padded influence function in the full padded pupil
     x_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(1, iact):mp.dm2.compact.xy_box_lowerLeft_AS(1, iact)+NboxPad2AS-1; % x-indices in pupil arrays for the box
     y_box_AS_ind = mp.dm2.compact.xy_box_lowerLeft_AS(2, iact):mp.dm2.compact.xy_box_lowerLeft_AS(2, iact)+NboxPad2AS-1; % y-indices in pupil arrays for the box
 
-    dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*padOrCropEven(mp.dm2.compact.inf_datacube(:, :, iact), NboxPad2AS); %--the padded influence function at DM2
+    dEbox = mp.dm2.VtoH(iact)*(mirrorFac*2*pi*1j/lambda)*pad_crop(mp.dm2.compact.inf_datacube(:, :, iact), NboxPad2AS); %--the padded influence function at DM2
     
     if mp.useGPU
         dEbox = gpuArray(dEbox);
@@ -518,7 +520,7 @@ if whichDM == 2
         EP3 = propcustom_relay(EP2eff, NrelayFactor*mp.Nrelay2to3, mp.centering); 
 
         %--Pad pupil P3 for FFT
-        EP3pad = padOrCropEven(EP3, Nfft2);
+        EP3pad = pad_crop(EP3, Nfft2);
 
         %--FFT from P3 to Fend.and apply vortex
         EF3 = fpm .* fft2(fftshift(EP3pad))/Nfft2;

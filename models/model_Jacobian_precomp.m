@@ -43,6 +43,47 @@ function mp = model_Jacobian_precomp(mp)
         else
             NrelayFactor = 0; % zero out the number of relays
         end
+
+        % Define the FPM
+        scaleFac = 1; % Default is that F3 focal plane sampling does not vary with wavelength
+        switch upper(mp.coro)
+            
+            case{'LC', 'APLC', 'FLC', 'SPLC'}
+                fpm = mp.F3.compact.mask;
+                transOuterFPM = 1;
+                
+            case{'HLC'}
+                switch mp.layout
+                    case{'fourier'}
+                        %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
+                        if isfield(mp.compact, 'FPMcube')
+                            fpm = squeeze(mp.compact.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM.
+                            transOuterFPM = fpm(1, 1);
+                        else
+                            t_Ti_base = 0;
+                            t_Ni_vec = 0;
+                            t_diel_vec = 1e-9*mp.t_diel_bias_nm; % [meters]
+                            pol = 2;
+                            [transOuterFPM, ~] = falco_thin_film_material_def(mp.F3.substrate, mp.F3.metal, mp.F3.dielectric, lambda, mp.aoi, t_Ti_base, t_Ni_vec, t_diel_vec, lambda*mp.FPM.d0fac, pol);
+                            fpm = squeeze(mp.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM. Calculated in model_Jacobian.m
+                        end
+                    case{'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'}
+                        fpm = squeeze(mp.compact.FPMcube(:, :, modvar.sbpIndex)); %--Complex transmission of the FPM.
+                        transOuterFPM = fpm(1, 1); %--Complex transmission of the points outside the FPM (just fused silica with optional dielectric and no metal).
+                        scaleFac = lambda/mp.lambda0; % Focal plane sampling varies with wavelength
+                    otherwise
+                        transOuterFPM = 1;
+                        fpm = 1;
+                end
+
+            otherwise
+                transOuterFPM = 1;
+                fpm = 1;
+        end
+
+        mp.jac.lc_fpm(:, :, imode) = fpm;
+        mp.jac.transOuterFPM(imode) = transOuterFPM;
+        mp.jac.scaleFac(imode) = scaleFac;
         
         switch upper(mp.coro)
             case{'VORTEX', 'VC', 'AVC'}
@@ -186,6 +227,7 @@ function mp = model_Jacobian_precomp(mp)
         
         if mp.flagDM1stop; DM1stop = pad_crop(mp.dm1.compact.mask, NdmPad); else; DM1stop = ones(NdmPad); end
         if mp.flagDM2stop; DM2stop = pad_crop(mp.dm2.compact.mask, NdmPad); else; DM2stop = ones(NdmPad); end
+        mp.jac.DM2stop = pad_crop(DM2stop, mp.dm1.compact.NdmPad);
         
         if any(mp.dm_ind == 1); DM1surf = pad_crop(mp.dm1.compact.surfM, NdmPad);  else; DM1surf = 0; end 
         if any(mp.dm_ind == 2); DM2surf = pad_crop(mp.dm2.compact.surfM, NdmPad);  else; DM2surf = 0; end 
@@ -193,8 +235,8 @@ function mp = model_Jacobian_precomp(mp)
             if any(mp.dm_ind == 1); DM1surf = gpuArray(DM1surf); end
             if any(mp.dm_ind == 2); DM2surf = gpuArray(DM2surf); end
         end
-        mp.jac.DM1surf = DM1surf;
-        mp.jac.DM2surf = DM2surf;
+        % mp.jac.DM1surf = DM1surf;
+        mp.jac.DM2surf = pad_crop(mp.dm2.compact.surfM, mp.dm1.compact.NdmPad);
         
         % % Define the FPM
         % switch upper(mp.coro)
