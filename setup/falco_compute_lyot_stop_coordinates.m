@@ -25,8 +25,8 @@ function mp = falco_compute_lyot_stop_coordinates(mp)
         elseif strcmpi(mp.centering, 'interpixel')
             mp.P4.full.xsDL = (-(mp.P4.full.Narr-1)/2:(mp.P4.full.Narr-1)/2)/mp.P4.full.Nbeam;
         end
+        [mp.P4.full.XsDL, mp.P4.full.YsDL] = meshgrid(mp.P4.full.xsDL);
     end
-    [mp.P4.full.XsDL, mp.P4.full.YsDL] = meshgrid(mp.P4.full.xsDL);
 
     % Compact model
     mp.P4.compact.dx = mp.P4.D/mp.P4.compact.Nbeam; % [meters per pixel]

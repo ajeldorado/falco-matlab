@@ -36,8 +36,12 @@ function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac
 
 %--If there is an extra input, it is the exit pupil multiplier array.
 EP4mult = 1; % default
+flagRevGrad = false;
 if size(varargin, 2) == 1
     EP4mult = varargin{1};
+elseif size(varargin, 2) == 2
+    EP4mult = varargin{1};
+    flagRevGrad = varargin{2};
 end
 
 if nargout >= 3

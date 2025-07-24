@@ -209,10 +209,89 @@ if(mp.flagPlot)
             title(sprintf('DM2 Surface (nm)'),'Fontsize',fst) %,'Fontweight','Bold');
             set(gca,'FontSize',20 ,'FontName','Times','FontWeight','Normal')            
             
-    end   
+            if strcmpi(mp.layout, 'dst1_proper')
+               if isfield(mp.full, 'monitor_xy_at_fpm')
+		    modvar0 = ModelVariables;
+		    modvar0.lambda = mp.lambda0;
+		    % defining mp.full.highres_output_filename makes the model save the high-res PSF at the FPM 
+                    mp.full.highres_output_filename = 'matlab_highres_psf.fits';
+                    E0f = model_full(mp, modvar0);
+		    mp.full = rmfield( mp.full, 'highres_output_filename' );
+                    psf = fitsread("matlab_highres_psf.fits");
+                    hpsf = fitsinfo("matlab_highres_psf.fits");
+                    [ldef, idef] = ismember('SAMPLING', hpsf.PrimaryData.Keywords(:,1));
+                    psf_sampling = hpsf.PrimaryData.Keywords{idef,2};
+                    fwhm0 = 1 / psf_sampling;     % very approx FWHM in lam/D
+                    [xc, yc] = fit_2d_gaussian( psf, fwhm0 );
+                    xc = xc * psf_sampling;             % lam0/D
+                    yc = yc * psf_sampling;
+                    fprintf('PSF at FPM x,y (lam0/D) = %6.3f, %6.3f\n', xc, yc);
+		    if isfield(mp,'scriptname')
+                        global globItr;
+                        if isempty(globItr); globItr = 0; end
+                        fileID = fopen( string(mp.scriptname)+"_xy.txt", 'a' );
+                        fprintf(fileID, '%3d  %6.3f  %6.3f\n', globItr, xc, yc);
+                        fclose(fileID);
+                        globItr = globItr + 1;
+                    end
+               end
+            end
+
+
+    end    %  switch upper(mp.coro)
+
+    % plot NI vs iterations
+    if Itr > 1
+    	figure(250);
+    	xx = linspace(0, Itr-1, Itr);
+    	semilogy(xx, InormHist(1:Itr), 'Linewidth', 2);
+    	axis([0 Itr-1 1e-11 1e-3]);
+        set(gca, 'Fontsize', 20)
+        set(gcf, 'Color', 'w')
+    end
 
     drawnow;
-   
-end
+  
+    if string(lower(mp.layout)) == "dst1_proper" && isfield(mp,'scriptname')
+	% write out table of NI vs iteration 
+        fileID = fopen(string(mp.scriptname)+"_contrast.txt", 'a');
+        if Itr == 1
+            fprintf(fileID, "%3d  %4.1f  %.4e\n", Itr-1, 0, InormHist(Itr));
+        else
+            fprintf(fileID, "%3d  %4.1f  %.4e\n", Itr-1, mp.ctrl.sched_mat(Itr-1,2), InormHist(Itr));
+        end
+        fclose(fileID);
+	% write out current DM voltage maps
+        fitswrite( mp.dm1.V, string(mp.scriptname)+"_dm1_v_last.fits" );
+        fitswrite( mp.dm2.V, string(mp.scriptname)+"_dm2_v_last.fits" );
+    end
+
+end  % if mp.flagPlot
 
 end %--END OF FUNCTION
+
+
+function F = D2GaussFunction(x,xdata)
+    F = x(1)*exp(   -((xdata(:,:,1)-x(2)).^2/(2*x(3)^2) + (xdata(:,:,2)-x(4)).^2/(2*x(5)^2) )    );
+end
+
+
+function [xc, yc, fit] = fit_2d_gaussian( image, fwhm0 )
+    amp = max(image, [], "all");
+    nimage = size(image,1);
+    xc0 = double(fix(nimage/2)) + 1;
+    yc0 = double(fix(nimage/2)) + 1;
+    [yc,xc] = find(image == amp);
+    x0 = [amp, xc, fwhm0, yc, fwhm0];
+    lb = [0,1,0,1,0];
+    ub = [realmax('double'),nimage,xc0^2,nimage,yc0^2];
+    [X,Y] = meshgrid(1:nimage);
+    xdata = zeros(size(X,1),size(Y,2),2);
+    xdata(:,:,1) = X;
+    xdata(:,:,2) = Y;
+    [x,resnorm,residual,exitflag] = lsqcurvefit(@D2GaussFunction,x0,xdata,image,lb,ub);
+    fit = D2GaussFunction(x,xdata);
+    xc = x(2) - xc0;
+    yc = x(4) - yc0;
+end
+

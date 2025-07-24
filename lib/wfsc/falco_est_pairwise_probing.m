@@ -338,7 +338,8 @@ for iSubband = 1:mp.Nsbp
     end
     ampSq2Dcube = zeros(mp.Fend.Neta, mp.Fend.Nxi, mp.est.probe.Npairs);
     for iProbe=1:Npairs % Display the actual probe intensity
-        ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
+        ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
         ampSq2Dcube(:, :, iProbe) = ampSq2D;
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
     end
