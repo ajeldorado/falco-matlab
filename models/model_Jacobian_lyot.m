@@ -103,13 +103,6 @@ if whichDM == 1
     dEbox = (surfIntoPhase*2*pi*1j/lambda)*pad_crop(mp.dm1.VtoH(iact)*mp.dm1.compact.inf_datacube(:, :, iact), NboxPad1AS); %--Pad influence function at DM1 for angular spectrum propagation.
     dEbox = propcustom_PTP_inf_func(dEbox.*Edm1pad(y_box_AS_ind, x_box_AS_ind), mp.P2.compact.dx*NboxPad1AS, lambda, mp.d_dm1_dm2, mp.dm1.dm_spacing, mp.propMethodPTP); % forward propagate to DM2 and apply DM2 E-field
     dEP2box = propcustom_PTP_inf_func(dEbox.*Edm2WFEpad(y_box_AS_ind, x_box_AS_ind).*DM2stop(y_box_AS_ind, x_box_AS_ind).*exp(surfIntoPhase*2*pi*1j/lambda*DM2surf(y_box_AS_ind, x_box_AS_ind)), mp.P2.compact.dx*NboxPad1AS, lambda, -1*(mp.d_dm1_dm2 + mp.d_P2_dm1), mp.dm1.dm_spacing, mp.propMethodPTP ); % back-propagate to DM1
-    
-    % figure(250);
-    % imagesc(abs(DM2stop(y_box_AS_ind, x_box_AS_ind)));
-    % colorbar;
-    % axis xy equal tight;
-    % title(sprintf('P2 for iact = %d', iact));
-    % pause(0.05);
 
     %--To simulate going forward to the next pupil plane (with the apodizer) most efficiently, 
     % First, back-propagate the apodizer (by rotating 180-degrees) to the previous pupil.

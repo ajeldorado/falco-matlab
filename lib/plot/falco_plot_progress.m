@@ -209,8 +209,8 @@ if(mp.flagPlot)
             title(sprintf('DM2 Surface (nm)'),'Fontsize',fst) %,'Fontweight','Bold');
             set(gca,'FontSize',20 ,'FontName','Times','FontWeight','Normal')            
             
-            if lower(mp.layout) == 'dst1_proper'
-               if isfield(mp.full,'monitor_xy_at_fpm')
+            if strcmpi(mp.layout, 'dst1_proper')
+               if isfield(mp.full, 'monitor_xy_at_fpm')
 		    modvar0 = ModelVariables;
 		    modvar0.lambda = mp.lambda0;
 		    % defining mp.full.highres_output_filename makes the model save the high-res PSF at the FPM 
@@ -244,8 +244,10 @@ if(mp.flagPlot)
     if Itr > 1
     	figure(250);
     	xx = linspace(0, Itr-1, Itr);
-    	semilogy( xx, InormHist(1:Itr) );
+    	semilogy(xx, InormHist(1:Itr), 'Linewidth', 2);
     	axis([0 Itr-1 1e-11 1e-3]);
+        set(gca, 'Fontsize', 20)
+        set(gcf, 'Color', 'w')
     end
 
     drawnow;
