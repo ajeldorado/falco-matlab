@@ -42,7 +42,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
         
         function testIntegrationJacobianVCfft(testCase)
             mp = testCase.mp;
-            mp.runLabel = 'test_VC';
+            mp.runLabel = 'test_vc_jac_fft';
             mp.jac.mftToVortex = false;
             [mp, out] = falco_flesh_out_workspace(mp);
             
@@ -103,7 +103,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
         
         function testIntegrationJacobianVCmft(testCase)
             mp = testCase.mp;
-            mp.runLabel = 'test_VC';
+            mp.runLabel = 'test_vc_jac_mft';
             mp.jac.mftToVortex = true;
             
             mp.P1.compact.Nbeam = 200;
@@ -183,7 +183,7 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             mp.jac.minimizeNI = true;
 %             mp.jac.mftToVortex = false;
 
-            mp.runLabel = 'test_VC';
+            mp.runLabel = 'test_vc_jac_no_fpm';
             [mp, out] = falco_flesh_out_workspace(mp);
             mp.dm1.V = zeros(mp.dm1.Nact);
             mp.dm2.V = zeros(mp.dm2.Nact);
@@ -193,9 +193,17 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             if(any(mp.dm_ind==1)); mp.dm1.compact.surfM = falco_gen_dm_surf(mp.dm1, mp.dm1.compact.dx, mp.dm1.compact.NdmPad); else; mp.dm1.compact.surfM = zeros(2); end
             if(any(mp.dm_ind==2)); mp.dm2.compact.surfM = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.NdmPad); else; mp.dm2.compact.surfM = zeros(2); end
 
-            iMode = 1;
-            G1fastAll = model_Jacobian_no_FPM(mp, iMode, 1);
-            G2fastAll = model_Jacobian_no_FPM(mp, iMode, 2);
+            mp = model_Jacobian_precomp(mp);
+
+            imode = 1;
+            for ii = mp.dm1.Nele:-1:1
+                iact = mp.dm1.act_ele(ii);
+                G1fastAll(ii) = model_Jacobian_no_FPM(mp, imode, 1, iact);
+            end
+            for ii = mp.dm2.Nele:-1:1
+                iact = mp.dm2.act_ele(ii);
+                G2fastAll(ii) = model_Jacobian_no_FPM(mp, imode, 2, iact);
+            end
 
             Nind = 20;
             subinds = 4*(1:Nind);
@@ -214,9 +222,9 @@ classdef TestIntegrationJacobianVortex < matlab.unittest.TestCase
             % Get the unocculted peak E-field and coronagraphic E-field
             if mp.jac.minimizeNI
                 modvar = ModelVariables;
-                modvar.sbpIndex = mp.jac.sbp_inds(iMode);
-                modvar.zernIndex = mp.jac.zern_inds(iMode);
-                modvar.starIndex = mp.jac.star_inds(iMode);
+                modvar.sbpIndex = mp.jac.sbp_inds(imode);
+                modvar.zernIndex = mp.jac.zern_inds(imode);
+                modvar.starIndex = mp.jac.star_inds(imode);
                 modvar.whichSource = 'star';
                 Eunocculted = model_compact(mp, modvar, 'nofpm');
                 [~, indPeak] = max(abs(Eunocculted(:)));
