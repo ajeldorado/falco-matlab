@@ -159,7 +159,8 @@ mp.P1.compact.mask = ones(size(mp.P1.compact.mask));
 
 mp.runLabel = sprintf('Series%04d_Trial%04d_Roman_CGI_SPC_WFOV_', mp.SeriesNum, mp.TrialNum);
 
-
+mp.flag_timeMaya = false;
+mp.Nsbp_bb = mp.Nsbp;
 %% Perform the Wavefront Sensing and Control
 
 [mp, out] = falco_flesh_out_workspace(mp);

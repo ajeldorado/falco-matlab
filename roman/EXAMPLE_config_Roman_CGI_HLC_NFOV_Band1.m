@@ -2,7 +2,7 @@
 
 %% Path to data needed by PROPER model
 
-mp.full.data_dir = '/Users/ajriggs/Documents/Sim/cgi/public/roman_phasec_v1.2.4/phasec_data/';
+mp.full.data_dir = 'C:\Users\sredmond\Documents\github_repos\roman-corgi-repos\roman_preflight_proper_public_v2.0.1_python\roman_preflight_proper\preflight_data\';
 
 
 %% Misc

@@ -115,7 +115,7 @@ for Itr = 1:mp.Nitr %* loops through the nb of iterations (Nitr)
     %mc
     if strcmpi(mp.estimator, 'pairwise') 
         %mc
-        pathname = '/Users/mayacadieux/Documents/udem/E24_stage/falco-matlab/data/jac';
+        pathname = [mp.path.config filesep mp.runLabel];
         save( fullfile(pathname, 'jacStruct_classic_Eest.mat'), 'jacStruct')
     end
 
@@ -287,7 +287,7 @@ for Itr = 1:mp.Nitr %* loops through the nb of iterations (Nitr)
     
         p = profile("info");
         filename = sprintf('ProfilingResults_Itr%d', Itr);
-        saveDirectory = "/Users/mayacadieux/Documents/udem/E24_stage/projet/running_time";
+        saveDirectory = [mp.path.config filesep mp.runLabel];
         fullPath = fullfile(saveDirectory, filename);
         %profsave(p, fullPath);
         
@@ -340,7 +340,7 @@ fprintf('...done.\n')
 %mc testing
 if strcmpi(mp.estimator, 'pairwise') 
     %mc
-    pathname = '/Users/mayacadieux/Documents/udem/E24_stage/falco-matlab/data';
+    pathname = [mp.path.config filesep mp.runLabel];
     save( fullfile(pathname, 'ev_classic.mat'), 'ev')
     fprintf('ev.Eest:', ev.Eest);
 end

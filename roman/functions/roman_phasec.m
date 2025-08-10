@@ -41,7 +41,7 @@ function [wavefront,  sampling_m] = roman_phasec( lambda_m, output_dim0, optval 
 
 % mask design data path
 
-data_dir = '/home/krist/afta/phasec/roman_phasec_v1.2.2/phasec_data';  % no trailing '/'
+data_dir = 'C:\Users\sredmond\Documents\github_repos\roman-corgi-repos\roman_preflight_proper_public_v2.0.1_python\roman_preflight_proper\preflight_data';  % no trailing '/'
 
 if ~exist('optval'); optval = 0; end
     
@@ -53,7 +53,7 @@ if ( isfield(optval,'data_dir') )
 end
 
 map_dir = [data_dir '/maps/'];            % directory for surface maps
-polfile = [data_dir '/pol/phasec_pol'];		% polarization aberration table rootname
+polfile = [data_dir '/pol/preflight_pol'];		% polarization aberration table rootname
 
 pupil_array = 0;                 % 2D array containing pupil pattern (overrides default)
 pupil_mask_array = 0;              % 2D array containing SPC pupil mask pattern (overrides default)
@@ -858,7 +858,7 @@ if ( use_pupil_lens == 0 && use_defocus_lens == 0 )
 elseif ( use_pupil_lens ) 
         % use pupil imaging lens
         if ( use_errors )
-		pupil_lens_error_file = [map_dir 'roman_phasec_PUPILLENS_phase_error_V1.0.fits']; 
+		pupil_lens_error_file = [map_dir 'roman_phasec_PUPIL_IMAGE_LENS1_measured_phase_error_V3.0.fits']; 
 	else
 		pupil_lens_error_file = ' ';
 	end

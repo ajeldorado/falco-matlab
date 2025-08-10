@@ -405,7 +405,7 @@ for iSubband = 1:mp.Nsbp
     %end
 
     %mc
-    pathname = '/Users/mayacadieux/Documents/udem/E24_stage/falco-matlab/data';
+    pathname = [mp.path.config filesep mp.runLabel];
     save( fullfile(pathname, 'DM1Vplus_classic.mat'), 'DM1Vplus')
     save( fullfile(pathname, 'zAll_classic.mat'), 'zAll')
     save( fullfile(pathname, 'DM1Vnom_classic.mat'), 'DM1Vnom')
