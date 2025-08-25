@@ -17,7 +17,7 @@
 %           by a photometry measurement at a single offset)
 %
 
-function normI = falco_get_dst2_sbp_image(mp,si)
+function [normI,varargout] = falco_get_dst2_sbp_image(mp,si)
 
     tb = mp.tb;
     sbp_width = tb.info.sbp_width(si); %--Width of each sub-bandpass on testbed (meters)
@@ -29,7 +29,16 @@ function normI = falco_get_dst2_sbp_image(mp,si)
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
     end
     
-    PSFpeak   = tb.info.PSFpeaks(si);% counts per second 
+    PSFpeak   = tb.info.PSFpeaks(si);% counts per second
+    
+    if mp.flagFiber
+        if mp.isProbing
+            sbp_texp_fiber  = tb.info.sbp_texp_probe_fiber(si);% Exposure time for each sub-bandpass (seconds)
+        else
+            sbp_texp_fiber  = tb.info.sbp_texp_fiber(si);% Exposure time for each sub-bandpass (seconds)
+        end
+        PSFpeakFiber = tb.info.PSFpeaksFiber(si);
+    end
     
     
     %----- Send commands to the DM -----
@@ -61,22 +70,32 @@ function normI = falco_get_dst2_sbp_image(mp,si)
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
     if tb.DM1.installed && tb.DM1.CONNECTED 
-        
-        try
-            DM_apply2Dmap(tb.DM1,dm1_map);
-        catch 
-            try; cleanUpDMs(tb); end
-            disp('Error setting DM1. Reseting electronics. Trying again.')
-            FNGR_setPos(tb,tb.FNGR.inpos);FNGR_setPos(tb,tb.FNGR.outpos);
-            pause(10);
-            setUpDMs(tb);
-            DM_apply2Dmap(tb.DM1,dm1_map);
-            DM_apply2Dmap(tb.DM1,dm1_map);
+        if mp.flagFiber
+           DM_apply2Dmap(tb.DM1,(dm1_map)+mp.dm1.V0);
+%            DM_apply2Dmap(tb.DM1,(dm1_map));
+        else
             DM_apply2Dmap(tb.DM1,dm1_map);
         end
+        
+%         try
+%             DM_apply2Dmap(tb.DM1,dm1_map);
+%         catch 
+%             try; cleanUpDMs(tb); end
+%             disp('Error setting DM1. Reseting electronics. Trying again.')
+%             FNGR_setPos(tb,tb.FNGR.inpos);FNGR_setPos(tb,tb.FNGR.outpos);
+%             pause(10);
+%             setUpDMs(tb);
+%             DM_apply2Dmap(tb.DM1,dm1_map);
+%             DM_apply2Dmap(tb.DM1,dm1_map);
+%             DM_apply2Dmap(tb.DM1,dm1_map);
+%         end
     end
     if tb.DM2.installed && tb.DM2.CONNECTED 
-        DM_apply2Dmap(tb.DM2,dm2_map);
+%         if mp.flagFiber
+%             DM_apply2Dmap(tb.DM2,fliplr(dm2_map));
+%         else
+            DM_apply2Dmap(tb.DM2,dm2_map);
+%         end
     end
     
     %----- Get image from the testbed -----
@@ -98,6 +117,25 @@ function normI = falco_get_dst2_sbp_image(mp,si)
     PSFpeak_counts = PSFpeak*sbp_texp; 
     
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
-    normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; 
+    normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts;
+    
+    if mp.flagFiber
+            %----- Get image from the testbed -----
+            disp(['Getting fiber intensity from testbed in band ',num2str(si),'. texp = ',num2str(sbp_texp_fiber)])
+            % Load a dark
+            darkFiber = wfsCam_loadDark(tb,sbp_texp_fiber);
+
+            % Scale the PSF photometry by the current integration time
+            PSFpeak_counts_fiber = PSFpeakFiber*sbp_texp_fiber; 
+
+            % Get normalized intensity (dark subtracted and normalized by PSFpeak)
+            normIfiber = wfsCam_getFiberIntensity(tb,sbp_texp_fiber,darkFiber,"showimage")/PSFpeak_counts_fiber;
+            if normIfiber<0
+                normIfiber = 1e-13;
+            end
+            varargout{1} = normIfiber;
+%             disp(['  NI-SMF (band ',num2str(si),')= ',num2str(normIfiber)])
+
+    end
     
 end

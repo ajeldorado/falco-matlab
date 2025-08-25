@@ -190,7 +190,14 @@ for iSubband = 1:mp.Nsbp
 
     %% Measure current contrast level average, and on each side of Image Plane
     % Reset DM commands to the unprobed state:
-    if any(mp.dm_ind == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom); end
+    if any(mp.dm_ind == 1)
+        if iSubband==1
+            mp.dm1 = falco_set_constrained_voltage(mp.dm1, DM1Vnom); 
+            DM1Vnom_constrained = mp.dm1.V*1;
+        else
+            mp.dm1.V = DM1Vnom_constrained*1;
+        end
+    end
     if any(mp.dm_ind == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, DM2Vnom); end
     
     %% Separate out values of images at dark hole pixels and delta DM voltage settings
@@ -240,7 +247,7 @@ for iSubband = 1:mp.Nsbp
     if isempty(mp.est.probeSchedule.InormProbeVec)
         ev.InormProbeMax = mp.est.InormProbeMax;
         if mp.flagFiber
-            InormProbe = min([sqrt(max(I0fibervec)*1e-8), ev.InormProbeMax]);
+            InormProbe = min([sqrt(max(I0fibervec)*1e-5), ev.InormProbeMax]);
         else
             InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
         end
@@ -261,6 +268,8 @@ for iSubband = 1:mp.Nsbp
                 probeCmd = falco_gen_pairwise_probe(mp, InormProbe, probePhaseVec(iProbe), iStar, mp.est.probe.rotation);
             case{'pairwise', 'pairwise-square', 'pwp-bp-square', 'pwp-kf', 'pairwise-kf'}
                 probeCmd = falco_gen_pairwise_probe_square(mp, InormProbe, probePhaseVec(iProbe), badAxisVec(iProbe), mp.est.probe.rotation);
+            case{'pwp-fiber'}
+                probeCmd = falco_gen_pairwise_probe_fiber(mp, InormProbe, probePhaseVec(iProbe), 'x');
         end
         %--Select which DM to use for probing. Allocate probe to that DM
         if whichDM == 1

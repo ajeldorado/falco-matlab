@@ -76,10 +76,15 @@ if(mp.flagPlot)
     title('DM1 Surface (nm)');
 
 	subplot(2,3,3); 
-    imagesc(1e9*DM2surf);  axis xy equal tight; axis off;
-    colorbar;
-    colormap(gca,gray);
-    title('DM2 Surface (nm)');
+%     imagesc(1e9*DM2surf);  axis xy equal tight; axis off;
+%     colorbar;
+%     colormap(gca,gray);
+    if(mp.Nsbp>1)
+        semilogy(mp.sbp_centers*1e9,Inorm.mod(end,:)+Inorm.unmod(end,:),'-o');
+    else
+        semilogy(mp.sbp_centers*1e9,Inorm.mod(end)+Inorm.unmod(end),'-o');
+    end
+    title('Total Int');
 
     subplot(2,3,4);
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;

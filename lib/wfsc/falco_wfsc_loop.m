@@ -177,7 +177,8 @@ for Itr = 1:mp.Nitr
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
     
-    %% End early? You can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
+    %% End early? You can change the value of flagBreak = 1 in debugger mode, but you cannot change mp.Nitr or Itr
+    
     if flagBreak
         break;
     end
@@ -294,7 +295,11 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     end
     
     if isfield(mp, 'testbed')
-        out.InormHist_tb.total = out.InormHist; 
+        if mp.flagFiber
+            out.InormHist_tb.total = out.InormFiberHist;
+        else
+            out.InormHist_tb.total = out.InormHist; 
+        end
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
