@@ -39,8 +39,36 @@ if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  en
 
 %% Get dither command
 
-if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
-if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+% if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
+% if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+
+% Set random number generator seed
+% Dither commands get re-used every dither_cycle_iters iterations
+if mod(Itr-1, mp.est.dither_cycle_iters) == 0 || Itr == 1
+    ev.dm1_seed_num = 0; 
+    ev.dm2_seed_num = 1000; % Don't want same random commands on DM1 and DM2
+    disp(['Dither random seed reset at iteration ', num2str(Itr)])
+else
+    ev.dm1_seed_num = ev.dm1_seed_num + 1; 
+    ev.dm2_seed_num = ev.dm2_seed_num + 1;
+end
+
+% Generate random dither command
+if any(mp.dm_ind == 1)  
+    rng(ev.dm1_seed_num); 
+    DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
+    DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
+else 
+    DM1Vdither = zeros(size(mp.dm1.V)); 
+end % The 'else' block would mean we're only using DM2
+
+if any(mp.dm_ind == 2)  
+    rng(ev.dm2_seed_num); 
+    DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
+    DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
+else
+    DM2Vdither = zeros(size(mp.dm2.V)); 
+end % The 'else' block would mean we're only using DM1
 
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
@@ -66,12 +94,16 @@ if any(mp.dm_ind == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
 elseif any(mp.dm_drift_ind == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
 
 if any(mp.dm_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
 elseif any(mp.dm_drift_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
 end
 
 % Do safety check to make sure no actuators are pinned
@@ -127,14 +159,24 @@ mp.isProbing = false;
 
 
 if any(mp.est.itr_ol==ev.Itr) == true
+    mp.tb.info.sbp_texp = 0.5*sbp_texp; % Reduce OL exposure time
     [mp,ev] = get_open_loop_data(mp,ev);
+    mp.tb.info.sbp_texp = sbp_texp;
 else
     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
 
 %% Remove control from DM command so that controller images are correct
-if any(mp.dm_ind == 1);  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);end
-if any(mp.dm_ind == 2);  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);end
+if any(mp.dm_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+if any(mp.dm_ind == 2) 
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
 
 save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 
@@ -226,13 +268,13 @@ end
 if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
 
     % Print error warning
-    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
-    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+    if ~isempty(ev.dm1.new_pinned_actuators); fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ',')); end
+    if ~isempty(ev.dm2.new_pinned_actuators); fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ',')); end
 
     % If actuators are used in jacobian, quit.
-    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
-        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
-        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
+    if size(ev.dm1.act_ele_pinned,2)>10 || size(ev.dm2.act_ele_pinned,2)>10
+        save(fullfile(mp.path.config,['ev_exit_',num2str(ev.Itr),'.mat']),'ev')
+        save(fullfile(mp.path.config,['mp_exit_',num2str(ev.Itr),'.mat']),'mp')
 
         error('New actuators in act_ele pinned, exiting loop');
     end
@@ -270,13 +312,13 @@ function [mp,ev] = get_open_loop_data(mp,ev)
 % used for control, apply V_dz
 if (any(mp.dm_drift_ind == 1) && any(mp.dm_ind == 1)) || any(mp.dm_drift_ind == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);
-elseif any(mp.dm_ind == 1) 
+elseif any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
 
 if (any(mp.dm_drift_ind == 2) && any(mp.dm_ind == 2)) || any(mp.dm_drift_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);
-elseif any(mp.dm_ind == 2) 
+elseif any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
 end
 
@@ -333,3 +375,4 @@ if ev.Itr == 1
 end
 
 end
+

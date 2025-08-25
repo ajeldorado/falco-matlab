@@ -30,7 +30,7 @@ ev.G_tot_cont = rearrange_jacobians(mp,jacStruct,mp.dm_ind);
 ev.G_tot_drift = rearrange_jacobians(mp,jacStruct,mp.dm_drift_ind);
 
 % Initialize EKF matrices
-ev = initialize_ekf_matrices(mp, ev);
+ev = initialize_ekf_matrices(mp, ev, sbp_texp);
 
 % Initialize pinned actuator check
 ev.dm1.initial_pinned_actuators = mp.dm1.pinned;
@@ -84,7 +84,7 @@ G_tot = [G1, G2];
 
 end
 
-function ev = initialize_ekf_matrices(mp, ev)
+function ev = initialize_ekf_matrices(mp, ev, sbp_texp)
 
 % Below are the defnitions of the EKF matrices. There are multiple EKFs 
 % defined in parallel.
@@ -121,7 +121,7 @@ for iSubband = 1:1:mp.Nsbp
     dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);
 
     for i = 0:1:floor(ev.SL/ev.BS)-1
-        ev.Q(:,:,i+1,iSubband) = G_reordered((i)*ev.BS+1:(i+1)*ev.BS,:)*dm_drift_covariance*G_reordered(i*ev.BS+1:(i+1)*ev.BS,:).'*mp.tb.info.sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
+        ev.Q(:,:,i+1,iSubband) = G_reordered((i)*ev.BS+1:(i+1)*ev.BS,:)*dm_drift_covariance*G_reordered(i*ev.BS+1:(i+1)*ev.BS,:).'*sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
     end
 end
 
@@ -141,18 +141,19 @@ for iSubband = 1:1:mp.Nsbp
     % If an estimate is availible from stroke minimization in a brighter setting:
     try %paths.E_estimated_filenames(k)
         % TODO: need to load this in main file from saved data
-        E_hat = mp.est.Eest(:,iSubband) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)); % assuming it is scaled (units: contrast)
+        E_hat = mp.est.Eest(:,iSubband) * ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)); % assuming it is scaled (units: contrast)
     catch
         E_hat = zeros(ev.SL/ev.BS,1);%,mp.Nsbp);
     end
 
     % Save initial ev state:
-    ev.x_hat0(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
-    ev.x_hat0(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
+    ev.x_hat0(1:ev.SS:end,iSubband) = real(E_hat);
+    ev.x_hat0(2:ev.SS:end,iSubband) = imag(E_hat);
 
     % The EKF state is scaled such that the intensity is measured in photons:
-    ev.x_hat(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
-    ev.x_hat(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband));
+    ev.x_hat(1:ev.SS:end,iSubband) = real(E_hat);
+    ev.x_hat(2:ev.SS:end,iSubband) = imag(E_hat);
  end
 
 end
+
