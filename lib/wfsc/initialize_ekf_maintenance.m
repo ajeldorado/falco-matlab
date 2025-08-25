@@ -141,18 +141,18 @@ for iSubband = 1:1:mp.Nsbp
     % If an estimate is availible from stroke minimization in a brighter setting:
     try %paths.E_estimated_filenames(k)
         % TODO: need to load this in main file from saved data
-        E_hat = mp.est.Eest(:,iSubband) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)); % assuming it is scaled (units: contrast)
+        E_hat = mp.est.Eest(:,iSubband) * ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)); % assuming it is scaled (units: contrast)
     catch
         E_hat = zeros(ev.SL/ev.BS,1);%,mp.Nsbp);
     end
 
     % Save initial ev state:
-    ev.x_hat0(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband));
-    ev.x_hat0(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband));
+    ev.x_hat0(1:ev.SS:end,iSubband) = real(E_hat);
+    ev.x_hat0(2:ev.SS:end,iSubband) = imag(E_hat);
 
     % The EKF state is scaled such that the intensity is measured in photons:
-    ev.x_hat(1:ev.SS:end,iSubband) = real(E_hat) * ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband));
-    ev.x_hat(2:ev.SS:end,iSubband) = imag(E_hat) * ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband));
+    ev.x_hat(1:ev.SS:end,iSubband) = real(E_hat);
+    ev.x_hat(2:ev.SS:end,iSubband) = imag(E_hat);
  end
 
 end

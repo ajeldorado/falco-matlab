@@ -39,8 +39,36 @@ if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  en
 
 %% Get dither command
 
-if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
-if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+% if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
+% if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+
+% Set random number generator seed
+% Dither commands get re-used every dither_cycle_iters iterations
+if mod(Itr-1, mp.est.dither_cycle_iters) == 0 || Itr == 1
+    ev.dm1_seed_num = 0; 
+    ev.dm2_seed_num = 1000; % Don't want same random commands on DM1 and DM2
+    disp(['Dither random seed reset at iteration ', num2str(Itr)])
+else
+    ev.dm1_seed_num = ev.dm1_seed_num + 1; 
+    ev.dm2_seed_num = ev.dm2_seed_num + 1;
+end
+
+% Generate random dither command
+if any(mp.dm_ind == 1)  
+    rng(ev.dm1_seed_num); 
+    DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
+    DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
+else 
+    DM1Vdither = zeros(size(mp.dm1.V)); 
+end % The 'else' block would mean we're only using DM2
+
+if any(mp.dm_ind == 2)  
+    rng(ev.dm2_seed_num); 
+    DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
+    DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
+else
+    DM2Vdither = zeros(size(mp.dm2.V)); 
+end % The 'else' block would mean we're only using DM1
 
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
@@ -131,7 +159,9 @@ mp.isProbing = false;
 
 
 if any(mp.est.itr_ol==ev.Itr) == true
+    mp.tb.info.sbp_texp = 0.5*sbp_texp; % Reduce OL exposure time
     [mp,ev] = get_open_loop_data(mp,ev);
+    mp.tb.info.sbp_texp = sbp_texp;
 else
     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
