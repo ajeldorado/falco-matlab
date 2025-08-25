@@ -216,7 +216,11 @@ else
     tag = '';
 end
 
-fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+if contains(mp.estimator,'ekf_maintenance') && Itr>1
+    fitswrite(Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+else
+    fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+end
 
 if(any(mp.dm_ind==1) && Itr==1)
     fitswrite(mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
