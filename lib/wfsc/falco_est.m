@@ -67,7 +67,7 @@ function ev = falco_est(mp, ev, jacStruct)
                 ev.Im = falco_get_summed_image(mp);
             end
 
-        case{'ekf_maintenance'}
+        case{'ekf_maintenance', 'modal_ekf_maintenance'}
             
             if ev.Itr == 1
                 disp('starting ekf initialization')
