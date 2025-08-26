@@ -18,6 +18,10 @@
 % cvar : structure of controller variables
 
 function [dDM, cvar] = falco_ctrl_modal_ekf_pass(mp, cvar)
+    % Set gain to 0 for first N iterations
+    if cvar.Itr<mp.ctrl.start_iteration; gain = 1; else gain = 0; end
+    cvar.du_hat = gain*cvar.du_hat;
+
     cvar = falco_ctrl_setup(mp, cvar);
     duVec = -mean(cvar.du_hat,2);
     
