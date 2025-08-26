@@ -460,15 +460,17 @@ efc = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
 
 
 if mp.dm_drift_ind(1) == 1; drift(:,:,1) = mp.dm1.V_drift;end
-if mp.dm_drift_ind(1) == 2; drift(:,:,1) = mp.dm2.V_drift ; else drift(:,:,2) = mp.dm2.V_drift; end
-
+if any(mp.dm_ind==2)
+    if mp.dm_drift_ind(1) == 2; drift(:,:,1) = mp.dm2.V_drift ; else drift(:,:,2) = mp.dm2.V_drift; end
+end
 
 if mp.dm_ind(1) == 1; dither(:,:,1) = DM1Vdither;end
 if mp.dm_ind(1) == 2; dither(:,:,1) = DM2Vdither ; else dither(:,:,2) = DM2Vdither; end
 
 if mp.dm_ind(1) == 1; efc(:,:,1) = mp.dm1.dV;end
-if mp.dm_ind(1) == 2; efc(:,:,1) = mp.dm2.dV ; else efc(:,:,2) = mp.dm2.dV; end
-
+if any(mp.dm_ind==2)
+    if mp.dm_ind(1) == 2; efc(:,:,1) = mp.dm2.dV ; else efc(:,:,2) = mp.dm2.dV; end
+end
 % TODO: move to plot_progress_iact
 fitswrite(drift,fullfile([mp.path.config,'/','/drift_command_it',num2str(ev.Itr),'.fits']))
 fitswrite(dither,fullfile([mp.path.config,'/','dither_command_it',num2str(ev.Itr),'.fits']))
