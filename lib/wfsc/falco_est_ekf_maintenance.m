@@ -369,8 +369,9 @@ fitswrite(efc,fullfile([mp.path.config,'/','efc_command_it',num2str(ev.Itr-1),'.
 if ev.Itr == 1
     dz_init = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
     if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz;end
-    if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
-
+    if any(mp.dm_ind==2)
+        if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
+    end
     fitswrite(dz_init,fullfile([mp.path.config,'/','dark_zone_command_0_pwp.fits']))
 end
 
