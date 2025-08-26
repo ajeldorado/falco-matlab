@@ -47,7 +47,7 @@ for Itr = 1:mp.Nitr
     %% Normalization and throughput calculations
     
     mp = falco_compute_psf_norm_factor(mp);
-    out = falco_store_normalization_data(mp, out, Itr);
+%     out = falco_store_normalization_data(mp, out, Itr);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr, :) = thput(:);   
@@ -122,7 +122,7 @@ for Itr = 1:mp.Nitr
         mp = mp.funCtrlStrategy(mp, out, Itr);
     end
     if strcmpi(mp.estimator, 'modal_ekf_maintenance')
-        cvar.du_hat = gain*ev.x_hat;
+        cvar.du_hat = ev.x_hat;
     end
     cvar.Eest = ev.Eest;
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);

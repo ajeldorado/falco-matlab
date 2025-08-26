@@ -19,7 +19,7 @@
 
 function [dDM, cvar] = falco_ctrl_modal_ekf_pass(mp, cvar)
     % Set gain to 0 for first N iterations
-    if cvar.Itr<mp.ctrl.start_iteration; gain = 1; else gain = 0; end
+    if cvar.Itr<mp.ctrl.start_iteration; gain = 0; else gain = 1; end
     cvar.du_hat = gain*cvar.du_hat;
 
     cvar = falco_ctrl_setup(mp, cvar);
