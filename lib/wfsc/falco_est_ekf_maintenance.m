@@ -326,10 +326,10 @@ for iSubband = 1:1:mp.Nsbp
     %--Modelled intensity difference
     controlled_command = cont_command + get_dm_command_vector(mp,mp.dm1.V_dz, mp.dm2.V_dz);
 
-    % E_hat_plus = G * (controlled_command + dither);
-    % E_hat_minus = G * (controlled_command - dither);
-    E_hat_plus = G * dither;
-    E_hat_minus = -G * dither;
+    E_hat_plus = G * (cont_command + mean(ev.x_hat,2) + dither);
+    E_hat_minus = G * (cont_command + mean(ev.x_hat,2) - dither);
+    % E_hat_plus = G * dither;
+    % E_hat_minus = -G * dither;
 
     I_hat_plus = E_hat_plus(1:2:end).^2 + E_hat_plus(2:2:end).^2;
     I_hat_minus = E_hat_minus(1:2:end).^2 + E_hat_minus(2:2:end).^2;

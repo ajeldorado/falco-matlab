@@ -122,7 +122,8 @@ for Itr = 1:mp.Nitr
         mp = mp.funCtrlStrategy(mp, out, Itr);
     end
     if strcmpi(mp.estimator, 'modal_ekf_maintenance')
-        cvar.du_hat = ev.x_hat;
+        if Itr<mp.ctrl.start_iteration; gain = 1; else gain = 0; end
+        cvar.du_hat = gain*ev.x_hat;
     end
     cvar.Eest = ev.Eest;
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
