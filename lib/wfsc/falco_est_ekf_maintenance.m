@@ -30,6 +30,7 @@ end
 
 % Initialize output arrays
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
+ev.imageArray2 = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
 ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IprobedMean = 0;
@@ -162,8 +163,8 @@ switch lower(mp.estimator)
         % Get image with plus dither but store in (i, lam, 1)
         [mp, ev, closed_loop_command, efc_command] = apply_dither(mp, ev, DM1Vdither, DM2Vdither);
         for iSubband = 1:mp.Nsbp
-            ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
-            I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
+            ev.imageArray2(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
+            I0 = ev.imageArray2(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
             y_measured(:,iSubband,1) = I0(mp.Fend.corr.mask);
         end
 end
