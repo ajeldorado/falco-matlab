@@ -38,10 +38,6 @@ if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  en
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  end
 
 %% Get dither command
-
-% if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
-% if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
-
 % Set random number generator seed
 % Dither commands get re-used every dither_cycle_iters iterations
 if mod(Itr-1, mp.est.dither_cycle_iters) == 0 || Itr == 1
@@ -159,9 +155,7 @@ mp.isProbing = false;
 
 
 if any(mp.est.itr_ol==ev.Itr) == true
-    mp.tb.info.sbp_texp = 0.5*sbp_texp; % Reduce OL exposure time
     [mp,ev] = get_open_loop_data(mp,ev);
-    mp.tb.info.sbp_texp = sbp_texp;
 else
     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
@@ -268,13 +262,13 @@ end
 if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
 
     % Print error warning
-    if ~isempty(ev.dm1.new_pinned_actuators); fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ',')); end
-    if ~isempty(ev.dm2.new_pinned_actuators); fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ',')); end
+    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
+    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
 
     % If actuators are used in jacobian, quit.
-    if size(ev.dm1.act_ele_pinned,2)>10 || size(ev.dm2.act_ele_pinned,2)>10
-        save(fullfile(mp.path.config,['ev_exit_',num2str(ev.Itr),'.mat']),'ev')
-        save(fullfile(mp.path.config,['mp_exit_',num2str(ev.Itr),'.mat']),'mp')
+    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
+        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
+        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
 
         error('New actuators in act_ele pinned, exiting loop');
     end
@@ -304,6 +298,7 @@ for i = 1:dim1
 end
 
 end
+
 
 function [mp,ev] = get_open_loop_data(mp,ev)
 %% Remove control and dither from DM command 
