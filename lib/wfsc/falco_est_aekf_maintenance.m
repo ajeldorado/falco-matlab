@@ -51,43 +51,51 @@ else
     ev.dm2_seed_num = ev.dm2_seed_num + 1;
 end
 
-% Generate random dither command
+% Generate random dither command (FIXED to match original EKF format)
 if any(mp.dm_ind == 1)  
-    rng(ev.dm1_seed_num);
-    dither_command1 = mp.est.dither.*randn(mp.dm1.Nact,1);%sqrt(iteration);
-    dither_command1(mp.dm1.pinned) = 0; % Don't dither pinned actuators
-else
-    dither_command1 = zeros(mp.dm1.Nact,1);
-end
+    rng(ev.dm1_seed_num); 
+    DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
+    DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
+else 
+    DM1Vdither = zeros(size(mp.dm1.V)); 
+end % The 'else' block would mean we're only using DM2
 
 if any(mp.dm_ind == 2)  
-    rng(ev.dm2_seed_num);
-    dither_command2 = mp.est.dither.*randn(mp.dm2.Nact,1);
-    dither_command2(mp.dm2.pinned) = 0; % Don't dither pinned actuators
+    rng(ev.dm2_seed_num); 
+    DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
+    DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
 else
-    dither_command2 = zeros(mp.dm2.Nact,1);
-end
+    DM2Vdither = zeros(size(mp.dm2.V)); 
+end % The 'else' block would mean we're only using DM1
+
+dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
 %% Injection of drift
 %FALCO drift is applied to ev.dm1.V, while the estimator assumes drift command is dV.
 
-% Get drift comand vector that estimator knows about
+% FIXED: Initialize drift_command_total with correct dimensions
+% Only initialize for DMs that are actually drifting (mp.dm_drift_ind)
 if ~isfield(ev,'drift_command_total')
-   ev.drift_command_total = zeros(mp.dm1.Nact + mp.dm2.Nact,1);
+    % Initialize with zero drift command to get correct dimensions
+    temp_drift1 = zeros(size(mp.dm1.V));
+    temp_drift2 = zeros(size(mp.dm2.V));
+    temp_drift_vector = get_dm_command_vector(mp, temp_drift1, temp_drift2, mp.dm_drift_ind);
+    ev.drift_command_total = zeros(size(temp_drift_vector));
 end
 
-drift_command = falco_drift_injection(mp, ev);
-ev.drift_command_total = ev.drift_command_total + drift_command; 
+[mp, ev] = falco_drift_injection(mp, ev);
+drift_command = get_dm_command_vector(mp, mp.dm1.V_drift, mp.dm2.V_drift, mp.dm_drift_ind);
+ev.drift_command_total = ev.drift_command_total + drift_command;
 
 %% Apply probing command
 % Get the current probe command (this is probably a bad proxy function)
 
 if mp.est.probe.whichDM == 1
-    probe_command1 = dither_command1;
-    probe_command2 = dither_command2;
+    probe_command1 = DM1Vdither;
+    probe_command2 = DM2Vdither;
 elseif mp.est.probe.whichDM == 2
-    probe_command1 = dither_command1;
-    probe_command2 = dither_command2;
+    probe_command1 = DM1Vdither;
+    probe_command2 = DM2Vdither;
 end
 
 mp.dm1.V = mp.dm1.V + probe_command1;
@@ -132,19 +140,6 @@ mp.dm2.V = mp.dm2.V - probe_command2;
 
 %% Safety check on pinned actuators (remove once this is tested)
 ev = pinned_act_safety_check(mp,ev);
-
-%% Optional output showing image
-if mp.flagDisplayProgress
-    if mp.flagFiber
-        ev.Im = falco_get_summed_image(mp);
-    end
-    
-    %--Plot the raw image in the dark hole
-    figure(300);
-    imagesc(mp.Fend.xisDL, mp.Fend.etasDL, log10(ev.Im), [-10, -4]); axis xy equal tight; 
-    colorbar; colormap parula; drawnow;
-    pause(0.1);
-end
 
 %% Control inputs
 % Add the dithering command to the DM drift command as the
@@ -193,14 +188,6 @@ for iSubband = 1:1:mp.Nsbp
     %--CORRECTED observation matrix H for 3-element state:
     % Use same pattern as standard EKF but adapted for 3-element state
     
-    % Debug information - ADD THIS FOR DEBUGGING
-    fprintf('=== AEKF Debug Info ===\n');
-    fprintf('ev.SS = %d, ev.BS = %d, ev.SL = %d\n', ev.SS, ev.BS, ev.SL);
-    fprintf('x_hat_CL size: [%d, %d]\n', size(x_hat_CL));
-    fprintf('mp.Fend.corr.Npix = %d\n', mp.Fend.corr.Npix);
-    fprintf('y_measured size: [%d, %d]\n', size(y_measured));
-    fprintf('Before H construction - ev.H size: [%d, %d, %d]\n', size(ev.H));
-    
     % CORRECTED H matrix construction
     dh = zeros(size(ev.x_hat(:,iSubband)));
     dh(1:ev.SS:end) = 2 * x_hat_CL(1:3:end);  % Real components: 2*real(E)
@@ -209,12 +196,6 @@ for iSubband = 1:1:mp.Nsbp
 
     ev.H(ev.H_indices) = dh;
     H_T = permute(ev.H,[2,1,3]);
-    
-    % More debug information
-    fprintf('After H construction - H size: [%d, %d, %d]\n', size(ev.H));
-    fprintf('H_T size: [%d, %d, %d]\n', size(H_T));
-    fprintf('P size: [%d, %d, %d]\n', size(ev.P(:,:,:,iSubband)));
-    fprintf('=== End AEKF Debug ===\n');
 
     ev.P(:,:,:,iSubband) = ev.P(:,:,:,iSubband) + ev.Q(:,:,:,iSubband);
    
@@ -247,10 +228,15 @@ for iSubband = 1:1:mp.Nsbp
 end
 
 %% =========================================================================
-function comm_vector = get_dm_command_vector(mp,command1, command2)
+function comm_vector = get_dm_command_vector(mp,command1, command2, dm_indices)
+% FIXED: Added optional dm_indices parameter to control which DMs to include
 
-if any(mp.dm_ind == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
-if any(mp.dm_ind == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
+if nargin < 4
+    dm_indices = mp.dm_ind; % Default to control DMs
+end
+
+if any(dm_indices == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
+if any(dm_indices == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
 comm_vector = [comm1;comm2];
 
 %% =========================================================================
@@ -263,7 +249,9 @@ end
 if any(mp.dm_ind == 2) || any(mp.dm_drift_ind == 2)
     ev.dm2.new_pinned_actuators = setdiff(mp.dm2.pinned, ev.dm2.initial_pinned_actuators);
     ev.dm2.act_ele_pinned = mp.dm2.pinned(ismember(ev.dm2.new_pinned_actuators,mp.dm2.act_ele));
+
 end
+
 
 %  Check that no new actuators have been pinned
 if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
@@ -273,7 +261,7 @@ if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>
     if ~isempty(ev.dm2.new_pinned_actuators); fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ',')); end
 
     % If actuators are used in jacobian, quit.
-    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
+    if size(ev.dm1.act_ele_pinned,2)>10 || size(ev.dm2.act_ele_pinned,2)>10
         save(fullfile(mp.path.config,['ev_exit_',num2str(ev.Itr),'.mat']),'ev')
         save(fullfile(mp.path.config,['mp_exit_',num2str(ev.Itr),'.mat']),'mp')
 

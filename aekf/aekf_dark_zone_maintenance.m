@@ -13,7 +13,7 @@ mp.dm_ind = [1,2]; %--DMs used in estimation/control
 mp.dm_ind_static = []; %--DMs ONLY holding dark zone shape, not injecting drift or part of control
 
 %%-- Variables for ekf maintenance estimation
-mp.estimator = 'aekf_maintenance';
+mp.estimator = 'aekf_maintenance';  % Change this to your AEKF version
 mp.est.probe.Npairs = 1; 
 mp.est.probe.whichDM = 2; %--Which DM is used for dither/control
 mp.est.dither = 9.5e-5; %--std dev of dither command for random dither [V/sqtr(iter)]
@@ -22,7 +22,10 @@ mp.est.read_noise = 1; %--Read noise of detector [e-]
 mp.est.dark_current = 0.01; %--Dark current of detector [e-/s]
 mp.est.itr_ol = [1:1:mp.Nitr].'; %--"open-loop" iterations where an image is taken with initial DM command + drift command
 mp.est.itr_reset = [mp.Nitr+1];
-mp.est.dither_cycle_iters = 50; %--Number of unique dither commands used
+mp.est.dither_cycle_iters = 50; %--Number of unique dither commands used (ADD THIS LINE)
+
+%%-- Enable plotting
+mp.flagPlot = true; %--Enable progress plots
 
 %%-- Controller variables 
 mp.controller = 'plannedEFC';
