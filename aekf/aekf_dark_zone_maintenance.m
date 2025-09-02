@@ -59,6 +59,10 @@ mp.compact.star.xiOffsetVec = mp.star.xiOffsetVec;
 mp.compact.star.etaOffsetVec = mp.star.etaOffsetVec;
 mp.compact.star.weights = mp.star.weights;
 
+%% CRITICAL FIX: Set up Jacobian star weights BEFORE fleshing out workspace
+% This must match the number of stars to prevent indexing errors
+mp.jac.star.weights = mp.star.weights; % Should be [1, 1e-7] for 2 stars
+
 %%--
 % Exposure times
 tb.info.sbp_texp = 5*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass (seconds)
@@ -92,6 +96,14 @@ end
 mp.diaryfile = fullfile(out_dir,'diary.txt');
 diary(mp.diaryfile)
 
+%% Debug check before fleshing out workspace
+fprintf('Before falco_flesh_out_workspace:\n');
+fprintf('  mp.star.count: %d\n', length(mp.star.weights));
+fprintf('  mp.compact.star.count: %d\n', mp.compact.star.count);
+fprintf('  mp.jac.star.weights length: %d\n', length(mp.jac.star.weights));
+fprintf('  mp.star.weights: [%s]\n', num2str(mp.star.weights));
+fprintf('  mp.jac.star.weights: [%s]\n', num2str(mp.jac.star.weights));
+
 %% Flesh out workspace again
 [mp, out] = falco_flesh_out_workspace(mp);
 
@@ -118,6 +130,14 @@ end
 
 %% Set up mp.star.count for multi-star simulation
 mp.star.count = length(mp.star.weights); % Should be 2 (star + planet)
+
+%% Final debug check
+fprintf('After setup:\n');
+fprintf('  mp.star.count: %d\n', mp.star.count);
+fprintf('  mp.compact.star.count: %d\n', mp.compact.star.count);
+if isfield(mp, 'WspatialVec')
+    fprintf('  WspatialVec size: [%d x %d]\n', size(mp.WspatialVec,1), size(mp.WspatialVec,2));
+end
 
 %% Test the multi-star simulation
 disp('Testing multi-star image generation...')
