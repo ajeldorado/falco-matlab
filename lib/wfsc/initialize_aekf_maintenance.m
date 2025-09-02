@@ -1,9 +1,8 @@
 function ev = initialize_aekf_maintenance(mp, ev, jacStruct)
-% Modified version of initialize_ekf_maintenance for incoherent estimation
-% Uses 3-element state vector per pixel: [real(E), imag(E), incoherent_intensity]
 
+% Check if sim mode to avoid calling tb obj in sim mode
 if mp.flagSim
-    sbp_texp = mp.detector.tExpUnprobedVec;
+    sbp_texp = mp.detector.tExpUnprobedVec; % exposure times for non-pairwise-probe images in each subband.
     psf_peaks = mp.detector.peakFluxVec;
 else
     sbp_texp  = mp.tb.info.sbp_texp;
@@ -16,19 +15,17 @@ ev.peak_psf_counts = zeros(1,mp.Nsbp);
 ev.e_scaling = zeros(1,mp.Nsbp);
 
 for iSubband = 1:mp.Nsbp
-
     % potentially set mp.detector.peakFluxVec(si) * mp.detector.tExpUnprobedVec(si) set to mp.tb.info.sbp_texp(si)*mp.tb.info.PSFpeaks(si);
     % to have cleaner setup
     ev.peak_psf_counts(iSubband) = sbp_texp(iSubband)*psf_peaks(iSubband);
     ev.e_scaling(iSubband) = sqrt(psf_peaks(iSubband));
-
 end
 
-% Rearrange jacobians - MODIFIED FOR INCOHERENT
+% Rearrange jacobians for AEKF (3-element state)
 ev.G_tot_cont = rearrange_jacobians_incoherent(mp,jacStruct,mp.dm_ind);
 ev.G_tot_drift = rearrange_jacobians_incoherent(mp,jacStruct,mp.dm_drift_ind);
 
-% Initialize EKF matrices - MODIFIED FOR INCOHERENT
+% Initialize EKF matrices for incoherent estimation
 ev = initialize_ekf_matrices_incoherent(mp, ev, sbp_texp);
 
 % Initialize pinned actuator check
@@ -39,11 +36,20 @@ ev.dm2.new_pinned_actuators = [];
 ev.dm1.act_ele_pinned = [];
 ev.dm2.act_ele_pinned = [];
 
-end
+% Final debug output
+fprintf('=== Final AEKF Initialization State ===\n');
+fprintf('x_hat size: [%d, %d]\n', size(ev.x_hat));
+fprintf('P size: [%d, %d, %d, %d]\n', size(ev.P));
+fprintf('Q size: [%d, %d, %d, %d]\n', size(ev.Q));
+fprintf('H size: [%d, %d, %d]\n', size(ev.H));
+fprintf('R size: [%d, %d, %d]\n', size(ev.R));
+fprintf('G_tot_cont size: [%d, %d, %d]\n', size(ev.G_tot_cont));
+fprintf('G_tot_drift size: [%d, %d, %d]\n', size(ev.G_tot_drift));
+fprintf('=== End AEKF Initialization Debug ===\n');
 
-
+%% =========================================================================
 function G_tot = rearrange_jacobians_incoherent(mp,jacStruct,dm_inds)
-% Modified to handle 3-element state (real, imag, incoherent)
+% Modified to handle 3-element state per pixel
 
 G1 = zeros(3*size(jacStruct.G1,1),mp.dm1.Nele,mp.Nsbp);
 G2 = zeros(3*size(jacStruct.G2,1),mp.dm2.Nele,mp.Nsbp);
@@ -61,7 +67,6 @@ for iSubband = 1:mp.Nsbp
         G1_split(3:3:end,:) = zeros(size(real(G1_comp))); % Incoherent (no DM coupling)
 
         G1(:,:,iSubband) = G1_split;
-
     else
         G1 = [];
     end
@@ -74,17 +79,14 @@ for iSubband = 1:mp.Nsbp
         G2_split(3:3:end,:) = zeros(size(real(G2_comp))); % Incoherent (no DM coupling)
 
         G2(:,:,iSubband) = G2_split;
-
     else
         G2 = [];
-
     end
 end
 
 G_tot = [G1, G2];
 
-end
-
+%% =========================================================================
 function ev = initialize_ekf_matrices_incoherent(mp, ev, sbp_texp)
 % Modified to handle 3-element state per pixel
 
@@ -100,14 +102,25 @@ ev.BS = ev.SS*1; % EKF block size - number of pixels per EKF (currently 1). Comp
 
 ev.SL = ev.SS*mp.Fend.corr.Npix; % Total length of the state vector (all pixels).
 
+% Debug output for initialization
+fprintf('=== AEKF Initialization Debug ===\n');
+fprintf('ev.SS = %d (should be 3)\n', ev.SS);
+fprintf('ev.BS = %d (should be 3)\n', ev.BS);
+fprintf('ev.SL = %d\n', ev.SL);
+fprintf('mp.Fend.corr.Npix = %d\n', mp.Fend.corr.Npix);
+
 %3D matrices that include all the 2D EKF matrices for all pixels at once
 ev.H = zeros(floor(ev.BS/ev.SS),ev.BS,floor(ev.SL/ev.BS));
-
 ev.R = zeros(floor(ev.BS/ev.SS),floor(ev.BS/ev.SS),floor(ev.SL/ev.BS));
 
-%% Assemble Q matrix - MODIFIED FOR 3-ELEMENT STATE
+%% Assemble H and R indices - MODIFIED FOR 3-ELEMENT STATE
+% CORRECTED: Fix H_indices calculation for 3-element state
 ev.H_indices = find(kron(eye(floor(ev.BS/ev.SS)),ones(1,ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev.BS/ev.SS)*ev.SS,floor(ev.SL/ev.BS)));
 ev.R_indices = logical(eye(floor(ev.BS/ev.SS)).*ones(floor(ev.BS/ev.SS),floor(ev.BS/ev.SS),floor(ev.SL/ev.BS)));
+
+% Debug the indices
+fprintf('H_indices length: %d\n', length(ev.H_indices));
+fprintf('R_indices size: [%d, %d, %d]\n', size(ev.R_indices));
 
 % The drift covariance matrix for each pixel (or block of pixels). Needs 
 % to be estimated if the model is not perfectly known.  This is a 4D
@@ -122,11 +135,13 @@ for iSubband = 1:1:mp.Nsbp
     dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);
 
     for i = 0:1:floor(ev.SL/ev.BS)-1
-        % Standard process noise for coherent components
-        Q_coherent = G_reordered((i)*ev.BS+1:(i+1)*ev.BS-1,:)*dm_drift_covariance*G_reordered(i*ev.BS+1:(i+1)*ev.BS-1,:).'*sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
+        % CORRECTED: Build Q matrix properly for 3-element state
+        % Standard process noise for coherent components (first 2 elements)
+        coherent_size = ev.BS-1; % Real and imaginary parts only (exclude incoherent)
+        Q_coherent = G_reordered((i)*ev.BS+1:(i)*ev.BS+coherent_size,:)*dm_drift_covariance*G_reordered((i)*ev.BS+1:(i)*ev.BS+coherent_size,:).'*sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
         
         % Assemble 3x3 Q matrix for each pixel
-        Q_pixel = zeros(3,3);
+        Q_pixel = zeros(ev.SS,ev.SS);
         Q_pixel(1:2,1:2) = Q_coherent; % Real and imaginary components
         Q_pixel(3,3) = 1e-6; % Process noise for incoherent component (tune this value)
         
@@ -164,6 +179,4 @@ for iSubband = 1:1:mp.Nsbp
     ev.x_hat(1:3:end,iSubband) = real(E_hat);       % Real part
     ev.x_hat(2:3:end,iSubband) = imag(E_hat);       % Imaginary part  
     ev.x_hat(3:3:end,iSubband) = zeros(size(real(E_hat))); % Initialize incoherent to zero
- end
-
 end
