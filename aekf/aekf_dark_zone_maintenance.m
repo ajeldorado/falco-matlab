@@ -13,7 +13,7 @@ mp.dm_ind = [1,2]; %--DMs used in estimation/control
 mp.dm_ind_static = []; %--DMs ONLY holding dark zone shape, not injecting drift or part of control
 
 %%-- Variables for ekf maintenance estimation
-mp.estimator = 'ekf_maintenance';
+mp.estimator = 'aekf_maintenance';
 mp.est.probe.Npairs = 1; 
 mp.est.probe.whichDM = 2; %--Which DM is used for dither/control
 mp.est.dither = 9.5e-5; %--std dev of dither command for random dither [V/sqtr(iter)]
@@ -63,6 +63,10 @@ mp.compact.star.weights = mp.star.weights;
 % This must match the number of stars to prevent indexing errors
 mp.jac.star.weights = mp.star.weights; % Should be [1, 1e-7] for 2 stars
 
+%% Enable incoherent estimation in EKF
+% Set flag to use 3-element state (real, imag, incoherent) instead of 2-element (real, imag)
+mp.est.flagIncoherent = true; % Enable incoherent intensity estimation
+
 %%--
 % Exposure times
 tb.info.sbp_texp = 5*ones(mp.Nsbp,1); % Exposure time for each sub-bandpass (seconds)
@@ -79,7 +83,7 @@ mp.dm1.V_shift = zeros(mp.dm1.Nact); %--DM shift command for estimator reset to 
 mp.dm2.V_shift = zeros(mp.dm2.Nact);
 
 %% Change run label and FALCO output paths
-mp.runLabel = ['DZM_with_planet'];
+mp.runLabel = ['DZM_with_planet_aekf'];
 
 out_dir = fullfile(mp.path.config,mp.runLabel);
 mp.path.config = out_dir;  %--Location of *config.mat and *snippet.mat output files
@@ -103,6 +107,7 @@ fprintf('  mp.compact.star.count: %d\n', mp.compact.star.count);
 fprintf('  mp.jac.star.weights length: %d\n', length(mp.jac.star.weights));
 fprintf('  mp.star.weights: [%s]\n', num2str(mp.star.weights));
 fprintf('  mp.jac.star.weights: [%s]\n', num2str(mp.jac.star.weights));
+fprintf('  Incoherent estimation enabled: %s\n', mat2str(mp.est.flagIncoherent));
 
 %% Flesh out workspace again
 [mp, out] = falco_flesh_out_workspace(mp);

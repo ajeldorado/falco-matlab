@@ -20,7 +20,7 @@ function mp = falco_verify_key_values(mp)
     mp.allowedCoronagraphTypes = {'VC', 'VORTEX', 'LC', 'APLC', 'FLC', 'SPLC', 'HLC'};
     mp.allowedLayouts = {'fourier', 'fpm_scale', 'proper', 'roman_phasec_proper', 'wfirst_phaseb_proper'};
     mp.allowedEstimators = {'perfect', 'pairwise', 'pairwise-square', 'pwp-bp-square', 'pairwise-rect', ...
-        'pwp-bp', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf', 'scc', 'iefc', 'ekf_maintenance', 'borde-traub', 'bt', 'bt-kf', 'bt-rect', 'bt-rect-kf'};
+        'pwp-bp', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf', 'scc', 'iefc', 'ekf_maintenance', 'aekf_maintenance', 'borde-traub', 'bt', 'bt-kf', 'bt-rect', 'bt-rect-kf'};
     mp.allowedControllers = {'gridsearchefc', 'plannedefc'};
     mp.allowedBasisTypes = {'actuator', 'fourier'};
     

@@ -75,6 +75,14 @@ function ev = falco_est(mp, ev, jacStruct)
             end
             
             ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
-    end
-
+         
+        case{'aekf_maintenance'}
+            
+            if ev.Itr == 1
+                disp('starting aekf initialization')
+                ev = initialize_aekf_maintenance(mp, ev, jacStruct);
+                disp('done aekf initialization')
+            end
+            
+            ev = falco_est_aekf_maintenance(mp,ev,jacStruct);
 end
