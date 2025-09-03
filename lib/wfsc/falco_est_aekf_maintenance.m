@@ -124,7 +124,7 @@ for iSubband = 1:mp.Nsbp
 end
 
 %% Perform the estimation
-ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
+ev = aekf_estimate_incoherent(mp,ev,jacStruct,y_measured,closed_loop_command);
 
 
 %% Save out the estimate
@@ -136,11 +136,9 @@ else
 end
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 for iSubband = 1:1:mp.Nsbp
-    % Extract electric field estimate from 3-element state vector
-    % State vector is [real1, imag1, inco1, real2, imag2, inco2, ...]
+    % ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
     real_parts = ev.x_hat(1:3:end,iSubband);  % Every 3rd element starting from 1
     imag_parts = ev.x_hat(2:3:end,iSubband);  % Every 3rd element starting from 2
-    
     ev.Eest(:,iSubband) = (real_parts + 1i*imag_parts)/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
     if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
     if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
@@ -161,21 +159,25 @@ ev.IprobedMean = mean(mean(ev.imageArray));
 
 mp.isProbing = false;
 
-%% If itr = itr_OL get OL data. NOTE THIS SHOULD BE BEFORE THE 
+%% If itr = itr_OL get OL data. NOTE THIS SHOULD BE BEFORE THE
 % "Remove control from DM command so that controller images are correct" block
 
-% COMMENTED OUT: get_open_loop_data function not available
-% if any(mp.est.itr_ol==ev.Itr) == true
-%     mp.tb.info.sbp_texp = 0.5*sbp_texp; % Reduce OL exposure time
-%     [mp,ev] = get_open_loop_data(mp,ev);
-%     mp.tb.info.sbp_texp = sbp_texp;
-% else
-%     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
-% end
+% Initialize IOLScoreHist if it doesn't exist (needed for non-OL iterations)
+if ~isfield(ev, 'IOLScoreHist')
+    ev.IOLScoreHist = zeros(mp.Nitr, mp.Nsbp);
+end
 
-% Simple fallback: just copy previous iteration's score
-if ev.Itr > 1 && isfield(ev, 'IOLScoreHist')
-    ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
+if any(mp.est.itr_ol==ev.Itr) == true
+    mp.tb.info.sbp_texp = 0.5*sbp_texp; % Reduce OL exposure time
+    [mp,ev] = get_open_loop_data(mp,ev);
+    mp.tb.info.sbp_texp = sbp_texp;
+else
+    if ev.Itr > 1
+        ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
+    else
+        % For first iteration with no previous data, initialize with zeros
+        ev.IOLScoreHist(ev.Itr,:) = zeros(1, mp.Nsbp);
+    end
 end
 
 %% Remove control from DM command so that controller images are correct
@@ -190,15 +192,14 @@ elseif any(mp.dm_ind_static == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
 end
 
-% COMMENTED OUT: save_ekf_data function not available
-% save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
+save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 
 fprintf(' done. Time: %.3f\n',toc);
-
 end
 
+
 %% =========================================================================
-function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
+function [ev] = aekf_estimate_incoherent(mp, ev, jacStruct, y_measured, closed_loop_command)
 %% Estimation part. All EKFs are advanced in parallel - MODIFIED FOR 3-ELEMENT STATE
 
 if mp.flagSim
@@ -223,9 +224,9 @@ for iSubband = 1:1:mp.Nsbp
     
     % CORRECTED H matrix construction
     dh = zeros(size(ev.x_hat(:,iSubband)));
-    dh(1:ev.SS:end) = 2 * x_hat_CL(1:3:end);  % Real components: 2*real(E)
-    dh(2:ev.SS:end) = 2 * x_hat_CL(2:3:end);  % Imaginary components: 2*imag(E)  
-    dh(3:ev.SS:end) = ones(mp.Fend.corr.Npix, 1);  % Incoherent components: 1
+    dh(1:3:end) = 2 * x_hat_CL(1:3:end);  % Real components: 2*real(E)
+    dh(2:3:end) = 2 * x_hat_CL(2:3:end);  % Imaginary components: 2*imag(E)  
+    dh(3:3:end) = ones(mp.Fend.corr.Npix, 1);  % Incoherent components: 1
 
     ev.H(ev.H_indices) = dh;
     H_T = permute(ev.H,[2,1,3]);
@@ -276,7 +277,6 @@ comm_vector = [comm1;comm2];
 
 end
 
-%% =========================================================================
 function ev = pinned_act_safety_check(mp,ev)
 % Update new pinned actuators
 if any(mp.dm_ind == 1) || any(mp.dm_drift_ind == 1)
@@ -308,7 +308,7 @@ end
 
 end
 
-%% =========================================================================
+
 function out = mypageinv(in)
 
 dim = size(in,3);
@@ -319,23 +319,85 @@ end
 
 end
 
-%% =========================================================================
 function out = mypagemtimes(X,Y) 
 
 dim1 = size(X,3);
 dim2 = size(Y,3);
-if(dim1~=dim2); 
-    % Enhanced error message for debugging
-    fprintf('ERROR in mypagemtimes: Matrix dimension mismatch!\n');
-    fprintf('  X dimensions: [%d, %d, %d]\n', size(X));
-    fprintf('  Y dimensions: [%d, %d, %d]\n', size(Y));
-    error('X and Y need to have the same third dimension size. X has %d pages, Y has %d pages.', dim1, dim2); 
+if(dim1~=dim2); error('X and Y need to be the same size.'); end
+out = zeros(size(X,1),size(Y,2),dim1);
+for i = 1:dim1
+    out(:,:,i) = X(:,:,i)*Y(:,:,i);
 end
 
-dim = size(X,3);
-out = zeros(size(X,1),size(Y,2),dim);
-for i = 1:dim
-    out(:,:,i) = X(:,:,i)*Y(:,:,i);
+end
+
+function [mp,ev] = get_open_loop_data(mp,ev)
+%% Remove control and dither from DM command 
+
+% If DM is used for drift and control, apply V_dz and Vdrift, if DM is only
+% used for control, apply V_dz
+if (any(mp.dm_drift_ind == 1) && any(mp.dm_ind == 1)) || any(mp.dm_drift_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift);
+elseif any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+
+if (any(mp.dm_drift_ind == 2) && any(mp.dm_ind == 2)) || any(mp.dm_drift_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift);
+elseif any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
+
+% Do safety check for pinned actuators
+disp('OL DM safety check.')
+ev = pinned_act_safety_check(mp,ev);
+
+if ev.Itr == 1
+    ev.IOLScoreHist = zeros(mp.Nitr,mp.Nsbp);
+end
+
+I_OL = zeros(size(ev.imageArray(:,:,1,1),1),size(ev.imageArray(:,:,1,1),2),mp.Nsbp);
+for iSubband = 1:mp.Nsbp
+    I0 = falco_get_sbp_image(mp, iSubband);
+    I_OL(:,:,iSubband) = I0;
+    
+    ev.IOLScoreHist(ev.Itr,iSubband) = mean(I0(mp.Fend.score.mask));
+    
+end
+
+
+ev.normI_OL_sbp = I_OL;
+
+disp(['mean OL contrast: ',num2str(mean(ev.IOLScoreHist(ev.Itr,:)))])
+end
+
+function save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
+drift = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_drift_ind));
+dither = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
+efc = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
+
+
+if mp.dm_drift_ind(1) == 1; drift(:,:,1) = mp.dm1.V_drift;end
+if mp.dm_drift_ind(1) == 2; drift(:,:,1) = mp.dm2.V_drift ; else drift(:,:,2) = mp.dm2.V_drift; end
+
+
+if mp.dm_ind(1) == 1; dither(:,:,1) = DM1Vdither;end
+if mp.dm_ind(1) == 2; dither(:,:,1) = DM2Vdither ; else dither(:,:,2) = DM2Vdither; end
+
+if mp.dm_ind(1) == 1; efc(:,:,1) = mp.dm1.dV;end
+if mp.dm_ind(1) == 2; efc(:,:,1) = mp.dm2.dV ; else efc(:,:,2) = mp.dm2.dV; end
+
+% TODO: move to plot_progress_iact
+fitswrite(drift,fullfile([mp.path.config,'/','/drift_command_it',num2str(ev.Itr),'.fits']))
+fitswrite(dither,fullfile([mp.path.config,'/','dither_command_it',num2str(ev.Itr),'.fits']))
+fitswrite(efc,fullfile([mp.path.config,'/','efc_command_it',num2str(ev.Itr-1),'.fits']))
+
+if ev.Itr == 1
+    dz_init = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
+    if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz;end
+    if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
+
+    fitswrite(dz_init,fullfile([mp.path.config,'/','dark_zone_command_0_pwp.fits']))
 end
 
 end

@@ -289,6 +289,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     
     % Plot open loop contrast if dark zone maintenance is running
     if contains(mp.estimator,'ekf_maintenance') 
+        hEplot = falco_plot_dzm(mp,ev);
         out.IOLScoreHist = ev.IOLScoreHist;
         if(mp.flagPlot)
             figure(111)
