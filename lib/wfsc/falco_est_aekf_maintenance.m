@@ -40,6 +40,10 @@ if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  en
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  end
 
 %% Get dither command
+
+% if any(mp.dm_ind == 1);  DM1Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM1Vdither = zeros(size(mp.dm1.V)); end % The 'else' block would mean we're only using DM2
+% if any(mp.dm_ind == 2);  DM2Vdither = normrnd(0,mp.est.dither,[mp.dm1.Nact mp.dm1.Nact]); else; DM2Vdither = zeros(size(mp.dm2.V)); end % The 'else' block would mean we're only using DM1
+
 % Set random number generator seed
 % Dither commands get re-used every dither_cycle_iters iterations
 if mod(Itr-1, mp.est.dither_cycle_iters) == 0 || Itr == 1
@@ -51,7 +55,7 @@ else
     ev.dm2_seed_num = ev.dm2_seed_num + 1;
 end
 
-% Generate random dither command (FIXED to match original EKF format)
+% Generate random dither command
 if any(mp.dm_ind == 1)  
     rng(ev.dm1_seed_num); 
     DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
@@ -70,102 +74,131 @@ end % The 'else' block would mean we're only using DM1
 
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
-%% Injection of drift
-%FALCO drift is applied to ev.dm1.V, while the estimator assumes drift command is dV.
+%% Set total command for estimator image
+% TODO: need to save these commands for each iteration separately
 
-% FIXED: Initialize drift_command_total with correct dimensions
-% Only initialize for DMs that are actually drifting (mp.dm_drift_ind)
-if ~isfield(ev,'drift_command_total')
-    % Initialize with zero drift command to get correct dimensions
-    temp_drift1 = zeros(size(mp.dm1.V));
-    temp_drift2 = zeros(size(mp.dm2.V));
-    temp_drift_vector = get_dm_command_vector(mp, temp_drift1, temp_drift2, mp.dm_drift_ind);
-    ev.drift_command_total = zeros(size(temp_drift_vector));
-end
-
-[mp, ev] = falco_drift_injection(mp, ev);
-drift_command = get_dm_command_vector(mp, mp.dm1.V_drift, mp.dm2.V_drift, mp.dm_drift_ind);
-ev.drift_command_total = ev.drift_command_total + drift_command;
-
-%% Apply probing command
-% Get the current probe command (this is probably a bad proxy function)
-
-if mp.est.probe.whichDM == 1
-    probe_command1 = DM1Vdither;
-    probe_command2 = DM2Vdither;
-elseif mp.est.probe.whichDM == 2
-    probe_command1 = DM1Vdither;
-    probe_command2 = DM2Vdither;
-end
-
-mp.dm1.V = mp.dm1.V + probe_command1;
-mp.dm2.V = mp.dm2.V + probe_command2;
-
-%% Take Image
-if mp.flagFiber
-    [ev.Im, ev.Ifiber] = falco_get_summed_image(mp);
+if Itr > 1
+    if ~isfield(mp.dm1,'dV'); mp.dm1.dV = zeros(mp.dm1.Nact);end
+    if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact);end
+    efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
 else
-    ev.Im = falco_get_summed_image(mp);
+    efc_command = 0*dither;
+    mp.dm1.dV = zeros(size(DM1Vdither));
+    mp.dm2.dV = zeros(size(DM1Vdither));
+end
+
+% Generate command to apply to DMs
+% Note if dm_drift_ind ~= i, the command is set to zero in
+% falco_drift_injection
+if any(mp.dm_ind == 1)
+    % note falco_set_constrained_voltage does not apply the command to the
+    % DM
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
+elseif any(mp.dm_drift_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+
+if any(mp.dm_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
+elseif any(mp.dm_drift_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
+
+% Do safety check to make sure no actuators are pinned
+ev = pinned_act_safety_check(mp,ev);
+
+closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_shift, mp.dm2.V_shift);
+
+%% Get images
+
+y_measured = zeros(mp.Fend.corr.Npix,mp.Nsbp);
+for iSubband = 1:mp.Nsbp
+    ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
+    I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
+    y_measured(:,iSubband) = I0(mp.Fend.corr.mask);
+
 end
 
 %% Perform the estimation
-% Get the DM commands known to the estimator
-closed_loop_command = get_dm_command_vector(mp,mp.dm1.V - mp.dm1.V_dz, mp.dm2.V - mp.dm2.V_dz);
+ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
 
-if mp.flagFiber
-    if mp.est.flagUseJac
-        ev = ekf_estimate_incoherent(mp, ev, jacStruct, ev.Ifiber, closed_loop_command);
-    else
-        ev = ekf_estimate_incoherent(mp, ev, [], ev.Ifiber, closed_loop_command);
-    end
-else
-    Im_meas = ev.Im(mp.Fend.corr.maskBool);
-    if mp.est.flagUseJac
-        ev = ekf_estimate_incoherent(mp, ev, jacStruct, Im_meas, closed_loop_command);
-    else
-        ev = ekf_estimate_incoherent(mp, ev, [], Im_meas, closed_loop_command);
-    end
-end
 
-%% Pack up E-field estimates
-% Get the closed-loop E-field estimate back to contrast units:
-for iSubband = 1:mp.Nsbp
-    ev.Eest(:,iSubband) = (ev.x_hat(1:ev.SS:end,iSubband) + 1i*ev.x_hat(2:ev.SS:end,iSubband)) ./ (ev.e_scaling(iSubband) * sqrt(ev.peak_psf_counts(iSubband)/ev.peak_psf_counts(iSubband)));
-    ev.IincoEst(:,iSubband) = ev.x_hat(3:ev.SS:end,iSubband) ./ ev.peak_psf_counts(iSubband);
-end
-
-%% Remove the probing command
-mp.dm1.V = mp.dm1.V - probe_command1;
-mp.dm2.V = mp.dm2.V - probe_command2;
-
-%% Safety check on pinned actuators (remove once this is tested)
-ev = pinned_act_safety_check(mp,ev);
-
-%% Control inputs
-% Add the dithering command to the DM drift command as the
-% estimator does not know about it
-
-efc_command = get_dm_command_vector(mp,probe_command1,probe_command2);
-
-% Estimate the closed loop E-field 
+%% Save out the estimate
+% TODO: add star and wavelength loop?
 if mp.flagSim
-    sbp_texp  = mp.detector.tExpUnprobedVec;
+    sbp_texp = mp.detector.tExpUnprobedVec; % exposure times for non-pairwise-probe images in each subband.
 else
     sbp_texp  = mp.tb.info.sbp_texp;
 end
-
+ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 for iSubband = 1:1:mp.Nsbp
-    ev.x_hat(:,iSubband) = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*efc_command;
-end
-mp.dm1.V_shift = mp.dm1.dV;
-mp.dm2.V_shift = mp.dm2.dV;
+    % Extract electric field estimate from 3-element state vector
+    % State vector is [real1, imag1, inco1, real2, imag2, inco2, ...]
+    real_parts = ev.x_hat(1:3:end,iSubband);  % Every 3rd element starting from 1
+    imag_parts = ev.x_hat(2:3:end,iSubband);  % Every 3rd element starting from 2
+    
+    ev.Eest(:,iSubband) = (real_parts + 1i*imag_parts)/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
+    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
+    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
 
-mp.dm1.dV = zeros(size(mp.dm1.V_dz));
-mp.dm2.dV = zeros(size(mp.dm2.V_dz));
-    % TODO: save each drift command
+    ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
+end
+I0vec = y_measured./ev.peak_psf_counts;
+ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
+
+%--Other data to save out
+% TODO: not sure if this is returning the right thing? do I need to return
+% ampNorm?
+ev.ampSqMean = mean(I0vec(:)); %--Mean probe intensity
+% ev.ampNorm = mean(I0vec(:)); %--Normalized probe amplitude maps
+
+% ev.Im = ev.imageArray(:,:,1,mp.si_ref);
+ev.IprobedMean = mean(mean(ev.imageArray)); 
+
+mp.isProbing = false;
+
+%% If itr = itr_OL get OL data. NOTE THIS SHOULD BE BEFORE THE 
+% "Remove control from DM command so that controller images are correct" block
+
+% COMMENTED OUT: get_open_loop_data function not available
+% if any(mp.est.itr_ol==ev.Itr) == true
+%     mp.tb.info.sbp_texp = 0.5*sbp_texp; % Reduce OL exposure time
+%     [mp,ev] = get_open_loop_data(mp,ev);
+%     mp.tb.info.sbp_texp = sbp_texp;
+% else
+%     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
+% end
+
+% Simple fallback: just copy previous iteration's score
+if ev.Itr > 1 && isfield(ev, 'IOLScoreHist')
+    ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
+end
+
+%% Remove control from DM command so that controller images are correct
+if any(mp.dm_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+if any(mp.dm_ind == 2) 
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
+
+% COMMENTED OUT: save_ekf_data function not available
+% save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
+
+fprintf(' done. Time: %.3f\n',toc);
+
+end
 
 %% =========================================================================
-function [ev] = ekf_estimate_incoherent(mp, ev, jacStruct, y_measured, closed_loop_command)
+function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
 %% Estimation part. All EKFs are advanced in parallel - MODIFIED FOR 3-ELEMENT STATE
 
 if mp.flagSim
@@ -227,6 +260,8 @@ for iSubband = 1:1:mp.Nsbp
 
 end
 
+end
+
 %% =========================================================================
 function comm_vector = get_dm_command_vector(mp,command1, command2, dm_indices)
 % FIXED: Added optional dm_indices parameter to control which DMs to include
@@ -238,6 +273,8 @@ end
 if any(dm_indices == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
 if any(dm_indices == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
 comm_vector = [comm1;comm2];
+
+end
 
 %% =========================================================================
 function ev = pinned_act_safety_check(mp,ev)
@@ -269,6 +306,8 @@ if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>
     end
 end
 
+end
+
 %% =========================================================================
 function out = mypageinv(in)
 
@@ -276,6 +315,8 @@ dim = size(in,3);
 out = zeros(size(in));
 for i = 1:dim
     out(:,:,i) = inv(in(:,:,i));
+end
+
 end
 
 %% =========================================================================
@@ -295,4 +336,6 @@ dim = size(X,3);
 out = zeros(size(X,1),size(Y,2),dim);
 for i = 1:dim
     out(:,:,i) = X(:,:,i)*Y(:,:,i);
+end
+
 end

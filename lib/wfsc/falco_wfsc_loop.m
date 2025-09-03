@@ -81,7 +81,7 @@ for Itr = 1:mp.Nitr
     
     %% Inject drift for (Only) Dark Zone Maintenance
     % Get Drift Command
-    if strcmpi(mp.estimator,'ekf_maintenance') || strcmpi(mp.estimator,'aekf_maintenance')
+    if contains(mp.estimator,'ekf_maintenance')
         [mp, ev] = falco_drift_injection(mp, ev);
     end
 
@@ -201,7 +201,7 @@ if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
 end
 
-if strcmpi(mp.estimator,'ekf_maintenance') || strcmpi(mp.estimator,'aekf_maintenance')  % sfr
+if contains(mp.estimator,'ekf_maintenance')  % sfr
    out.IOLScoreHist = ev.IOLScoreHist;
 end
 
@@ -288,7 +288,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
     
     % Plot open loop contrast if dark zone maintenance is running
-    if strcmpi(mp.estimator,'ekf_maintenance') 
+    if contains(mp.estimator,'ekf_maintenance') 
         out.IOLScoreHist = ev.IOLScoreHist;
         if(mp.flagPlot)
             figure(111)
