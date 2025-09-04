@@ -120,7 +120,8 @@ closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_s
 %% Get images
 
 y_measured = zeros(mp.Fend.corr.Npix,mp.Nsbp);
-for iSubband = 1:mp.Nsbp
+% for iSubband = 1:mp.Nsbp
+for iSubband = 1:1
     ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
     I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
     y_measured(:,iSubband) = I0(mp.Fend.corr.mask);
