@@ -143,7 +143,8 @@ for iSubband = 1:1:mp.Nsbp
         % Assemble 3x3 Q matrix for each pixel
         Q_pixel = zeros(ev.SS,ev.SS);
         Q_pixel(1:2,1:2) = Q_coherent; % Real and imaginary components
-        Q_pixel(3,3) = 1e-6; % Process noise for incoherent component (tune this value)
+        % Q_pixel(3,3) = 1e-6; % Process noise for incoherent component (tune this value)
+        Q_pixel(3,3) = mp.est.process_noise_incoherent; % Process noise for incoherent component
         
         ev.Q(:,:,i+1,iSubband) = Q_pixel;
     end
