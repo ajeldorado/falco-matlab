@@ -32,6 +32,10 @@ end
 
 % Initialize output arrays
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
+% ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+% ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+%% clp: need to debug this
+%% clp: need to also add in the variable that considers how much of the inco to count as inco
 ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IprobedMean = 0;
@@ -211,6 +215,8 @@ end
 for iSubband = 1:1:mp.Nsbp
 
     %--Estimate of the closed loop electric field (3-element state):
+    %% G_tot_cont is now gamma, so this needs to be fixed
+    %% Need to also fix Q????
     x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
 
     %--Estimate of the measurement (modified for 3-element state):
@@ -245,6 +251,7 @@ for iSubband = 1:1:mp.Nsbp
     dy = (y_measured(:,iSubband) - y_hat);
     
     % Modified for 3-element state
+    %% fix this? maybe?
     dy_hat_stacked  = zeros(size(K));
     dy_hat_stacked(1,:,:) = dy.';
     dy_hat_stacked(2,:,:) = dy.';
