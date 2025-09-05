@@ -4,6 +4,9 @@
 
 EXAMPLE_try_running_FALCO
 
+%% check values for Q and make inco smaller than that
+%% remove color bar limits (make it more limits for now)
+
 % Option 2: Load DM command from previous experiment, load mp and out variables 
 
 %% Step 2: Set variables for DZM
@@ -23,7 +26,7 @@ mp.est.dark_current = 0.01; %--Dark current of detector [e-/s]
 mp.est.itr_ol = [1:1:mp.Nitr].'; %--"open-loop" iterations where an image is taken with initial DM command + drift command
 mp.est.itr_reset = [mp.Nitr+1];
 mp.est.dither_cycle_iters = 50; %--Number of unique dither commands used (ADD THIS LINE)
-mp.est.process_noise_incoherent = 1e-9; % Process noise for incoherent component (tune this value)
+mp.est.process_noise_incoherent = 1e-15; % Process noise for incoherent component (tune this value)
 
 %%-- Enable plotting
 mp.flagPlot = true; %--Enable progress plots

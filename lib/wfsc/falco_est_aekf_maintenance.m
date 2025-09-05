@@ -36,8 +36,8 @@ ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
 % ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 %% clp: need to debug this
 %% clp: need to also add in the variable that considers how much of the inco to count as inco
-ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
-ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
+ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp);
+ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp);
 ev.IprobedMean = 0;
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  end
@@ -120,8 +120,7 @@ closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_s
 %% Get images
 
 y_measured = zeros(mp.Fend.corr.Npix,mp.Nsbp);
-% for iSubband = 1:mp.Nsbp
-for iSubband = 1:1
+for iSubband = 1:mp.Nsbp
     ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
     I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
     y_measured(:,iSubband) = I0(mp.Fend.corr.mask);
@@ -140,18 +139,37 @@ else
     sbp_texp  = mp.tb.info.sbp_texp;
 end
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
-for iSubband = 1:1:mp.Nsbp
-    % ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
-    real_parts = ev.x_hat(1:3:end,iSubband);  % Every 3rd element starting from 1
-    imag_parts = ev.x_hat(2:3:end,iSubband);  % Every 3rd element starting from 2
+% for iSubband = 1:1:mp.Nsbp
+%     % ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
+%     real_parts = ev.x_hat(1:3:end,iSubband);  % Every 3rd element starting from 1
+%     imag_parts = ev.x_hat(2:3:end,iSubband);  % Every 3rd element starting from 2
+%     ev.Eest(:,iSubband) = (real_parts + 1i*imag_parts)/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
+%     if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
+%     if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
+% 
+%     ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
+% end
+% I0vec = y_measured./ev.peak_psf_counts;
+% ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
+
+% Extract incoherent components from state vector instead of computing residual
+for iSubband = 1:mp.Nsbp
+    % Extract coherent components
+    real_parts = ev.x_hat(1:3:end,iSubband);
+    imag_parts = ev.x_hat(2:3:end,iSubband);
     ev.Eest(:,iSubband) = (real_parts + 1i*imag_parts)/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
-    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
-    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
+    
+    % Extract incoherent components from state vector
+    incoherent_parts = ev.x_hat(3:3:end,iSubband); % Every 3rd element starting from 3
+    ev.IincoEst(:,iSubband) = incoherent_parts / (ev.e_scaling(iSubband)^2 * sbp_texp(iSubband));
+    
+    if any(mp.dm_ind == 1); ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V; end
+    if any(mp.dm_ind == 2); ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V; end
 
     ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
 end
+
 I0vec = y_measured./ev.peak_psf_counts;
-ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
 
 %--Other data to save out
 % TODO: not sure if this is returning the right thing? do I need to return
@@ -198,6 +216,35 @@ elseif any(mp.dm_ind_static == 2)
 end
 
 save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
+
+%% Transform AEKF estimates to mode-based format for controller compatibility
+% The controller expects ev.Eest to have mp.jac.Nmode columns (subband × star combinations)
+% AEKF only estimates for subbands, so we need to replicate for each star
+
+fprintf('Converting AEKF estimates to controller format...\n');
+
+% Create mode-based arrays
+ev.Eest_modes = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+ev.IincoEst_modes = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+
+for iMode = 1:mp.jac.Nmode
+    iSubband = mp.jac.sbp_inds(iMode);
+    iStar = mp.jac.star_inds(iMode);
+    
+    % For AEKF, we only have estimates for the primary star (star 1)
+    % For other stars (e.g., injected planets), use zero estimate
+    if iStar == 1
+        ev.Eest_modes(:, iMode) = ev.Eest(:, iSubband);
+        ev.IincoEst_modes(:, iMode) = ev.IincoEst(:, iSubband);
+    else
+        ev.Eest_modes(:, iMode) = zeros(mp.Fend.corr.Npix, 1);
+        ev.IincoEst_modes(:, iMode) = zeros(mp.Fend.corr.Npix, 1);
+    end
+end
+
+% Replace the subband-based arrays with mode-based arrays for controller
+ev.Eest = ev.Eest_modes;
+ev.IincoEst = ev.IincoEst_modes;
 
 fprintf(' done. Time: %.3f\n',toc);
 end
