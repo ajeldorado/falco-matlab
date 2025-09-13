@@ -1,4 +1,4 @@
-function ev = falco_est_ekf_maintenance(mp, ev, varargin)
+function [mp, ev] = falco_est_ekf_maintenance(mp, ev, varargin)
 
 %% This stuff has been copy-pasted
 
@@ -16,9 +16,11 @@ end
 
 % Augment which DMs are used if the probing DM isn't used for control.
 if whichDM == 1 && ~any(mp.dm_ind == 1)
-    mp.dm_ind = [mp.dm_ind(:); 1];
+    mp.dm_ind_est = [mp.dm_ind(:); 1];
 elseif whichDM == 2 && ~any(mp.dm_ind == 2)
-    mp.dm_ind = [mp.dm_ind(:); 2];
+    mp.dm_ind_est = [mp.dm_ind(:); 2];
+else
+    mp.dm_ind_est = mp.dm_ind;
 end
 
 %--Select number of actuators across based on chosen DM for the probing
@@ -58,7 +60,7 @@ else
 end
 
 % Generate random dither command
-if any(mp.dm_ind == 1)  
+if any(mp.dm_ind_est == 1)  
     rng(ev.dm1_seed_num); 
     DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
     DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
@@ -66,7 +68,7 @@ else
     DM1Vdither = zeros(size(mp.dm1.V)); 
 end % The 'else' block would mean we're only using DM2
 
-if any(mp.dm_ind == 2)  
+if any(mp.dm_ind_est == 2)  
     rng(ev.dm2_seed_num); 
     DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
     DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
@@ -91,8 +93,8 @@ end
 % TODO: add star and wavelength loop?
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 for iSubband = 1:1:mp.Nsbp
-    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
-    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
+    if any(mp.dm_ind_est == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
+    if any(mp.dm_ind_est == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
     ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
 end
 
@@ -121,12 +123,12 @@ else
 end
 
 %% Remove control from DM command so that controller images are correct
-if any(mp.dm_ind == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
+if any(mp.dm_ind_est == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + -DM1Vdither + mp.dm1.V_shift);
 elseif any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
-if any(mp.dm_ind == 2) 
+if any(mp.dm_ind_est == 2) 
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
 elseif any(mp.dm_ind_static == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
@@ -284,10 +286,17 @@ for iSubband = 1:1:mp.Nsbp
 
      %--Jacobian (convert from sqrt(contrast)/nm to sqrt(photons/s)/nm)
     G = ev.G_tot_cont(:, :, iSubband) * ev.e_scaling(iSubband) * sqrt(ev.sbp_texp); % Jacobian for the full DM
+    if isfield(mp.est, 'r')
+        [U, S_diag, V] = svd(G, "econ");
+        r = length(ev.x_hat);
+        G_r = U(:, 1:r);
+    end
     
     %--Dither-modulated Jacobian
     J_du = G * dither;
-    
+    if ev.Itr == 10
+        a =5;
+    end
     %--Measurement noise covariance matrix (R)
     % if mp.est.low_photon_regime
         % dark_current_photons = mp.est.dark_current * mp.est.quantum_efficiency * mp.exp.t_coron_sbp;
@@ -301,7 +310,11 @@ for iSubband = 1:1:mp.Nsbp
     % end
 
     %--Measurement operator (H)
-    JJdu = G.' * diag(J_du);
+    if isfield(mp.est, 'r')
+        JJdu = G_r.' * diag(J_du);
+    else
+        JJdu = G' * diag(J_du);
+    end
     ev.H = 4 * (JJdu(:, 1:2:end) + JJdu(:, 2:2:end));
     
     %--Prediction step for the covariance matrix
@@ -311,24 +324,62 @@ for iSubband = 1:1:mp.Nsbp
     P_H = ev.P(:, :, iSubband) * ev.H;
     S = ev.H.' * P_H + ev.R;
     
-    if rcond(S) < 1e-12
+    if rcond(S) < 1e-5
         K = P_H * pinv(S);
         fprintf('Warning: S matrix is singular. Using pseudo-inverse.\n');
     else
         K = P_H / S;
     end
-    
+    figure(1234);
+    hold on;                             % keep previous plots
+    plot(ev.Itr, rcond(S), 'o-');
+    yscale log% add new point
+    title('S Condition num')
+    hold off;  
+
     %--Update step for the covariance matrix
-    ev.P(:, :, iSubband) = ev.P(:, :, iSubband) - K * P_H';
+    ev.P(:, :, iSubband) = (eye(length(ev.x_hat)) - K*ev.H')* ev.P(:, :, iSubband)*(eye(length(ev.x_hat)) - K*ev.H')' + K*ev.R*K';
     
+    figure(2234);
+    hold on;                             % keep previous plots
+    plot(ev.Itr, rcond(ev.P),'o-');
+    yscale log% add new point
+    title('P Condition num')
+    hold off;  
+
+    figure(3234);
+    hold on;                             % keep previous plots
+    plot(ev.Itr, min(eig(ev.P)),'ro-');
+    hold on 
+    plot(ev.Itr, max(eig(ev.P)),'bo-');
+    legend('Min', 'Max')
+    yscale log% add new point
+    title('P Min eigenvalue')
+    hold off;
+    
+    figure(4234);
+    hold on;
+    plot(ev.Itr, mean(sqrt(diag(ev.P))),'o-')
+    title('Min std from covar')
+    hold off;
+
+    figure(5234);
+    hold on;
+    plot(ev.Itr, mean(sqrt(diag(ev.R))),'o-')
+    hold off;
+    title('R matrix std')
     %--Measurement residual (dy)
     dy = y_plus - y_minus;
     
     %--Modelled intensity difference
     controlled_command = cont_command + get_dm_command_vector(mp,mp.dm1.V_dz, mp.dm2.V_dz);
-
-    E_hat_plus = G * (cont_command + mean(ev.x_hat,2) + dither);
-    E_hat_minus = G * (cont_command + mean(ev.x_hat,2) - dither);
+    if isfield(mp.est, 'r')
+        E_hat_plus = G * (cont_command + dither) + G_r* mean(ev.x_hat,2);
+        E_hat_minus = G * (cont_command - dither)+ G_r* mean(ev.x_hat,2);
+    else
+        E_hat_plus = G * (cont_command + dither) + G* mean(ev.x_hat,2);
+        E_hat_minus = G * (cont_command - dither)+ G* mean(ev.x_hat,2);
+    end
     % E_hat_plus = G * dither;
     % E_hat_minus = -G * dither;
 
@@ -339,8 +390,36 @@ for iSubband = 1:1:mp.Nsbp
     %--Update DM command estimate
     residual = dy - dy_hat;
     ev.x_hat(:, iSubband) = ev.x_hat(:, iSubband) + K * residual;
+
+    figure(6234)
+    hold on;
+    colormap(parula)
+    plot(1:length(ev.x_hat), ev.x_hat)
+    title('State vec estimate')
+    colorbar;
+    clim([0 ev.Itr]);
+    hold off;
+    if isfield(mp.est, 'r')
+        V_T = V';
+        sigma_r = S_diag(1:r, 1:r);
+        check = (pinv(sigma_r)*(ev.x_hat(:, iSubband)));
+        ev.control = (V(:, 1:r))*check;
+        vector = zeros(50);
+        vector(mp.dm1.act_ele) = ev.control;
+        colormap(turbo)
+        figure(8234)
+        hold on;
+        imagesc(vector)
+        colorbar;
+        title('Control vec')
+        hold off;
+        E_hat_est = G * (cont_command - dither) + G_r * mean(ev.x_hat,2);
+    else
+        E_hat_est = G * (cont_command - dither) + G * mean(ev.x_hat,2);
+    end
     
-    ev.Eest(:,iSubband) = (E_hat_plus(1:2:end) + 1i*E_hat_plus(2:2:end));
+    
+    ev.Eest(:,iSubband) = E_hat_est(1:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp)) + 1i*(E_hat_est(2:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp)));
 
 end
 

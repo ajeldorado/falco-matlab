@@ -92,10 +92,14 @@ end
 function ev = initialize_modal_ekf_matrices(mp, ev)
 
     fprintf('Initializing modal EKF...\n');
-
-    nele_vals = [mp.dm1.Nele, mp.dm2.Nele];
-    Nact_est = sum(nele_vals(mp.dm_ind));
-    Nact_drift = sum(nele_vals(mp.dm_drift_ind));
+    if isfield(mp.est, 'r')
+        Nact_est = mp.est.r;
+        Nact_drift = mp.est.r;
+    else
+        nele_vals = [mp.dm1.Nele, mp.dm2.Nele];
+        Nact_est = sum(nele_vals(mp.dm_ind));
+        Nact_drift = sum(nele_vals(mp.dm_drift_ind));
+    end
 
     %--Initial DM command, based on all available DM actuators
     ev.SS = 2; % Pixel state size. Two for real and imaginary parts of the electric field. If incoherent intensity is not ignored, SS should be 3 and the EKF modified accordingly.

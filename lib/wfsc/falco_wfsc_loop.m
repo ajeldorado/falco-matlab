@@ -89,7 +89,7 @@ for Itr = 1:mp.Nitr
     %% Wavefront Estimation
     
     if (Itr > 1); EestPrev = ev.Eest; end % save previous estimate for Delta E plot
-    ev = falco_est(mp, ev, jacStruct);
+    [mp, ev] = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
 
@@ -122,7 +122,11 @@ for Itr = 1:mp.Nitr
         mp = mp.funCtrlStrategy(mp, out, Itr);
     end
     if strcmpi(mp.estimator, 'modal_ekf_maintenance')
-        cvar.du_hat = ev.x_hat;
+        if isfield(mp.est, 'r')
+            cvar.du_hat = ev.control;
+        else
+            cvar.du_hat = ev.x_hat;
+        end
     end
     cvar.Eest = ev.Eest;
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);

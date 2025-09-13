@@ -245,10 +245,12 @@ fitswrite(Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fit
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
-    if Itr == 1
-        save(fullfile(out_dir,['jacobian_data',tag,'.mat']),'ev.G_tot_cont', 'ev.G_tot_drift');
-    end
     if contains(mp.estimator,'ekf_maintenance')
+        if Itr == 1
+            G_tot_cont = ev.G_tot_cont;
+            G_tot_drift = ev.G_tot_drift;
+            save(fullfile(out_dir,['jacobian_data',tag,'.mat']),'G_tot_cont', 'G_tot_drift');
+        end
         fields_to_remove = {'G_tot_cont','G_tot_drift','R','H','Q'};
         ev = rmfield(ev,fields_to_remove); 
         disp('removed dzm matrices')

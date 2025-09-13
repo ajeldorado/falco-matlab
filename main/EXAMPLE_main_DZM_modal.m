@@ -23,7 +23,7 @@ mp.fracBW = 0.01;       %--fractional bandwidth of the whole bandpass (Delta lam
 mp.Nsbp = 1;            %--Number of sub-bandpasses to divide the whole bandpass into for estimation and control
 mp.Nwpsbp = 1;          %--Number of wavelengths to used to approximate an image in each sub-bandpass
 
-mp.Nitr = 6; %--Number of wavefront control iterations
+mp.Nitr = 1; %--Number of wavefront control iterations
 
 mp.dm_ind = [1]; 
 mp.est.probe.whichDM = 1; 
@@ -56,7 +56,7 @@ mp.dm_ind_static = [2]; %--DMs ONLY holding dark zone shape, not injecting drift
 mp.estimator = 'modal_ekf_maintenance';
 mp.est.probe.Npairs = 1; 
 mp.est.probe.whichDM = 1; %--Which DM is used for dither/control
-mp.est.dither = 2.5*9.5e-3; %--std dev of dither command for random dither [V/sqtr(iter)]
+mp.est.dither = 5*9.5e-3; %--std dev of dither command for random dither [V/sqtr(iter)]
 mp.est.flagUseJac = true; % EKF needs the jacobian for estimation 
 mp.est.read_noise = 1; %--Read noise of detector [e-]
 mp.est.dark_current = 0.01; %--Dark current of detector [e-/s]
