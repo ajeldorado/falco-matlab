@@ -285,7 +285,7 @@ function [ev] = modal_ekf_estimate(mp,ev,jacStruct,y_measured,dither,cont_comman
 for iSubband = 1:1:mp.Nsbp
 
      %--Jacobian (convert from sqrt(contrast)/nm to sqrt(photons/s)/nm)
-    G = ev.G_tot_cont(:, :, iSubband) * ev.e_scaling(iSubband) * sqrt(ev.sbp_texp); % Jacobian for the full DM
+    G = ev.G_tot_cont(:, :, iSubband) * ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband)); % Jacobian for the full DM
     if isfield(mp.est, 'r')
         [U, S_diag, V] = svd(G, "econ");
         r = length(ev.x_hat);
@@ -303,7 +303,7 @@ for iSubband = 1:1:mp.Nsbp
         % read_noise_photons = mp.est.read_noise * mp.est.quantum_efficiency;
         % ev.dm_R = diag(y_prev + y_measured + 2 * dark_current_photons^2 + 2 * read_noise_photons^2);
     % else
-    dark_current_photons = mp.est.dark_current * mp.est.quantum_efficiency * ev.sbp_texp;
+    dark_current_photons = mp.est.dark_current * mp.est.quantum_efficiency * ev.sbp_texp(iSubband);
     read_noise_photons = mp.est.read_noise * mp.est.quantum_efficiency;
 
     ev.R = diag(y_plus + y_minus + 2 * dark_current_photons^2 + 2 * read_noise_photons^2);
@@ -324,7 +324,7 @@ for iSubband = 1:1:mp.Nsbp
     P_H = ev.P(:, :, iSubband) * ev.H;
     S = ev.H.' * P_H + ev.R;
     
-    if rcond(S) < 1e-5
+    if rcond(S) < 1e-12
         K = P_H * pinv(S);
         fprintf('Warning: S matrix is singular. Using pseudo-inverse.\n');
     else
@@ -419,7 +419,7 @@ for iSubband = 1:1:mp.Nsbp
     end
     
     
-    ev.Eest(:,iSubband) = E_hat_est(1:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp)) + 1i*(E_hat_est(2:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp)));
+    ev.Eest(:,iSubband) = E_hat_est(1:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband))) + 1i*(E_hat_est(2:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband))));
 
 end
 
@@ -455,8 +455,18 @@ end
 if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
 
     % Print error warning
-    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
-    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+    if ~isempty(ev.dm1.new_pinned_actuators)
+        fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
+    else
+        fprintf('New DM1 pinned: []\n');
+    end
+
+    % Handle DM2
+    if ~isempty(ev.dm2.new_pinned_actuators)
+        fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+    else
+        fprintf('New DM2 pinned: []\n');
+    end
 
     % If actuators are used in jacobian, quit.
     if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
