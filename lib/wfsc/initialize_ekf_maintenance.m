@@ -174,7 +174,7 @@ for iSubband = 1:1:mp.Nsbp
     % If an estimate is availible from stroke minimization in a brighter setting:
     try %paths.E_estimated_filenames(k)
         % TODO: need to load this in main file from saved data
-        E_hat = mp.est.Eest(:,iSubband) * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)); % assuming it is scaled (units: contrast)
+        E_hat = mp.est.Eest(:,iSubband); % * ev.e_scaling(iSubband) * sqrt(mp.tb.info.sbp_texp(iSubband)); % assuming it is scaled (units: contrast)
     catch
         E_hat = zeros(ev.SL/ev.BS,1);%,mp.Nsbp);
     end
