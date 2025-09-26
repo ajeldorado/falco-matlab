@@ -47,6 +47,7 @@ for Itr = 1:mp.Nitr
     %% Normalization and throughput calculations
     
     mp = falco_compute_psf_norm_factor(mp);
+%     out = falco_store_normalization_data(mp, out, Itr);
     
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr, :) = thput(:);   
@@ -81,14 +82,14 @@ for Itr = 1:mp.Nitr
     
     %% Inject drift for (Only) Dark Zone Maintenance
     % Get Drift Command
-    if strcmpi(mp.estimator,'ekf_maintenance')
+    if contains(mp.estimator,'ekf_maintenance')
         [mp, ev] = falco_drift_injection(mp, ev);
     end
 
     %% Wavefront Estimation
     
     if (Itr > 1); EestPrev = ev.Eest; end % save previous estimate for Delta E plot
-    ev = falco_est(mp, ev, jacStruct);
+    [mp, ev] = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
 
@@ -120,7 +121,13 @@ for Itr = 1:mp.Nitr
     if isfield(mp, 'funCtrlStrategy') && ~isempty(mp.funCtrlStrategy)
         mp = mp.funCtrlStrategy(mp, out, Itr);
     end
-    
+    if strcmpi(mp.estimator, 'modal_ekf_maintenance')
+        if isfield(mp.est, 'r')
+            cvar.du_hat = ev.control;
+        else
+            cvar.du_hat = ev.x_hat;
+        end
+    end
     cvar.Eest = ev.Eest;
     [mp, cvar] = falco_ctrl(mp, cvar, jacStruct);
     
@@ -191,6 +198,9 @@ Itr = Itr + 1;
 
 out = store_dm_command_history(mp, out, Itr);
 
+mp = falco_compute_psf_norm_factor(mp);
+% out = falco_store_normalization_data(mp, out, Itr);
+
 [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
 out.thput(Itr, :) = thput(:);
 mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true
@@ -201,7 +211,7 @@ if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
 end
 
-if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
+if contains(mp.estimator,'ekf_maintenance')  % sfr
    out.IOLScoreHist = ev.IOLScoreHist;
 end
 
@@ -289,7 +299,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     if any(mp.dm_ind == 2); DM2surf = falco_gen_dm_surf(mp.dm2, mp.dm2.compact.dx, mp.dm2.compact.Ndm); else; DM2surf = zeros(mp.dm2.compact.Ndm); end
     
     % Plot open loop contrast if dark zone maintenance is running
-    if strcmpi(mp.estimator,'ekf_maintenance') 
+    if contains(mp.estimator,'ekf_maintenance') 
         out.IOLScoreHist = ev.IOLScoreHist;
         if(mp.flagPlot)
             figure(111)
@@ -306,7 +316,7 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
     end
     
     if isfield(mp, 'testbed')
-        out.InormHist_tb.total = out.IrawScoreHist; 
+        out.InormHist_tb.total = out.InormHist; 
         Im_tb.Im = Im;
         Im_tb.E = zeros([size(Im), mp.Nsbp]);
         Im_tb.Iinco = zeros([size(Im), mp.Nsbp]);
@@ -320,8 +330,8 @@ function [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSi
                 tmp(mp.Fend.corr.maskBool) = ev.IincoEst(:, si);
                 Im_tb.Iinco(:, :, si) = tmp; % unmodulated component 
 
-                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(mp.Fend.scoreInCorr, si)).^2);
-                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(mp.Fend.scoreInCorr, si));
+                out.InormHist_tb.mod(Itr, si) = mean(abs(ev.Eest(:, si)).^2);
+                out.InormHist_tb.unmod(Itr, si) = mean(ev.IincoEst(:, si));
 
                 Im_tb.ev = ev; % Passing the probing structure so I can save it
             end

@@ -67,7 +67,7 @@ VafterConstraints = Vtotal;
 numOfChangedActsChanged = nnz(VafterConstraints(:) - VbeforeConstraints(:));
 
 if(numOfChangedActsChanged>0)
-    disp(['     DM constrained: ',num2str(numOfChangedActsChanged),' changed.'])
+    % disp(['     DM constrained: ',num2str(numOfChangedActsChanged),' changed.'])
 end
 
 dm.V = Vtotal - dm.biasMap;

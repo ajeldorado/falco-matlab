@@ -16,7 +16,7 @@
 % -------
 % ev : structure of estimator variables
 
-function ev = falco_est(mp, ev, jacStruct)
+function [mp, ev] = falco_est(mp, ev, jacStruct)
     
     if ~mp.est.flagUseJac; clear jacStruct; end % save RAM
 
@@ -31,7 +31,8 @@ function ev = falco_est(mp, ev, jacStruct)
                 
             
         case{'pwp-bp-square', 'pwp-bp', 'pairwise', 'pairwise-square', ...
-                'pairwise-rect', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf'}
+                'pairwise-rect', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf',...
+                'pwp-fiber'}
             if(mp.flagFiber && mp.flagLenslet)
                 if mp.est.flagUseJac
                     ev = falco_est_pairwise_probing_fiber(mp, jacStruct);
@@ -66,7 +67,7 @@ function ev = falco_est(mp, ev, jacStruct)
                 ev.Im = falco_get_summed_image(mp);
             end
 
-        case{'ekf_maintenance'}
+        case{'ekf_maintenance', 'modal_ekf_maintenance'}
             
             if ev.Itr == 1
                 disp('starting ekf initialization')
@@ -74,7 +75,7 @@ function ev = falco_est(mp, ev, jacStruct)
                 disp('done ekf initialization')
             end
             
-            ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
+            [mp, ev] = falco_est_ekf_maintenance(mp,ev,jacStruct);
     end
 
 end
