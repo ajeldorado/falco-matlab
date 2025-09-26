@@ -159,9 +159,7 @@ switch lower(mp.estimator)
         for iSubband = 1:mp.Nsbp
             ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
             I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
-            Itmp = I0(mp.Fend.corr.mask);
-            Itmp(Itmp<0) = 0;
-            y_measured(:,iSubband,2) = Itmp;
+            y_measured(:,iSubband,2) = I0(mp.Fend.corr.mask);
         end
            
         % Get image with plus dither but store in (i, lam, 1)
@@ -169,9 +167,7 @@ switch lower(mp.estimator)
         for iSubband = 1:mp.Nsbp
             ev.imageArray2(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
             I0 = ev.imageArray2(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
-            Itmp = I0(mp.Fend.corr.mask);
-            Itmp(Itmp<0) = 0;
-            y_measured(:,iSubband,1) = Itmp;
+            y_measured(:,iSubband,1) = I0(mp.Fend.corr.mask);
         end
 end
 
@@ -336,8 +332,8 @@ for iSubband = 1:1:mp.Nsbp
     end
     figure(1234);
     hold on;                             % keep previous plots
-    semilogy(ev.Itr, rcond(S), 'o-');
-%     yscale log% add new point
+    plot(ev.Itr, rcond(S), 'o-');
+    yscale log% add new point
     title('S Condition num')
     hold off;  
 
@@ -346,18 +342,18 @@ for iSubband = 1:1:mp.Nsbp
     
     figure(2234);
     hold on;                             % keep previous plots
-    semilogy(ev.Itr, rcond(ev.P),'o-');
-%     yscale log% add new point
+    plot(ev.Itr, rcond(ev.P),'o-');
+    yscale log% add new point
     title('P Condition num')
     hold off;  
 
     figure(3234);
     hold on;                             % keep previous plots
-    semilogy(ev.Itr, min(eig(ev.P)),'ro-');
+    plot(ev.Itr, min(eig(ev.P)),'ro-');
     hold on 
     plot(ev.Itr, max(eig(ev.P)),'bo-');
     legend('Min', 'Max')
-%     yscale log% add new point
+    yscale log% add new point
     title('P Min eigenvalue')
     hold off;
     
@@ -401,17 +397,8 @@ for iSubband = 1:1:mp.Nsbp
     plot(1:length(ev.x_hat), ev.x_hat)
     title('State vec estimate')
     colorbar;
-%     clim([0 ev.Itr]);
+    clim([0 ev.Itr]);
     hold off;
-    
-    figure(1111)
-    vector = zeros(50);
-    vector(mp.dm1.act_ele) = ev.x_hat(:, iSubband);
-    hold on;
-    imagesc(vector)
-    colorbar;
-    title('xhat')
-    
     if isfield(mp.est, 'r')
         V_T = V';
         sigma_r = S_diag(1:r, 1:r);
