@@ -98,7 +98,10 @@ function [mp, cvar] = falco_ctrl(mp, cvar, jacStruct)
         case{'tsm'}
             cvar.dummy = 1;
             [dDM,cvar] = falco_ctrl_total_stroke_minimization(mp,cvar); 
-            
+
+        case{'modal_ekf_ctrl'}
+            [dDM,cvar] = falco_ctrl_modal_ekf_pass(mp,cvar); 
+
     end
     fprintf(' done. Time: %.3f sec\n',toc);
 

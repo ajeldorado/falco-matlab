@@ -81,6 +81,8 @@ function mp = falco_configure_fiber_dark_hole(mp)
 
             maskFiberCladding.pixresFP = mp.Fend.res;
             maskFiberCladding.FOV = mp.Fend.FOV;
+            maskFiberCladding.Nxi = mp.Fend.Nxi;
+            maskFiberCladding.Neta = mp.Fend.Neta;
             maskFiberCladding.xiOffset = mp.Fend.x_fiber(iFiber);
             maskFiberCladding.etaOffset = mp.Fend.y_fiber(iFiber);
             [mp.Fend.fiberCladding.mask, ~, ~] = falco_gen_SW_mask(maskFiberCladding);
