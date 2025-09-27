@@ -23,6 +23,7 @@ else
     mp.dm_ind_est = mp.dm_ind;
 end
 
+
 %--Select number of actuators across based on chosen DM for the probing
 if whichDM == 1
     Nact = mp.dm1.Nact;
@@ -78,7 +79,6 @@ end % The 'else' block would mean we're only using DM1
 
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
-
 [mp, ev, y_measured, closed_loop_command, efc_command] = get_estimate_data(mp, ev, DM1Vdither, DM2Vdither);
 %% Perform the estimation
 switch lower(mp.estimator)
@@ -124,7 +124,7 @@ end
 
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind_est == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + -DM1Vdither + mp.dm1.V_shift);
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
 elseif any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
