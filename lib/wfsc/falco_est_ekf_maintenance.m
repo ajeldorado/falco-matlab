@@ -1,4 +1,4 @@
-function ev = falco_est_ekf_maintenance(mp, ev, varargin)
+function [mp, ev] = falco_est_ekf_maintenance(mp, ev, varargin)
 
 %% This stuff has been copy-pasted
 
@@ -16,10 +16,13 @@ end
 
 % Augment which DMs are used if the probing DM isn't used for control.
 if whichDM == 1 && ~any(mp.dm_ind == 1)
-    mp.dm_ind = [mp.dm_ind(:); 1];
+    mp.dm_ind_est = [mp.dm_ind(:); 1];
 elseif whichDM == 2 && ~any(mp.dm_ind == 2)
-    mp.dm_ind = [mp.dm_ind(:); 2];
+    mp.dm_ind_est = [mp.dm_ind(:); 2];
+else
+    mp.dm_ind_est = mp.dm_ind;
 end
+
 
 %--Select number of actuators across based on chosen DM for the probing
 if whichDM == 1
@@ -54,7 +57,7 @@ else
 end
 
 % Generate random dither command
-if any(mp.dm_ind == 1)  
+if any(mp.dm_ind_est == 1)  
     rng(ev.dm1_seed_num); 
     DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
     DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
@@ -62,7 +65,7 @@ else
     DM1Vdither = zeros(size(mp.dm1.V)); 
 end % The 'else' block would mean we're only using DM2
 
-if any(mp.dm_ind == 2)  
+if any(mp.dm_ind_est == 2)  
     rng(ev.dm2_seed_num); 
     DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
     DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
@@ -88,7 +91,7 @@ end
 % Generate command to apply to DMs
 % Note if dm_drift_ind ~= i, the command is set to zero in
 % falco_drift_injection
-if any(mp.dm_ind == 1)
+if any(mp.dm_ind_est == 1)
     % note falco_set_constrained_voltage does not apply the command to the
     % DM
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
@@ -98,7 +101,7 @@ elseif any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
 
-if any(mp.dm_ind == 2)
+if any(mp.dm_ind_est == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
 elseif any(mp.dm_drift_ind == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
@@ -135,8 +138,8 @@ end
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 for iSubband = 1:1:mp.Nsbp
     ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
-    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
-    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
+    if any(mp.dm_ind_est == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
+    if any(mp.dm_ind_est == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
 
     ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
 end
@@ -167,12 +170,12 @@ else
 end
 
 %% Remove control from DM command so that controller images are correct
-if any(mp.dm_ind == 1)
+if any(mp.dm_ind_est == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
 elseif any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
-if any(mp.dm_ind == 2) 
+if any(mp.dm_ind_est == 2) 
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + DM2Vdither + mp.dm2.V_shift);
 elseif any(mp.dm_ind_static == 2)
     mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);

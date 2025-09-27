@@ -73,7 +73,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
         catch 
             try; cleanUpDMs(tb); end
             disp('Error setting DM2. Reseting electronics. Trying again.')
-            FNGR_setPos(tb,6);FNGR_setPos(tb,9);FNGR_setPos(tb,6);
+            FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
             pause(10);
             setUpDMs(tb);
             DM_apply2Dmap(tb.DM1,dm1_map);
@@ -103,6 +103,45 @@ function normI = falco_get_dst_sbp_image(mp,si)
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts; 
     
+    %% Take WFS image 
+    
+    if isfield(mp,'flagWFSimages') && mp.flagWFSimages
+        
+        % Get image in WFS band 
+%         lam1WFS_nm = tb.wfsCam.lam1_nm;
+%         lam2WFS_nm = tb.wfsCam.lam2_nm;
+        texpWFS = tb.wfsCam.texp0; 
+        coaddsWFS = tb.wfsCam.coaddsWFS0; 
+%         if strcmpi(tb.info.source,'nkt') 
+%             NKT_setWvlRange(tb,lam1WFS_nm,lam2WFS_nm);
+%         end
+        imWFS = wfsCam_getCoaddedImage(tb,texpWFS,coaddsWFS); 
+%         if strcmpi(tb.info.source,'nkt') 
+%             NKT_setWvlRange(tb,lam1*1e9,lam2*1e9);
+%         end
+        
+        tb.wfsCam.numCoadds = tb.wfsCam.coaddsWFS0; 
+
+        % Save image 
+        if ~isfield(mp,'Itr')
+            Itr = 0;
+        else
+            Itr = mp.Itr; 
+        end
+        out_dir = fullfile(tb.info.OUT_DATA_DIR,mp.runLabel,'WFS',['it',num2str(Itr,'%02d')]);
+        % Directory to save dat
+        if(~exist(out_dir, 'dir'))
+            mkdir(out_dir);
+        end
+        dircheck = dir(fullfile(out_dir,'*.fits'));
+        numFiles = numel(dircheck);
+        flnm = ['n',num2str(numFiles+1,'%02d'),'.fits'];
+        wfsCam_fitswrite(tb,imWFS,fullfile(out_dir,flnm));
+        
+        tb.wfsCam.numCoadds = 1; % reset coadds to 1
+        
+    end
+    
     %% apply nominal dark hole to mitigate_persistance. jorgellop
     if mp.flagResetNominalVafterProbe
         
@@ -126,7 +165,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
             catch 
                 try; cleanUpDMs(tb); end
                 disp('Error setting DM2. Reseting electronics. Trying again.')
-                FNGR_setPos(tb,6);FNGR_setPos(tb,9);FNGR_setPos(tb,6);
+                FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
                 pause(10);
                 setUpDMs(tb);
                 DM_apply2Dmap(tb.DM1,dm1_map);
@@ -137,40 +176,7 @@ function normI = falco_get_dst_sbp_image(mp,si)
         
     end
     
-    %% Take WFS image 
-    
-    if isfield(mp,'flagWFSimages') && mp.flagWFSimages
-        
-        % Get image in WFS band 
-        lam1WFS_nm = tb.wfsCam.lam1_nm;
-        lam2WFS_nm = tb.wfsCam.lam2_nm;
-        texpWFS = tb.wfsCam.texp0; 
-        coaddsWFS = tb.wfsCam.coaddsWFS0; 
-        if strcmpi(tb.info.source,'nkt') 
-            NKT_setWvlRange(tb,lam1WFS_nm,lam2WFS_nm);
-        end
-        imWFS = wfsCam_getCoaddedImage(tb,texpWFS,coaddsWFS); 
-        if strcmpi(tb.info.source,'nkt') 
-            NKT_setWvlRange(tb,lam1*1e9,lam2*1e9);
-        end
-        
-        % Save image 
-        if ~isfield(mp,'Itr')
-            Itr = 0;
-        else
-            Itr = mp.Itr; 
-        end
-        out_dir = fullfile(tb.info.OUT_DATA_DIR,mp.runLabel,'WFS',['it',num2str(Itr,'%02d')]);
-        % Directory to save dat
-        if(~exist(out_dir, 'dir'))
-            mkdir(out_dir);
-        end
-        dircheck = dir(fullfile(out_dir,'*.fits'));
-        numFiles = numel(dircheck);
-        flnm = ['n',num2str(numFiles+1,'%02d'),'.fits'];
-        wfsCam_fitswrite(tb,imWFS,fullfile(out_dir,flnm));
-        
-    end
+
 
 
 end

@@ -16,7 +16,7 @@
 % -------
 % ev : structure of estimator variables
 
-function ev = falco_est(mp, ev, jacStruct)
+function [mp, ev] = falco_est(mp, ev, jacStruct)
     
     if ~mp.est.flagUseJac; clear jacStruct; end % save RAM
 
@@ -74,7 +74,7 @@ function ev = falco_est(mp, ev, jacStruct)
                 disp('done ekf initialization')
             end
             
-            ev = falco_est_ekf_maintenance(mp,ev,jacStruct);
+            [mp, ev] = falco_est_ekf_maintenance(mp,ev,jacStruct);
     end
 
 end

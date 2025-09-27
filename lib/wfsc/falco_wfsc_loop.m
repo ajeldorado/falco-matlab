@@ -88,7 +88,7 @@ for Itr = 1:mp.Nitr
     %% Wavefront Estimation
     
     if (Itr > 1); EestPrev = ev.Eest; end % save previous estimate for Delta E plot
-    ev = falco_est(mp, ev, jacStruct);
+    [mp, ev] = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
 
