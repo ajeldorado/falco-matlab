@@ -23,7 +23,6 @@ else
     mp.dm_ind_est = mp.dm_ind;
 end
 
-
 %--Select number of actuators across based on chosen DM for the probing
 if whichDM == 1
     Nact = mp.dm1.Nact;
@@ -79,6 +78,7 @@ end % The 'else' block would mean we're only using DM1
 
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
+
 [mp, ev, y_measured, closed_loop_command, efc_command] = get_estimate_data(mp, ev, DM1Vdither, DM2Vdither);
 %% Perform the estimation
 switch lower(mp.estimator)
@@ -124,7 +124,7 @@ end
 
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind_est == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + -DM1Vdither + mp.dm1.V_shift);
 elseif any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
@@ -159,7 +159,9 @@ switch lower(mp.estimator)
         for iSubband = 1:mp.Nsbp
             ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
             I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
-            y_measured(:,iSubband,2) = I0(mp.Fend.corr.mask);
+            Itmp = I0(mp.Fend.corr.mask);
+            Itmp(Itmp<0) = 0;
+            y_measured(:,iSubband,2) = Itmp;
         end
            
         % Get image with plus dither but store in (i, lam, 1)
@@ -167,7 +169,9 @@ switch lower(mp.estimator)
         for iSubband = 1:mp.Nsbp
             ev.imageArray2(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
             I0 = ev.imageArray2(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
-            y_measured(:,iSubband,1) = I0(mp.Fend.corr.mask);
+            Itmp = I0(mp.Fend.corr.mask);
+            Itmp(Itmp<0) = 0;
+            y_measured(:,iSubband,1) = Itmp;
         end
 end
 
@@ -332,8 +336,8 @@ for iSubband = 1:1:mp.Nsbp
     end
     figure(1234);
     hold on;                             % keep previous plots
-    plot(ev.Itr, rcond(S), 'o-');
-    yscale log% add new point
+    semilogy(ev.Itr, rcond(S), 'o-');
+%     yscale log% add new point
     title('S Condition num')
     hold off;  
 
@@ -342,18 +346,18 @@ for iSubband = 1:1:mp.Nsbp
     
     figure(2234);
     hold on;                             % keep previous plots
-    plot(ev.Itr, rcond(ev.P),'o-');
-    yscale log% add new point
+    semilogy(ev.Itr, rcond(ev.P),'o-');
+%     yscale log% add new point
     title('P Condition num')
     hold off;  
 
     figure(3234);
     hold on;                             % keep previous plots
-    plot(ev.Itr, min(eig(ev.P)),'ro-');
+    semilogy(ev.Itr, min(eig(ev.P)),'ro-');
     hold on 
     plot(ev.Itr, max(eig(ev.P)),'bo-');
     legend('Min', 'Max')
-    yscale log% add new point
+%     yscale log% add new point
     title('P Min eigenvalue')
     hold off;
     
@@ -397,8 +401,17 @@ for iSubband = 1:1:mp.Nsbp
     plot(1:length(ev.x_hat), ev.x_hat)
     title('State vec estimate')
     colorbar;
-    clim([0 ev.Itr]);
+%     clim([0 ev.Itr]);
     hold off;
+    
+    figure(1111)
+    vector = zeros(50);
+    vector(mp.dm1.act_ele) = ev.x_hat(1:length(mp.dm1.act_ele), iSubband);
+    hold on;
+    imagesc(vector)
+    colorbar;
+    title('xhat')
+    
     if isfield(mp.est, 'r')
         V_T = V';
         sigma_r = S_diag(1:r, 1:r);
