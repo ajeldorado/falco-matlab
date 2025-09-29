@@ -97,7 +97,7 @@ if(mp.flagPlot)
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
     semilogy(0:Itr-1,mean(Inorm.mod,2),'-o');
     semilogy(0:Itr-1,mean(Inorm.unmod,2),'--o');
-    if strcmpi(mp.estimator,'ekf_maintenance') %&& any(mp.est.itr_ol==Itr) == true
+    if contains(mp.estimator,'ekf_maintenance') %&& any(mp.est.itr_ol==Itr) == true
         % TODO: this fails when it isnt an OL iteration for some reason
         semilogy(0:Itr-1,mean(Im_tb.ev.IOLScoreHist(1:Itr,:),2),'-p')
     end
@@ -106,7 +106,7 @@ if(mp.flagPlot)
     xlabel('Iteration')
 %     ylabel('Norm. I');
     legend('Total','Modulated','Unmodulated');
-    if strcmpi(mp.estimator,'ekf_maintenance')
+    if contains(mp.estimator,'ekf_maintenance')
         legend('Total','OL est','Unmodulated','OL meas','location','southeast');
     end
 	title('Mean Normalized Intensity')
@@ -251,15 +251,20 @@ fitswrite(Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fit
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
-    if strcmpi(mp.estimator, 'ekf_maintenance')
-        fields_to_remove = {'G_tot_cont','G_tot_drift','R','H','P','Q'};
+    if contains(mp.estimator,'ekf_maintenance')
+        if Itr == 1
+            G_tot_cont = ev.G_tot_cont;
+            G_tot_drift = ev.G_tot_drift;
+            save(fullfile(out_dir,['jacobian_data',tag,'.mat']),'G_tot_cont', 'G_tot_drift');
+        end
+        fields_to_remove = {'G_tot_cont','G_tot_drift','R','H','Q'};
         ev = rmfield(ev,fields_to_remove); 
         disp('removed dzm matrices')
     end
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
 end
 
-if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
+if contains(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
     img = mean(Im_tb.ev.normI_OL_sbp,3);
     fitswrite(img,fullfile(out_dir,['normI_OL_it',num2str(Itr-1),tag,'.fits']));
 end
