@@ -109,10 +109,10 @@ function ev = initialize_modal_ekf_matrices(mp, ev)
     for iSubband = 1:1:mp.Nsbp
         %--Initial covariance, based on drifting DM actuators
         act_drift = 1:Nact_drift;
-        ev.Q(act_drift,act_drift,iSubband) = eye(size(mp.dm_drift_ind, 2) * Nact_drift) * mp.drift.presumed_dm_std^2;
+        ev.Q(act_drift,act_drift,iSubband) = eye(Nact_drift) * mp.drift.presumed_dm_std^2;
         
         %--Process noise covariance, based on drifting DM actuators
-        ev.P(act_drift,act_drift,iSubband) = eye(size(mp.dm_drift_ind, 2) * Nact_drift) * mp.drift.presumed_dm_std^2; %+ eye(size(mp.dm_drift_ind, 2) * Nact) * mp.est.testbed_drift^2;
+        ev.P(act_drift,act_drift,iSubband) = eye(Nact_drift) * mp.drift.presumed_dm_std^2; %+ eye(size(mp.dm_drift_ind, 2) * Nact) * mp.est.testbed_drift^2;
     end
 
 end

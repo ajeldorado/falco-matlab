@@ -281,8 +281,8 @@ if mp.flagSim
 else
     sciCam_fitswrite(tb,obj,filename);
 end
-end
-
+% end
+% 
 % function fitswrite(data,filename)
 %     fitswrite_hdr(data,filename,{},'b');
-% end
+end
