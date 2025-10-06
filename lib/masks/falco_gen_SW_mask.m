@@ -55,6 +55,9 @@ if isfield(inputs,'centering'); centering = inputs.centering; else; centering = 
 
 if isfield(inputs,'clockAngDeg');  clockAngDeg = inputs.clockAngDeg; else; clockAngDeg = 0;  end %--Amount extra to clock the dark hole
 
+% oversized (eroded) shapes
+if isfield(inputs,'radius_erode');  radius_erode = inputs.radius_erode; else; radius_erode = 0;  end %--Amount extra to enlarge the dark hole
+
 %--Number of points across each axis. Crop the vertical (eta) axis if angDeg<180 degrees.
 if( strcmpi(centering,'interpixel') )
     Nxi =  ceil_even(2*minFOVxi*pixresFP); % Number of points across the full FPM
@@ -121,6 +124,13 @@ softwareMask = softwareMask0 & abs(angle(exp(1i*(THETAS-clockAngRad))))<=angRad/
 if any(strcmpi(whichSide, {'both', 'lr', 'rl', 'leftright', 'rightleft', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'}))
     softwareMask2 = softwareMask0 & abs(angle(exp(1i*(THETAS-(clockAngRad+pi)))))<=angRad/2;
     softwareMask = or(softwareMask, softwareMask2);
+end
+
+if radius_erode > 0
+    window_array = 0*RHOS;
+    window_array(RHOS <= radius_erode) = 1;
+    % window_array = window_array/sum(window_array);
+    softwareMask = imerode(softwareMask, window_array);
 end
 
 end %--END OF FUNCTION
