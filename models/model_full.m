@@ -212,7 +212,7 @@ switch lower(mp.layout)
             Eout = Eout/sqrt(normFac);
         end
 
-    case{'dst1_proper'}
+    case{'dst1_proper', 'dst2_proper'}
         optval = mp.full;
         optval.use_dm1 = true;
         optval.use_dm2 = true;
@@ -225,7 +225,12 @@ switch lower(mp.layout)
             optval.source_y_shift_lam0divd = -mp.source_y_offset_norm;
         end
         lambda_um = lambda * 1e6;
-        Eout = matlab_to_python_proper('dst1', lambda_um, optval.gridsize, optval ); 
+        if strcmpi(mp.layout, 'dst1_proper')
+            prescription = 'dst1';
+        elseif strcmpi(mp.layout, 'dst2_proper')
+            prescription = 'dst2';
+        end
+        Eout = matlab_to_python_proper(prescription, lambda_um, optval.gridsize, optval); 
 
         if normFac ~= 0
             Eout = Eout/sqrt(normFac);
