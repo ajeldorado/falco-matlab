@@ -29,12 +29,12 @@ trigger:
 pool:
   vmimage: ubuntu-latest
 steps:
-  - task: InstallMATLAB@0
+  - task: InstallMATLAB@1
     inputs:
-      release: R2021a
+      release: R2024a
 ##############################################
   
-  - task: RunMATLABTests@0
+  - task: RunMATLABTests@1
     inputs:
       codeCoverageCobertura: 'code-coverage/coverage.xml'
       selectByFolder: testing/testarchive;testing/tests_long
