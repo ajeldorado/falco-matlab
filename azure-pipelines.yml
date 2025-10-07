@@ -31,7 +31,7 @@ pool:
 steps:
   - task: InstallMATLAB@1
     inputs:
-      release: 2024a
+      release: R2024a
       products: Image_Processing_Toolbox
 
 ##############################################
