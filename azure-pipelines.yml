@@ -44,7 +44,31 @@ steps:
     condition: succeededOrFailed()
     inputs:
       testResultsFiles: 'test-results/results.xml'
-  - task: PublishCodeCoverageResults@1
+
+  # # Deprecated code coverage with v1
+  # - task: PublishCodeCoverageResults@1
+  #   inputs:
+  #     codeCoverageTool: Cobertura
+  #     summaryFileLocation: 'code-coverage/coverage.xml'
+
+  # Attempt at v2 usage from
+  # https://stackoverflow.com/questions/79323701/how-to-properly-upgrade-from-publishcodecoverageresults1-to-publishcodecoverage
+  # https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/customize-python?view=azure-devops
+
+  - task: UseDotNet@2  # DotNet Might be needed for PublishCodeCoverageResults@2
+    displayName: 'Install .NET Core SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '8.x'
+      performMultiLevelLookup: true
+      includePreviewVersions: true
+  - script: |
+      dotnet --version
+    displayName: 'Check .NET SDK Version'
+
+  - task: PublishCodeCoverageResults@2
+    displayName: 'Publish Code Coverage'
     inputs:
       codeCoverageTool: Cobertura
-      summaryFileLocation: 'code-coverage/coverage.xml'
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+      failIfCoverageEmpty: true
