@@ -31,10 +31,9 @@ pool:
 steps:
   - task: InstallMATLAB@1
     inputs:
-      release: latest
-      products: >
-        Image_Processing_Toolbox
-        # Parallel_Computing_Toolbox
+      release: 2024a
+      products: Image_Processing_Toolbox
+
 ##############################################
   
   - task: RunMATLABTests@1
