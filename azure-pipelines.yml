@@ -31,19 +31,18 @@ pool:
 steps:
   - task: InstallMATLAB@1
     inputs:
-      release: latest
-      products: >
-        Parallel_Computing_Toolbox
-        Image_Processing_Toolbox
+      release: R2024a
+      products: Image_Processing_Toolbox
+
 ##############################################
   
   - task: RunMATLABTests@1
     inputs:
-      useParallel: true
       codeCoverageCobertura: 'code-coverage/coverage.xml'
       selectByFolder: testing/testarchive;testing/tests_long
       sourceFolder: 'lib:models:setup'
       testResultsJUnit: 'test-results/results.xml'
+      # useParallel: true
   - task: PublishTestResults@1
     condition: succeededOrFailed()
     inputs:

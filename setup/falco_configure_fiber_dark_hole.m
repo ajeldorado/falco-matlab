@@ -88,6 +88,8 @@ function mp = falco_configure_fiber_dark_hole(mp)
             [FENDXIS, FENDETAS] = meshgrid(mp.Fend.xisDL, mp.Fend.etasDL);
             
             FENDRHOS = sqrt((FENDXIS - mp.Fend.x_fiber(iFiber)).^2 + (FENDETAS - mp.Fend.y_fiber(iFiber)).^2);
+            mp.Fend.fiberCore.mask = pad_crop(mp.Fend.fiberCore.mask, size(FENDRHOS));
+            mp.Fend.fiberCladding.mask = pad_crop(mp.Fend.fiberCladding.mask, size(FENDRHOS));
             mp.Fend.fiberCore.mode = mp.Fend.fiberCore.mask.*besselj(0, U.*FENDRHOS/mp.fiber.a)./besselj(0,U);
             mp.Fend.fiberCladding.mode = mp.Fend.fiberCladding.mask.*besselk(0, W.*FENDRHOS/mp.fiber.a)./besselk(0,W);
             mp.Fend.fiberCladding.mode(isnan(mp.Fend.fiberCladding.mode)) = 0;
