@@ -141,7 +141,9 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
             otherwise
                 error('propcustom_dm: Chosen inf_sign value not allowed.')
         end
-            
+      case{'stat'}  % random statisics working with conv2_variation.m
+        icav = icav + 1;
+        stat = varargin{icav};
       otherwise
         error('prop_dm: Unknown keyword: %s\n', varargin{icav});
     end
@@ -225,11 +227,16 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
   lgy1 = fix(raiy/2) + mrgy + 1;        % index of  1st actuator center y
   lgx2 = lgx1 + raix * (acnx-1);        % index of last actuator center x
   lgy2 = lgy1 + raiy * (acny-1);        % index of last actuator center y
-  dmg  = zeros(dmny, dmnx);             % initialize subsampled DM grid
-% Fill the subsampled DM grid with the actuator amplitudes
-  dmg(lgy1 : raiy : lgy2, lgx1 : raix : lgx2) = dmcz;
-% Do the convolution of the actuator amplitudes with the influence function
-  dmg  = conv2(dmg, inf, 'same');
+
+  %dmg  = zeros(dmny, dmnx);             % initialize subsampled DM grid
+  %% Fill the subsampled DM grid with the actuator amplitudes
+  %dmg (lgy1 : raiy : lgy2, lgx1 : raix : lgx2) = dmcz;
+  %% Do the convolution of the actuator amplitudes with the influence function
+  %dmg   = conv2(dmg_old , inf, 'same');
+
+  [yy xx]   = meshgrid(lgy1 : raiy : lgy2, lgx1 : raix : lgx2);
+  xyzv      = [xx(:) yy(:) dmcz(:)];    % 2304 x 3
+  dmg       = conv2_variation(dmny, dmnx, xyzv, inf, stat);
 
   [ny, nx] = size(bm.wf);       % number of points in wavefront array
 
@@ -327,4 +334,4 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
   if NoAp == 0
     bm   = prop_add_phase(bm, 2.0 * map);
   end
-end % function prop_dm
+return % function prop_dm

@@ -87,6 +87,6 @@ end
 %--Generate the DM surface
 [~, DMsurf] = propcustom_dm(bm, heightMap, dm.xc-cshift, dm.yc-cshift, dm.dm_spacing,...
     'XTILT', dm.xtilt, 'YTILT', dm.ytilt, 'ZTILT', dm.zrot,orderOfOps, ...
-    'inf_sign', dm.inf_sign, 'inf_fn', dm.inf_fn);
+    'inf_sign', dm.inf_sign, 'inf_fn', dm.inf_fn, 'stat',dm.stat);
 
 end %--END OF FUNCTION
