@@ -228,15 +228,17 @@ function [bm, map] = propcustom_dm(bm, dmz0, dmcx, dmcy, spcg, varargin)
   lgx2 = lgx1 + raix * (acnx-1);        % index of last actuator center x
   lgy2 = lgy1 + raiy * (acny-1);        % index of last actuator center y
 
-  %dmg  = zeros(dmny, dmnx);             % initialize subsampled DM grid
-  %% Fill the subsampled DM grid with the actuator amplitudes
-  %dmg (lgy1 : raiy : lgy2, lgx1 : raix : lgx2) = dmcz;
-  %% Do the convolution of the actuator amplitudes with the influence function
-  %dmg   = conv2(dmg_old , inf, 'same');
-
-  [yy xx]   = meshgrid(lgy1 : raiy : lgy2, lgx1 : raix : lgx2);
-  xyzv      = [xx(:) yy(:) dmcz(:)];    % 2304 x 3
-  dmg       = conv2_variation(dmny, dmnx, xyzv, inf, stat);
+  if stat.rseed == -1   % for debug. this is for previous simple conv2
+    dmg  = zeros(dmny, dmnx);             % initialize subsampled DM grid
+    % Fill the subsampled DM grid with the actuator amplitudes
+    dmg (lgy1 : raiy : lgy2, lgx1 : raix : lgx2) = dmcz;
+    % Do the convolution of the actuator amplitudes with the influence function
+    dmg   = conv2(dmg, inf, 'same');
+  else
+    [yy xx]   = meshgrid(lgy1 : raiy : lgy2, lgx1 : raix : lgx2);
+    xyzv      = [xx(:) yy(:) dmcz(:)];    % 2304 x 3
+    dmg       = conv2_variation(dmny, dmnx, xyzv, inf, stat);
+  end
 
   [ny, nx] = size(bm.wf);       % number of points in wavefront array
 
