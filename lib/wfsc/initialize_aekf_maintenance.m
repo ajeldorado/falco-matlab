@@ -128,25 +128,38 @@ fprintf('R_indices size: [%d, %d, %d]\n', size(ev.R_indices));
 % Need to convert jacobian from contrast units to counts.
 
 ev.Q = zeros(ev.SS,ev.SS,floor(ev.SL/ev.BS),mp.Nsbp);
+
 for iSubband = 1:1:mp.Nsbp
     disp(['assembling Q for subband ',num2str(iSubband)])
-   
     G_reordered = ev.G_tot_drift(:,:,iSubband);
     dm_drift_covariance = eye(size(G_reordered,2))*(mp.drift.presumed_dm_std^2);
-
+    
     for i = 0:1:floor(ev.SL/ev.BS)-1
-        % CORRECTED: Build Q matrix properly for 3-element state
-        % Standard process noise for coherent components (first 2 elements)
-        coherent_size = ev.BS-1; % Real and imaginary parts only (exclude incoherent)
-        Q_coherent = G_reordered((i)*ev.BS+1:(i)*ev.BS+coherent_size,:)*dm_drift_covariance*G_reordered((i)*ev.BS+1:(i)*ev.BS+coherent_size,:).'*sbp_texp(iSubband)*(ev.e_scaling(iSubband)^2);
+        % FIXED: Correct indexing for 3-element state
+        
+        % Get the correct row indices for this pixel's 3-element state
+        pixel_start_row = i * ev.BS + 1;  % Starting row for this pixel
+        
+        % Extract coherent components (real and imaginary parts only)
+        coherent_rows = [pixel_start_row, pixel_start_row + 1];  % Rows for real and imag
+        G_coherent = G_reordered(coherent_rows, :);  % 2x(num_actuators) matrix
+        
+        % Compute coherent process noise covariance (2x2 matrix)
+        Q_coherent = G_coherent * dm_drift_covariance * G_coherent.' * sbp_texp(iSubband) * (ev.e_scaling(iSubband)^2);
         
         % Assemble 3x3 Q matrix for each pixel
-        Q_pixel = zeros(ev.SS,ev.SS);
-        Q_pixel(1:2,1:2) = Q_coherent; % Real and imaginary components
-        % Q_pixel(3,3) = 1e-6; % Process noise for incoherent component (tune this value)
-        Q_pixel(3,3) = mp.est.process_noise_incoherent; % Process noise for incoherent component
+        Q_pixel = zeros(ev.SS, ev.SS);  % 3x3 matrix
+        Q_pixel(1:2, 1:2) = Q_coherent;  % Real and imaginary components (top-left 2x2)
+        Q_pixel(3, 3) = mp.est.process_noise_incoherent;  % Incoherent component (bottom-right)
         
-        ev.Q(:,:,i+1,iSubband) = Q_pixel;
+        % Store in the Q array
+        ev.Q(:, :, i+1, iSubband) = Q_pixel;
+        
+        % Debug output for first few pixels (optional)
+        if i < 3 && iSubband == 1
+            fprintf('Pixel %d: Q_coherent range: [%.2e, %.2e], Q_incoherent: %.2e\n', ...
+                i, min(Q_coherent(:)), max(Q_coherent(:)), Q_pixel(3,3));
+        end
     end
 end
 
