@@ -212,7 +212,7 @@ switch lower(mp.layout)
             Eout = Eout/sqrt(normFac);
         end
 
-    case{'dst1_proper', 'dst2_proper'}
+    case{'dst1_proper', 'dst2_proper', 'epic5_proper'}
         optval = mp.full;
         optval.use_dm1 = true;
         optval.use_dm2 = true;
@@ -221,11 +221,17 @@ switch lower(mp.layout)
         optval.lambda0_m = mp.lambda0;
         optval.image_diam_pix = mp.Fend.Nxi;
         lambda_um = lambda * 1e6;
-        if strcmpi(mp.layout, 'dst1_proper')
+        if strcmpi(mp.layout, 'dst1_proper') 
             prescription = 'dst1';
             if normFac == 0
                 optval.source_x_shift_lam0divd = mp.source_x_offset_norm;
                 optval.source_y_shift_lam0divd = mp.source_y_offset_norm;
+            end
+	elseif strcmpi(mp.layout, 'epic5_proper') 
+            prescription = 'epic5';
+            if normFac == 0
+                optval.source_x_shift_lam0divd = -mp.source_x_offset_norm;
+                optval.source_y_shift_lam0divd = -mp.source_y_offset_norm;
             end
         elseif strcmpi(mp.layout, 'dst2_proper')
             prescription = 'dst2';
