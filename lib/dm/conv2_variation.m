@@ -1,5 +1,4 @@
 
-
 function dmg = conv2_variation(dmny, dmnx, xyzv, inf, stat)
   if ~exist('stat')
     stat.width.percent  = 0;        % vary inf width
@@ -30,10 +29,10 @@ function dmg = conv2_variation(dmny, dmnx, xyzv, inf, stat)
         yinx    = xyzv(ii,2)+[-hl:hl]; 
         if any(stat.width.percent) | any(stat.position.pixel)
             inff            = inf_modify(inf, stat.width.percent*randvalue(1,ii), stat.position.pixel*randvalue(2:3,ii));
-            dmg(yinx,xinx)  = dmg(yinx,xinx) + xyzv(ii,3)*inff;
+            dmg(xinx,yinx)  = dmg(xinx,yinx) + xyzv(ii,3)*inff;
             continue;
         end
-        dmg(yinx,xinx)  = dmg(yinx,xinx) + xyzv(ii,3)*inf;
+        dmg(xinx,yinx)  = dmg(xinx,yinx) + xyzv(ii,3)*inf;
     end
   end
 return
