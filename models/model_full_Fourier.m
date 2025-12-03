@@ -48,6 +48,7 @@ if(isfield(mp, 'full'))
         if(isfield(mp.full.dm1, 'xtilt'));  mp.dm1.xtilt = mp.full.dm1.xtilt;  end % for foreshortening. angle of rotation about x-axis [degrees]
         if(isfield(mp.full.dm1, 'ytilt'));  mp.dm1.ytilt = mp.full.dm1.ytilt;  end % for foreshortening. angle of rotation about y-axis [degrees]
         if(isfield(mp.full.dm1, 'zrot'));   mp.dm1.zrot  = mp.full.dm1.zrot;  end % clocking of DM surface [degrees]
+        if(isfield(mp.full.dm1, 'VtoH'));   mp.dm1.VtoH  = mp.full.dm1.VtoH;  end % DM Gain [m/v, Surface m per Volt]
         if(isfield(mp.full.dm1, 'V0'));  mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V + mp.full.dm1.V0);  end % Add some extra starting command to the voltages  [volts]
     end
     if(isfield(mp.full, 'dm2'))
@@ -56,6 +57,7 @@ if(isfield(mp, 'full'))
         if(isfield(mp.full.dm2, 'xtilt'));  mp.dm2.xtilt = mp.full.dm2.xtilt;  end % for foreshortening. angle of rotation about x-axis [degrees]
         if(isfield(mp.full.dm2, 'ytilt'));  mp.dm2.ytilt = mp.full.dm2.ytilt;  end % for foreshortening. angle of rotation about y-axis [degrees]
         if(isfield(mp.full.dm2, 'zrot'));   mp.dm2.zrot  = mp.full.dm2.zrot;  end % clocking of DM surface [degrees]
+        if(isfield(mp.full.dm2, 'VtoH'));   mp.dm2.VtoH  = mp.full.dm2.VtoH;  end % DM Gain [m/v, Surface m per Volt]
         if(isfield(mp.full.dm2, 'V0'));  mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V + mp.full.dm2.V0); end % Add some extra starting command to the voltages  [volts]
     end
 end
