@@ -32,7 +32,17 @@
 % In wrapper above this that chooses layout, need to define mp.FPM.mask like this:
 % mp.FPM.mask = falco_gen_HLC_FPM_complex_trans_mat(mp, modvar.sbpIndex, modvar.wpsbpIndex, 'compact');
 
-function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM)
+function [Eout, Efiber, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, varargin)
+
+%--If there is an extra input, it is the exit pupil multiplier array.
+EP4mult = 1; % default
+flagRevGrad = false;
+if size(varargin, 2) == 1
+    EP4mult = varargin{1};
+elseif size(varargin, 2) == 2
+    EP4mult = varargin{1};
+    flagRevGrad = varargin{2};
+end
 
 if nargout >= 3
     debug = true;
@@ -164,24 +174,50 @@ if flagUseFPM
                 % chromatic phase FPM.
                 phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
             end
-            
-            inVal = mp.F3.inVal;
-            outVal = mp.F3.outVal;
-            spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
-            spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
-            pixPerLamD = mp.F3.compact.res;
-            
-            inputs.type = mp.F3.phaseMaskType;
-            inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);
-            inputs.charge = mp.F3.VortexCharge;
-            inputs.phaseScaleFac = phaseScaleFac;
-            inputs.clocking = mp.F3.clocking;
-            inputs.Nsteps = mp.F3.NstepStaircase;
-            fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
-            EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
-            
-            % Undo the rotation inherent to propcustom_mft_Pup2Vortex2Pup.m
-            if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
+           
+
+            if mp.F3.flagDimple
+                inVal = mp.F3.inVal;
+                outVal = mp.F3.outVal;
+                pixPerLamD = mp.F3.compact.res;
+    
+                inputs.type = 'sawtooth';
+                inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);
+                inputs.charge = mp.F3.VortexCharge;
+                inputs.phaseScaleFac = phaseScaleFac;
+                inputs.clocking = mp.F3.clocking;
+                inputs.roddierradius = mp.F3.roddierradius;
+                inputs.roddierphase = mp.F3.roddierphase;
+                
+                inputs.res = mp.F3.compact.res;
+                FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);
+                
+                inputs.type = mp.F3.phaseMaskType;
+                inputs.res = floor(pixPerLamD*mp.P1.compact.Nbeam/(2*mp.F3.outVal));
+                FPMfine = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+                
+                EP4 = propcustom_mft_PtoFtoP_multispot(EP3, FPMcoarse, FPMfine, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU);
+            else
+
+                inVal = mp.F3.inVal;
+                outVal = mp.F3.outVal;
+                spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
+                spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
+                pixPerLamD = mp.F3.compact.res;
+                
+                inputs.type = mp.F3.phaseMaskType;
+                inputs.N = ceil_even(pixPerLamD*mp.P1.compact.Nbeam);
+                inputs.charge = mp.F3.VortexCharge;
+                inputs.phaseScaleFac = phaseScaleFac;
+                inputs.clocking = mp.F3.clocking;
+                inputs.Nsteps = mp.F3.NstepStaircase;
+                fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+
+                EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.compact.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
+            end
+
+            % One 180-degree rotation is inherent to propcustom_mft_PtoFtoP
+            EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);
 
             % Resize beam if Lyot plane has different resolution
             if mp.P4.compact.Nbeam ~= mp.P1.compact.Nbeam
@@ -294,7 +330,6 @@ else % No FPM in beam path, so relay directly from P3 to P4.
         EP4 = (mp.P1.compact.Nbeam/mp.P4.compact.Nbeam) * EP4;
     end
     
-%     figure(552); imagesc(abs(EP4)); axis xy equal tight; colorbar; drawnow;
     EP4 = pad_crop(EP4, mp.P4.compact.Narr);
     
 end
@@ -309,9 +344,13 @@ if debug, sDebug.EP4_before_mask = EP4; end
 EP4 = mp.P4.compact.croppedMask .* EP4;
 
 if debug, sDebug.EP4_after_mask = EP4; end
-    
-%--MFT to camera
+
+% Apply rotation, downstream pointing, and dowstream aberrations.
+EP4 = EP4mult .* EP4;
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
+
+
+%--MFT to camera
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.compact.dx, dxi, Nxi, deta, Neta, mp.centering);
 
 %--Don't apply FPM if normalization value is being found

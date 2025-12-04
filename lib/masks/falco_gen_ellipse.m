@@ -38,10 +38,12 @@ function pupil = falco_gen_ellipse(inputs)
     xShear = 0.;
     yShear = 0.;
     magFac = 1.;
+    upsampleFactor = 100;
     if(isfield(inputs,'centering')); centering = inputs.centering; end
     if(isfield(inputs,'xShear')); xShear = inputs.xShear; end % x-shear of ellipse [pupil diameters]
     if(isfield(inputs,'yShear')); yShear = inputs.yShear; end % y-shear of ellipse [pupil diameters]
     if(isfield(inputs,'magFac')); magFac = inputs.magFac; end % magnification factor
+    if(isfield(inputs,'upsampleFactor')); upsampleFactor = inputs.upsampleFactor; end % upsampling factor
     
     switch centering
         case 'interpixel'
@@ -72,8 +74,15 @@ function pupil = falco_gen_ellipse(inputs)
 %     xTransition = X(rhoInterior); 
 %     yTransition = Y(rhoInterior); 
 
-    upsampleFactor = 100;
     dxUp = dx/upsampleFactor;
+    % if mod(upsampleFactor, 2) == 1  % odd
+    %     nhalf = floor((upsampleFactor-1)/2);
+    %     xUp = (-nhalf:nhalf)*dxUp;
+    % elseif mod(upsampleFactor, 2) == 0  % even
+    %     nhalf = (upsampleFactor-1)/2;
+    %     xUp = (-nhalf:nhalf)*dxUp;
+    % end
+    
     xUp = (-(upsampleFactor-1)/2:(upsampleFactor-1)/2)*dxUp;
     [Xup, Yup] = meshgrid(xUp);
 

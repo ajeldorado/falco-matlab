@@ -95,3 +95,25 @@ inputs.shape = 'square';
 
 [mask6, xis6, etas6] = falco_gen_SW_mask(inputs);
 figure(6); imagesc(xis6, etas6, mask6); axis xy equal tight; colormap gray; drawnow;
+
+
+clear;
+
+% inputs.FOV = 15;
+inputs.pixresFP = 10;
+inputs.rhoInner = 3;
+inputs.rhoOuter = 10;
+inputs.angDeg = 180;
+inputs.clockAngDeg = 0;
+inputs.whichSide = 'r';
+inputs.centering = 'pixel';
+inputs.xiOffset = 0.15;
+inputs.etaOffset = 3;
+
+[mask11, xis11, etas11] = falco_gen_SW_mask(inputs);
+figure(11); imagesc(xis11, etas11, mask11); axis xy equal tight; colormap gray; drawnow;
+
+inputs.radius_dilate = 0.2;
+[mask12, xis12, etas12] = falco_gen_SW_mask(inputs);
+figure(12); imagesc(xis11, etas11, pad_crop(mask11, size(mask12))+mask12); axis xy equal tight; colormap parula; drawnow;
+

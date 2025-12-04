@@ -37,6 +37,7 @@ normFac = mp.Fend.compact.I00(modvar.sbpIndex); % Value to normalize the PSF. Se
 flagEval = false; % flag to use a different (usually higher) resolution at final focal plane for evaluation
 flagNewNorm = false;
 flagUseFPM = true; % default is to have the FPM in the beam
+flagRevGrad = false; % extra outputs to use in the reverse gradient model
 %--Enable different arguments values by using varargin
 icav = 0; % index in cell array varargin
 while icav < size(varargin, 2)
@@ -51,6 +52,8 @@ while icav < size(varargin, 2)
             flagEval = true;
         case{'nofpm', 'unocculted'}
             flagUseFPM = false;
+        case{'for_reverse_gradient'}
+            flagRevGrad = true;
         otherwise
             error('model_compact: Unknown keyword: %s\n', varargin{icav});
     end
@@ -109,6 +112,9 @@ if modvar.zernIndex ~= 1
     Ein = Ein .* zernMat * (2*pi*1j/lambda) * mp.jac.Zcoef(mp.jac.zerns == modvar.zernIndex);
 end
 
+% Compute the change in E-field to apply at the exit pupil plane, EP4.
+EP4mult = mp.P4.compact.E(:, :, modvar.sbpIndex);
+
 %--Define what the complex-valued FPM is if the coronagraph is some type of HLC.
 switch lower(mp.layout)
     case{'fourier'}
@@ -132,13 +138,13 @@ end
 %--Select which optical layout's compact model to use and get the output E-field
 if ~mp.flagFiber
     if mp.debug
-        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+        [Eout, ~, sDebug] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, EP4mult);
         varargout{end+1} = sDebug;
     else
-        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+        [Eout, ~] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, EP4mult);
     end
 else
-    [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM);
+    [Eout, Efiber] = model_compact_general(mp, lambda, Ein, normFac, flagEval, flagUseFPM, EP4mult);
     varargout{1} = Efiber;
 end
     

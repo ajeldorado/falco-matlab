@@ -57,43 +57,49 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input E-fields
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%--Include the tip/tilt in the input wavefront
-iStar = modvar.starIndex;
-xiOffset = mp.star.xiOffsetVec(iStar);
-etaOffset = mp.star.etaOffsetVec(iStar);
-starWeight = mp.star.weights(iStar);
-TTphase = (-1)*(2*pi*(xiOffset*mp.P2.full.XsDL + etaOffset*mp.P2.full.YsDL));
-Ett = exp(1j*TTphase*mp.lambda0/lambda);
-Ein = sqrt(starWeight) * Ett .* mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
-
-if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
-    TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
+if ~mp.full.flagPROPER
+    %--Include the tip/tilt in the input wavefront
+    iStar = modvar.starIndex;
+    xiOffset = mp.star.xiOffsetVec(iStar);
+    etaOffset = mp.star.etaOffsetVec(iStar);
+    starWeight = mp.star.weights(iStar);
+    TTphase = (-1)*(2*pi*(xiOffset*mp.P2.full.XsDL + etaOffset*mp.P2.full.YsDL));
     Ett = exp(1j*TTphase*mp.lambda0/lambda);
-    Ein = Ett .* Ein; 
+    Ein = sqrt(starWeight) * Ett .* mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 
+    
+    if strcmpi(modvar.whichSource, 'offaxis') %--Use for throughput calculations 
+        TTphase = (-1)*(2*pi*(modvar.x_offset*mp.P2.full.XsDL + modvar.y_offset*mp.P2.full.YsDL));
+        Ett = exp(1j*TTphase*mp.lambda0/lambda);
+        Ein = Ett .* Ein; 
+    end
+    
+    %--Shift the source off-axis to compute the intensity normalization value.
+    %  This replaces the previous way of taking the FPM out in the optical model.
+    if normFac == 0
+        source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
+        source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
+        TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.full.XsDL + source_y_offset*mp.P2.full.YsDL));
+        Ett = exp(1j*TTphase*mp.lambda0/lambda);
+        Ein = Ett .* Ein; 
+    end
+    
+    %--Apply a Zernike (in amplitude) at input pupil if specified
+    % if isfield(modvar, 'zernIndex') == false
+    %     modvar.zernIndex = 1;
+    % end
+    
+    if modvar.zernIndex ~= 1
+        indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
+        zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
+        zernMat = padOrCropEven(zernMat, mp.P1.full.Narr);
+        Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns ==  modvar.zernIndex);
+    end
+    
+    % Compute the change in E-field to apply at the exit pupil plane, EP4.
+    EP4mult = mp.P4.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex);
+    % EP4mult = falco_get_full_model_detector_offsets(mp, modvar);
 end
 
-%--Shift the source off-axis to compute the intensity normalization value.
-%  This replaces the previous way of taking the FPM out in the optical model.
-if normFac == 0
-    source_x_offset = mp.source_x_offset_norm; %--source offset in lambda0/D for normalization
-    source_y_offset = mp.source_y_offset_norm; %--source offset in lambda0/D for normalization
-    TTphase = (-1)*(2*pi*(source_x_offset*mp.P2.full.XsDL + source_y_offset*mp.P2.full.YsDL));
-    Ett = exp(1j*TTphase*mp.lambda0/lambda);
-    Ein = Ett .* Ein; 
-end
-
-%--Apply a Zernike (in amplitude) at input pupil if specified
-% if isfield(modvar, 'zernIndex') == false
-%     modvar.zernIndex = 1;
-% end
-
-if modvar.zernIndex ~= 1
-    indsZnoll = modvar.zernIndex; %--Just send in 1 Zernike mode
-    zernMat = falco_gen_norm_zernike_maps(mp.P1.full.Nbeam, mp.centering, indsZnoll); %--Cube of normalized (RMS = 1) Zernike modes.
-    zernMat = padOrCropEven(zernMat, mp.P1.full.Narr);
-    Ein = Ein.*zernMat*(2*pi/lambda)*mp.jac.Zcoef(mp.jac.zerns ==  modvar.zernIndex);
-end
 
 %% Pre-compute the FPM first for HLC as mp.FPM.mask
 switch lower(mp.layout)
@@ -151,9 +157,9 @@ switch lower(mp.layout)
     
     case{'fourier', 'fpm_scale'}
         if ~mp.flagFiber
-            Eout = model_full_Fourier(mp, lambda, Ein, normFac);
+            Eout = model_full_Fourier(mp, lambda, Ein, normFac, EP4mult);
         else
-            [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac);
+            [Eout, Efiber] = model_full_Fourier(mp, lambda, Ein, normFac, EP4mult);
             varargout{1} = Efiber;
         end
         
@@ -202,6 +208,40 @@ switch lower(mp.layout)
                 Eout = prop_run('roman_phasec', lambda*1e6, mp.Fend.Nxi, 'quiet', 'passvalue', optval ); %--wavelength needs to be in microns instead of meters for PROPER
         end
         
+        if normFac ~= 0
+            Eout = Eout/sqrt(normFac);
+        end
+
+    case{'dst1_proper', 'dst2_proper', 'epic5_proper'}
+        optval = mp.full;
+        optval.use_dm1 = true;
+        optval.use_dm2 = true;
+        optval.dm1_v = mp.dm1.V + mp.full.dm1.flatmap;
+        optval.dm2_v = mp.dm2.V + mp.full.dm2.flatmap;
+        optval.lambda0_m = mp.lambda0;
+        optval.image_diam_pix = mp.Fend.Nxi;
+        lambda_um = lambda * 1e6;
+        if strcmpi(mp.layout, 'dst1_proper') 
+            prescription = 'dst1';
+            if normFac == 0
+                optval.source_x_shift_lam0divd = mp.source_x_offset_norm;
+                optval.source_y_shift_lam0divd = mp.source_y_offset_norm;
+            end
+	elseif strcmpi(mp.layout, 'epic5_proper') 
+            prescription = 'epic5';
+            if normFac == 0
+                optval.source_x_shift_lam0divd = -mp.source_x_offset_norm;
+                optval.source_y_shift_lam0divd = -mp.source_y_offset_norm;
+            end
+        elseif strcmpi(mp.layout, 'dst2_proper')
+            prescription = 'dst2';
+            if normFac == 0
+                optval.source_x_shift_lam0divd = -mp.source_x_offset_norm;
+                optval.source_y_shift_lam0divd = -mp.source_y_offset_norm;
+            end
+        end
+        Eout = matlab_to_python_proper(prescription, lambda_um, optval.gridsize, optval); 
+
         if normFac ~= 0
             Eout = Eout/sqrt(normFac);
         end

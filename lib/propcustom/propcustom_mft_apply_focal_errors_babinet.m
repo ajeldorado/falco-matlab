@@ -34,10 +34,12 @@ function Epupil = propcustom_mft_apply_focal_errors_babinet(Epupil, EerrorMap, r
     lambda = 1;
 
     Efocus = propcustom_mft_PtoF(Epupil, fl, lambda, dx, dxi, Nxi, deta, Neta);
+%     figure(222); semilogy(abs(Efocus(Neta/2+1,Neta/2+1:end)).^2);  title('Roddier focal plane: PSF');
+%     figure(223); plot(angle(EerrorMap(Neta/2+1,Neta/2+1:end)));  title('Roddier focal plane: mask');
     
     % Backwards MFT to the original pupil plane
     deltaE = propcustom_mft_FtoP(Efocus .* (1-EerrorMap), -fl, lambda, dxi, deta, dx, NarrayPupil);
     
-    Epupil = Epupil - deltaE;
+    Epupil = Epupil + deltaE;
 
 end

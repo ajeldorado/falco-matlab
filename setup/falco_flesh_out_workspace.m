@@ -41,6 +41,7 @@ mp = falco_gen_dm_stops(mp);
 mp = falco_set_dm_surface_padding(mp);
 
 mp = falco_set_initial_Efields(mp);
+mp = falco_compute_psf_norm_factor(mp, 0); % voltages zeroed out temporarily
 mp = falco_compute_psf_norm_factor(mp);
 
 out = falco_init_storage_arrays(mp); % Initialize Arrays to Store Performance History

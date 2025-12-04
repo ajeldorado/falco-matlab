@@ -31,6 +31,8 @@ function pupil = falco_gen_pupil_Simple(inputs)
     if(isfield(inputs, 'clocking')); clocking = inputs.clocking; else; clocking = 0; end % clocking [degrees]
     if(isfield(inputs, 'xShear')); xShear = inputs.xShear; else; xShear = 0; end % x-shear [pupil diameters]
     if(isfield(inputs, 'yShear')); yShear = inputs.yShear; else; yShear = 0; end % y-shear [pupil diameters]
+    if(isfield(inputs, 'upsampleFactor')); upsampleFactor = inputs.upsampleFactor; else; upsampleFactor = 100; end % upsampling factor
+    
     if(isfield(inputs, 'flagHG')); flagHG = inputs.flagHG; else; flagHG = false; end % whether to use hyper-Gaussians to generate the pupil instead. (Old behavior)
     if ID > OD
         error('Inner diameter cannot be larger than outer diameter.');
@@ -47,6 +49,7 @@ function pupil = falco_gen_pupil_Simple(inputs)
         inpOuter.clockingDegrees = clocking;
         inpOuter.xShear = xShear;
         inpOuter.yShear = yShear;
+        inpOuter.upsampleFactor = upsampleFactor;
         apOuter = falco_gen_ellipse(inpOuter);
 
         % Create inner aperture
@@ -59,6 +62,7 @@ function pupil = falco_gen_pupil_Simple(inputs)
             inpInner.clockingDegrees = clocking;
             inpInner.xShear = xShear;
             inpInner.yShear = yShear;
+            inpInner.upsampleFactor = upsampleFactor;
             apInner = 1 - falco_gen_ellipse(inpInner);
         else
             apInner = 1;
@@ -77,7 +81,7 @@ function pupil = falco_gen_pupil_Simple(inputs)
             wl_dummy = 1e-6; %--dummy value
             bdf = Dbeam/Darray; %--beam diameter fraction
             bm = prop_begin(Dbeam, wl_dummy, Narray, 'beam_diam_fraction', bdf);
-            prop_set_antialiasing(101);
+            prop_set_antialiasing(ceil_odd(upsampleFactor));
             
             switch centering % 0 shift for pixel-centered pupil, or -diam/Narray shift for inter-pixel centering
                 case {'interpixel'}

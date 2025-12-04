@@ -28,9 +28,17 @@ function iefcStruct = falco_est_delta_intensity(mp, whichDM, dV, iJacMode)
         
         V0 = mp.dm1.V;
         mp.dm1.V = V0 + dV;
-        imagePlus = falco_get_sbp_image(mp, modvar.sbpIndex);
+        if ~mp.flagFiber
+            imagePlus = falco_get_sbp_image(mp, modvar.sbpIndex);
+        else
+            [~,imagePlus] = falco_get_sbp_image(mp, modvar.sbpIndex);
+        end
         mp.dm1.V = V0 - dV;
-        imageMinus = falco_get_sbp_image(mp, modvar.sbpIndex);
+        if ~mp.flagFiber
+            imageMinus = falco_get_sbp_image(mp, modvar.sbpIndex);
+        else
+            [~,imageMinus] = falco_get_sbp_image(mp, modvar.sbpIndex);
+        end
         mp.dm1.V = V0; % reset;
         
     elseif whichDM == 2
@@ -52,9 +60,14 @@ function iefcStruct = falco_est_delta_intensity(mp, whichDM, dV, iJacMode)
         figure(1005); imagesc(log10(abs(DI2D))); axis xy equal tight; colorbar; drawnow;
         figure(1006); imagesc(angle(DI2D)); axis xy equal tight; colorbar; drawnow;
     end
-
-    iefcStruct.DeltaI = DI2D(mp.Fend.corr.maskBool).';
-    iefcStruct.imagePlus = imagePlus;
-    iefcStruct.imageMinus = imageMinus;
     
+    if ~mp.flagFiber
+        iefcStruct.DeltaI = DI2D(mp.Fend.corr.maskBool).';
+        iefcStruct.imagePlus = imagePlus;
+        iefcStruct.imageMinus = imageMinus;
+    else
+        iefcStruct.DeltaI = DI2D;
+        iefcStruct.imagePlus = imagePlus;
+        iefcStruct.imageMinus = imageMinus;
+    end
 end %--END OF FUNCTION

@@ -30,7 +30,10 @@ mp.path.dummy = 1;
 mp.detector.dummy = 1;
 mp.scc.dummy = 1;
 mp.iefc.dummy = 1;
+mp.plot.dummy = 1;
 mp.fiber.dummy = 1;
+mp.Fend.compact.dummy = 1;
+mp.Fend.full.dummy = 1;
 
 %% Default File Paths for Data Storage (all excluded from git)
 
@@ -83,6 +86,10 @@ if(isfield(mp.P4,'flagSymm')==false);  mp.P4.flagSymm = false;  end
 
 if ~isfield(mp, 'runLabel');  mp.runLabel = 'default_label_';  end
 
+% Progress plot limits
+if ~isfield(mp.plot, 'contrast_clim_min');  mp.plot.contrast_clim_min = -10;  end
+if ~isfield(mp.plot, 'contrast_clim_max');  mp.plot.contrast_clim_max = -3;  end
+
 % How many stars to use and their positions
 % mp.star is for the full model, and mp.compact.star is for the compact and
 % Jacobian models.
@@ -95,6 +102,14 @@ if ~isfield(mp.compact.star, 'xiOffsetVec');  mp.compact.star.xiOffsetVec = 0;  
 if ~isfield(mp.compact.star, 'etaOffsetVec');  mp.compact.star.etaOffsetVec = 0;  end
 if ~isfield(mp.compact.star, 'weights');  mp.compact.star.weights = 1;  end
 if ~isfield(mp.jac.star, 'weights');  mp.jac.star.weights = ones(1, mp.compact.star.count);  end % Spatial weighting in the Jacobian by star
+
+% Downstream star offsets (i.e., tip/tilt added to Lyot stop plane)
+if ~isfield(mp.Fend.compact, 'xiOffset'); mp.Fend.compact.xiOffset = 0;  end  % [lambda0/D]
+if ~isfield(mp.Fend.compact, 'etaOffset'); mp.Fend.compact.etaOffset = 0;  end  % [lambda0/D]
+if ~isfield(mp.Fend.full, 'xiOffset'); mp.Fend.full.xiOffset = 0;  end  % [lambda0/D]
+if ~isfield(mp.Fend.full, 'etaOffset'); mp.Fend.full.etaOffset = 0;  end  % [lambda0/D]
+
+
 
 if(isfield(mp.full,'pol_conds')==false);  mp.full.pol_conds = 0;  end %--Vector of which polarization state(s) to use when creating images from the full model. Currently only used with PROPER full models from John Krist.
 
@@ -115,6 +130,9 @@ if(isfield(mp.F3, 'clocking')==false);  mp.F3.clocking = 0;  end  % Counterclock
 if(isfield(mp.F3, 'phaseScaleFac')==false);  mp.F3.phaseScaleFac = 1;  end  % Factor to apply to the phase in the phase FPM. Use a vector to add chromaticity to the model. 
 if(isfield(mp.F3, 'inVal')==false);  mp.F3.inVal = 0.3;  end  % Inner radius to start the Tukey window for azimuthal phase FPMs. Units of lambda0/D.
 if(isfield(mp.F3, 'outVal')==false);  mp.F3.outVal = 5.0;  end  % Out radius to end the Tukey window for azimuthal phase FPMs. Units of lambda0/D.
+if(isfield(mp.F3, 'flagDimple')==false);  mp.F3.flagDimple = false;  end
+if(isfield(mp.F3, 'roddierphase')==false);  mp.F3.roddierphase = 0.50;  end  % [waves]
+if(isfield(mp.F3, 'roddierradius')==false);  mp.F3.roddierradius = 0.53;  end % [lambda/D]
 
 %--HLC FPM materials
 if(isfield(mp.F3, 'substrate')==false);  mp.F3.substrate = 'FS';  end % name of substrate material  [FS or N-BK7]

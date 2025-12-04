@@ -64,13 +64,24 @@ function jacStruct = model_Jacobian(mp)
         if(any(mp.dm_ind==8)); jacStruct.G8 = zeros(mp.Fend.corr.Npix, mp.dm8.Nele, mp.jac.Nmode);  else;  jacStruct.G8 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM8
         if(any(mp.dm_ind==9)); jacStruct.G9 = zeros(mp.Fend.corr.Npix, mp.dm9.Nele, mp.jac.Nmode);  else;  jacStruct.G9 = zeros(0, 0, mp.jac.Nmode);  end % control Jacobian for DM9
     end
-        
-    %--Loop over the possible combinations of 1) Zernike modes, 2) sub-bandpasses, 3) stars, & 4) DM number 
-    %   (either with parfor or for)
-    vals_list = allcomb(1:mp.jac.Nmode, mp.dm_ind).'; %--dimensions: [2 x length(mp.jac.Nmode)*length(mp.dm_ind) ]
+    
+    fprintf('Running control Jacobian precomputation...');
+    tic
+    mp = model_Jacobian_precomp(mp);
+    fprintf('...done.  Time = %.2f\n', toc);
+
+    %--Loop over the possible combinations of 
+    % 1) Mode (combinations of Zernike modes, sub-bandpasses, and stars)
+    % 2) DM number 
+    % 3) actuator index
+    %--dimensions: [3 x length(mp.jac.Nmode)*length(mp.dm_ind)*(length(mp.dm1.Nele) + mp.dm2.Nele) ]
+    vals_list_dm1 = allcomb(1:mp.jac.Nmode, 1, 1:mp.dm1.Nele).'; 
+    vals_list_dm2 = allcomb(1:mp.jac.Nmode, 2, 1:mp.dm2.Nele).';
+    vals_list_dm8 = allcomb(1:mp.jac.Nmode, 8, 1:mp.dm8.Nele).';
+    vals_list_dm9 = allcomb(1:mp.jac.Nmode, 9, 1:mp.dm9.Nele).';
+    vals_list = [vals_list_dm1, vals_list_dm2, vals_list_dm8, vals_list_dm9];
     Nvals = size(vals_list, 2);
 
-    
     switch mp.estimator
 
         case 'scc'
@@ -92,47 +103,49 @@ function jacStruct = model_Jacobian(mp)
         otherwise
             fprintf('Computing control Jacobian matrices ... \n'); tic
             %--Parallel/distributed computing
-            if(mp.flagParfor)
+            if mp.flagParfor
                 if isfield(mp, 'tb')
                     mp = rmfield(mp, 'tb'); % Remove testbed object 'tb' if it exists before calling parfor.
                 end
-                parfor ii=1:Nvals
-                    Jtemp{ii} = model_Jacobian_middle_layer(mp, vals_list, ii)
+                parfor icombo=1:Nvals
+                    Jtemp{icombo} = model_Jacobian_middle_layer(mp, vals_list, icombo)
                 end        
 
                 %--Re-organize the structure
-                for ii = 1:Nvals
-                    iMode = vals_list(1, ii); % index for Zernike-wavelength-star mode
-                    whichDM = vals_list(2, ii); % number of the specified DM
+                for icombo = 1:Nvals
+                    imode = vals_list(1, icombo); % Jacobian index for Zernike-subband-star mode
+                    whichDM = vals_list(2, icombo); % number of the specified DM
+                    iactSubset = vals_list(3, icombo); %--jacobian index of actuator number
 
-                    if(whichDM==1); jacStruct.G1(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==2); jacStruct.G2(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==3); jacStruct.G3(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==4); jacStruct.G4(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==5); jacStruct.G5(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==6); jacStruct.G6(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==7); jacStruct.G7(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==8); jacStruct.G8(:, :, iMode) =  Jtemp{ii};  end
-                    if(whichDM==9); jacStruct.G9(:, :, iMode) =  Jtemp{ii};  end
+                    if(whichDM==1); jacStruct.G1(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==2); jacStruct.G2(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==3); jacStruct.G3(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==4); jacStruct.G4(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==5); jacStruct.G5(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==6); jacStruct.G6(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==7); jacStruct.G7(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==8); jacStruct.G8(:, iactSubset, imode) = Jtemp{icombo};  end
+                    if(whichDM==9); jacStruct.G9(:, iactSubset, imode) = Jtemp{icombo};  end
                 end
                 clear Jtemp
 
             %--Serial calculation
             else 
-                for ii = 1:Nvals
-                    iMode = vals_list(1, ii); %--index for Zernike-wavelength-star mode
-                    whichDM = vals_list(2, ii); %--number of the specified DM
-                    fprintf('mode%ddm%d ', iMode, whichDM)
+                for icombo = 1:Nvals
+                    imode = vals_list(1, icombo); % Jacobian index for Zernike-wavelength-star mode
+                    whichDM = vals_list(2, icombo); % number of the specified DM
+                    iactSubset = vals_list(3, icombo); % Jacobian index of actuator number
+                    %fprintf('mode%ddm%dact%d ', imode, whichDM, iact)
 
-                    if(whichDM==1); jacStruct.G1(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==2); jacStruct.G2(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==3); jacStruct.G3(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==4); jacStruct.G4(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==5); jacStruct.G5(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==6); jacStruct.G6(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==7); jacStruct.G7(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==8); jacStruct.G8(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
-                    if(whichDM==9); jacStruct.G9(:, :, iMode) =  model_Jacobian_middle_layer(mp, vals_list, ii);  end
+                    if(whichDM==1); jacStruct.G1(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==2); jacStruct.G2(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==3); jacStruct.G3(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==4); jacStruct.G4(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==5); jacStruct.G5(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==6); jacStruct.G6(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==7); jacStruct.G7(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==8); jacStruct.G8(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
+                    if(whichDM==9); jacStruct.G9(:, iactSubset, imode) = model_Jacobian_middle_layer(mp, vals_list, icombo);  end
                 end
                 fprintf('\n')
             end    
@@ -241,40 +254,4 @@ function jacStruct = model_Jacobian(mp)
             end
     end
        
-end %--END OF FUNCTION model_Jacobian.m
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Select which optical layout's Jacobian model to use and get the output E-field
-% INPUTS
-% ------
-% mp : structure of model parameters
-% vals_list : structure containing combinations of:
-%     -tsi : index of the pair of sub-bandpass index and tip/tilt offset index
-%     -whichDM : which DM number
-%
-% OUTPUTS
-% -------
-% -jacMode = Jacobian for the specified combo of DM, wavelength, and Zernike mode.
-%
-function jacMode = model_Jacobian_middle_layer(mp, vals_list, jj)
-
-    iModeCopy = vals_list(1, jj); %--index for Zernike-&-subbandpass pair
-    whichDMCopy = vals_list(2, jj); %--number of the specified DM
-
-    switch upper(mp.coro)
-        
-        case{'LC', 'APLC', 'SPLC', 'FLC', 'HLC'}
-            jacMode = model_Jacobian_lyot(mp, iModeCopy, whichDMCopy); 
-            
-        case{'VORTEX', 'VC'}
-            jacMode = model_Jacobian_VC(mp, iModeCopy, whichDMCopy);
-            
-        case{'EHLC'} %--Extended HLC: DMs, extended FPM with nickel and dielectric modulation, and LS.
-            jacMode = model_Jacobian_EHLC(mp, iModeCopy, whichDMCopy);
-            
-        otherwise
-            error('No Jacobian function for the value of mp.coro');        
-    end
-
-end %--END OF FUNCTION model_Jacobian_middle_layer.m    
+end %--END OF FUNCTION
