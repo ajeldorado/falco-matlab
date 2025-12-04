@@ -31,7 +31,8 @@ function ev = falco_est(mp, ev, jacStruct)
                 
             
         case{'pwp-bp-square', 'pwp-bp', 'pairwise', 'pairwise-square', ...
-                'pairwise-rect', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf'}
+                'pairwise-rect', 'pwp-kf', 'pairwise-kf', 'pairwise-rect-kf',...
+                'pwp-fiber'}
             if(mp.flagFiber && mp.flagLenslet)
                 if mp.est.flagUseJac
                     ev = falco_est_pairwise_probing_fiber(mp, jacStruct);

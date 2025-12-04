@@ -155,7 +155,9 @@ mp.isProbing = false;
 
 
 if any(mp.est.itr_ol==ev.Itr) == true
+    mp.tb.info.sbp_texp = 0.5*sbp_texp; % Reduce OL exposure time
     [mp,ev] = get_open_loop_data(mp,ev);
+    mp.tb.info.sbp_texp = sbp_texp;
 else
     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
@@ -236,6 +238,168 @@ end
 end
 
 
+function [ev] = modal_ekf_estimate(mp,ev,jacStruct,y_measured,dither,cont_command)
+
+    y_plus = y_measured(:,:,1);
+    y_minus = y_measured(:,:,end);
+
+for iSubband = 1:1:mp.Nsbp
+
+     %--Jacobian (convert from sqrt(contrast)/nm to sqrt(photons/s)/nm)
+    G = ev.G_tot_cont(:, :, iSubband) * ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband)); % Jacobian for the full DM
+    if isfield(mp.est, 'r')
+        [U, S_diag, V] = svd(G, "econ");
+        r = length(ev.x_hat);
+        G_r = U(:, 1:r);
+    end
+    
+    %--Dither-modulated Jacobian
+    J_du = G * dither;
+    if ev.Itr == 10
+        a =5;
+    end
+    %--Measurement noise covariance matrix (R)
+    % if mp.est.low_photon_regime
+        % dark_current_photons = mp.est.dark_current * mp.est.quantum_efficiency * mp.exp.t_coron_sbp;
+        % read_noise_photons = mp.est.read_noise * mp.est.quantum_efficiency;
+        % ev.dm_R = diag(y_prev + y_measured + 2 * dark_current_photons^2 + 2 * read_noise_photons^2);
+    % else
+    dark_current_photons = mp.est.dark_current * mp.est.quantum_efficiency * ev.sbp_texp(iSubband);
+    read_noise_photons = mp.est.read_noise * mp.est.quantum_efficiency;
+
+    ev.R = diag(y_plus + y_minus + 2 * dark_current_photons^2 + 2 * read_noise_photons^2);
+    % end
+
+    %--Measurement operator (H)
+    if isfield(mp.est, 'r')
+        JJdu = G_r.' * diag(J_du);
+    else
+        JJdu = G' * diag(J_du);
+    end
+    ev.H = 4 * (JJdu(:, 1:2:end) + JJdu(:, 2:2:end));
+    
+    %--Prediction step for the covariance matrix
+    ev.P(:, :, iSubband) = ev.P(:, :, iSubband) + ev.Q(:, :, iSubband);
+    
+    %--Kalman Gain Calculation
+    P_H = ev.P(:, :, iSubband) * ev.H;
+    S = ev.H.' * P_H + ev.R;
+    
+    if rcond(S) < 1e-12
+        K = P_H * pinv(S);
+        fprintf('Warning: S matrix is singular. Using pseudo-inverse.\n');
+    else
+        K = P_H / S;
+    end
+    figure(1234);
+    hold on;                             % keep previous plots
+    semilogy(ev.Itr, rcond(S), 'o-');
+%     yscale log% add new point
+    title('S Condition num')
+    hold off;  
+
+    %--Update step for the covariance matrix
+    ev.P(:, :, iSubband) = (eye(length(ev.x_hat)) - K*ev.H')* ev.P(:, :, iSubband)*(eye(length(ev.x_hat)) - K*ev.H')' + K*ev.R*K';
+    
+%     figure(2234);
+%     hold on;                             % keep previous plots
+%     semilogy(ev.Itr, rcond(ev.P),'o-');
+% %     yscale log% add new point
+%     title('P Condition num')
+%     hold off;  
+% 
+%     figure(3234);
+%     hold on;                             % keep previous plots
+%     semilogy(ev.Itr, min(eig(ev.P)),'ro-');
+%     hold on 
+%     plot(ev.Itr, max(eig(ev.P)),'bo-');
+%     legend('Min', 'Max')
+% %     yscale log% add new point
+%     title('P Min eigenvalue')
+%     hold off;
+% 
+%     figure(4234);
+%     hold on;
+%     plot(ev.Itr, mean(sqrt(diag(ev.P))),'o-')
+%     title('Min std from covar')
+%     hold off;
+% 
+%     figure(5234);
+%     hold on;
+%     plot(ev.Itr, mean(sqrt(diag(ev.R))),'o-')
+%     hold off;
+%     title('R matrix std')
+    %--Measurement residual (dy)
+    dy = y_plus - y_minus;
+    
+    %--Modelled intensity difference
+    controlled_command = cont_command + get_dm_command_vector(mp,mp.dm1.V_dz, mp.dm2.V_dz);
+    if isfield(mp.est, 'r')
+        E_hat_plus = G * (cont_command + dither) + G_r* mean(ev.x_hat,2);
+        E_hat_minus = G * (cont_command - dither)+ G_r* mean(ev.x_hat,2);
+    else
+        E_hat_plus = G * (cont_command + dither) + G* mean(ev.x_hat,2);
+        E_hat_minus = G * (cont_command - dither)+ G* mean(ev.x_hat,2);
+    end
+    % E_hat_plus = G * dither;
+    % E_hat_minus = -G * dither;
+
+    I_hat_plus = E_hat_plus(1:2:end).^2 + E_hat_plus(2:2:end).^2;
+    I_hat_minus = E_hat_minus(1:2:end).^2 + E_hat_minus(2:2:end).^2;
+    dy_hat = I_hat_plus - I_hat_minus;
+    
+    %--Update DM command estimate
+    residual = dy - dy_hat;
+    ev.x_hat(:, iSubband) = ev.x_hat(:, iSubband) + K * residual;
+
+%     figure(6234)
+%     hold on;
+%     colormap(parula)
+%     plot(1:length(ev.x_hat), ev.x_hat)
+%     title('State vec estimate')
+%     colorbar;
+% %     clim([0 ev.Itr]);
+%     hold off;
+% 
+%     figure(1111)
+%     vector = zeros(50);
+%     vector(mp.dm1.act_ele) = ev.x_hat(:, iSubband);
+%     hold on;
+%     imagesc(vector)
+%     colorbar;
+%     title('xhat')
+    
+    if isfield(mp.est, 'r')
+        V_T = V';
+        sigma_r = S_diag(1:r, 1:r);
+        check = (pinv(sigma_r)*(ev.x_hat(:, iSubband)));
+        ev.control = (V(:, 1:r))*check;
+        vector = zeros(50);
+        vector(mp.dm1.act_ele) = ev.control;
+        colormap(turbo)
+        figure(8234)
+        hold on;
+        imagesc(vector)
+        colorbar;
+        title('Control vec')
+        hold off;
+        E_hat_est = G * (cont_command - dither) + G_r * mean(ev.x_hat,2);
+    else
+        E_hat_est = G * (cont_command - dither) + G * mean(ev.x_hat,2);
+    end
+    
+    
+    ev.Eest(:,iSubband) = E_hat_est(1:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband))) + 1i*(E_hat_est(2:2:end)/(ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband))));
+
+end
+
+% % Prep estimate to save out
+% for iSubband = 1:1:mp.Nsbp
+%     ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband)));
+% end
+end
+
+
 function comm_vector = get_dm_command_vector(mp,command1, command2)
 
 if any(mp.dm_ind == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
@@ -262,13 +426,13 @@ end
 if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>0
 
     % Print error warning
-    fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ','));
-    fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ','));
+    if ~isempty(ev.dm1.new_pinned_actuators); fprintf('New DM1 pinned: [%s]\n', join(string(ev.dm1.new_pinned_actuators), ',')); end
+    if ~isempty(ev.dm2.new_pinned_actuators); fprintf('New DM2 pinned: [%s]\n', join(string(ev.dm2.new_pinned_actuators), ',')); end
 
     % If actuators are used in jacobian, quit.
-    if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
-        save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
-        save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
+    if size(ev.dm1.act_ele_pinned,2)>10 || size(ev.dm2.act_ele_pinned,2)>10
+        save(fullfile(mp.path.config,['ev_exit_',num2str(ev.Itr),'.mat']),'ev')
+        save(fullfile(mp.path.config,['mp_exit_',num2str(ev.Itr),'.mat']),'mp')
 
         error('New actuators in act_ele pinned, exiting loop');
     end
@@ -364,9 +528,11 @@ fitswrite(efc,fullfile([mp.path.config,'/','efc_command_it',num2str(ev.Itr-1),'.
 if ev.Itr == 1
     dz_init = zeros(mp.dm1.Nact,mp.dm1.Nact,length(mp.dm_ind));
     if mp.dm_ind(1) == 1; dz_init(:,:,1) = mp.dm1.V_dz;end
-    if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
-
+    if any(mp.dm_ind==2)
+        if mp.dm_ind(1) == 2; dz_init(:,:,1) = mp.dm2.V_dz ; else dz_init(:,:,2) = mp.dm2.V_dz; end
+    end
     fitswrite(dz_init,fullfile([mp.path.config,'/','dark_zone_command_0_pwp.fits']))
 end
 
 end
+

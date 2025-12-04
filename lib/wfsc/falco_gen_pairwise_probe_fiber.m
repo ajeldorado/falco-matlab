@@ -55,6 +55,8 @@ xs = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.xOffset)/Nact;
 ys = (-(Nact-1)/2:(Nact-1)/2)/Nact - round(mp.est.probe.yOffset)/Nact;
 [XS,YS] = meshgrid(xs,ys);
 
+%--Correct for actual number of actuarotrs in beam
+corr_nbeam = Nact/mp.dm1.Nactbeam;
 %--Restrict the probing region if it is not possible to achieve
 if(mp.est.probe.radius > Nact/2)
     mp.est.probe.radius = Nact/2;
@@ -64,16 +66,16 @@ end
 magn = 4*pi*mp.lambda0*sqrt(InormDes);   % surface height to get desired intensity [meters]
 switch lower(badAxis)
     case 'y'
-        omegaX = mp.est.probe.Xloc(1)/2;
+        omegaX = mp.est.probe.xOffset(1) * corr_nbeam;
         probeCmd = magn*sin(2*pi*omegaX*XS + psi);
 
     case 'x'
-        omegaY = mp.est.probe.Yloc(1)/2;
+        omegaY = mp.est.probe.yOffset(1) * corr_nbeam;
         probeCmd = magn*sin(2*pi*omegaY*YS + psi);
         
     case 'm'
-        omegaX = mp.est.probe.Xloc/2;
-        omegaY = mp.est.probe.Yloc/2;
+        omegaX = mp.est.probe.Xloc * corr_nbeam;
+        omegaY = mp.est.probe.Yloc * corr_nbeam;
         probeCmd = zeros(size(XS));
         for i = 1:mp.Fend.Nfiber
             probeCmd = probeCmd + magn*sin(2*pi*omegaX(i)*XS + psi).*sin(2*pi*omegaY(i)*YS + psi);

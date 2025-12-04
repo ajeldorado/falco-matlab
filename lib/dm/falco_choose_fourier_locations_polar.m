@@ -82,11 +82,12 @@ function [xiVec, etaVec] = falco_choose_fourier_locations_polar(freqMax, spacing
 
     % 2nd, remove all points not in the region of interest
     [THETAS, RHOS] = cart2pol(XIS, ETAS);
-    THETAS_ROT = angle(exp(1j*(THETAS-deg2rad(clocking))));
+%     THETAS_ROT = angle(exp(1j*(THETAS-deg2rad(clocking))));
+%     THETAS_ROT = THETAS-deg2rad(clocking);
     radialMask = (RHOS >= radiusInner) & (RHOS <= radiusOuter);
-    angleMask = abs(THETAS_ROT) <= deg2rad(angleOpen)/2;
+    angleMask = abs(THETAS) <= deg2rad(angleOpen)/2;
     if ~isempty(xiMin)
-        knifeEdgeMask = RHOS.*cos(THETAS_ROT) >= xiMin;
+        knifeEdgeMask = RHOS.*cos(THETAS) >= xiMin;
     else
         knifeEdgeMask = logical(ones(size(radialMask)));
     end
@@ -95,5 +96,9 @@ function [xiVec, etaVec] = falco_choose_fourier_locations_polar(freqMax, spacing
     xiVec = XIS(softwareMask);
     etaVec = ETAS(softwareMask);
 
+    [THETAS, RHOS] = cart2pol(xiVec, etaVec);
+    xiVec  = RHOS.*cos(THETAS - deg2rad(clocking));
+    etaVec = RHOS.*sin(THETAS - deg2rad(clocking));
+    
 
 end %--END OF FUNCTION

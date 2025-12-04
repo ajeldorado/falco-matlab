@@ -76,10 +76,15 @@ if(mp.flagPlot)
     title('DM1 Surface (nm)');
 
 	subplot(2,3,3); 
-    imagesc(1e9*DM2surf);  axis xy equal tight; axis off;
-    colorbar;
-    colormap(gca,gray);
-    title('DM2 Surface (nm)');
+%     imagesc(1e9*DM2surf);  axis xy equal tight; axis off;
+%     colorbar;
+%     colormap(gca,gray);
+    if(mp.Nsbp>1)
+        semilogy(mp.sbp_centers*1e9,Inorm.mod(end,:)+Inorm.unmod(end,:),'-o');
+    else
+        semilogy(mp.sbp_centers*1e9,Inorm.mod(end)+Inorm.unmod(end),'-o');
+    end
+    title('Total Int');
 
     subplot(2,3,4);
     semilogy(0:length(Inorm.total)-1,Inorm.total,'-o');hold on;
@@ -211,7 +216,11 @@ else
     tag = '';
 end
 
-fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+if Itr>1 && contains(mp.estimator,'ekf_maintenance')
+    fitswrite(Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+else
+    fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+end
 
 if(any(mp.dm_ind==1) && Itr==1)
     fitswrite(mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
@@ -236,6 +245,16 @@ fitswrite(Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fit
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
+    if contains(mp.estimator,'ekf_maintenance')
+        if Itr == 1
+            G_tot_cont = ev.G_tot_cont;
+            G_tot_drift = ev.G_tot_drift;
+            save(fullfile(out_dir,['jacobian_data',tag,'.mat']),'G_tot_cont', 'G_tot_drift');
+        end
+        fields_to_remove = {'G_tot_cont','G_tot_drift','R','H','Q'};
+        ev = rmfield(ev,fields_to_remove); 
+        disp('removed dzm matrices')
+    end
     save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
 end
 if strcmpi(mp.estimator,'ekf_maintenance') && any(mp.est.itr_ol==ev.Itr) == true
