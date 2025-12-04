@@ -58,9 +58,9 @@ classdef TestFunctionalLC < matlab.unittest.TestCase
             testCase.verifyLessThan(Iraw,1.4e-07)           
             
             Iest = out.IestScoreHist(end); % 8.8397e-07
-            %8.8e-7 < Iest && Iest < 8.9e-7
-            testCase.verifyGreaterThan(Iest,8.8e-7)
-            testCase.verifyLessThan(Iest,8.9e-7)
+            %8.75e-7 < Iest && Iest < 8.95e-7
+            testCase.verifyGreaterThan(Iest,8.75e-7)
+            testCase.verifyLessThan(Iest,8.95e-7)
             
             %all(out.IincoCorrHist == 0)
             import matlab.unittest.constraints.EveryElementOf

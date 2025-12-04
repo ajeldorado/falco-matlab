@@ -347,7 +347,8 @@ for iSubband = 1:mp.Nsbp
     end
     ampSq2Dcube = zeros(mp.Fend.Neta, mp.Fend.Nxi, mp.est.probe.Npairs);
     for iProbe=1:Npairs % Display the actual probe intensity
-        ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi); ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
+        ampSq2D = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+        ampSq2D(mp.Fend.corr.maskBool) = ampSq(:, iProbe); 
         ampSq2Dcube(:, :, iProbe) = ampSq2D;
         fprintf('*** Mean measured Inorm for probe #%d  =\t%.3e \n',iProbe,mean(ampSq2D(mp.Fend.corr.maskBool)));
     end
@@ -552,9 +553,9 @@ for iSubband = 1:mp.Nsbp
             % ncounts_readout = mp.readNoiseStd;  % Read noise in counts (ADU). Might need to be in photo-electrons
             % ncounts_shot = sqrt(ev.IprobedMean*mp.peakCountsPerPixPerSec);
             % Dark current not included here (yet).
-            ncounts_peak = mp.detector.peakFluxVec(iSubband) * mp.detector.tExpProbedVec(iSubband); % Using exposure time for probes
-            ncounts_std = sqrt( (sqrt(2)*ev.IprobedMeanSubband(iSubband)*ncounts_peak + mp.detector.readNoiseStd^2)/mp.detector.Nexp);
-            Rvar = (ncounts_std/ncounts_peak)^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
+            NelectronsPeak = mp.detector.gain * mp.detector.peakFluxVec(iSubband) * mp.detector.tExpProbedVec(iSubband);
+            meas_variance = (2*ev.IprobedMeanSubband(iSubband)*Ncounts_peak*mp.detector.gain/4 + mp.detector.readNoiseStd^2)/mp.detector.Nexp; %units of (e-)^2
+            Rvar = meas_variance/NelectronsPeak^2; % Don't forget to square it since R = E<n*n.'>. This is a variable scalar
             Rmat = mp.est.kf.Rcoef*Rvar*eye(Npairs);
             fprintf('Sensor noise coefficient: %.3e\n', Rmat(1, 1));
 

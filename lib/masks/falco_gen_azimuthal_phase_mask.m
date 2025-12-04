@@ -13,7 +13,7 @@
 % ------
 % inputs: structure of inputs parameters
 %   - inputs.type: type of mask. Valid options are 'vortex', 'cos',
-%   'sectors','staircase', 'classicalwrapped', 'frenchwrapped', 'mcmc6'.
+%   'sectors','staircase','sawtooth','galicher8','wrapped6','dzpm','custom'
 %   - inputs.charge: number of 2-pi phase progressions over the 360
 %     degrees of the mask)
 %   - inputs.N: width and height of the output array
@@ -27,6 +27,7 @@
 %                     array center in units of pixels
 %   - inputs.yOffset: (optional) y-offset of the mask center from the
 %                     array center in units of pixels
+%   - inputs.wav: (required for 'custom') index of fpm cube with lam depth
 %
 % OUTPUTS
 % -------
@@ -39,17 +40,27 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     charge = inputs.charge; 
     N = inputs.N;
     phaseScaleFac = inputs.phaseScaleFac;
+    
+    
+    %ADDITIONAL TEMPORARY PARAMETERS--needs to be properly integrated...
+%     
+%     P1 = 300; %mp.P1.full.Nbeam
+%     pixPerLamD = 8;%N/P1;
+    
 
     % OPTIONAL INPUTS
     centering = 'pixel';  %--Default to pixel centering
     xOffset = 0;
     yOffset = 0;
     clocking = 0; % [degrees]
+    res = 0;
     if(isfield(inputs,'centering')); centering = inputs.centering; end % 'pixel' or 'interpixel'
     if(isfield(inputs, 'xOffset')); xOffset = inputs.xOffset; end % [pixels]
     if(isfield(inputs, 'yOffset')); yOffset = inputs.yOffset; end % [pixels]
     if(isfield(inputs,'clocking')); clocking = inputs.clocking; end % [degrees]
-
+    if(isfield(inputs,'res'));res = inputs.res; end %[m]
+    if(isfield(inputs,'roddierradius')); roddierradius = inputs.roddierradius; end % [lambda/D]
+    if(isfield(inputs,'roddierphase')); roddierphase = inputs.roddierphase; end % [waves]
     % Input checks
     Check.scalar_integer(charge);
     
@@ -77,10 +88,25 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
     % make mask 
     switch lower(maskType)
+
         case 'vortex'
             vort = phaseScaleFac*charge*THETA;
             mask = exp(1j*vort);
+            
+%             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',charge*pi.*[-0.99,-.5,0,0.5,1],...
+%          'TickLabels',{num2str(-charge)+"\pi",num2str(-charge/2)+"\pi",'0',num2str(charge/2)+"\pi",num2str(charge)+"\pi"},'FontSize',20); title('Classical Vortex Phase Map','FontSize',20);
 
+            
+%           %FIGURE MAKING
+
+%             set(groot,'defaulttextinterpreter','latex');
+%             set(groot,'defaultLegendInterpreter','latex');
+%             set(groot,'defaultAxesTickLabelInterpreter','latex');  
+%             
+%             figure(); imagesc(vort); axis image; axis off; set(gcf,'color','w'); set(gca,'fontsize',40); set(gcf,'position',[30,30,600,400])
+%             h = colorbar('Ticks',charge*pi.*[-0.99,-.5,0,0.5,1],'TickLabels',{'$-6\pi$','$-3\pi$','$0$','$3\pi$','$6\pi$'},'TickLabelInterpreter', 'latex'); 
+%             set(get(h,'label'),'string','\phi');
+            %             title('Classical Vortex Phase Map','FontSize',20);
 
         case{'cos'}
             z_m = besselzero(0,1);
@@ -90,14 +116,15 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 
         case 'sectors'
             % Generate 1D phase profile 
-            Nsamps1D = 100*N; 
+            Nfac = 100;
+            Nsamps1D = Nfac*N; 
             q = linspace(-pi,pi,Nsamps1D);
             fpmPhz1D = pi/2*sign(cos(charge*q));
             
             % Filter out unwanted modes  
             mask1D = exp(1j*phaseScaleFac*fpmPhz1D);
             mask1D_FT = fft(mask1D);
-            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/100;
+            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/Nfac;
             mask1D_FT = mask1D_FT.*filter; 
             mask1D = ifft(mask1D_FT);
 
@@ -111,14 +138,15 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             Nsteps = inputs.Nsteps;
 
             % Generate 1D phase profile 
-            Nsamps1D = 100*N; 
+            Nfac = 1000;
+            Nsamps1D = Nfac*N; 
             q = linspace(-pi,pi,Nsamps1D);
             fpmPhz1D = ceil(mod((q+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi-pi;
             
             % Filter out unwanted modes  
             mask1D = exp(1j*phaseScaleFac*fpmPhz1D);
             mask1D_FT = fft(mask1D);
-            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/100;
+            filter = abs(mask1D_FT) > max(abs(mask1D_FT))/Nfac;
             mask1D_FT = mask1D_FT.*filter; 
             mask1D = ifft(mask1D_FT);
 
@@ -127,7 +155,24 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
 %             figure;imagesc(angle(mask));colorbar; colormap(hsv);caxis([-pi pi]);set(gca,'ydir','normal')
 %             mask = abs(mask).*exp(1j*phaseScaleFac*angle(mask));
             
-        case 'classicalwrapped'
+            
+            vort = phaseScaleFac*ceil(mod((THETA+pi)/(2*pi)*charge, 1)*Nsteps)/Nsteps*2*pi;
+            
+%             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title(' Staircase Vortex Phase Map','FontSize',20);
+
+
+%           %FIGURE MAKING
+
+%             set(groot,'defaulttextinterpreter','latex');
+%             set(groot,'defaultLegendInterpreter','latex');
+%             set(groot,'defaultAxesTickLabelInterpreter','latex');  
+%             
+%             figure(); imagesc(vort); axis image; axis off; set(gcf,'color','w');  set(gca,'fontsize',40); set(gcf,'position',[30,30,600,400])
+%             h = colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],'TickLabels',{'$0$','$\frac{\pi}{2}$','$\pi$','$\frac{3\pi}{2}$','$2\pi$'},'TickLabelInterpreter', 'latex'); 
+%             set(get(h,'label'),'string','\phi');
+%             
+        case 'sawtooth'
             
 %             vort = phaseScaleFac*charge*rem(THETA,pi./4);
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
@@ -139,10 +184,20 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = exp(phaseScaleFac*1j*vort);
 
 %             figure(); imagesc(vort); axis image; axis off; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
-%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',16);title(' Classical Wrapped Vortex Phase Map','FontSize',16);
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title(' Sawtooth Vortex Phase Map','FontSize',20);
+
+            %FIGURE MAKING
+% 
+%             set(groot,'defaulttextinterpreter','latex');
+%             set(groot,'defaultLegendInterpreter','latex');
+%             set(groot,'defaultAxesTickLabelInterpreter','latex');  
+%             
+%             figure(); imagesc(vort); axis image; axis off; set(gcf,'color','w');  set(gca,'fontsize',40); set(gcf,'position',[30,30,600,400])
+%             h = colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],'TickLabels',{'$0$','$\frac{\pi}{2}$','$\pi$','$\frac{3\pi}{2}$','$2\pi$'},'TickLabelInterpreter', 'latex'); 
+%             set(get(h,'label'),'string','\phi');
 
 
-        case 'frenchwrapped'
+        case 'wrapped8'
             
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             %
@@ -166,10 +221,10 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = exp(phaseScaleFac*1j*fancyVort);
 
 %             figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[-0.99,0,1,2,2.99],...
-%          'TickLabels',{"-\pi",0,"\pi","2\pi","3\pi"},'FontSize',16);title(' French Wrapped Vortex Phase Map','FontSize',16);
+%          'TickLabels',{"-\pi",0,"\pi","2\pi","3\pi"},'FontSize',20);title(' Galicher Wrapped Vortex Phase Map','FontSize',20);
 
      
-        case 'mcmc6'
+        case 'wrapped6'
             
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             %
@@ -189,11 +244,131 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             mask = exp(phaseScaleFac*1j*fancyVort);
             
 %             figure(); imagesc(fancyVort); axis image; axis off; colorbar('Ticks',pi.*[0,1,2,2.99],...
-%          'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',16);title('MCMC Vortex Phase Map','FontSize',16);
+%          'TickLabels',{0,"\pi","2\pi","3\pi"},'FontSize',20);title('Wrapped Vortex Phase Map','FontSize',20);
+
+        case 'dzpm'
+            % dual zone phase mask
+            if~res
+               error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+            
+            R1 = (coords.RHO <= 0.515*res);
+            vort(R1) =vort(R1) + 0.47*2*pi;
+            R2 = (coords.RHO > 0.515*res) & (coords.RHO <= 0.705*res);
+            vort(R2) =vort(R2) + 0.92*2*pi;
+            
+            mask = exp(phaseScaleFac*1j*vort);
+
+            
+        case 'roddier'
+            %roddier + sawtooth
+            if ~res
+               error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
+            if ~isfield(inputs, 'roddierradius')
+                error("inputs.roddierradius must be defined for this mask case.")
+            end
+
+            if ~isfield(inputs, 'roddierphase')
+                error("inputs.roddierphase must be defined for this mask case.")
+            end
+
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            vort = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+            
+            R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
+            vort(R1) =vort(R1) + roddierphase*2*pi;
+            
+            mask = exp(phaseScaleFac*1j*vort);
+
+%             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
+
+        case 'just_dimple'
+            % a roddier dimple without any azimuthal structure
+            if~res
+                error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
+            if ~isfield(inputs, 'roddierradius')
+                error("inputs.roddierradius must be defined for this mask case.")
+            end
+
+            if ~isfield(inputs, 'roddierphase')
+                error("inputs.roddierphase must be defined for this mask case.")
+            end
+
+            coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+            dimple = 0.* coords.THETA;
+            domain = (coords.THETA >= 0);
+            
+            R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
+            dimple(R1) =dimple(R1) + roddierphase*2*pi;
+            
+            mask = exp(phaseScaleFac*-1j*dimple);
+
+%             figure(); imagesc(vort); axis image; colorbar('Ticks',pi.*[0,0.5,1,1.5,1.99],...
+%          'TickLabels',{0,"\pi/2","\pi","3\pi/2","2\pi"},'FontSize',20);title('Roddier Phase Map','FontSize',20);
+
+
+        case 'custom'
+            % MONOCHROMATIC metasurface vortex
+            
+            %read in Metasurface vortcube, lams
+%             load lorenzovortex6cube.mat
+%             lams   = [3.4,3.6,3.8,4.,4.2];
+            i_lam = 3; %find(round((lams(ceil(end/2)))./lams,4) == round(phaseScaleFac,4));
+            
+            
+%             mask = vortcube(:,:,i_lam);
+            
+            design="sawtooth";
+            trans  = "var"; %"const";
+%             
+%             % i_lam  = 2;%2;%3;%4;%5
+% %             vortcube = [];%zeros(4);
+%             
+% 
+% %             for i_lam = 1:length(lams)
+% 
+                Npad   = N; %4096; %4096; %8192; % %2^13;
+                charge = 6;
+                theta  = angle(falco_gen_vortex_mask(1,Npad)); % gen_v_mask  with charge 1 means having an array with the azi angle for each pxl
+                z1 = 2.40483; % wiki Bessel zeros
+                z2 = 5.52008; % using z2 or z3 results in more than 2pi phase coverage needed
+                z3 = 8.65373; %
+                if design=="sawtooth", [pss,Tss,sss] = b30_library_siz_auto(angle(exp(1i.*charge.*theta)),i_lam); end % VORTEX: add wavelength dependent phase. 
+                if design=="cosine", [pss,Tss,sss] = b30_library_siz_auto(angle(exp(1i.*z1.*cos(charge.*theta)))+z1-pi,i_lam); end % COSINE: add wavelength dependent phase. 
+                vortex1 = exp(1i.*pss); % phase only
+                if trans=="const", vortex = vortex1; end
+                if trans=="var", vortex = vortex1.*sqrt(Tss); end % add phase dependent transmission values
+% 
+% %                 vortcube = cat(3,vortcube,vortex); %(:,:,i_lam);
+% 
+% %             end
+%             
+            mask = vortex;
+            
+            
+            
+%             figure(); imagesc(angle(mask)); axis image; title('Custom Phase Map','FontSize',20);
+%             disp('read metasurface map successfully');
 
             
         otherwise
-            validOptions = "Valid options are 'vortex', 'cos', 'sectors', 'staircase', 'classicalwrapped', 'frenchwrapped', and 'mcmc6'.";
+            validOptions = "Valid options are 'vortex', 'cos', 'sectors', 'staircase', 'sawtooth', 'wrapped8', 'wrapped6', 'dzpm', 'roddier', and 'just_dimple'.";
             error('%s is not a valid option for inputs.type. \n%s', inputs.type, validOptions)
     end
 

@@ -42,6 +42,7 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
                 Iall{iCombo} = falco_get_single_sim_image(iCombo, indexCombos, mp);
             end
         end
+   
 
         %--Apply the spectral and stellar weights, and then sum
         summedImage = 0;

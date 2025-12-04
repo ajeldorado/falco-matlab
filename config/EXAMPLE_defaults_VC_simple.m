@@ -246,33 +246,14 @@ inputs.Npad = 2^(nextpow2(mp.P4.compact.Nbeam));
 mp.P4.compact.mask = falco_gen_pupil_Simple(inputs); 
 
 
-%% VC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SVC-Specific Values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 mp.F3.VortexCharge = 6; %--Charge of the vortex mask
 
 mp.F3.compact.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
 mp.F3.full.res = 4; % Coarse DFT resolution used in propcustom_mft_PtoFtoP.m
 
-%set phasescalefac
 
-mp.sbp_weights = ones(mp.Nsbp,1);
-if(mp.Nwpsbp==1 && mp.flagSim) %--Set ctrl wavelengths evenly between endpoints (inclusive) of the total bandpass.
-    if(mp.Nsbp==1)
-        mp.sbp_centers = mp.lambda0;
-    else
-        mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBW/2, 1+mp.fracBW/2, mp.Nsbp);
-        mp.sbp_weights(1) = 1/2; %--Give end sub-bands half weighting
-        mp.sbp_weights(end) = 1/2; %--Give end sub-bands half weighting
-    end
-else %--For cases with multiple sub-bands: Choose wavelengths to be at subbandpass centers since the wavelength samples will span to the full extent of the sub-bands.
-    mp.fracBWcent2cent = mp.fracBW*(1-1/mp.Nsbp); %--Bandwidth between centers of endpoint subbandpasses.
-    mp.sbp_centers = mp.lambda0*linspace(1-mp.fracBWcent2cent/2, 1+mp.fracBWcent2cent/2, mp.Nsbp); %--Space evenly at the centers of the subbandpasses.
-end
-
-
-mp.F3.phaseScaleFacLambdas = mp.sbp_centers
-
-mp.F3.phaseScaleFac = mp.lambda0./ mp.F3.phaseScaleFacLambdas
 
 
 

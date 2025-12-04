@@ -15,17 +15,25 @@ end
 % set default options 
 refwave = false;
 to_input = false;
+noFPM = false;
 
 % Check if user wants to compute the reference wave, which is the FT of the
 % part of the beam that passes through the phase dimple. 
 if(~isempty(varargin))
     flag = varargin(1); 
-    if(strcmp(flag, 'refwave'))
+    if(strcmpi(flag, 'refwave'))
         refwave = true; 
+        noFPM = false;
     end
-    if(strcmp(flag, 'to_input'))
+    if(strcmpi(flag, 'to_input'))
         to_input = true;
         refwave = false; 
+        noFPM = false;
+    end
+    if(strcmpi(flag, 'noFPM'))
+        to_input = false;
+        refwave = false; 
+        noFPM = true;
     end
 end
 
@@ -184,6 +192,8 @@ else % otherwise, go through the mask and on to the next pupil.
     
     if(refwave)
         Eout = EP4sub;
+    elseif(noFPM)
+        Eout = EP4noFPM;
     else
         Eout = EP4noFPM-EP4sub;
     end

@@ -55,13 +55,16 @@ if isfield(inputs,'centering'); centering = inputs.centering; else; centering = 
 
 if isfield(inputs,'clockAngDeg');  clockAngDeg = inputs.clockAngDeg; else; clockAngDeg = 0;  end %--Amount extra to clock the dark hole
 
+% oversized (eroded) shapes
+if isfield(inputs,'radius_dilate');  radius_dilate = inputs.radius_dilate; else; radius_dilate = 0;  end %--Amount extra to enlarge the dark hole
+
 %--Number of points across each axis. Crop the vertical (eta) axis if angDeg<180 degrees.
 if( strcmpi(centering,'interpixel') )
-    Nxi =  ceil_even(2*minFOVxi*pixresFP); % Number of points across the full FPM
-    Neta = ceil_even(2*minFOVeta*pixresFP);
+    Nxi =  ceil_even(2*(minFOVxi+radius_dilate+xiOffset)*pixresFP); % Number of points across the full FPM
+    Neta = ceil_even(2*(minFOVeta+radius_dilate+etaOffset)*pixresFP);
 else
-    Nxi =  ceil_even(2*(minFOVxi*pixresFP+1/2)); % Number of points across the full FPM
-    Neta = ceil_even(2*(minFOVeta*pixresFP+1/2));
+    Nxi =  ceil_even(2*((minFOVxi+radius_dilate+xiOffset)*pixresFP + 1/2)); % Number of points across the full FPM
+    Neta = ceil_even(2*((minFOVeta+radius_dilate+etaOffset)*pixresFP + 1/2));
 end
 %--Overwrite the calculated value if it is specified.
 if(isfield(inputs, 'Nxi')); Nxi = inputs.Nxi; end
@@ -121,6 +124,19 @@ softwareMask = softwareMask0 & abs(angle(exp(1i*(THETAS-clockAngRad))))<=angRad/
 if any(strcmpi(whichSide, {'both', 'lr', 'rl', 'leftright', 'rightleft', 'tb', 'bt', 'ud', 'du', 'topbottom', 'bottomtop', 'updown', 'downup'}))
     softwareMask2 = softwareMask0 & abs(angle(exp(1i*(THETAS-(clockAngRad+pi)))))<=angRad/2;
     softwareMask = or(softwareMask, softwareMask2);
+end
+
+if radius_dilate > 0
+
+    radius_dilate_pix = radius_dilate*pixresFP;
+    kdim = ceil_odd(radius_dilate_pix * 2 + 1);
+    [x, y] = meshgrid(0:kdim-1,0:kdim-1);
+    x = x - fix(kdim / 2);
+    y = y - fix(kdim / 2);
+    r = sqrt(x.^2 + y.^2);
+    k = (r <= radius_dilate_pix);
+    softwareMask = imdilate(softwareMask, k);
+ 
 end
 
 end %--END OF FUNCTION

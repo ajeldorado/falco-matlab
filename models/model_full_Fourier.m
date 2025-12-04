@@ -26,7 +26,13 @@
 % varargout{1}==Efiber : E-field at final plane when a single mode fiber
 % is used
 
-function [Eout, varargout] = model_full_Fourier(mp, lambda, Ein, normFac)
+function [Eout, varargout] = model_full_Fourier(mp, lambda, Ein, normFac, varargin)
+
+%--If there is an extra input, it is the exit pupil multiplier array.
+EP4mult = 1; % default
+if size(varargin, 2) == 1
+    EP4mult = varargin{1};
+end
 
 mirrorFac = 2; % Phase change is twice the DM surface height.
 NdmPad = mp.full.NdmPad;
@@ -138,27 +144,50 @@ switch upper(mp.coro)
             phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
         end
         
-        inVal = mp.F3.inVal;
-        outVal = mp.F3.outVal;
-        spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
-        spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
-        pixPerLamD = mp.F3.full.res;
+        if mp.F3.flagDimple %for radially varying vortex phase masks
+            inVal = mp.F3.inVal;
+            outVal = mp.F3.outVal;
+            pixPerLamD = mp.F3.full.res;
+            
+            clear inputs
+            inputs.type = 'sawtooth';
+            inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
+            inputs.charge = mp.F3.VortexCharge;
+            inputs.phaseScaleFac = phaseScaleFac;
+            inputs.clocking = mp.F3.clocking;
+
+            inputs.roddierradius = mp.F3.roddierradius;
+            inputs.roddierphase = mp.F3.roddierphase;
+            
+            inputs.res = mp.F3.full.res;
+            FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);
+            
+            inputs.type = mp.F3.phaseMaskType;
+            inputs.res = floor(pixPerLamD*mp.P1.full.Nbeam/(2*mp.F3.outVal));
+            FPMfine = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+            
+            % EP4 = propcustom_mft_PtoFtoP_multispot(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU,'spotDiamVec',mp.F3.VortexSpotDiamVec * (phaseScaleFac),'spotAmpVec',mp.F3.VortexSpotAmpVec,'spotPhaseVec',mp.F3.VortexSpotPhaseVec/phaseScaleFac);
+            EP4 = propcustom_mft_PtoFtoP_multispot(EP3, FPMcoarse, FPMfine, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU);
+        else
+            inVal = mp.F3.inVal;
+            outVal = mp.F3.outVal;
+            % mp.F3.VortexSpotDiam = 0; % TEMPORARY--DO NOT COMMIT
+            spotDiam = mp.F3.VortexSpotDiam * (mp.lambda0/lambda);
+            spotOffsets = mp.F3.VortexSpotOffsets * (mp.lambda0/lambda);
+            pixPerLamD = mp.F3.full.res;
+            
+            inputs.type = mp.F3.phaseMaskType;
+            inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
+            inputs.charge = mp.F3.VortexCharge;
+            inputs.phaseScaleFac = phaseScaleFac;
+            inputs.clocking = mp.F3.clocking;
+            inputs.Nsteps = mp.F3.NstepStaircase;
+            fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
+            EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
+        end
         
-        inputs.type = mp.F3.phaseMaskType;
-        inputs.N = ceil_even(pixPerLamD*mp.P1.full.Nbeam);
-        inputs.charge = mp.F3.VortexCharge;
-        inputs.phaseScaleFac = phaseScaleFac;
-        inputs.clocking = mp.F3.clocking;
-        inputs.Nsteps = mp.F3.NstepStaircase;
-        fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
-        
-%         figure(222);imagesc(angle(fpm));colorbar; colormap(gray);caxis([-pi pi]);set(gca,'ydir','normal')
- 
-        EP4 = propcustom_mft_PtoFtoP(EP3, fpm, mp.P1.full.Nbeam/2, inVal, outVal, mp.useGPU, spotDiam, spotOffsets);
-        
-        % Undo the rotation inherent to propcustom_mft_PtoFtoP.m
-        if ~mp.flagRotation; EP4 = propcustom_relay(EP4, -1, mp.centering); end
-        
+        % One 180-degree rotation is inherent to propcustom_mft_PtoFtoP
+        EP4 = propcustom_relay(EP4, NrelayFactor*mp.Nrelay3to4 - 1, mp.centering);        
         EP4 = pad_crop(EP4, mp.P4.full.Narr);
 
     case{'SPLC', 'FLC'}
@@ -248,8 +277,13 @@ end
 %--Apply the Lyot stop
 EP4 = mp.P4.full.croppedMask .* EP4;
 
-%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
+%--Apply other changes at EP4 if needed.
+EP4 = EP4mult .* EP4;
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
+% Apply change in E-field at EP4 (for downstream shift and/or aberrations) 
+
+
+%--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
 EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.full.dx, mp.Fend.dxi, mp.Fend.Nxi, ...
     mp.Fend.deta, mp.Fend.Neta, mp.centering);
 

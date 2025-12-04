@@ -23,8 +23,8 @@ mp.flagSaveWS = true;  %--Whether to save out entire (large) workspace at the en
 %% Step 2: Load default model parameters
 
 EXAMPLE_defaults_try_running_FALCO
-mp.estimator = 'perfect';
-mp.ctrl.flagUseModel = true;
+mp.estimator = 'pairwise-square';
+mp.est.probe.axis = 'multi';
 
 % % Fiber parameters
 mp.flagFiber = true;

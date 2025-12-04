@@ -79,7 +79,7 @@ end
 args = varargin(1:NC) ;
 
 if any(cellfun('isempty', args)) % check for empty inputs
-    warning('ALLCOMB:EmptyInput','One of more empty inputs result in an empty output.') ;
+    % warning('ALLCOMB:EmptyInput','One of more empty inputs result in an empty output.') ;
     A = zeros(0, NC) ;
 elseif NC == 0 % no inputs
     A = zeros(0,0) ; 

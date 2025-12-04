@@ -12,7 +12,11 @@
 function out = falco_store_intensities(mp, out, ev, Itr)
     
     if strcmpi(mp.estimator, 'iefc')
-        ev.Eest = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+        if ~mp.flagFiber
+            ev.Eest = zeros(mp.Fend.corr.Npix, mp.jac.Nmode);
+        else
+            ev.Eest = zeros(mp.Fend.Nfiber, mp.jac.Nmode);
+        end
     end
 
     % Apply subband weights and then sum over subbands
