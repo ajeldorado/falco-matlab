@@ -216,7 +216,7 @@ else
     tag = '';
 end
 
-if Itr>1
+if Itr>1 && contains(mp.estimator,'ekf_maintenance')
     fitswrite(Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
 else
     fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));

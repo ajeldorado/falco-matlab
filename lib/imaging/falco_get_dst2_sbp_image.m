@@ -119,6 +119,13 @@ function [normI,varargout] = falco_get_dst2_sbp_image(mp,si)
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     normI = (sciCam_getImage(tb,sbp_texp)-dark)/PSFpeak_counts;
     
+    if isfield(mp.Fend, 'binFac')
+        if mp.Fend.binFac > 1
+            normIbinned = falco_bin_downsample(normI(2:end, 2:end), mp.Fend.binFac);
+            normI = normIbinned;
+        end
+    end
+    
     if mp.flagFiber
             %----- Get image from the testbed -----
             disp(['Getting fiber intensity from testbed in band ',num2str(si),'. texp = ',num2str(sbp_texp_fiber)])
