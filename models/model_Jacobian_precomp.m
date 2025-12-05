@@ -323,8 +323,8 @@ function mp = model_Jacobian_precomp(mp)
         Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
         Edm1 = Edm1WFE .* DM1stop .* exp(surfIntoPhase*2*pi*1j*DM1surf/lambda) .* Edm1;
     
-        NboxPad2AS = mp.dm2.compact.NboxAS; 
-        mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
+%         NboxPad2AS = mp.dm2.compact.NboxAS; 
+%         mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
         
         % apodReimaged = pad_crop(apodReimaged, mp.dm2.compact.NdmPad);
         DM2stopPad = pad_crop(DM2stop, mp.dm2.compact.NdmPad);
