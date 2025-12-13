@@ -89,10 +89,10 @@ if any(mp.dm_ind == 2)
 end
 
 if any(mp.dm_ind == 1)
-    fprintf(' Delta RMS DM1 surface = %.1f nm this iteration\n', 1e9*out.dm1.DeltaSrms(Itr))
+    fprintf(' RMS Delta DM1 surface = %.1f nm this iteration\n', 1e9*out.dm1.DeltaSrms(Itr))
 end
 if any(mp.dm_ind == 2)
-    fprintf(' Delta RMS DM2 surface = %.1f nm this iteration\n', 1e9*out.dm2.DeltaSrms(Itr))
+    fprintf(' RMS Delta DM2 surface = %.1f nm this iteration\n', 1e9*out.dm2.DeltaSrms(Itr))
 end
 
 %--Report pinned and comoving actuators
