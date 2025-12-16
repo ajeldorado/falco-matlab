@@ -188,7 +188,7 @@ if flagUseFPM
                 inputs.clocking = mp.F3.clocking;
                 inputs.roddierradius = mp.F3.roddierradius;
                 inputs.roddierphase = mp.F3.roddierphase;
-                
+                inputs.lamScaleFac = mp.lambda0/lambda;
                 inputs.res = mp.F3.compact.res;
                 FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);
                 

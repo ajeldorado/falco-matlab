@@ -61,6 +61,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
     if(isfield(inputs,'res'));res = inputs.res; end %[m]
     if(isfield(inputs,'roddierradius')); roddierradius = inputs.roddierradius; end % [lambda/D]
     if(isfield(inputs,'roddierphase')); roddierphase = inputs.roddierphase; end % [waves]
+    if(isfield(inputs,'lamScaleFac')); lamScaleFac = inputs.lamScaleFac; end
     % Input checks
     Check.scalar_integer(charge);
     
@@ -280,6 +281,10 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             if ~isfield(inputs, 'roddierphase')
                 error("inputs.roddierphase must be defined for this mask case.")
             end
+            
+            if ~isfield(inputs,'lamScaleFac')
+                error("inputs.lamScaleFac must be defined for this mask case.")
+            end
 
             coords = generateCoordinates(N);% Creates NxN arrays with coordinates 
             vort = 0.* coords.THETA;
@@ -288,7 +293,7 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
             domain = (coords.THETA >= -pi) & (coords.THETA < 0);
             vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
             
-            R1 = (coords.RHO <= roddierradius*res*phaseScaleFac);
+            R1 = (coords.RHO <= roddierradius*res*lamScaleFac);
             vort(R1) =vort(R1) + roddierphase*2*pi;
             
             mask = exp(phaseScaleFac*1j*vort);

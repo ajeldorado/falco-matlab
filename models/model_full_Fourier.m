@@ -158,7 +158,7 @@ switch upper(mp.coro)
 
             inputs.roddierradius = mp.F3.roddierradius;
             inputs.roddierphase = mp.F3.roddierphase;
-            
+            inputs.lamScaleFac = mp.lambda0/lambda;
             inputs.res = mp.F3.full.res;
             FPMcoarse = falco_gen_azimuthal_phase_mask(inputs);
             

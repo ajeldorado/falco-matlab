@@ -100,6 +100,9 @@ function mp = model_Jacobian_precomp(mp)
                     % chromatic phase FPM.
                     phaseScaleFac = interp1(mp.F3.phaseScaleFacLambdas, mp.F3.phaseScaleFac, lambda, 'linear', 'extrap');
                 end
+                if mp.F3.flagDimple
+                    lamScaleFac = mp.lambda0/lambda;
+                end
     
                 %--Array size for planes P3, F3, and P4
                 Nfft1 = 2^(ceil(log2(max([mp.dm1.compact.NdmPad, minPadFacVortex*mp.dm1.compact.Nbox])))); %--Don't crop--but do pad if necessary.
@@ -133,6 +136,11 @@ function mp = model_Jacobian_precomp(mp)
                     inputs.clocking = mp.F3.clocking;
                     inputs.Nsteps = mp.F3.NstepStaircase;
                     inputs.res = pixres;
+                    if mp.F3.flagDimple
+                        inputs.roddierphase = mp.F3.roddierphase;
+                        inputs.roddierradius = mp.F3.roddierradius;
+                        inputs.lamScaleFac = lamScaleFac; 
+                    end
                     fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
             
                     mp.jac.vortexDM1_list(:, :, imode) = fpm;
@@ -166,6 +174,11 @@ function mp = model_Jacobian_precomp(mp)
                         inputs.clocking = mp.F3.clocking;
                         inputs.Nsteps = mp.F3.NstepStaircase;
                         inputs.res = Nfft/mp.P1.compact.Nbeam;
+                        if mp.F3.flagDimple
+                            inputs.roddierphase = mp.F3.roddierphase;
+                            inputs.roddierradius = mp.F3.roddierradius;
+                            inputs.lamScaleFac = lamScaleFac; 
+                        end
                         fpm = falco_gen_azimuthal_phase_mask(inputs); clear inputs;
                         
                         % Generate FPM with fftshift already applied
@@ -323,10 +336,6 @@ function mp = model_Jacobian_precomp(mp)
         Edm1 = propcustom_PTP(EP2, mp.P2.compact.dx*NdmPad, lambda, mp.d_P2_dm1);
         Edm1 = Edm1WFE .* DM1stop .* exp(surfIntoPhase*2*pi*1j*DM1surf/lambda) .* Edm1;
     
-%         NboxPad2AS = mp.dm2.compact.NboxAS; 
-%         mp.dm2.compact.xy_box_lowerLeft_AS = mp.dm2.compact.xy_box_lowerLeft - (NboxPad2AS-mp.dm2.compact.Nbox)/2; %--Account for the padding of the influence function boxes
-        
-        % apodReimaged = pad_crop(apodReimaged, mp.dm2.compact.NdmPad);
         DM2stopPad = pad_crop(DM2stop, mp.dm2.compact.NdmPad);
         Edm2WFEpad = pad_crop(Edm2WFE, mp.dm2.compact.NdmPad);
         
