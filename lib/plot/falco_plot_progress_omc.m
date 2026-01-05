@@ -123,6 +123,7 @@ if(mp.flagPlot)
     cmap = jet(mp.Nsbp+1);
     cmap = cmap ./ sum(cmap,2);% make the jet cmap darker
 
+    legstr = {};
     for si = 1:mp.Nsbp
         if(si==mp.si_ref)
             linecolor=[0 0 0];
@@ -131,10 +132,11 @@ if(mp.flagPlot)
         else
             linecolor=cmap(si,:);
         end
+        legstr{si} = ['subband ' num2str(si)];
         semilogy(0:Itr-1,Inorm.mod(:,si),'-o','Color',linecolor); hold on;
         %hl2(si)=semilogy(0:Itr-2,Inorm.unmod(:,si),'--o','Color',linecolor);
     end
-
+    legend(legstr{:});
     hold off;
     xlim([0 length(Inorm.total)])
     xlabel('Iteration')
@@ -192,17 +194,19 @@ if(mp.flagPlot)
             axis xy equal tight;
             colorbar;
             colormap(gca,parula)  
-             try
-                 axis(mp.Fend.dzAxis)
-             catch
-                 axis xy equal tight; 
-             end
+            try
+                axis(mp.Fend.dzAxis)
+            catch
+                axis xy equal tight;
+            end
+            title(['|E_{tb}|, band ' num2str(si)])
     
             subplot(2,mp.Nsbp,si+mp.Nsbp); % Save the handle of the subplot
             imagesc(mp.Fend.xisDL,mp.Fend.etasDL,angle(Im_tb.E(:,:,si)),[-pi pi]); 
             axis xy equal tight; 
             colorbar; 
             colormap(gca,hsv);
+            title(['Arg(E_{tb}), band ' num2str(si)])
     
             try
                  axis(mp.Fend.dzAxis)

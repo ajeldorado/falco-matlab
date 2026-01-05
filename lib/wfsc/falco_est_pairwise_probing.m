@@ -351,10 +351,21 @@ for iSubband = 1:mp.Nsbp
     % Set (approximate) probe intensity based on current measured Inorm
     if isempty(mp.est.probeSchedule.InormProbeVec)
         ev.InormProbeMax = mp.est.InormProbeMax;
+        if isfield(mp.est, 'InormProbeMin'), ev.InormProbeMin = mp.est.InormProbeMin; end
+        
         if mp.flagFiber
             InormProbe = min([sqrt(max(I0fibervec)*1e-8), ev.InormProbeMax]);
         else
             InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
+            
+            % allow for minimum probe intensity, for testing
+            if isfield(ev, 'InormProbeMin')
+                InormProbe = max(InormProbe, ev.InormProbeMin);
+            end
+            
+            %if check existence & mp.est.flagQuantizedInormProbe
+            %    % Todo ^?
+            %end
         end
         fprintf('Chosen probe intensity: %.2e \n', InormProbe);
     else
