@@ -60,9 +60,9 @@ end
 
 %--Include the tip/tilt in the input wavefront
 iStar = modvar.starIndex;
-xiOffset = mp.star.xiOffsetVec(iStar);
-etaOffset = mp.star.etaOffsetVec(iStar);
-starWeight = mp.star.weights(iStar);
+xiOffset = mp.full.star.xiOffsetVec(iStar);
+etaOffset = mp.full.star.etaOffsetVec(iStar);
+starWeight = mp.full.star.weights(iStar);
 TTphase = (-1)*(2*pi*(xiOffset*mp.P2.full.XsDL + etaOffset*mp.P2.full.YsDL));
 Ett = exp(1j*TTphase*mp.lambda0/lambda);
 Ein = sqrt(starWeight) * Ett .* mp.P1.full.E(:, :, modvar.wpsbpIndex, modvar.sbpIndex); 

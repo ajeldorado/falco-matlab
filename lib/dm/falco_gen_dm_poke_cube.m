@@ -198,7 +198,7 @@ dm.infMaster = griddata(xsNew,ysNew,inf0pad,Xs0,Ys0,'cubic');%,'cubic',0);
 dm.infMaster(isnan(dm.infMaster)) = 0;
 
 %--Crop down the influence function until it has no zero padding left
-infSum = sum(dm.infMaster(:));
+infSum = sum(abs(dm.infMaster(:)));
 infDiff = 0; counter = 0;
 while( abs(infDiff) <= 1e-7)
     counter = counter + 2;
