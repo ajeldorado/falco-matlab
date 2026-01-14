@@ -23,6 +23,7 @@ if(mp.flagPlot)
     handles.master = figure(90+ev.iStar);
     set(handles.master,'units', 'inches', 'Position', [0 0 12 8])
     set(handles.master,'Color','w')
+    FigureTitle(['Subband Index = ' num2str(iSubband)]); % modeIndex = (iStar-1)*mp.Nsbp + iSubband
 
     %--Plot the DM shapes for each probe
     for iProbe=1:Npairs
@@ -93,3 +94,33 @@ if(mp.flagPlot)
     hold off
 
 end
+
+end % function
+
+function han_out = FigureTitle(stitle, varargin)
+% han = FigureTitle(stitle, varargin)
+%
+% add an annotation text at the top of the figure, 
+% useful for adding a single main title to a figure with subplots
+%
+% varargin are property, value pairs passed to the annotation handle
+
+han = annotation('textbox', [0.5 0.8 0.2 0.2], 'String', stitle, ...
+    'FitBoxToText', 'on', 'LineStyle', 'none', ...
+    'FontSize', 16, 'Color', 'r', 'FontWeight', 'bold');
+set(han,'HorizontalAlignment','center')
+% center horizontally
+ppp = get(han,'Position');
+set(han,'Position',[0.5 - 0.5*ppp(3) ppp(2:end)])
+% so it can be found and deleted later
+set(get(han,'parent'),'HandleVisibility','on')
+
+if ~isempty(varargin),
+    set(han, varargin{:})
+end
+
+if nargout > 0,
+    han_out = han;
+end
+
+end % FigureTitle
