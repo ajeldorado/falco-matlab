@@ -584,7 +584,6 @@ for iSubband = 1:mp.Nsbp
     end
 
     %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
-
     if useKalmanFilter
         Hall = zeros(Npairs, 2, mp.Fend.corr.Npix);
     end

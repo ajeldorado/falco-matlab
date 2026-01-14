@@ -146,6 +146,16 @@ if mp.F3.full.flagErrors
     mp.F3.full.Eab = mp.F3.full.EabArray(:, :, modvar.sbpIndex, modvar.wpsbpIndex);
 end
 
+%% phase errors such as chromatic defocus at the very end
+if isfield(mp.Fend, 'defocus')
+    z4_rms_m = mp.Fend.defocus(modvar.sbpIndex); % rms Z4 (m)
+    x = -mp.P4.full.Nbeam/2:(mp.P4.full.Nbeam/2-1);
+    [X, Y] = meshgrid(x, x);
+    R = hypot(X, Y);
+    r = R./(mp.P4.full.Nbeam/2);
+    mp.P4.phase_error = exp(1j*2*pi*(z4_rms_m/lambda).*sqrt(3).*(2.*r.^2 - 1));
+end
+
 %% Select which optical layout's full model to use.
 switch lower(mp.layout)
     

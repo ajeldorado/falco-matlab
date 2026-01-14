@@ -6,8 +6,6 @@
 %
 function handles = falco_plot_progress_omc_model(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf)
 
-tb = mp.tb;
-
 % if(Itr==10 || Itr==40)
 %     % Clear the dark 
 %     disp('Clearing the dark ...');
@@ -205,7 +203,7 @@ end
 
 %%-- Save data
 
-out_dir = fullfile(tb.info.OUT_DATA_DIR,mp.runLabel);
+out_dir = fullfile(mp.OUT_DATA_DIR, mp.runLabel);
 % Directory to save dat
 if(~exist(out_dir, 'dir'))
     mkdir(out_dir);
