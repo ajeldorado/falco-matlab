@@ -207,6 +207,9 @@ end
 
 if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
    out.IOLScoreHist = ev.IOLScoreHist;
+   % Maintenance store function to save data
+   savePath = mp.path.config;
+   out = store_maintenance_data(ev, out, savePath);
 end
 
 
@@ -245,6 +248,19 @@ function out = store_dm_command_history(mp, out, Itr)
 
 end
 
+%% store maintenance data function
+function out = store_maintenance_data(ev, out, savePath)
+    % Store ev parameters as out variables
+    out.peak_psf_counts = ev.peak_psf_counts;
+    out.e_scaling = ev.e_scaling;
+    out.normI_OL_sbp = ev.normI_OL_sbp;
+    out.Esim = ev.Esim;
+    
+    % Save ev parameters as FITS files
+    fitswrite(ev.G_tot_cont, fullfile(savePath, 'G_tot_cont.fits'));
+    fitswrite(ev.G_tot_drift, fullfile(savePath, 'G_tot_drift.fits'));
+    fitswrite(ev.Q, fullfile(savePath, 'Q.fits'));
+end
 
 function out = falco_store_controller_data(mp, out, cvar, Itr)
     
