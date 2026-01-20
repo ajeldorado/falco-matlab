@@ -28,6 +28,18 @@ elseif whichDM == 2
     Nact = mp.dm2.Nact;
 end
 
+%--Select number of actuators being changed
+Nact_delta = 0;
+if any(mp.dm_ind == 1) || (whichDM == 1)
+    Nact_delta = mp.dm1.Nele;
+end
+if any(mp.dm_ind == 2) || (whichDM == 2)
+    Nact_delta = Nact_delta + mp.dm2.Nele;
+end
+
+
+
+
 % Initialize output arrays
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
 ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
@@ -38,6 +50,7 @@ if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  en
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  end
 
 %% Get dither command
+
 % Set random number generator seed
 % Dither commands get re-used every dither_cycle_iters iterations
 if mod(Itr-1, mp.est.dither_cycle_iters) == 0 || Itr == 1
@@ -66,6 +79,7 @@ else
     DM2Vdither = zeros(size(mp.dm2.V)); 
 end % The 'else' block would mean we're only using DM1
 
+
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
 %% Set total command for estimator image
@@ -84,23 +98,7 @@ end
 % Generate command to apply to DMs
 % Note if dm_drift_ind ~= i, the command is set to zero in
 % falco_drift_injection
-if any(mp.dm_ind == 1)
-    % note falco_set_constrained_voltage does not apply the command to the
-    % DM
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
-elseif any(mp.dm_drift_ind == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
-elseif any(mp.dm_ind_static == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
-end
-
-if any(mp.dm_ind == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
-elseif any(mp.dm_drift_ind == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
-elseif any(mp.dm_ind_static == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
-end
+mp = set_constrained_full_command(mp, DM1Vdither, DM2Vdither);
 
 % Do safety check to make sure no actuators are pinned
 ev = pinned_act_safety_check(mp,ev);
@@ -118,8 +116,10 @@ for iSubband = 1:mp.Nsbp
 end
 
 %% Perform the estimation
-ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
+ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command,DM1Vdither, DM2Vdither);
 
+% Reset DM commands
+mp = set_constrained_full_command(mp, DM1Vdither, DM2Vdither);
 
 %% Save out the estimate
 % TODO: add star and wavelength loop?
@@ -181,17 +181,22 @@ end
 
 
 
-function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
+function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command, DM1Vdither, DM2Vdither)
 %% Estimation part. All EKFs are avanced in parallel
 if mp.flagSim
     sbp_texp = mp.detector.tExpUnprobedVec;
 else
     sbp_texp = mp.tb.info.sbp_texp;
 end
+
+
 for iSubband = 1:1:mp.Nsbp
 
+    % Get gdu
+    gdu = get_gdu(mp, ev, iSubband, y_measured, closed_loop_command, DM1Vdither, DM2Vdither);
+
     %--Estimate of the closed loop electric field:
-    x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
+    x_hat_CL = ev.x_hat(:,iSubband) + gdu*ev.e_scaling(iSubband)*sqrt(sbp_texp(iSubband));
 
     %--Estimate of the measurement:
     y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*sbp_texp(iSubband));
@@ -235,12 +240,68 @@ end
 
 end
 
+function gdu = get_gdu(mp, ev, iSubband, y_measured, closed_loop_command, DM1Vdither, DM2Vdither)
+
+
+modvar = ModelVariables;
+modvar.starIndex = 1;
+modvar.whichSource = 'star';
+
+if mp.est.flagUseJacAlgDiff
+    gdu = ev.G_tot_cont(:,:,iSubband)*closed_loop_command;
+
+else %--Get the probe phase from the model and the probe amplitude from the measurements
+    % For unprobed field based on model:
+    if any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz); end
+    if any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz); end
+    E0 = model_compact(mp, modvar);
+    E0vec = E0(mp.Fend.corr.maskBool);
+     
+    %--For probed fields based on model:
+    gdu  = zeros(2*size(y_measured(:,iSubband),1),1);    
+    if any(mp.dm_ind == 1) || any(mp.dm_ind_static == 1); mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); end
+    if any(mp.dm_ind == 2) || any(mp.dm_ind_static == 2); mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); end
+    Edither = model_compact(mp, modvar);
+    Edithervec = Edither(mp.Fend.corr.maskBool);
+
+    gdu_comp = Edithervec - E0vec;
+
+    gdu(1:2:end,1) = real(gdu_comp);
+    gdu(2:2:end,1) = imag(gdu_comp);
+
+    % Split gdu into re and imag and convert units
+    % Reset DMS
+end
+
+end
 
 function comm_vector = get_dm_command_vector(mp,command1, command2)
 
 if any(mp.dm_ind == 1); comm1 = command1(mp.dm1.act_ele);  else; comm1 = []; end % The 'else' block would mean we're only using DM2
 if any(mp.dm_ind == 2); comm2 = command2(mp.dm2.act_ele);  else; comm2 = []; end
 comm_vector = [comm1;comm2];
+
+end
+
+function mp = set_constrained_full_command(mp, DM1Vdither, DM2Vdither)
+
+    if any(mp.dm_ind == 1)
+        % note falco_set_constrained_voltage does not apply the command to the
+        % DM
+        mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
+    elseif any(mp.dm_drift_ind == 1)
+        mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
+    elseif any(mp.dm_ind_static == 1)
+        mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+    end
+    
+    if any(mp.dm_ind == 2)
+        mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
+    elseif any(mp.dm_drift_ind == 2)
+        mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
+    elseif any(mp.dm_ind_static == 2)
+        mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+    end
 
 end
 
