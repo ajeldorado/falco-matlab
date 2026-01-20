@@ -37,6 +37,13 @@ ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1, mp.Nsbp);  end
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1, mp.Nsbp);  end
 
+% Get exposure time
+if mp.flagSim
+    ev.sbp_texp = mp.detector.tExpUnprobedVec; % exposure times for non-pairwise-probe images in each subband.
+else
+    ev.sbp_texp  = mp.tb.info.sbp_texp;
+end
+
 %% Get dither command
 % Set random number generator seed
 % Dither commands get re-used every dither_cycle_iters iterations
@@ -68,75 +75,27 @@ end % The 'else' block would mean we're only using DM1
 
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
-%% Set total command for estimator image
-% TODO: need to save these commands for each iteration separately
 
-if Itr > 1
-    if ~isfield(mp.dm1,'dV'); mp.dm1.dV = zeros(mp.dm1.Nact);end
-    if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact);end
-    efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
-else
-    efc_command = 0*dither;
-    mp.dm1.dV = zeros(size(DM1Vdither));
-    mp.dm2.dV = zeros(size(DM1Vdither));
-end
-
-% Generate command to apply to DMs
-% Note if dm_drift_ind ~= i, the command is set to zero in
-% falco_drift_injection
-if any(mp.dm_ind == 1)
-    % note falco_set_constrained_voltage does not apply the command to the
-    % DM
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
-elseif any(mp.dm_drift_ind == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
-elseif any(mp.dm_ind_static == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
-end
-
-if any(mp.dm_ind == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
-elseif any(mp.dm_drift_ind == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
-elseif any(mp.dm_ind_static == 2)
-    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
-end
-
-% Do safety check to make sure no actuators are pinned
-ev = pinned_act_safety_check(mp,ev);
-
-closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_shift, mp.dm2.V_shift);
-
-%% Get images
-
-y_measured = zeros(mp.Fend.corr.Npix,mp.Nsbp);
-for iSubband = 1:mp.Nsbp
-    ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
-    I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
-    y_measured(:,iSubband) = I0(mp.Fend.corr.mask);
-
-end
-
+[mp, ev, y_measured, closed_loop_command, efc_command] = get_estimate_data(mp, ev, DM1Vdither, DM2Vdither);
 %% Perform the estimation
-ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
+switch lower(mp.estimator)
+    case{'ekf_maintenance'}
+        ev = ekf_estimate(mp,ev,jacStruct,y_measured,closed_loop_command);
+    case{'modal_ekf_maintenance'}
+        ev = modal_ekf_estimate(mp,ev,jacStruct,y_measured,dither,efc_command);
+end
 
 
 %% Save out the estimate
 % TODO: add star and wavelength loop?
-if mp.flagSim
-    sbp_texp = mp.detector.tExpUnprobedVec; % exposure times for non-pairwise-probe images in each subband.
-else
-    sbp_texp  = mp.tb.info.sbp_texp;
-end
 ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
 for iSubband = 1:1:mp.Nsbp
-    ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(sbp_texp(iSubband)));
     if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, 1, iSubband) = mp.dm1.V;  end
     if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, 1, iSubband) = mp.dm2.V;  end
-
     ev.Im = ev.Im + mp.sbp_weights(iSubband)*ev.imageArray(:,:,1,iSubband);
 end
-I0vec = y_measured./ev.peak_psf_counts;
+
+I0vec = y_measured(:,:,1)./ev.peak_psf_counts;
 ev.IincoEst = I0vec - abs(ev.Eest).^2; % incoherent light
 
 %--Other data to save out
@@ -177,24 +136,99 @@ save_ekf_data(mp,ev,DM1Vdither, DM2Vdither)
 fprintf(' done. Time: %.3f\n',toc);
 end
 
+function [mp, ev, y_measured, closed_loop_command, efc_command] = get_estimate_data(mp, ev, DM1Vdither, DM2Vdither)
 
+%% Get images
+switch lower(mp.estimator)
+    case{'ekf_maintenance'}
+        [mp, ev, closed_loop_command, efc_command] = apply_dither(mp, ev, DM1Vdither, DM2Vdither);
+        y_measured = zeros(mp.Fend.corr.Npix,mp.Nsbp);
+        for iSubband = 1:mp.Nsbp
+            ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
+            I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
+            y_measured(:,iSubband) = I0(mp.Fend.corr.mask);
+        
+        end
+     case{'modal_ekf_maintenance'}
+         % Get image with minus dither but store in (i, lam, 2)
+        [mp, ev, closed_loop_command, efc_command] = apply_dither(mp, ev, -DM1Vdither, -DM2Vdither);
+        y_measured = zeros(mp.Fend.corr.Npix,mp.Nsbp,2);
+        for iSubband = 1:mp.Nsbp
+            ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
+            I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
+            y_measured(:,iSubband,2) = I0(mp.Fend.corr.mask);
+        end
+           
+        % Get image with plus dither but store in (i, lam, 1)
+        [mp, ev, closed_loop_command, efc_command] = apply_dither(mp, ev, DM1Vdither, DM2Vdither);
+        for iSubband = 1:mp.Nsbp
+            ev.imageArray(:,:,1,iSubband) = falco_get_sbp_image(mp, iSubband);
+            I0 = ev.imageArray(:,:,1,iSubband) * ev.peak_psf_counts(iSubband);
+            y_measured(:,iSubband,1) = I0(mp.Fend.corr.mask);
+        end
+end
 
+end
+
+function [mp, ev, closed_loop_command, efc_command] = apply_dither(mp, ev, DM1Vdither, DM2Vdither)
+
+%% Set total command for estimator image
+% TODO: need to save these commands for each iteration separately
+dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
+
+if ev.Itr > 1
+    if ~isfield(mp.dm1,'dV'); mp.dm1.dV = zeros(mp.dm1.Nact);end
+    if ~isfield(mp.dm2,'dV'); mp.dm2.dV = zeros(mp.dm2.Nact);end
+    efc_command = get_dm_command_vector(mp,mp.dm1.dV, mp.dm2.dV);
+else
+    efc_command = 0*dither;
+    mp.dm1.dV = zeros(size(DM1Vdither));
+    mp.dm2.dV = zeros(size(DM1Vdither));
+end
+
+% Generate command to apply to DMs
+% Note if dm_drift_ind ~= i, the command is set to zero in
+% falco_drift_injection
+if any(mp.dm_ind == 1)
+    % note falco_set_constrained_voltage does not apply the command to the
+    % DM
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + mp.dm1.dV + DM1Vdither + mp.dm1.V_shift); 
+elseif any(mp.dm_drift_ind == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift); 
+elseif any(mp.dm_ind_static == 1)
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
+end
+
+if any(mp.dm_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift + mp.dm2.dV + DM2Vdither + mp.dm2.V_shift); 
+elseif any(mp.dm_drift_ind == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz + mp.dm2.V_drift); 
+elseif any(mp.dm_ind_static == 2)
+    mp.dm2 = falco_set_constrained_voltage(mp.dm2, mp.dm2.V_dz);
+end
+
+% Do safety check to make sure no actuators are pinned
+ev = pinned_act_safety_check(mp,ev);
+
+closed_loop_command = dither + efc_command + get_dm_command_vector(mp,mp.dm1.V_shift, mp.dm2.V_shift);
+
+end
 
 
 function [ev] = ekf_estimate(mp, ev, jacStruct, y_measured, closed_loop_command)
 %% Estimation part. All EKFs are avanced in parallel
-if mp.flagSim
-    sbp_texp = mp.detector.tExpUnprobedVec;
-else
-    sbp_texp = mp.tb.info.sbp_texp;
-end
+% if mp.flagSim
+%     sbp_texp = mp.detector.tExpUnprobedVec;
+% else
+%     sbp_texp = mp.tb.info.sbp_texp;
+% end
 for iSubband = 1:1:mp.Nsbp
 
     %--Estimate of the closed loop electric field:
-    x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(sbp_texp(iSubband))*closed_loop_command;
+    x_hat_CL = ev.x_hat(:,iSubband) + (ev.G_tot_cont(:,:,iSubband)*ev.e_scaling(iSubband))*sqrt(ev.sbp_texp(iSubband))*closed_loop_command;
 
     %--Estimate of the measurement:
-    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*sbp_texp(iSubband));
+    y_hat = x_hat_CL(1:ev.SS:end).^2 + x_hat_CL(2:ev.SS:end).^2 + (mp.est.dark_current*ev.sbp_texp(iSubband));
 
     ev.R(ev.R_indices) = reshape(y_hat + (mp.est.read_noise)^2,size(ev.R(ev.R_indices)));
 
@@ -231,10 +265,89 @@ for iSubband = 1:1:mp.Nsbp
 
 end
 
+% Prep estimate to save out
+for iSubband = 1:1:mp.Nsbp
+    ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband)));
+end
+
 
 
 end
 
+function [ev] = modal_ekf_estimate(mp,ev,jacStruct,y_measured,dither,cont_command)
+
+    y_plus = y_measured(:,:,1);
+    y_minus = y_measured(:,:,end);
+
+for iSubband = 1:1:mp.Nsbp
+
+     %--Jacobian (convert from sqrt(contrast)/nm to sqrt(photons/s)/nm)
+    G = ev.G_tot_cont(:, :, iSubband) * ev.e_scaling(iSubband) * sqrt(ev.sbp_texp); % Jacobian for the full DM
+    
+    %--Dither-modulated Jacobian
+    J_du = G * dither;
+    
+    %--Measurement noise covariance matrix (R)
+    % if mp.est.low_photon_regime
+        % dark_current_photons = mp.est.dark_current * mp.est.quantum_efficiency * mp.exp.t_coron_sbp;
+        % read_noise_photons = mp.est.read_noise * mp.est.quantum_efficiency;
+        % ev.dm_R = diag(y_prev + y_measured + 2 * dark_current_photons^2 + 2 * read_noise_photons^2);
+    % else
+    dark_current_photons = mp.est.dark_current * mp.est.quantum_efficiency * ev.sbp_texp;
+    read_noise_photons = mp.est.read_noise * mp.est.quantum_efficiency;
+
+    ev.R = diag(y_plus + y_minus + 2 * dark_current_photons^2 + 2 * read_noise_photons^2);
+    % end
+
+    %--Measurement operator (H)
+    JJdu = G.' * diag(J_du);
+    ev.H = 4 * (JJdu(:, 1:2:end) + JJdu(:, 2:2:end));
+    
+    %--Prediction step for the covariance matrix
+    ev.P(:, :, iSubband) = ev.P(:, :, iSubband) + ev.Q(:, :, iSubband);
+    
+    %--Kalman Gain Calculation
+    P_H = ev.P(:, :, iSubband) * ev.H;
+    S = ev.H.' * P_H + ev.R;
+    
+    if rcond(S) < 1e-12
+        K = P_H * pinv(S);
+        fprintf('Warning: S matrix is singular. Using pseudo-inverse.\n');
+    else
+        K = P_H / S;
+    end
+    
+    %--Update step for the covariance matrix
+    ev.P(:, :, iSubband) = ev.P(:, :, iSubband) - K * P_H';
+    
+    %--Measurement residual (dy)
+    dy = y_plus - y_minus;
+    
+    %--Modelled intensity difference
+    controlled_command = cont_command + get_dm_command_vector(mp,mp.dm1.V_dz, mp.dm2.V_dz);
+
+    % E_hat_plus = G * (controlled_command + dither);
+    % E_hat_minus = G * (controlled_command - dither);
+    E_hat_plus = G * dither;
+    E_hat_minus = -G * dither;
+
+    I_hat_plus = E_hat_plus(1:2:end).^2 + E_hat_plus(2:2:end).^2;
+    I_hat_minus = E_hat_minus(1:2:end).^2 + E_hat_minus(2:2:end).^2;
+    dy_hat = I_hat_plus - I_hat_minus;
+    
+    %--Update DM command estimate
+    residual = dy - dy_hat;
+    ev.x_hat(:, iSubband) = ev.x_hat(:, iSubband) + K * residual;
+    
+    ev.Eest(:,iSubband) = (E_hat_plus(1:2:end) + 1i*E_hat_plus(2:2:end));
+
+end
+
+% % Prep estimate to save out
+% for iSubband = 1:1:mp.Nsbp
+%     ev.Eest(:,iSubband) = (ev.x_hat(1:2:end,iSubband) + 1i*ev.x_hat(2:2:end,iSubband))/ (ev.e_scaling(iSubband) * sqrt(ev.sbp_texp(iSubband)));
+% end
+end
 
 function comm_vector = get_dm_command_vector(mp,command1, command2)
 
@@ -269,8 +382,8 @@ if size(ev.dm1.new_pinned_actuators,2)>0 || size(ev.dm2.new_pinned_actuators,2)>
     if size(ev.dm1.act_ele_pinned,2)>0 || size(ev.dm2.act_ele_pinned,2)>0
         save(fullfile([mp.path.config,'/','/ev_exit_',num2str(ev.Itr),'.mat']),'ev')
         save(fullfile([mp.path.config,'/','/mp_exit_',num2str(ev.Itr),'.mat']),"mp")
-
-        error('New actuators in act_ele pinned, exiting loop');
+        
+        % error('New actuators in act_ele pinned, exiting loop');
     end
 end
 
