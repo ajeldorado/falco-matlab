@@ -220,7 +220,7 @@ fprintf('...done.\n')
 %% Save out the data from the workspace
 if mp.flagSaveWS
     clear ev cvar G* h* jacStruct; % Save a ton of space when storing the workspace
-
+    
     fnAll = fullfile(mp.path.ws,[mp.runLabel, '_all.mat']);
     disp(['Saving entire workspace to file ' fnAll '...'])
     save(fnAll);

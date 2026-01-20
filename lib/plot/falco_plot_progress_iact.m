@@ -8,15 +8,15 @@ function handles = falco_plot_progress_iact(handles,mp,Itr,Inorm,Im_tb,DM1surf,D
 
 tb = mp.tb;
 
-if(Itr==3 && ~mp.flagSim)
-    % Clear the dark 
-    disp('Clearing the dark ...');
-    sbp_texp = tb.info.sbp_texp(mp.si_ref);
-    [~,flnm] = sciCam_loadDark(tb,sbp_texp);
-    delete(flnm);
-else
-    disp('Keeping dark ...');
-end
+% if(Itr==3 && ~mp.flagSim)
+%     % Clear the dark 
+%     disp('Clearing the dark ...');
+%     sbp_texp = tb.info.sbp_texp(mp.si_ref);
+%     [~,flnm] = sciCam_loadDark(tb,sbp_texp);
+%     delete(flnm);
+% else
+%     disp('Keeping dark ...');
+% end
 
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
@@ -47,12 +47,12 @@ if(mp.flagPlot)
         try
             figure(handles.master);
         catch
-            handles.master = figure('Color','w');
-            set(handles.master,'units', 'inches', 'Position', [0 0 12 4])
+            handles.master = figure();
+            set(handles.master,'Color', 'w', 'units', 'inches', 'Position', [0 0 12 4])
         end
     else
-        handles.master = figure('Color','w');
-        set(handles.master,'units', 'inches', 'Position', [0 0 12 4])
+        handles.master = figure();
+            set(handles.master,'Color', 'w', 'units', 'inches', 'Position', [0 0 12 4])
     end
 
     
@@ -204,25 +204,25 @@ end
 fitswrite_tb(mp,tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
 
 if(any(mp.dm_ind==1) && Itr==1)
-    fitswrite_tb(mp,tb,mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
+    fitswrite(mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
 end
 % if(any(mp.dm_ind==2) && Itr==1)
-%     fitswrite_tb(mp,tb,mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits');
+%     fitswrite(mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits');
 % end
 
 if(any(mp.dm_ind==1))
-    fitswrite_tb(mp,tb,mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
-    fitswrite_tb(mp,tb,DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
 end
 if(any(mp.dm_ind==2))
-    fitswrite_tb(mp,tb,mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
-    fitswrite_tb(mp,tb,DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
+    fitswrite(DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
 end
 
 
-fitswrite_tb(mp,tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
-fitswrite_tb(mp,tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
-fitswrite_tb(mp,tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
+fitswrite(abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),tag,'.fits']));
+fitswrite(angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),tag,'.fits']));
+fitswrite(Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),tag,'.fits']));
 
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
