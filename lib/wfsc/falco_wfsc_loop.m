@@ -181,7 +181,7 @@ for Itr = 1:mp.Nitr
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
     
-    %% End early? You can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
+    %% End early? You can change the value of flagBreak in debugger mode, but you cannot change mp.Nitr or Itr
     if flagBreak
         break;
     end

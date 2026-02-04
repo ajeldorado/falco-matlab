@@ -124,18 +124,21 @@ if(mp.flagPlot)
     cmap = cmap ./ sum(cmap,2);% make the jet cmap darker
 
     legstr = {};
-    for si = 1:mp.Nsbp
-        if(si==mp.si_ref)
-            linecolor=[0 0 0];
-        elseif(si==mp.Nsbp)
-            linecolor=cmap(end,:);% force last band to red
-        else
-            linecolor=cmap(si,:);
-        end
-        legstr{si} = ['subband ' num2str(si)];
-        semilogy(0:Itr-1,Inorm.mod(:,si),'-o','Color',linecolor); hold on;
-        %hl2(si)=semilogy(0:Itr-2,Inorm.unmod(:,si),'--o','Color',linecolor);
-    end
+    for istar = 1:mp.star.count
+        for isb = 1:mp.Nsbp
+            si = isb + (istar-1)*mp.Nsbp;
+            if(si==mp.si_ref)
+                linecolor=[0 0 0];
+            elseif(si==mp.Nsbp)
+                linecolor=cmap(end,:);% force last band to red
+            else
+                linecolor=cmap(si,:);
+            end
+            legstr{si} = ['sbnd ' num2str(isb) '; star ' num2str(istar)];
+            semilogy(0:Itr-1,Inorm.mod(:,si),'-o','Color',linecolor); hold on;
+            %hl2(si)=semilogy(0:Itr-2,Inorm.unmod(:,si),'--o','Color',linecolor);
+        end % subband
+    end % star
     legend(legstr{:});
     hold off;
     xlim([0 length(Inorm.total)])

@@ -561,7 +561,13 @@ for iSubband = 1:mp.Nsbp
         for iProbe = 1:Npairs
             dphdm(:, iProbe) = atan2(imag(dEprobe(:, iProbe)), real(dEprobe(:, iProbe)));
             % model predicted probe amplitude, only for diagnostics
-            amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
+            %ampSq = (Iplus+Iminus)/2 - repmat(I0vec, [1,Npairs]);  % square of probe E-field amplitudes
+            %ampSq(ampSq < 0) = 0;  % If probe amplitude is zero, amplitude is zero there.
+            %amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
+            ampSq_model = 0.5*(abs(Eplus(:, iProbe)).^2 + abs(Eminus(:, iProbe)).^2) - abs(E0vec).^2;
+            ampSq_model(ampSq_model < 0) = 0;
+            amp_model(:, iProbe) = sqrt(ampSq_model);
+            %amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
         end
         
     end 
