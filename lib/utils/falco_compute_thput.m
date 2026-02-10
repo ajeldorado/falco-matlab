@@ -4,6 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
+% Uses compact model.
+% Forces mp.compact.star.weights(1) = 1; for the computation
 %
 % REVISION HISTORY:
 % --------------
@@ -11,6 +13,10 @@
 % ---------------
 
 function [mp,thput,varargout] = falco_compute_thput(mp)
+
+% store current value of star weights and force on-axis star weight = 1
+star_weights_save = mp.compact.star.weights;
+mp.compact.star.weights(1) = 1;
 
 if mp.flagFiber
     fprintf('Computing throughput over %i fibers (one propagation per fiber) \n',mp.Fend.Nfiber);
@@ -47,5 +53,8 @@ else
     
 end
 varargout{1} = ImSimCompact;
+
+% re-set forced values
+mp.compact.star.weights = star_weights_save;
 
 end %--END OF FUNCTION

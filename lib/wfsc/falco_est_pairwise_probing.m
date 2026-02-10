@@ -351,10 +351,21 @@ for iSubband = 1:mp.Nsbp
     % Set (approximate) probe intensity based on current measured Inorm
     if isempty(mp.est.probeSchedule.InormProbeVec)
         ev.InormProbeMax = mp.est.InormProbeMax;
+        if isfield(mp.est, 'InormProbeMin'), ev.InormProbeMin = mp.est.InormProbeMin; end
+        
         if mp.flagFiber
             InormProbe = min([sqrt(max(I0fibervec)*1e-8), ev.InormProbeMax]);
         else
             InormProbe = min([sqrt(max(I0vec)*1e-5), ev.InormProbeMax]);
+            
+            % allow for minimum probe intensity, for testing
+            if isfield(ev, 'InormProbeMin')
+                InormProbe = max(InormProbe, ev.InormProbeMin);
+            end
+            
+            %if check existence & mp.est.flagQuantizedInormProbe
+            %    % Todo ^?
+            %end
         end
         fprintf('Chosen probe intensity: %.2e \n', InormProbe);
     else
@@ -505,6 +516,7 @@ for iSubband = 1:mp.Nsbp
             Eminus = zeros(size(Ifiberminus));
         else
             E0 = model_compact(mp, modvar);
+            %E0 = model_full(mp, modvar);
             E0vec = E0(mp.Fend.corr.maskBool);
              %--For probed fields based on model:
             Eplus  = zeros(size(Iplus ));
@@ -523,6 +535,7 @@ for iSubband = 1:mp.Nsbp
                 Eplus(:, iProbe) = Etemp;
             else
                 Etemp = model_compact(mp, modvar);
+                %Etemp = model_full(mp, modvar);
                 Eplus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             end
             
@@ -537,6 +550,7 @@ for iSubband = 1:mp.Nsbp
                 Eminus(:, iProbe) = Etemp;
             else
                 Etemp = model_compact(mp, modvar);
+                %Etemp = model_full(mp, modvar);
                 Eminus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             end
             
@@ -550,6 +564,12 @@ for iSubband = 1:mp.Nsbp
         for iProbe = 1:Npairs
             dphdm(:, iProbe) = atan2(imag(dEprobe(:, iProbe)), real(dEprobe(:, iProbe)));
             % model predicted probe amplitude, only for diagnostics
+            %ampSq = (Iplus+Iminus)/2 - repmat(I0vec, [1,Npairs]);  % square of probe E-field amplitudes
+            %ampSq(ampSq < 0) = 0;  % If probe amplitude is zero, amplitude is zero there.
+            %amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
+            ampSq_model = 0.5*(abs(Eplus(:, iProbe)).^2 + abs(Eminus(:, iProbe)).^2) - abs(E0vec).^2;
+            ampSq_model(ampSq_model < 0) = 0;
+            %amp_model(:, iProbe) = sqrt(ampSq_model);
             amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
         end
         

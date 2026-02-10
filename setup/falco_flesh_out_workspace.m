@@ -6,9 +6,11 @@
 %
 % Flesh out the rest of the workspace prior to wavefront estimation and control.
 %
-% [mp, out] = falco_flesh_out_workspace(mp)
+% [mp, out] = falco_flesh_out_workspace(mp, varargin)
+% options for varargin:
+%   'nosaveconfig' do not save the result config (default is to save the config)
 
-function [mp, out] = falco_flesh_out_workspace(mp)
+function [mp, out] = falco_flesh_out_workspace(mp, varargin)
 
 mp = falco_set_optional_variables(mp);
 mp = falco_verify_key_values(mp);
@@ -46,8 +48,10 @@ mp = falco_compute_psf_norm_factor(mp);
 out = falco_init_storage_arrays(mp); % Initialize Arrays to Store Performance History
 
 %--Save the config file
-fn_config = [mp.path.config filesep mp.runLabel,'_config.mat'];
-save(fn_config, 'mp')
-fprintf('Saved the config file: \t%s\n', fn_config)
+if ~strcmpi('nosaveconfig', varargin)
+    fn_config = [mp.path.config filesep mp.runLabel,'_config.mat'];
+    save(fn_config, 'mp')
+    fprintf('Saved the config file: \t%s\n', fn_config)
+end
 
 end %--END OF FUNCTION

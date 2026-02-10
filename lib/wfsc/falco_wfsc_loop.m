@@ -45,9 +45,13 @@ for Itr = 1:mp.Nitr
     out = store_dm_command_history(mp, out, Itr);
 
     %% Normalization and throughput calculations
+    % always iStar = 1 is used to calculate psf_norm_factor and throughput
+    % falco_compute_psf_norm_factor and falco_compute_thput force
+    % star.weight(1) = 1;
+    % calculates I00 for: mp.Fend.compace, mp.Fend.full, mp.Fend.eval
+    mp = falco_compute_psf_norm_factor(mp); % ?? only mp.Fend.full.I00, not mp.Fend.companct.I00? mp.Fend.eval.I00
     
-    mp = falco_compute_psf_norm_factor(mp);
-    
+    % falco_compute_thput uses compact model, also has starweight problem
     [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
     out.thput(Itr, :) = thput(:);   
     mp.thput_vec(Itr) = max(thput); % note: max() needed when mp.flagFiber==true
@@ -177,7 +181,7 @@ for Itr = 1:mp.Nitr
     %% SAVE THE TRAINING DATA OR RUN THE E-M Algorithm
     if mp.flagTrainModel; mp = falco_train_model(mp,ev); end
     
-    %% End early? You can change the value of bEndEarly in debugger mode, but you cannot change mp.Nitr or Itr
+    %% End early? You can change the value of flagBreak in debugger mode, but you cannot change mp.Nitr or Itr
     if flagBreak
         break;
     end
@@ -191,6 +195,7 @@ Itr = Itr + 1;
 
 out = store_dm_command_history(mp, out, Itr);
 
+% falco_compute_thput forces mp.compact.star.weight(1) = 1;
 [mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
 out.thput(Itr, :) = thput(:);
 mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true

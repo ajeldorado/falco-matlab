@@ -26,7 +26,7 @@
 % - Created on 2019-03-22 by G. Ruane 
 % - Copied from falco_get_dst_sbp_image.m and modified 2022-02 by D. Marx
 
-function normI = falco_get_omc_sbp_image(mp,si)
+function [normI, fn_fits] = falco_get_omc_sbp_image(mp,si)
 
     % convenience:
     tb = mp.tb;
@@ -131,11 +131,11 @@ function normI = falco_get_omc_sbp_image(mp,si)
     
     if true
         lam0 = mp.sbp_centers(si);
-        lam1 = lam0 - sbp_width/2;
-        lam2 = lam0 + sbp_width/2;
-        tb.star.lower = lam1/NM;
-        tb.star.upper = lam2/NM;
-        tb.star.power = star_power;
+        lam1 = lam0 - 0.5*tb.info.sbp_width(si);
+        lam2 = lam0 + 0.5*tb.info.sbp_width(si);
+        tb.star.lower = lam1*1e9;
+        tb.star.upper = lam2*1e9;
+        tb.star.power = tb.info.star_power(si);
     end
     
     if false %debug
@@ -143,10 +143,8 @@ function normI = falco_get_omc_sbp_image(mp,si)
     end
 
     %--- Set / check EM gain
-    if isfield('em_gain', tb.info)
-        if tb.info.em_gain ~= double(tb.sciCam.excam.em_gain)
-            tb.sciCam.excam.em_gain(py.int(tb.info.em_gain));
-        end
+    if isfield(tb.info, 'em_gain')
+        tb.sciCam.excam.em_gain(py.int(tb.info.em_gain));
     end
 
     %     if(strcmpi(tb.info.source,'nkt'))
@@ -162,7 +160,7 @@ function normI = falco_get_omc_sbp_image(mp,si)
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     % sciCam_getImage returns FOV window to match falco expected image size   
     %rawIm = sciCam_getImage(tb,sbp_texp);
-    rawIm = sciCam_getImage(tb,sbp_texp,'nexp',1, 'addheader', true);
+    [rawIm, fn_fits] = sciCam_getImage(tb,sbp_texp,'nexp',1, 'addheader', true);
     normI = (rawIm-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
     
 end

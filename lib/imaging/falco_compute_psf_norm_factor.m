@@ -13,6 +13,12 @@
 %   for an off-axis object at separation (mp.source_x_offset_norm,
 %   mp.source_y_offset_norm) lambda0/D.
 %
+% For multiple stars, normalization value is always calculated for
+%   starIndex = 1
+% The calculation forces:
+%   mp.star.weight(1) = 1;
+%   mp.compact.star.weight(1) = 1;
+%
 % INPUTS
 % ------
 % mp : structure of model parameters
@@ -22,6 +28,12 @@
 % mp : structure of model parameters
 
 function mp = falco_compute_psf_norm_factor(mp)
+
+% store star weights and force star.weight(1) = 1;
+star_weights_save = mp.star.weights;
+mp.star.weights(1) = 1;
+compact_star_weights_save = mp.compact.star.weights;
+mp.compact.star.weights(1) = 1;
 
 %--Different normalization factor used when comparing to PROPER model:
 mp.sumPupil = sum(sum(abs(mp.P1.compact.mask.*padOrCropEven(mean(mp.P1.compact.E,3),size(mp.P1.compact.mask,1) )).^2));
@@ -40,6 +52,10 @@ modvar = ModelVariables;
 modvar.zernIndex = 1;
 modvar.whichSource = 'star';  
 modvar.starIndex = 1; % Always use first star for image normalization
+% check that starweight for first star is > 0
+if mp.star.weights(modvar.starIndex) <= 0,
+    error(['cannot calculate psf norm if weight of first star is zero']);
+end
 
 %--Compact Model Normalizations
 for si=1:mp.Nsbp
@@ -132,6 +148,10 @@ if(mp.flagPlot)
     set(gca,'Fontsize', 18)
     drawnow;
 end
+
+% re-set saved values before returning mp
+mp.star.weights = star_weights_save;
+mp.compact.star.weights = compact_star_weights_save;
 
 end %--END OF FUNCTION
 
