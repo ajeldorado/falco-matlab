@@ -516,6 +516,7 @@ for iSubband = 1:mp.Nsbp
             Eminus = zeros(size(Ifiberminus));
         else
             E0 = model_compact(mp, modvar);
+            %E0 = model_full(mp, modvar);
             E0vec = E0(mp.Fend.corr.maskBool);
              %--For probed fields based on model:
             Eplus  = zeros(size(Iplus ));
@@ -534,6 +535,7 @@ for iSubband = 1:mp.Nsbp
                 Eplus(:, iProbe) = Etemp;
             else
                 Etemp = model_compact(mp, modvar);
+                %Etemp = model_full(mp, modvar);
                 Eplus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             end
             
@@ -548,6 +550,7 @@ for iSubband = 1:mp.Nsbp
                 Eminus(:, iProbe) = Etemp;
             else
                 Etemp = model_compact(mp, modvar);
+                %Etemp = model_full(mp, modvar);
                 Eminus(:, iProbe) = Etemp(mp.Fend.corr.maskBool);
             end
             
@@ -566,8 +569,8 @@ for iSubband = 1:mp.Nsbp
             %amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
             ampSq_model = 0.5*(abs(Eplus(:, iProbe)).^2 + abs(Eminus(:, iProbe)).^2) - abs(E0vec).^2;
             ampSq_model(ampSq_model < 0) = 0;
-            amp_model(:, iProbe) = sqrt(ampSq_model);
-            %amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
+            %amp_model(:, iProbe) = sqrt(ampSq_model);
+            amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
         end
         
     end 

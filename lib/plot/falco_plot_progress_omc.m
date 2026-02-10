@@ -9,23 +9,21 @@
 function handles = falco_plot_progress_omc(handles,mp,Itr,Inorm,Im_tb,DM1surf,DM2surf)
 
 if mp.flagSim
-    %handles = falco_plot_progress_omc_model(handles, mp, Itr, InormHist_tb, Im_tb, DM1surf, DM2surf);
-    handles = falco_plot_progress_omc_model(handles, mp, Itr, Inorm, Im_tb, DM1surf, DM2surf);
-    return
-end
-
-tb = mp.tb;
-
-if(Itr==10 || Itr==40)
-    % Clear the dark 
-    disp('Clearing the dark ...');
-    sbp_texp = tb.info.sbp_texp(mp.si_ref);
-    [~,flnm] = sciCam_loadDark(tb,sbp_texp);
-    delete(flnm);
+    % handles = falco_plot_progress_omc_model(handles, mp, Itr, InormHist_tb, Im_tb, DM1surf, DM2surf);
+    % handles = falco_plot_progress_omc_model(handles, mp, Itr, Inorm, Im_tb, DM1surf, DM2surf);
+    % return
+    tb = [];
 else
-    disp('Keeping dark ...');
+    tb = mp.tb;
 end
 
+% only difference between testbed and model is tb writes some tb stuff to
+% fits header
+if isempty(tb)
+    fFitsWrite = @(tb, im, fn) fitswrite(im, fn);
+else
+    fFitsWrite = @(tb, im, fn) sciCam_fitswrite(tb, im, fn);
+end
 
 subplot = @(m,n,p) subtightplot(m,n,p,[0.025 0.025],[0.1 0.1],[0.1 0.1]);
 
@@ -182,6 +180,7 @@ if(mp.flagPlot)
 % %     ylabel('\lambda_0/D');
 %     title('Phase (previous)');
 %     
+   FigureTitle(['Trial ' num2str(mp.TrialNum, '%04d')]);
    drawnow;
 
 
@@ -229,36 +228,33 @@ end % if plot
 
 
 %%-- Save data
-
-out_dir = fullfile(tb.info.OUT_DATA_DIR,mp.runLabel);
+if isempty(tb)
+    % mp.OUT_DATA_DIR = fullfile(getenv("DATA_ROOT"), ['falco_testbed_run' num2str(mp.SeriesNum)], 'data', mp.runLabel);
+    out_dir = fullfile(mp.OUT_DATA_DIR, mp.runLabel);
+else
+    out_dir = fullfile(tb.info.OUT_DATA_DIR, mp.runLabel);
+end
 % Directory to save dat
 if(~exist(out_dir, 'dir'))
     mkdir(out_dir);
 end
 
-% Make it clear that the file is simulated if mp.flagSim = true
-if(mp.flagSim)
-    tag = '_SIM';
-else
-    tag = '';
-end
-
-sciCam_fitswrite(tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),tag,'.fits']));
+fFitsWrite(tb,Im,fullfile(out_dir,['normI_it',num2str(Itr-1),'.fits']));
 
 if(any(mp.dm_ind==1) && Itr==1)
-    sciCam_fitswrite(tb,mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
+    fFitsWrite(tb,mp.dm1.biasMap,fullfile(out_dir,'dm1_Vbias.fits'));
 end
 if(any(mp.dm_ind==2) && Itr==1)
-    sciCam_fitswrite(tb,mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits'));
+    fFitsWrite(tb,mp.dm2.biasMap,fullfile(out_dir,'dm2_Vbias.fits'));
 end
 
 if(any(mp.dm_ind==1))
-    sciCam_fitswrite(tb,mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),tag,'.fits']));
-    sciCam_fitswrite(tb,DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),tag,'.fits']));
+    fFitsWrite(tb,mp.dm1.V,fullfile(out_dir,['dm1_V_it',num2str(Itr-1),'.fits']));
+    fFitsWrite(tb,DM1surf,fullfile(out_dir,['dm1_model_it',num2str(Itr-1),'.fits']));
 end
 if(any(mp.dm_ind==2))
-    sciCam_fitswrite(tb,mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),tag,'.fits']));
-    sciCam_fitswrite(tb,DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),tag,'.fits']));
+    fFitsWrite(tb,mp.dm2.V,fullfile(out_dir,['dm2_V_it',num2str(Itr-1),'.fits']));
+    fFitsWrite(tb,DM2surf,fullfile(out_dir,['dm2_model_it',num2str(Itr-1),'.fits']));
 end
 
 
@@ -295,10 +291,10 @@ end
 %         
 %             
 %         %new
-%         sciCam_fitswrite(tb,abs(thisEsens).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1), '_mode', num2str(modeIndex), tag,'.fits']));
-%         sciCam_fitswrite(tb,angle(thisEsens),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1), '_mode', num2str(modeIndex), tag,'.fits']));
-%         sciCam_fitswrite(tb,thisIinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1), '_mode', num2str(modeIndex),tag,'.fits']));
-%         sciCam_fitswrite(tb,thisIunprobed,fullfile(out_dir,['normI_unprobed_it',num2str(Itr-1),'_mode', num2str(modeIndex), tag,'.fits']));
+%         fFitsWrite(tb,abs(thisEsens).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1), '_mode', num2str(modeIndex),'.fits']));
+%         fFitsWrite(tb,angle(thisEsens),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1), '_mode', num2str(modeIndex),'.fits']));
+%         fFitsWrite(tb,thisIinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1), '_mode', num2str(modeIndex),'.fits']));
+%         fFitsWrite(tb,thisIunprobed,fullfile(out_dir,['normI_unprobed_it',num2str(Itr-1),'_mode', num2str(modeIndex),'.fits']));
 %      end
 % end
 
@@ -309,22 +305,51 @@ for iStar = 1:mp.compact.star.count
         thisIunprobed = Im_tb.ev.I0{modeIndex};
     end
 end
-sciCam_fitswrite(tb,thisIunprobed,fullfile(out_dir,['normI_unprobed_it',num2str(Itr-1),'_mode', num2str(modeIndex), tag,'.fits']));
+fFitsWrite(tb,thisIunprobed,fullfile(out_dir,['normI_unprobed_it',num2str(Itr-1),'_mode', num2str(modeIndex),'.fits']));
 
 
 %old
-sciCam_fitswrite(tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1), tag,'.fits']));
-sciCam_fitswrite(tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1), tag,'.fits']));
-sciCam_fitswrite(tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1), tag,'.fits']));
+fFitsWrite(tb,abs(Im_tb.E).^2,fullfile(out_dir,['normI_Esens_it',num2str(Itr-1),'.fits']));
+fFitsWrite(tb,angle(Im_tb.E),fullfile(out_dir,['phz_Esens_it',num2str(Itr-1),'.fits']));
+fFitsWrite(tb,Im_tb.Iinco,fullfile(out_dir,['normI_inco_it',num2str(Itr-1),'.fits']));
  
 
 % all the data is being saved in the .mat structure
 if(~strcmpi(mp.estimator,'perfect'))
     ev = Im_tb.ev;
-    save(fullfile(out_dir,['probing_data_',num2str(Itr-1),tag,'.mat']),'ev');
+    save(fullfile(out_dir,['probing_data_',num2str(Itr-1),'.mat']),'ev');
 end
 
 % % Update the diary 
 % diary off; diary(mp.diaryfile)
 
 end %--END OF FUNCTION
+
+function han_out = FigureTitle(stitle, varargin)
+% han = FigureTitle(stitle, varargin)
+%
+% add an annotation text at the top of the figure, 
+% useful for adding a single main title to a figure with subplots
+%
+% varargin can be property, value pairs sent to the annotation handle
+% copied from D. Marx matlab toolbox
+
+han = annotation('textbox', [0.5 0.8 0.2 0.2], 'String', stitle, ...
+    'FitBoxToText', 'on', 'LineStyle', 'none', ...
+    'FontSize', 24, 'Color', 'r', 'FontWeight', 'bold');
+set(han,'HorizontalAlignment','center')
+% center horizontally
+ppp = get(han,'Position');
+set(han,'Position',[0.5 - 0.5*ppp(3) ppp(2:end)])
+% so it can be found and deleted later
+set(get(han,'parent'),'HandleVisibility','on')
+
+if ~isempty(varargin),
+    set(han, varargin{:})
+end
+
+if nargout > 0,
+    han_out = han;
+end
+
+end % FigureTitle
