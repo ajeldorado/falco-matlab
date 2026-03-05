@@ -4,6 +4,8 @@
 % at the California Institute of Technology.
 % -------------------------------------------------------------------------
 %
+% probeCmd = falco_gen_pairwise_probe(mp, InormDes, phaseShift, starIndex, rotation)
+% 
 % Compute a pair-wise probe shape for batch process estimation
 % of the electric field in the final focal plane. The rectangular dark
 % hole region is specified by its position on one half of the focal plane.
@@ -66,9 +68,20 @@ if (xiOffset + width/2) > maxSpatialFreq || (etaOffset + height/2) > maxSpatialF
 end
 
 %--Generate the DM command for the probe
-surfMax = 4*pi*mp.lambda0*sqrt(InormDes); % [meters]
-probeHeight = surfMax * sinc(width*XS) .* sinc(height*YS) .* cos(2*pi*(xiOffset*XS + etaOffset*YS) + phaseShift);
+%surfMax = 4*pi*mp.lambda0*sqrt(InormDes); % [meters]
+surfShape = sinc(width*XS) .* sinc(height*YS) .* cos(2*pi*(xiOffset*XS + etaOffset*YS) + phaseShift);
+% old:
+%probeHeight = surfMax * surfShape;
+
+surfParceval = sum(abs(surfShape(:)).^2);
+probeHeight = 4*pi*mp.lambda0*sqrt(InormDes/surfParceval) * surfShape;
+
 probeCmd = falco_fit_dm_surf(dm, probeHeight);
-probeCmd = mp.est.probe.gainFudge(starIndex) * probeCmd; % Scale the probe amplitude empirically if needed
+
+gainFudge = mp.est.probe.gainFudge(starIndex);
+if (gainFudge.^2 .* InormDes) > mp.est.InormProbeMax
+    gainFudge = sqrt(mp.est.InormProbeMax./InormDes);
+end    
+probeCmd = gainFudge * probeCmd; % Scale the probe amplitude empirically if needed
 
 end

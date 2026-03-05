@@ -569,11 +569,11 @@ for iSubband = 1:mp.Nsbp
             %amp = sqrt(ampSq);   % E-field amplitudes, dimensions: [mp.Fend.corr.Npix, Npairs]
             ampSq_model = 0.5*(abs(Eplus(:, iProbe)).^2 + abs(Eminus(:, iProbe)).^2) - abs(E0vec).^2;
             ampSq_model(ampSq_model < 0) = 0;
-            %amp_model(:, iProbe) = sqrt(ampSq_model);
-            amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
+            amp_model(:, iProbe) = sqrt(ampSq_model);
+            %amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
         end
         
-    end 
+    end
 
     %% reset back the original star state after finished probing
     

@@ -11,6 +11,10 @@ function [mp, out] = falco_wfsc_loop(mp, out)
 fprintf('\nBeginning Trial %d of Series %d.\n', mp.TrialNum, mp.SeriesNum);
 mp.thput_vec = zeros(mp.Nitr+1, 1);
 
+% create cleanup object
+cleanupObj = onCleanup(@() funCleanup(mp));
+
+% initialize
 flagBreak = false;
 
 for Itr = 1:mp.Nitr
@@ -95,7 +99,7 @@ for Itr = 1:mp.Nitr
     ev = falco_est(mp, ev, jacStruct);
     
     out = falco_store_intensities(mp, out, ev, Itr);
-
+    
     %% Plot the expected and measured delta E-fields
     if ~mp.flagFiber
         if (Itr > 1); EsimPrev = Esim; end % save previous value for Delta E plot
@@ -230,15 +234,20 @@ else
     disp('Entire workspace NOT saved because mp.flagSaveWS==false')
 end
 
-%% restore some settings to defaults
-mp.tb.sciCam.subdir = 'temp';
-
 end %--END OF main FUNCTION
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Local Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function funCleanup(mp)
+    % executes when falco_wfsc_loop exits, even when there is an error
+    
+    % restore some settings to defaults
+    mp.tb.sciCam.subdir = 'temp';
+
+end % funCleanup
 
 function out = store_dm_command_history(mp, out, Itr)
 

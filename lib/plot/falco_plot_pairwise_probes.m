@@ -78,7 +78,13 @@ if(mp.flagPlot)
     for iProbe=1:Npairs
         subplot(4,Npairs,iProbe + Npairs*3); % Save the handle of the subplot
         ampSq2D = ampSq2Dcube(:,:,iProbe);
-        imagesc(log10(ampSq2D),log10([max(ampSq2D(:))*1e-1,max(ampSq2D(:))])); axis xy equal tight; axis off;
+        if max(ampSq2D(:)) > 0,
+            clim = log10([max(ampSq2D(:))*1e-1,max(ampSq2D(:))]);
+            imagesc(log10(ampSq2D), clim); axis xy equal tight; axis off;
+        else
+            imagesc(zeros(size(ampSq2D))); axis xy equal tight; axis off;
+        end
+        
         colorbar;
         colormap(gca,gray);
         title('Probe Intensity, |dP|^2');
