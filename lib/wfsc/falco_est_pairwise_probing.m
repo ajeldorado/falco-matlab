@@ -59,11 +59,12 @@ else
 end
 
 
-if strcmpi(mp.estimator, 'pairwise-bb') 
-    mp.Nsbp = 1; %change the value of nb of sub-bandpasses for broadband image
-    mp = falco_set_spectral_properties(mp);
-    
-end
+% if strcmpi(mp.estimator, 'pairwise-bb') 
+%     mp.Nsbp = 1; %change the value of nb of sub-bandpasses for broadband image
+%     % mp.Nwpsbp = mp.Nsbp_bb;  % SFR
+%     mp = falco_set_spectral_properties(mp);
+% 
+% end
 
 
 %% Input checks
@@ -246,7 +247,11 @@ for iSubband = 1:mp.Nsbp
     whichImage = 1;
     mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
     if ~mp.flagFiber
-        I0 = falco_get_sbp_image(mp, iSubband);
+        if strcmpi(mp.estimator, 'pairwise-bb')
+            I0 = falco_get_summed_image(mp);
+        else
+            I0 = falco_get_sbp_image(mp, iSubband);
+        end
         ev.score.Inorm = mean(I0(mp.Fend.score.maskBool));
         ev.corr.Inorm  = mean(I0(mp.Fend.corr.maskBool));
     else
@@ -318,7 +323,11 @@ for iSubband = 1:mp.Nsbp
             [Im,Ifiber] = falco_get_sbp_image(mp, iSubband);
             ev.IprobedMean = ev.IprobedMean + Ifiber/(2*Npairs); %--Inorm averaged over all the probed images
         else
-            Im = falco_get_sbp_image(mp, iSubband);
+            if strcmpi(mp.estimator, 'pairwise-bb')
+                Im = falco_get_summed_image(mp);
+            else
+                Im = falco_get_sbp_image(mp, iSubband);
+            end
             ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); %--Inorm averaged over all the probed images
         end
         whichImage = 1+iProbe; %--Increment image counter
@@ -414,7 +423,12 @@ for iSubband = 1:mp.Nsbp
 
     if strcmpi(mp.estimator, 'pairwise-bb') 
         %perform broadband estimations of Electric Field
+        mp.Nsbp = 1; %change the value of nb of sub-bandpasses for broadband image
+        mp = falco_set_spectral_properties(mp);
+
         Eest = pairwise_bb_estimation(mp, jacStruct, DM1Vplus, DM2Vplus, zAll);
+        mp.Nsbp = mp.Nsbp_bb; %change the value of nb of sub-bandpasses for broadband image
+        mp = falco_set_spectral_properties(mp);
     else
     
         if mp.est.flagUseJac %--Use Jacobian for estimation. This is fully model-based if the Jacobian is purely model-based, or it is better if the Jacobian is adaptive based on empirical data.

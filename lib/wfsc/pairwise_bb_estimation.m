@@ -21,7 +21,7 @@ function Eest_bb = pairwise_bb_estimation(mp, jacStruct, DM1Vplus, DM2Vplus, zAl
 
     gdus = [];%Initialize delta E-fields for each probe image
     
-    G_bb = bb_jacobian(mp, jacStruct, mp.dm_ind); % 2*Nsbp*Npix x Nele_tot
+    G_bb = bb_jacobian(mp, jacStruct, whichDM); % 2*Nsbp*Npix x Nele_tot
 
     dV1 = []; 
     dV2 = [];
