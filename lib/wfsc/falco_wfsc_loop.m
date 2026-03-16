@@ -13,11 +13,20 @@ mp.thput_vec = zeros(mp.Nitr+1, 1);
 
 flagBreak = false;
 
+% out.countHist = [];
+% out.texpHist = [];
+
 for Itr = 1:mp.Nitr
     
 
     %% Bookkeeping
     fprintf(['WFSC Iteration: ' num2str(Itr) '/' num2str(mp.Nitr) ', ' datestr(now) '\n' ]);
+
+        if Itr > 1
+            out.countHist = [out.countHist; out.normIntMeasScore(Itr-1,:).*mp.tb.info.PSFpeaks.*mp.tb.info.sbp_texp'];
+            out.texpHist = [out.texpHist; mp.tb.info.sbp_texp];
+        end
+
     
     % user-defined bookkeeping updates for each iteration
     if isfield(mp, 'funTopofloopBookkeeping') && ~isempty(mp.funTopofloopBookkeeping)

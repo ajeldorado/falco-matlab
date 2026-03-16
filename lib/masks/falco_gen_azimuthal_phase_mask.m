@@ -310,30 +310,76 @@ function mask = falco_gen_azimuthal_phase_mask(inputs)
                 error("inputs.roddierphase must be defined for this mask case.")
             end
             
-            centercoords = generateCoordinates(N);% Creates NxN arrays with coordinates 
-            centercoords = rotateCoordinates(centercoords,30);
-            vortcenter = 0.*centercoords.THETA;
-            domain = (centercoords.THETA >= 0);
-            vortcenter(domain) = charge*rem(centercoords.THETA(domain),2*pi./charge);
-            domain = (centercoords.THETA >= -pi) & (centercoords.THETA < 0);
-            vortcenter(domain) = charge*rem((centercoords.THETA(domain)+pi),2*pi./charge);
-            R1 = (RHO > roddierradius*res*phaseScaleFac);
-            vortcenter(R1) = 0;
+%             centercoords = generateCoordinates(N);% Creates NxN arrays with coordinates 
+%             centercoords = rotateCoordinates(centercoords,30);
+%             vortcenter = 0.*centercoords.THETA;
+%             domain = (centercoords.THETA >= 0);
+%             vortcenter(domain) = charge*rem(centercoords.THETA(domain),2*pi./charge);
+%             domain = (centercoords.THETA >= -pi) & (centercoords.THETA < 0);
+%             vortcenter(domain) = charge*rem((centercoords.THETA(domain)+pi),2*pi./charge);
+%             R1 = (RHO > roddierradius*res*phaseScaleFac);
+%             vortcenter(R1) = 0;
+%             
+%             coords = generateCoordinates(N);
+%             vort = 0.* coords.THETA;
+%             domain = (coords.THETA >= 0);
+%             vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
+%             domain = (coords.THETA >= -pi) & (coords.THETA < 0);
+%             vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
+%             
+%             R1 = (RHO <= roddierradius*res*phaseScaleFac);
+%             vort(R1) =0;
+%             
+%             combinedvort = vortcenter + vort;
             
-            coords = generateCoordinates(N);
-            vort = 0.* coords.THETA;
-            domain = (coords.THETA >= 0);
-            vort(domain) = charge*rem(coords.THETA(domain),2*pi./charge);
-            domain = (coords.THETA >= -pi) & (coords.THETA < 0);
-            vort(domain) = charge*rem((coords.THETA(domain)+pi),2*pi./charge);
-            
-            R1 = (RHO <= roddierradius*res*phaseScaleFac);
-            vort(R1) =0;
-            
-            combinedvort = vortcenter + vort;
-            
-            mask = exp(phaseScaleFac*1j*combinedvort);
+%             mask = exp(phaseScaleFac*1j*combinedvort);
 
+            vort = 0.* THETA;
+            vort = wrapToPi(charge*rem(THETA,2*pi./charge));
+            %apply 30degree twist to central coords
+            fixedRotationDeg = 30;
+            fixedRotationRad = deg2rad(fixedRotationDeg);
+            THETA_rot = THETA - fixedRotationRad;
+            
+            R1_rotated = (RHO <= roddierradius*res*phaseScaleFac);
+            
+            vort_final = vort;
+            
+            vort_final(R1_rotated) = wrapToPi(charge*rem(THETA_rot(R1_rotated),2*pi/charge));
+            mask = exp(phaseScaleFac*1j*vort_final);
+            %figure(99); imagesc(angle(mask));axis xy equal tight;
+            %colorbar;
+            
+            
+        case 'twist_dimple'
+            %sawtooth + twisted center
+            if ~res
+               error('Error. For radial FPMs, the resolution must be specified.')
+            end
+
+            if ~isfield(inputs, 'roddierradius')
+                error("inputs.roddierradius must be defined for this mask case.")
+            end
+
+            if ~isfield(inputs, 'roddierphase')
+                error("inputs.roddierphase must be defined for this mask case.")
+            end
+            
+            vort = 0.* THETA;
+            vort = wrapToPi(charge*rem(THETA,2*pi./charge));
+            %apply 30degree twist to central coords
+            fixedRotationDeg = 30;
+            fixedRotationRad = deg2rad(fixedRotationDeg);
+            THETA_rot = THETA - fixedRotationRad;
+            
+            R1_rotated = (RHO <= roddierradius*res*phaseScaleFac);
+            
+            vort_final = vort;
+            
+            vort_final(R1_rotated) = wrapToPi(charge*rem(THETA_rot(R1_rotated),2*pi/charge));
+            vort_final(R1_rotated) =vort_final(R1_rotated) - roddierphase*2*pi;
+            
+            mask = exp(phaseScaleFac*1j*vort_final);
 
         case 'just_dimple'
             % a roddier dimple without any azimuthal structure
