@@ -301,6 +301,13 @@ for iSubband = 1:mp.Nsbp
         ev.corr.Inorm  = mean(I0fibervec);
     end
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
+        
+    % I0vec = img_dns / PSFpeaks / (nexp*texp)
+    var_dns = mean(I0vec) * mp.tb.info.PSFpeaks(1) * mp.tb.info.sbp_nexp;
+    std_dns = sqrt(var_dns);
+    normI_shotnoise = std_dns ./ mp.tb.info.PSFpeaks(1) ./ (mp.tb.info.sbp_nexp * mp.tb.info.sbp_texp);
+    fprintf('unprobed shot noise estimate = %.2e\n', normI_shotnoise);
+
     
     % only need outer loop for fully toggled
 %     % set probed star state (if toggled)
@@ -455,6 +462,15 @@ for iSubband = 1:mp.Nsbp
         end
         
     end % for iProbe = 1:2*Npairs
+
+    % estimate shot noise
+    % I0 = img_dns / PSFpeaks / texp
+    img_dns = 0.5*(Iplus + Iminus) * mp.tb.info.PSFpeaks(iSubband) * mp.tb.info.sbp_texp_probe(iSubband);
+    img_dns_total = img_dns * mp.tb.info.sbp_nexp_probe(iSubband);
+    var_dns = mean(img_dns_total(:)); % or should be max ?
+    std_dns = sqrt(var_dns);
+    normI_shotnoise = std_dns / mp.tb.info.PSFpeaks(iSubband) / (mp.tb.info.sbp_nexp_probe(iSubband) * mp.tb.info.sbp_texp_probe(iSubband));
+    fprintf('\nProbe Shot Noise Estimate = %.2e\n\n', normI_shotnoise);
 
     %% Calculate probe amplitudes and measurement vector. (Refer again to Give'on+ SPIE 2011 to undersand why.)
     ampSq = (Iplus+Iminus)/2 - repmat(I0vec, [1,Npairs]);  % square of probe E-field amplitudes

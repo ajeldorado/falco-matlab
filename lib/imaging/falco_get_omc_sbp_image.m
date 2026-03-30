@@ -40,7 +40,12 @@ function [normI, fn_fits] = falco_get_omc_sbp_image(mp,si)
     NM = 1e-9;
     
     if(mp.isProbing)
-        sbp_texp  = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
+        sbp_texp = tb.info.sbp_texp_probe(si);% Exposure time for each sub-bandpass (seconds)
+        if isfield(tb.info, 'sbp_nexp_probe')
+            sbp_nexp = tb.info.sbp_nexp_probe;
+        else
+            sbp_nexp = 1;
+        end
     else
         % TO DO: Add the capability to make the exposure time adaptive 
         % if(tb.info.adaptive_texp)
@@ -48,6 +53,11 @@ function [normI, fn_fits] = falco_get_omc_sbp_image(mp,si)
         %   sbp_texp = sciCam_getAdaptiveExposureTime(c,1e-8,10)
         % else
         sbp_texp  = tb.info.sbp_texp(si);% Exposure time for each sub-bandpass (seconds)
+        if isfield(tb.info, 'sbp_nexp')
+            sbp_nexp = tb.info.sbp_nexp;
+        else
+            sbp_nexp = 1;
+        end
     end
     
     PSFpeak   = tb.info.PSFpeaks(si);% counts per second 
@@ -160,7 +170,7 @@ function [normI, fn_fits] = falco_get_omc_sbp_image(mp,si)
     % Get normalized intensity (dark subtracted and normalized by PSFpeak)
     % sciCam_getImage returns FOV window to match falco expected image size   
     %rawIm = sciCam_getImage(tb,sbp_texp);
-    [rawIm, fn_fits] = sciCam_getImage(tb,sbp_texp,'nexp',1, 'addheader', true);
+    [rawIm, fn_fits] = sciCam_getImage(tb, sbp_texp, 'nexp', sbp_nexp, 'addheader', true);
     normI = (rawIm-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
     
 end
