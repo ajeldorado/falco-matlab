@@ -79,7 +79,7 @@ probeHeight = 4*pi*mp.lambda0*sqrt(InormDes/surfParceval) * surfShape;
 probeCmd = falco_fit_dm_surf(dm, probeHeight);
 
 gainFudge = mp.est.probe.gainFudge(starIndex);
-if (gainFudge.^2 .* InormDes) > mp.est.InormProbeMax
+if (gainFudge.^2 * InormDes) > mp.est.InormProbeMax
     gainFudge = sqrt(mp.est.InormProbeMax./InormDes);
 end    
 probeCmd = gainFudge * probeCmd; % Scale the probe amplitude empirically if needed

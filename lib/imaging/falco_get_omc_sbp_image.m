@@ -171,6 +171,21 @@ function [normI, fn_fits] = falco_get_omc_sbp_image(mp,si)
     % sciCam_getImage returns FOV window to match falco expected image size   
     %rawIm = sciCam_getImage(tb,sbp_texp);
     [rawIm, fn_fits] = sciCam_getImage(tb, sbp_texp, 'nexp', sbp_nexp, 'addheader', true);
+    
+    % check for bias after dark subtraction.
+    % if FS in, we can use camera pixels outside mp.Fend.corr FOV
+    if all(abs(mp.tb.fs.xyz - struct2array(mp.tb.Settings.fs.in)) < 1e-3) % 1 um tolerance
+        % then field stop is in
+        % make mask that covers the dark hole plus a generous padding
+        se = strel('square', 2*tb.info.biascheck_npad+1);
+        bias_mask = imdilate(mp.Fend.corr.maskBool, se);
+        biascheck = mean(rawIm(~bias_mask) - dark(~bias_mask), 'all');
+        if biascheck > tb.info.biascheck_maxdn, % dn
+            warning(['falco_get_omc_sbp_image: biascheck = ' num2str(biascheck) ' dn']);
+        end
+    end
+    
+    %
     normI = (rawIm-dark)/PSFpeak_counts; % DST/gruane_DST/tb_lib/scicam/sciCam_getImage
     
 end

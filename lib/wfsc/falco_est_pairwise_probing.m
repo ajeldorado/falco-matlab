@@ -303,7 +303,7 @@ for iSubband = 1:mp.Nsbp
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
         
     % I0vec = img_dns / PSFpeaks / (nexp*texp)
-    var_dns = mean(I0vec) * mp.tb.info.PSFpeaks(1) * mp.tb.info.sbp_nexp;
+    var_dns = mean(I0vec) * mp.tb.info.PSFpeaks(1) * mp.tb.info.sbp_texp * mp.tb.info.sbp_nexp;
     std_dns = sqrt(var_dns);
     normI_shotnoise = std_dns ./ mp.tb.info.PSFpeaks(1) ./ (mp.tb.info.sbp_nexp * mp.tb.info.sbp_texp);
     fprintf('unprobed shot noise estimate = %.2e\n', normI_shotnoise);
