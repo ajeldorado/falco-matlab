@@ -65,17 +65,25 @@ function normI = falco_get_dst_sbp_image(mp,si)
     % Note: tb.DM.flatmap contains the commands to flatten the DM. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap. 
     if(tb.DM1.installed && tb.DM1.CONNECTED)
-        DM_apply2Dmap(tb.DM1,dm1_map);
+        try 
+            DM_apply2Dmap(tb.DM1,dm1_map);
+        catch
+            pause(10)
+            DM_apply2Dmap(tb.DM1,dm1_map);
+        end
     end
     if(tb.DM2.installed && tb.DM2.CONNECTED)
         try
             DM_apply2Dmap(tb.DM2,dm2_map);
         catch 
-            try; cleanUpDMs(tb); end
             disp('Error setting DM2. Reseting electronics. Trying again.')
+            tb.ANX.conn_obj_fngr.power_on()
             FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
             pause(10);
-            setUpDMs(tb);
+            try tb.DM2.dmobj.disconnect(); catch; pause(10);tb.DM2.dmobj.disconnect();end 
+            pause(10)
+            try tb.DM2.dmobj.connect(); catch; pause(10);tb.DM2.dmobj.connect();end 
+            pause(10)
             DM_apply2Dmap(tb.DM1,dm1_map);
             DM_apply2Dmap(tb.DM2,dm2_map);
         end
@@ -163,11 +171,14 @@ function normI = falco_get_dst_sbp_image(mp,si)
             try
                 DM_apply2Dmap(tb.DM2,dm2_map);
             catch 
-                try; cleanUpDMs(tb); end
                 disp('Error setting DM2. Reseting electronics. Trying again.')
+                tb.ANX.conn_obj_fngr.power_on()
                 FNGR_setPos(tb,5);FNGR_setPos(tb,8);FNGR_setPos(tb,5);
                 pause(10);
-                setUpDMs(tb);
+                try tb.DM2.dmobj.disconnect(); catch; pause(10);tb.DM2.dmobj.disconnect();end
+                pause(10)
+                try tb.DM2.dmobj.connect(); catch; pause(10);tb.DM2.dmobj.connect();end
+                pause(10)
                 DM_apply2Dmap(tb.DM1,dm1_map);
                 DM_apply2Dmap(tb.DM2,dm2_map);
             end
