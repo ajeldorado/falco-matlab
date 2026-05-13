@@ -131,7 +131,7 @@ end
 
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind_est == 1)
-    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + -DM1Vdither + mp.dm1.V_shift);
+    mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
 elseif any(mp.dm_ind_static == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz);
 end
@@ -412,7 +412,7 @@ for iSubband = 1:1:mp.Nsbp
     hold off;
     
     figure(1111)
-    vector = zeros(50);
+    vector = zeros(mp.dm1.Nact,mp.dm1.Nact);
     vector(mp.dm1.act_ele) = ev.x_hat(1:length(mp.dm1.act_ele), iSubband);
     hold on;
     imagesc(vector)
@@ -550,7 +550,9 @@ end
 
 I_OL = zeros(size(ev.imageArray(:,:,1,1),1),size(ev.imageArray(:,:,1,1),2),mp.Nsbp);
 for iSubband = 1:mp.Nsbp
+    mp.isProbing = true;
     I0 = falco_get_sbp_image(mp, iSubband);
+    mp.isProbing = false;
     I_OL(:,:,iSubband) = I0;
     
     ev.IOLScoreHist(ev.Itr,iSubband) = mean(I0(mp.Fend.score.mask));
