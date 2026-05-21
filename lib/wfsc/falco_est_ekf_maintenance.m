@@ -1,5 +1,4 @@
 function [mp, ev] = falco_est_ekf_maintenance(mp, ev, varargin)
-function [mp, ev] = falco_est_ekf_maintenance(mp, ev, varargin)
 
 %% This stuff has been copy-pasted
 
@@ -24,8 +23,6 @@ elseif whichDM == 2 && ~any(mp.dm_ind == 2)
 else
     mp.dm_ind_est = mp.dm_ind;
     mp.dm_ind_est = [mp.dm_ind(:); 2];
-else
-    mp.dm_ind_est = mp.dm_ind;
 end
 
 %--Select number of actuators across based on chosen DM for the probing
@@ -82,7 +79,6 @@ end
 % end % The 'else' block would mean we're only using DM1
 %% Trying a new optimal dither test
 if any(mp.dm_ind_est == 1)  
-if any(mp.dm_ind_est == 1)  
     rng(ev.dm1_seed_num); 
     DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
     mask_opt_dm1 = mp.est.dither_opt(1:mp.dm1.Nele);
@@ -103,7 +99,6 @@ else
 end
 
 % === GENERATE MDZM DM2 DITHER ===
-if any(mp.dm_ind_est == 2)  
 if any(mp.dm_ind_est == 2)  
     rng(ev.dm2_seed_num); 
     DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
