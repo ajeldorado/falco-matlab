@@ -17,6 +17,12 @@
 % -------
 % ev : structure of estimation variables
 %
+% NOTES
+% -----
+% For Multi-star Wavefront Control (MSWC), including Toggled MSWC, it is
+% assumed that both stars are turned on at function entry. The function
+% ensures both stars are turned on at function exit.
+%
 % REFERENCES
 % ----------
 % A. Give'on, B. Kern, and S. Shaklan, "Pair-wise, deformable mirror, 
@@ -38,8 +44,10 @@
 
 function ev = falco_est_pairwise_probing(mp, ev, varargin)
 
+% convenience constants
 Itr = ev.Itr;
 whichDM = mp.est.probe.whichDM;
+toggledMSWC = isfield(mp, 'toggledMSWC') && mp.toggledMSWC;
 
 % Number of elements to correct depending of regular pixels or fibers
 if mp.flagFiber
@@ -132,7 +140,7 @@ ev.Eest = zeros(Ncorr, Nstarbands);
 ev.IincoEst = zeros(Ncorr, Nstarbands);
 
 ev.IprobedMean = 0;
-ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi);
+ev.Im = zeros(mp.Fend.Neta, mp.Fend.Nxi); % summed unprobed image for all stars and subbands 
 if whichDM == 1;  ev.dm1.Vall = zeros(mp.dm1.Nact, mp.dm1.Nact, 1+2*Npairs, Nstarbands);  end
 if whichDM == 2;  ev.dm2.Vall = zeros(mp.dm2.Nact, mp.dm2.Nact, 1+2*Npairs, Nstarbands);  end
 
@@ -184,17 +192,17 @@ end
 
 fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 
-%% save current star configuration
-if isfield(mp.est,'toggledMSWC')
-    if (mp.est.toggledMSWC)
-        initSource = mp.star;
-        
-        if ~(mp.flagSim)
-            %initTbSource.onax = mp.tb.star.onoff;
-            %initTbSource.offax = mp.tb.offaxisstar.onoff;
-            initTbSource.onax.current = mp.tb.star.current;
-            initTbSource.offax.current = mp.tb.offaxisstar.current;
-        end
+%% save current star configuration (both stars assumed on at entry)
+if toggledMSWC
+    initStarWeights = mp.star.weights;
+
+    if ~(mp.flagSim)
+        initTbCurrents.onax = mp.tb.star.current;
+        initTbCurrents.offax = mp.tb.offaxisstar.current;
+    else
+        % Set dummy values for simulation mode
+        initTbCurrents.onax = 0;
+        initTbCurrents.offax = 0;
     end
 end
 
@@ -205,39 +213,9 @@ for iStar = 1:mp.compact.star.count
     modvar.starIndex = iStar;
     modvar.whichSource = listStar{iStar};
     
-    %% toggle current star for estimation 
-    if isfield(mp.est,'toggledMSWC')
-        if (mp.est.toggledMSWC)
-            if iStar == 1
-                % star = 'star'
-                mp.tb.star.current = mp.tb.info.star_power;
-                mp.tb.offaxisstar.current = 0;
-                mp.tb.info.PSFpeaks = mp.tb.info.PSFpeaks_save;
-            end
-            
-            if iStar == 2
-                % offaxis star, use info_offaxisstar
-                mp.tb.star.current = 0;
-                mp.tb.offaxisstar.current = mp.tb.info_offaxisstar.star_power;
-                mp.tb.info.PSFpeaks = mp.tb.info_offaxisstar.PSFpeaks;
-            end
-            mp.star.weights = zeros(1,mp.star.count);
-            mp.star.weights(iStar) = initSource.weights(iStar);
-            
-            % save the current source config
-            currentSource = mp.star;
-            
-            if ~(mp.flagSim)
-                currentTbSource.onax.current = mp.tb.star.current;
-                if currentTbSource.onax.current < 0; currentTbSource.onax.current = 0; end;
-                currentTbSource.offax.current = mp.tb.offaxisstar.current;
-                if currentTbSource.offax.current < 0; currentTbSource.offax.current = 0; end;
-
-                %currentTbSource.onax = mp.tb.star.onoff;
-                %currentTbSource.offax = mp.tb.offaxisstar.onoff;
-                pause(mp.est.toggledMSWC_waitTime);
-            end
-        end
+    %% toggle to current star only for estimation
+    if toggledMSWC
+        mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents);
     end
 
 for iSubband = 1:mp.Nsbp
@@ -266,28 +244,7 @@ for iSubband = 1:mp.Nsbp
     DM2Vminus = zeros([Nact, Nact, Npairs]);
 
     %% Compute probe shapes and take probed images:
-%     % set unprobed star state
-%     if isfield(mp.est, 'toggledMSWC')
-%         if (mp.est.toggledMSWC)
-%             mp.star = initSource;
-%             
-%             if ~(mp.flagSim)
-%                 %mp.tb.star.onoff = initTbSource.onax;
-%                 %mp.tb.offaxisstar.onoff = initTbSource.offax;
-%                 mp.tb.star.current = initTbSource.onax.current;
-%                 mp.tb.offaxisstar.current = initTbSource.offax.current;
-%                 pause(mp.est.toggledMSWC_waitTime);
-%                 
-%             end
-%         end
-%     end
-
     %--Take initial, unprobed image (for unprobed DM settings).\
-    
-    % turn on both stars for unprobed
-    %mp.tb.star.current = mp.tb.info_star.star_power;
-    %mp.tb.offaxisstar.current = mp.tb.info_offaxisstar.star_power;
-    
     whichImage = 1;
     mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
     if ~mp.flagFiber
@@ -302,58 +259,27 @@ for iSubband = 1:mp.Nsbp
     end
     I0vec = I0(mp.Fend.corr.maskBool); % Vectorize the correction region pixels
         
+    % shot noise estimate of unprobed image
     % I0vec = img_dns / PSFpeaks / (nexp*texp)
     var_dns = mean(I0vec) * mp.tb.info.PSFpeaks(1) * mp.tb.info.sbp_texp * mp.tb.info.sbp_nexp;
     std_dns = sqrt(var_dns);
     normI_shotnoise = std_dns ./ mp.tb.info.PSFpeaks(1) ./ (mp.tb.info.sbp_nexp * mp.tb.info.sbp_texp);
     fprintf('unprobed shot noise estimate = %.2e\n', normI_shotnoise);
 
+    % star and subband averaged unprobed image for plotting
+    ev.Im = ev.Im + mp.star.weights(iStar)*mp.sbp_weights(iSubband)*I0;
+    % unprobed image per mode (=star and subband)
+    ev.I0{modeIndex} = I0;
+        
+    if mp.flagFiber; ev.Ifiber = ev.Ifiber + mp.sbp_weights(iSubband)*I0fiber;end %
     
-    % only need outer loop for fully toggled
-%     % set probed star state (if toggled)
-%     if isfield(mp.est, 'toggledMSWC')
-%         if (mp.est.toggledMSWC)
-%             mp.star = currentSource;
-%             
-%             if ~(mp.flagSim)
-%                 %mp.tb.star.onoff = currentTbSource.onax;
-%                 %mp.tb.offaxisstar.onoff = initTbSource.offax;
-%                 
-%                 mp.tb.star.current = currentTbSource.onax.current;
-%                 mp.tb.offaxisstar.current = currentTbSource.offax.current;                
-%                 pause(mp.est.toggledMSWC_waitTime);
-%             end
-%         end
-%     end
-    
-    %if iStar == 1 % Image already includes all stars, so don't sum over star loop
-        
-    
-        %this logic adds unprobed images for each
-        %star component for toggled MSWC (but only once for full MSWC)
-        
-        if iStar == 1
-            ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0; % subband-averaged image for plotting
-        else
-            if isfield(mp.est,'toggledMSWC')
-                if mp.est.toggledMSWC
-                    ev.Im = ev.Im + mp.sbp_weights(iSubband)*I0;
-                end
-            end
-        end
-        
-        ev.I0{modeIndex} = I0; %save unprobed image per mode
-        
-        if mp.flagFiber; ev.Ifiber = ev.Ifiber + mp.sbp_weights(iSubband)*I0fiber;end % 
-
-        %--Store values for first image and its DM commands
-        ev.imageArray(:, :, whichImage, modeIndex) = I0;
-        if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, modeIndex) = mp.dm1.V;  end
-        if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, modeIndex) = mp.dm2.V;  end
-    %end
+    %--Store values for first image (unprobed) and its DM commands
+    ev.imageArray(:, :, whichImage, modeIndex) = I0;
+    if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, modeIndex) = mp.dm1.V;  end
+    if any(mp.dm_ind == 2);  ev.dm2.Vall(:, :, whichImage, modeIndex) = mp.dm2.V;  end
     
     %--Compute the average Inorm in the scoring and correction regions
-    fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n',ev.corr.Inorm,ev.score.Inorm);    
+    fprintf('Measured unprobed Inorm (Corr / Score): %.2e \t%.2e \n', ev.corr.Inorm, ev.score.Inorm);    
 
     % Set (approximate) probe intensity based on current measured Inorm
     if isempty(mp.est.probeSchedule.InormProbeVec)
@@ -418,16 +344,6 @@ for iSubband = 1:mp.Nsbp
         end
         whichImage = 1+iProbe; %--Increment image counter
         
-        % if toggledMSWC, check option to force offaxis images to zero
-        if isfield(mp.est, 'toggledMSWC')
-            if (mp.est.toggledMSWC)
-                if ((iStar == 2) && mp.est.toggledMSWCforceZero)
-                    Im = zeros(size(Im));
-                    ev.IprobedMean = ev.IprobedMean + mean(Im(mp.Fend.corr.maskBool))/(2*Npairs); 
-                end
-            end
-        end
-
         %--Store probed image and its DM settings
         ev.imageArray(:, :, whichImage, modeIndex) = Im;
         if any(mp.dm_ind == 1);  ev.dm1.Vall(:, :, whichImage, modeIndex) = mp.dm1.V;  end
@@ -463,7 +379,7 @@ for iSubband = 1:mp.Nsbp
         
     end % for iProbe = 1:2*Npairs
 
-    % estimate shot noise
+    % estimate shot noise for probe intensity
     % I0 = img_dns / PSFpeaks / texp
     img_dns = 0.5*(Iplus + Iminus) * mp.tb.info.PSFpeaks(iSubband) * mp.tb.info.sbp_texp_probe(iSubband);
     img_dns_total = img_dns * mp.tb.info.sbp_nexp_probe(iSubband);
@@ -589,23 +505,6 @@ for iSubband = 1:mp.Nsbp
             %amp_model(:, iProbe) = abs(dEprobe(:, iProbe));
         end
         
-    end
-
-    %% reset back the original star state after finished probing
-    
-    if isfield(mp.est, 'toggledMSWC')
-        if (mp.est.toggledMSWC)
-            mp.star = initSource;
-            
-            if ~(mp.flagSim)
-                %mp.tb.star.onoff = initTbSource.onax;
-                %mp.tb.offaxisstar.onoff = initTbSource.offax;
-                if (initTbSource.onax.current < 0); initTbSource.onax.current = 0; end
-                mp.tb.star.current = initTbSource.onax.current;
-                mp.tb.offaxisstar.current = initTbSource.offax.current;
-                pause(mp.est.toggledMSWC_waitTime);
-            end
-        end
     end
 
     %% Batch process the measurements to estimate the electric field in the dark hole. Done pixel by pixel.
@@ -813,6 +712,16 @@ end %--End of loop over the wavelengths
 end %--End of loop over stars
 
 mp.isProbing = false; % tells the camera whether to use the exposure time for either probed or unprobed images.
+
+%% Ensure both stars are on when exiting
+if toggledMSWC
+    mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents);
+end
+
+%% Normalize unprobed image for plain Multi-star (to avoid double counting)
+if ~toggledMSWC
+    ev.Im = ev.Im / sum(mp.star.weights);
+end
 
 fprintf(' done. Time: %.3f\n',toc);
 
