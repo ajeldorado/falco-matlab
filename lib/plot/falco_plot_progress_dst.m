@@ -283,6 +283,6 @@ else
 end
 end
 
-function fitswrite(data,filename)
-    fitswrite_hdr(data,filename,{},'b');
-end
+% function fitswrite(data,filename)
+%     fitswrite_hdr(data,filename,{},'b');
+% end
