@@ -64,25 +64,65 @@ else
     ev.dm2_seed_num = ev.dm2_seed_num + 1;
 end
 
-% Generate random dither command
+% % Generate random dither command
+% if any(mp.dm_ind_est == 1)  
+%     rng(ev.dm1_seed_num); 
+%     DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
+%     DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
+% else 
+%     DM1Vdither = zeros(size(mp.dm1.V)); 
+% end % The 'else' block would mean we're only using DM2
+% 
+% if any(mp.dm_ind_est == 2)  
+%     rng(ev.dm2_seed_num); 
+%     DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
+%     DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
+% else
+%     DM2Vdither = zeros(size(mp.dm2.V)); 
+% end % The 'else' block would mean we're only using DM1
+%% Trying a new optimal dither test
 if any(mp.dm_ind_est == 1)  
 if any(mp.dm_ind_est == 1)  
     rng(ev.dm1_seed_num); 
     DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
-    DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
+    mask_opt_dm1 = mp.est.dither_opt(1:mp.dm1.Nele);
+    % 1. Generate Standard Normal Noise (Mean=0, STD=1)
+    random_noise_dm1 = randn([mp.dm1.Nele, 1]);
+    
+    % 2. Apply the Spatial Importance Map (Hadamard Mask)
+    masked_dither_dm1 = random_noise_dm1 .* abs(mask_opt_dm1);
+    
+    % 3. Hardware Safety Clamp (Force STD to exactly mp.est.dither)
+    actual_std_dm1 = std(masked_dither_dm1);
+    scaling_factor_dm1 = mp.est.dither / max(actual_std_dm1, 1e-8);
+    final_dither_dm1 = masked_dither_dm1 * scaling_factor_dm1;
+    
+    DM1Vdither(mp.dm1.act_ele) = final_dither_dm1; 
 else 
     DM1Vdither = zeros(size(mp.dm1.V)); 
-end % The 'else' block would mean we're only using DM2
+end
 
+% === GENERATE MDZM DM2 DITHER ===
 if any(mp.dm_ind_est == 2)  
 if any(mp.dm_ind_est == 2)  
     rng(ev.dm2_seed_num); 
     DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
-    DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
+    mask_opt_dm2 = mp.est.dither_opt(mp.dm1.Nele+1:end);
+    % 1. Generate Standard Normal Noise (Mean=0, STD=1)
+    random_noise_dm2 = randn([mp.dm2.Nele, 1]);
+    
+    % 2. Apply the Spatial Importance Map (Hadamard Mask)
+    masked_dither_dm2 = random_noise_dm2 .* abs(mask_opt_dm2);
+    
+    % 3. Hardware Safety Clamp (Force STD to exactly mp.est.dither)
+    actual_std_dm2 = std(masked_dither_dm2);
+    scaling_factor_dm2 = mp.est.dither / max(actual_std_dm2, 1e-8);
+    final_dither_dm2 = masked_dither_dm2 * scaling_factor_dm2;
+    
+    DM2Vdither(mp.dm2.act_ele) = final_dither_dm2; 
 else
     DM2Vdither = zeros(size(mp.dm2.V)); 
-end % The 'else' block would mean we're only using DM1
-
+end
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
 
@@ -329,8 +369,7 @@ for iSubband = 1:1:mp.Nsbp
     ev.H = 4 * (JJdu(:, 1:2:end) + JJdu(:, 2:2:end));
     
     %--Prediction step for the covariance matrix
-    ev.P(:, :, iSubband) = ev.P(:, :, iSubband) + ev.Q(:, :, iSubband);
-    
+    ev.P(:, :, iSubband) = ev.P(:, :, iSubband) + (ev.Q(:, :, iSubband));
     %--Kalman Gain Calculation
     P_H = ev.P(:, :, iSubband) * ev.H;
     S = ev.H.' * P_H + ev.R;
