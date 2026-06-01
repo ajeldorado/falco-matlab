@@ -50,74 +50,7 @@ else
 end
 
 %% Get dither command
-% Set random number generator seed
-% Dither commands get re-used every dither_cycle_iters iterations
-if mod(Itr-1, mp.est.dither_cycle_iters) == 0 || Itr == 1
-    ev.dm1_seed_num = 0; 
-    ev.dm2_seed_num = 1000; % Don't want same random commands on DM1 and DM2
-    disp(['Dither random seed reset at iteration ', num2str(Itr)])
-else
-    ev.dm1_seed_num = ev.dm1_seed_num + 1; 
-    ev.dm2_seed_num = ev.dm2_seed_num + 1;
-end
-
-% % Generate random dither command
-% if any(mp.dm_ind_est == 1)  
-%     rng(ev.dm1_seed_num); 
-%     DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
-%     DM1Vdither(mp.dm1.act_ele) = normrnd(0,mp.est.dither,[mp.dm1.Nele, 1]); 
-% else 
-%     DM1Vdither = zeros(size(mp.dm1.V)); 
-% end % The 'else' block would mean we're only using DM2
-% 
-% if any(mp.dm_ind_est == 2)  
-%     rng(ev.dm2_seed_num); 
-%     DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
-%     DM2Vdither(mp.dm2.act_ele) = normrnd(0,mp.est.dither,[mp.dm2.Nele, 1]); 
-% else
-%     DM2Vdither = zeros(size(mp.dm2.V)); 
-% end % The 'else' block would mean we're only using DM1
-%% Trying a new optimal dither test
-if any(mp.dm_ind_est == 1)  
-    rng(ev.dm1_seed_num); 
-    DM1Vdither = zeros([mp.dm1.Nact, mp.dm1.Nact]);
-    mask_opt_dm1 = mp.est.dither_opt(1:mp.dm1.Nele);
-    % 1. Generate Standard Normal Noise (Mean=0, STD=1)
-    random_noise_dm1 = randn([mp.dm1.Nele, 1]);
-    
-    % 2. Apply the Spatial Importance Map (Hadamard Mask)
-    masked_dither_dm1 = random_noise_dm1 .* abs(mask_opt_dm1);
-    
-    % 3. Hardware Safety Clamp (Force STD to exactly mp.est.dither)
-    actual_std_dm1 = std(masked_dither_dm1);
-    scaling_factor_dm1 = mp.est.dither / max(actual_std_dm1, 1e-8);
-    final_dither_dm1 = masked_dither_dm1 * scaling_factor_dm1;
-    
-    DM1Vdither(mp.dm1.act_ele) = final_dither_dm1; 
-else 
-    DM1Vdither = zeros(size(mp.dm1.V)); 
-end
-
-% === GENERATE MDZM DM2 DITHER ===
-if any(mp.dm_ind_est == 2)  
-    rng(ev.dm2_seed_num); 
-    DM2Vdither = zeros([mp.dm2.Nact, mp.dm2.Nact]);
-    mask_opt_dm2 = mp.est.dither_opt(mp.dm1.Nele+1:end);
-    % 1. Generate Standard Normal Noise (Mean=0, STD=1)
-    random_noise_dm2 = randn([mp.dm2.Nele, 1]);
-    
-    % 2. Apply the Spatial Importance Map (Hadamard Mask)
-    masked_dither_dm2 = random_noise_dm2 .* abs(mask_opt_dm2);
-    
-    % 3. Hardware Safety Clamp (Force STD to exactly mp.est.dither)
-    actual_std_dm2 = std(masked_dither_dm2);
-    scaling_factor_dm2 = mp.est.dither / max(actual_std_dm2, 1e-8);
-    final_dither_dm2 = masked_dither_dm2 * scaling_factor_dm2;
-    
-    DM2Vdither(mp.dm2.act_ele) = final_dither_dm2; 
-else
-    DM2Vdither = zeros(size(mp.dm2.V)); 
-end
+[mp, ev, DM1Vdither, DM2Vdither] = falco_generate_dither(mp, ev);
 dither = get_dm_command_vector(mp,DM1Vdither, DM2Vdither);
 
 
@@ -164,6 +97,37 @@ else
     ev.IOLScoreHist(ev.Itr,:) = ev.IOLScoreHist(ev.Itr-1,:);
 end
 
+fracBW_old = mp.fracBW;
+if (fracBW_old) > 0.05
+    if any(mp.est.itr_bb==ev.Itr) == true
+        Nwpsbp_old = mp.Nwpsbp;
+        lambda0_old = mp.lambda0;
+        sbp_texp_old = mp.tb.info.sbp_texp;
+
+        wl_bound_low = mp.lambda0 - mp.lambda0 * fracBW_old/2;
+        wl_bound_high = mp.lambda0 + mp.lambda0 * fracBW_old/2;
+        fracBW_new = 0.025;
+        wl_cent_low = wl_bound_low/(1-fracBW_new/2);
+        wl_cent_high = wl_bound_high/(1+fracBW_new/2);
+        mp.fracBW = fracBW_new;
+        mp.Nwpsbp = 1;
+        mp.tb.info.sbp_texp = 60;
+        images_mono = zeros(500, 500, 3);
+        bands = [wl_cent_low, lambda0_old, wl_cent_high];
+        for b = 1:length(bands)
+            mp.lambda0 = bands(b);
+            mp.sbp_centers = mp.lambda0;
+            images_mono(:,:,b) = falco_get_sbp_image(mp, iSubband);
+        end
+        fitswrite(images_mono, fullfile(mp.path.ws,sprintf("monochrome_images_itr%d.fits", ev.Itr)));
+        mp.fracBW = fracBW_old;
+        mp.Nwpsbp = Nwpsbp_old;
+        mp.tb.info.sbp_texp = sbp_texp_old;
+        mp.lambda0 = lambda0_old;
+        mp.sbp_centers = mp.lambda0;
+    end
+    
+end
 %% Remove control from DM command so that controller images are correct
 if any(mp.dm_ind_est == 1)
     mp.dm1 = falco_set_constrained_voltage(mp.dm1, mp.dm1.V_dz + mp.dm1.V_drift + DM1Vdither + mp.dm1.V_shift);
