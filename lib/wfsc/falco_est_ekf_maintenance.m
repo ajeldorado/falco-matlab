@@ -5,7 +5,9 @@ function [mp, ev] = falco_est_ekf_maintenance(mp, ev, varargin)
 Itr = ev.Itr;
 
 whichDM = mp.est.probe.whichDM;
-
+if ~isfield(mp.est, 'debug')
+   mp.est.debug = false;
+end
 if ~isa(mp.est.probe, 'Probe')
     error('mp.est.probe must be an instance of class Probe')
 end
@@ -17,12 +19,10 @@ end
 % Augment which DMs are used if the probing DM isn't used for control.
 if whichDM == 1 && ~any(mp.dm_ind == 1)
     mp.dm_ind_est = [mp.dm_ind(:); 1];
-    mp.dm_ind_est = [mp.dm_ind(:); 1];
 elseif whichDM == 2 && ~any(mp.dm_ind == 2)
     mp.dm_ind_est = [mp.dm_ind(:); 2];
 else
     mp.dm_ind_est = mp.dm_ind;
-    mp.dm_ind_est = [mp.dm_ind(:); 2];
 end
 
 %--Select number of actuators across based on chosen DM for the probing
@@ -34,6 +34,7 @@ end
 
 % Initialize output arrays
 ev.imageArray = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
+
 ev.imageArray2 = zeros(mp.Fend.Neta, mp.Fend.Nxi, 1, mp.Nsbp);
 ev.Eest = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
 ev.IincoEst = zeros(mp.Fend.corr.Npix, mp.Nsbp*mp.compact.star.count);
@@ -100,31 +101,7 @@ end
 fracBW_old = mp.fracBW;
 if (fracBW_old) > 0.05
     if any(mp.est.itr_bb==ev.Itr) == true
-        Nwpsbp_old = mp.Nwpsbp;
-        lambda0_old = mp.lambda0;
-        sbp_texp_old = mp.tb.info.sbp_texp;
-
-        wl_bound_low = mp.lambda0 - mp.lambda0 * fracBW_old/2;
-        wl_bound_high = mp.lambda0 + mp.lambda0 * fracBW_old/2;
-        fracBW_new = 0.025;
-        wl_cent_low = wl_bound_low/(1-fracBW_new/2);
-        wl_cent_high = wl_bound_high/(1+fracBW_new/2);
-        mp.fracBW = fracBW_new;
-        mp.Nwpsbp = 1;
-        mp.tb.info.sbp_texp = 60;
-        images_mono = zeros(500, 500, 3);
-        bands = [wl_cent_low, lambda0_old, wl_cent_high];
-        for b = 1:length(bands)
-            mp.lambda0 = bands(b);
-            mp.sbp_centers = mp.lambda0;
-            images_mono(:,:,b) = falco_get_sbp_image(mp, iSubband);
-        end
-        fitswrite(images_mono, fullfile(mp.path.ws,sprintf("monochrome_images_itr%d.fits", ev.Itr)));
-        mp.fracBW = fracBW_old;
-        mp.Nwpsbp = Nwpsbp_old;
-        mp.tb.info.sbp_texp = sbp_texp_old;
-        mp.lambda0 = lambda0_old;
-        mp.sbp_centers = mp.lambda0;
+        [mp,ev] = falco_take_mono_images(mp,ev);
     end
     
 end
@@ -339,44 +316,7 @@ for iSubband = 1:1:mp.Nsbp
     else
         K = P_H / S;
     end
-    figure(1234);
-    hold on;                             % keep previous plots
-    semilogy(ev.Itr, rcond(S), 'o-');
-%     yscale log% add new point
-    title('S Condition num')
-    hold off;  
 
-    %--Update step for the covariance matrix
-    ev.P(:, :, iSubband) = (eye(length(ev.x_hat)) - K*ev.H')* ev.P(:, :, iSubband)*(eye(length(ev.x_hat)) - K*ev.H')' + K*ev.R*K';
-    
-    figure(2234);
-    hold on;                             % keep previous plots
-    semilogy(ev.Itr, rcond(ev.P),'o-');
-%     yscale log% add new point
-    title('P Condition num')
-    hold off;  
-
-    figure(3234);
-    hold on;                             % keep previous plots
-    semilogy(ev.Itr, min(eig(ev.P)),'ro-');
-    hold on 
-    plot(ev.Itr, max(eig(ev.P)),'bo-');
-    legend('Min', 'Max')
-%     yscale log% add new point
-    title('P Min eigenvalue')
-    hold off;
-    
-    figure(4234);
-    hold on;
-    plot(ev.Itr, mean(sqrt(diag(ev.P))),'o-')
-    title('Min std from covar')
-    hold off;
-
-    figure(5234);
-    hold on;
-    plot(ev.Itr, mean(sqrt(diag(ev.R))),'o-')
-    hold off;
-    title('R matrix std')
     %--Measurement residual (dy)
     dy = y_plus - y_minus;
     
@@ -399,24 +339,64 @@ for iSubband = 1:1:mp.Nsbp
     %--Update DM command estimate
     residual = dy - dy_hat;
     ev.x_hat(:, iSubband) = ev.x_hat(:, iSubband) + K * residual;
+    
+    if mp.est.debug
+        figure(1234);
+        hold on;                             % keep previous plots
+        semilogy(ev.Itr, rcond(S), 'o-');
+    %     yscale log% add new point
+        title('S Condition num')
+        hold off;  
+    
+        %--Update step for the covariance matrix
+        ev.P(:, :, iSubband) = (eye(length(ev.x_hat)) - K*ev.H')* ev.P(:, :, iSubband)*(eye(length(ev.x_hat)) - K*ev.H')' + K*ev.R*K';
+        
+        figure(2234);
+        hold on;                             % keep previous plots
+        semilogy(ev.Itr, rcond(ev.P),'o-');
+    %     yscale log% add new point
+        title('P Condition num')
+        hold off;  
+    
+        figure(3234);
+        hold on;                             % keep previous plots
+        semilogy(ev.Itr, min(eig(ev.P)),'ro-');
+        hold on 
+        plot(ev.Itr, max(eig(ev.P)),'bo-');
+        legend('Min', 'Max')
+    %     yscale log% add new point
+        title('P Min eigenvalue')
+        hold off;
+        
+        figure(4234);
+        hold on;
+        plot(ev.Itr, mean(sqrt(diag(ev.P))),'o-')
+        title('Min std from covar')
+        hold off;
+    
+        figure(5234);
+        hold on;
+        plot(ev.Itr, mean(sqrt(diag(ev.R))),'o-')
+        hold off;
+        title('R matrix std')
 
-    figure(6234)
-    hold on;
-    colormap(parula)
-    plot(1:length(ev.x_hat), ev.x_hat)
-    title('State vec estimate')
-    colorbar;
-%     clim([0 ev.Itr]);
-    hold off;
-    
-    figure(1111)
-    vector = zeros(mp.dm1.Nact,mp.dm1.Nact);
-    vector(mp.dm1.act_ele) = ev.x_hat(1:length(mp.dm1.act_ele), iSubband);
-    hold on;
-    imagesc(vector)
-    colorbar;
-    title('xhat')
-    
+        figure(6234)
+        hold on;
+        colormap(parula)
+        plot(1:length(ev.x_hat), ev.x_hat)
+        title('State vec estimate')
+        colorbar;
+    %     clim([0 ev.Itr]);
+        hold off;
+        
+        figure(1111)
+        vector = zeros(mp.dm1.Nact,mp.dm1.Nact);
+        vector(mp.dm1.act_ele) = ev.x_hat(1:length(mp.dm1.act_ele), iSubband);
+        hold on;
+        imagesc(vector)
+        colorbar;
+        title('xhat')
+    end
     if isfield(mp.est, 'r')
         V_T = V';
         sigma_r = S_diag(1:r, 1:r);
@@ -424,12 +404,14 @@ for iSubband = 1:1:mp.Nsbp
         ev.control = (V(:, 1:r))*check;
         vector = zeros(50);
         vector(mp.dm1.act_ele) = ev.control;
-        colormap(turbo)
-        figure(8234)
-        hold on;
-        imagesc(vector)
-        colorbar;
-        title('Control vec')
+        if mp.est.debug
+            colormap(turbo)
+            figure(8234)
+            hold on;
+            imagesc(vector)
+            colorbar;
+            title('Control vec')
+        end
         hold off;
         E_hat_est = G * (cont_command - dither) + G_r * mean(ev.x_hat,2);
     else
