@@ -24,6 +24,8 @@
   %
   % NOTES
   % -----
+  % This function works for model (mp.flagSim == true)
+  % This function has been tested only for the OMC testbed (mp.flagSim == false)
   % This function modifies:
   %  - mp.star.weights
   %  - mp.tb.star.current
@@ -46,7 +48,6 @@
               % Restore both testbed sources to initial currents
               mp.tb.star.current = initTbCurrents.onax;
               mp.tb.offaxisstar.current = initTbCurrents.offax;
-              mp.tb.info.PSFpeaks = mp.tb.info.PSFpeaks_save;
           end
 
       elseif starIndex == 1  % On-axis star only
@@ -56,7 +57,7 @@
           if ~mp.flagSim
               mp.tb.star.current = mp.tb.info.star_power;
               mp.tb.offaxisstar.current = 0;
-              mp.tb.info.PSFpeaks = mp.tb.info.PSFpeaks_save;
+              pause(1.0);
           end
 
       elseif starIndex == 2  % Off-axis star only
@@ -66,7 +67,7 @@
           if ~mp.flagSim
               mp.tb.star.current = 0;
               mp.tb.offaxisstar.current = mp.tb.info_offaxisstar.star_power;
-              mp.tb.info.PSFpeaks = mp.tb.info_offaxisstar.PSFpeaks;
+              pause(1.0);
           end
 
       else

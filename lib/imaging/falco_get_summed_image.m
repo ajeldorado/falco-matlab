@@ -9,6 +9,9 @@
 % Get a broadband image over the entire bandpass by summing subband images.
 % Uses full model
 %
+% Modified to allow for toggled MSWC mode where the image for each star is
+% recorded separately.
+%
 % INPUTS
 % ------
 % mp : structure of all model parameters
@@ -61,16 +64,39 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
         
         summedImage = 0;
         summedIfiber = 0;
-        for iSubband = 1:mp.Nsbp    
+        for iSubband = 1:mp.Nsbp
             if mp.flagFiber
                 [sbpim,sbIfiber] = falco_get_sbp_image(mp, iSubband);
                 summedIfiber = summedIfiber + mp.sbp_weights(iSubband)*sbIfiber;
                 varargout{1} = summedIfiber;
+            elseif isfield(mp, 'toggledMSWC') && mp.toggledMSWC && ~mp.flagSim
+                % Toggled Multi-star, record each star seperately, each has
+                % its own exposure times
+                initStarWeights = mp.star.weights;
+                initTbCurrents.onax = mp.tb.star.current;
+                initTbCurrents.offax = mp.tb.offaxisstar.current;
+        
+                % tb.info is for on-axis star, tb.info_offaxis is off-axis
+                % create array of tb.info(istar),
+                % info has texp, nexp, and PSFpeaks
+                % info also has star_power, but that is handled in
+                % falco_toggle_stars()
+                star_info = [mp.tb.info mp.tb.info_offaxisstar];
+                sbpim = 0;
+                for iStar = 1:mp.star.count
+                    mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents);
+                    mp.tb.info = star_info(iStar);
+                    sbpim = sbpim + falco_get_sbp_image(mp, iSubband);
+                end % star
+                
+                mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents);
+                mp.tb.info = star_info(1);
+
             else
                 sbpim = falco_get_sbp_image(mp, iSubband);
             end
             summedImage = summedImage +  mp.sbp_weights(iSubband)*sbpim;
-        end
+        end % each subband
     end
 
 end
