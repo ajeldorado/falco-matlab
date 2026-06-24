@@ -30,8 +30,8 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
         if any(mp.dm_ind == 1); mp.dm1.surfM = falco_gen_dm_surf(mp.dm1,mp.dm1.dx,mp.dm1.NdmPad); end
         if any(mp.dm_ind == 2); mp.dm2.surfM = falco_gen_dm_surf(mp.dm2,mp.dm2.dx,mp.dm2.NdmPad); end
         if any(mp.dm_ind == 9); mp.dm9.phaseM = falco_dm_surf_from_cube(mp.dm9,mp.dm9); end
-        
-        %--Loop over all wavelengths, polarizations, and stars       
+
+        %--Loop over all wavelengths, polarizations, and stars
         indexCombos = allcomb(1:mp.full.NlamUnique, 1:length(mp.full.pol_conds), 1:mp.star.count).';
         Ncombos = size(indexCombos, 2);
 
@@ -46,7 +46,7 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
                 Iall{iCombo} = falco_get_single_sim_image(iCombo, indexCombos, mp);
             end
         end
-   
+
 
         %--Apply the spectral and stellar weights, and then sum
         summedImage = 0;
@@ -61,7 +61,7 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
         end
 
     else
-        
+
         summedImage = 0;
         summedIfiber = 0;
         for iSubband = 1:mp.Nsbp
@@ -75,7 +75,16 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
                 initStarWeights = mp.star.weights;
                 initTbCurrents.onax = mp.tb.star.current;
                 initTbCurrents.offax = mp.tb.offaxisstar.current;
-        
+                initTbCurrents.onax_upper = mp.tb.star.upper;
+                initTbCurrents.offax_upper = mp.tb.offaxisstar.upper;
+
+                % Get toggle method if specified
+                if isfield(mp, 'toggleMethod')
+                    toggleMethod = mp.toggleMethod;
+                else
+                    toggleMethod = 'current'; % default
+                end
+
                 % tb.info is for on-axis star, tb.info_offaxis is off-axis
                 % create array of tb.info(istar),
                 % info has texp, nexp, and PSFpeaks
@@ -84,12 +93,12 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
                 star_info = [mp.tb.info mp.tb.info_offaxisstar];
                 sbpim = 0;
                 for iStar = 1:mp.star.count
-                    mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents);
+                    mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents, toggleMethod);
                     mp.tb.info = star_info(iStar);
                     sbpim = sbpim + falco_get_sbp_image(mp, iSubband);
                 end % star
-                
-                mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents);
+
+                mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
                 mp.tb.info = star_info(1);
 
             else

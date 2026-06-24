@@ -17,6 +17,11 @@
   % initTbCurrents : saved initial testbed currents struct with fields:
   %                  .onax  = on-axis star current
   %                  .offax = off-axis star current
+  %                  .onax_upper  = on-axis star upper wavelength (nm)
+  %                  .offax_upper = off-axis star upper wavelength (nm)
+  % method : (optional) string specifying toggle method:
+  %          'current' = use laser current (default)
+  %          'wavelength' = use upper wavelength limit
   %
   % OUTPUTS
   % -------
@@ -26,19 +31,52 @@
   % -----
   % This function works for model (mp.flagSim == true)
   % This function has been tested only for the OMC testbed (mp.flagSim == false)
-  % This function modifies:
+  %
+  % Method 'current' modifies:
   %  - mp.star.weights
   %  - mp.tb.star.current
   %  - mp.tb.offaxisstar.current
   %  - mp.tb.info.PSFpeaks
-  % and pauses for mp.est.toggledMSWC_waitTime if in testbed mode.
+  %
+  % Method 'wavelength' modifies:
+  %  - mp.star.weights
+  %  - mp.tb.star.upper
+  %  - mp.tb.offaxisstar.upper
+  %
+  % For 'wavelength' method, turning star off sets upper wavelength to 500nm,
+  % which is less than the lower wavelength and below the 700nm longpass filter.
+  %
+  % Both methods pause for mp.est.toggledMSWC_waitTime if in testbed mode.
 
-  function mp = falco_toggle_stars(mp, starIndex, initStarWeights, initTbCurrents)
+  function mp = falco_toggle_stars(mp, starIndex, initStarWeights, initTbCurrents, method)
+
+      % Default to current method if not specified
+      if nargin < 5 || isempty(method)
+          method = 'current';
+      end
+
+      % Validate method
+      if ~ismember(lower(method), {'current', 'wavelength'})
+          error('method must be ''current'' or ''wavelength''');
+      end
 
       % Convert 'both' to 0 for convenience
       if ischar(starIndex) && strcmpi(starIndex, 'both')
           starIndex = 0;
       end
+
+      % Apply method based on selection
+      if strcmpi(method, 'current')
+          mp = toggle_by_current(mp, starIndex, initStarWeights, initTbCurrents);
+      elseif strcmpi(method, 'wavelength')
+          mp = toggle_by_wavelength(mp, starIndex, initStarWeights, initTbCurrents);
+      end
+
+  end
+
+
+  function mp = toggle_by_current(mp, starIndex, initStarWeights, initTbCurrents)
+      % Original current-based toggling method
 
       % Set star weights
       if starIndex == 0  % Both stars
@@ -83,6 +121,55 @@
               mp.tb.offaxisstar.current = 0;
           end
 
+          pause(mp.est.toggledMSWC_waitTime);
+      end
+
+  end
+
+
+  function mp = toggle_by_wavelength(mp, starIndex, initStarWeights, initTbCurrents)
+      % Wavelength-based toggling method
+      % Turning star off: sets upper wavelength to 500nm (below lower and below 700nm filter)
+      % Turning star on: restores upper wavelength from initTbCurrents
+
+      % Set star weights
+      if starIndex == 0  % Both stars
+          mp.star.weights = initStarWeights;
+
+          if ~mp.flagSim
+              % Restore both testbed sources to initial upper wavelengths
+              mp.tb.star.upper = initTbCurrents.onax_upper;
+              mp.tb.offaxisstar.upper = initTbCurrents.offax_upper;
+          end
+
+      elseif starIndex == 1  % On-axis star only
+          mp.star.weights = zeros(1, mp.star.count);
+          mp.star.weights(1) = initStarWeights(1);
+
+          if ~mp.flagSim
+              % Turn on on-axis star, turn off off-axis star
+              mp.tb.star.upper = initTbCurrents.onax_upper;
+              mp.tb.offaxisstar.upper = 500;  % Off (< lower wavelength and < 700nm filter)
+              pause(1.0);
+          end
+
+      elseif starIndex == 2  % Off-axis star only
+          mp.star.weights = zeros(1, mp.star.count);
+          mp.star.weights(2) = initStarWeights(2);
+
+          if ~mp.flagSim
+              % Turn off on-axis star, turn on off-axis star
+              mp.tb.star.upper = 500;  % Off (< lower wavelength and < 700nm filter)
+              mp.tb.offaxisstar.upper = initTbCurrents.offax_upper;
+              pause(1.0);
+          end
+
+      else
+          error('starIndex must be 0 (both), 1 (on-axis), or 2 (off-axis)');
+      end
+
+      % Pause for testbed stabilization
+      if ~mp.flagSim
           pause(mp.est.toggledMSWC_waitTime);
       end
 

@@ -199,6 +199,8 @@ if toggledMSWC
     if ~(mp.flagSim)
         initTbCurrents.onax = mp.tb.star.current;
         initTbCurrents.offax = mp.tb.offaxisstar.current;
+        initTbCurrents.onax_upper = mp.tb.star.upper;
+        initTbCurrents.offax_upper = mp.tb.offaxisstar.upper;
         
         % tb.info is for on-axis star, tb.info_offaxis is off-axis
         % create array of tb.info(istar),
@@ -210,18 +212,24 @@ if toggledMSWC
         initTbCurrents.onax = 0;
         initTbCurrents.offax = 0;
     end
-end
 
+    % Get toggle method if specified
+    if isfield(mp, 'toggleMethod')
+        toggleMethod = mp.toggleMethod;
+    else
+        toggleMethod = 'current'; % default
+    end
+end
 listStar = {'star', 'offaxisstar'};
 for iStar = 1:mp.compact.star.count
 
     modvar = ModelVariables;
     modvar.starIndex = iStar;
     modvar.whichSource = listStar{iStar};
-    
+
     %% toggle to current star only for estimation
     if toggledMSWC && ~mp.flagSim
-        mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents);
+        mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents, toggleMethod);
         mp.tb.info = star_info(iStar);
     end
 
@@ -269,9 +277,9 @@ for iSubband = 1:mp.Nsbp
     if ~(mp.flagSim)
         % shot noise estimate of unprobed image
         % I0vec = img_dns / PSFpeaks / (nexp*texp)
-        var_dns = mean(I0vec) * mp.tb.info.PSFpeaks(1) * mp.tb.info.sbp_texp * mp.tb.info.sbp_nexp;
+        var_dns = mean(I0vec) * mp.tb.info.PSFpeaks(iSubband) * mp.tb.info.sbp_texp(iSubband) * mp.tb.info.sbp_nexp(iSubband);
         std_dns = sqrt(var_dns);
-        normI_shotnoise = std_dns ./ mp.tb.info.PSFpeaks(1) ./ (mp.tb.info.sbp_nexp * mp.tb.info.sbp_texp);
+        normI_shotnoise = std_dns ./ mp.tb.info.PSFpeaks(iSubband) ./ (mp.tb.info.sbp_nexp(iSubband) * mp.tb.info.sbp_texp(iSubband));
         fprintf('unprobed shot noise estimate = %.2e\n', normI_shotnoise);
     end
     
@@ -733,7 +741,7 @@ mp.isProbing = false; % tells the camera whether to use the exposure time for ei
 
 %% Ensure both stars are on and reset tb.info when exiting
 if toggledMSWC && ~mp.flagSim
-    mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents);
+    mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
     mp.tb.info = star_info(1);
 end
 
