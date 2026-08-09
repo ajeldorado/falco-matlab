@@ -164,6 +164,7 @@ function [normI, fn_fits] = falco_get_omc_sbp_image(mp,si)
 
     % Load a dark or estimate bias, CAUTION: must have FS in
     if isequal(lower(tb.sciCam.dark_method), 'autobias')
+        % sciCam_autobias returns image with bias removed
         [rawIm, bias] = sciCam_autobias(tb, rawIm, mp.Fend.corr.maskBool);
         dark = zeros(size(rawIm));
     else

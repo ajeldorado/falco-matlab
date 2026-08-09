@@ -16,6 +16,7 @@ cleanupObj = onCleanup(@() funCleanup(mp));
 
 % initialize
 flagBreak = false;
+hProgress.master = 1;
 
 for Itr = 1:mp.Nitr
     
@@ -112,9 +113,7 @@ for Itr = 1:mp.Nitr
     end
 
     %% Progress plots (PSF, NI, and DM surfaces)
-    % plot_wfsc_progress also saves images and ev probe data
-    
-    if Itr == 1; hProgress.master = 1; end % initialize the handle
+    % plot_wfsc_progress also saves images and ev probe data    
     [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
         
     %% Compute and Plot the Singular Mode Spectrum of the Electric Field
@@ -192,35 +191,9 @@ for Itr = 1:mp.Nitr
 
 end %--END OF ESTIMATION + CONTROL LOOP
 
-Itr = mp.Nitr;
-
-%% Update 'out' structure and progress plot one last time
-Itr = Itr + 1;
-
-out = store_dm_command_history(mp, out, Itr);
-
-% falco_compute_thput forces mp.compact.star.weight(1) = 1;
-[mp, thput, ImSimOffaxis] = falco_compute_thput(mp);
-out.thput(Itr, :) = thput(:);
-mp.thput_vec(Itr) = max(thput); % max() used for if mp.flagFiber==true
-
-% Update progress plot using image from controller (if new image was taken)
-if isfield(cvar, 'Im') && ~mp.ctrl.flagUseModel
-    ev.Im = cvar.Im;
-    [out, hProgress] = plot_wfsc_progress(mp, out, ev, hProgress, Itr, ImSimOffaxis);
-end
-
 if strcmpi(mp.estimator,'ekf_maintenance')  % sfr
    out.IOLScoreHist = ev.IOLScoreHist;
 end
-
-
-%% Save out an abridged workspace
-
-fnSnippet = [mp.path.config filesep mp.runLabel,'_snippet.mat'];
-fprintf('\nSaving data snippet to:\n\t%s\n', fnSnippet)
-save(fnSnippet, 'out');
-fprintf('...done.\n')
 
 %% Save out the data from the workspace
 if mp.flagSaveWS
@@ -243,9 +216,11 @@ end %--END OF main FUNCTION
 
 function funCleanup(mp)
     % executes when falco_wfsc_loop exits, even when there is an error
+    fprintf('\nfalco_wfsc_loop: Executing funCleanup()\n');
     
     % restore some settings to defaults
     mp.tb.sciCam.subdir = 'temp';
+    
 
 end % funCleanup
 

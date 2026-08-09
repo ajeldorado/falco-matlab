@@ -9,10 +9,10 @@
   % INPUTS
   % ------
   % mp : structure of model parameters
-  % starIndex : which star(s) to turn on:
+  % starIndex : which star(s) to turn ON:
   %             1 = on-axis star only
   %             2 = off-axis star only
-  %             0 or 'both' = both stars
+  %             0 or 'both' = both stars on
   % initStarWeights : saved initial star weights vector (from mp.star.weights)
   % initTbCurrents : saved initial testbed currents struct with fields:
   %                  .onax  = on-axis star current

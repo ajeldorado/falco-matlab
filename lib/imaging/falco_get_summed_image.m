@@ -84,13 +84,19 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
                 else
                     toggleMethod = 'current'; % default
                 end
-
+                
                 % tb.info is for on-axis star, tb.info_offaxis is off-axis
                 % create array of tb.info(istar),
                 % info has texp, nexp, and PSFpeaks
                 % info also has star_power, but that is handled in
                 % falco_toggle_stars()
                 star_info = [mp.tb.info mp.tb.info_offaxisstar];
+                
+                % this creates an object that will restore star settings
+                % even if an error occurs
+                cleanup = onCleanup(@() CleanUp_toggledMSWC(mp, initStarWeights, initTbCurrents, toggleMethod, star_info));
+                
+                % loop to sum separate images, this modifies star settings, etc
                 sbpim = 0;
                 for iStar = 1:mp.star.count
                     mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents, toggleMethod);
@@ -98,9 +104,9 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
                     sbpim = sbpim + falco_get_sbp_image(mp, iSubband);
                 end % star
 
-                mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
-                mp.tb.info = star_info(1);
-
+                % CleanUp_toggledMSWC(mp, initStarWeights, initTbCurrents, toggleMethod, star_info)
+                % gets called automatically on exit
+                
             else
                 sbpim = falco_get_sbp_image(mp, iSubband);
             end
@@ -109,3 +115,11 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
     end
 
 end
+
+function mp = CleanUp_toggledMSWC(mp, initStarWeights, initTbCurrents, toggleMethod, star_info)
+% restore tb.info and star settings even if an error occurs
+
+mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
+mp.tb.info = star_info(1);
+
+end % CleanUp_toggledMSWC(mp)

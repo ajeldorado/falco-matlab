@@ -196,6 +196,13 @@ fprintf('Estimating electric field with batch process estimation ...\n'); tic;
 if toggledMSWC
     initStarWeights = mp.star.weights;
     
+    % Get toggle method if specified
+    if isfield(mp, 'toggleMethod')
+        toggleMethod = mp.toggleMethod;
+    else
+        toggleMethod = 'current'; % default
+    end
+    
     if ~(mp.flagSim)
         initTbCurrents.onax = mp.tb.star.current;
         initTbCurrents.offax = mp.tb.offaxisstar.current;
@@ -207,19 +214,17 @@ if toggledMSWC
         % double check that this is copy by value
         star_info = [mp.tb.info mp.tb.info_offaxisstar];
 
+        % Setup cleanup to ensure stars are restored on error
+        cleanupObj = onCleanup(@() funCleanup(mp, initStarWeights, initTbCurrents, toggleMethod, star_info));
+
     else
         % Set dummy values for simulation mode
         initTbCurrents.onax = 0;
         initTbCurrents.offax = 0;
     end
 
-    % Get toggle method if specified
-    if isfield(mp, 'toggleMethod')
-        toggleMethod = mp.toggleMethod;
-    else
-        toggleMethod = 'current'; % default
-    end
 end
+
 listStar = {'star', 'offaxisstar'};
 for iStar = 1:mp.compact.star.count
 
@@ -753,3 +758,10 @@ end
 fprintf(' done. Time: %.3f\n',toc);
 
 end %--END OF FUNCTION
+
+function funCleanup(mp, initStarWeights, initTbCurrents, toggleMethod, star_info)
+    % Cleanup function to restore star configuration on error
+    mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
+    mp.tb.info = star_info(1);
+end
+

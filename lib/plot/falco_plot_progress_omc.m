@@ -112,7 +112,7 @@ if(mp.flagPlot)
     xlim([0 length(Inorm.total)])
     xlabel('Iteration')
 %     ylabel('Norm. I');
-    legend('Total','Modulated','Unmodulated');
+    legend off; %legend('Total','Modulated','Unmodulated');
 	title('Mean Normalized Intensity')
     grid on;axis square;
 % 	hcbdummy = colorbar;set(hcbdummy,'visible','off');
