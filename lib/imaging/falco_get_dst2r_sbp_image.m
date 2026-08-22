@@ -31,10 +31,14 @@ function normI = falco_get_dst2r_sbp_image(mp,si)
     
     PSFpeak   = tb.info.PSFpeaks(si);% counts per second 
     
+
     
     %----- Send commands to the DM -----
     % Note: tb.DM.flatmap generally contains the commands to flatten the wavefront. 
     %       mp.dm1.V is added to the flat commands inside DM_apply2Dmap.  
+    dm1_map = mp.dm1.V;
+    dm2_map = mp.dm2.V;
+
     if tb.DM1.installed && tb.DM1.CONNECTED 
         DM_apply2Dmap(tb.DM1,dm1_map);
     end
