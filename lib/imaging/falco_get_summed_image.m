@@ -19,6 +19,10 @@
 % OUTPUTS
 % -------
 % summedImage : PSF averaged over all subbands and polarization states [normalized intensity]
+% varargout{1} : when mp.toggledMSWC is true (and not flagSim and not flagFiber),
+%                a 1 x mp.star.count cell array of the per-star summed images
+%                (summed over subbands with mp.sbp_weights), such that
+%                summedImage == sum of starImages{:}
 
 function [summedImage,varargout] = falco_get_summed_image(mp)
 
@@ -64,6 +68,7 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
 
         summedImage = 0;
         summedIfiber = 0;
+        starImages = []; % only populated when toggledMSWC, see below
         for iSubband = 1:mp.Nsbp
             if mp.flagFiber
                 [sbpim,sbIfiber] = falco_get_sbp_image(mp, iSubband);
@@ -82,36 +87,50 @@ function [summedImage,varargout] = falco_get_summed_image(mp)
                 if isfield(mp, 'toggleMethod')
                     toggleMethod = mp.toggleMethod;
                 else
-                    toggleMethod = 'current'; % default
+                    toggleMethod = 'wavelength'; % default
                 end
-                
+
                 % tb.info is for on-axis star, tb.info_offaxis is off-axis
                 % create array of tb.info(istar),
                 % info has texp, nexp, and PSFpeaks
                 % info also has star_power, but that is handled in
                 % falco_toggle_stars()
-                star_info = [mp.tb.info mp.tb.info_offaxisstar];
-                
+                star_info = {mp.tb.info mp.tb.info_offaxisstar};
+
                 % this creates an object that will restore star settings
                 % even if an error occurs
                 cleanup = onCleanup(@() CleanUp_toggledMSWC(mp, initStarWeights, initTbCurrents, toggleMethod, star_info));
-                
+
+                % keep each star's image summed separately across subbands,
+                % in addition to the combined sbpim used below, so the
+                % caller can see what composed summedImage (varargout{1})
+                if isempty(starImages)
+                    starImages = cell(1, mp.star.count);
+                    for iStar = 1:mp.star.count; starImages{iStar} = 0; end
+                end
+
                 % loop to sum separate images, this modifies star settings, etc
                 sbpim = 0;
                 for iStar = 1:mp.star.count
                     mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents, toggleMethod);
-                    mp.tb.info = star_info(iStar);
-                    sbpim = sbpim + falco_get_sbp_image(mp, iSubband);
+                    mp.tb.info = star_info{iStar};
+                    sbpim_star = falco_get_sbp_image(mp, iSubband);
+                    starImages{iStar} = starImages{iStar} + mp.sbp_weights(iSubband)*sbpim_star;
+                    sbpim = sbpim + sbpim_star;
                 end % star
 
                 % CleanUp_toggledMSWC(mp, initStarWeights, initTbCurrents, toggleMethod, star_info)
                 % gets called automatically on exit
-                
+
             else
                 sbpim = falco_get_sbp_image(mp, iSubband);
             end
             summedImage = summedImage +  mp.sbp_weights(iSubband)*sbpim;
         end % each subband
+
+        if ~isempty(starImages)
+            varargout = starImages;
+        end
     end
 
 end
@@ -120,6 +139,6 @@ function mp = CleanUp_toggledMSWC(mp, initStarWeights, initTbCurrents, toggleMet
 % restore tb.info and star settings even if an error occurs
 
 mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
-mp.tb.info = star_info(1);
+mp.tb.info = star_info{1};
 
 end % CleanUp_toggledMSWC(mp)

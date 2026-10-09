@@ -221,6 +221,10 @@ function funCleanup(mp)
     % restore some settings to defaults
     mp.tb.sciCam.subdir = 'temp';
     
+    % make sure both lasers are back to standard operating
+    % (last 8 iterations might have toggled)
+    mp.tb.SetStarSubband(1);
+    mp.tb.SetStarSubband(1, 'whichstar', 'offaxisstar');
 
 end % funCleanup
 

@@ -20,8 +20,8 @@
   %                  .onax_upper  = on-axis star upper wavelength (nm)
   %                  .offax_upper = off-axis star upper wavelength (nm)
   % method : (optional) string specifying toggle method:
-  %          'current' = use laser current (default)
-  %          'wavelength' = use upper wavelength limit
+  %          'current' = use laser current
+  %          'wavelength' = use upper wavelength limit (default)
   %
   % OUTPUTS
   % -------
@@ -47,12 +47,18 @@
   % which is less than the lower wavelength and below the 700nm longpass filter.
   %
   % Both methods pause for mp.est.toggledMSWC_waitTime if in testbed mode.
+  %
+  % Also gives each toggle state (both/on-axis/off-axis) its own dark cache
+  % directory (mp.tb.sciCam.path2darks), since sciCam_loadDark's cache
+  % filename (texp/em_gain/nbin/coadd/AOI) has no notion of which stars are
+  % toggled on, so different toggle states can otherwise collide on the
+  % same cached dark.
 
   function mp = falco_toggle_stars(mp, starIndex, initStarWeights, initTbCurrents, method)
 
-      % Default to current method if not specified
+      % Default to wavelength method if not specified
       if nargin < 5 || isempty(method)
-          method = 'current';
+          method = 'wavelength';
       end
 
       % Validate method
@@ -65,6 +71,29 @@
           starIndex = 0;
       end
 
+      % Give each toggle state its own dark cache directory, since
+      % sciCam_loadDark's cache filename (texp/em_gain/nbin/coadd/AOI) has
+      % no notion of which stars are toggled on, so different toggle
+      % states can otherwise collide on the same cached dark.
+      if ~mp.flagSim
+          switch starIndex
+              case 0
+                  toggle_tag = 'both';
+              case 1
+                  toggle_tag = 'onaxis';
+              case 2
+                  toggle_tag = 'offaxis';
+              otherwise
+                  error('starIndex must be 0 (both), 1 (on-axis), or 2 (off-axis)');
+          end
+
+          path2darks_base = strip_toggled_subdir(mp.tb.sciCam.path2darks);
+          mp.tb.sciCam.path2darks = fullfile(path2darks_base, 'toggled', toggle_tag);
+          if ~exist(mp.tb.sciCam.path2darks, 'dir')
+              mkdir(mp.tb.sciCam.path2darks);
+          end
+      end
+
       % Apply method based on selection
       if strcmpi(method, 'current')
           mp = toggle_by_current(mp, starIndex, initStarWeights, initTbCurrents);
@@ -72,6 +101,20 @@
           mp = toggle_by_wavelength(mp, starIndex, initStarWeights, initTbCurrents);
       end
 
+  end
+
+
+  function base = strip_toggled_subdir(path2darks_in)
+      % undo a previous .../toggled/<tag> suffix so repeated calls don't nest
+      [parent1, leaf1] = fileparts(path2darks_in);
+      if ismember(leaf1, {'both','onaxis','offaxis'})
+          [parent2, leaf2] = fileparts(parent1);
+          if strcmp(leaf2, 'toggled')
+              base = parent2;
+              return;
+          end
+      end
+      base = path2darks_in;
   end
 
 

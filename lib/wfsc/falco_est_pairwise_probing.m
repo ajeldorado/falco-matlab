@@ -212,7 +212,7 @@ if toggledMSWC
         % tb.info is for on-axis star, tb.info_offaxis is off-axis
         % create array of tb.info(istar),
         % double check that this is copy by value
-        star_info = [mp.tb.info mp.tb.info_offaxisstar];
+        star_info = {mp.tb.info mp.tb.info_offaxisstar};
 
         % Setup cleanup to ensure stars are restored on error
         cleanupObj = onCleanup(@() funCleanup(mp, initStarWeights, initTbCurrents, toggleMethod, star_info));
@@ -235,7 +235,7 @@ for iStar = 1:mp.compact.star.count
     %% toggle to current star only for estimation
     if toggledMSWC && ~mp.flagSim
         mp = falco_toggle_stars(mp, iStar, initStarWeights, initTbCurrents, toggleMethod);
-        mp.tb.info = star_info(iStar);
+        mp.tb.info = star_info{iStar};
     end
 
 for iSubband = 1:mp.Nsbp
@@ -747,7 +747,7 @@ mp.isProbing = false; % tells the camera whether to use the exposure time for ei
 %% Ensure both stars are on and reset tb.info when exiting
 if toggledMSWC && ~mp.flagSim
     mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
-    mp.tb.info = star_info(1);
+    mp.tb.info = star_info{1};
 end
 
 %% Normalize unprobed image for plain Multi-star (to avoid double counting)
@@ -762,6 +762,6 @@ end %--END OF FUNCTION
 function funCleanup(mp, initStarWeights, initTbCurrents, toggleMethod, star_info)
     % Cleanup function to restore star configuration on error
     mp = falco_toggle_stars(mp, 'both', initStarWeights, initTbCurrents, toggleMethod);
-    mp.tb.info = star_info(1);
+    mp.tb.info = star_info{1};
 end
 
