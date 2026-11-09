@@ -244,6 +244,8 @@ if ~isfield(mp.detector, 'tExpUnprobedVec'); mp.detector.tExpUnprobedVec = 1.0 *
 if ~isfield(mp.detector, 'tExpProbedVec'); mp.detector.tExpProbedVec = 1.0 * ones(mp.Nsbp, 1); end % exposure times for probed images in each subband [seconds]
 if ~isfield(mp.detector, 'Nexp'); mp.detector.Nexp = 1; end % number of exposures to stack for each combined frame
 
+if ~isfield(mp.Fend.full, 'binfac'); mp.Fend.full.binfac = 1; end % hardware pixel-binning factor for the full-model focal plane (1 = no binning)
+
 %% Initialize some basic attributes for all DMs (which include hybrid FPMs).
 mp.dm1.NactTotal=0; mp.dm2.NactTotal=0; mp.dm3.NactTotal=0; mp.dm4.NactTotal=0; mp.dm5.NactTotal=0; mp.dm6.NactTotal=0; mp.dm7.NactTotal=0; mp.dm8.NactTotal=0; mp.dm9.NactTotal=0; 
 mp.dm1.Nele=0; mp.dm2.Nele=0; mp.dm3.Nele=0; mp.dm4.Nele=0; mp.dm5.Nele=0; mp.dm6.Nele=0; mp.dm7.Nele=0; mp.dm8.Nele=0; mp.dm9.Nele=0; %--Initialize for Jacobian calculations later. 

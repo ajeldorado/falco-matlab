@@ -67,9 +67,13 @@ CORR.Neta = size(maskCorr, 1);
 mp.Fend.corr.mask = logical(mp.Fend.corr.mask);
 mp.Fend.corr.maskBool = logical(mp.Fend.corr.mask);
 
-% Size of the output image 
+% Size of the output image
 mp.Fend.Nxi  = size(mp.Fend.corr.mask, 2);
 mp.Fend.Neta = size(mp.Fend.corr.mask, 1);
+
+%--Full model's internal (pre-binning) grid size
+mp.Fend.full.Nxi  = mp.Fend.full.binfac * mp.Fend.Nxi;
+mp.Fend.full.Neta = mp.Fend.full.binfac * mp.Fend.Neta;
 
 [XIS, ETAS] = meshgrid(mp.Fend.xisDL, mp.Fend.etasDL);
 mp.Fend.RHOS = sqrt(XIS.^2 + ETAS.^2);

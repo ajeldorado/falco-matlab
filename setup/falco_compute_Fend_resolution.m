@@ -22,6 +22,11 @@ function mp = falco_compute_Fend_resolution(mp)
 
     %--Compact evaluation model at higher resolution
     mp.Fend.eval.dxi = fLamD/mp.Fend.eval.res; % [meters/pixel]
-    mp.Fend.eval.deta = mp.Fend.eval.dxi; % [meters/pixel]  
-    
+    mp.Fend.eval.deta = mp.Fend.eval.dxi; % [meters/pixel]
+
+    %--Full model may use a finer grid internally, then bin by mp.Fend.full.binfac
+    mp.Fend.full.res = mp.Fend.res * mp.Fend.full.binfac;
+    mp.Fend.full.dxi = fLamD/mp.Fend.full.res; % [meters/pixel]
+    mp.Fend.full.deta = mp.Fend.full.dxi; % [meters/pixel]
+
 end

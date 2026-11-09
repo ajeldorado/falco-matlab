@@ -283,8 +283,17 @@ EP4 = EP4mult .* EP4;
 EP4 = propcustom_relay(EP4, NrelayFactor*mp.NrelayFend, mp.centering); %--Rotate the final image if necessary
 
 %--MFT from Lyot Stop to final focal plane (i.e., P4 to Fend)
-EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.full.dx, mp.Fend.dxi, mp.Fend.Nxi, ...
-    mp.Fend.deta, mp.Fend.Neta, mp.centering);
+if mp.Fend.full.binfac > 1
+    % Propagate to a finer grid, then physically bin (sum intensity over
+    % each binfac x binfac block) to emulate hardware pixel binning.
+    EFendFine = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.full.dx, mp.Fend.full.dxi, mp.Fend.full.Nxi, ...
+        mp.Fend.full.deta, mp.Fend.full.Neta, mp.centering);
+    IFendBinned = mp.Fend.full.binfac^2 * falco_bin_downsample(abs(EFendFine).^2, mp.Fend.full.binfac);
+    EFend = sqrt(IFendBinned); % phase is discarded; all callers use abs(Eout).^2
+else
+    EFend = propcustom_mft_PtoF(EP4, mp.fl, lambda, mp.P4.full.dx, mp.Fend.dxi, mp.Fend.Nxi, ...
+        mp.Fend.deta, mp.Fend.Neta, mp.centering);
+end
 
 %--Don't apply FPM if normalization value is being found
 if(normFac==0)
